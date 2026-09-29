@@ -1,7 +1,8 @@
+   import { Sparkles } from "./Extras";
 function Hero() {
   return (
     <section className="hero">
-
+     <Sparkles />
       <div className="hero-content">
 
         <p className="small-text">

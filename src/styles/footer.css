@@ -1,376 +1,136 @@
 /* =====================================================
-   FOOTER
+   FOOTER — trắng hồng
 ===================================================== */
-
 .footer {
   position: relative;
-
   width: 100%;
-
   padding: 100px 7% 30px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #160910 0%,
-      #24101a 50%,
-      #12070d 100%
-    );
-
-  color: #fff;
-
+  background: linear-gradient(180deg, var(--blush) 0%, var(--petal) 100%);
+  color: var(--plum);
   overflow: hidden;
 }
 
+/* chữ thương hiệu mờ phía sau */
+.footer::after {
+  content: "ORORAVN";
+  position: absolute;
+  left: 50%;
+  bottom: -0.22em;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-size: clamp(120px, 24vw, 340px);
+  font-weight: 600;
+  letter-spacing: -4px;
+  line-height: 1;
+  color: rgba(226, 103, 143, 0.1);
+  pointer-events: none;
+  user-select: none;
+}
 
-/* =====================================================
-   FOOTER MAIN
-===================================================== */
-
+/* MAIN */
 .footer-main {
+  position: relative;
+  z-index: 1;
   width: 100%;
-
   display: grid;
-
-  grid-template-columns:
-    2fr
-    1fr
-    1fr
-    1fr;
-
+  grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 60px;
-
-  padding-bottom: 80px;
-
-  border-bottom:
-    1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 70px;
+  border-bottom: 1px solid var(--line);
 }
 
-
-/* =====================================================
-   BRAND
-===================================================== */
-
-.footer-brand {
-  width: 100%;
-  max-width: 300px;
-
-  min-width: 0;
-}
+/* BRAND */
+.footer-brand { width: 100%; max-width: 320px; min-width: 0; }
 
 .footer-logo {
-  margin-bottom: 25px;
-
-  font-size: 22px;
-
+  margin-bottom: 22px;
+  font-family: var(--font-display);
+  font-size: 32px;
   font-weight: 600;
-
-  letter-spacing: 4px;
-
+  letter-spacing: 3px;
   white-space: nowrap;
+  color: var(--plum);
 }
 
-.footer-logo span {
-  color: #f3a0bd;
-
-  font-weight: 300;
-}
+.footer-logo span { color: var(--rose); font-style: italic; font-weight: 500; }
 
 .footer-brand p {
   max-width: 300px;
-
-  font-size: 13px;
-
+  font-size: 14px;
   line-height: 1.8;
-
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--plum-soft);
 }
 
-
-/* =====================================================
-   COLUMNS
-===================================================== */
-
-.footer-column {
-  min-width: 0;
-
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 14px;
-}
+/* COLUMNS */
+.footer-column { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
 
 .footer-column h3 {
-  margin-bottom: 12px;
-
-  font-size: 11px;
-
+  margin-bottom: 10px;
+  font-size: 12px;
   font-weight: 500;
-
   letter-spacing: 3px;
-
   text-transform: uppercase;
-
-  color: #f3a0bd;
+  color: var(--rose-deep);
 }
 
 .footer-column a,
 .footer-column p {
+  position: relative;
   width: fit-content;
-
   max-width: 100%;
-
   margin: 0;
-
-  font-size: 13px;
-
+  font-size: 14px;
   line-height: 1.7;
-
-  color: rgba(255, 255, 255, 0.55);
-
+  color: var(--plum-soft);
   overflow-wrap: anywhere;
-
-  word-break: break-word;
-
-  transition:
-    color 0.3s ease,
-    transform 0.3s ease;
+  transition: color 0.3s ease, transform 0.3s ease;
 }
 
-.footer-column a:hover {
-  color: #fff;
-
-  transform: translateX(4px);
+.footer-column a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 1px;
+  background: var(--rose);
+  transition: width 0.35s var(--ease);
 }
 
-.footer-column p {
-  color: rgba(255, 255, 255, 0.45);
-}
+.footer-column a:hover { color: var(--rose-deep); transform: translateX(4px); }
+.footer-column a:hover::after { width: 100%; }
 
-
-/* =====================================================
-   LICENSE
-===================================================== */
-
+/* LICENSE */
 .footer-license {
+  position: relative;
+  z-index: 1;
   width: 100%;
-
-  padding-top: 25px;
-
+  padding-top: 26px;
   display: flex;
-
   justify-content: space-between;
-
   align-items: center;
-
   gap: 20px;
-
-  font-size: 10px;
-
+  font-size: 12px;
   letter-spacing: 0.5px;
-
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--plum-soft);
 }
 
-.footer-license > div {
-  min-width: 0;
-}
+.footer-license > div { min-width: 0; }
+.footer-license span { overflow-wrap: anywhere; }
 
-.footer-license span {
-  overflow-wrap: anywhere;
-}
-
-
-/* =====================================================
-   TABLET
-===================================================== */
-
+/* TABLET */
 @media (max-width: 900px) {
-
-  .footer {
-    padding: 80px 5% 25px;
-  }
-
-  .footer-main {
-    grid-template-columns:
-      1fr
-      1fr;
-
-    gap: 50px 30px;
-
-    padding-bottom: 60px;
-  }
-
-  .footer-brand {
-    max-width: 100%;
-  }
-
-  .footer-column {
-    width: 100%;
-  }
-
+  .footer { padding: 80px 5% 25px; }
+  .footer-main { grid-template-columns: 1fr 1fr; gap: 50px 30px; padding-bottom: 55px; }
+  .footer-brand { max-width: 100%; }
 }
 
-
-/* =====================================================
-   MOBILE
-===================================================== */
-
+/* MOBILE */
 @media (max-width: 600px) {
-
-  .footer {
-    width: 100%;
-
-    padding: 65px 20px 22px;
-
-    overflow: hidden;
-  }
-
-  .footer-main {
-    width: 100%;
-
-    display: grid;
-
-    grid-template-columns: 1fr;
-
-    gap: 38px;
-
-    padding-bottom: 45px;
-  }
-
-
-  /* BRAND */
-
-  .footer-brand {
-    width: 100%;
-
-    max-width: 100%;
-  }
-
-  .footer-logo {
-    margin-bottom: 18px;
-
-    font-size: 19px;
-
-    letter-spacing: 3px;
-  }
-
-  .footer-brand p {
-    max-width: 280px;
-
-    font-size: 12px;
-
-    line-height: 1.8;
-  }
-
-
-  /* COLUMNS */
-
-  .footer-column {
-    width: 100%;
-
-    min-width: 0;
-
-    gap: 12px;
-  }
-
-  .footer-column h3 {
-    margin-bottom: 8px;
-
-    font-size: 10px;
-
-    letter-spacing: 2.5px;
-  }
-
-  .footer-column a,
-  .footer-column p {
-    width: fit-content;
-
-    max-width: 100%;
-
-    font-size: 12px;
-
-    line-height: 1.7;
-
-    overflow-wrap: anywhere;
-
-    word-break: break-word;
-  }
-
-
-  /* LICENSE */
-
-  .footer-license {
-    width: 100%;
-
-    padding-top: 20px;
-
-    display: flex;
-
-    flex-direction: column;
-
-    align-items: flex-start;
-
-    justify-content: flex-start;
-
-    gap: 7px;
-
-    font-size: 9px;
-
-    line-height: 1.6;
-  }
-
-  .footer-license > div {
-    width: 100%;
-
-    max-width: 100%;
-  }
-
-  .footer-license span {
-    display: block;
-
-    width: 100%;
-
-    max-width: 100%;
-
-    overflow-wrap: anywhere;
-
-    word-break: break-word;
-  }
-
-}
-
-
-/* =====================================================
-   SMALL MOBILE
-===================================================== */
-
-@media (max-width: 480px) {
-
-  .footer {
-    padding: 60px 20px 20px;
-  }
-
-  .footer-main {
-    gap: 35px;
-
-    padding-bottom: 40px;
-  }
-
-  .footer-logo {
-    font-size: 17px;
-
-    letter-spacing: 2.5px;
-  }
-
-  .footer-column a,
-  .footer-column p {
-    font-size: 12px;
-  }
-
-  .footer-license {
-    font-size: 8.5px;
-  }
-
+  .footer { padding: 65px 20px 22px; }
+  .footer-main { grid-template-columns: 1fr; gap: 36px; padding-bottom: 42px; }
+  .footer-logo { font-size: 28px; margin-bottom: 16px; }
+  .footer-brand p { font-size: 13px; }
+  .footer-column a, .footer-column p { font-size: 13px; }
+  .footer-license { flex-direction: column; align-items: flex-start; gap: 6px; font-size: 11px; }
 }

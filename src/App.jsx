@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from "react";
-
-import gsap from "gsap";
+   import { Marquee, Features, Ritual, Testimonials, Newsletter } from "./components/Extras";
+     import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import {
@@ -330,11 +330,15 @@ function App() {
               <Navbar />
 
               <Hero />
+   <Marquee />
 
               <About />
 
               <Collection />
-
+              <Features />
+              <Ritual />
+                 <Testimonials />
+   <Newsletter />
               <Footer />
 
             </main>

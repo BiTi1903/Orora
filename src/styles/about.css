@@ -1,7 +1,6 @@
 /* =====================================================
    ABOUT
 ===================================================== */
-
 .about {
   position: relative;
   width: 100%;
@@ -10,32 +9,38 @@
   display: flex;
   align-items: center;
   gap: 7%;
-  background:
-    linear-gradient(
-      135deg,
-      #fff5f8 0%,
-      #fce8ef 50%,
-      #f8dce6 100%
-    );
-  color: #241019;
+  background: linear-gradient(180deg, var(--bg) 0%, var(--blush) 100%);
+  color: var(--plum);
   overflow: hidden;
 }
 
-/* =====================================================
-   ABOUT IMAGE
-===================================================== */
+.about::before {
+  content: "";
+  position: absolute;
+  width: 460px; height: 460px;
+  top: -140px; right: -140px;
+  border-radius: 50%;
+  background: rgba(247, 184, 208, 0.3);
+  filter: blur(70px);
+  pointer-events: none;
+}
+
+/* ẢNH */
+.about-visual {
+  position: relative;
+  width: 52%;
+  flex-shrink: 0;
+}
 
 .about-image-wrapper {
   position: relative;
-  width: 57%;
+  width: 100%;
   height: 72vh;
   min-height: 500px;
-  flex-shrink: 0;
   overflow: hidden;
-  border-radius: 12px;
-  box-shadow:
-    0 25px 70px rgba(0, 0, 0, 0.25),
-    0 0 45px rgba(226, 93, 139, 0.10);
+  border-radius: 200px 200px 28px 28px;
+  border: 8px solid #fff;
+  box-shadow: var(--shadow-lift);
 }
 
 .about-image {
@@ -43,90 +48,118 @@
   height: 100%;
   display: block;
   object-fit: cover;
-  object-position: center;
-  will-change: transform;
+  transition: transform 1.4s var(--ease);
 }
 
-/* Soft pink light */
+.about-image-wrapper:hover .about-image { transform: scale(1.05); }
 
 .about-image-wrapper::after {
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(
-      135deg,
-      rgba(245, 119, 164, 0.14),
-      transparent 45%,
-      rgba(255, 95, 155, 0.10)
-    );
   pointer-events: none;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.22), transparent 45%, rgba(184, 68, 109, 0.1));
 }
 
-/* =====================================================
-   ABOUT CONTENT
-===================================================== */
-
-.about-content {
-  width: 36%;
-  flex-shrink: 0;
-  color: #241019;
+/* HUY HIỆU NỔI */
+.about-badge {
+  position: absolute;
+  right: -30px;
+  bottom: 50px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 24px 16px 18px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--line);
+  border-radius: 60px;
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(10px);
+  animation: badgeFloat 5s ease-in-out infinite alternate;
 }
+
+.about-badge b {
+  display: grid;
+  place-items: center;
+  width: 46px; height: 46px;
+  font-size: 22px;
+  color: #fff;
+  background: linear-gradient(135deg, #ee7fa2, var(--rose-deep));
+  border-radius: 50%;
+}
+
+.about-badge span {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+@keyframes badgeFloat { to { transform: translateY(-14px); } }
+
+/* NỘI DUNG */
+.about-content { position: relative; flex: 1; min-width: 0; }
 
 .about-label {
-  margin-bottom: 30px;
-  font-size: 11px;
-  letter-spacing: 5px;
-  color: #b44e72;
-  opacity: 0.9;
+  display: inline-block;
+  margin-bottom: 26px;
+  padding: 8px 18px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 4px;
+  color: var(--rose-deep);
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 40px;
 }
 
 .about-content h2 {
-  margin-bottom: 40px;
+  margin-bottom: 34px;
+  font-family: var(--font-display);
   font-size: clamp(50px, 6vw, 100px);
-  line-height: 0.9;
-  letter-spacing: -4px;
+  line-height: 0.95;
+  letter-spacing: -2px;
   font-weight: 600;
-  color: #241019;
+  color: var(--plum);
 }
 
-.about-content h2 span {
-  color: #c6537c;
-  font-weight: 300;
-}
+.about-content h2 span { color: var(--rose); font-style: italic; font-weight: 400; }
 
 .about-text {
-  max-width: 400px;
-  margin-bottom: 35px;
-  font-size: 15px;
-  line-height: 1.8;
-  color: rgba(50, 20, 32, 0.62);
+  max-width: 440px;
+  margin-bottom: 40px;
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.85;
+  color: var(--plum-soft);
 }
 
-.about-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 15px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(180, 78, 114, 0.6);
-  color: #b44e72;
-  font-size: 13px;
-  transition:
-    color 0.3s ease,
-    border-color 0.3s ease;
+/* SỐ LIỆU */
+.about-stats { display: flex; gap: 40px; flex-wrap: wrap; }
+
+.about-stats strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 50px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--rose-deep);
 }
 
-.about-link span {
-  display: inline-block;
-  transition:
-    transform 0.3s ease;
+.about-stats span { font-size: 13px; color: var(--plum-soft); }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .about { flex-direction: column; padding: 110px 5% 90px; gap: 60px; }
+  .about-visual { width: 100%; max-width: 460px; }
+  .about-image-wrapper { height: 58vh; min-height: 420px; }
+  .about-badge { right: -10px; }
+  .about-content { width: 100%; }
 }
 
-.about-link:hover {
-  color: #241019;
-  border-color: #241019;
-}
-
-.about-link:hover span {
-  transform: translate(4px, -4px);
+@media (max-width: 480px) {
+  .about { padding: 100px 20px 80px; }
+  .about-badge { right: 8px; bottom: 30px; padding: 12px 18px 12px 14px; }
+  .about-stats { gap: 26px; }
+  .about-stats strong { font-size: 40px; }
 }
