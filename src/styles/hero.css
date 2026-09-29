@@ -1,0 +1,287 @@
+
+
+.hero {
+
+  position: relative;
+
+  width: 100%;
+
+  height: 100vh;
+
+  min-height: 700px;
+
+  overflow: hidden;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  background:
+    url("/hero.jpg");
+
+  background-size: cover;
+
+  background-position: center center;
+
+  isolation: isolate;
+
+}
+
+
+
+
+/* =====================================================
+   HERO CONTENT
+===================================================== */
+
+.hero-content {
+
+  position: relative;
+
+  z-index: 2;
+
+  width: 100%;
+
+  padding: 0 30px;
+
+  text-align: center;
+
+}
+
+.small-text {
+
+  margin-bottom: 25px;
+
+  font-size: 12px;
+
+  letter-spacing: 8px;
+
+  color: #b44e72;
+
+  opacity: 0.9;
+
+}
+
+.hero-title {
+
+  margin: 0;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  overflow: hidden;
+
+  font-size: clamp(80px, 14vw, 200px);
+
+  line-height: 0.82;
+
+  letter-spacing: -8px;
+
+  font-weight: 700;
+
+  color: #241019;
+
+}
+
+.hero-title-line {
+
+  display: block;
+
+  overflow: hidden;
+
+}
+
+.hero h1 span {
+
+  font-weight: 300;
+
+  color: #c6537c;
+
+}
+
+
+/* =====================================================
+   DESCRIPTION
+===================================================== */
+
+.description {
+
+  margin-top: 35px;
+
+  font-size: 15px;
+
+  line-height: 1.5;
+
+  color: rgba(50, 20, 32, 0.65);
+
+}
+
+
+/* =====================================================
+   EXPLORE
+===================================================== */
+
+.explore {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 15px;
+
+  margin-top: 40px;
+
+  padding: 14px 26px;
+
+  border: 1px solid rgba(180, 78, 114, 0.55);
+
+  border-radius: 50px;
+
+  color: #fff;
+
+  font-size: 13px;
+
+  background: linear-gradient(
+    135deg,
+    #ee8eae,
+    #b44e72
+  );
+
+  box-shadow:
+    0 14px 34px rgba(180, 78, 114, 0.25);
+
+  transition:
+    background 0.4s ease,
+    color 0.4s ease,
+    transform 0.4s ease,
+    border-color 0.4s ease,
+    box-shadow 0.4s ease;
+
+}
+
+.explore span {
+
+  display: inline-block;
+
+  transition:
+    transform 0.4s ease;
+
+}
+
+.explore:hover {
+
+  background: #c6537c;
+
+  border-color: #c6537c;
+
+  color: #fff;
+
+  transform: translateY(-3px);
+
+  box-shadow:
+    0 20px 44px rgba(180, 78, 114, 0.35);
+
+}
+
+.explore:hover span {
+
+  transform: translate(4px, -4px);
+
+}
+
+
+/* =====================================================
+   SCROLL
+===================================================== */
+
+.scroll {
+
+  position: absolute;
+
+  left: 50%;
+
+  bottom: 30px;
+
+  transform: translateX(-50%);
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  gap: 10px;
+
+  z-index: 5;
+
+}
+
+.scroll span {
+
+  font-size: 9px;
+
+  letter-spacing: 4px;
+
+  color: #b44e72;
+
+  opacity: 0.8;
+
+}
+
+.scroll div {
+
+  width: 1px;
+
+  height: 45px;
+
+  background: #c6537c;
+
+  opacity: 0.65;
+
+  animation: scrollLine 2s infinite;
+
+}
+
+
+/* =====================================================
+   SCROLL ANIMATION
+===================================================== */
+
+@keyframes scrollLine {
+
+  0% {
+
+    transform: scaleY(0);
+
+    transform-origin: top;
+
+  }
+
+  50% {
+
+    transform: scaleY(1);
+
+    transform-origin: top;
+
+  }
+
+  51% {
+
+    transform-origin: bottom;
+
+  }
+
+  100% {
+
+    transform: scaleY(0);
+
+    transform-origin: bottom;
+
+  }
+
+}
