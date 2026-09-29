@@ -1,9 +1,10 @@
 import ProductCard from "./ProductCard";
-
+  import { Reveal } from "./Extras";
 function Collection() {
 
   const products = [
     {
+      
       image: "/gallery1.jpg",
       number: "01",
       name: "First Story",
@@ -11,6 +12,8 @@ function Collection() {
         "A beautiful piece created for your everyday moments.",
       price: "1.290.000đ",
       slug: "first-story",
+        slug: "first-story",
+  badge: "New",
     },
 
     {
@@ -21,6 +24,8 @@ function Collection() {
         "Simple, elegant and designed to stand out.",
       price: "1.490.000đ",
       slug: "second-story",
+        slug: "first-story",
+  badge: "New",
     },
 
     {
@@ -67,19 +72,19 @@ function Collection() {
 
       <div className="gallery">
 
-        {products.map((product) => (
-
-          <ProductCard
-            key={product.number}
-            image={product.image}
-            number={product.number}
-            name={product.name}
-            description={product.description}
-            price={product.price}
-            slug={product.slug}
-          />
-
-        ))}
+          {products.map((product, i) => (
+    <Reveal key={product.number} delay={i * 120}>
+      <ProductCard
+        image={product.image}
+        number={product.number}
+        name={product.name}
+        description={product.description}
+        price={product.price}
+        slug={product.slug}
+        badge={product.badge}
+      />
+    </Reveal>
+  ))}
 
       </div>
 

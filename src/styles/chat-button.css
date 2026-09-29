@@ -1,0 +1,52 @@
+.chat-button {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 58px;
+  padding: 0 17px;
+  border-radius: 40px;
+  color: #fff;
+  background: linear-gradient(135deg, #ee7fa2, var(--rose-deep));
+  box-shadow: 0 14px 34px rgba(184, 68, 109, 0.4);
+  overflow: hidden;
+  transition: gap 0.4s var(--ease), padding 0.4s var(--ease), transform 0.4s var(--ease);
+}
+
+/* vòng nhịp nhẹ phía sau nút */
+.chat-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid var(--rose);
+  animation: chatPulse 2.4s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes chatPulse {
+  0%   { transform: scale(1);    opacity: 0.7; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+
+.chat-icon { font-size: 24px; line-height: 1; }
+
+.chat-text {
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: max-width 0.5s var(--ease);
+}
+
+.chat-button:hover { gap: 10px; padding: 0 22px 0 17px; transform: translateY(-3px); }
+.chat-button:hover .chat-text { max-width: 180px; }
+
+@media (max-width: 600px) {
+  .chat-button { right: 16px; bottom: 16px; height: 52px; }
+}

@@ -208,14 +208,14 @@
 /* =====================================================
    FOOTER
 ===================================================== */
-.footer { padding: 70px 7% 40px; text-align: center; border-top: 1px solid var(--line); background: var(--bg); }
+/* .footer { padding: 70px 7% 40px; text-align: center; border-top: 1px solid var(--line); background: var(--bg); }
 .footer-logo { font-family: var(--font-display); font-size: 34px; font-weight: 600; letter-spacing: 2px; }
 .footer-logo span { color: var(--rose); font-style: italic; font-weight: 500; }
 .footer p { margin: 12px 0 26px; font-size: 14px; color: var(--plum-soft); }
 .footer-links { display: flex; justify-content: center; gap: 30px; margin-bottom: 34px; }
 .footer-links a { font-size: 13px; letter-spacing: 1px; color: var(--rose-deep); transition: color 0.3s; }
 .footer-links a:hover { color: var(--plum); }
-.footer small { font-size: 12px; color: var(--plum-soft); opacity: 0.7; }
+.footer small { font-size: 12px; color: var(--plum-soft); opacity: 0.7; } */
 
 /* =====================================================
    RESPONSIVE

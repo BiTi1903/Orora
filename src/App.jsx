@@ -2,13 +2,14 @@ import { useLayoutEffect, useRef } from "react";
    import { Marquee, Features, Ritual, Testimonials, Newsletter } from "./components/Extras";
      import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-
+import CursorSparkle from "./components/CursorSparkle"; 
 import {
   Routes,
   Route,
   useLocation,
 } from "react-router-dom";
-
+import BackToTop from "./components/BackToTop";
+import ChatButton from "./components/ChatButton";
 import ProductDetail from "./components/ProductDetail";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
@@ -16,7 +17,8 @@ import About from "./components/About";
 import Collection from "./components/Collection";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
-
+import Petals from "./components/Petals";
+import ScrollText from "./components/ScrollText";
 import "./App.css";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -335,12 +337,17 @@ function App() {
               <About />
 
               <Collection />
+              <ScrollText />
+
               <Features />
               <Ritual />
                  <Testimonials />
    <Newsletter />
               <Footer />
-
+<ChatButton />
+<BackToTop />
+<CursorSparkle />
+<Petals />
             </main>
           }
         />
@@ -360,7 +367,6 @@ function App() {
               <ProductDetail />
 
               <Footer />
-
             </main>
           }
         />

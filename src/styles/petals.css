@@ -1,0 +1,28 @@
+.petals {
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.petal {
+  position: absolute;
+  top: -40px;
+  border-radius: 150% 0 150% 0;
+  opacity: 0;
+  animation: petalFall linear infinite;
+  filter: drop-shadow(0 2px 4px rgba(184, 68, 109, 0.2));
+}
+
+.petal.tone-0 { background: linear-gradient(135deg, #ffd6e4, #f7b8d0); }
+.petal.tone-1 { background: linear-gradient(135deg, #f7b8d0, #ee7fa2); }
+.petal.tone-2 { background: linear-gradient(135deg, #fff, #fde2ec); }
+
+@keyframes petalFall {
+  0%   { opacity: 0;   transform: translate3d(0, 0, 0) rotate(0deg); }
+  10%  { opacity: 0.9; }
+  50%  { transform: translate3d(var(--sway), 55vh, 0) rotate(180deg); }
+  90%  { opacity: 0.9; }
+  100% { opacity: 0;   transform: translate3d(calc(var(--sway) * -1), 110vh, 0) rotate(360deg); }
+}

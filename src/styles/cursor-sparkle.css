@@ -1,0 +1,19 @@
+.cursor-sparkle {
+  position: fixed;
+  z-index: 2000;
+  pointer-events: none;
+  background: linear-gradient(135deg, #ffc3d6, var(--rose));
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  filter: drop-shadow(0 0 8px rgba(226, 103, 143, 0.9));
+  transform: translate(-50%, -50%);
+  animation: cursorFall 1.2s ease-out forwards;
+}
+
+.cursor-sparkle.deep {
+  background: linear-gradient(135deg, var(--rose), var(--rose-deep));
+}
+
+@keyframes cursorFall {
+  0%   { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.2) rotate(160deg); }
+}
