@@ -18,7 +18,7 @@ function Navbar() {
         </Link>
 
         <Link to="/#shop">
-          Shop
+          Sản phẩm
         </Link>
 
         <Link to="/#contact">

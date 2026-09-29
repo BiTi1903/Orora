@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import "../styles/scroll-text.css";
 
 const TEXT =
-  "Làn da đẹp không cần quá nhiều bước, chỉ cần đúng sản phẩm và một chút yêu thương dành cho chính mình.";
+  "TRÂN TRỌNG TỪNG CHÚT YÊU THƯƠNG DÀNH CHO CHÍNH MÌNH.";
 
 function ScrollText() {
   const secRef = useRef(null);

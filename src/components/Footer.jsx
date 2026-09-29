@@ -102,13 +102,13 @@ function Footer() {
 
         <div>
           <span>
-            © 2026 YOUR BRAND. All rights reserved.
+            © 2026 ORORA. All rights reserved.
           </span>
         </div>
 
         <div>
           <span>
-            Business Registration No. 0123456789
+            CTY TNHH ORORA No. 0123456789
           </span>
         </div>
 

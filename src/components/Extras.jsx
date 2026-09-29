@@ -80,7 +80,7 @@ export function Marquee() {
 
 /* ---------- Lý do chọn ---------- */
 const FEATURES = [
-  { icon: "❀", title: "Thành phần dịu nhẹ", text: "Công thức ưu tiên chiết xuất thiên nhiên, phù hợp cả làn da nhạy cảm." },
+  { icon: "❀", title: "Thành phần lành tính", text: "Công thức ưu tiên chiết xuất thiên nhiên, phù hợp cả làn da nhạy cảm." },
   { icon: "☾", title: "Cấp ẩm suốt ngày dài", text: "Thấm nhanh, không bết dính, để da mềm mượt từ sáng đến tối." },
   { icon: "✧", title: "Hương thơm thanh tao", text: "Mùi hương nhẹ nhàng như một khoảnh khắc thư giãn cho riêng bạn." },
   { icon: "♡", title: "Đóng gói tinh tế", text: "Thiết kế xinh xắn, làm quà tặng cho chính mình hay người thương đều đẹp." },
@@ -88,9 +88,9 @@ const FEATURES = [
 export function Features() {
   return (
     <section className="ex-section" id="why">
-      <Reveal><p className="ex-label">VÌ SAO CHỌN CHÚNG TÔI</p></Reveal>
+      <Reveal><p className="ex-label">ORORA</p></Reveal>
       <Reveal delay={80}>
-        <h2 className="ex-title">Chăm da là một <em>nghi thức</em> yêu bản thân</h2>
+        <h2 className="ex-title">Nâng cấp bản thân</h2>
       </Reveal>
       <div className="feature-grid">
         {FEATURES.map((f, i) => (

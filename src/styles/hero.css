@@ -1,287 +1,345 @@
-
-
+/* =====================================================
+   HERO
+===================================================== */
 .hero {
-
+  --px: 0;
+  --py: 0;
   position: relative;
-
   width: 100%;
-
   height: 100vh;
-
-  min-height: 700px;
-
+  min-height: 720px;
   overflow: hidden;
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
-
-  background:
-    url("/hero.jpg");
-
+  background: url("/hero.jpg");
   background-size: cover;
-
   background-position: center center;
-
   isolation: isolate;
-
 }
 
-
-
+/* đáy hero mờ dần vào nền trang */
+.hero::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 170px;
+  z-index: 1;
+  background: linear-gradient(to bottom, transparent, var(--bg));
+  pointer-events: none;
+}
 
 /* =====================================================
-   HERO CONTENT
+   CONTENT
 ===================================================== */
-
 .hero-content {
-
   position: relative;
-
   z-index: 2;
-
   width: 100%;
-
-  padding: 0 30px;
-
+  padding: 70px 30px 0;
   text-align: center;
+}
 
+/* quầng sáng nhẹ sau chữ để dễ đọc */
+.hero-content::before {
+  content: "";
+  position: absolute;
+  inset: -6% 12%;
+  z-index: -1;
+  background: radial-gradient(ellipse at center, rgba(255, 250, 252, 0.5), transparent 68%);
+  filter: blur(10px);
+  pointer-events: none;
 }
 
 .small-text {
-
-  margin-bottom: 25px;
-
+  display: inline-block;
+  margin-bottom: 22px;
+  padding: 8px 20px;
   font-size: 12px;
-
-  letter-spacing: 8px;
-
-  color: #b44e72;
-
-  opacity: 0.9;
-
+  font-weight: 500;
+  letter-spacing: 6px;
+  color: var(--rose-deep);
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 40px;
+  backdrop-filter: blur(10px);
+  animation: heroFade 1s var(--ease) both;
 }
 
+/* =====================================================
+   TITLE — từng chữ cái trượt lên
+===================================================== */
 .hero-title {
-
   margin: 0;
-
   display: flex;
-
   flex-direction: column;
-
   align-items: center;
-
-  overflow: hidden;
-
+  font-family: var(--font-display);
   font-size: clamp(80px, 14vw, 200px);
-
-  line-height: 0.82;
-
-  letter-spacing: -8px;
-
-  font-weight: 700;
-
-  color: #241019;
-
+  line-height: 0.9;
+  letter-spacing: -4px;
+  font-weight: 600;
+  color: var(--plum);
 }
 
 .hero-title-line {
-
-  display: block;
-
+  display: flex;
   overflow: hidden;
-
+  padding: 0 0.05em 0.14em;
 }
 
-.hero h1 span {
-
-  font-weight: 300;
-
-  color: #c6537c;
-
+.hero-letter {
+  display: inline-block;
+  animation: letterUp 1.1s var(--ease) both;
 }
 
+.hero-letter:last-child {
+  color: var(--rose);
+  font-style: italic;
+  font-weight: 400;
+}
+
+@keyframes letterUp {
+  from { transform: translateY(110%) rotate(8deg); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+@keyframes heroFade {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
 
 /* =====================================================
-   DESCRIPTION
+   DESCRIPTION + TỪ ĐỔI
 ===================================================== */
-
 .description {
-
-  margin-top: 35px;
-
-  font-size: 15px;
-
-  line-height: 1.5;
-
-  color: rgba(50, 20, 32, 0.65);
-
+  margin-top: 26px;
+  font-size: 17px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  color: var(--plum);
+  animation: heroFade 1s 0.9s var(--ease) both;
 }
 
+.hero-rotator {
+  margin-top: 8px;
+  font-family: var(--font-display);
+  font-size: 26px;
+  color: var(--plum-soft);
+  animation: heroFade 1s 1.05s var(--ease) both;
+}
+
+.rotator-box {
+  display: inline-block;
+  min-width: 120px;
+  height: 1.25em;
+  overflow: hidden;
+  vertical-align: bottom;
+  text-align: center;
+}
+
+.rotator-box em {
+  display: inline-block;
+  font-weight: 600;
+  color: var(--rose);
+  animation: wordIn 0.7s var(--ease) both;
+}
+
+@keyframes wordIn {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
 
 /* =====================================================
-   EXPLORE
+   BUTTONS
 ===================================================== */
+.hero-actions {
+  margin-top: 36px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  animation: heroFade 1s 1.2s var(--ease) both;
+}
+
+.explore,
+.explore-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 30px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  transition: transform 0.4s var(--ease), box-shadow 0.4s ease, background 0.4s ease, color 0.4s ease;
+}
 
 .explore {
-
-  display: inline-flex;
-
-  align-items: center;
-
-  gap: 15px;
-
-  margin-top: 40px;
-
-  padding: 14px 26px;
-
-  border: 1px solid rgba(180, 78, 114, 0.55);
-
-  border-radius: 50px;
-
   color: #fff;
-
-  font-size: 13px;
-
-  background: linear-gradient(
-    135deg,
-    #ee8eae,
-    #b44e72
-  );
-
-  box-shadow:
-    0 14px 34px rgba(180, 78, 114, 0.25);
-
-  transition:
-    background 0.4s ease,
-    color 0.4s ease,
-    transform 0.4s ease,
-    border-color 0.4s ease,
-    box-shadow 0.4s ease;
-
+  background: linear-gradient(135deg, #ee8eae, var(--rose-deep));
+  box-shadow: 0 14px 34px rgba(184, 68, 109, 0.32);
 }
 
-.explore span {
-
-  display: inline-block;
-
-  transition:
-    transform 0.4s ease;
-
-}
+.explore span { display: inline-block; transition: transform 0.4s ease; }
 
 .explore:hover {
-
-  background: #c6537c;
-
-  border-color: #c6537c;
-
-  color: #fff;
-
-  transform: translateY(-3px);
-
-  box-shadow:
-    0 20px 44px rgba(180, 78, 114, 0.35);
-
+  transform: translateY(-4px);
+  box-shadow: 0 22px 46px rgba(184, 68, 109, 0.42);
 }
 
-.explore:hover span {
+.explore:hover span { transform: translate(4px, -4px); }
 
-  transform: translate(4px, -4px);
-
+.explore-ghost {
+  color: var(--rose-deep);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--rose-soft);
+  backdrop-filter: blur(10px);
 }
 
+.explore-ghost:hover {
+  background: #fff;
+  transform: translateY(-4px);
+  box-shadow: 0 16px 34px rgba(184, 68, 109, 0.2);
+}
+
+/* =====================================================
+   THẺ KÍNH NỔI (parallax theo chuột)
+===================================================== */
+.hero-chip {
+  position: absolute;
+  z-index: 3;
+  translate: calc(var(--px) * var(--d) * 1px) calc(var(--py) * var(--d) * 1px);
+  transition: translate 0.35s ease-out;
+}
+
+.chip-in {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 22px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--plum);
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 40px;
+  box-shadow: 0 14px 36px rgba(184, 68, 109, 0.2);
+  backdrop-filter: blur(14px);
+  animation: chipFloat 6s ease-in-out infinite alternate;
+}
+
+.chip-in b { color: var(--rose); font-size: 16px; }
+
+.chip-1 { top: 27%; left: 9%; }
+.chip-2 { top: 40%; right: 8%; }
+.chip-3 { bottom: 23%; left: 14%; }
+
+.chip-2 .chip-in { animation-delay: -2s; }
+.chip-3 .chip-in { animation-delay: -4s; }
+
+@keyframes chipFloat {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-14px); }
+}
+
+/* =====================================================
+   VÒNG CHỮ XOAY
+===================================================== */
+.hero-ring {
+  position: absolute;
+  z-index: 3;
+  right: 12%;
+  bottom: 20%;
+  width: 130px;
+  height: 130px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 14px 36px rgba(184, 68, 109, 0.2);
+  backdrop-filter: blur(12px);
+  translate: calc(var(--px) * 30px) calc(var(--py) * 30px);
+  transition: translate 0.35s ease-out;
+}
+
+.hero-ring svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  animation: ringSpin 18s linear infinite;
+}
+
+.hero-ring text {
+  font-size: 8.5px;
+  font-weight: 500;
+  fill: var(--rose-deep);
+}
+
+.hero-ring b { font-size: 26px; color: var(--rose); }
+
+@keyframes ringSpin { to { transform: rotate(360deg); } }
 
 /* =====================================================
    SCROLL
 ===================================================== */
-
 .scroll {
-
   position: absolute;
-
   left: 50%;
-
   bottom: 30px;
-
   transform: translateX(-50%);
-
-  display: flex;
-
-  flex-direction: column;
-
-  align-items: center;
-
-  gap: 10px;
-
   z-index: 5;
-
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
-.scroll span {
-
-  font-size: 9px;
-
-  letter-spacing: 4px;
-
-  color: #b44e72;
-
-  opacity: 0.8;
-
-}
+.scroll span { font-size: 9px; letter-spacing: 4px; color: var(--rose-deep); opacity: 0.85; }
 
 .scroll div {
-
   width: 1px;
-
   height: 45px;
-
-  background: #c6537c;
-
-  opacity: 0.65;
-
+  background: var(--rose);
+  opacity: 0.7;
   animation: scrollLine 2s infinite;
-
 }
 
+@keyframes scrollLine {
+  0%   { transform: scaleY(0); transform-origin: top; }
+  50%  { transform: scaleY(1); transform-origin: top; }
+  51%  { transform-origin: bottom; }
+  100% { transform: scaleY(0); transform-origin: bottom; }
+}
 
 /* =====================================================
-   SCROLL ANIMATION
+   RESPONSIVE
 ===================================================== */
+@media (max-width: 1100px) {
+  .chip-1 { left: 4%; }
+  .chip-2 { right: 3%; }
+  .chip-3 { left: 6%; }
+  .hero-ring { right: 5%; }
+}
 
-@keyframes scrollLine {
+@media (max-width: 900px) {
+  .hero-chip { display: none; }
+  .hero-ring { width: 96px; height: 96px; right: 5%; bottom: 17%; }
+  .hero-ring b { font-size: 20px; }
+}
 
-  0% {
-
-    transform: scaleY(0);
-
-    transform-origin: top;
-
-  }
-
-  50% {
-
-    transform: scaleY(1);
-
-    transform-origin: top;
-
-  }
-
-  51% {
-
-    transform-origin: bottom;
-
-  }
-
-  100% {
-
-    transform: scaleY(0);
-
-    transform-origin: bottom;
-
-  }
-
+@media (max-width: 600px) {
+  .hero { min-height: 680px; }
+  .hero-title { letter-spacing: -2px; }
+  .small-text { font-size: 10px; letter-spacing: 4px; }
+  .description { font-size: 15px; }
+  .hero-rotator { font-size: 21px; }
+  .rotator-box { min-width: 100px; }
+  .hero-ring { display: none; }
+  .explore, .explore-ghost { padding: 13px 24px; }
 }

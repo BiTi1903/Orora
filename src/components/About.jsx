@@ -8,10 +8,10 @@ function About() {
         <Reveal className="about-image-wrapper">
           <img src="/about.jpg" className="about-image" alt="About" />
         </Reveal>
-        <div className="about-badge">
+        {/* <div className="about-badge">
           <b>✿</b>
           <span>Nhẹ nhàng<br />cho làn da</span>
-        </div>
+        </div> */}
       </div>
 
       <div className="about-content">
