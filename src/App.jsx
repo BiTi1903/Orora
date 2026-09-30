@@ -20,7 +20,6 @@ import ScrollToTop from "./components/ScrollToTop";
 import Petals from "./components/Petals";
 import ScrollText from "./components/ScrollText";
 import "./App.css";
-
 gsap.registerPlugin(ScrollTrigger);
 
 
