@@ -1,0 +1,63 @@
+import { useEffect, useState } from "react";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "../lib/firebase";
+import AdminLogin from "./AdminLogin";
+import Dashboard from "./Dashboard";
+import HomeAdmin from "./HomeAdmin";
+import ProductsAdmin from "./ProductsAdmin";
+import "../styles/admin.css";
+
+const TABS = [
+  ["dashboard", "Tổng quan"],
+  ["home", "Trang chủ"],
+  ["products", "Sản phẩm"],
+];
+
+export default function AdminApp() {
+  const [user, setUser] = useState(undefined);
+  const [tab, setTab] = useState("dashboard");
+
+  useEffect(() => {
+    if (!auth) {
+      setUser(null);
+      return;
+    }
+    return onAuthStateChanged(auth, setUser);
+  }, []);
+
+  if (user === undefined)
+    return (
+      <div className="admin-login">
+        <p className="admin-muted">Đang tải...</p>
+      </div>
+    );
+
+  if (!user) return <AdminLogin />;
+
+  return (
+    <div className="admin-shell">
+      <aside className="admin-side">
+        <div className="admin-brand">ORORA</div>
+        <nav className="admin-nav">
+          {TABS.map(([key, label]) => (
+            <button key={key} className={tab === key ? "active" : ""} onClick={() => setTab(key)}>
+              {label}
+            </button>
+          ))}
+        </nav>
+        <div className="admin-side-bottom">
+          <span className="admin-muted">{user.email}</span>
+          <span className="admin-muted" style={{ fontSize: 11 }}>UID: {user.uid}</span>
+          <a href="/" className="admin-btn">Xem website</a>
+          <button className="admin-btn" onClick={() => signOut(auth)}>Đăng xuất</button>
+        </div>
+      </aside>
+
+      <main className="admin-main">
+        {tab === "dashboard" && <Dashboard />}
+        {tab === "home" && <HomeAdmin />}
+        {tab === "products" && <ProductsAdmin />}
+      </main>
+    </div>
+  );
+}

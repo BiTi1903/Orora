@@ -1,3 +1,4 @@
+import AdminApp from "./admin/AdminApp";
 import { useLayoutEffect, useRef } from "react";
    import { Marquee, Features, Ritual, Testimonials, Newsletter } from "./components/Extras";
      import gsap from "gsap";
@@ -317,8 +318,7 @@ function App() {
       <ScrollToTop />
 
       <Routes>
-
-
+<Route path="/admin" element={<AdminApp />} />
         {/* =========================
             HOME
         ========================= */}
