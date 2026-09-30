@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<urlset
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+>
+
+  <url>
+    <loc>https://ororavn.com/</loc>
+  </url>
+
+  <url>
+    <loc>https://ororavn.com/product/first-story</loc>
+  </url>
+
+  <url>
+    <loc>https://ororavn.com/product/second-story</loc>
+  </url>
+
+  <url>
+    <loc>https://ororavn.com/product/third-story</loc>
+  </url>
+
+</urlset>
