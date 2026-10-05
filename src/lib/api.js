@@ -4,9 +4,7 @@ import {
   doc,
   getDoc,
   getDocs,
-  query,
   setDoc,
-  where,
 } from "firebase/firestore";
 
 import { db } from "./firebase";
@@ -31,50 +29,15 @@ export async function getProducts() {
     );
 }
 
-/* ---------- LẤY SẢN PHẨM THEO SLUG ---------- */
-
 export async function getProduct(slug) {
   if (!db || !slug) return null;
 
-  // Cách 1: thử document ID = slug
-  try {
-    const directSnap = await getDoc(doc(db, "products", slug));
+  const snap = await getDoc(doc(db, "products", slug));
 
-    if (directSnap.exists()) {
-      return {
-        id: directSnap.id,
-        ...directSnap.data(),
-      };
-    }
-  } catch (error) {
-    console.warn("Không thể lấy product theo document ID:", error);
-  }
-
-  // Cách 2: tìm theo field slug
-  try {
-    const q = query(
-      collection(db, "products"),
-      where("slug", "==", slug)
-    );
-
-    const snap = await getDocs(q);
-
-    if (!snap.empty) {
-      const item = snap.docs[0];
-
-      return {
-        id: item.id,
-        ...item.data(),
-      };
-    }
-  } catch (error) {
-    console.error("Không thể tìm product theo slug:", error);
-  }
-
-  return null;
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
-// tên khác của getProduct
+// tên khác của getProduct, để các file gọi bằng tên nào cũng chạy
 export const getProductBySlug = getProduct;
 
 export async function saveProduct(product) {
@@ -82,16 +45,11 @@ export async function saveProduct(product) {
 
   const id = product.id || product.slug;
 
-  if (!id) {
-    throw new Error("Sản phẩm cần có slug.");
-  }
+  if (!id) throw new Error("Sản phẩm cần có slug.");
 
   await setDoc(
     doc(db, "products", id),
-    {
-      ...product,
-      id,
-    },
+    { ...product, id },
     { merge: true }
   );
 
