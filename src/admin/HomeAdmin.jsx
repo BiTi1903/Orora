@@ -17,10 +17,16 @@ export default function HomeAdmin() {
   const [form, setForm] = useState(defaultHomeContent);
   const [message, setMessage] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [rotatorText, setRotatorText] = useState((defaultHomeContent.heroRotator || []).join("\n"));
 
   useEffect(() => {
     getHomeContent()
-      .then((v) => v && setForm({ ...defaultHomeContent, ...v }))
+      .then((v) => {
+        if (!v) return;
+        const merged = { ...defaultHomeContent, ...v };
+        setForm(merged);
+        setRotatorText((merged.heroRotator || []).join("\n"));
+      })
       .catch(() => {});
   }, []);
 
@@ -30,7 +36,9 @@ export default function HomeAdmin() {
     e.preventDefault();
     setBusy(true);
     try {
-      await saveHomeContent(form);
+      const heroRotator = rotatorText.split("\n").map((t) => t.trim()).filter(Boolean);
+      await saveHomeContent({ ...form, heroRotator });
+      setForm((f) => ({ ...f, heroRotator }));
       setMessage({ type: "success", text: "Đã lưu nội dung trang chủ." });
     } catch (err) {
       setMessage({ type: "error", text: explainError(err) });
@@ -64,8 +72,8 @@ export default function HomeAdmin() {
           <label>Các từ đổi liên tục (mỗi dòng một từ hoặc cụm)</label>
           <textarea
             rows="4"
-            value={(form.heroRotator || []).join("\n")}
-            onChange={(e) => setForm({ ...form, heroRotator: e.target.value.split("\n").filter(Boolean) })}
+            value={rotatorText}
+            onChange={(e) => setRotatorText(e.target.value)}
           />
         </div>
 

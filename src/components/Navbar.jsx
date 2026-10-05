@@ -8,7 +8,7 @@ function Navbar() {
         to="/"
         className="logo"
       >
-        ORORA<span>VN</span>
+        ORORA<span></span>
       </Link>
 
       <div className="nav-links">
