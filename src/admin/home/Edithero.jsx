@@ -15,6 +15,13 @@ const FIELDS = [
   "shopButtonLink",
   "heroImage",
   "heroRotator",
+
+  "heroChip1",
+  "heroChip2",
+  "heroChip3",
+
+  "heroRingText",
+  "heroScrollText",
 ];
 
 export default function EditHero() {
@@ -109,6 +116,36 @@ export default function EditHero() {
           }
         />
       </div>
+
+      <Field
+        label="Thẻ nổi 1"
+        name="heroChip1"
+        {...h}
+      />
+
+      <Field
+        label="Thẻ nổi 2"
+        name="heroChip2"
+        {...h}
+      />
+
+      <Field
+        label="Thẻ nổi 3"
+        name="heroChip3"
+        {...h}
+      />
+
+      <Field
+        label="Chữ vòng tròn"
+        name="heroRingText"
+        {...h}
+      />
+
+      <Field
+        label="Chữ cuộn"
+        name="heroScrollText"
+        {...h}
+      />
     </SectionShell>
   );
 }

@@ -12,9 +12,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: url("/hero.jpg");
+
+  background-image: url("/hero.jpg");
   background-size: cover;
   background-position: center center;
+  background-repeat: no-repeat;
+
   isolation: isolate;
 }
 
@@ -438,7 +441,13 @@
 }
 
 @media (max-width: 600px) {
-  .hero { min-height: 680px; }
+  .hero {
+    min-height: 680px;
+    background-image: url("/hero-mobile.jpg");
+    background-size: cover;
+    background-position: center center;
+  }
+
   .hero-title { letter-spacing: -2px; }
   .small-text { font-size: 10px; letter-spacing: 4px; }
   .description { font-size: 15px; }
