@@ -12,7 +12,7 @@
 
 /* chữ thương hiệu mờ phía sau */
 .footer::after {
-  content: "ORORAVN";
+  content: "ORORA";
   position: absolute;
   left: 50%;
   bottom: -0.22em;
