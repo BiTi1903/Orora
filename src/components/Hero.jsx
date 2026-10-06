@@ -4,8 +4,11 @@ import useHomeContent from "../hooks/useHomeContent";
 
 function Hero() {
   const c = useHomeContent();
+
   const words =
-    c.heroRotator && c.heroRotator.length ? c.heroRotator : ["dịu nhẹ"];
+    c.heroRotator && c.heroRotator.length
+      ? c.heroRotator
+      : ["dịu nhẹ"];
 
   const [i, setI] = useState(0);
 
@@ -53,26 +56,30 @@ function Hero() {
     >
       <Sparkles />
 
-      {/* thẻ kính nổi */}
+      {/* =========================
+          THẺ KÍNH NỔI
+      ========================= */}
       <div className="hero-chip chip-1" style={{ "--d": 40 }}>
         <span className="chip-in">
-          <b>✦</b> Dịu nhẹ cho da
+          <b>✦</b> {c.heroChip1 || "Dịu nhẹ cho da"}
         </span>
       </div>
 
       <div className="hero-chip chip-2" style={{ "--d": -55 }}>
         <span className="chip-in">
-          <b>♡</b> Thành phần thuần khiết
+          <b>♡</b> {c.heroChip2 || "Thành phần thuần khiết"}
         </span>
       </div>
 
       <div className="hero-chip chip-3" style={{ "--d": 30 }}>
         <span className="chip-in">
-          <b>✧</b> Cấp ẩm sâu
+          <b>✧</b> {c.heroChip3 || "Cấp ẩm sâu"}
         </span>
       </div>
 
-      {/* vòng chữ xoay - click để tới sản phẩm */}
+      {/* =========================
+          VÒNG CHỮ XOAY
+      ========================= */}
       <a
         href="#shop"
         className="hero-ring"
@@ -87,12 +94,8 @@ function Hero() {
           </defs>
 
           <text>
-            <textPath
-              href="#ringPath"
-              textLength="286"
-              lengthAdjust="spacing"
-            >
-              ORORA ✦ SẢN PHẨM ✦ ORORA ✦
+            <textPath href="#ringPath">
+              {c.heroRingText || "ORORA ✦ SẢN PHẨM ✦ ORORA ✦"}
             </textPath>
           </text>
         </svg>
@@ -100,6 +103,9 @@ function Hero() {
         <b>✿</b>
       </a>
 
+      {/* =========================
+          NỘI DUNG HERO
+      ========================= */}
       <div className="hero-content">
         <p className="small-text">{c.heroEyebrow}</p>
 
@@ -109,7 +115,9 @@ function Hero() {
               <span
                 key={n}
                 className="hero-letter"
-                style={{ "--letter-delay": `${0.2 + n * 0.09}s` }}
+                style={{
+                  "--letter-delay": `${0.2 + n * 0.09}s`,
+                }}
               >
                 {ch}
               </span>
@@ -127,6 +135,9 @@ function Hero() {
           mỗi ngày
         </p>
 
+        {/* =========================
+            BUTTONS
+        ========================= */}
         <div className="hero-actions">
           <a
             href={c.heroButtonLink || "#about"}
@@ -145,8 +156,11 @@ function Hero() {
         </div>
       </div>
 
+      {/* =========================
+          CUỘN
+      ========================= */}
       <div className="scroll">
-        <span>CUỘN</span>
+        <span>{c.heroScrollText || "CUỘN"}</span>
         <div />
       </div>
     </section>
