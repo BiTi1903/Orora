@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import "../styles/extras.css";
 import useHomeContent from "../hooks/useHomeContent";
+import { toCss } from "../lib/typography";
 
 /* ---------- Hook: hiện dần khi cuộn tới ---------- */
 
@@ -166,51 +167,92 @@ export function Marquee() {
   );
 }
 
-/* ---------- Lý do chọn ---------- */
+/* ---------- Lý do chọn / Nâng cấp bản thân ---------- */
 
-export function Features() {
-  const c = useHomeContent();
+export function Features({
+  preview = false,
+  previewData = null,
+  selectedElement = "",
+  onSelect,
+}) {
+  const live = useHomeContent();
+  const c = preview && previewData ? previewData : live || {};
 
-  const features =
-    c.features?.length
-      ? c.features
-      : [];
+  const features = c.features?.length ? c.features : [];
+  const fs = c.featuresStyles || {};
+  const css = (key) => toCss(fs[key], { responsive: !preview });
+
+  const select = (key) => (e) => {
+    if (!preview || !onSelect) return;
+    e.preventDefault();
+    e.stopPropagation();
+    onSelect(key);
+  };
+
+  const selectedClass = (key) =>
+    preview && selectedElement === key ? "builder-selected" : "";
+
+  const LabelWrap = preview ? "div" : Reveal;
+  const TitleWrap = preview ? "div" : Reveal;
 
   return (
     <section
-      className="ex-section"
-      id="why"
+      className={`ex-section ${preview ? "ex-section--preview" : ""}`}
+      id={preview ? undefined : "why"}
     >
-      <Reveal>
-        <p className="ex-label">
+      <LabelWrap>
+        <p
+          className={`ex-label ${selectedClass("featLabel")}`}
+          data-builder-key={preview ? "featLabel" : undefined}
+          onClick={select("featLabel")}
+          style={css("label")}
+        >
           {c.featuresLabel || "ORORA"}
         </p>
-      </Reveal>
+      </LabelWrap>
 
-      <Reveal delay={80}>
-        <h2 className="ex-title">
-          {c.featuresTitle ||
-            "Nâng cấp bản thân"}
+      <TitleWrap delay={80}>
+        <h2
+          className={`ex-title ${selectedClass("featTitle")}`}
+          data-builder-key={preview ? "featTitle" : undefined}
+          onClick={select("featTitle")}
+          style={css("title")}
+        >
+          {c.featuresTitle || "Nâng cấp bản thân"}
         </h2>
-      </Reveal>
+      </TitleWrap>
 
       <div className="feature-grid">
-        {features.map((f, i) => (
-          <Reveal
-            key={`${f.title}-${i}`}
-            delay={i * 110}
-          >
-            <article className="feature-card">
-              <div className="feature-icon">
+        {features.map((f, i) => {
+          const cardKey = `featCard-${i}`;
+          const card = (
+            <article
+              className={`feature-card ${selectedClass(cardKey)}`}
+              data-builder-key={preview ? cardKey : undefined}
+              onClick={select(cardKey)}
+            >
+              <div
+                className="feature-icon"
+                style={css("icon")}
+              >
                 {f.icon}
               </div>
 
-              <h3>{f.title}</h3>
-
-              <p>{f.text}</p>
+              <h3 style={css("cardTitle")}>{f.title}</h3>
+              <p style={css("cardText")}>{f.text}</p>
             </article>
-          </Reveal>
-        ))}
+          );
+
+          if (preview) {
+            return <div key={`${f.title}-${i}`}>{card}</div>;
+          }
+
+          return (
+            <Reveal key={`${f.title}-${i}`} delay={i * 110}>
+              {card}
+            </Reveal>
+          );
+        })}
       </div>
     </section>
   );
@@ -351,6 +393,7 @@ export function Testimonials({
   const c = preview && previewData ? previewData : live || {};
 
   const reviews = c.reviews?.length ? c.reviews : [];
+  const ts = c.testimonialsStyles || {};
 
   const select = (key) => (e) => {
     if (!preview || !onSelect) return;
@@ -364,6 +407,7 @@ export function Testimonials({
 
   const LabelWrap = preview ? "div" : Reveal;
   const TitleWrap = preview ? "div" : Reveal;
+  const css = (key) => toCss(ts[key], { responsive: !preview });
 
   return (
     <section
@@ -374,22 +418,27 @@ export function Testimonials({
           className={`ex-label ${selectedClass("revLabel")}`}
           data-builder-key={preview ? "revLabel" : undefined}
           onClick={select("revLabel")}
+          style={css("label")}
         >
           {c.testimonialsLabel || "CẢM NHẬN"}
         </p>
       </LabelWrap>
 
       <TitleWrap delay={80}>
-        <h2
-          className={`ex-title ${selectedClass("revTitle")}`}
-          data-builder-key={preview ? "revTitle" : undefined}
-          onClick={select("revTitle")}
-        >
-          {c.testimonialsTitle || "Được"}{" "}
+        <h2 className="ex-title">
+          <span
+            className={selectedClass("revTitle")}
+            data-builder-key={preview ? "revTitle" : undefined}
+            onClick={select("revTitle")}
+            style={css("title")}
+          >
+            {c.testimonialsTitle || "Được"}
+          </span>{" "}
           <em
             className={selectedClass("revHighlight")}
             data-builder-key={preview ? "revHighlight" : undefined}
             onClick={select("revHighlight")}
+            style={css("highlight")}
           >
             {c.testimonialsHighlight || "yêu thích"}
           </em>{" "}
@@ -397,6 +446,7 @@ export function Testimonials({
             className={selectedClass("revTitleEnd")}
             data-builder-key={preview ? "revTitleEnd" : undefined}
             onClick={select("revTitleEnd")}
+            style={css("titleEnd")}
           >
             {c.testimonialsTitleEnd || "bởi những cô nàng như bạn"}
           </span>
@@ -414,7 +464,7 @@ export function Testimonials({
             >
               <div className="stars">★★★★★</div>
 
-              <p>“{r.text}”</p>
+              <p style={css("reviewText")}>“{r.text}”</p>
 
               <div className="review-author">
                 {r.image ? (
@@ -428,7 +478,7 @@ export function Testimonials({
                     {(r.name || "?").charAt(0).toUpperCase()}
                   </span>
                 )}
-                <cite>{r.name}</cite>
+                <cite style={css("reviewName")}>{r.name}</cite>
               </div>
             </blockquote>
           );

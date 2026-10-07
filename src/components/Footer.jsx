@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getHomeContent } from "../lib/api";
+import { toCss } from "../lib/typography";
 
 function Footer({
   preview = false,
@@ -22,6 +23,8 @@ function Footer({
   }, [preview]);
 
   const data = preview && previewData ? previewData : home || {};
+  const fs = data.footerStyles || {};
+  const css = (key) => toCss(fs[key], { responsive: !preview });
 
   const footerLogo = data.footerLogo || "ORORA";
   const footerDescription =
@@ -68,13 +71,14 @@ function Footer({
           className={`${className || ""} ${selectedClass(sel)}`}
           data-builder-key={sel}
           onClick={select(sel)}
+          style={css("link")}
         >
           {children}
         </span>
       );
     }
     return (
-      <a href={href} className={className}>
+      <a href={href} className={className} style={css("link")}>
         {children}
       </a>
     );
@@ -92,6 +96,7 @@ function Footer({
             className={`footer-logo ${selectedClass("ftLogo")}`}
             data-builder-key={preview ? "ftLogo" : undefined}
             onClick={select("ftLogo")}
+            style={css("logo")}
           >
             {footerLogo}
           </div>
@@ -100,6 +105,7 @@ function Footer({
             className={selectedClass("ftDesc")}
             data-builder-key={preview ? "ftDesc" : undefined}
             onClick={select("ftDesc")}
+            style={css("description")}
           >
             {footerDescription}
           </p>
@@ -111,6 +117,7 @@ function Footer({
             className={selectedClass("ftInfoTitle")}
             data-builder-key={preview ? "ftInfoTitle" : undefined}
             onClick={select("ftInfoTitle")}
+            style={css("columnTitle")}
           >
             {infoTitle}
           </h3>
@@ -135,6 +142,7 @@ function Footer({
             className={selectedClass("ftContactTitle")}
             data-builder-key={preview ? "ftContactTitle" : undefined}
             onClick={select("ftContactTitle")}
+            style={css("columnTitle")}
           >
             {contactTitle}
           </h3>
@@ -145,6 +153,7 @@ function Footer({
                 className={selectedClass("ftPhone")}
                 data-builder-key="ftPhone"
                 onClick={select("ftPhone")}
+                style={css("link")}
               >
                 {phone}
               </span>
@@ -152,6 +161,7 @@ function Footer({
                 className={selectedClass("ftEmail")}
                 data-builder-key="ftEmail"
                 onClick={select("ftEmail")}
+                style={css("link")}
               >
                 {email}
               </span>
@@ -159,15 +169,20 @@ function Footer({
                 className={selectedClass("ftAddress")}
                 data-builder-key="ftAddress"
                 onClick={select("ftAddress")}
+                style={css("link")}
               >
                 {address}
               </p>
             </>
           ) : (
             <>
-              <a href={`tel:${phone}`}>{phone}</a>
-              <a href={`mailto:${email}`}>{email}</a>
-              <p>{address}</p>
+              <a href={`tel:${phone}`} style={css("link")}>
+                {phone}
+              </a>
+              <a href={`mailto:${email}`} style={css("link")}>
+                {email}
+              </a>
+              <p style={css("link")}>{address}</p>
             </>
           )}
         </div>
@@ -178,6 +193,7 @@ function Footer({
             className={selectedClass("ftSocialTitle")}
             data-builder-key={preview ? "ftSocialTitle" : undefined}
             onClick={select("ftSocialTitle")}
+            style={css("columnTitle")}
           >
             {socialTitle}
           </h3>
@@ -188,6 +204,7 @@ function Footer({
                 className={selectedClass("ftInstagram")}
                 data-builder-key="ftInstagram"
                 onClick={select("ftInstagram")}
+                style={css("link")}
               >
                 Instagram
               </span>
@@ -195,6 +212,7 @@ function Footer({
                 className={selectedClass("ftFacebook")}
                 data-builder-key="ftFacebook"
                 onClick={select("ftFacebook")}
+                style={css("link")}
               >
                 Facebook
               </span>
@@ -202,6 +220,7 @@ function Footer({
                 className={selectedClass("ftTikTok")}
                 data-builder-key="ftTikTok"
                 onClick={select("ftTikTok")}
+                style={css("link")}
               >
                 TikTok
               </span>
@@ -209,22 +228,43 @@ function Footer({
                 className={selectedClass("ftYouTube")}
                 data-builder-key="ftYouTube"
                 onClick={select("ftYouTube")}
+                style={css("link")}
               >
                 YouTube
               </span>
             </>
           ) : (
             <>
-              <a href={instagram} target="_blank" rel="noreferrer">
+              <a
+                href={instagram}
+                target="_blank"
+                rel="noreferrer"
+                style={css("link")}
+              >
                 Instagram
               </a>
-              <a href={facebook} target="_blank" rel="noreferrer">
+              <a
+                href={facebook}
+                target="_blank"
+                rel="noreferrer"
+                style={css("link")}
+              >
                 Facebook
               </a>
-              <a href={tikTok} target="_blank" rel="noreferrer">
+              <a
+                href={tikTok}
+                target="_blank"
+                rel="noreferrer"
+                style={css("link")}
+              >
                 TikTok
               </a>
-              <a href={youtube} target="_blank" rel="noreferrer">
+              <a
+                href={youtube}
+                target="_blank"
+                rel="noreferrer"
+                style={css("link")}
+              >
                 YouTube
               </a>
             </>
@@ -239,6 +279,7 @@ function Footer({
             className={selectedClass("ftCopyright")}
             data-builder-key={preview ? "ftCopyright" : undefined}
             onClick={select("ftCopyright")}
+            style={css("copyright")}
           >
             {copyright}
           </span>
@@ -249,6 +290,7 @@ function Footer({
             className={selectedClass("ftCompany")}
             data-builder-key={preview ? "ftCompany" : undefined}
             onClick={select("ftCompany")}
+            style={css("copyright")}
           >
             {companyNumber}
           </span>

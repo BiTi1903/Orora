@@ -4,7 +4,7 @@ import About from "../../components/About";
 import Hero from "../../components/Hero";
 import Collection from "../../components/Collection";
 import ProductDetail from "../../components/ProductDetail";
-import { Testimonials } from "../../components/Extras";
+import { Testimonials, Features } from "../../components/Extras";
 import Footer from "../../components/Footer";
 import { defaultProducts } from "../../data/content";
 import "./VisualBuilder.css";
@@ -337,6 +337,62 @@ const DEFAULT_PRODUCT_DETAIL = {
   },
 };
 
+const DEFAULT_FEATURES = {
+  featuresLabel: "ORORA",
+  featuresTitle: "Nâng cấp bản thân",
+  features: [
+    {
+      icon: "❀",
+      title: "Thành phần lành tính",
+      text: "Công thức ưu tiên chiết xuất thiên nhiên, phù hợp cả làn da nhạy cảm.",
+    },
+    {
+      icon: "☾",
+      title: "Cấp ẩm suốt ngày dài",
+      text: "Thấm nhanh, không bết dính, để da mềm mượt từ sáng đến tối.",
+    },
+    {
+      icon: "✧",
+      title: "Hương thơm thanh tao",
+      text: "Mùi hương nhẹ nhàng như một khoảnh khắc thư giãn cho riêng bạn.",
+    },
+    {
+      icon: "♡",
+      title: "Đóng gói tinh tế",
+      text: "Thiết kế xinh xắn, làm quà tặng cho chính mình hay người thương đều đẹp.",
+    },
+  ],
+  featuresStyles: {
+    label: {
+      fontSize: 12,
+      fontWeight: 500,
+      letterSpacing: 4,
+      color: "#b8446d",
+    },
+    title: {
+      fontFamily: '"Cormorant Garamond", serif',
+      fontSize: 48,
+      fontWeight: 600,
+      color: "#3a1526",
+    },
+    icon: {
+      fontSize: 24,
+      color: "#b8446d",
+    },
+    cardTitle: {
+      fontFamily: '"Cormorant Garamond", serif',
+      fontSize: 25,
+      fontWeight: 600,
+      color: "#3a1526",
+    },
+    cardText: {
+      fontSize: 14,
+      lineHeight: 1.75,
+      color: "#7d656f",
+    },
+  },
+};
+
 const DEFAULT_REVIEWS = {
   testimonialsLabel: "CẢM NHẬN",
   testimonialsTitle: "Được",
@@ -359,6 +415,44 @@ const DEFAULT_REVIEWS = {
       image: "",
     },
   ],
+  testimonialsStyles: {
+    label: {
+      fontSize: 12,
+      fontWeight: 500,
+      letterSpacing: 4,
+      color: "#b8446d",
+    },
+    title: {
+      fontFamily: '"Cormorant Garamond", serif',
+      fontSize: 48,
+      fontWeight: 600,
+      color: "#3a1526",
+    },
+    highlight: {
+      fontFamily: '"Cormorant Garamond", serif',
+      fontSize: 48,
+      fontWeight: 400,
+      color: "#e2678f",
+      fontStyle: "italic",
+    },
+    titleEnd: {
+      fontFamily: '"Cormorant Garamond", serif',
+      fontSize: 48,
+      fontWeight: 600,
+      color: "#3a1526",
+    },
+    reviewText: {
+      fontFamily: '"Cormorant Garamond", serif',
+      fontSize: 22,
+      lineHeight: 1.45,
+      color: "#3a1526",
+    },
+    reviewName: {
+      fontSize: 13,
+      letterSpacing: 1,
+      color: "#b8446d",
+    },
+  },
 };
 
 const DEFAULT_FOOTER = {
@@ -380,6 +474,35 @@ const DEFAULT_FOOTER = {
   footerYouTube: "#",
   footerCopyright: "© 2026 ORORA. All rights reserved.",
   footerCompanyNumber: "CTY TNHH ORORA No. 0123456789",
+  footerStyles: {
+    logo: {
+      fontFamily: '"Cormorant Garamond", serif',
+      fontSize: 34,
+      fontWeight: 600,
+      letterSpacing: 2,
+      color: "#3a1526",
+    },
+    description: {
+      fontSize: 14,
+      lineHeight: 1.7,
+      color: "#7d656f",
+    },
+    columnTitle: {
+      fontSize: 13,
+      fontWeight: 600,
+      letterSpacing: 1,
+      color: "#3a1526",
+    },
+    link: {
+      fontSize: 14,
+      lineHeight: 1.8,
+      color: "#7d656f",
+    },
+    copyright: {
+      fontSize: 12,
+      color: "#9a7a88",
+    },
+  },
 };
 
 const SECTION_LIST = [
@@ -411,9 +534,8 @@ const SECTION_LIST = [
   },
   {
     key: "features",
-    label: "Lý do chọn",
+    label: "Nâng cấp BT",
     icon: "✧",
-    disabled: true,
   },
   {
     key: "steps",
@@ -622,6 +744,25 @@ function createProductDetail(data = {}) {
   );
 }
 
+function createFeatures(data = {}) {
+  return {
+    featuresLabel: data.featuresLabel ?? DEFAULT_FEATURES.featuresLabel,
+    featuresTitle: data.featuresTitle ?? DEFAULT_FEATURES.featuresTitle,
+    features:
+      data.features?.length > 0
+        ? data.features.map((f) => ({
+            icon: f.icon || "✦",
+            title: f.title || "",
+            text: f.text || "",
+          }))
+        : DEFAULT_FEATURES.features.map((f) => ({ ...f })),
+    featuresStyles: mergeNestedStyle(
+      DEFAULT_FEATURES.featuresStyles,
+      data.featuresStyles
+    ),
+  };
+}
+
 function createReviews(data = {}) {
   return {
     testimonialsLabel:
@@ -640,16 +781,25 @@ function createReviews(data = {}) {
             image: r.image || "",
           }))
         : DEFAULT_REVIEWS.reviews.map((r) => ({ ...r })),
+    testimonialsStyles: mergeNestedStyle(
+      DEFAULT_REVIEWS.testimonialsStyles,
+      data.testimonialsStyles
+    ),
   };
 }
 
 function createFooter(data = {}) {
   const result = { ...DEFAULT_FOOTER };
   for (const key of Object.keys(DEFAULT_FOOTER)) {
+    if (key === "footerStyles") continue;
     if (data[key] != null && data[key] !== "") {
       result[key] = data[key];
     }
   }
+  result.footerStyles = mergeNestedStyle(
+    DEFAULT_FOOTER.footerStyles,
+    data.footerStyles
+  );
   return result;
 }
 
@@ -658,6 +808,7 @@ const SECTION_DEFAULT_SELECTED = {
   about: "title",
   collection: "colTitle",
   productdetail: "pdName",
+  features: "featTitle",
   reviews: "revTitle",
   footer: "ftLogo",
 };
@@ -668,6 +819,7 @@ export default function VisualBuilder() {
   const [hero, setHero] = useState(DEFAULT_HERO);
   const [collection, setCollection] = useState(DEFAULT_COLLECTION);
   const [productDetail, setProductDetail] = useState(DEFAULT_PRODUCT_DETAIL);
+  const [features, setFeatures] = useState(DEFAULT_FEATURES);
   const [reviews, setReviews] = useState(DEFAULT_REVIEWS);
   const [footer, setFooter] = useState(DEFAULT_FOOTER);
   const [activeSection, setActiveSection] = useState("about");
@@ -688,6 +840,7 @@ export default function VisualBuilder() {
         setHero(createHero(data || {}));
         setCollection(createCollection(data || {}));
         setProductDetail(createProductDetail(data || {}));
+        setFeatures(createFeatures(data || {}));
         setReviews(createReviews(data || {}));
         setFooter(createFooter(data || {}));
       })
@@ -699,6 +852,7 @@ export default function VisualBuilder() {
           setHero(DEFAULT_HERO);
           setCollection(DEFAULT_COLLECTION);
           setProductDetail(DEFAULT_PRODUCT_DETAIL);
+          setFeatures(DEFAULT_FEATURES);
           setReviews(DEFAULT_REVIEWS);
           setFooter(DEFAULT_FOOTER);
         }
@@ -727,6 +881,9 @@ export default function VisualBuilder() {
     if (activeSection === "productdetail") {
       return getProductDetailSelectedData(productDetail, selected);
     }
+    if (activeSection === "features") {
+      return getFeaturesSelectedData(features, selected);
+    }
     if (activeSection === "reviews") {
       return getReviewsSelectedData(reviews, selected);
     }
@@ -740,6 +897,7 @@ export default function VisualBuilder() {
     hero,
     collection,
     productDetail,
+    features,
     reviews,
     footer,
     selected,
@@ -748,6 +906,24 @@ export default function VisualBuilder() {
   const updateSelected = (patch) => {
     if (activeSection === "hero") {
       setHero((current) => ({ ...current, ...patch }));
+      return;
+    }
+
+    if (activeSection === "features") {
+      setFeatures((current) => {
+        if (patch._featuresList) {
+          return { ...current, features: patch._featuresList };
+        }
+        if (patch._featureIndex != null) {
+          const next = [...(current.features || [])];
+          next[patch._featureIndex] = {
+            ...next[patch._featureIndex],
+            ...patch._featureItem,
+          };
+          return { ...current, features: next };
+        }
+        return { ...current, ...patch };
+      });
       return;
     }
 
@@ -876,6 +1052,64 @@ export default function VisualBuilder() {
       return;
     }
 
+    if (activeSection === "features") {
+      let styleKey = FEATURES_TEXT_MAP[selected]?.styleKey;
+      const stylePatch = { ...patch };
+      if (selected?.startsWith("featCard-")) {
+        styleKey = stylePatch._styleKey || "cardTitle";
+        delete stylePatch._styleKey;
+      }
+      if (!styleKey) return;
+      setFeatures((current) => ({
+        ...current,
+        featuresStyles: {
+          ...(current.featuresStyles || {}),
+          [styleKey]: {
+            ...(current.featuresStyles?.[styleKey] || {}),
+            ...stylePatch,
+          },
+        },
+      }));
+      return;
+    }
+
+    if (activeSection === "reviews") {
+      let styleKey = REVIEWS_TEXT_MAP[selected]?.styleKey;
+      const stylePatch = { ...patch };
+      if (selected?.startsWith("revCard-")) {
+        styleKey = stylePatch._styleKey || "reviewText";
+        delete stylePatch._styleKey;
+      }
+      if (!styleKey) return;
+      setReviews((current) => ({
+        ...current,
+        testimonialsStyles: {
+          ...(current.testimonialsStyles || {}),
+          [styleKey]: {
+            ...(current.testimonialsStyles?.[styleKey] || {}),
+            ...stylePatch,
+          },
+        },
+      }));
+      return;
+    }
+
+    if (activeSection === "footer") {
+      const styleKey = FOOTER_FIELD_MAP[selected]?.styleKey;
+      if (!styleKey) return;
+      setFooter((current) => ({
+        ...current,
+        footerStyles: {
+          ...(current.footerStyles || {}),
+          [styleKey]: {
+            ...(current.footerStyles?.[styleKey] || {}),
+            ...patch,
+          },
+        },
+      }));
+      return;
+    }
+
     setAbout((current) => {
       if (
         selected === "section" ||
@@ -949,15 +1183,40 @@ export default function VisualBuilder() {
         // Product Detail page styles
         productDetailStyles: productDetail,
 
+        // Features / Nâng cấp bản thân
+        featuresLabel: features.featuresLabel,
+        featuresTitle: features.featuresTitle,
+        features: features.features,
+        featuresStyles: features.featuresStyles,
+
         // Reviews / Cảm nhận
         testimonialsLabel: reviews.testimonialsLabel,
         testimonialsTitle: reviews.testimonialsTitle,
         testimonialsHighlight: reviews.testimonialsHighlight,
         testimonialsTitleEnd: reviews.testimonialsTitleEnd,
         reviews: reviews.reviews,
+        testimonialsStyles: reviews.testimonialsStyles,
 
         // Footer
-        ...footer,
+        footerLogo: footer.footerLogo,
+        footerDescription: footer.footerDescription,
+        footerInfoTitle: footer.footerInfoTitle,
+        footerAboutText: footer.footerAboutText,
+        footerShopText: footer.footerShopText,
+        footerTermsText: footer.footerTermsText,
+        footerPrivacyText: footer.footerPrivacyText,
+        footerContactTitle: footer.footerContactTitle,
+        footerPhone: footer.footerPhone,
+        footerEmail: footer.footerEmail,
+        footerAddress: footer.footerAddress,
+        footerSocialTitle: footer.footerSocialTitle,
+        footerInstagram: footer.footerInstagram,
+        footerFacebook: footer.footerFacebook,
+        footerTikTok: footer.footerTikTok,
+        footerYouTube: footer.footerYouTube,
+        footerCopyright: footer.footerCopyright,
+        footerCompanyNumber: footer.footerCompanyNumber,
+        footerStyles: footer.footerStyles,
       };
 
       await saveHomeContent(payload);
@@ -1094,6 +1353,9 @@ export default function VisualBuilder() {
               activeSection === "productdetail"
                 ? "builder-preview--productdetail"
                 : "",
+              activeSection === "features"
+                ? "builder-preview--features"
+                : "",
               activeSection === "reviews"
                 ? "builder-preview--reviews"
                 : "",
@@ -1122,6 +1384,13 @@ export default function VisualBuilder() {
                 preview
                 previewStyles={productDetail}
                 previewProduct={defaultProducts[0]}
+                selectedElement={selected}
+                onSelect={setSelected}
+              />
+            ) : activeSection === "features" ? (
+              <Features
+                preview
+                previewData={features}
                 selectedElement={selected}
                 onSelect={setSelected}
               />
@@ -1159,6 +1428,7 @@ export default function VisualBuilder() {
             hero={hero}
             collection={collection}
             productDetail={productDetail}
+            features={features}
             reviews={reviews}
             footer={footer}
             onChange={updateSelected}
@@ -1358,11 +1628,54 @@ function getProductDetailSelectedData(productDetail, selected) {
   return { type: "pdStyle", data: productDetail, meta };
 }
 
+const FEATURES_TEXT_MAP = {
+  featLabel: {
+    key: "featuresLabel",
+    label: "Nhãn nhỏ",
+    styleKey: "label",
+  },
+  featTitle: {
+    key: "featuresTitle",
+    label: "Tiêu đề",
+    styleKey: "title",
+  },
+};
+
+function getFeaturesSelectedData(features, selected) {
+  if (selected?.startsWith("featCard-")) {
+    const index = Number(selected.replace("featCard-", ""));
+    return {
+      type: "featCard",
+      data: features,
+      meta: { index, label: `Ô ${index + 1}` },
+    };
+  }
+  const meta = FEATURES_TEXT_MAP[selected];
+  if (!meta) return { type: "featEmpty", data: null };
+  return { type: "featText", data: features, meta };
+}
+
 const REVIEWS_TEXT_MAP = {
-  revLabel: { key: "testimonialsLabel", label: "Nhãn nhỏ" },
-  revTitle: { key: "testimonialsTitle", label: "Tiêu đề (trước)" },
-  revHighlight: { key: "testimonialsHighlight", label: "Chữ nổi bật" },
-  revTitleEnd: { key: "testimonialsTitleEnd", label: "Tiêu đề (sau)" },
+  revLabel: {
+    key: "testimonialsLabel",
+    label: "Nhãn nhỏ",
+    styleKey: "label",
+  },
+  revTitle: {
+    key: "testimonialsTitle",
+    label: "Tiêu đề (trước)",
+    styleKey: "title",
+  },
+  revHighlight: {
+    key: "testimonialsHighlight",
+    label: "Chữ nổi bật",
+    styleKey: "highlight",
+  },
+  revTitleEnd: {
+    key: "testimonialsTitleEnd",
+    label: "Tiêu đề (sau)",
+    styleKey: "titleEnd",
+  },
 };
 
 function getReviewsSelectedData(reviews, selected) {
@@ -1380,24 +1693,86 @@ function getReviewsSelectedData(reviews, selected) {
 }
 
 const FOOTER_FIELD_MAP = {
-  ftLogo: { key: "footerLogo", label: "Tên thương hiệu" },
-  ftDesc: { key: "footerDescription", label: "Mô tả", rows: 3 },
-  ftInfoTitle: { key: "footerInfoTitle", label: "Tiêu đề Information" },
-  ftAbout: { key: "footerAboutText", label: "About us" },
-  ftShop: { key: "footerShopText", label: "Shop" },
-  ftTerms: { key: "footerTermsText", label: "Terms & Conditions" },
-  ftPrivacy: { key: "footerPrivacyText", label: "Privacy Policy" },
-  ftContactTitle: { key: "footerContactTitle", label: "Tiêu đề Contact" },
-  ftPhone: { key: "footerPhone", label: "Số điện thoại" },
-  ftEmail: { key: "footerEmail", label: "Email" },
-  ftAddress: { key: "footerAddress", label: "Địa chỉ", rows: 2 },
-  ftSocialTitle: { key: "footerSocialTitle", label: "Tiêu đề mạng xã hội" },
-  ftInstagram: { key: "footerInstagram", label: "Link Instagram" },
-  ftFacebook: { key: "footerFacebook", label: "Link Facebook" },
-  ftTikTok: { key: "footerTikTok", label: "Link TikTok" },
-  ftYouTube: { key: "footerYouTube", label: "Link YouTube" },
-  ftCopyright: { key: "footerCopyright", label: "Copyright" },
-  ftCompany: { key: "footerCompanyNumber", label: "Thông tin công ty" },
+  ftLogo: {
+    key: "footerLogo",
+    label: "Tên thương hiệu",
+    styleKey: "logo",
+  },
+  ftDesc: {
+    key: "footerDescription",
+    label: "Mô tả",
+    rows: 3,
+    styleKey: "description",
+  },
+  ftInfoTitle: {
+    key: "footerInfoTitle",
+    label: "Tiêu đề Information",
+    styleKey: "columnTitle",
+  },
+  ftAbout: {
+    key: "footerAboutText",
+    label: "About us",
+    styleKey: "link",
+  },
+  ftShop: { key: "footerShopText", label: "Shop", styleKey: "link" },
+  ftTerms: {
+    key: "footerTermsText",
+    label: "Terms & Conditions",
+    styleKey: "link",
+  },
+  ftPrivacy: {
+    key: "footerPrivacyText",
+    label: "Privacy Policy",
+    styleKey: "link",
+  },
+  ftContactTitle: {
+    key: "footerContactTitle",
+    label: "Tiêu đề Contact",
+    styleKey: "columnTitle",
+  },
+  ftPhone: { key: "footerPhone", label: "Số điện thoại", styleKey: "link" },
+  ftEmail: { key: "footerEmail", label: "Email", styleKey: "link" },
+  ftAddress: {
+    key: "footerAddress",
+    label: "Địa chỉ",
+    rows: 2,
+    styleKey: "link",
+  },
+  ftSocialTitle: {
+    key: "footerSocialTitle",
+    label: "Tiêu đề mạng xã hội",
+    styleKey: "columnTitle",
+  },
+  ftInstagram: {
+    key: "footerInstagram",
+    label: "Link Instagram",
+    styleKey: "link",
+  },
+  ftFacebook: {
+    key: "footerFacebook",
+    label: "Link Facebook",
+    styleKey: "link",
+  },
+  ftTikTok: {
+    key: "footerTikTok",
+    label: "Link TikTok",
+    styleKey: "link",
+  },
+  ftYouTube: {
+    key: "footerYouTube",
+    label: "Link YouTube",
+    styleKey: "link",
+  },
+  ftCopyright: {
+    key: "footerCopyright",
+    label: "Copyright",
+    styleKey: "copyright",
+  },
+  ftCompany: {
+    key: "footerCompanyNumber",
+    label: "Thông tin công ty",
+    styleKey: "copyright",
+  },
 };
 
 function getFooterSelectedData(footer, selected) {
@@ -1414,6 +1789,7 @@ function StylePanel({
   hero,
   collection,
   productDetail,
+  features,
   reviews,
   footer,
   onChange,
@@ -1446,6 +1822,8 @@ function StylePanel({
       ? data.meta?.label ||
         PRODUCT_DETAIL_FIELD_MAP[selected]?.label ||
         selected
+      : section === "features"
+      ? data.meta?.label || FEATURES_TEXT_MAP[selected]?.label || selected
       : section === "reviews"
       ? data.meta?.label || REVIEWS_TEXT_MAP[selected]?.label || selected
       : section === "footer"
@@ -1487,12 +1865,23 @@ function StylePanel({
         />
       )}
 
+      {section === "features" && (
+        <FeaturesSettings
+          selected={selected}
+          data={data}
+          features={features}
+          onChange={onChange}
+          onStyleChange={onStyleChange}
+        />
+      )}
+
       {section === "reviews" && (
         <ReviewsSettings
           selected={selected}
           data={data}
           reviews={reviews}
           onChange={onChange}
+          onStyleChange={onStyleChange}
         />
       )}
 
@@ -1502,6 +1891,7 @@ function StylePanel({
           data={data}
           footer={footer}
           onChange={onChange}
+          onStyleChange={onStyleChange}
         />
       )}
 
@@ -1539,7 +1929,231 @@ function StylePanel({
   );
 }
 
-function ReviewsSettings({ selected, data, reviews, onChange }) {
+function FeaturesSettings({
+  selected,
+  data,
+  features,
+  onChange,
+  onStyleChange,
+}) {
+  if (!data || data.type === "featEmpty") {
+    return (
+      <div className="builder-empty">
+        Chọn một thành phần trên preview.
+      </div>
+    );
+  }
+
+  const styles = features.featuresStyles || {};
+
+  if (data.type === "featText") {
+    const { key, label, styleKey } = data.meta;
+    return (
+      <>
+        <SettingGroup title={label}>
+          <div className="builder-field">
+            <label>Nội dung</label>
+            <input
+              value={features[key] || ""}
+              onChange={(e) => onChange({ [key]: e.target.value })}
+            />
+          </div>
+        </SettingGroup>
+        <StyleTypographyBlock
+          style={styles[styleKey] || {}}
+          onStyleChange={onStyleChange}
+        />
+      </>
+    );
+  }
+
+  if (data.type === "featCard") {
+    const index = data.meta.index;
+    const item = features.features?.[index] || {
+      icon: "✦",
+      title: "",
+      text: "",
+    };
+
+    return (
+      <>
+        <SettingGroup title={`Ô ${index + 1}`}>
+          <div className="builder-field">
+            <label>Icon (emoji / ký tự)</label>
+            <input
+              value={item.icon || ""}
+              onChange={(e) =>
+                onChange({
+                  _featureIndex: index,
+                  _featureItem: { icon: e.target.value },
+                })
+              }
+            />
+          </div>
+          <div className="builder-field">
+            <label>Tiêu đề ô</label>
+            <input
+              value={item.title || ""}
+              onChange={(e) =>
+                onChange({
+                  _featureIndex: index,
+                  _featureItem: { title: e.target.value },
+                })
+              }
+            />
+          </div>
+          <div className="builder-field">
+            <label>Nội dung</label>
+            <textarea
+              rows={3}
+              value={item.text || ""}
+              onChange={(e) =>
+                onChange({
+                  _featureIndex: index,
+                  _featureItem: { text: e.target.value },
+                })
+              }
+            />
+          </div>
+        </SettingGroup>
+
+        <StyleTypographyBlock
+          style={styles.cardTitle || {}}
+          onStyleChange={(patch) =>
+            onStyleChange({ ...patch, _styleKey: "cardTitle" })
+          }
+        />
+
+        <SettingGroup title="Typography — Nội dung ô">
+          <TypographyControls
+            style={{
+              fontFamily: toBareFontFamily(styles.cardText?.fontFamily),
+              fontSize: styles.cardText?.fontSize ?? "",
+              fontWeight: styles.cardText?.fontWeight ?? "",
+              color: styles.cardText?.color || "",
+              letterSpacing: styles.cardText?.letterSpacing ?? "",
+              lineHeight: styles.cardText?.lineHeight ?? "",
+              italic:
+                styles.cardText?.italic ||
+                styles.cardText?.fontStyle === "italic",
+              textAlign: styles.cardText?.textAlign || "left",
+              marginTop: styles.cardText?.marginTop ?? 0,
+              marginBottom: styles.cardText?.marginBottom ?? 0,
+            }}
+            onChange={(patch) => {
+              const next = { ...patch, _styleKey: "cardText" };
+              if ("fontFamily" in patch) {
+                next.fontFamily = toFullFontFamily(patch.fontFamily);
+              }
+              if ("italic" in patch) {
+                next.fontStyle = patch.italic ? "italic" : "normal";
+              }
+              onStyleChange(next);
+            }}
+          />
+        </SettingGroup>
+
+        <SettingGroup title="Typography — Icon">
+          <TypographyControls
+            style={{
+              fontFamily: toBareFontFamily(styles.icon?.fontFamily),
+              fontSize: styles.icon?.fontSize ?? "",
+              fontWeight: styles.icon?.fontWeight ?? "",
+              color: styles.icon?.color || "",
+              letterSpacing: styles.icon?.letterSpacing ?? "",
+              lineHeight: styles.icon?.lineHeight ?? "",
+              italic: false,
+              textAlign: "center",
+              marginTop: 0,
+              marginBottom: 0,
+            }}
+            onChange={(patch) => {
+              const next = { ...patch, _styleKey: "icon" };
+              if ("fontFamily" in patch) {
+                next.fontFamily = toFullFontFamily(patch.fontFamily);
+              }
+              onStyleChange(next);
+            }}
+          />
+        </SettingGroup>
+
+        <SettingGroup title="Danh sách">
+          <button
+            type="button"
+            className="admin-btn"
+            style={{ width: "100%", marginBottom: 8 }}
+            onClick={() =>
+              onChange({
+                _featuresList: [
+                  ...(features.features || []),
+                  { icon: "✦", title: "", text: "" },
+                ],
+              })
+            }
+          >
+            + Thêm ô
+          </button>
+          {(features.features || []).length > 1 && (
+            <button
+              type="button"
+              className="admin-btn danger"
+              style={{ width: "100%" }}
+              onClick={() => {
+                const next = (features.features || []).filter(
+                  (_, i) => i !== index
+                );
+                onChange({ _featuresList: next });
+              }}
+            >
+              Xóa ô này
+            </button>
+          )}
+        </SettingGroup>
+      </>
+    );
+  }
+
+  return null;
+}
+
+function StyleTypographyBlock({ style = {}, onStyleChange }) {
+  return (
+    <SettingGroup title="Typography">
+      <TypographyControls
+        style={{
+          fontFamily: toBareFontFamily(style.fontFamily),
+          fontSize: style.fontSize ?? "",
+          fontWeight: style.fontWeight ?? "",
+          color: style.color || "",
+          letterSpacing: style.letterSpacing ?? "",
+          lineHeight: style.lineHeight ?? "",
+          italic: style.italic || style.fontStyle === "italic",
+          textAlign: style.textAlign || "left",
+          marginTop: style.marginTop ?? 0,
+          marginBottom: style.marginBottom ?? 0,
+        }}
+        onChange={(patch) => {
+          const next = { ...patch };
+          if ("fontFamily" in patch) {
+            next.fontFamily = toFullFontFamily(patch.fontFamily);
+          }
+          if ("italic" in patch) {
+            next.fontStyle = patch.italic ? "italic" : "normal";
+          }
+          onStyleChange(next);
+        }}
+      />
+    </SettingGroup>
+  );
+}
+
+function ReviewsSettings({
+  selected,
+  data,
+  reviews,
+  onChange,
+  onStyleChange,
+}) {
   if (!data || data.type === "revEmpty") {
     return (
       <div className="builder-empty">
@@ -1548,18 +2162,26 @@ function ReviewsSettings({ selected, data, reviews, onChange }) {
     );
   }
 
+  const styles = reviews.testimonialsStyles || {};
+
   if (data.type === "revText") {
-    const { key, label } = data.meta;
+    const { key, label, styleKey } = data.meta;
     return (
-      <SettingGroup title={label}>
-        <div className="builder-field">
-          <label>Nội dung</label>
-          <input
-            value={reviews[key] || ""}
-            onChange={(e) => onChange({ [key]: e.target.value })}
-          />
-        </div>
-      </SettingGroup>
+      <>
+        <SettingGroup title={label}>
+          <div className="builder-field">
+            <label>Nội dung</label>
+            <input
+              value={reviews[key] || ""}
+              onChange={(e) => onChange({ [key]: e.target.value })}
+            />
+          </div>
+        </SettingGroup>
+        <StyleTypographyBlock
+          style={styles[styleKey] || {}}
+          onStyleChange={onStyleChange}
+        />
+      </>
     );
   }
 
@@ -1634,6 +2256,42 @@ function ReviewsSettings({ selected, data, reviews, onChange }) {
           )}
         </SettingGroup>
 
+        <StyleTypographyBlock
+          style={styles.reviewText || {}}
+          onStyleChange={(patch) =>
+            onStyleChange({ ...patch, _styleKey: "reviewText" })
+          }
+        />
+
+        <SettingGroup title="Typography — Tên khách">
+          <TypographyControls
+            style={{
+              fontFamily: toBareFontFamily(styles.reviewName?.fontFamily),
+              fontSize: styles.reviewName?.fontSize ?? "",
+              fontWeight: styles.reviewName?.fontWeight ?? "",
+              color: styles.reviewName?.color || "",
+              letterSpacing: styles.reviewName?.letterSpacing ?? "",
+              lineHeight: styles.reviewName?.lineHeight ?? "",
+              italic:
+                styles.reviewName?.italic ||
+                styles.reviewName?.fontStyle === "italic",
+              textAlign: styles.reviewName?.textAlign || "left",
+              marginTop: styles.reviewName?.marginTop ?? 0,
+              marginBottom: styles.reviewName?.marginBottom ?? 0,
+            }}
+            onChange={(patch) => {
+              const next = { ...patch, _styleKey: "reviewName" };
+              if ("fontFamily" in patch) {
+                next.fontFamily = toFullFontFamily(patch.fontFamily);
+              }
+              if ("italic" in patch) {
+                next.fontStyle = patch.italic ? "italic" : "normal";
+              }
+              onStyleChange(next);
+            }}
+          />
+        </SettingGroup>
+
         <SettingGroup title="Danh sách">
           <button
             type="button"
@@ -1674,7 +2332,7 @@ function ReviewsSettings({ selected, data, reviews, onChange }) {
   return null;
 }
 
-function FooterSettings({ data, footer, onChange }) {
+function FooterSettings({ data, footer, onChange, onStyleChange }) {
   if (!data || data.type === "ftEmpty") {
     return (
       <div className="builder-empty">
@@ -1683,26 +2341,30 @@ function FooterSettings({ data, footer, onChange }) {
     );
   }
 
-  const { key, label, rows } = data.meta;
+  const { key, label, rows, styleKey } = data.meta;
+  const style = footer.footerStyles?.[styleKey] || {};
 
   return (
-    <SettingGroup title={label}>
-      <div className="builder-field">
-        <label>Nội dung</label>
-        {rows ? (
-          <textarea
-            rows={rows}
-            value={footer[key] || ""}
-            onChange={(e) => onChange({ [key]: e.target.value })}
-          />
-        ) : (
-          <input
-            value={footer[key] || ""}
-            onChange={(e) => onChange({ [key]: e.target.value })}
-          />
-        )}
-      </div>
-    </SettingGroup>
+    <>
+      <SettingGroup title={label}>
+        <div className="builder-field">
+          <label>Nội dung</label>
+          {rows ? (
+            <textarea
+              rows={rows}
+              value={footer[key] || ""}
+              onChange={(e) => onChange({ [key]: e.target.value })}
+            />
+          ) : (
+            <input
+              value={footer[key] || ""}
+              onChange={(e) => onChange({ [key]: e.target.value })}
+            />
+          )}
+        </div>
+      </SettingGroup>
+      <StyleTypographyBlock style={style} onStyleChange={onStyleChange} />
+    </>
   );
 }
 

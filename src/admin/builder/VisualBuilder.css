@@ -321,6 +321,21 @@
     box-shadow 0.2s ease;
 }
 
+.builder-preview--features {
+  padding: 24px 20px 40px;
+}
+
+.builder-preview--features > .ex-section {
+  margin: 0;
+  padding: 20px 0 0;
+}
+
+.builder-preview--features .feature-grid {
+  margin-top: 36px;
+  transform: scale(0.92);
+  transform-origin: top center;
+}
+
 .builder-preview--reviews {
   padding: 24px 20px 40px;
 }

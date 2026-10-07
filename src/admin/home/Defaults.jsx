@@ -158,14 +158,17 @@ aboutStyles: {
     {
       name: "Khách hàng A",
       text: "Da mình mềm và dịu hơn hẳn sau vài tuần dùng. Mùi hương rất dễ chịu.",
+      image: "",
     },
     {
       name: "Khách hàng B",
       text: "Bao bì xinh, dùng lên không bết dính. Mình đã mua tặng bạn thân.",
+      image: "",
     },
     {
       name: "Khách hàng C",
       text: "Sản phẩm nhẹ nhàng, phù hợp da nhạy cảm như mình.",
+      image: "",
     },
   ],
 
