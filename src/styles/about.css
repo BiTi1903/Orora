@@ -163,3 +163,6 @@
   .about-stats { gap: 26px; }
   .about-stats strong { font-size: 40px; }
 }
+.about-image-wrapper.builder-preview-image {
+  height: auto;
+}

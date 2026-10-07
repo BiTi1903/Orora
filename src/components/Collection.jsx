@@ -1,49 +1,43 @@
-import { useEffect, useState } from "react";
 import ProductCard from "./ProductCard";
 import { Reveal } from "./Extras";
 import useProducts from "../hooks/useProducts";
-import { getHomeContent } from "../lib/api";
+import useHomeContent from "../hooks/useHomeContent";
+import { toCss } from "../lib/typography";
 
 function Collection() {
   const { products, loading } = useProducts();
-  const [home, setHome] = useState(null);
 
-  useEffect(() => {
-    getHomeContent()
-      .then((data) => {
-        if (data) {
-          setHome(data);
-        }
-      })
-      .catch((err) => {
-        console.error("Không thể tải nội dung Collection:", err);
-      });
-  }, []);
+  /* đọc trực tiếp từ Firestore, admin lưu là trang tự cập nhật */
+  const home = useHomeContent();
 
-  const collectionLabel =
-    home?.collectionLabel || "COLLECTION";
+  const collectionLabel = home.collectionLabel || "COLLECTION";
+  const collectionTitle = home.collectionTitle || "Explore";
+  const collectionHighlight = home.collectionHighlight || "the details.";
 
-  const collectionTitle =
-    home?.collectionTitle || "Explore";
-
-  const collectionHighlight =
-    home?.collectionHighlight || "the details.";
+  const headStyles = home.collectionStyles || {};
+  const cardStyles = home.productCardStyles || {};
 
   return (
     <section className="collection" id="shop">
 
       {/* HEADER */}
       <div className="collection-header">
-        <p className="collection-label">
+        <p className="collection-label" style={toCss(headStyles.label)}>
           {collectionLabel}
         </p>
 
         <h2>
-          <span className="collection-title-line">
+          <span
+            className="collection-title-line"
+            style={toCss(headStyles.title)}
+          >
             {collectionTitle}
           </span>
 
-          <span className="collection-title-line">
+          <span
+            className="collection-title-line"
+            style={toCss(headStyles.highlight)}
+          >
             {collectionHighlight}
           </span>
         </h2>
@@ -60,6 +54,7 @@ function Collection() {
               description={product.description}
               price={product.price}
               slug={product.slug || product.id}
+              styles={cardStyles}
             />
           </Reveal>
         ))}

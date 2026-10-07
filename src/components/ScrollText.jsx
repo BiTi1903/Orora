@@ -1,12 +1,33 @@
 import { useEffect, useRef } from "react";
+import useHomeContent from "../hooks/useHomeContent";
+import { splitColor, toCss } from "../lib/typography";
 import "../styles/scroll-text.css";
 
-const TEXT =
+const DEFAULT_LABEL = "✦ TRIẾT LÝ CỦA CHÚNG TÔI ✦";
+const DEFAULT_TEXT =
   "TRÂN TRỌNG TỪNG CHÚT YÊU THƯƠNG DÀNH CHO CHÍNH MÌNH.";
 
 function ScrollText() {
   const secRef = useRef(null);
-  const words = TEXT.split(" ");
+  const c = useHomeContent();
+
+  const label = c.philosophyLabel || DEFAULT_LABEL;
+  const text = c.philosophyText || DEFAULT_TEXT;
+
+  const parsed = parseInt(c.philosophyAccentCount, 10);
+  const accentCount = Number.isFinite(parsed) ? Math.max(parsed, 0) : 4;
+
+  const words = text.split(/\s+/).filter(Boolean);
+
+  /* kiểu chữ do admin chỉnh (màu đi qua biến CSS vì chữ đổi màu theo cuộn) */
+  const st = c.philosophyStyles || {};
+  const { color: onColor, rest: bodyRest } = splitColor(st.text);
+  const accent = toCss(st.accent);
+
+  const bodyStyle = { ...bodyRest };
+  if (onColor) bodyStyle["--st-on"] = onColor;
+  if (accent.color) bodyStyle["--st-accent"] = accent.color;
+  if (accent.fontStyle) bodyStyle["--st-accent-style"] = accent.fontStyle;
 
   useEffect(() => {
     const sec = secRef.current;
@@ -40,14 +61,22 @@ function ScrollText() {
       window.removeEventListener("resize", onScroll);
       cancelAnimationFrame(raf);
     };
-  }, []);
+    /* chạy lại khi nội dung đổi để danh sách chữ luôn đúng */
+  }, [text, accentCount]);
 
   return (
     <section className="scroll-text" ref={secRef}>
-      <p className="scroll-text-label">✦ TRIẾT LÝ CỦA CHÚNG TÔI ✦</p>
-      <p className="scroll-text-body">
+      <p className="scroll-text-label" style={toCss(st.label)}>
+        {label}
+      </p>
+      <p className="scroll-text-body" style={bodyStyle}>
         {words.map((w, i) => (
-          <span key={i} className="st-word">{w} </span>
+          <span
+            key={i}
+            className={`st-word${i >= words.length - accentCount ? " accent" : ""}`}
+          >
+            {w}{" "}
+          </span>
         ))}
       </p>
     </section>

@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { Link } from "react-router-dom";
+import { splitColor, toCss } from "../lib/typography";
 
 function ProductCard({
   image,
@@ -8,8 +9,15 @@ function ProductCard({
   description,
   price,
   slug,
+  styles = {},
 }) {
   const frameRef = useRef(null);
+
+  /* màu tên đi qua biến CSS để giữ hiệu ứng đổi màu khi rê chuột */
+  const { color: nameColor, rest: nameRest } = splitColor(styles.name);
+  const nameStyle = nameColor
+    ? { ...nameRest, "--pc-name": nameColor }
+    : nameRest;
 
   const handleMove = (e) => {
     const el = frameRef.current;
@@ -49,19 +57,28 @@ function ProductCard({
       </div>
 
       <div className="gallery-info">
-        <span>{number}</span>
-        <p>{name}</p>
+        <span style={toCss(styles.number)}>{number}</span>
+        <p style={nameStyle}>{name}</p>
       </div>
 
       <div className="product-details">
 
-        <p className="product-description">{description}</p>
+        <p
+          className="product-description"
+          style={toCss(styles.description)}
+        >
+          {description}
+        </p>
 
         <div className="product-bottom">
 
-          <span className="product-price">{price}</span>
+          <span className="product-price" style={toCss(styles.price)}>{price}</span>
 
-          <Link to={`/product/${slug}`} className="buy-button">
+          <Link
+            to={`/product/${slug}`}
+            className="buy-button"
+            style={toCss(styles.button)}
+          >
             Xem chi tiết
             <span>↗</span>
           </Link>

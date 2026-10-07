@@ -1,19 +1,75 @@
-export function SectionShell({ title, hint, message, busy, loading, onSubmit, children }) {
+export function SectionShell({
+  title,
+  hint,
+  message,
+  busy,
+  loading,
+  onSubmit,
+  children,
+}) {
   return (
     <form className="admin-card admin-form" onSubmit={onSubmit}>
-      <div>
-        <h2>{title}</h2>
-        {hint && <p className="admin-muted">{hint}</p>}
+      {/* HEADER + NÚT LƯU */}
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 20,
+          margin: "-24px -24px 24px",
+          padding: "18px 24px",
+          background: "rgba(255, 250, 253, 0.94)",
+          backdropFilter: "blur(14px)",
+          WebkitBackdropFilter: "blur(14px)",
+          borderBottom: "1px solid #ead9e0",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 20,
+        }}
+      >
+        <div>
+          <h2 style={{ margin: 0 }}>{title}</h2>
+
+          {hint && (
+            <p
+              className="admin-muted"
+              style={{ margin: "5px 0 0" }}
+            >
+              {hint}
+            </p>
+          )}
+        </div>
+
+        {!loading && (
+          <button
+            type="submit"
+            className="admin-btn primary"
+            disabled={busy}
+            style={{
+              flexShrink: 0,
+              minWidth: 120,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {busy ? "Đang lưu..." : "💾 Lưu"}
+          </button>
+        )}
       </div>
 
-      {loading ? <p className="admin-muted">Đang tải dữ liệu...</p> : children}
+      {/* NỘI DUNG */}
+      {loading ? (
+        <p className="admin-muted">
+          Đang tải dữ liệu...
+        </p>
+      ) : (
+        children
+      )}
 
-      {message && <div className={`admin-${message.type}`}>{message.text}</div>}
-
-      {!loading && (
-        <button className="admin-btn primary" disabled={busy}>
-          {busy ? "Đang lưu..." : "Lưu phần này"}
-        </button>
+      {/* THÔNG BÁO */}
+      {message && (
+        <div className={`admin-${message.type}`}>
+          {message.text}
+        </div>
       )}
     </form>
   );

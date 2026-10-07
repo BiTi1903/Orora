@@ -42,13 +42,17 @@
 
 .st-word {
   color: rgba(58, 21, 38, 0.15);
+  color: color-mix(in srgb, var(--st-on, var(--plum)) 15%, transparent);
   transition: color 0.5s ease;
 }
 
-.st-word.on { color: var(--plum); }
+.st-word.on { color: var(--st-on, var(--plum)); }
 
-/* các từ cuối lên màu hồng cho điểm nhấn */
-.st-word.on:nth-last-child(-n + 4) { color: var(--rose); font-style: italic; }
+/* các từ cuối lên màu hồng cho điểm nhấn (số chữ do admin chọn) */
+.st-word.accent.on {
+  color: var(--st-accent, var(--rose));
+  font-style: var(--st-accent-style, italic);
+}
 
 @media (max-width: 600px) {
   .scroll-text { padding: 100px 20px; }

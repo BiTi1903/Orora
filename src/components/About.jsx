@@ -2,95 +2,630 @@ import { useEffect, useState } from "react";
 import { Reveal, CountUp } from "./Extras";
 import { getHomeContent } from "../lib/api";
 
-function About() {
+const GOOGLE_FONTS = [
+  "Mulish",
+  "Noto Sans",
+  "Noto Serif",
+  "Playfair Display",
+  "Cormorant Garamond",
+  "Montserrat",
+  "Poppins",
+  "Inter",
+  "DM Sans",
+  "Lora",
+  "Roboto",
+];
+
+function loadGoogleFonts() {
+  const id = "orora-builder-google-fonts";
+
+  if (document.getElementById(id)) return;
+
+  const link = document.createElement("link");
+
+  link.id = id;
+  link.rel = "stylesheet";
+  link.href =
+    "https://fonts.googleapis.com/css2?family=" +
+    GOOGLE_FONTS
+      .map(
+        (font) =>
+          `${font.replace(/ /g, "+")}:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800`
+      )
+      .join("&family=") +
+    "&display=swap";
+
+  document.head.appendChild(link);
+}
+
+function createTextStyle(style = {}) {
+  const maxWidth =
+    style.maxWidth == null
+      ? undefined
+      : Number(style.maxWidth) <= 100
+      ? `${Number(style.maxWidth)}%`
+      : `${Number(style.maxWidth)}px`;
+
+  return {
+    fontFamily: style.fontFamily
+      ? `"${style.fontFamily}", sans-serif`
+      : undefined,
+
+    fontSize:
+      style.fontSize != null
+        ? `${Number(style.fontSize)}px`
+        : undefined,
+
+    fontWeight:
+      style.fontWeight != null
+        ? Number(style.fontWeight)
+        : undefined,
+
+    color: style.color || undefined,
+
+    fontStyle: style.italic
+      ? "italic"
+      : "normal",
+
+    letterSpacing:
+      style.letterSpacing != null
+        ? `${Number(style.letterSpacing)}px`
+        : undefined,
+
+    lineHeight:
+      style.lineHeight != null
+        ? Number(style.lineHeight)
+        : undefined,
+
+    textAlign:
+      style.textAlign || undefined,
+
+    marginTop:
+      style.marginTop != null
+        ? `${Number(style.marginTop)}px`
+        : undefined,
+
+    marginBottom:
+      style.marginBottom != null
+        ? `${Number(style.marginBottom)}px`
+        : undefined,
+
+    paddingTop:
+      style.paddingTop != null
+        ? `${Number(style.paddingTop)}px`
+        : undefined,
+
+    paddingBottom:
+      style.paddingBottom != null
+        ? `${Number(style.paddingBottom)}px`
+        : undefined,
+
+    maxWidth,
+  };
+}
+
+function normalizeBuilder(data) {
+  const builder = data?.aboutBuilder || {};
+  const styles = data?.aboutStyles || {};
+
+  const defaultStyle = {
+    fontFamily: "Mulish",
+    fontSize: 16,
+    fontWeight: 400,
+    color: "#3a1526",
+    italic: false,
+    letterSpacing: 0,
+    lineHeight: 1.5,
+    textAlign: "left",
+    marginTop: 0,
+    marginBottom: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
+    maxWidth: 100,
+  };
+
+  const defaultData = {
+    section: {
+      background: "#fffafc",
+      paddingTop: 140,
+      paddingBottom: 140,
+      gap: 7,
+    },
+
+    label: {
+      text:
+        data?.storyLabel ||
+        "CÂU CHUYỆN CỦA CHÚNG TÔI",
+
+      style: {
+        ...defaultStyle,
+        fontSize: 12,
+        fontWeight: 500,
+        color: "#b8446d",
+        letterSpacing: 4,
+        lineHeight: 1.2,
+        marginBottom: 18,
+      },
+    },
+
+    title: {
+      text:
+        data?.storyTitle ||
+        "Đẹp từ những điều",
+
+      style: {
+        ...defaultStyle,
+        fontFamily: "Cormorant Garamond",
+        fontSize: 80,
+        fontWeight: 600,
+        color: "#3a1526",
+        letterSpacing: -2,
+        lineHeight: 0.95,
+      },
+    },
+
+    highlight: {
+      text:
+        data?.storyHighlight ||
+        "giản dị",
+
+      style: {
+        ...defaultStyle,
+        fontFamily: "Cormorant Garamond",
+        fontSize: 80,
+        fontWeight: 400,
+        color: "#e2678f",
+        italic: true,
+        letterSpacing: -2,
+        lineHeight: 0.95,
+        marginBottom: 30,
+      },
+    },
+
+    text: {
+      text:
+        data?.storyText ||
+        "A simple space to tell your story.",
+
+      style: {
+        ...defaultStyle,
+        fontSize: 16,
+        fontWeight: 300,
+        color: "#755968",
+        lineHeight: 1.85,
+        maxWidth: 440,
+        marginBottom: 30,
+      },
+    },
+
+    image: {
+      src: data?.storyImage || "/about.jpg",
+      width: 52,
+      height: 620,
+      radius: 200,
+      borderWidth: 8,
+    },
+
+    stats:
+      data?.storyStats?.length
+        ? data.storyStats
+        : [
+            {
+              value: 5,
+              suffix: "+",
+              label: "Sản phẩm",
+            },
+            {
+              value: 1000,
+              suffix: "+",
+              label: "Khách hàng",
+            },
+            {
+              value: 98,
+              suffix: "%",
+              label: "Hài lòng",
+            },
+          ],
+
+    statValue: {
+      ...defaultStyle,
+      fontFamily: "Cormorant Garamond",
+      fontSize: 50,
+      fontWeight: 600,
+      color: "#b8446d",
+      lineHeight: 1,
+    },
+
+    statLabel: {
+      ...defaultStyle,
+      fontSize: 13,
+      fontWeight: 400,
+      color: "#755968",
+      lineHeight: 1.4,
+    },
+  };
+
+  const result = {
+    ...defaultData,
+    ...builder,
+
+    section: {
+      ...defaultData.section,
+      ...(builder.section || {}),
+    },
+
+    label: {
+      ...defaultData.label,
+      ...(builder.label || {}),
+      style: {
+        ...defaultData.label.style,
+        ...(styles.label || {}),
+        ...(builder.label?.style || {}),
+      },
+    },
+
+    title: {
+      ...defaultData.title,
+      ...(builder.title || {}),
+      style: {
+        ...defaultData.title.style,
+        ...(styles.title || {}),
+        ...(builder.title?.style || {}),
+      },
+    },
+
+    highlight: {
+      ...defaultData.highlight,
+      ...(builder.highlight || {}),
+      style: {
+        ...defaultData.highlight.style,
+        ...(styles.highlight || {}),
+        ...(builder.highlight?.style || {}),
+      },
+    },
+
+    text: {
+      ...defaultData.text,
+      ...(builder.text || {}),
+      style: {
+        ...defaultData.text.style,
+        ...(styles.text || {}),
+        ...(builder.text?.style || {}),
+      },
+    },
+
+    image: {
+      ...defaultData.image,
+      ...(builder.image || {}),
+    },
+
+    stats:
+      builder.stats?.length
+        ? builder.stats
+        : defaultData.stats,
+
+    statValue: {
+      ...defaultData.statValue,
+      ...(styles.statValue || {}),
+      ...(builder.statValue || {}),
+    },
+
+    statLabel: {
+      ...defaultData.statLabel,
+      ...(styles.statLabel || {}),
+      ...(builder.statLabel || {}),
+    },
+  };
+
+  return result;
+}
+
+function About({
+  preview = false,
+  previewData = null,
+  selectedElement = "",
+  onSelect,
+}) {
   const [home, setHome] = useState(null);
 
   useEffect(() => {
+    loadGoogleFonts();
+
+    if (preview) return;
+
     getHomeContent()
       .then((data) => {
-        if (data) {
-          setHome(data);
-        }
+        setHome(data || {});
       })
       .catch((err) => {
-        console.error("Không thể tải nội dung Story:", err);
+        console.error(
+          "Không thể tải nội dung Story:",
+          err
+        );
       });
-  }, []);
+  }, [preview]);
 
-  const storyLabel = home?.storyLabel || "ABOUT";
-  const storyTitle = home?.storyTitle || "Something";
-  const storyHighlight = home?.storyHighlight || "beautiful.";
+  const builder = preview
+    ? previewData || {}
+    : normalizeBuilder(home || {});
 
-  const storyText =
-    home?.storyText ||
-    "A simple space to tell your story. Show your products, your style, and everything that makes your brand different.";
+  const section = builder.section || {};
+  const label = builder.label || {};
+  const title = builder.title || {};
+  const highlight = builder.highlight || {};
+  const text = builder.text || {};
+  const image = builder.image || {};
+  const stats = builder.stats || [];
 
-  const storyImage = home?.storyImage || "/about.jpg";
+  const select = (key) => {
+    if (!preview || !onSelect) return;
+    onSelect(key);
+  };
 
-  const storyStats = home?.storyStats?.length
-    ? home.storyStats
-    : [
-        { value: 5, suffix: "+", label: "Sản phẩm" },
-        { value: 1000, suffix: "+", label: "Khách hàng" },
-        { value: 98, suffix: "%", label: "Hài lòng" },
-      ];
+  const selectedClass = (key) =>
+    preview && selectedElement === key
+      ? "builder-selected"
+      : "";
+
+  const sectionStyle = {
+    background:
+      section.background || "#fffafc",
+
+    paddingTop:
+      section.paddingTop != null
+        ? `${Number(section.paddingTop)}px`
+        : undefined,
+
+    paddingBottom:
+      section.paddingBottom != null
+        ? `${Number(section.paddingBottom)}px`
+        : undefined,
+
+    gap:
+      section.gap != null
+        ? `${Number(section.gap)}%`
+        : undefined,
+  };
+
+  const imageStyle = {
+    height:
+      image.height != null
+        ? `${Number(image.height)}px`
+        : undefined,
+
+    borderRadius:
+      image.radius != null
+        ? `${Number(image.radius)}px ${Number(
+            image.radius
+          )}px 28px 28px`
+        : undefined,
+
+    borderWidth:
+      image.borderWidth != null
+        ? `${Number(image.borderWidth)}px`
+        : undefined,
+  };
+
+  const imageVisualWidth = {
+    width:
+      image.width != null
+        ? `${Number(image.width)}%`
+        : undefined,
+  };
+
+  const RevealBox = ({
+    children,
+    delay = 0,
+    className = "",
+  }) => {
+    if (preview) {
+      return (
+        <div className={className}>
+          {children}
+        </div>
+      );
+    }
+
+    return (
+      <Reveal
+        delay={delay}
+        className={className}
+      >
+        {children}
+      </Reveal>
+    );
+  };
 
   return (
-    <section className="about" id="about">
-      <div className="about-visual">
-        <Reveal className="about-image-wrapper">
+    <section
+      className="about"
+      id="about"
+      style={sectionStyle}
+      data-builder-key={
+        preview ? "section" : undefined
+      }
+      onClick={(e) => {
+        if (
+          preview &&
+          e.target === e.currentTarget
+        ) {
+          select("section");
+        }
+      }}
+    >
+      <div
+        className="about-visual"
+        style={imageVisualWidth}
+      >
+        <RevealBox
+          className={`about-image-wrapper ${selectedClass(
+            "image"
+          )}`}
+        >
           <img
-            src={storyImage}
+            src={
+              image.src ||
+              "/about.jpg"
+            }
             className="about-image"
             alt="About"
-          />
-        </Reveal>
+            style={imageStyle}
+            data-builder-key={
+              preview ? "image" : undefined
+            }
+            onClick={(e) => {
+              if (!preview) return;
 
-        {/* <div className="about-badge">
-          <b>✿</b>
-          <span>
-            Nhẹ nhàng
-            <br />
-            cho làn da
-          </span>
-        </div> */}
+              e.stopPropagation();
+              select("image");
+            }}
+          />
+        </RevealBox>
       </div>
 
       <div className="about-content">
-        <Reveal>
-          <p className="about-label">{storyLabel}</p>
-        </Reveal>
+        <RevealBox>
+          <p
+            className={`about-label ${selectedClass(
+              "label"
+            )}`}
+            style={createTextStyle(
+              label.style
+            )}
+            data-builder-key={
+              preview ? "label" : undefined
+            }
+            onClick={(e) => {
+              if (!preview) return;
 
-        <Reveal delay={80}>
-          <h2>
-            {storyTitle}
-            <br />
-            <span>{storyHighlight}</span>
-          </h2>
-        </Reveal>
-
-        <Reveal delay={160}>
-          <p className="about-text">
-            {storyText}
+              e.stopPropagation();
+              select("label");
+            }}
+          >
+            {label.text}
           </p>
-        </Reveal>
+        </RevealBox>
 
-        <Reveal delay={240}>
-          <div className="about-stats">
-            {storyStats.map((item, index) => (
+        <RevealBox delay={80}>
+          <h2
+            className={selectedClass("title")}
+            style={createTextStyle(
+              title.style
+            )}
+            data-builder-key={
+              preview ? "title" : undefined
+            }
+            onClick={(e) => {
+              if (!preview) return;
+
+              e.stopPropagation();
+              select("title");
+            }}
+          >
+            {title.text}
+          </h2>
+        </RevealBox>
+
+        <RevealBox delay={120}>
+          <div
+            className={selectedClass(
+              "highlight"
+            )}
+            style={{
+              ...createTextStyle(
+                highlight.style
+              ),
+              display: "block",
+            }}
+            data-builder-key={
+              preview ? "highlight" : undefined
+            }
+            onClick={(e) => {
+              if (!preview) return;
+
+              e.stopPropagation();
+              select("highlight");
+            }}
+          >
+            {highlight.text}
+          </div>
+        </RevealBox>
+
+        <RevealBox delay={160}>
+          <p
+            className={`about-text ${selectedClass(
+              "text"
+            )}`}
+            style={{
+              ...createTextStyle(
+                text.style
+              ),
+              whiteSpace: "pre-line",
+            }}
+            data-builder-key={
+              preview ? "text" : undefined
+            }
+            onClick={(e) => {
+              if (!preview) return;
+
+              e.stopPropagation();
+              select("text");
+            }}
+          >
+            {text.text}
+          </p>
+        </RevealBox>
+
+        <RevealBox delay={240}>
+          <div
+            className={`about-stats ${selectedClass(
+              "stats"
+            )}`}
+            data-builder-key={
+              preview ? "stats" : undefined
+            }
+            onClick={(e) => {
+              if (!preview) return;
+
+              e.stopPropagation();
+              select("stats");
+            }}
+          >
+            {stats.map((item, index) => (
               <div key={index}>
-                <strong>
-                  <CountUp
-                    to={Number(item.value) || 0}
-                    suffix={item.suffix || ""}
-                  />
+                <strong
+                  style={createTextStyle(
+                    builder.statValue
+                  )}
+                >
+                  {preview ? (
+                    <>
+                      {Number(item.value) || 0}
+                      {item.suffix || ""}
+                    </>
+                  ) : (
+                    <CountUp
+                      to={
+                        Number(item.value) || 0
+                      }
+                      suffix={
+                        item.suffix || ""
+                      }
+                    />
+                  )}
                 </strong>
 
-                <span>{item.label}</span>
+                <span
+                  style={createTextStyle(
+                    builder.statLabel
+                  )}
+                >
+                  {item.label}
+                </span>
               </div>
             ))}
           </div>
-        </Reveal>
+        </RevealBox>
       </div>
     </section>
   );

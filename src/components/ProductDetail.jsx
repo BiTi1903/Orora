@@ -2,11 +2,17 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import gsap from "gsap";
 import { getProduct } from "../lib/api";
+import useHomeContent from "../hooks/useHomeContent";
+import { toCss } from "../lib/typography";
 import { defaultProducts } from "../data/content";
 
 function ProductDetail() {
   const { id } = useParams();
   const pageRef = useRef(null);
+
+  /* kiểu chữ do admin chỉnh (mục "Chi tiết sản phẩm") */
+  const home = useHomeContent();
+  const ps = home.productDetailStyles || {};
 
   // undefined = đang tải, null = không tìm thấy
   const [product, setProduct] = useState(undefined);
@@ -150,38 +156,47 @@ function ProductDetail() {
         </div>
 
         <div className="product-detail-info">
-          <p className="product-detail-number">
+          <p
+            className="product-detail-number"
+            style={toCss(ps.number)}
+          >
             {product.number}
           </p>
 
-          <h1>{product.name}</h1>
+          <h1 style={toCss(ps.name)}>{product.name}</h1>
 
-          <p className="product-detail-price">
+          <p
+            className="product-detail-price"
+            style={toCss(ps.price)}
+          >
             {product.price}
           </p>
 
-          <p className="product-detail-description">
+          <p
+            className="product-detail-description"
+            style={toCss(ps.description)}
+          >
             {product.description}
           </p>
 
           {product.story && (
             <div className="product-section">
-              <h2>About the product</h2>
-              <p>{product.story}</p>
+              <h2 style={toCss(ps.sectionTitle)}>About the product</h2>
+              <p style={toCss(ps.body)}>{product.story}</p>
             </div>
           )}
 
           {rows.length > 0 && (
             <div className="product-section">
-              <h2>Details</h2>
+              <h2 style={toCss(ps.sectionTitle)}>Details</h2>
 
               {rows.map(([label, value]) => (
                 <div
                   className="product-detail-row"
                   key={label}
                 >
-                  <span>{label}</span>
-                  <p>{value}</p>
+                  <span style={toCss(ps.rowLabel)}>{label}</span>
+                  <p style={toCss(ps.rowValue)}>{value}</p>
                 </div>
               ))}
             </div>
