@@ -177,6 +177,34 @@
 .review p { font-family: var(--font-display); font-size: 22px; line-height: 1.45; margin-bottom: 20px; }
 .review cite { font-size: 13px; font-style: normal; color: var(--rose-deep); letter-spacing: 1px; }
 
+.review-author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.review-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid #f5d6e0;
+  box-shadow: 0 4px 12px rgba(184, 68, 109, 0.15);
+}
+
+.review-avatar--placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8e4ec, #f0c4d4);
+  color: #b8446d;
+  font-size: 14px;
+  font-weight: 600;
+  font-style: normal;
+}
+
 /* =====================================================
    NEWSLETTER
 ===================================================== */

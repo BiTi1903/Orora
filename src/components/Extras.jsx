@@ -341,53 +341,108 @@ export function Ritual() {
 
 /* ---------- Cảm nhận ---------- */
 
-export function Testimonials() {
-  const c = useHomeContent();
+export function Testimonials({
+  preview = false,
+  previewData = null,
+  selectedElement = "",
+  onSelect,
+}) {
+  const live = useHomeContent();
+  const c = preview && previewData ? previewData : live || {};
 
-  const reviews =
-    c.reviews?.length
-      ? c.reviews
-      : [];
+  const reviews = c.reviews?.length ? c.reviews : [];
+
+  const select = (key) => (e) => {
+    if (!preview || !onSelect) return;
+    e.preventDefault();
+    e.stopPropagation();
+    onSelect(key);
+  };
+
+  const selectedClass = (key) =>
+    preview && selectedElement === key ? "builder-selected" : "";
+
+  const LabelWrap = preview ? "div" : Reveal;
+  const TitleWrap = preview ? "div" : Reveal;
 
   return (
-    <section className="ex-section">
-      <Reveal>
-        <p className="ex-label">
-          {c.testimonialsLabel ||
-            "CẢM NHẬN"}
+    <section
+      className={`ex-section ${preview ? "ex-section--preview" : ""}`}
+    >
+      <LabelWrap>
+        <p
+          className={`ex-label ${selectedClass("revLabel")}`}
+          data-builder-key={preview ? "revLabel" : undefined}
+          onClick={select("revLabel")}
+        >
+          {c.testimonialsLabel || "CẢM NHẬN"}
         </p>
-      </Reveal>
+      </LabelWrap>
 
-      <Reveal delay={80}>
-        <h2 className="ex-title">
-          {c.testimonialsTitle ||
-            "Được"}{" "}
-          <em>
-            {c.testimonialsHighlight ||
-              "yêu thích"}
+      <TitleWrap delay={80}>
+        <h2
+          className={`ex-title ${selectedClass("revTitle")}`}
+          data-builder-key={preview ? "revTitle" : undefined}
+          onClick={select("revTitle")}
+        >
+          {c.testimonialsTitle || "Được"}{" "}
+          <em
+            className={selectedClass("revHighlight")}
+            data-builder-key={preview ? "revHighlight" : undefined}
+            onClick={select("revHighlight")}
+          >
+            {c.testimonialsHighlight || "yêu thích"}
           </em>{" "}
-          {c.testimonialsTitleEnd ||
-            "bởi những cô nàng như bạn"}
+          <span
+            className={selectedClass("revTitleEnd")}
+            data-builder-key={preview ? "revTitleEnd" : undefined}
+            onClick={select("revTitleEnd")}
+          >
+            {c.testimonialsTitleEnd || "bởi những cô nàng như bạn"}
+          </span>
         </h2>
-      </Reveal>
+      </TitleWrap>
 
       <div className="review-grid">
-        {reviews.map((r, i) => (
-          <Reveal
-            key={`${r.name}-${i}`}
-            delay={i * 110}
-          >
-            <blockquote className="review">
-              <div className="stars">
-                ★★★★★
-              </div>
+        {reviews.map((r, i) => {
+          const cardKey = `revCard-${i}`;
+          const card = (
+            <blockquote
+              className={`review ${selectedClass(cardKey)}`}
+              data-builder-key={preview ? cardKey : undefined}
+              onClick={select(cardKey)}
+            >
+              <div className="stars">★★★★★</div>
 
               <p>“{r.text}”</p>
 
-              <cite>{r.name}</cite>
+              <div className="review-author">
+                {r.image ? (
+                  <img
+                    className="review-avatar"
+                    src={r.image}
+                    alt={r.name || "Khách hàng"}
+                  />
+                ) : (
+                  <span className="review-avatar review-avatar--placeholder">
+                    {(r.name || "?").charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <cite>{r.name}</cite>
+              </div>
             </blockquote>
-          </Reveal>
-        ))}
+          );
+
+          if (preview) {
+            return <div key={`${r.name}-${i}`}>{card}</div>;
+          }
+
+          return (
+            <Reveal key={`${r.name}-${i}`} delay={i * 110}>
+              {card}
+            </Reveal>
+          );
+        })}
       </div>
     </section>
   );

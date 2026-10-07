@@ -3,12 +3,23 @@ import { Reveal } from "./Extras";
 import useProducts from "../hooks/useProducts";
 import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
+import { defaultProducts } from "../data/content";
 
-function Collection() {
-  const { products, loading } = useProducts();
+function Collection({
+  preview = false,
+  previewData = null,
+  selectedElement = "",
+  onSelect,
+  sampleProducts = null,
+}) {
+  const { products: liveProducts, loading } = useProducts();
+  const liveHome = useHomeContent();
 
-  /* đọc trực tiếp từ Firestore, admin lưu là trang tự cập nhật */
-  const home = useHomeContent();
+  const home = preview && previewData ? previewData : liveHome || {};
+  const products =
+    preview
+      ? sampleProducts || defaultProducts.slice(0, 3)
+      : liveProducts;
 
   const collectionLabel = home.collectionLabel || "COLLECTION";
   const collectionTitle = home.collectionTitle || "Explore";
@@ -17,37 +28,64 @@ function Collection() {
   const headStyles = home.collectionStyles || {};
   const cardStyles = home.productCardStyles || {};
 
-  return (
-    <section className="collection" id="shop">
+  const select = (key) => (e) => {
+    if (!preview || !onSelect) return;
+    e.preventDefault();
+    e.stopPropagation();
+    onSelect(key);
+  };
 
+  const selectedClass = (key) =>
+    preview && selectedElement === key ? "builder-selected" : "";
+
+  const HeaderWrap = ({ children }) => {
+    if (preview) return <div className="collection-header">{children}</div>;
+    return <div className="collection-header">{children}</div>;
+  };
+
+  return (
+    <section
+      className={`collection ${preview ? "collection--preview" : ""}`}
+      id={preview ? undefined : "shop"}
+    >
       {/* HEADER */}
-      <div className="collection-header">
-        <p className="collection-label" style={toCss(headStyles.label)}>
+      <HeaderWrap>
+        <p
+          className={`collection-label ${selectedClass("colLabel")}`}
+          data-builder-key={preview ? "colLabel" : undefined}
+          onClick={select("colLabel")}
+          style={toCss(headStyles.label, { responsive: !preview })}
+        >
           {collectionLabel}
         </p>
 
         <h2>
           <span
-            className="collection-title-line"
-            style={toCss(headStyles.title)}
+            className={`collection-title-line ${selectedClass("colTitle")}`}
+            data-builder-key={preview ? "colTitle" : undefined}
+            onClick={select("colTitle")}
+            style={toCss(headStyles.title, { responsive: !preview })}
           >
             {collectionTitle}
           </span>
 
           <span
-            className="collection-title-line"
-            style={toCss(headStyles.highlight)}
+            className={`collection-title-line ${selectedClass("colHighlight")}`}
+            data-builder-key={preview ? "colHighlight" : undefined}
+            onClick={select("colHighlight")}
+            style={toCss(headStyles.highlight, { responsive: !preview })}
           >
             {collectionHighlight}
           </span>
         </h2>
-      </div>
+      </HeaderWrap>
 
       {/* PRODUCTS */}
       <div className="gallery">
-        {products.map((product, i) => (
-          <Reveal key={product.id} delay={i * 120}>
+        {products.map((product, i) => {
+          const card = (
             <ProductCard
+              key={product.id}
               image={product.image}
               number={product.number}
               name={product.name}
@@ -55,12 +93,25 @@ function Collection() {
               price={product.price}
               slug={product.slug || product.id}
               styles={cardStyles}
+              preview={preview}
+              selectedElement={selectedElement}
+              onSelect={onSelect}
             />
-          </Reveal>
-        ))}
+          );
+
+          if (preview) {
+            return <div key={product.id}>{card}</div>;
+          }
+
+          return (
+            <Reveal key={product.id} delay={i * 120}>
+              {card}
+            </Reveal>
+          );
+        })}
       </div>
 
-      {!loading && products.length === 0 && (
+      {!preview && !loading && products.length === 0 && (
         <p
           style={{
             textAlign: "center",
@@ -72,7 +123,6 @@ function Collection() {
           Sản phẩm sẽ sớm được cập nhật.
         </p>
       )}
-
     </section>
   );
 }

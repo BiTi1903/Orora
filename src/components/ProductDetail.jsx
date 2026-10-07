@@ -6,19 +6,34 @@ import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
 import { defaultProducts } from "../data/content";
 
-function ProductDetail() {
+function ProductDetail({
+  preview = false,
+  previewStyles = null,
+  previewProduct = null,
+  selectedElement = "",
+  onSelect,
+}) {
   const { id } = useParams();
   const pageRef = useRef(null);
 
-  /* kiểu chữ do admin chỉnh (mục "Chi tiết sản phẩm") */
   const home = useHomeContent();
-  const ps = home.productDetailStyles || {};
+  const ps =
+    preview && previewStyles
+      ? previewStyles
+      : home?.productDetailStyles || {};
 
   // undefined = đang tải, null = không tìm thấy
-  const [product, setProduct] = useState(undefined);
+  const [product, setProduct] = useState(
+    preview ? previewProduct || defaultProducts[0] : undefined
+  );
 
   /* ---------- lấy sản phẩm từ Firestore ---------- */
   useEffect(() => {
+    if (preview) {
+      setProduct(previewProduct || defaultProducts[0]);
+      return;
+    }
+
     let alive = true;
     setProduct(undefined);
     window.scrollTo({ top: 0 });
@@ -39,11 +54,11 @@ function ProductDetail() {
     return () => {
       alive = false;
     };
-  }, [id]);
+  }, [id, preview, previewProduct]);
 
   /* ---------- hiệu ứng GSAP ---------- */
   useLayoutEffect(() => {
-    if (!product) return;
+    if (preview || !product) return;
 
     const ctx = gsap.context(() => {
       const timeline = gsap.timeline({
@@ -114,7 +129,17 @@ function ProductDetail() {
     }, pageRef);
 
     return () => ctx.revert();
-  }, [product]);
+  }, [product, preview]);
+
+  const select = (key) => (e) => {
+    if (!preview || !onSelect) return;
+    e.preventDefault();
+    e.stopPropagation();
+    onSelect(key);
+  };
+
+  const selectedClass = (key) =>
+    preview && selectedElement === key ? "builder-selected" : "";
 
   /* ---------- đang tải ---------- */
   if (product === undefined) {
@@ -142,12 +167,21 @@ function ProductDetail() {
     ["Origin", product.origin],
   ].filter(([, value]) => value);
 
+  const css = (key) => toCss(ps[key], { responsive: !preview });
+
   return (
-    <main className="product-detail" ref={pageRef}>
+    <main
+      className={`product-detail ${preview ? "product-detail--preview" : ""}`}
+      ref={pageRef}
+    >
       <div className="product-detail-top">
-        <Link to="/" className="product-back">
-          ← Back to Collection
-        </Link>
+        {preview ? (
+          <span className="product-back">← Back to Collection</span>
+        ) : (
+          <Link to="/" className="product-back">
+            ← Back to Collection
+          </Link>
+        )}
       </div>
 
       <section className="product-detail-content">
@@ -157,46 +191,91 @@ function ProductDetail() {
 
         <div className="product-detail-info">
           <p
-            className="product-detail-number"
-            style={toCss(ps.number)}
+            className={`product-detail-number ${selectedClass("pdNumber")}`}
+            data-builder-key={preview ? "pdNumber" : undefined}
+            onClick={select("pdNumber")}
+            style={css("number")}
           >
             {product.number}
           </p>
 
-          <h1 style={toCss(ps.name)}>{product.name}</h1>
+          <h1
+            className={selectedClass("pdName")}
+            data-builder-key={preview ? "pdName" : undefined}
+            onClick={select("pdName")}
+            style={css("name")}
+          >
+            {product.name}
+          </h1>
 
           <p
-            className="product-detail-price"
-            style={toCss(ps.price)}
+            className={`product-detail-price ${selectedClass("pdPrice")}`}
+            data-builder-key={preview ? "pdPrice" : undefined}
+            onClick={select("pdPrice")}
+            style={css("price")}
           >
             {product.price}
           </p>
 
           <p
-            className="product-detail-description"
-            style={toCss(ps.description)}
+            className={`product-detail-description ${selectedClass("pdDescription")}`}
+            data-builder-key={preview ? "pdDescription" : undefined}
+            onClick={select("pdDescription")}
+            style={css("description")}
           >
             {product.description}
           </p>
 
           {product.story && (
             <div className="product-section">
-              <h2 style={toCss(ps.sectionTitle)}>About the product</h2>
-              <p style={toCss(ps.body)}>{product.story}</p>
+              <h2
+                className={selectedClass("pdSectionTitle")}
+                data-builder-key={preview ? "pdSectionTitle" : undefined}
+                onClick={select("pdSectionTitle")}
+                style={css("sectionTitle")}
+              >
+                About the product
+              </h2>
+              <p
+                className={selectedClass("pdBody")}
+                data-builder-key={preview ? "pdBody" : undefined}
+                onClick={select("pdBody")}
+                style={css("body")}
+              >
+                {product.story}
+              </p>
             </div>
           )}
 
           {rows.length > 0 && (
             <div className="product-section">
-              <h2 style={toCss(ps.sectionTitle)}>Details</h2>
+              <h2
+                className={selectedClass("pdSectionTitle")}
+                data-builder-key={preview ? "pdSectionTitle" : undefined}
+                onClick={select("pdSectionTitle")}
+                style={css("sectionTitle")}
+              >
+                Details
+              </h2>
 
               {rows.map(([label, value]) => (
-                <div
-                  className="product-detail-row"
-                  key={label}
-                >
-                  <span style={toCss(ps.rowLabel)}>{label}</span>
-                  <p style={toCss(ps.rowValue)}>{value}</p>
+                <div className="product-detail-row" key={label}>
+                  <span
+                    className={selectedClass("pdRowLabel")}
+                    data-builder-key={preview ? "pdRowLabel" : undefined}
+                    onClick={select("pdRowLabel")}
+                    style={css("rowLabel")}
+                  >
+                    {label}
+                  </span>
+                  <p
+                    className={selectedClass("pdRowValue")}
+                    data-builder-key={preview ? "pdRowValue" : undefined}
+                    onClick={select("pdRowValue")}
+                    style={css("rowValue")}
+                  >
+                    {value}
+                  </p>
                 </div>
               ))}
             </div>

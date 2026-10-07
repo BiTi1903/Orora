@@ -10,6 +10,9 @@ function ProductCard({
   price,
   slug,
   styles = {},
+  preview = false,
+  selectedElement = "",
+  onSelect,
 }) {
   const frameRef = useRef(null);
 
@@ -20,6 +23,7 @@ function ProductCard({
     : nameRest;
 
   const handleMove = (e) => {
+    if (preview) return;
     const el = frameRef.current;
     if (!el || !window.matchMedia("(hover: hover)").matches) return;
     const r = el.getBoundingClientRect();
@@ -32,61 +36,99 @@ function ProductCard({
   };
 
   const handleLeave = () => {
+    if (preview) return;
     const el = frameRef.current;
     if (!el) return;
     el.style.setProperty("--rx", "0deg");
     el.style.setProperty("--ry", "0deg");
   };
 
-  return (
-    <div className="gallery-item">
+  const select = (key) => (e) => {
+    if (!preview || !onSelect) return;
+    e.preventDefault();
+    e.stopPropagation();
+    onSelect(key);
+  };
 
+  const selectedClass = (key) =>
+    preview && selectedElement === key ? "builder-selected" : "";
+
+  const ImageWrap = preview ? "div" : Link;
+  const imageProps = preview
+    ? {}
+    : { to: `/product/${slug}` };
+
+  const ButtonWrap = preview ? "span" : Link;
+  const buttonProps = preview
+    ? {}
+    : { to: `/product/${slug}` };
+
+  return (
+    <div className={`gallery-item ${preview ? "gallery-item--preview" : ""}`}>
       <div
         className="gallery-image tilt"
         ref={frameRef}
         onMouseMove={handleMove}
         onMouseLeave={handleLeave}
       >
-
         <span className="tilt-shine" aria-hidden="true" />
 
-        <Link to={`/product/${slug}`}>
+        <ImageWrap {...imageProps}>
           <img src={image} alt={name} />
-        </Link>
-
+        </ImageWrap>
       </div>
 
       <div className="gallery-info">
-        <span style={toCss(styles.number)}>{number}</span>
-        <p style={nameStyle}>{name}</p>
+        <span
+          className={selectedClass("cardNumber")}
+          data-builder-key={preview ? "cardNumber" : undefined}
+          onClick={select("cardNumber")}
+          style={toCss(styles.number, { responsive: !preview })}
+        >
+          {number}
+        </span>
+        <p
+          className={selectedClass("cardName")}
+          data-builder-key={preview ? "cardName" : undefined}
+          onClick={select("cardName")}
+          style={nameStyle}
+        >
+          {name}
+        </p>
       </div>
 
       <div className="product-details">
-
         <p
-          className="product-description"
-          style={toCss(styles.description)}
+          className={`product-description ${selectedClass("cardDescription")}`}
+          data-builder-key={preview ? "cardDescription" : undefined}
+          onClick={select("cardDescription")}
+          style={toCss(styles.description, { responsive: !preview })}
         >
           {description}
         </p>
 
         <div className="product-bottom">
+          <span
+            className={`product-price ${selectedClass("cardPrice")}`}
+            data-builder-key={preview ? "cardPrice" : undefined}
+            onClick={select("cardPrice")}
+            style={toCss(styles.price, { responsive: !preview })}
+          >
+            {price}
+          </span>
 
-          <span className="product-price" style={toCss(styles.price)}>{price}</span>
-
-          <Link
-            to={`/product/${slug}`}
-            className="buy-button"
-            style={toCss(styles.button)}
+          <ButtonWrap
+            {...buttonProps}
+            className={`buy-button ${selectedClass("cardButton")}`}
+            data-builder-key={preview ? "cardButton" : undefined}
+            onClick={select("cardButton")}
+            style={toCss(styles.button, { responsive: !preview })}
           >
             Xem chi tiết
             <span>↗</span>
-          </Link>
-
+          </ButtonWrap>
         </div>
-
       </div>
-
     </div>
   );
 }

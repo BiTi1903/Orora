@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { getHomeContent, saveHomeContent } from "../../lib/api";
 import About from "../../components/About";
+import Hero from "../../components/Hero";
+import Collection from "../../components/Collection";
+import ProductDetail from "../../components/ProductDetail";
+import { Testimonials } from "../../components/Extras";
+import Footer from "../../components/Footer";
+import { defaultProducts } from "../../data/content";
 import "./VisualBuilder.css";
 
 
@@ -203,12 +209,184 @@ const DEFAULT_ABOUT = {
   },
 };
 
+const DEFAULT_HERO = {
+  heroEyebrow: "WELCOME TO",
+  heroTitle: "ORORA",
+  heroDescription: "Create something beautiful.",
+  heroRotator: ["dịu nhẹ", "rạng rỡ", "tự tin", "tỏa sáng"],
+  heroButtonText: "Khám phá",
+  heroButtonLink: "#about",
+  shopButtonText: "Xem sản phẩm",
+  shopButtonLink: "#shop",
+  heroImage: "/hero.jpg",
+  heroChip1: "Dịu nhẹ cho da",
+  heroChip2: "Thành phần thuần khiết",
+  heroChip3: "Cấp ẩm sâu",
+  heroRingText: "ORORA ✦ SẢN PHẨM ✦ ORORA ✦",
+  heroScrollText: "CUỘN",
+};
+
+const DEFAULT_COLLECTION = {
+  collectionLabel: "COLLECTION",
+  collectionTitle: "Explore",
+  collectionHighlight: "the details.",
+  collectionStyles: {
+    label: {
+      fontSize: 12,
+      fontWeight: 500,
+      letterSpacing: 3,
+      color: "#b8446d",
+    },
+    title: {
+      fontFamily: '"Cormorant Garamond", serif',
+      fontSize: 72,
+      fontWeight: 600,
+      letterSpacing: -3,
+      lineHeight: 0.92,
+      color: "#3a1526",
+    },
+    highlight: {
+      fontFamily: '"Cormorant Garamond", serif',
+      fontSize: 72,
+      fontWeight: 400,
+      letterSpacing: -3,
+      lineHeight: 0.92,
+      color: "#e2678f",
+      fontStyle: "italic",
+    },
+  },
+  productCardStyles: {
+    number: {
+      fontSize: 12,
+      letterSpacing: 1,
+      color: "#e2678f",
+    },
+    name: {
+      fontFamily: '"Cormorant Garamond", serif',
+      fontSize: 22,
+      fontWeight: 600,
+      color: "#3a1526",
+    },
+    description: {
+      fontSize: 13,
+      lineHeight: 1.7,
+      color: "#7d656f",
+    },
+    price: {
+      fontFamily: '"Cormorant Garamond", serif',
+      fontSize: 22,
+      fontWeight: 600,
+      color: "#b8446d",
+    },
+    button: {
+      fontSize: 12,
+      fontWeight: 500,
+      letterSpacing: 1,
+      color: "#ffffff",
+    },
+  },
+};
+
+const DEFAULT_PRODUCT_DETAIL = {
+  number: {
+    fontSize: 12,
+    fontWeight: 500,
+    letterSpacing: 2,
+    color: "#b8446d",
+  },
+  name: {
+    fontFamily: '"Cormorant Garamond", serif',
+    fontSize: 64,
+    fontWeight: 600,
+    letterSpacing: -2,
+    lineHeight: 0.95,
+    color: "#3a1526",
+  },
+  price: {
+    fontFamily: '"Cormorant Garamond", serif',
+    fontSize: 34,
+    fontWeight: 600,
+    color: "#b8446d",
+  },
+  description: {
+    fontSize: 16,
+    fontWeight: 300,
+    lineHeight: 1.85,
+    color: "#7d656f",
+  },
+  sectionTitle: {
+    fontFamily: '"Cormorant Garamond", serif',
+    fontSize: 26,
+    fontWeight: 600,
+    color: "#3a1526",
+  },
+  body: {
+    fontSize: 15,
+    lineHeight: 1.9,
+    color: "#7d656f",
+  },
+  rowLabel: {
+    fontSize: 13,
+    fontWeight: 500,
+    color: "#b8446d",
+  },
+  rowValue: {
+    fontSize: 14,
+    lineHeight: 1.7,
+    color: "#7d656f",
+  },
+};
+
+const DEFAULT_REVIEWS = {
+  testimonialsLabel: "CẢM NHẬN",
+  testimonialsTitle: "Được",
+  testimonialsHighlight: "yêu thích",
+  testimonialsTitleEnd: "bởi những cô nàng như bạn",
+  reviews: [
+    {
+      name: "Khách hàng A",
+      text: "Da mình mềm và dịu hơn hẳn sau vài tuần dùng. Mùi hương rất dễ chịu.",
+      image: "",
+    },
+    {
+      name: "Khách hàng B",
+      text: "Bao bì xinh, dùng lên không bết dính. Mình đã mua tặng bạn thân.",
+      image: "",
+    },
+    {
+      name: "Khách hàng C",
+      text: "Sản phẩm nhẹ nhàng, phù hợp da nhạy cảm như mình.",
+      image: "",
+    },
+  ],
+};
+
+const DEFAULT_FOOTER = {
+  footerLogo: "ORORA",
+  footerDescription: "Chăm sóc làn da, nuôi dưỡng sự tự tin.",
+  footerInfoTitle: "Information",
+  footerAboutText: "About us",
+  footerShopText: "Shop",
+  footerTermsText: "Terms & Conditions",
+  footerPrivacyText: "Privacy Policy",
+  footerContactTitle: "Contact",
+  footerPhone: "0822.466.800",
+  footerEmail: "sales@ororavn.com",
+  footerAddress: "207A Nguyễn Văn Thủ, Tân Định, HCM",
+  footerSocialTitle: "Follow us",
+  footerInstagram: "#",
+  footerFacebook: "#",
+  footerTikTok: "#",
+  footerYouTube: "#",
+  footerCopyright: "© 2026 ORORA. All rights reserved.",
+  footerCompanyNumber: "CTY TNHH ORORA No. 0123456789",
+};
+
 const SECTION_LIST = [
   {
     key: "hero",
     label: "Hero",
     icon: "✦",
-    disabled: true,
   },
   {
     key: "ticker",
@@ -220,7 +398,16 @@ const SECTION_LIST = [
     key: "about",
     label: "Câu chuyện",
     icon: "♡",
-    active: true,
+  },
+  {
+    key: "collection",
+    label: "Sản phẩm",
+    icon: "◇",
+  },
+  {
+    key: "productdetail",
+    label: "Chi tiết SP",
+    icon: "▣",
   },
   {
     key: "features",
@@ -238,7 +425,6 @@ const SECTION_LIST = [
     key: "reviews",
     label: "Cảm nhận",
     icon: "❝",
-    disabled: true,
   },
   {
     key: "newsletter",
@@ -250,7 +436,6 @@ const SECTION_LIST = [
     key: "footer",
     label: "Footer",
     icon: "⌄",
-    disabled: true,
   },
 ];
 
@@ -350,9 +535,142 @@ function createAbout(data = {}) {
   };
 }
 
+function createHero(data = {}) {
+  return {
+    ...DEFAULT_HERO,
+    heroEyebrow: data.heroEyebrow ?? DEFAULT_HERO.heroEyebrow,
+    heroTitle: data.heroTitle ?? DEFAULT_HERO.heroTitle,
+    heroDescription: data.heroDescription ?? DEFAULT_HERO.heroDescription,
+    heroRotator:
+      data.heroRotator?.length > 0
+        ? data.heroRotator
+        : DEFAULT_HERO.heroRotator,
+    heroButtonText: data.heroButtonText ?? DEFAULT_HERO.heroButtonText,
+    heroButtonLink: data.heroButtonLink ?? DEFAULT_HERO.heroButtonLink,
+    shopButtonText: data.shopButtonText ?? DEFAULT_HERO.shopButtonText,
+    shopButtonLink: data.shopButtonLink ?? DEFAULT_HERO.shopButtonLink,
+    heroImage: data.heroImage ?? DEFAULT_HERO.heroImage,
+    heroChip1: data.heroChip1 ?? DEFAULT_HERO.heroChip1,
+    heroChip2: data.heroChip2 ?? DEFAULT_HERO.heroChip2,
+    heroChip3: data.heroChip3 ?? DEFAULT_HERO.heroChip3,
+    heroRingText: data.heroRingText ?? DEFAULT_HERO.heroRingText,
+    heroScrollText: data.heroScrollText ?? DEFAULT_HERO.heroScrollText,
+  };
+}
+
+function mergeNestedStyle(base, custom) {
+  const result = { ...base };
+  if (!custom) return result;
+  for (const key of Object.keys(base)) {
+    result[key] = { ...(base[key] || {}), ...(custom[key] || {}) };
+  }
+  // keep any extra keys from custom
+  for (const key of Object.keys(custom)) {
+    if (!result[key]) result[key] = { ...custom[key] };
+  }
+  return result;
+}
+
+const SERIF_FONTS = new Set([
+  "Cormorant Garamond",
+  "Playfair Display",
+  "Lora",
+  "Noto Serif",
+  "Georgia",
+  "Times New Roman",
+]);
+
+/** "Cormorant Garamond" → '"Cormorant Garamond", serif' (for toCss) */
+function toFullFontFamily(name) {
+  if (!name) return name;
+  if (String(name).includes(",")) return name;
+  const stack = SERIF_FONTS.has(name) ? "serif" : "sans-serif";
+  return `"${name}", ${stack}`;
+}
+
+/** '"Cormorant Garamond", serif' → "Cormorant Garamond" (for select) */
+function toBareFontFamily(value) {
+  if (!value) return "";
+  const m = String(value).match(/"([^"]+)"/);
+  if (m) return m[1];
+  return String(value).split(",")[0].trim().replace(/"/g, "");
+}
+
+function createCollection(data = {}) {
+  return {
+    collectionLabel:
+      data.collectionLabel ?? DEFAULT_COLLECTION.collectionLabel,
+    collectionTitle:
+      data.collectionTitle ?? DEFAULT_COLLECTION.collectionTitle,
+    collectionHighlight:
+      data.collectionHighlight ?? DEFAULT_COLLECTION.collectionHighlight,
+    collectionStyles: mergeNestedStyle(
+      DEFAULT_COLLECTION.collectionStyles,
+      data.collectionStyles
+    ),
+    productCardStyles: mergeNestedStyle(
+      DEFAULT_COLLECTION.productCardStyles,
+      data.productCardStyles
+    ),
+  };
+}
+
+function createProductDetail(data = {}) {
+  return mergeNestedStyle(
+    DEFAULT_PRODUCT_DETAIL,
+    data.productDetailStyles
+  );
+}
+
+function createReviews(data = {}) {
+  return {
+    testimonialsLabel:
+      data.testimonialsLabel ?? DEFAULT_REVIEWS.testimonialsLabel,
+    testimonialsTitle:
+      data.testimonialsTitle ?? DEFAULT_REVIEWS.testimonialsTitle,
+    testimonialsHighlight:
+      data.testimonialsHighlight ?? DEFAULT_REVIEWS.testimonialsHighlight,
+    testimonialsTitleEnd:
+      data.testimonialsTitleEnd ?? DEFAULT_REVIEWS.testimonialsTitleEnd,
+    reviews:
+      data.reviews?.length > 0
+        ? data.reviews.map((r) => ({
+            name: r.name || "",
+            text: r.text || "",
+            image: r.image || "",
+          }))
+        : DEFAULT_REVIEWS.reviews.map((r) => ({ ...r })),
+  };
+}
+
+function createFooter(data = {}) {
+  const result = { ...DEFAULT_FOOTER };
+  for (const key of Object.keys(DEFAULT_FOOTER)) {
+    if (data[key] != null && data[key] !== "") {
+      result[key] = data[key];
+    }
+  }
+  return result;
+}
+
+const SECTION_DEFAULT_SELECTED = {
+  hero: "title",
+  about: "title",
+  collection: "colTitle",
+  productdetail: "pdName",
+  reviews: "revTitle",
+  footer: "ftLogo",
+};
+
 export default function VisualBuilder() {
   const [home, setHome] = useState(null);
   const [about, setAbout] = useState(DEFAULT_ABOUT);
+  const [hero, setHero] = useState(DEFAULT_HERO);
+  const [collection, setCollection] = useState(DEFAULT_COLLECTION);
+  const [productDetail, setProductDetail] = useState(DEFAULT_PRODUCT_DETAIL);
+  const [reviews, setReviews] = useState(DEFAULT_REVIEWS);
+  const [footer, setFooter] = useState(DEFAULT_FOOTER);
+  const [activeSection, setActiveSection] = useState("about");
   const [selected, setSelected] = useState("title");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -367,12 +685,22 @@ export default function VisualBuilder() {
 
         setHome(data || {});
         setAbout(createAbout(data || {}));
+        setHero(createHero(data || {}));
+        setCollection(createCollection(data || {}));
+        setProductDetail(createProductDetail(data || {}));
+        setReviews(createReviews(data || {}));
+        setFooter(createFooter(data || {}));
       })
       .catch((err) => {
         console.error(err);
         if (alive) {
           setHome({});
           setAbout(DEFAULT_ABOUT);
+          setHero(DEFAULT_HERO);
+          setCollection(DEFAULT_COLLECTION);
+          setProductDetail(DEFAULT_PRODUCT_DETAIL);
+          setReviews(DEFAULT_REVIEWS);
+          setFooter(DEFAULT_FOOTER);
         }
       })
       .finally(() => {
@@ -384,12 +712,100 @@ export default function VisualBuilder() {
     };
   }, []);
 
-  const selectedData = useMemo(
-    () => getSelectedData(about, selected),
-    [about, selected]
-  );
+  const switchSection = (key) => {
+    setActiveSection(key);
+    setSelected(SECTION_DEFAULT_SELECTED[key] || "title");
+  };
+
+  const selectedData = useMemo(() => {
+    if (activeSection === "hero") {
+      return getHeroSelectedData(hero, selected);
+    }
+    if (activeSection === "collection") {
+      return getCollectionSelectedData(collection, selected);
+    }
+    if (activeSection === "productdetail") {
+      return getProductDetailSelectedData(productDetail, selected);
+    }
+    if (activeSection === "reviews") {
+      return getReviewsSelectedData(reviews, selected);
+    }
+    if (activeSection === "footer") {
+      return getFooterSelectedData(footer, selected);
+    }
+    return getSelectedData(about, selected);
+  }, [
+    activeSection,
+    about,
+    hero,
+    collection,
+    productDetail,
+    reviews,
+    footer,
+    selected,
+  ]);
 
   const updateSelected = (patch) => {
+    if (activeSection === "hero") {
+      setHero((current) => ({ ...current, ...patch }));
+      return;
+    }
+
+    if (activeSection === "reviews") {
+      setReviews((current) => {
+        if (patch._reviewsList) {
+          return { ...current, reviews: patch._reviewsList };
+        }
+        if (patch._reviewIndex != null) {
+          const next = [...(current.reviews || [])];
+          next[patch._reviewIndex] = {
+            ...next[patch._reviewIndex],
+            ...patch._reviewItem,
+          };
+          return { ...current, reviews: next };
+        }
+        return { ...current, ...patch };
+      });
+      return;
+    }
+
+    if (activeSection === "footer") {
+      setFooter((current) => ({ ...current, ...patch }));
+      return;
+    }
+
+    if (activeSection === "productdetail") {
+      // style-only section — updates go through updateSelectedStyle
+      return;
+    }
+
+    if (activeSection === "collection") {
+      setCollection((current) => {
+        // text fields
+        if (patch.collectionLabel !== undefined ||
+            patch.collectionTitle !== undefined ||
+            patch.collectionHighlight !== undefined) {
+          return { ...current, ...patch };
+        }
+        // style patches: { styleKey: 'name', style: {...} } or direct nested
+        if (patch._styleKey) {
+          const group = patch._styleGroup || "productCardStyles";
+          return {
+            ...current,
+            [group]: {
+              ...current[group],
+              [patch._styleKey]: {
+                ...(current[group]?.[patch._styleKey] || {}),
+                ...patch.style,
+              },
+            },
+          };
+        }
+        return { ...current, ...patch };
+      });
+      return;
+    }
+
     setAbout((current) => {
       if (selected === "section") {
         return {
@@ -429,6 +845,37 @@ export default function VisualBuilder() {
   };
 
   const updateSelectedStyle = (patch) => {
+    if (activeSection === "hero") return;
+
+    if (activeSection === "productdetail") {
+      const meta = PRODUCT_DETAIL_FIELD_MAP[selected];
+      if (!meta) return;
+      setProductDetail((current) => ({
+        ...current,
+        [meta.styleKey]: {
+          ...(current[meta.styleKey] || {}),
+          ...patch,
+        },
+      }));
+      return;
+    }
+
+    if (activeSection === "collection") {
+      const meta = COLLECTION_FIELD_MAP[selected];
+      if (!meta || meta.type !== "colStyle") return;
+      setCollection((current) => ({
+        ...current,
+        [meta.group]: {
+          ...current[meta.group],
+          [meta.styleKey]: {
+            ...(current[meta.group]?.[meta.styleKey] || {}),
+            ...patch,
+          },
+        },
+      }));
+      return;
+    }
+
     setAbout((current) => {
       if (
         selected === "section" ||
@@ -457,6 +904,7 @@ export default function VisualBuilder() {
 
     try {
       const payload = {
+        // About / Story
         storyLabel: about.label.text,
         storyTitle: about.title.text,
         storyHighlight: about.highlight.text,
@@ -474,6 +922,42 @@ export default function VisualBuilder() {
           statValue: about.statValue,
           statLabel: about.statLabel,
         },
+
+        // Hero
+        heroEyebrow: hero.heroEyebrow,
+        heroTitle: hero.heroTitle,
+        heroDescription: hero.heroDescription,
+        heroRotator: hero.heroRotator,
+        heroButtonText: hero.heroButtonText,
+        heroButtonLink: hero.heroButtonLink,
+        shopButtonText: hero.shopButtonText,
+        shopButtonLink: hero.shopButtonLink,
+        heroImage: hero.heroImage,
+        heroChip1: hero.heroChip1,
+        heroChip2: hero.heroChip2,
+        heroChip3: hero.heroChip3,
+        heroRingText: hero.heroRingText,
+        heroScrollText: hero.heroScrollText,
+
+        // Collection + Product Card
+        collectionLabel: collection.collectionLabel,
+        collectionTitle: collection.collectionTitle,
+        collectionHighlight: collection.collectionHighlight,
+        collectionStyles: collection.collectionStyles,
+        productCardStyles: collection.productCardStyles,
+
+        // Product Detail page styles
+        productDetailStyles: productDetail,
+
+        // Reviews / Cảm nhận
+        testimonialsLabel: reviews.testimonialsLabel,
+        testimonialsTitle: reviews.testimonialsTitle,
+        testimonialsHighlight: reviews.testimonialsHighlight,
+        testimonialsTitleEnd: reviews.testimonialsTitleEnd,
+        reviews: reviews.reviews,
+
+        // Footer
+        ...footer,
       };
 
       await saveHomeContent(payload);
@@ -559,12 +1043,12 @@ export default function VisualBuilder() {
                 disabled={section.disabled}
                 className={[
                   "builder-section-item",
-                  selected === section.key ? "active" : "",
+                  activeSection === section.key ? "active" : "",
                   section.disabled ? "disabled" : "",
                 ].join(" ")}
                 onClick={() => {
                   if (!section.disabled) {
-                    setSelected("section");
+                    switchSection(section.key);
                   }
                 }}
               >
@@ -577,11 +1061,13 @@ export default function VisualBuilder() {
                   <small>
                     {section.disabled
                       ? "Sắp có"
-                      : "Đang chỉnh sửa"}
+                      : activeSection === section.key
+                      ? "Đang chỉnh sửa"
+                      : "Sẵn sàng"}
                   </small>
                 </span>
 
-                {section.active && (
+                {activeSection === section.key && (
                   <span className="builder-dot" />
                 )}
               </button>
@@ -598,21 +1084,83 @@ export default function VisualBuilder() {
             </span>
           </div>
 
-          <div className="builder-preview">
-            <About
-              preview
-              previewData={about}
-              selectedElement={selected}
-              onSelect={setSelected}
-            />
+          <div
+            className={[
+              "builder-preview",
+              activeSection === "hero" ? "builder-preview--hero" : "",
+              activeSection === "collection"
+                ? "builder-preview--collection"
+                : "",
+              activeSection === "productdetail"
+                ? "builder-preview--productdetail"
+                : "",
+              activeSection === "reviews"
+                ? "builder-preview--reviews"
+                : "",
+              activeSection === "footer"
+                ? "builder-preview--footer"
+                : "",
+            ].join(" ")}
+          >
+            {activeSection === "hero" ? (
+              <Hero
+                preview
+                previewData={hero}
+                selectedElement={selected}
+                onSelect={setSelected}
+              />
+            ) : activeSection === "collection" ? (
+              <Collection
+                preview
+                previewData={collection}
+                selectedElement={selected}
+                onSelect={setSelected}
+                sampleProducts={defaultProducts.slice(0, 3)}
+              />
+            ) : activeSection === "productdetail" ? (
+              <ProductDetail
+                preview
+                previewStyles={productDetail}
+                previewProduct={defaultProducts[0]}
+                selectedElement={selected}
+                onSelect={setSelected}
+              />
+            ) : activeSection === "reviews" ? (
+              <Testimonials
+                preview
+                previewData={reviews}
+                selectedElement={selected}
+                onSelect={setSelected}
+              />
+            ) : activeSection === "footer" ? (
+              <Footer
+                preview
+                previewData={footer}
+                selectedElement={selected}
+                onSelect={setSelected}
+              />
+            ) : (
+              <About
+                preview
+                previewData={about}
+                selectedElement={selected}
+                onSelect={setSelected}
+              />
+            )}
           </div>
         </main>
 
         <aside className="builder-settings">
           <StylePanel
+            section={activeSection}
             selected={selected}
             data={selectedData}
             about={about}
+            hero={hero}
+            collection={collection}
+            productDetail={productDetail}
+            reviews={reviews}
+            footer={footer}
             onChange={updateSelected}
             onStyleChange={updateSelectedStyle}
           />
@@ -650,10 +1198,224 @@ function getSelectedData(about, selected) {
   };
 }
 
+const HERO_FIELD_MAP = {
+  image: { type: "heroImage", label: "Ảnh nền" },
+  eyebrow: { type: "heroText", key: "heroEyebrow", label: "Dòng nhỏ phía trên" },
+  title: { type: "heroText", key: "heroTitle", label: "Tiêu đề lớn" },
+  description: {
+    type: "heroText",
+    key: "heroDescription",
+    label: "Mô tả ngắn",
+    rows: 3,
+  },
+  rotator: { type: "heroRotator", label: "Các từ đổi liên tục" },
+  btnPrimary: {
+    type: "heroButton",
+    textKey: "heroButtonText",
+    linkKey: "heroButtonLink",
+    label: "Nút chính",
+  },
+  btnSecondary: {
+    type: "heroButton",
+    textKey: "shopButtonText",
+    linkKey: "shopButtonLink",
+    label: "Nút phụ",
+  },
+  chip1: { type: "heroText", key: "heroChip1", label: "Thẻ nổi 1" },
+  chip2: { type: "heroText", key: "heroChip2", label: "Thẻ nổi 2" },
+  chip3: { type: "heroText", key: "heroChip3", label: "Thẻ nổi 3" },
+  ring: { type: "heroText", key: "heroRingText", label: "Chữ vòng tròn" },
+  scroll: { type: "heroText", key: "heroScrollText", label: "Chữ cuộn" },
+};
+
+function getHeroSelectedData(hero, selected) {
+  const meta = HERO_FIELD_MAP[selected];
+  if (!meta) {
+    return { type: "heroEmpty", data: null };
+  }
+  return { type: meta.type, data: hero, meta };
+}
+
+const COLLECTION_FIELD_MAP = {
+  colLabel: {
+    type: "colStyle",
+    group: "collectionStyles",
+    styleKey: "label",
+    textKey: "collectionLabel",
+    label: "Nhãn nhỏ",
+    sample: "COLLECTION",
+  },
+  colTitle: {
+    type: "colStyle",
+    group: "collectionStyles",
+    styleKey: "title",
+    textKey: "collectionTitle",
+    label: "Tiêu đề dòng 1",
+    sample: "Explore",
+  },
+  colHighlight: {
+    type: "colStyle",
+    group: "collectionStyles",
+    styleKey: "highlight",
+    textKey: "collectionHighlight",
+    label: "Tiêu đề dòng 2",
+    sample: "the details.",
+  },
+  cardNumber: {
+    type: "colStyle",
+    group: "productCardStyles",
+    styleKey: "number",
+    label: "Số thứ tự thẻ",
+    sample: "01",
+    textOnly: false,
+  },
+  cardName: {
+    type: "colStyle",
+    group: "productCardStyles",
+    styleKey: "name",
+    label: "Tên sản phẩm",
+    sample: "First Story",
+  },
+  cardDescription: {
+    type: "colStyle",
+    group: "productCardStyles",
+    styleKey: "description",
+    label: "Mô tả ngắn",
+    sample: "A beautiful piece created for your everyday moments.",
+  },
+  cardPrice: {
+    type: "colStyle",
+    group: "productCardStyles",
+    styleKey: "price",
+    label: "Giá",
+    sample: "1.290.000đ",
+  },
+  cardButton: {
+    type: "colStyle",
+    group: "productCardStyles",
+    styleKey: "button",
+    label: "Nút Xem chi tiết",
+    sample: "Xem chi tiết ↗",
+  },
+};
+
+function getCollectionSelectedData(collection, selected) {
+  const meta = COLLECTION_FIELD_MAP[selected];
+  if (!meta) {
+    return { type: "colEmpty", data: null };
+  }
+  return { type: meta.type, data: collection, meta };
+}
+
+const PRODUCT_DETAIL_FIELD_MAP = {
+  pdNumber: {
+    styleKey: "number",
+    label: "Số thứ tự",
+    sample: "01",
+  },
+  pdName: {
+    styleKey: "name",
+    label: "Tên sản phẩm",
+    sample: "First Story",
+  },
+  pdPrice: {
+    styleKey: "price",
+    label: "Giá",
+    sample: "1.290.000đ",
+  },
+  pdDescription: {
+    styleKey: "description",
+    label: "Mô tả ngắn",
+    sample: "A beautiful piece created for your everyday moments.",
+  },
+  pdSectionTitle: {
+    styleKey: "sectionTitle",
+    label: "Tiêu đề mục (About / Details)",
+    sample: "About the product",
+  },
+  pdBody: {
+    styleKey: "body",
+    label: "Đoạn câu chuyện sản phẩm",
+    sample: "First Story is created with a simple idea in mind.",
+  },
+  pdRowLabel: {
+    styleKey: "rowLabel",
+    label: "Tên thông tin (Material, Size…)",
+    sample: "Material",
+  },
+  pdRowValue: {
+    styleKey: "rowValue",
+    label: "Giá trị thông tin",
+    sample: "Premium material with a soft finish.",
+  },
+};
+
+function getProductDetailSelectedData(productDetail, selected) {
+  const meta = PRODUCT_DETAIL_FIELD_MAP[selected];
+  if (!meta) {
+    return { type: "pdEmpty", data: null };
+  }
+  return { type: "pdStyle", data: productDetail, meta };
+}
+
+const REVIEWS_TEXT_MAP = {
+  revLabel: { key: "testimonialsLabel", label: "Nhãn nhỏ" },
+  revTitle: { key: "testimonialsTitle", label: "Tiêu đề (trước)" },
+  revHighlight: { key: "testimonialsHighlight", label: "Chữ nổi bật" },
+  revTitleEnd: { key: "testimonialsTitleEnd", label: "Tiêu đề (sau)" },
+};
+
+function getReviewsSelectedData(reviews, selected) {
+  if (selected?.startsWith("revCard-")) {
+    const index = Number(selected.replace("revCard-", ""));
+    return {
+      type: "revCard",
+      data: reviews,
+      meta: { index, label: `Đánh giá ${index + 1}` },
+    };
+  }
+  const meta = REVIEWS_TEXT_MAP[selected];
+  if (!meta) return { type: "revEmpty", data: null };
+  return { type: "revText", data: reviews, meta };
+}
+
+const FOOTER_FIELD_MAP = {
+  ftLogo: { key: "footerLogo", label: "Tên thương hiệu" },
+  ftDesc: { key: "footerDescription", label: "Mô tả", rows: 3 },
+  ftInfoTitle: { key: "footerInfoTitle", label: "Tiêu đề Information" },
+  ftAbout: { key: "footerAboutText", label: "About us" },
+  ftShop: { key: "footerShopText", label: "Shop" },
+  ftTerms: { key: "footerTermsText", label: "Terms & Conditions" },
+  ftPrivacy: { key: "footerPrivacyText", label: "Privacy Policy" },
+  ftContactTitle: { key: "footerContactTitle", label: "Tiêu đề Contact" },
+  ftPhone: { key: "footerPhone", label: "Số điện thoại" },
+  ftEmail: { key: "footerEmail", label: "Email" },
+  ftAddress: { key: "footerAddress", label: "Địa chỉ", rows: 2 },
+  ftSocialTitle: { key: "footerSocialTitle", label: "Tiêu đề mạng xã hội" },
+  ftInstagram: { key: "footerInstagram", label: "Link Instagram" },
+  ftFacebook: { key: "footerFacebook", label: "Link Facebook" },
+  ftTikTok: { key: "footerTikTok", label: "Link TikTok" },
+  ftYouTube: { key: "footerYouTube", label: "Link YouTube" },
+  ftCopyright: { key: "footerCopyright", label: "Copyright" },
+  ftCompany: { key: "footerCompanyNumber", label: "Thông tin công ty" },
+};
+
+function getFooterSelectedData(footer, selected) {
+  const meta = FOOTER_FIELD_MAP[selected];
+  if (!meta) return { type: "ftEmpty", data: null };
+  return { type: "ftText", data: footer, meta };
+}
+
 function StylePanel({
+  section,
   selected,
   data,
   about,
+  hero,
+  collection,
+  productDetail,
+  reviews,
+  footer,
   onChange,
   onStyleChange,
 }) {
@@ -665,7 +1427,7 @@ function StylePanel({
     );
   }
 
-  const titleMap = {
+  const aboutTitleMap = {
     section: "Phần Câu chuyện",
     label: "Nhãn nhỏ",
     title: "Tiêu đề",
@@ -675,28 +1437,89 @@ function StylePanel({
     stats: "Số liệu",
   };
 
+  const sideLabel =
+    section === "hero"
+      ? data.meta?.label || HERO_FIELD_MAP[selected]?.label || selected
+      : section === "collection"
+      ? data.meta?.label || COLLECTION_FIELD_MAP[selected]?.label || selected
+      : section === "productdetail"
+      ? data.meta?.label ||
+        PRODUCT_DETAIL_FIELD_MAP[selected]?.label ||
+        selected
+      : section === "reviews"
+      ? data.meta?.label || REVIEWS_TEXT_MAP[selected]?.label || selected
+      : section === "footer"
+      ? data.meta?.label || FOOTER_FIELD_MAP[selected]?.label || selected
+      : aboutTitleMap[selected] || selected;
+
   return (
     <div className="builder-settings-inner">
       <div className="builder-panel-title">
         <span>Properties</span>
-        <small>{titleMap[selected] || selected}</small>
+        <small>{sideLabel}</small>
       </div>
 
-      {data.type === "section" && (
+      {section === "hero" && (
+        <HeroSettings
+          selected={selected}
+          data={data}
+          hero={hero}
+          onChange={onChange}
+        />
+      )}
+
+      {section === "collection" && (
+        <CollectionSettings
+          selected={selected}
+          data={data}
+          collection={collection}
+          onChange={onChange}
+          onStyleChange={onStyleChange}
+        />
+      )}
+
+      {section === "productdetail" && (
+        <ProductDetailSettings
+          selected={selected}
+          data={data}
+          productDetail={productDetail}
+          onStyleChange={onStyleChange}
+        />
+      )}
+
+      {section === "reviews" && (
+        <ReviewsSettings
+          selected={selected}
+          data={data}
+          reviews={reviews}
+          onChange={onChange}
+        />
+      )}
+
+      {section === "footer" && (
+        <FooterSettings
+          selected={selected}
+          data={data}
+          footer={footer}
+          onChange={onChange}
+        />
+      )}
+
+      {section === "about" && data.type === "section" && (
         <SectionSettings
           data={data.data}
           onChange={onChange}
         />
       )}
 
-      {data.type === "image" && (
+      {section === "about" && data.type === "image" && (
         <ImageSettings
           data={data.data}
           onChange={onChange}
         />
       )}
 
-      {data.type === "stats" && (
+      {section === "about" && data.type === "stats" && (
         <StatsSettings
           stats={about.stats}
           about={about}
@@ -704,7 +1527,7 @@ function StylePanel({
         />
       )}
 
-      {data.type === "text" && (
+      {section === "about" && data.type === "text" && (
         <TextSettings
           selected={selected}
           data={data.data}
@@ -714,6 +1537,496 @@ function StylePanel({
       )}
     </div>
   );
+}
+
+function ReviewsSettings({ selected, data, reviews, onChange }) {
+  if (!data || data.type === "revEmpty") {
+    return (
+      <div className="builder-empty">
+        Chọn một thành phần trên preview.
+      </div>
+    );
+  }
+
+  if (data.type === "revText") {
+    const { key, label } = data.meta;
+    return (
+      <SettingGroup title={label}>
+        <div className="builder-field">
+          <label>Nội dung</label>
+          <input
+            value={reviews[key] || ""}
+            onChange={(e) => onChange({ [key]: e.target.value })}
+          />
+        </div>
+      </SettingGroup>
+    );
+  }
+
+  if (data.type === "revCard") {
+    const index = data.meta.index;
+    const item = reviews.reviews?.[index] || {
+      name: "",
+      text: "",
+      image: "",
+    };
+
+    return (
+      <>
+        <SettingGroup title={`Đánh giá ${index + 1}`}>
+          <div className="builder-field">
+            <label>Tên khách hàng</label>
+            <input
+              value={item.name || ""}
+              onChange={(e) =>
+                onChange({
+                  _reviewIndex: index,
+                  _reviewItem: { name: e.target.value },
+                })
+              }
+            />
+          </div>
+
+          <div className="builder-field">
+            <label>Nội dung</label>
+            <textarea
+              rows={4}
+              value={item.text || ""}
+              onChange={(e) =>
+                onChange({
+                  _reviewIndex: index,
+                  _reviewItem: { text: e.target.value },
+                })
+              }
+            />
+          </div>
+
+          <div className="builder-field">
+            <label>Ảnh khách hàng (URL)</label>
+            <input
+              value={item.image || ""}
+              onChange={(e) =>
+                onChange({
+                  _reviewIndex: index,
+                  _reviewItem: { image: e.target.value },
+                })
+              }
+              placeholder="Dán link ảnh hoặc /avatar.jpg"
+            />
+            <small className="builder-help">
+              Ảnh tròn nhỏ cạnh tên. Có thể tải lên ở Form cũ → Cảm nhận.
+            </small>
+          </div>
+
+          {item.image && (
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: "50%",
+                overflow: "hidden",
+                border: "2px solid #f5d6e0",
+                backgroundImage: `url("${item.image}")`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            />
+          )}
+        </SettingGroup>
+
+        <SettingGroup title="Danh sách">
+          <button
+            type="button"
+            className="admin-btn"
+            style={{ width: "100%", marginBottom: 8 }}
+            onClick={() =>
+              onChange({
+                _reviewsList: [
+                  ...(reviews.reviews || []),
+                  { name: "", text: "", image: "" },
+                ],
+              })
+            }
+          >
+            + Thêm đánh giá
+          </button>
+
+          {(reviews.reviews || []).length > 1 && (
+            <button
+              type="button"
+              className="admin-btn danger"
+              style={{ width: "100%" }}
+              onClick={() => {
+                const next = (reviews.reviews || []).filter(
+                  (_, i) => i !== index
+                );
+                onChange({ _reviewsList: next });
+              }}
+            >
+              Xóa đánh giá này
+            </button>
+          )}
+        </SettingGroup>
+      </>
+    );
+  }
+
+  return null;
+}
+
+function FooterSettings({ data, footer, onChange }) {
+  if (!data || data.type === "ftEmpty") {
+    return (
+      <div className="builder-empty">
+        Chọn một thành phần trên preview.
+      </div>
+    );
+  }
+
+  const { key, label, rows } = data.meta;
+
+  return (
+    <SettingGroup title={label}>
+      <div className="builder-field">
+        <label>Nội dung</label>
+        {rows ? (
+          <textarea
+            rows={rows}
+            value={footer[key] || ""}
+            onChange={(e) => onChange({ [key]: e.target.value })}
+          />
+        ) : (
+          <input
+            value={footer[key] || ""}
+            onChange={(e) => onChange({ [key]: e.target.value })}
+          />
+        )}
+      </div>
+    </SettingGroup>
+  );
+}
+
+function ProductDetailSettings({
+  selected,
+  data,
+  productDetail,
+  onStyleChange,
+}) {
+  if (!data || data.type === "pdEmpty") {
+    return (
+      <div className="builder-empty">
+        Chọn một thành phần trên preview.
+      </div>
+    );
+  }
+
+  const meta = data.meta;
+  const style = productDetail[meta.styleKey] || {};
+
+  return (
+    <>
+      <SettingGroup title="Typography">
+        <TypographyControls
+          style={{
+            fontFamily: toBareFontFamily(style.fontFamily),
+            fontSize: style.fontSize ?? "",
+            fontWeight: style.fontWeight ?? "",
+            color: style.color || "",
+            letterSpacing: style.letterSpacing ?? "",
+            lineHeight: style.lineHeight ?? "",
+            italic: style.italic || style.fontStyle === "italic",
+            textAlign: style.textAlign || "left",
+            marginTop: style.marginTop ?? 0,
+            marginBottom: style.marginBottom ?? 0,
+          }}
+          onChange={(patch) => {
+            const next = { ...patch };
+            if ("fontFamily" in patch) {
+              next.fontFamily = toFullFontFamily(patch.fontFamily);
+            }
+            if ("italic" in patch) {
+              next.fontStyle = patch.italic ? "italic" : "normal";
+            }
+            onStyleChange(next);
+          }}
+        />
+      </SettingGroup>
+
+      <SettingGroup title="Gợi ý">
+        <p className="builder-help" style={{ margin: 0 }}>
+          Kiểu chữ này áp dụng cho trang chi tiết của{" "}
+          <strong>mọi sản phẩm</strong>. Nội dung từng SP sửa ở mục
+          Sản phẩm.
+        </p>
+        {meta.sample && (
+          <div
+            style={{
+              marginTop: 10,
+              padding: 14,
+              borderRadius: 10,
+              border: "1px dashed #ead9e0",
+              background: "#fffafd",
+              fontFamily: style.fontFamily || undefined,
+              fontSize: style.fontSize
+                ? `${style.fontSize}px`
+                : undefined,
+              fontWeight: style.fontWeight,
+              fontStyle:
+                style.italic || style.fontStyle === "italic"
+                  ? "italic"
+                  : "normal",
+              letterSpacing:
+                style.letterSpacing != null
+                  ? typeof style.letterSpacing === "number"
+                    ? `${style.letterSpacing}px`
+                    : style.letterSpacing
+                  : undefined,
+              lineHeight: style.lineHeight,
+              color: style.color,
+            }}
+          >
+            {meta.sample}
+          </div>
+        )}
+      </SettingGroup>
+    </>
+  );
+}
+
+function CollectionSettings({
+  selected,
+  data,
+  collection,
+  onChange,
+  onStyleChange,
+}) {
+  if (!data || data.type === "colEmpty") {
+    return (
+      <div className="builder-empty">
+        Chọn một thành phần trên preview.
+      </div>
+    );
+  }
+
+  const meta = data.meta;
+  const style =
+    collection[meta.group]?.[meta.styleKey] || {};
+
+  return (
+    <>
+      {meta.textKey && (
+        <SettingGroup title="Nội dung">
+          <div className="builder-field">
+            <label>{meta.label}</label>
+            <input
+              value={collection[meta.textKey] || ""}
+              onChange={(e) =>
+                onChange({ [meta.textKey]: e.target.value })
+              }
+            />
+          </div>
+        </SettingGroup>
+      )}
+
+      <SettingGroup title="Typography">
+        <TypographyControls
+          style={{
+            fontFamily: toBareFontFamily(style.fontFamily),
+            fontSize: style.fontSize ?? "",
+            fontWeight: style.fontWeight ?? "",
+            color: style.color || "",
+            letterSpacing: style.letterSpacing ?? "",
+            lineHeight: style.lineHeight ?? "",
+            italic: style.italic || style.fontStyle === "italic",
+            textAlign: style.textAlign || "left",
+            marginTop: style.marginTop ?? 0,
+            marginBottom: style.marginBottom ?? 0,
+          }}
+          onChange={(patch) => {
+            const next = { ...patch };
+            if ("fontFamily" in patch) {
+              next.fontFamily = toFullFontFamily(patch.fontFamily);
+            }
+            if ("italic" in patch) {
+              next.fontStyle = patch.italic ? "italic" : "normal";
+            }
+            onStyleChange(next);
+          }}
+        />
+      </SettingGroup>
+
+      <SettingGroup title="Gợi ý">
+        <p className="builder-help" style={{ margin: 0 }}>
+          {meta.group === "productCardStyles"
+            ? "Kiểu chữ này áp dụng cho TẤT CẢ thẻ sản phẩm. Nội dung từng sản phẩm sửa ở mục Sản phẩm."
+            : "Chỉnh chữ và kiểu cho tiêu đề khu vực Collection."}
+        </p>
+        {meta.sample && (
+          <div
+            style={{
+              marginTop: 10,
+              padding: 14,
+              borderRadius: 10,
+              border: "1px dashed #ead9e0",
+              background:
+                meta.styleKey === "button" ? "#d9628a" : "#fffafd",
+              color: meta.styleKey === "button" ? "#fff" : undefined,
+              fontFamily: style.fontFamily
+                ? `"${style.fontFamily}", serif`
+                : undefined,
+              fontSize: style.fontSize
+                ? `${style.fontSize}px`
+                : undefined,
+              fontWeight: style.fontWeight,
+              fontStyle:
+                style.italic || style.fontStyle === "italic"
+                  ? "italic"
+                  : "normal",
+              letterSpacing:
+                style.letterSpacing != null
+                  ? `${style.letterSpacing}px`
+                  : undefined,
+              lineHeight: style.lineHeight,
+              color:
+                meta.styleKey === "button"
+                  ? style.color || "#fff"
+                  : style.color,
+            }}
+          >
+            {meta.sample}
+          </div>
+        )}
+      </SettingGroup>
+    </>
+  );
+}
+
+function HeroSettings({ selected, data, hero, onChange }) {
+  if (!data || data.type === "heroEmpty") {
+    return (
+      <div className="builder-empty">
+        Chọn một thành phần trên preview.
+      </div>
+    );
+  }
+
+  if (data.type === "heroImage") {
+    return (
+      <SettingGroup title="Ảnh nền">
+        <div className="builder-field">
+          <label>URL ảnh nền</label>
+          <input
+            value={hero.heroImage || ""}
+            onChange={(e) =>
+              onChange({ heroImage: e.target.value })
+            }
+            placeholder="/hero.jpg"
+          />
+          <small className="builder-help">
+            Dán URL ảnh (Cloudinary hoặc đường dẫn local).
+          </small>
+        </div>
+
+        {hero.heroImage && (
+          <div
+            style={{
+              marginTop: 8,
+              borderRadius: 12,
+              overflow: "hidden",
+              border: "1px solid #ead9e0",
+              height: 120,
+              backgroundImage: `url("${hero.heroImage}")`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          />
+        )}
+      </SettingGroup>
+    );
+  }
+
+  if (data.type === "heroRotator") {
+    const text = (hero.heroRotator || []).join("\n");
+    return (
+      <SettingGroup title="Các từ đổi liên tục">
+        <div className="builder-field">
+          <label>Mỗi dòng một từ</label>
+          <textarea
+            rows={5}
+            value={text}
+            onChange={(e) =>
+              onChange({
+                heroRotator: e.target.value
+                  .split("\n")
+                  .map((s) => s.trim())
+                  .filter(Boolean),
+              })
+            }
+            placeholder={"dịu nhẹ\nrạng rỡ\ntự tin"}
+          />
+          <small className="builder-help">
+            Preview hiển thị từ đầu tiên. Trên trang thật sẽ xoay lần lượt.
+          </small>
+        </div>
+      </SettingGroup>
+    );
+  }
+
+  if (data.type === "heroButton") {
+    const { textKey, linkKey, label } = data.meta;
+    return (
+      <SettingGroup title={label}>
+        <div className="builder-field">
+          <label>Chữ nút</label>
+          <input
+            value={hero[textKey] || ""}
+            onChange={(e) =>
+              onChange({ [textKey]: e.target.value })
+            }
+          />
+        </div>
+        <div className="builder-field">
+          <label>Liên kết</label>
+          <input
+            value={hero[linkKey] || ""}
+            onChange={(e) =>
+              onChange({ [linkKey]: e.target.value })
+            }
+            placeholder="#about"
+          />
+        </div>
+      </SettingGroup>
+    );
+  }
+
+  if (data.type === "heroText") {
+    const { key, label, rows } = data.meta;
+    return (
+      <SettingGroup title={label}>
+        <div className="builder-field">
+          <label>Nội dung</label>
+          {rows ? (
+            <textarea
+              rows={rows}
+              value={hero[key] || ""}
+              onChange={(e) =>
+                onChange({ [key]: e.target.value })
+              }
+            />
+          ) : (
+            <input
+              value={hero[key] || ""}
+              onChange={(e) =>
+                onChange({ [key]: e.target.value })
+              }
+            />
+          )}
+        </div>
+      </SettingGroup>
+    );
+  }
+
+  return null;
 }
 
 function SectionSettings({ data, onChange }) {
