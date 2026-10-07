@@ -638,12 +638,11 @@ function createAbout(data = {}) {
         DEFAULT_ABOUT.image.src,
     },
 
-    stats:
-      builder.stats?.length
-        ? builder.stats
-        : data.storyStats?.length
-        ? data.storyStats
-        : DEFAULT_ABOUT.stats,
+    stats: Array.isArray(builder.stats)
+      ? builder.stats
+      : Array.isArray(data.storyStats)
+      ? data.storyStats
+      : DEFAULT_ABOUT.stats,
 
     statValue: mergeStyle(
       DEFAULT_ABOUT.statValue,
@@ -1004,10 +1003,31 @@ export default function VisualBuilder() {
       }
 
       if (selected === "stats") {
-        return {
-          ...current,
-          stats: patch,
-        };
+        if (Array.isArray(patch)) {
+          return { ...current, stats: patch };
+        }
+        if (patch._statsList) {
+          return { ...current, stats: patch._statsList };
+        }
+        if (patch._statValue) {
+          return {
+            ...current,
+            statValue: {
+              ...(current.statValue || {}),
+              ...patch._statValue,
+            },
+          };
+        }
+        if (patch._statLabel) {
+          return {
+            ...current,
+            statLabel: {
+              ...(current.statLabel || {}),
+              ...patch._statLabel,
+            },
+          };
+        }
+        return current;
       }
 
       return {
@@ -1144,7 +1164,7 @@ export default function VisualBuilder() {
         storyHighlight: about.highlight.text,
         storyText: about.text.text,
         storyImage: about.image.src,
-        storyStats: about.stats,
+        storyStats: Array.isArray(about.stats) ? about.stats : DEFAULT_ABOUT.stats,
 
         aboutBuilder: about,
 
@@ -1336,10 +1356,10 @@ export default function VisualBuilder() {
 
         <main className="builder-canvas">
           <div className="builder-canvas-head">
-            <span>Preview</span>
+            <span>Preview — kích thước thật (full width cột giữa)</span>
 
             <span className="builder-device">
-              Desktop
+              Desktop 1:1
             </span>
           </div>
 
@@ -1458,13 +1478,24 @@ function getSelectedData(about, selected) {
   if (selected === "stats") {
     return {
       type: "stats",
-      data: about.stats,
+      data: Array.isArray(about.stats) ? about.stats : DEFAULT_ABOUT.stats,
+    };
+  }
+
+  const block = about[selected];
+  if (!block || typeof block !== "object") {
+    return {
+      type: "text",
+      data: { text: "", style: { ...DEFAULT_STYLE } },
     };
   }
 
   return {
     type: "text",
-    data: about[selected],
+    data: {
+      text: block.text || "",
+      style: block.style || { ...DEFAULT_STYLE },
+    },
   };
 }
 
@@ -2116,9 +2147,9 @@ function FeaturesSettings({
   return null;
 }
 
-function StyleTypographyBlock({ style = {}, onStyleChange }) {
+function StyleTypographyBlock({ style = {}, onStyleChange, title = "Typography" }) {
   return (
-    <SettingGroup title="Typography">
+    <SettingGroup title={title}>
       <TypographyControls
         style={{
           fontFamily: toBareFontFamily(style.fontFamily),
@@ -2131,6 +2162,9 @@ function StyleTypographyBlock({ style = {}, onStyleChange }) {
           textAlign: style.textAlign || "left",
           marginTop: style.marginTop ?? 0,
           marginBottom: style.marginBottom ?? 0,
+          paddingTop: style.paddingTop ?? 0,
+          paddingBottom: style.paddingBottom ?? 0,
+          maxWidth: style.maxWidth ?? 100,
         }}
         onChange={(patch) => {
           const next = { ...patch };
@@ -2387,32 +2421,7 @@ function ProductDetailSettings({
 
   return (
     <>
-      <SettingGroup title="Typography">
-        <TypographyControls
-          style={{
-            fontFamily: toBareFontFamily(style.fontFamily),
-            fontSize: style.fontSize ?? "",
-            fontWeight: style.fontWeight ?? "",
-            color: style.color || "",
-            letterSpacing: style.letterSpacing ?? "",
-            lineHeight: style.lineHeight ?? "",
-            italic: style.italic || style.fontStyle === "italic",
-            textAlign: style.textAlign || "left",
-            marginTop: style.marginTop ?? 0,
-            marginBottom: style.marginBottom ?? 0,
-          }}
-          onChange={(patch) => {
-            const next = { ...patch };
-            if ("fontFamily" in patch) {
-              next.fontFamily = toFullFontFamily(patch.fontFamily);
-            }
-            if ("italic" in patch) {
-              next.fontStyle = patch.italic ? "italic" : "normal";
-            }
-            onStyleChange(next);
-          }}
-        />
-      </SettingGroup>
+      <StyleTypographyBlock style={style} onStyleChange={onStyleChange} />
 
       <SettingGroup title="Gợi ý">
         <p className="builder-help" style={{ margin: 0 }}>
@@ -2490,32 +2499,7 @@ function CollectionSettings({
         </SettingGroup>
       )}
 
-      <SettingGroup title="Typography">
-        <TypographyControls
-          style={{
-            fontFamily: toBareFontFamily(style.fontFamily),
-            fontSize: style.fontSize ?? "",
-            fontWeight: style.fontWeight ?? "",
-            color: style.color || "",
-            letterSpacing: style.letterSpacing ?? "",
-            lineHeight: style.lineHeight ?? "",
-            italic: style.italic || style.fontStyle === "italic",
-            textAlign: style.textAlign || "left",
-            marginTop: style.marginTop ?? 0,
-            marginBottom: style.marginBottom ?? 0,
-          }}
-          onChange={(patch) => {
-            const next = { ...patch };
-            if ("fontFamily" in patch) {
-              next.fontFamily = toFullFontFamily(patch.fontFamily);
-            }
-            if ("italic" in patch) {
-              next.fontStyle = patch.italic ? "italic" : "normal";
-            }
-            onStyleChange(next);
-          }}
-        />
-      </SettingGroup>
+      <StyleTypographyBlock style={style} onStyleChange={onStyleChange} />
 
       <SettingGroup title="Gợi ý">
         <p className="builder-help" style={{ margin: 0 }}>
@@ -2801,38 +2785,62 @@ function ImageSettings({ data, onChange }) {
 }
 
 function StatsSettings({ stats, about, onChange }) {
+  const list = Array.isArray(stats)
+    ? stats.map((item) => ({
+        value: item?.value ?? 0,
+        suffix: item?.suffix || "",
+        label: item?.label || "",
+      }))
+    : DEFAULT_ABOUT.stats;
+
+  const valueStyle = about?.statValue || DEFAULT_ABOUT.statValue;
+  const labelStyle = about?.statLabel || DEFAULT_ABOUT.statLabel;
+
+  const patchList = (next) => onChange({ _statsList: next });
+
   return (
     <>
-      <SettingGroup title="Kiểu số">
-        <TypographyControls
-          style={about.statValue}
-          onChange={(patch) =>
-            onChange({
-              ...about.statValue,
-              ...patch,
-            })
-          }
-        />
-      </SettingGroup>
+      <StyleTypographyBlock
+        title="Kiểu số"
+        style={valueStyle}
+        onStyleChange={(patch) => onChange({ _statValue: patch })}
+      />
 
       <SettingGroup title="Kiểu mô tả">
         <TypographyControls
-          style={about.statLabel}
-          onChange={(patch) =>
-            onChange({
-              ...about.statLabel,
-              ...patch,
-            })
-          }
+          style={{
+            fontFamily: toBareFontFamily(labelStyle.fontFamily),
+            fontSize: labelStyle.fontSize ?? "",
+            fontWeight: labelStyle.fontWeight ?? "",
+            color: labelStyle.color || "",
+            letterSpacing: labelStyle.letterSpacing ?? "",
+            lineHeight: labelStyle.lineHeight ?? "",
+            italic:
+              labelStyle.italic || labelStyle.fontStyle === "italic",
+            textAlign: labelStyle.textAlign || "left",
+            marginTop: labelStyle.marginTop ?? 0,
+            marginBottom: labelStyle.marginBottom ?? 0,
+            paddingTop: labelStyle.paddingTop ?? 0,
+            paddingBottom: labelStyle.paddingBottom ?? 0,
+            maxWidth: labelStyle.maxWidth ?? 100,
+          }}
+          onChange={(patch) => {
+            const next = { ...patch };
+            if ("fontFamily" in patch) {
+              next.fontFamily = toFullFontFamily(patch.fontFamily);
+            }
+            if ("italic" in patch) {
+              next.fontStyle = patch.italic ? "italic" : "normal";
+            }
+            onChange({ _statLabel: next });
+          }}
         />
       </SettingGroup>
 
       <SettingGroup title="Nội dung">
-        {stats.map((item, index) => (
+        {list.map((item, index) => (
           <div className="builder-stat-edit" key={index}>
-            <div className="builder-stat-number">
-              #{index + 1}
-            </div>
+            <div className="builder-stat-number">#{index + 1}</div>
 
             <div className="builder-field-row">
               <div className="builder-field">
@@ -2841,13 +2849,12 @@ function StatsSettings({ stats, about, onChange }) {
                   type="number"
                   value={item.value ?? ""}
                   onChange={(e) => {
-                    const next = [...stats];
+                    const next = [...list];
                     next[index] = {
                       ...next[index],
-                      value:
-                        Number(e.target.value) || 0,
+                      value: Number(e.target.value) || 0,
                     };
-                    onChange(next);
+                    patchList(next);
                   }}
                 />
               </div>
@@ -2857,12 +2864,12 @@ function StatsSettings({ stats, about, onChange }) {
                 <input
                   value={item.suffix || ""}
                   onChange={(e) => {
-                    const next = [...stats];
+                    const next = [...list];
                     next[index] = {
                       ...next[index],
                       suffix: e.target.value,
                     };
-                    onChange(next);
+                    patchList(next);
                   }}
                 />
               </div>
@@ -2873,12 +2880,12 @@ function StatsSettings({ stats, about, onChange }) {
               <input
                 value={item.label || ""}
                 onChange={(e) => {
-                  const next = [...stats];
+                  const next = [...list];
                   next[index] = {
                     ...next[index],
                     label: e.target.value,
                   };
-                  onChange(next);
+                  patchList(next);
                 }}
               />
             </div>
@@ -2895,6 +2902,9 @@ function TextSettings({
   onChange,
   onStyleChange,
 }) {
+  const safe = data || { text: "", style: { ...DEFAULT_STYLE } };
+  const style = safe.style || { ...DEFAULT_STYLE };
+
   return (
     <>
       <SettingGroup title="Nội dung">
@@ -2907,7 +2917,7 @@ function TextSettings({
 
           <textarea
             rows={selected === "text" ? 7 : 4}
-            value={data.text || ""}
+            value={safe.text || ""}
             onChange={(e) =>
               onChange({
                 text: e.target.value,
@@ -2924,7 +2934,7 @@ function TextSettings({
 
       <SettingGroup title="Typography">
         <TypographyControls
-          style={data.style}
+          style={style}
           onChange={onStyleChange}
         />
       </SettingGroup>
@@ -2933,11 +2943,12 @@ function TextSettings({
 }
 
 function TypographyControls({ style, onChange }) {
+  const s = style || {};
   return (
     <>
       <SelectField
         label="Font"
-        value={style.fontFamily}
+        value={s.fontFamily}
         options={FONT_OPTIONS}
         onChange={(value) =>
           onChange({ fontFamily: value })
@@ -2947,7 +2958,7 @@ function TypographyControls({ style, onChange }) {
       <div className="builder-field-row">
         <SelectField
           label="Size"
-          value={style.fontSize}
+          value={s.fontSize}
           options={SIZE_OPTIONS}
           suffix="px"
           onChange={(value) =>
@@ -2959,7 +2970,7 @@ function TypographyControls({ style, onChange }) {
 
         <SelectField
           label="Weight"
-          value={style.fontWeight}
+          value={s.fontWeight}
           options={WEIGHT_OPTIONS}
           onChange={(value) =>
             onChange({
@@ -2971,7 +2982,7 @@ function TypographyControls({ style, onChange }) {
 
       <ColorField
         label="Màu chữ"
-        value={style.color}
+        value={s.color}
         onChange={(value) =>
           onChange({ color: value })
         }
@@ -2980,7 +2991,7 @@ function TypographyControls({ style, onChange }) {
       <div className="builder-field-row">
         <SelectField
           label="Letter spacing"
-          value={style.letterSpacing}
+          value={s.letterSpacing}
           options={LETTER_OPTIONS}
           suffix="px"
           onChange={(value) =>
@@ -2992,7 +3003,7 @@ function TypographyControls({ style, onChange }) {
 
         <SelectField
           label="Line height"
-          value={style.lineHeight}
+          value={s.lineHeight}
           options={LINE_OPTIONS}
           onChange={(value) =>
             onChange({
@@ -3016,7 +3027,7 @@ function TypographyControls({ style, onChange }) {
               key={value}
               type="button"
               className={
-                style.textAlign === value
+                s.textAlign === value
                   ? "active"
                   : ""
               }
@@ -3039,11 +3050,11 @@ function TypographyControls({ style, onChange }) {
         <button
           type="button"
           className={`builder-toggle ${
-            style.italic ? "active" : ""
+            s.italic ? "active" : ""
           }`}
           onClick={() =>
             onChange({
-              italic: !style.italic,
+              italic: !s.italic,
             })
           }
         >
@@ -3055,7 +3066,7 @@ function TypographyControls({ style, onChange }) {
         <div className="builder-field-row">
           <SelectField
             label="Margin trên"
-            value={style.marginTop}
+            value={s.marginTop}
             options={SPACE_OPTIONS}
             suffix="px"
             onChange={(value) =>
@@ -3067,7 +3078,7 @@ function TypographyControls({ style, onChange }) {
 
           <SelectField
             label="Margin dưới"
-            value={style.marginBottom}
+            value={s.marginBottom}
             options={SPACE_OPTIONS}
             suffix="px"
             onChange={(value) =>
@@ -3081,7 +3092,7 @@ function TypographyControls({ style, onChange }) {
         <div className="builder-field-row">
           <SelectField
             label="Padding trên"
-            value={style.paddingTop}
+            value={s.paddingTop}
             options={SPACE_OPTIONS}
             suffix="px"
             onChange={(value) =>
@@ -3093,7 +3104,7 @@ function TypographyControls({ style, onChange }) {
 
           <SelectField
             label="Padding dưới"
-            value={style.paddingBottom}
+            value={s.paddingBottom}
             options={SPACE_OPTIONS}
             suffix="px"
             onChange={(value) =>
@@ -3106,7 +3117,7 @@ function TypographyControls({ style, onChange }) {
 
         <SelectField
           label="Max width"
-          value={style.maxWidth}
+          value={s.maxWidth}
           options={[
             30,
             40,
@@ -3147,15 +3158,31 @@ function SelectField({
   suffix = "",
   onChange,
 }) {
+  const list = Array.isArray(options) ? options : [];
+  const raw = value ?? "";
+  const hasValue = list.some((option) => String(option) === String(raw));
+  const selectValue = raw === "" || hasValue ? raw : String(raw);
+  const extra =
+    raw !== "" && !hasValue ? (
+      <option value={selectValue}>
+        {selectValue}
+        {suffix}
+      </option>
+    ) : null;
+
   return (
     <div className="builder-field">
       <label>{label}</label>
 
       <select
-        value={value ?? ""}
+        value={selectValue}
         onChange={(e) => onChange(e.target.value)}
       >
-        {options.map((option) => (
+        {raw === "" && !hasValue && (
+          <option value="">—</option>
+        )}
+        {extra}
+        {list.map((option) => (
           <option key={String(option)} value={option}>
             {option}
             {suffix}
@@ -3166,17 +3193,28 @@ function SelectField({
   );
 }
 
+function toSafeHexColor(value) {
+  if (typeof value !== "string") return "#000000";
+  const v = value.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(v)) return v;
+  if (/^#[0-9a-fA-F]{3}$/.test(v)) {
+    return `#${v[1]}${v[1]}${v[2]}${v[2]}${v[3]}${v[3]}`;
+  }
+  return "#000000";
+}
+
 function ColorField({ label, value, onChange }) {
+  const hex = toSafeHexColor(value);
   return (
     <div className="builder-color-field">
       <div>
         <label>{label}</label>
-        <span>{value}</span>
+        <span>{value || hex}</span>
       </div>
 
       <input
         type="color"
-        value={value || "#000000"}
+        value={hex}
         onChange={(e) => onChange(e.target.value)}
       />
     </div>

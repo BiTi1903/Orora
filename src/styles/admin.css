@@ -48,6 +48,50 @@
 
 .admin-main { padding: 40px 5%; min-width: 0; }
 
+/* Khi mở Visual Builder: giảm padding để preview rộng hơn, sát kích thước thật */
+.admin-main:has(.visual-builder) {
+  padding: 20px 18px 18px;
+}
+
+.home-admin-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.home-admin-mode {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.home-admin-mode button {
+  padding: 9px 16px;
+  border: 1px solid #f7b8d0;
+  border-radius: 40px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: #b8446d;
+  background: #fff;
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s, transform 0.2s;
+}
+
+.home-admin-mode button:hover {
+  background: #fff0f5;
+  transform: translateY(-1px);
+}
+
+.home-admin-mode button.active {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, #ee8eae, #b8446d);
+}
+
 /* ---- lưới + thẻ ---- */
 .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-top: 20px; }
 

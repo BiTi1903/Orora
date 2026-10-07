@@ -67,8 +67,36 @@ export function toCss(style, { responsive = true } = {}) {
       typeof s.letterSpacing === "number" ? `${s.letterSpacing}px` : s.letterSpacing;
   }
   if (has(s.lineHeight)) css.lineHeight = Number(s.lineHeight);
-  if (has(s.fontStyle)) css.fontStyle = s.fontStyle;
+  if (has(s.fontStyle)) {
+    css.fontStyle = s.fontStyle;
+  } else if (s.italic === true) {
+    css.fontStyle = "italic";
+  } else if (s.italic === false) {
+    css.fontStyle = "normal";
+  }
   if (has(s.textTransform)) css.textTransform = s.textTransform;
+  if (has(s.textAlign)) css.textAlign = s.textAlign;
+
+  /* Spacing — đồng bộ với About (createTextStyle) để mọi section chỉnh được */
+  if (s.marginTop != null && s.marginTop !== "") {
+    css.marginTop = `${Number(s.marginTop)}px`;
+  }
+  if (s.marginBottom != null && s.marginBottom !== "") {
+    css.marginBottom = `${Number(s.marginBottom)}px`;
+  }
+  if (s.paddingTop != null && s.paddingTop !== "") {
+    css.paddingTop = `${Number(s.paddingTop)}px`;
+  }
+  if (s.paddingBottom != null && s.paddingBottom !== "") {
+    css.paddingBottom = `${Number(s.paddingBottom)}px`;
+  }
+  if (s.maxWidth != null && s.maxWidth !== "") {
+    const n = Number(s.maxWidth);
+    if (!Number.isNaN(n) && n > 0) {
+      /* ≤100 coi là %, >100 coi là px (giống About) */
+      css.maxWidth = n <= 100 ? `${n}%` : `${n}px`;
+    }
+  }
 
   return css;
 }

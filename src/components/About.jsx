@@ -39,65 +39,70 @@ function loadGoogleFonts() {
 }
 
 function createTextStyle(style = {}) {
+  const s = style || {};
   const maxWidth =
-    style.maxWidth == null
+    s.maxWidth == null
       ? undefined
-      : Number(style.maxWidth) <= 100
-      ? `${Number(style.maxWidth)}%`
-      : `${Number(style.maxWidth)}px`;
+      : Number(s.maxWidth) <= 100
+      ? `${Number(s.maxWidth)}%`
+      : `${Number(s.maxWidth)}px`;
 
   return {
-    fontFamily: style.fontFamily
-      ? `"${style.fontFamily}", sans-serif`
+    fontFamily: s.fontFamily
+      ? String(s.fontFamily).includes(",")
+        ? s.fontFamily
+        : `"${s.fontFamily}", sans-serif`
       : undefined,
 
     fontSize:
-      style.fontSize != null
-        ? `${Number(style.fontSize)}px`
+      s.fontSize != null
+        ? `${Number(s.fontSize)}px`
         : undefined,
 
     fontWeight:
-      style.fontWeight != null
-        ? Number(style.fontWeight)
+      s.fontWeight != null
+        ? Number(s.fontWeight)
         : undefined,
 
-    color: style.color || undefined,
+    color: s.color || undefined,
 
-    fontStyle: style.italic
+    fontStyle: s.italic || s.fontStyle === "italic"
       ? "italic"
-      : "normal",
+      : s.fontStyle || undefined,
 
     letterSpacing:
-      style.letterSpacing != null
-        ? `${Number(style.letterSpacing)}px`
+      s.letterSpacing != null
+        ? typeof s.letterSpacing === "number"
+          ? `${Number(s.letterSpacing)}px`
+          : s.letterSpacing
         : undefined,
 
     lineHeight:
-      style.lineHeight != null
-        ? Number(style.lineHeight)
+      s.lineHeight != null
+        ? Number(s.lineHeight)
         : undefined,
 
     textAlign:
-      style.textAlign || undefined,
+      s.textAlign || undefined,
 
     marginTop:
-      style.marginTop != null
-        ? `${Number(style.marginTop)}px`
+      s.marginTop != null
+        ? `${Number(s.marginTop)}px`
         : undefined,
 
     marginBottom:
-      style.marginBottom != null
-        ? `${Number(style.marginBottom)}px`
+      s.marginBottom != null
+        ? `${Number(s.marginBottom)}px`
         : undefined,
 
     paddingTop:
-      style.paddingTop != null
-        ? `${Number(style.paddingTop)}px`
+      s.paddingTop != null
+        ? `${Number(s.paddingTop)}px`
         : undefined,
 
     paddingBottom:
-      style.paddingBottom != null
-        ? `${Number(style.paddingBottom)}px`
+      s.paddingBottom != null
+        ? `${Number(s.paddingBottom)}px`
         : undefined,
 
     maxWidth,
@@ -299,10 +304,9 @@ function normalizeBuilder(data) {
       ...(builder.image || {}),
     },
 
-    stats:
-      builder.stats?.length
-        ? builder.stats
-        : defaultData.stats,
+    stats: Array.isArray(builder.stats)
+      ? builder.stats
+      : defaultData.stats,
 
     statValue: {
       ...defaultData.statValue,
@@ -591,7 +595,7 @@ function About({
               select("stats");
             }}
           >
-            {stats.map((item, index) => (
+            {(Array.isArray(stats) ? stats : []).map((item, index) => (
               <div key={index}>
                 <strong
                   style={createTextStyle(
@@ -600,16 +604,16 @@ function About({
                 >
                   {preview ? (
                     <>
-                      {Number(item.value) || 0}
-                      {item.suffix || ""}
+                      {Number(item?.value) || 0}
+                      {item?.suffix || ""}
                     </>
                   ) : (
                     <CountUp
                       to={
-                        Number(item.value) || 0
+                        Number(item?.value) || 0
                       }
                       suffix={
-                        item.suffix || ""
+                        item?.suffix || ""
                       }
                     />
                   )}
@@ -620,7 +624,7 @@ function About({
                     builder.statLabel
                   )}
                 >
-                  {item.label}
+                  {item?.label}
                 </span>
               </div>
             ))}

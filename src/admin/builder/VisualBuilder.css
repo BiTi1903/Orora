@@ -1,27 +1,32 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Montserrat:wght@300;400;500;600;700&family=Mulish:wght@300;400;500;600;700;800&family=Noto+Sans:wght@300;400;500;600;700&family=Noto+Serif:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap");
 
 .visual-builder {
-  margin-top: 26px;
+  margin-top: 16px;
   border: 1px solid rgba(184, 68, 109, 0.15);
   border-radius: 24px;
   overflow: hidden;
   background: #f8f3f5;
   box-shadow: 0 18px 60px rgba(90, 35, 55, 0.1);
+  /* Chiều cao cố định để panel phải có thể cuộn */
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 140px);
+  min-height: 720px;
+  max-height: calc(100vh - 100px);
 }
 
 /* TOP TOOLBAR */
 
 .builder-toolbar {
-  min-height: 76px;
-  padding: 14px 18px 14px 22px;
+  flex-shrink: 0;
+  min-height: 64px;
+  padding: 12px 16px 12px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
   background: rgba(255, 255, 255, 0.96);
   border-bottom: 1px solid rgba(184, 68, 109, 0.12);
-  position: sticky;
-  top: 0;
   z-index: 100;
   backdrop-filter: blur(16px);
 }
@@ -65,24 +70,29 @@
   background: #fdecea;
 }
 
-/* MAIN */
+/* MAIN — cho preview chiếm nhiều không gian ngang hơn (gần kích thước thật) */
 
 .builder-layout {
-  min-height: 760px;
+  flex: 1;
+  min-height: 0;
   display: grid;
-  grid-template-columns: 210px minmax(400px, 1fr) 310px;
+  /* Sidebar trái hẹp hơn, panel phải vừa đủ, preview chiếm phần còn lại */
+  grid-template-columns: 168px minmax(0, 1fr) 280px;
+  height: 100%;
 }
 
 /* LEFT */
 
 .builder-sections {
   min-width: 0;
+  height: 100%;
+  overflow-y: auto;
   background: #fff;
   border-right: 1px solid rgba(184, 68, 109, 0.12);
 }
 
 .builder-panel-title {
-  padding: 18px 18px 14px;
+  padding: 14px 12px 12px;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -103,22 +113,22 @@
 }
 
 .builder-section-list {
-  padding: 10px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .builder-section-item {
   width: 100%;
-  min-height: 58px;
-  padding: 9px 10px;
+  min-height: 48px;
+  padding: 8px 8px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   position: relative;
   border: 0;
-  border-radius: 12px;
+  border-radius: 10px;
   background: transparent;
   text-align: left;
   color: #3a1526;
@@ -184,13 +194,15 @@
   background: #e2678f;
 }
 
-/* CENTER */
+/* CENTER — preview full width của cột giữa, không bị hẹp */
 
 .builder-canvas {
   min-width: 0;
+  height: 100%;
   background: #eee7ea;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .builder-canvas-head {
@@ -223,28 +235,57 @@
 .builder-preview {
   flex: 1;
   min-width: 0;
-  padding: 24px;
-  overflow: auto;
+  min-height: 0;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Không dùng flex column cho content — để section tự giãn theo nội dung */
+  display: block;
 }
 
+/* ========== ABOUT (Câu chuyện) ========== */
 .builder-preview > .about {
-  min-height: 720px;
-  padding-left: 6%;
-  padding-right: 6%;
+  width: 100%;
   margin: 0;
+  min-height: auto !important;
+  height: auto !important;
+  overflow: visible !important;
+  /* Padding hợp lý trong khung preview (không cần chừa chỗ navbar) */
+  padding: 56px 5% !important;
+  box-sizing: border-box;
 }
 
+.builder-preview > .about .about-image-wrapper {
+  /* Tránh 72vh trong khung nhỏ — dùng chiều cao cố định vừa phải */
+  height: 420px !important;
+  min-height: 320px !important;
+  max-height: 520px;
+}
+
+.builder-preview > .about .about-visual {
+  max-width: none;
+}
+
+.builder-preview .about [data-builder-key] {
+  cursor: pointer;
+  transition:
+    outline 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* ========== HERO ========== */
 .builder-preview--hero {
   padding: 0;
-  display: flex;
-  align-items: stretch;
+  min-height: 100%;
 }
 
 .builder-preview--hero > .hero {
   width: 100%;
   min-height: 640px;
-  height: 640px;
+  height: auto;
   border-radius: 0;
+  overflow: visible !important;
 }
 
 .builder-preview .hero [data-builder-key] {
@@ -260,15 +301,33 @@
   pointer-events: auto;
 }
 
+/* ========== COLLECTION (Sản phẩm) ========== */
 .builder-preview--collection {
-  padding: 20px 16px 32px;
+  padding: 0;
 }
 
 .builder-preview--collection > .collection {
+  width: 100%;
   margin: 0;
-  padding-top: 40px;
-  padding-bottom: 40px;
-  min-height: 0;
+  min-height: auto !important;
+  height: auto !important;
+  overflow: visible !important;
+  padding: 48px 4% 64px !important;
+  box-sizing: border-box;
+}
+
+.builder-preview--collection .collection-header {
+  margin-bottom: 40px;
+}
+
+.builder-preview--collection .collection-header h2 {
+  /* Giữ tỷ lệ chữ nhưng không quá lớn trong khung hẹp */
+  font-size: clamp(40px, 5.5vw, 88px) !important;
+}
+
+.builder-preview--collection .gallery {
+  transform: none !important;
+  width: 100%;
 }
 
 .builder-preview .collection [data-builder-key] {
@@ -278,40 +337,48 @@
     box-shadow 0.2s ease;
 }
 
-.builder-preview--collection .gallery {
-  transform: scale(0.92);
-  transform-origin: top center;
-}
-
+/* ========== PRODUCT DETAIL (Chi tiết) ========== */
 .builder-preview--productdetail {
   padding: 0;
   background: #fffafc;
 }
 
-.builder-preview--productdetail > .product-detail {
-  min-height: 0;
-  padding-bottom: 40px;
+.builder-preview--productdetail > .product-detail,
+.builder-preview .product-detail--preview {
+  width: 100%;
+  margin: 0;
+  min-height: auto !important;
+  height: auto !important;
+  overflow: visible !important;
+  box-sizing: border-box;
 }
 
+/* Bỏ padding lớn dành cho navbar cố định */
 .builder-preview--productdetail .product-detail-top {
-  padding-top: 24px;
-  padding-bottom: 12px;
+  padding: 24px 4% 12px !important;
 }
 
 .builder-preview--productdetail .product-detail-content {
-  width: calc(100% - 32px);
-  gap: 28px;
-  padding-bottom: 32px;
+  width: 92% !important;
+  max-width: none !important;
+  margin: 0 auto 0 !important;
+  padding-bottom: 48px !important;
+  gap: 4% !important;
 }
 
+/* Không sticky trong khung preview (scroll cha) */
 .builder-preview--productdetail .product-detail-image {
-  position: relative;
-  top: 0;
-  max-height: 360px;
+  position: relative !important;
+  top: auto !important;
+  max-height: none;
 }
 
 .builder-preview--productdetail .product-detail-info h1 {
-  font-size: clamp(36px, 6vw, 56px) !important;
+  font-size: clamp(36px, 5vw, 72px) !important;
+}
+
+.builder-preview--productdetail .product-section {
+  margin-top: 36px;
 }
 
 .builder-preview .product-detail [data-builder-key] {
@@ -321,34 +388,26 @@
     box-shadow 0.2s ease;
 }
 
-.builder-preview--features {
-  padding: 24px 20px 40px;
-}
-
-.builder-preview--features > .ex-section {
-  margin: 0;
-  padding: 20px 0 0;
-}
-
-.builder-preview--features .feature-grid {
-  margin-top: 36px;
-  transform: scale(0.92);
-  transform-origin: top center;
-}
-
+/* ========== FEATURES / REVIEWS ========== */
+.builder-preview--features,
 .builder-preview--reviews {
-  padding: 24px 20px 40px;
+  padding: 0;
 }
 
+.builder-preview--features > .ex-section,
 .builder-preview--reviews > .ex-section {
+  width: 100%;
   margin: 0;
-  padding: 20px 0 0;
+  min-height: auto !important;
+  height: auto !important;
+  overflow: visible !important;
+  padding: 48px 4% 56px !important;
+  box-sizing: border-box;
 }
 
+.builder-preview--features .feature-grid,
 .builder-preview--reviews .review-grid {
-  margin-top: 36px;
-  transform: scale(0.95);
-  transform-origin: top center;
+  transform: none !important;
 }
 
 .builder-preview .ex-section [data-builder-key] {
@@ -358,15 +417,17 @@
     box-shadow 0.2s ease;
 }
 
+/* ========== FOOTER ========== */
 .builder-preview--footer {
   padding: 0;
-  display: flex;
-  align-items: flex-end;
 }
 
 .builder-preview--footer > .footer {
   width: 100%;
   margin: 0;
+  min-height: auto !important;
+  height: auto !important;
+  overflow: visible !important;
 }
 
 .builder-preview .footer [data-builder-key] {
@@ -380,17 +441,21 @@
   display: block;
 }
 
-/* RIGHT */
+/* RIGHT — panel chỉnh font/style: cuộn khi nội dung dài */
 
 .builder-settings {
   min-width: 0;
+  height: 100%;
   background: #fff;
   border-left: 1px solid rgba(184, 68, 109, 0.12);
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .builder-settings-inner {
-  min-height: 100%;
+  min-height: min-content;
+  padding-bottom: 24px;
 }
 
 .builder-setting-group {
@@ -618,23 +683,34 @@
 
 /* RESPONSIVE */
 
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
   .builder-layout {
-    grid-template-columns: 190px minmax(360px, 1fr) 280px;
-  }
-
-  .builder-preview {
-    padding: 14px;
+    grid-template-columns: 160px minmax(0, 1fr) 260px;
   }
 }
 
-@media (max-width: 950px) {
+@media (max-width: 1200px) {
   .builder-layout {
-    grid-template-columns: 180px 1fr;
+    grid-template-columns: 150px minmax(0, 1fr) 250px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .visual-builder {
+    height: auto;
+    max-height: none;
+    min-height: 0;
+  }
+
+  .builder-layout {
+    grid-template-columns: 150px 1fr;
+    height: auto;
   }
 
   .builder-settings {
     grid-column: 1 / -1;
+    height: auto;
+    max-height: 420px;
     border-left: 0;
     border-top: 1px solid rgba(184, 68, 109, 0.12);
   }
@@ -646,6 +722,16 @@
 
   .builder-panel-title {
     grid-column: 1 / -1;
+  }
+
+  .builder-sections {
+    height: auto;
+    max-height: 280px;
+  }
+
+  .builder-canvas {
+    min-height: 560px;
+    height: auto;
   }
 }
 
@@ -667,6 +753,7 @@
   .builder-sections {
     border-right: 0;
     border-bottom: 1px solid rgba(184, 68, 109, 0.12);
+    max-height: none;
   }
 
   .builder-section-list {
@@ -675,7 +762,11 @@
   }
 
   .builder-canvas {
-    min-height: 600px;
+    min-height: 520px;
+  }
+
+  .builder-settings {
+    max-height: 480px;
   }
 
   .builder-settings-inner {
