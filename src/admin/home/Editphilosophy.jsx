@@ -35,7 +35,7 @@ const ELEMENTS = [
 export default function EditPhilosophy() {
   const h = useHomeForm([
     "philosophyLabel",
-    "philosophyText",
+    "philosophyBody",
     "philosophyAccentCount",
     "philosophyStyles",
   ]);
@@ -47,8 +47,8 @@ export default function EditPhilosophy() {
       {...h}
       onSubmit={h.save}
     >
-      <Field label="Nhãn nhỏ" name="philosophyLabel" {...h} />
-      <Field label="Câu triết lý" name="philosophyText" rows="3" {...h} />
+      <Field label="Nhãn — Triết lý của chúng tôi" name="philosophyLabel" rows="2" {...h} />
+      <Field label="Nội dung (Enter để xuống dòng)" name="philosophyBody" rows="6" {...h} />
       <Field label="Số chữ cuối được nhấn màu (0 = tắt)" name="philosophyAccentCount" {...h} />
 
       <StyleList

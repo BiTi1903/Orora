@@ -8,6 +8,7 @@ import { Testimonials, Features } from "../../components/Extras";
 import { toCss } from "../../lib/typography";
 import Footer from "../../components/Footer";
 import Navbar from "../../components/Navbar";
+import ScrollText from "../../components/ScrollText";
 import { defaultProducts } from "../../data/content";
 import "./VisualBuilder.css";
 
@@ -610,6 +611,11 @@ const SECTION_LIST = [
     icon: "♡",
   },
   {
+    key: "philosophy",
+    label: "Triết lý",
+    icon: "✦",
+  },
+  {
     key: "collection",
     label: "Sản phẩm",
     icon: "◇",
@@ -944,6 +950,7 @@ const SECTION_DEFAULT_SELECTED = {
   navbar: "navLogo",
   hero: "title",
   about: "title",
+  philosophy: "philosophy",
   collection: "colTitle",
   productdetail: "pdName",
   features: "featTitle",
@@ -964,6 +971,17 @@ export default function VisualBuilder() {
   const [footer, setFooter] = useState(DEFAULT_FOOTER);
   const [ticker, setTicker] = useState(DEFAULT_TICKER);
   const [navbar, setNavbar] = useState(DEFAULT_NAV);
+  const [philosophy, setPhilosophy] = useState({
+    philosophyBody: "✦ TRIẾT LÝ CỦA CHÚNG TÔI ✦\nTRÂN TRỌNG TỪNG CHÚT YÊU THƯƠNG DÀNH CHO CHÍNH MÌNH.",
+    philosophyStyle: {
+      fontFamily: '"Cormorant Garamond", serif',
+      fontSize: 42,
+      fontWeight: 500,
+      lineHeight: 1.35,
+      textAlign: "center",
+      color: "#3a1526",
+    },
+  });
   const [activeSection, setActiveSection] = useState("about");
   const [selected, setSelected] = useState("title");
   const [loading, setLoading] = useState(true);
@@ -987,6 +1005,15 @@ export default function VisualBuilder() {
         setFooter(createFooter(data || {}));
         setTicker(createTicker(data || {}));
         setNavbar(createNav(data || {}));
+        setPhilosophy({
+          philosophyLabel: data?.philosophyLabel || "✦ TRIẾT LÝ CỦA CHÚNG TÔI ✦",
+          philosophyBody:
+            data?.philosophyBody ||
+            data?.philosophyText ||
+            "TRÂN TRỌNG TỪNG CHÚT YÊU THƯƠNG DÀNH CHO CHÍNH MÌNH.",
+          philosophyAccentCount: data?.philosophyAccentCount ?? 4,
+          philosophyStyles: data?.philosophyStyles || {},
+        });
       })
       .catch((err) => {
         console.error(err);
@@ -1021,6 +1048,9 @@ export default function VisualBuilder() {
     if (activeSection === "navbar") {
       return { type: "navbar", data: navbar };
     }
+    if (activeSection === "philosophy") {
+      return { type: "philosophy", data: philosophy };
+    }
     if (activeSection === "hero") {
       return getHeroSelectedData(hero, selected);
     }
@@ -1054,11 +1084,16 @@ export default function VisualBuilder() {
     footer,
     ticker,
     navbar,
+    philosophy,
     selected,
     detailProduct,
   ]);
 
   const updateSelected = (patch) => {
+    if (activeSection === "philosophy") {
+      setPhilosophy((current) => ({ ...current, ...patch }));
+      return;
+    }
     if (activeSection === "navbar") {
       setNavbar((current) => {
         if (patch.navLogo != null) return { ...current, navLogo: patch.navLogo };
@@ -1285,6 +1320,22 @@ export default function VisualBuilder() {
   };
 
   const updateSelectedStyle = (patch) => {
+    if (activeSection === "philosophy") {
+      const styleKey = patch._styleKey || (selected === "philLabel" ? "label" : "text");
+      const nextPatch = { ...patch };
+      delete nextPatch._styleKey;
+      setPhilosophy((current) => ({
+        ...current,
+        philosophyStyles: {
+          ...(current.philosophyStyles || {}),
+          [styleKey]: {
+            ...(current.philosophyStyles?.[styleKey] || {}),
+            ...nextPatch,
+          },
+        },
+      }));
+      return;
+    }
     if (activeSection === "navbar") {
       const styleKey = selected === "navLogo" ? "logo" : "link";
       setNavbar((current) => ({
@@ -1473,6 +1524,10 @@ export default function VisualBuilder() {
         navLogo: navbar.navLogo,
         navLinks: navbar.navLinks,
         navStyles: navbar.navStyles,
+        philosophyLabel: philosophy.philosophyLabel,
+        philosophyBody: philosophy.philosophyBody,
+        philosophyAccentCount: philosophy.philosophyAccentCount,
+        philosophyStyles: philosophy.philosophyStyles,
 
         heroEyebrow: hero.heroEyebrow,
         heroTitle: hero.heroTitle,
@@ -1702,6 +1757,13 @@ export default function VisualBuilder() {
                 selectedElement={selected}
                 onSelect={setSelected}
               />
+            ) : activeSection === "philosophy" ? (
+              <ScrollText
+                preview
+                previewData={philosophy}
+                selectedElement={selected}
+                onSelect={setSelected}
+              />
             ) : activeSection === "hero" ? (
               <Hero
                 preview
@@ -1772,6 +1834,7 @@ export default function VisualBuilder() {
             footer={footer}
             ticker={ticker}
             navbar={navbar}
+            philosophy={philosophy}
             onChange={updateSelected}
             onStyleChange={updateSelectedStyle}
           />
@@ -2262,6 +2325,7 @@ function StylePanel({
   footer,
   ticker,
   navbar,
+  philosophy,
   onChange,
   onStyleChange,
 }) {
@@ -2380,6 +2444,15 @@ function StylePanel({
         <NavbarSettings
           selected={selected}
           navbar={navbar}
+          onChange={onChange}
+          onStyleChange={onStyleChange}
+        />
+      )}
+
+      {section === "philosophy" && (
+        <PhilosophySettings
+          selected={selected}
+          philosophy={philosophy}
           onChange={onChange}
           onStyleChange={onStyleChange}
         />
@@ -2875,6 +2948,51 @@ function FooterSettings({ data, footer, onChange, onStyleChange }) {
         </div>
       </SettingGroup>
       <StyleTypographyBlock style={style} onStyleChange={onStyleChange} />
+    </>
+  );
+}
+
+function PhilosophySettings({ selected, philosophy, onChange, onStyleChange }) {
+  const styles = philosophy.philosophyStyles || {};
+  const styleKey = selected === "philLabel" ? "label" : selected === "philAccent" ? "accent" : "text";
+  const style = styles[styleKey] || {};
+  return (
+    <>
+      <SettingGroup title="Nội dung">
+        <div className="builder-field">
+          <label>Nhãn — Triết lý của chúng tôi</label>
+          <textarea
+            rows={2}
+            value={philosophy.philosophyLabel || ""}
+            onChange={(e) => onChange({ philosophyLabel: e.target.value })}
+          />
+        </div>
+        <div className="builder-field">
+          <label>Nội dung (Enter để xuống dòng)</label>
+          <textarea
+            rows={6}
+            value={philosophy.philosophyBody || ""}
+            onChange={(e) => onChange({ philosophyBody: e.target.value })}
+          />
+        </div>
+        <div className="builder-field">
+          <label>Số chữ cuối đổi màu (0 = tắt)</label>
+          <input
+            type="number"
+            min="0"
+            value={philosophy.philosophyAccentCount ?? 4}
+            onChange={(e) => onChange({ philosophyAccentCount: Number(e.target.value) || 0 })}
+          />
+        </div>
+        <small className="builder-help">
+          Hiệu ứng sáng dần khi cuộn giữ nguyên. Những chữ cuối dùng màu nhấn.
+        </small>
+      </SettingGroup>
+      <StyleTypographyBlock
+        title={styleKey === "label" ? "Kiểu nhãn" : styleKey === "accent" ? "Màu chữ nổi bật" : "Kiểu câu chữ"}
+        style={style}
+        onStyleChange={(patch) => onStyleChange({ _styleKey: styleKey, ...patch })}
+      />
     </>
   );
 }

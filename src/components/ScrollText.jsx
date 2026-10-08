@@ -3,43 +3,48 @@ import useHomeContent from "../hooks/useHomeContent";
 import { splitColor, toCss } from "../lib/typography";
 import "../styles/scroll-text.css";
 
-const DEFAULT_LABEL = "✦ TRIẾT LÝ CỦA CHÚNG TÔI ✦";
 const DEFAULT_TEXT =
-  "TRÂN TRỌNG TỪNG CHÚT YÊU THƯƠNG DÀNH CHO CHÍNH MÌNH.";
+  "✦ TRIẾT LÝ CỦA CHÚNG TÔI ✦\nTRÂN TRỌNG TỪNG CHÚT YÊU THƯƠNG DÀNH CHO CHÍNH MÌNH.";
 
-function ScrollText() {
+function ScrollText({
+  preview = false,
+  previewData = null,
+  selectedElement = "",
+  onSelect,
+}) {
   const secRef = useRef(null);
-  const c = useHomeContent();
-
-  const label = c.philosophyLabel || DEFAULT_LABEL;
-  const text = c.philosophyText || DEFAULT_TEXT;
-
+  const home = useHomeContent();
+  const c = preview && previewData ? previewData : home || {};
+  const label = c.philosophyLabel || "✦ TRIẾT LÝ CỦA CHÚNG TÔI ✦";
+  const text = c.philosophyBody || c.philosophyText || "TRÂN TRỌNG TỪNG CHÚT YÊU THƯƠNG DÀNH CHO CHÍNH MÌNH.";
   const parsed = parseInt(c.philosophyAccentCount, 10);
   const accentCount = Number.isFinite(parsed) ? Math.max(parsed, 0) : 4;
-
-  const words = text.split(/\s+/).filter(Boolean);
-
-  /* kiểu chữ do admin chỉnh (màu đi qua biến CSS vì chữ đổi màu theo cuộn) */
+  const lines = text.split("\n");
+  const words = lines.flatMap((line) => line.split(/\s+/).filter(Boolean));
   const st = c.philosophyStyles || {};
   const { color: onColor, rest: bodyRest } = splitColor(st.text);
   const accent = toCss(st.accent);
-
-  const bodyStyle = { ...bodyRest };
+  const bodyStyle = { ...bodyRest, whiteSpace: "pre-line" };
   if (onColor) bodyStyle["--st-on"] = onColor;
   if (accent.color) bodyStyle["--st-accent"] = accent.color;
   if (accent.fontStyle) bodyStyle["--st-accent-style"] = accent.fontStyle;
+
+  const select = (key) => (e) => {
+    if (!preview || !onSelect) return;
+    e.preventDefault();
+    e.stopPropagation();
+    onSelect(key);
+  };
 
   useEffect(() => {
     const sec = secRef.current;
     if (!sec) return;
     const spans = sec.querySelectorAll(".st-word");
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
     if (reduce) {
       spans.forEach((s) => s.classList.add("on"));
       return;
     }
-
     let raf = 0;
     const update = () => {
       const r = sec.getBoundingClientRect();
@@ -52,7 +57,6 @@ function ScrollText() {
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);
     };
-
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
@@ -61,23 +65,44 @@ function ScrollText() {
       window.removeEventListener("resize", onScroll);
       cancelAnimationFrame(raf);
     };
-    /* chạy lại khi nội dung đổi để danh sách chữ luôn đúng */
   }, [text, accentCount]);
+
+  let wordIndex = 0;
 
   return (
     <section className="scroll-text" ref={secRef}>
-      <p className="scroll-text-label" style={toCss(st.label)}>
+      <p
+        className={`scroll-text-label${preview && selectedElement === "philLabel" ? " builder-selected" : ""}`}
+        style={{ ...toCss(st.label, { responsive: !preview }), whiteSpace: "pre-line" }}
+        onClick={select("philLabel")}
+      >
         {label}
       </p>
-      <p className="scroll-text-body" style={bodyStyle}>
-        {words.map((w, i) => (
-          <span
-            key={i}
-            className={`st-word${i >= words.length - accentCount ? " accent" : ""}`}
-          >
-            {w}{" "}
-          </span>
-        ))}
+      <p
+        className={`scroll-text-body${preview && selectedElement === "philText" ? " builder-selected" : ""}`}
+        style={bodyStyle}
+        onClick={select("philText")}
+      >
+        {lines.map((line, lineIndex) => {
+          const lineWords = line.split(/\s+/).filter(Boolean);
+          return (
+            <span key={lineIndex} className="st-line">
+              {lineWords.map((w) => {
+                const i = wordIndex;
+                wordIndex += 1;
+                return (
+                  <span
+                    key={`${lineIndex}-${i}`}
+                    className={`st-word${i >= words.length - accentCount ? " accent" : ""}`}
+                  >
+                    {w}{" "}
+                  </span>
+                );
+              })}
+              {lineIndex < lines.length - 1 && <br />}
+            </span>
+          );
+        })}
       </p>
     </section>
   );
