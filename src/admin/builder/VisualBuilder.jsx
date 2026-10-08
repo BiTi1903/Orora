@@ -7,6 +7,7 @@ import ProductDetail from "../../components/ProductDetail";
 import { Testimonials, Features } from "../../components/Extras";
 import { toCss } from "../../lib/typography";
 import Footer from "../../components/Footer";
+import Navbar from "../../components/Navbar";
 import { defaultProducts } from "../../data/content";
 import "./VisualBuilder.css";
 
@@ -168,6 +169,7 @@ const DEFAULT_ABOUT = {
 
   image: {
     src: "/about.jpg",
+    extras: ["", "", ""],
     width: 52,
     height: 620,
     radius: 200,
@@ -361,6 +363,16 @@ const DEFAULT_PRODUCT_DETAIL = {
     fontWeight: 500,
     color: "#b8446d",
   },
+  materialLabel: { text: "Material" },
+  sizeLabel: { text: "Size" },
+  colorLabel: { text: "Color" },
+  originLabel: { text: "Origin" },
+  detailLabels: {
+    material: "Material",
+    size: "Size",
+    color: "Color",
+    origin: "Origin",
+  },
   rowValue: {
     fontSize: 14,
     lineHeight: 1.7,
@@ -536,7 +548,52 @@ const DEFAULT_FOOTER = {
   },
 };
 
+const DEFAULT_NAV = {
+  navLogo: "ORORA",
+  navLinks: [
+    { label: "Về Chúng Tôi", href: "/#about" },
+    { label: "Sản phẩm", href: "/#shop" },
+    { label: "Liên Hệ", href: "/#contact" },
+  ],
+  navStyles: {
+    logo: {
+      fontFamily: '"Cormorant Garamond", serif',
+      fontSize: 26,
+      fontWeight: 600,
+      letterSpacing: 2,
+      color: "#3a1526",
+    },
+    link: {
+      fontSize: 13,
+      fontWeight: 500,
+      letterSpacing: 1,
+      color: "#3a1526",
+    },
+  },
+};
+
+function createNav(data = {}) {
+  return {
+    navLogo: data.navLogo || DEFAULT_NAV.navLogo,
+    navLinks: Array.isArray(data.navLinks) && data.navLinks.length
+      ? data.navLinks.map((item) => ({
+          label: item.label || "",
+          href: item.href || "/",
+        }))
+      : DEFAULT_NAV.navLinks.map((item) => ({ ...item })),
+    navStyles: {
+      logo: { ...DEFAULT_NAV.navStyles.logo, ...(data.navStyles?.logo || {}) },
+      link: { ...DEFAULT_NAV.navStyles.link, ...(data.navStyles?.link || {}) },
+    },
+  };
+}
+
 const SECTION_LIST = [
+  {
+    key: "navbar",
+    label: "Navbar",
+    icon: "≡",
+  },
   {
     key: "hero",
     label: "Hero",
@@ -666,6 +723,11 @@ function createAbout(data = {}) {
         builder.image?.src ??
         data.storyImage ??
         DEFAULT_ABOUT.image.src,
+      extras: Array.isArray(builder.image?.extras)
+        ? builder.image.extras
+        : Array.isArray(data.storyImages)
+        ? data.storyImages
+        : ["", "", ""],
     },
 
     stats: Array.isArray(builder.stats)
@@ -879,6 +941,7 @@ function createTicker(data = {}) {
 }
 
 const SECTION_DEFAULT_SELECTED = {
+  navbar: "navLogo",
   hero: "title",
   about: "title",
   collection: "colTitle",
@@ -895,10 +958,12 @@ export default function VisualBuilder() {
   const [hero, setHero] = useState(DEFAULT_HERO);
   const [collection, setCollection] = useState(DEFAULT_COLLECTION);
   const [productDetail, setProductDetail] = useState(DEFAULT_PRODUCT_DETAIL);
+  const [detailProduct, setDetailProduct] = useState(defaultProducts[0]);
   const [features, setFeatures] = useState(DEFAULT_FEATURES);
   const [reviews, setReviews] = useState(DEFAULT_REVIEWS);
   const [footer, setFooter] = useState(DEFAULT_FOOTER);
   const [ticker, setTicker] = useState(DEFAULT_TICKER);
+  const [navbar, setNavbar] = useState(DEFAULT_NAV);
   const [activeSection, setActiveSection] = useState("about");
   const [selected, setSelected] = useState("title");
   const [loading, setLoading] = useState(true);
@@ -921,6 +986,7 @@ export default function VisualBuilder() {
         setReviews(createReviews(data || {}));
         setFooter(createFooter(data || {}));
         setTicker(createTicker(data || {}));
+        setNavbar(createNav(data || {}));
       })
       .catch((err) => {
         console.error(err);
@@ -934,6 +1000,7 @@ export default function VisualBuilder() {
           setReviews(DEFAULT_REVIEWS);
           setFooter(DEFAULT_FOOTER);
           setTicker(DEFAULT_TICKER);
+          setNavbar(DEFAULT_NAV);
         }
       })
       .finally(() => {
@@ -951,6 +1018,9 @@ export default function VisualBuilder() {
   };
 
   const selectedData = useMemo(() => {
+    if (activeSection === "navbar") {
+      return { type: "navbar", data: navbar };
+    }
     if (activeSection === "hero") {
       return getHeroSelectedData(hero, selected);
     }
@@ -958,7 +1028,7 @@ export default function VisualBuilder() {
       return getCollectionSelectedData(collection, selected);
     }
     if (activeSection === "productdetail") {
-      return getProductDetailSelectedData(productDetail, selected);
+      return getProductDetailSelectedData(productDetail, selected, detailProduct);
     }
     if (activeSection === "features") {
       return getFeaturesSelectedData(features, selected);
@@ -983,10 +1053,27 @@ export default function VisualBuilder() {
     reviews,
     footer,
     ticker,
+    navbar,
     selected,
+    detailProduct,
   ]);
 
   const updateSelected = (patch) => {
+    if (activeSection === "navbar") {
+      setNavbar((current) => {
+        if (patch.navLogo != null) return { ...current, navLogo: patch.navLogo };
+        if (patch._linkIndex != null) {
+          const links = [...(current.navLinks || [])];
+          links[patch._linkIndex] = {
+            ...(links[patch._linkIndex] || {}),
+            ...patch._link,
+          };
+          return { ...current, navLinks: links };
+        }
+        return { ...current, ...patch };
+      });
+      return;
+    }
     if (activeSection === "ticker") {
       setTicker((current) => {
         if (patch.marqueeWords) {
@@ -1053,6 +1140,32 @@ export default function VisualBuilder() {
     }
 
     if (activeSection === "productdetail") {
+      if (patch.__labelKey && patch.text != null) {
+        const key = `${patch.__labelKey}Label`;
+        setProductDetail((current) => ({
+          ...current,
+          detailLabels: {
+            ...(current.detailLabels || {}),
+            [patch.__labelKey]: patch.text,
+          },
+          [key]: {
+            ...(current[key] || {}),
+            text: patch.text,
+          },
+        }));
+        return;
+      }
+      if (typeof selected === "string" && selected.startsWith("pdLabel:") && patch.text != null) {
+        const key = `${selected.split(":")[1]}Label`;
+        setProductDetail((current) => ({
+          ...current,
+          [key]: {
+            ...(current[key] || {}),
+            text: patch.text,
+          },
+        }));
+        return;
+      }
       const meta = PRODUCT_DETAIL_FIELD_MAP[selected];
       if (meta?.textKey && patch.text != null) {
         setProductDetail((current) => ({
@@ -1172,6 +1285,20 @@ export default function VisualBuilder() {
   };
 
   const updateSelectedStyle = (patch) => {
+    if (activeSection === "navbar") {
+      const styleKey = selected === "navLogo" ? "logo" : "link";
+      setNavbar((current) => ({
+        ...current,
+        navStyles: {
+          ...(current.navStyles || {}),
+          [styleKey]: {
+            ...(current.navStyles?.[styleKey] || {}),
+            ...patch,
+          },
+        },
+      }));
+      return;
+    }
     if (activeSection === "ticker") {
       const key = selected === "star" ? "star" : selected === "text" ? "text" : null;
       if (!key) return;
@@ -1191,12 +1318,15 @@ export default function VisualBuilder() {
     if (activeSection === "hero") return;
 
     if (activeSection === "productdetail") {
-      const meta = PRODUCT_DETAIL_FIELD_MAP[selected];
-      if (!meta) return;
+      const styleKey =
+        typeof selected === "string" && selected.startsWith("pdLabel:")
+          ? "rowLabel"
+          : PRODUCT_DETAIL_FIELD_MAP[selected]?.styleKey;
+      if (!styleKey) return;
       setProductDetail((current) => ({
         ...current,
-        [meta.styleKey]: {
-          ...(current[meta.styleKey] || {}),
+        [styleKey]: {
+          ...(current[styleKey] || {}),
           ...patch,
         },
       }));
@@ -1325,6 +1455,7 @@ export default function VisualBuilder() {
         storyHighlight: about.highlight.text,
         storyText: about.text.text,
         storyImage: about.image.src,
+        storyImages: Array.isArray(about.image.extras) ? about.image.extras : ["", "", ""],
         storyStats: Array.isArray(about.stats) ? about.stats : DEFAULT_ABOUT.stats,
 
         aboutBuilder: about,
@@ -1339,6 +1470,10 @@ export default function VisualBuilder() {
         },
 
         // Hero
+        navLogo: navbar.navLogo,
+        navLinks: navbar.navLinks,
+        navStyles: navbar.navStyles,
+
         heroEyebrow: hero.heroEyebrow,
         heroTitle: hero.heroTitle,
         heroDescription: hero.heroDescription,
@@ -1363,6 +1498,7 @@ export default function VisualBuilder() {
 
         // Product Detail page styles
         productDetailStyles: productDetail,
+        detailLabels: productDetail.detailLabels || {},
 
         // Features / Nâng cấp bản thân
         featuresLabel: features.featuresLabel,
@@ -1559,6 +1695,13 @@ export default function VisualBuilder() {
                 selected={selected}
                 onSelect={setSelected}
               />
+            ) : activeSection === "navbar" ? (
+              <Navbar
+                preview
+                previewData={navbar}
+                selectedElement={selected}
+                onSelect={setSelected}
+              />
             ) : activeSection === "hero" ? (
               <Hero
                 preview
@@ -1578,7 +1721,7 @@ export default function VisualBuilder() {
               <ProductDetail
                 preview
                 previewStyles={productDetail}
-                previewProduct={defaultProducts[0]}
+                previewProduct={detailProduct}
                 selectedElement={selected}
                 onSelect={setSelected}
               />
@@ -1623,10 +1766,12 @@ export default function VisualBuilder() {
             hero={hero}
             collection={collection}
             productDetail={productDetail}
+            detailProduct={detailProduct}
             features={features}
             reviews={reviews}
             footer={footer}
             ticker={ticker}
+            navbar={navbar}
             onChange={updateSelected}
             onStyleChange={updateSelectedStyle}
           />
@@ -1856,12 +2001,38 @@ const PRODUCT_DETAIL_FIELD_MAP = {
   },
   pdRowValue: {
     styleKey: "rowValue",
-    label: "Giá trị thông tin",
-    sample: "Premium material with a soft finish.",
+    label: "Nội dung Material / Size / Color / Origin",
+    sample: "Nội dung dùng chung font và size",
   },
 };
 
-function getProductDetailSelectedData(productDetail, selected) {
+function getProductDetailSelectedData(productDetail, selected, detailProduct) {
+  if (typeof selected === "string" && selected.startsWith("pdValue:")) {
+    const key = selected.split(":")[1];
+    return {
+      type: "pdValue",
+      data: productDetail,
+      meta: {
+        key,
+        label: `Nội dung ${key}`,
+        text: detailProduct?.[key] || "",
+      },
+    };
+  }
+  if (typeof selected === "string" && selected.startsWith("pdLabel:")) {
+    const key = selected.split(":")[1];
+    const styleKey = `${key}Label`;
+    return {
+      type: "pdFieldLabel",
+      data: productDetail,
+      meta: {
+        key,
+        styleKey,
+        label: `Tên mục ${key}`,
+        sample: key[0].toUpperCase() + key.slice(1),
+      },
+    };
+  }
   const meta = PRODUCT_DETAIL_FIELD_MAP[selected];
   if (!meta) {
     return { type: "pdEmpty", data: null };
@@ -2085,10 +2256,12 @@ function StylePanel({
   hero,
   collection,
   productDetail,
+  detailProduct,
   features,
   reviews,
   footer,
   ticker,
+  navbar,
   onChange,
   onStyleChange,
 }) {
@@ -2167,6 +2340,7 @@ function StylePanel({
           selected={selected}
           data={data}
           productDetail={productDetail}
+          detailProduct={detailProduct}
           onChange={onChange}
           onStyleChange={onStyleChange}
         />
@@ -2197,6 +2371,15 @@ function StylePanel({
           selected={selected}
           data={data}
           footer={footer}
+          onChange={onChange}
+          onStyleChange={onStyleChange}
+        />
+      )}
+
+      {section === "navbar" && (
+        <NavbarSettings
+          selected={selected}
+          navbar={navbar}
           onChange={onChange}
           onStyleChange={onStyleChange}
         />
@@ -2696,10 +2879,82 @@ function FooterSettings({ data, footer, onChange, onStyleChange }) {
   );
 }
 
+function NavbarSettings({ selected, navbar, onChange, onStyleChange }) {
+  const isLogo = selected === "navLogo";
+  const linkIndex = String(selected || "").startsWith("navLink:")
+    ? Number(selected.split(":")[1])
+    : 0;
+  const link = (navbar.navLinks || [])[linkIndex] || { label: "", href: "/" };
+  const style = isLogo ? navbar.navStyles?.logo : navbar.navStyles?.link;
+  const space = (label, key) => (
+    <SelectField
+      label={label}
+      value={style?.[key] ?? 0}
+      options={SPACE_OPTIONS}
+      suffix="px"
+      onChange={(value) => onStyleChange({ [key]: Number(value) })}
+    />
+  );
+
+  return (
+    <>
+      <SettingGroup title={isLogo ? "Logo" : `Link ${linkIndex + 1}`}>
+        {isLogo ? (
+          <div className="builder-field">
+            <label>Chữ logo</label>
+            <input
+              value={navbar.navLogo || ""}
+              onChange={(e) => onChange({ navLogo: e.target.value })}
+            />
+          </div>
+        ) : (
+          <>
+            <div className="builder-field">
+              <label>Chữ link</label>
+              <input
+                value={link.label || ""}
+                onChange={(e) => onChange({ _linkIndex: linkIndex, _link: { label: e.target.value } })}
+              />
+            </div>
+            <div className="builder-field">
+              <label>Đường dẫn</label>
+              <input
+                value={link.href || ""}
+                onChange={(e) => onChange({ _linkIndex: linkIndex, _link: { href: e.target.value } })}
+              />
+            </div>
+            <small className="builder-help">Font, căn lề, margin và padding dùng chung cho mọi link.</small>
+          </>
+        )}
+      </SettingGroup>
+      <StyleTypographyBlock style={style} onStyleChange={onStyleChange} />
+      <SettingGroup title="Padding / margin">
+        <div className="builder-field-row">
+          {space("Margin trên", "marginTop")}
+          {space("Margin phải", "marginRight")}
+        </div>
+        <div className="builder-field-row">
+          {space("Margin dưới", "marginBottom")}
+          {space("Margin trái", "marginLeft")}
+        </div>
+        <div className="builder-field-row">
+          {space("Padding trên", "paddingTop")}
+          {space("Padding phải", "paddingRight")}
+        </div>
+        <div className="builder-field-row">
+          {space("Padding dưới", "paddingBottom")}
+          {space("Padding trái", "paddingLeft")}
+        </div>
+      </SettingGroup>
+    </>
+  );
+}
+
 function ProductDetailSettings({
   selected,
   data,
   productDetail,
+  detailProduct,
   onChange,
   onStyleChange,
 }) {
@@ -2711,11 +2966,100 @@ function ProductDetailSettings({
     );
   }
 
+  if (selected === "pdRowValue" || data.type === "pdValue") {
+    const style = productDetail.rowValue || {};
+    const space = (label, key) => (
+      <SelectField
+        label={label}
+        value={style[key] ?? 0}
+        options={SPACE_OPTIONS}
+        suffix="px"
+        onChange={(value) => onStyleChange({ [key]: Number(value) })}
+      />
+    );
+    return (
+      <>
+        <small className="builder-help">
+          Chữ sửa ở từng sản phẩm. Font, size, căn lề, margin và padding dùng chung cho nội dung Material, Size, Color, Origin.
+        </small>
+        <StyleTypographyBlock style={style} onStyleChange={onStyleChange} />
+        <SettingGroup title="Padding / margin">
+          <div className="builder-field-row">
+            {space("Margin trên", "marginTop")}
+            {space("Margin phải", "marginRight")}
+          </div>
+          <div className="builder-field-row">
+            {space("Margin dưới", "marginBottom")}
+            {space("Margin trái", "marginLeft")}
+          </div>
+          <div className="builder-field-row">
+            {space("Padding trên", "paddingTop")}
+            {space("Padding phải", "paddingRight")}
+          </div>
+          <div className="builder-field-row">
+            {space("Padding dưới", "paddingBottom")}
+            {space("Padding trái", "paddingLeft")}
+          </div>
+        </SettingGroup>
+      </>
+    );
+  }
+
+  if (data.type === "pdFieldLabel") {
+    const meta = data.meta;
+    const labelStyle = productDetail.rowLabel || {};
+    const fields = [
+      ["material", "Material"],
+      ["size", "Size"],
+      ["color", "Color"],
+      ["origin", "Origin"],
+    ];
+    return (
+      <>
+        <SettingGroup title="Nội dung">
+          {fields.map(([key, fallback]) => (
+            <div className="builder-field" key={key}>
+              <label>{fallback}</label>
+              <input
+                value={productDetail.detailLabels?.[key] ?? productDetail[`${key}Label`]?.text ?? fallback}
+                onChange={(e) => onChange({ __labelKey: key, text: e.target.value })}
+              />
+            </div>
+          ))}
+          <small className="builder-help">
+            Đây là chữ hiển thị của 4 mục. Font bên dưới dùng chung.
+          </small>
+        </SettingGroup>
+        <StyleTypographyBlock style={labelStyle} onStyleChange={onStyleChange} />
+      </>
+    );
+  }
+
   const meta = data.meta;
   const style = productDetail[meta.styleKey] || {};
+  const showDetailNames = meta.styleKey === "rowLabel" || selected === "pdDetailsTitle";
+  const valueStyleOnly = meta.styleKey === "rowValue";
 
   return (
     <>
+      {showDetailNames && (
+        <SettingGroup title="Nội dung">
+          {[
+            ["material", "Material"],
+            ["size", "Size"],
+            ["color", "Color"],
+            ["origin", "Origin"],
+          ].map(([key, fallback]) => (
+            <div className="builder-field" key={key}>
+              <label>{fallback}</label>
+              <input
+                value={productDetail.detailLabels?.[key] ?? productDetail[`${key}Label`]?.text ?? fallback}
+                onChange={(e) => onChange({ __labelKey: key, text: e.target.value })}
+              />
+            </div>
+          ))}
+        </SettingGroup>
+      )}
       {meta.textKey && (
         <SettingGroup title="Nội dung">
           <div className="builder-field">
@@ -2728,7 +3072,54 @@ function ProductDetailSettings({
         </SettingGroup>
       )}
 
-      <StyleTypographyBlock style={style} onStyleChange={onStyleChange} />
+      {(selected === "pdDetailsTitle" || String(selected || "").startsWith("pdLabel:")) && (
+        <SettingGroup title="Tên 4 mục">
+          {[
+            ["material", "Material"],
+            ["size", "Size"],
+            ["color", "Color"],
+            ["origin", "Origin"],
+          ].map(([key, fallback]) => (
+            <div className="builder-field" key={key}>
+              <label>{fallback}</label>
+              <input
+                value={productDetail.detailLabels?.[key] ?? productDetail[`${key}Label`]?.text ?? fallback}
+                onChange={(e) => {
+                  const prev = selected;
+                  onChange({
+                    __labelKey: key,
+                    text: e.target.value,
+                    __restore: prev,
+                  });
+                }}
+              />
+            </div>
+          ))}
+        </SettingGroup>
+      )}
+
+      {valueStyleOnly ? (
+        <SettingGroup title="Font / size dùng chung">
+          <small className="builder-help">
+            Áp dụng cho nội dung Material, Size, Color và Origin. Không sửa chữ ở đây.
+          </small>
+          <SelectField
+            label="Font"
+            value={toBareFontFamily(style.fontFamily)}
+            options={FONT_OPTIONS}
+            onChange={(value) => onStyleChange({ fontFamily: toFullFontFamily(value) })}
+          />
+          <SelectField
+            label="Size"
+            value={style.fontSize ?? 14}
+            options={SIZE_OPTIONS}
+            suffix="px"
+            onChange={(value) => onStyleChange({ fontSize: Number(value) })}
+          />
+        </SettingGroup>
+      ) : (
+        <StyleTypographyBlock style={style} onStyleChange={onStyleChange} />
+      )}
 
       {meta.textKey && (
         <SettingGroup title="Padding / margin">
@@ -3106,7 +3497,7 @@ function ImageSettings({ data, onChange }) {
     <>
       <SettingGroup title="Ảnh">
         <div className="builder-field">
-          <label>URL hình ảnh</label>
+          <label>Ảnh chính</label>
           <input
             value={data.src || ""}
             onChange={(e) =>
@@ -3115,6 +3506,20 @@ function ImageSettings({ data, onChange }) {
             placeholder="/about.jpg"
           />
         </div>
+        {[0, 1, 2].map((index) => (
+          <div className="builder-field" key={index}>
+            <label>Ảnh phụ {index + 1}</label>
+            <input
+              value={(data.extras || [])[index] || ""}
+              onChange={(e) => {
+                const extras = [...(data.extras || ["", "", ""])];
+                extras[index] = e.target.value;
+                onChange({ extras });
+              }}
+              placeholder="/about.jpg"
+            />
+          </div>
+        ))}
       </SettingGroup>
 
       <SettingGroup title="Kích thước">

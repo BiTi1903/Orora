@@ -52,6 +52,8 @@
 }
 
 .about-image-wrapper:hover .about-image { transform: scale(1.05); }
+.about-image-wrapper .product-slideshow { border-radius: inherit; }
+.about-image-wrapper:hover .product-slideshow img.is-active { transform: scale(1.05); }
 
 .about-image-wrapper::after {
   content: "";

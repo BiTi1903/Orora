@@ -364,6 +364,7 @@ export default function EditStory() {
     "storyHighlight",
     "storyText",
     "storyImage",
+    "storyImages",
     "storyStats",
     "aboutStyles",
   ]);
@@ -438,11 +439,24 @@ export default function EditStory() {
       />
 
       <ImageField
-        label="Ảnh phần Câu chuyện"
+        label="Ảnh chính phần Câu chuyện"
         value={h.form.storyImage ?? "/about.jpg"}
         onChange={(v) => h.set("storyImage", v)}
         width={2000}
       />
+      {[0, 1, 2].map((index) => (
+        <ImageField
+          key={index}
+          label={`Ảnh phụ ${index + 1}`}
+          value={(h.form.storyImages || [])[index] || ""}
+          onChange={(v) => {
+            const next = [...(h.form.storyImages || ["", "", ""])];
+            next[index] = v;
+            h.set("storyImages", next);
+          }}
+          width={2000}
+        />
+      ))}
 
       <ItemCards
         title="Số liệu"

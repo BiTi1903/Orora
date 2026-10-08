@@ -18,10 +18,15 @@ function ProductDetail({
   const pageRef = useRef(null);
 
   const home = useHomeContent();
-  const ps =
-    preview && previewStyles
-      ? previewStyles
-      : home?.productDetailStyles || {};
+  const ps = preview && previewStyles
+    ? previewStyles
+    : {
+        ...(home?.productDetailStyles || {}),
+        detailLabels: {
+          ...(home?.detailLabels || {}),
+          ...(home?.productDetailStyles?.detailLabels || {}),
+        },
+      };
 
   // undefined = đang tải, null = không tìm thấy
   const [product, setProduct] = useState(
@@ -161,12 +166,13 @@ function ProductDetail({
     );
   }
 
+  const detailLabels = ps.detailLabels || {};
   const rows = [
-    ["Material", product.material],
-    ["Size", product.size],
-    ["Color", product.color],
-    ["Origin", product.origin],
-  ].filter(([, value]) => value);
+    ["material", detailLabels.material || ps.materialLabel?.text || "Material", product.material],
+    ["size", detailLabels.size || ps.sizeLabel?.text || "Size", product.size],
+    ["color", detailLabels.color || ps.colorLabel?.text || "Color", product.color],
+    ["origin", detailLabels.origin || ps.originLabel?.text || "Origin", product.origin],
+  ].filter(([, , value]) => value || preview);
 
   const css = (key) => toCss(ps[key], { responsive: !preview });
 
@@ -262,13 +268,13 @@ function ProductDetail({
                 {ps.detailsTitle?.text || "Details"}
               </h2>
 
-              {rows.map(([label, value]) => (
-                <div className="product-detail-row" key={label}>
+              {rows.map(([key, label, value]) => (
+                <div className="product-detail-row" key={key}>
                   <span
-                    className={selectedClass("pdRowLabel")}
-                    data-builder-key={preview ? "pdRowLabel" : undefined}
-                    onClick={select("pdRowLabel")}
-                    style={css("rowLabel")}
+                    className={selectedClass(`pdLabel:${key}`)}
+                    data-builder-key={preview ? `pdLabel:${key}` : undefined}
+                    onClick={select(`pdLabel:${key}`)}
+                    style={{ ...css("rowLabel"), cursor: preview ? "pointer" : undefined }}
                   >
                     {label}
                   </span>
@@ -276,7 +282,7 @@ function ProductDetail({
                     className={selectedClass("pdRowValue")}
                     data-builder-key={preview ? "pdRowValue" : undefined}
                     onClick={select("pdRowValue")}
-                    style={css("rowValue")}
+                    style={{ ...css("rowValue"), cursor: preview ? "pointer" : undefined }}
                   >
                     {value}
                   </p>

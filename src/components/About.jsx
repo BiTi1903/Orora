@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Reveal, CountUp } from "./Extras";
 import { getHomeContent } from "../lib/api";
+import ProductSlideshow from "./ProductSlideshow";
 
 const GOOGLE_FONTS = [
   "Mulish",
@@ -225,6 +226,7 @@ function normalizeBuilder(data) {
 
     image: {
       src: data?.storyImage || "/about.jpg",
+      extras: Array.isArray(data?.storyImages) ? data.storyImages : ["", "", ""],
       width: 52,
       height: 620,
       radius: 200,
@@ -486,24 +488,23 @@ function About({
             "image"
           )}`}
         >
-          <img
-            src={
-              image.src ||
-              "/about.jpg"
-            }
-            className="about-image"
-            alt="About"
-            style={imageStyle}
-            data-builder-key={
-              preview ? "image" : undefined
-            }
+          <div
+            data-builder-key={preview ? "image" : undefined}
             onClick={(e) => {
               if (!preview) return;
-
               e.stopPropagation();
               select("image");
             }}
-          />
+            style={{ position: "absolute", inset: 0 }}
+          >
+            <ProductSlideshow
+              images={[
+                image.src || "/about.jpg",
+                ...(Array.isArray(image.extras) ? image.extras : []),
+              ]}
+              alt="About"
+            />
+          </div>
         </RevealBox>
       </div>
 
