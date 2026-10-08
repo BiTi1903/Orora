@@ -7,7 +7,7 @@ import { FooterSettings } from "./FooterPanels";
 import { ProductDetailSettings } from "./ProductDetailPanels";
 import { CollectionSettings } from "./CollectionPanels";
 import { HeroSettings } from "./HeroPanels";
-import { SectionSettings, ImageSettings, TextSettings, StatsSettings } from "./AboutPanels";
+import { SectionSettings, ImageSettings, TextSettings, StatsSettings, StatTextSettings } from "./AboutPanels";
 import { HERO_FIELD_MAP, COLLECTION_FIELD_MAP, PRODUCT_DETAIL_FIELD_MAP, FEATURES_TEXT_MAP, REVIEWS_TEXT_MAP, FOOTER_FIELD_MAP } from "./registry";
 
 export function StylePanel({
@@ -208,3 +208,4 @@ export function StylePanel({
     </div>
   );
 }
+
