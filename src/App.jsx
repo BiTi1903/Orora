@@ -1,6 +1,6 @@
 import AdminApp from "./admin/AdminApp";
 import { useLayoutEffect, useRef } from "react";
-   import { Marquee, Features, Ritual, Testimonials, Newsletter } from "./components/Extras";
+   import { Marquee, Features, Testimonials, Newsletter } from "./components/Extras";
      import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import CursorSparkle from "./components/CursorSparkle"; 
@@ -339,7 +339,7 @@ function App() {
               <ScrollText />
 
               <Features />
-              <Ritual />
+              {/* <Ritual /> */}
                  <Testimonials />
    <Newsletter />
               <Footer />

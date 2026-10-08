@@ -5,6 +5,7 @@ import { getProduct } from "../lib/api";
 import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
 import { defaultProducts } from "../data/content";
+import ProductSlideshow from "./ProductSlideshow";
 
 function ProductDetail({
   preview = false,
@@ -186,7 +187,10 @@ function ProductDetail({
 
       <section className="product-detail-content">
         <div className="product-detail-image">
-          <img src={product.image} alt={product.name} />
+          <ProductSlideshow
+            images={[product.image, product.image2, product.image3, product.image4]}
+            alt={product.name}
+          />
         </div>
 
         <div className="product-detail-info">

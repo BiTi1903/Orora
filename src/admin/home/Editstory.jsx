@@ -449,15 +449,14 @@ export default function EditStory() {
         listKey="storyStats"
         h={h}
         blank={{
-          value: 0,
+          value: "test",
           suffix: "",
           label: "",
         }}
         fields={[
           {
             key: "value",
-            label: "Số",
-            number: true,
+            label: "Chữ / số hiển thị",
           },
           {
             key: "suffix",

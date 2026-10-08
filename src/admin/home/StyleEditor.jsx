@@ -1,221 +1,264 @@
-import {
-  FONT_OPTIONS,
-  FONT_STYLE_OPTIONS,
-  TRANSFORM_OPTIONS,
-  WEIGHT_OPTIONS,
-  toCss,
-} from "../../lib/typography";
+const FONT_OPTIONS = [
+  { label: "Mulish", value: '"Mulish", sans-serif' },
+  { label: "Noto Sans", value: '"Noto Sans", sans-serif' },
+  { label: "Noto Serif", value: '"Noto Serif", serif' },
+  { label: "Playfair Display", value: '"Playfair Display", serif' },
+  { label: "Cormorant Garamond", value: '"Cormorant Garamond", serif' },
+  { label: "Montserrat", value: '"Montserrat", sans-serif' },
+  { label: "Poppins", value: '"Poppins", sans-serif' },
+  { label: "Inter", value: '"Inter", sans-serif' },
+  { label: "DM Sans", value: '"DM Sans", sans-serif' },
+  { label: "Lora", value: '"Lora", serif' },
+  { label: "Roboto", value: '"Roboto", sans-serif' },
+  { label: "Arial", value: "Arial, sans-serif" },
+  { label: "Georgia", value: "Georgia, serif" },
+  { label: "Times New Roman", value: '"Times New Roman", serif' },
+];
 
-const LABEL = { fontSize: 12, fontWeight: 600, color: "#6f5361" };
+const SIZE_OPTIONS = [
+  12, 13, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72, 80, 96, 100, 120, 130,
+];
 
-const CONTROL = {
-  width: "100%",
-  height: 42,
-  padding: "0 12px",
-  border: "1px solid #ead9e0",
-  borderRadius: 10,
-  background: "#fff",
-  color: "#321525",
-  fontSize: 13,
-  outline: "none",
-};
+const WEIGHT_OPTIONS = [
+  { label: "300 - Light", value: 300 },
+  { label: "400 - Regular", value: 400 },
+  { label: "500 - Medium", value: 500 },
+  { label: "600 - Semi Bold", value: 600 },
+  { label: "700 - Bold", value: 700 },
+  { label: "800 - Extra Bold", value: 800 },
+];
 
-function Box({ label, children }) {
+const LETTER_SPACING_OPTIONS = [-3, -2, -1, -0.5, 0, 0.5, 1, 2, 3, 4, 6];
+const LINE_HEIGHT_OPTIONS = [0.9, 0.92, 0.95, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.8, 2];
+
+const ALL_FIELDS = [
+  "fontFamily",
+  "fontSize",
+  "fontWeight",
+  "color",
+  "letterSpacing",
+  "lineHeight",
+  "fontStyle",
+  "textTransform",
+];
+
+function SelectControl({ label, value, onChange, children }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 7, minWidth: 0 }}>
-      <label style={LABEL}>{label}</label>
-      {children}
+    <div className="admin-field">
+      <label>{label}</label>
+      <select value={value ?? ""} onChange={(e) => onChange(e.target.value)}>
+        {children}
+      </select>
     </div>
   );
 }
 
-function SelectBox({ label, value, options, onChange }) {
+function ColorControl({ label, value, onChange }) {
   return (
-    <Box label={label}>
-      <select
-        value={value ?? ""}
-        onChange={(e) => onChange(e.target.value)}
-        style={{ ...CONTROL, cursor: "pointer" }}
-      >
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    </Box>
-  );
-}
-
-function NumberBox({ label, value, placeholder, step = 1, onChange }) {
-  return (
-    <Box label={label}>
-      <input
-        type="number"
-        step={step}
-        value={value ?? ""}
-        placeholder={placeholder !== undefined ? String(placeholder) : "Mặc định"}
-        onChange={(e) => {
-          const raw = e.target.value;
-          onChange(raw === "" ? "" : Number(raw));
-        }}
-        style={CONTROL}
-      />
-    </Box>
-  );
-}
-
-function ColorBox({ label, value, fallback, onChange }) {
-  return (
-    <Box label={label}>
-      <div style={{ ...CONTROL, padding: "4px 8px", display: "flex", alignItems: "center", gap: 10 }}>
+    <div className="admin-field">
+      <label>{label}</label>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <input
           type="color"
-          value={value || fallback || "#000000"}
+          value={/^#([0-9a-f]{6})$/i.test(value || "") ? value : "#b8446d"}
           onChange={(e) => onChange(e.target.value)}
-          style={{ width: 32, height: 32, padding: 0, border: 0, background: "transparent", cursor: "pointer" }}
+          style={{
+            width: 42,
+            height: 42,
+            padding: 0,
+            border: "1px solid #ead9e0",
+            borderRadius: 10,
+            background: "#fff",
+            cursor: "pointer",
+          }}
         />
-        <span style={{ fontSize: 12, color: "#6f5361", textTransform: "uppercase", flex: 1 }}>
-          {value || "Mặc định"}
-        </span>
-        {value && (
-          <button
-            type="button"
-            onClick={() => onChange("")}
-            title="Về màu mặc định"
-            style={{ border: 0, background: "transparent", color: "#b8446d", cursor: "pointer", fontSize: 12 }}
-          >
-            ↺
-          </button>
-        )}
+        <input
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="#b8446d"
+        />
       </div>
-    </Box>
+    </div>
   );
 }
 
-/* fields: các ô được hiện. Mặc định hiện đủ. */
-const ALL_FIELDS = ["fontFamily", "fontSize", "fontWeight", "color", "letterSpacing", "lineHeight", "fontStyle", "textTransform"];
-
-export default function StyleEditor({
-  title,
-  value,
-  defaults = {},
-  onChange,
-  sample = "Chữ mẫu Aa",
-  fields = ALL_FIELDS,
-  previewBg = "#fffafd",
-}) {
-  const saved = value || {};
-  const eff = { ...defaults, ...saved };
-  const show = (k) => fields.includes(k);
-
-  const set = (key, v) => {
-    const next = { ...saved };
-    if (v === "" || v === undefined || (typeof v === "number" && Number.isNaN(v))) delete next[key];
-    else next[key] = v;
-    onChange(next);
-  };
-
-  const changed = Object.keys(saved).length > 0;
+function StyleFields({ style, fields, onChange }) {
+  const show = (key) => !fields || fields.includes(key);
+  const update = (key, nextValue) => onChange({ ...style, [key]: nextValue });
 
   return (
-    <details
+    <div
       style={{
-        marginTop: 14,
-        border: "1px solid #ead9e0",
-        borderRadius: 14,
-        background: "#fffafd",
+        display: "grid",
+        gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+        gap: 12,
       }}
     >
-      <summary
-        style={{
-          cursor: "pointer",
-          padding: "14px 18px",
-          fontSize: 14,
-          fontWeight: 700,
-          color: "#321525",
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 12,
-        }}
-      >
-        <span>{title}</span>
-        {changed && <span style={{ fontSize: 11, color: "#b8446d", fontWeight: 600 }}>● đã chỉnh</span>}
-      </summary>
-
-      <div style={{ padding: "0 18px 18px" }}>
-        {/* XEM TRƯỚC NGAY */}
-        <div
-          style={{
-            marginBottom: 14,
-            padding: 16,
-            borderRadius: 10,
-            background: previewBg,
-            border: "1px dashed #ead9e0",
-            overflow: "hidden",
-          }}
+      {show("fontFamily") && (
+        <SelectControl
+          label="Font"
+          value={style.fontFamily || ""}
+          onChange={(v) => update("fontFamily", v)}
         >
-          <div style={toCss(eff, { responsive: false })}>{sample}</div>
-        </div>
+          <option value="">Mặc định</option>
+          {FONT_OPTIONS.map((font) => (
+            <option key={font.value} value={font.value}>
+              {font.label}
+            </option>
+          ))}
+        </SelectControl>
+      )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 12 }}>
-          {show("fontFamily") && (
-            <SelectBox label="Font" value={saved.fontFamily} options={FONT_OPTIONS} onChange={(v) => set("fontFamily", v)} />
-          )}
-          {show("fontSize") && (
-            <NumberBox label="Cỡ chữ (px)" value={saved.fontSize} placeholder={defaults.fontSize} onChange={(v) => set("fontSize", v)} />
-          )}
-          {show("fontWeight") && (
-            <SelectBox label="Độ đậm" value={saved.fontWeight} options={WEIGHT_OPTIONS} onChange={(v) => set("fontWeight", v === "" ? "" : Number(v))} />
-          )}
-          {show("color") && (
-            <ColorBox label="Màu chữ" value={saved.color} fallback={defaults.color} onChange={(v) => set("color", v)} />
-          )}
-          {show("letterSpacing") && (
-            <NumberBox label="Khoảng cách chữ (px)" step={0.5} value={saved.letterSpacing} placeholder={defaults.letterSpacing} onChange={(v) => set("letterSpacing", v)} />
-          )}
-          {show("lineHeight") && (
-            <NumberBox label="Chiều cao dòng" step={0.05} value={saved.lineHeight} placeholder={defaults.lineHeight} onChange={(v) => set("lineHeight", v)} />
-          )}
-          {show("fontStyle") && (
-            <SelectBox label="Kiểu chữ" value={saved.fontStyle} options={FONT_STYLE_OPTIONS} onChange={(v) => set("fontStyle", v)} />
-          )}
-          {show("textTransform") && (
-            <SelectBox label="Hoa / thường" value={saved.textTransform} options={TRANSFORM_OPTIONS} onChange={(v) => set("textTransform", v)} />
-          )}
-        </div>
+      {show("fontSize") && (
+        <SelectControl
+          label="Size"
+          value={style.fontSize ?? ""}
+          onChange={(v) => update("fontSize", Number(v))}
+        >
+          {SIZE_OPTIONS.map((size) => (
+            <option key={size} value={size}>
+              {size}px
+            </option>
+          ))}
+        </SelectControl>
+      )}
 
-        {changed && (
-          <button
-            type="button"
-            className="admin-btn"
-            style={{ marginTop: 14 }}
-            onClick={() => onChange({})}
-          >
-            ↺ Đặt lại mặc định
-          </button>
-        )}
-      </div>
-    </details>
+      {show("fontWeight") && (
+        <SelectControl
+          label="Độ đậm"
+          value={style.fontWeight ?? ""}
+          onChange={(v) => update("fontWeight", Number(v))}
+        >
+          {WEIGHT_OPTIONS.map((weight) => (
+            <option key={weight.value} value={weight.value}>
+              {weight.label}
+            </option>
+          ))}
+        </SelectControl>
+      )}
+
+      {show("color") && (
+        <ColorControl
+          label="Màu chữ"
+          value={style.color}
+          onChange={(v) => update("color", v)}
+        />
+      )}
+
+      {show("letterSpacing") && (
+        <SelectControl
+          label="Khoảng cách chữ"
+          value={style.letterSpacing ?? ""}
+          onChange={(v) => update("letterSpacing", Number(v))}
+        >
+          {LETTER_SPACING_OPTIONS.map((item) => (
+            <option key={item} value={item}>
+              {item}px
+            </option>
+          ))}
+        </SelectControl>
+      )}
+
+      {show("lineHeight") && (
+        <SelectControl
+          label="Chiều cao dòng"
+          value={style.lineHeight ?? ""}
+          onChange={(v) => update("lineHeight", Number(v))}
+        >
+          {LINE_HEIGHT_OPTIONS.map((item) => (
+            <option key={item} value={item}>
+              {item}
+            </option>
+          ))}
+        </SelectControl>
+      )}
+
+      {show("fontStyle") && (
+        <SelectControl
+          label="Kiểu chữ"
+          value={style.fontStyle || "normal"}
+          onChange={(v) => update("fontStyle", v)}
+        >
+          <option value="normal">Bình thường</option>
+          <option value="italic">Nghiêng</option>
+        </SelectControl>
+      )}
+
+      {show("textTransform") && (
+        <SelectControl
+          label="Hoa / thường"
+          value={style.textTransform || "none"}
+          onChange={(v) => update("textTransform", v)}
+        >
+          <option value="none">Giữ nguyên</option>
+          <option value="uppercase">IN HOA</option>
+          <option value="lowercase">chữ thường</option>
+          <option value="capitalize">Viết Hoa Đầu</option>
+        </SelectControl>
+      )}
+    </div>
   );
 }
 
-/* Hiện nhiều StyleEditor từ một danh sách khai báo.
-   elements: [{ key, title, sample, defaults, fields?, previewBg? }]
-   value: object { [key]: kiểu chữ }  ·  onChange: nhận object mới */
-export function StyleList({ elements, value, onChange }) {
-  const all = value || {};
+export function StyleList({ elements = [], value, onChange }) {
+  const styles = value && typeof value === "object" ? value : {};
 
-  return elements.map((el) => (
-    <StyleEditor
-      key={el.key}
-      title={el.title}
-      sample={el.sample}
-      defaults={el.defaults}
-      fields={el.fields}
-      previewBg={el.previewBg}
-      value={all[el.key]}
-      onChange={(v) => onChange({ ...all, [el.key]: v })}
-    />
-  ));
+  const updateKey = (key, nextStyle) => {
+    onChange?.({
+      ...styles,
+      [key]: nextStyle,
+    });
+  };
+
+  return (
+    <div style={{ display: "grid", gap: 14, marginTop: 8 }}>
+      {elements.map((element) => {
+        const style = {
+          ...(element.defaults || {}),
+          ...(styles[element.key] || {}),
+        };
+        const fields = element.fields || ALL_FIELDS;
+
+        return (
+          <div
+            key={element.key}
+            style={{
+              padding: 18,
+              border: "1px solid #ead9e0",
+              borderRadius: 14,
+              background: "#fffafd",
+            }}
+          >
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#321525", marginBottom: 6 }}>
+              {element.title || element.key}
+            </div>
+            {element.sample && (
+              <div
+                style={{
+                  marginBottom: 14,
+                  fontFamily: style.fontFamily || "inherit",
+                  fontSize: Math.min(Number(style.fontSize) || 18, 36),
+                  fontWeight: style.fontWeight,
+                  fontStyle: style.fontStyle,
+                  letterSpacing: style.letterSpacing != null ? `${style.letterSpacing}px` : undefined,
+                  lineHeight: style.lineHeight,
+                  color: style.color,
+                  textTransform: style.textTransform,
+                }}
+              >
+                {element.sample}
+              </div>
+            )}
+            <StyleFields
+              style={style}
+              fields={fields}
+              onChange={(next) => updateKey(element.key, next)}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
 }
+
+export default StyleList;

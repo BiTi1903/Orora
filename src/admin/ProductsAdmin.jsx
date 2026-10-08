@@ -5,6 +5,7 @@ import ImageField from "./ImageField";
 
 const empty = {
   id: "", number: "", name: "", slug: "", price: "", image: "",
+  image2: "", image3: "", image4: "",
   description: "", story: "", material: "", size: "", color: "", origin: "",
   active: true,
 };
@@ -77,6 +78,9 @@ export default function ProductsAdmin() {
         number: form.number.trim() || String(items.length + 1).padStart(2, "0"),
         price: form.price.trim(),
         image: form.image.trim(),
+        image2: (form.image2 || "").trim(),
+        image3: (form.image3 || "").trim(),
+        image4: (form.image4 || "").trim(),
       });
       say("success", "Đã lưu sản phẩm.");
       setEditing(false);
@@ -148,9 +152,30 @@ export default function ProductsAdmin() {
           </div>
 
           <ImageField
-            label="Ảnh sản phẩm"
+            label="Ảnh chính"
             value={form.image}
             onChange={(v) => setForm({ ...form, image: v })}
+            width={1200}
+          />
+          <p className="admin-muted" style={{ margin: "4px 0 14px", fontSize: 13 }}>
+            Ảnh phụ sẽ tự chạy slideshow trên thẻ sản phẩm và trang chi tiết: hiện ảnh 1, sau 3 giây chuyển ảnh 2, rồi lần lượt. Để trống nếu không dùng.
+          </p>
+          <ImageField
+            label="Ảnh phụ 1"
+            value={form.image2}
+            onChange={(v) => setForm({ ...form, image2: v })}
+            width={1200}
+          />
+          <ImageField
+            label="Ảnh phụ 2"
+            value={form.image3}
+            onChange={(v) => setForm({ ...form, image3: v })}
+            width={1200}
+          />
+          <ImageField
+            label="Ảnh phụ 3"
+            value={form.image4}
+            onChange={(v) => setForm({ ...form, image4: v })}
             width={1200}
           />
 

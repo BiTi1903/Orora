@@ -90,9 +90,19 @@ function createTextStyle(style = {}) {
         ? `${Number(s.marginTop)}px`
         : undefined,
 
+    marginRight:
+      s.marginRight != null
+        ? `${Number(s.marginRight)}px`
+        : undefined,
+
     marginBottom:
       s.marginBottom != null
         ? `${Number(s.marginBottom)}px`
+        : undefined,
+
+    marginLeft:
+      s.marginLeft != null
+        ? `${Number(s.marginLeft)}px`
         : undefined,
 
     paddingTop:
@@ -100,9 +110,19 @@ function createTextStyle(style = {}) {
         ? `${Number(s.paddingTop)}px`
         : undefined,
 
+    paddingRight:
+      s.paddingRight != null
+        ? `${Number(s.paddingRight)}px`
+        : undefined,
+
     paddingBottom:
       s.paddingBottom != null
         ? `${Number(s.paddingBottom)}px`
+        : undefined,
+
+    paddingLeft:
+      s.paddingLeft != null
+        ? `${Number(s.paddingLeft)}px`
         : undefined,
 
     maxWidth,
@@ -216,18 +236,18 @@ function normalizeBuilder(data) {
         ? data.storyStats
         : [
             {
-              value: 5,
-              suffix: "+",
+              value: "test",
+              suffix: "",
               label: "Sản phẩm",
             },
             {
-              value: 1000,
-              suffix: "+",
+              value: "test",
+              suffix: "",
               label: "Khách hàng",
             },
             {
-              value: 98,
-              suffix: "%",
+              value: "test",
+              suffix: "",
               label: "Hài lòng",
             },
           ],
@@ -581,48 +601,44 @@ function About({
         </RevealBox>
 
         <RevealBox delay={240}>
-          <div
-            className={`about-stats ${selectedClass(
-              "stats"
-            )}`}
-            data-builder-key={
-              preview ? "stats" : undefined
-            }
-            onClick={(e) => {
-              if (!preview) return;
-
-              e.stopPropagation();
-              select("stats");
-            }}
-          >
+          <div className="about-stats">
             {(Array.isArray(stats) ? stats : []).map((item, index) => (
               <div key={index}>
                 <strong
-                  style={createTextStyle(
-                    builder.statValue
-                  )}
+                  className={selectedClass(`statValue:${index}`)}
+                  style={{
+                    ...createTextStyle(builder.statValue),
+                    display: "block",
+                  }}
+                  data-builder-key={
+                    preview ? `statValue:${index}` : undefined
+                  }
+                  onClick={(e) => {
+                    if (!preview) return;
+                    e.stopPropagation();
+                    select(`statValue:${index}`);
+                  }}
                 >
-                  {preview ? (
-                    <>
-                      {Number(item?.value) || 0}
-                      {item?.suffix || ""}
-                    </>
-                  ) : (
-                    <CountUp
-                      to={
-                        Number(item?.value) || 0
-                      }
-                      suffix={
-                        item?.suffix || ""
-                      }
-                    />
-                  )}
+                  {item?.value == null || item?.value === ""
+                    ? "test"
+                    : item.value}
+                  {item?.suffix || ""}
                 </strong>
 
                 <span
-                  style={createTextStyle(
-                    builder.statLabel
-                  )}
+                  className={selectedClass(`statLabel:${index}`)}
+                  style={{
+                    ...createTextStyle(builder.statLabel),
+                    display: "block",
+                  }}
+                  data-builder-key={
+                    preview ? `statLabel:${index}` : undefined
+                  }
+                  onClick={(e) => {
+                    if (!preview) return;
+                    e.stopPropagation();
+                    select(`statLabel:${index}`);
+                  }}
                 >
                   {item?.label}
                 </span>

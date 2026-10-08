@@ -667,6 +667,12 @@
   About.jsx sẽ thêm class này khi preview.
 */
 
+.builder-preview .marquee,
+.builder-preview .marquee span,
+.builder-preview .marquee b {
+  cursor: pointer;
+}
+
 .builder-selected {
   outline: 2px solid #e2678f !important;
   outline-offset: 5px;

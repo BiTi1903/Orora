@@ -5,6 +5,7 @@ import Hero from "../../components/Hero";
 import Collection from "../../components/Collection";
 import ProductDetail from "../../components/ProductDetail";
 import { Testimonials, Features } from "../../components/Extras";
+import { toCss } from "../../lib/typography";
 import Footer from "../../components/Footer";
 import { defaultProducts } from "../../data/content";
 import "./VisualBuilder.css";
@@ -175,18 +176,18 @@ const DEFAULT_ABOUT = {
 
   stats: [
     {
-      value: 5,
-      suffix: "+",
+      value: "test",
+      suffix: "",
       label: "Sản phẩm chọn lọc",
     },
     {
-      value: 1000,
-      suffix: "+",
+      value: "test",
+      suffix: "",
       label: "Khách hàng yêu thích",
     },
     {
-      value: 98,
-      suffix: "%",
+      value: "test",
+      suffix: "",
       label: "Hài lòng",
     },
   ],
@@ -515,7 +516,6 @@ const SECTION_LIST = [
     key: "ticker",
     label: "Dải chữ chạy",
     icon: "↔",
-    disabled: true,
   },
   {
     key: "about",
@@ -802,6 +802,52 @@ function createFooter(data = {}) {
   return result;
 }
 
+const DEFAULT_TICKER = {
+  marqueeWords: [
+    "Dịu nhẹ cho da",
+    "Thành phần thuần khiết",
+    "Không paraben",
+    "Cấp ẩm sâu",
+    "Rạng rỡ mỗi ngày",
+  ],
+  marqueeStyles: {
+    text: {
+      fontFamily: '"Cormorant Garamond", serif',
+      fontSize: 28,
+      fontWeight: 400,
+      fontStyle: "italic",
+      color: "#3a1526",
+    },
+    star: {
+      fontSize: 14,
+      fontWeight: 400,
+      color: "#e2678f",
+    },
+    band: {
+      color: "#fffafc",
+    },
+  },
+};
+
+function createTicker(data = {}) {
+  const styles = data.marqueeStyles || {};
+  const bandColor =
+    (styles.band && typeof styles.band === "object" && styles.band.color) ||
+    (typeof styles.background === "string" ? styles.background : "") ||
+    DEFAULT_TICKER.marqueeStyles.band.color;
+
+  return {
+    marqueeWords: data.marqueeWords?.length
+      ? [...data.marqueeWords]
+      : [...DEFAULT_TICKER.marqueeWords],
+    marqueeStyles: {
+      text: { ...DEFAULT_TICKER.marqueeStyles.text, ...(styles.text || {}) },
+      star: { ...DEFAULT_TICKER.marqueeStyles.star, ...(styles.star || {}) },
+      band: { color: bandColor },
+    },
+  };
+}
+
 const SECTION_DEFAULT_SELECTED = {
   hero: "title",
   about: "title",
@@ -810,6 +856,7 @@ const SECTION_DEFAULT_SELECTED = {
   features: "featTitle",
   reviews: "revTitle",
   footer: "ftLogo",
+  ticker: "text",
 };
 
 export default function VisualBuilder() {
@@ -821,6 +868,7 @@ export default function VisualBuilder() {
   const [features, setFeatures] = useState(DEFAULT_FEATURES);
   const [reviews, setReviews] = useState(DEFAULT_REVIEWS);
   const [footer, setFooter] = useState(DEFAULT_FOOTER);
+  const [ticker, setTicker] = useState(DEFAULT_TICKER);
   const [activeSection, setActiveSection] = useState("about");
   const [selected, setSelected] = useState("title");
   const [loading, setLoading] = useState(true);
@@ -842,6 +890,7 @@ export default function VisualBuilder() {
         setFeatures(createFeatures(data || {}));
         setReviews(createReviews(data || {}));
         setFooter(createFooter(data || {}));
+        setTicker(createTicker(data || {}));
       })
       .catch((err) => {
         console.error(err);
@@ -854,6 +903,7 @@ export default function VisualBuilder() {
           setFeatures(DEFAULT_FEATURES);
           setReviews(DEFAULT_REVIEWS);
           setFooter(DEFAULT_FOOTER);
+          setTicker(DEFAULT_TICKER);
         }
       })
       .finally(() => {
@@ -889,6 +939,9 @@ export default function VisualBuilder() {
     if (activeSection === "footer") {
       return getFooterSelectedData(footer, selected);
     }
+    if (activeSection === "ticker") {
+      return getTickerSelectedData(ticker, selected);
+    }
     return getSelectedData(about, selected);
   }, [
     activeSection,
@@ -899,10 +952,30 @@ export default function VisualBuilder() {
     features,
     reviews,
     footer,
+    ticker,
     selected,
   ]);
 
   const updateSelected = (patch) => {
+    if (activeSection === "ticker") {
+      setTicker((current) => {
+        if (patch.marqueeWords) {
+          return { ...current, marqueeWords: patch.marqueeWords };
+        }
+        if (patch.bandColor != null) {
+          return {
+            ...current,
+            marqueeStyles: {
+              ...current.marqueeStyles,
+              band: { ...current.marqueeStyles.band, color: patch.bandColor },
+            },
+          };
+        }
+        return current;
+      });
+      return;
+    }
+
     if (activeSection === "hero") {
       setHero((current) => ({ ...current, ...patch }));
       return;
@@ -1030,6 +1103,25 @@ export default function VisualBuilder() {
         return current;
       }
 
+      if (
+        typeof selected === "string" &&
+        (selected.startsWith("statValue:") || selected.startsWith("statLabel:"))
+      ) {
+        const [kind, indexRaw] = selected.split(":");
+        const index = Number(indexRaw);
+        const field = kind === "statValue" ? "value" : "label";
+        const stats = Array.isArray(current.stats) ? current.stats : [];
+        return {
+          ...current,
+          stats: stats.map((item, i) => {
+            if (i !== index) return item;
+            const next = { ...item, [field]: patch.text ?? item?.[field] ?? "" };
+            if (patch.suffix != null) next.suffix = patch.suffix;
+            return next;
+          }),
+        };
+      }
+
       return {
         ...current,
         [selected]: {
@@ -1041,6 +1133,22 @@ export default function VisualBuilder() {
   };
 
   const updateSelectedStyle = (patch) => {
+    if (activeSection === "ticker") {
+      const key = selected === "star" ? "star" : selected === "text" ? "text" : null;
+      if (!key) return;
+      setTicker((current) => ({
+        ...current,
+        marqueeStyles: {
+          ...current.marqueeStyles,
+          [key]: {
+            ...(current.marqueeStyles?.[key] || {}),
+            ...patch,
+          },
+        },
+      }));
+      return;
+    }
+
     if (activeSection === "hero") return;
 
     if (activeSection === "productdetail") {
@@ -1131,6 +1239,20 @@ export default function VisualBuilder() {
     }
 
     setAbout((current) => {
+      if (
+        typeof selected === "string" &&
+        (selected.startsWith("statValue:") || selected.startsWith("statLabel:"))
+      ) {
+        const styleKey = selected.startsWith("statValue:") ? "statValue" : "statLabel";
+        return {
+          ...current,
+          [styleKey]: {
+            ...(current[styleKey] || {}),
+            ...patch,
+          },
+        };
+      }
+
       if (
         selected === "section" ||
         selected === "image" ||
@@ -1237,6 +1359,11 @@ export default function VisualBuilder() {
         footerCopyright: footer.footerCopyright,
         footerCompanyNumber: footer.footerCompanyNumber,
         footerStyles: footer.footerStyles,
+        marqueeWords: ticker.marqueeWords,
+        marqueeStyles: {
+          ...ticker.marqueeStyles,
+          background: ticker.marqueeStyles?.band?.color || "",
+        },
       };
 
       await saveHomeContent(payload);
@@ -1382,9 +1509,18 @@ export default function VisualBuilder() {
               activeSection === "footer"
                 ? "builder-preview--footer"
                 : "",
+              activeSection === "ticker"
+                ? "builder-preview--ticker"
+                : "",
             ].join(" ")}
           >
-            {activeSection === "hero" ? (
+            {activeSection === "ticker" ? (
+              <TickerPreview
+                ticker={ticker}
+                selected={selected}
+                onSelect={setSelected}
+              />
+            ) : activeSection === "hero" ? (
               <Hero
                 preview
                 previewData={hero}
@@ -1451,6 +1587,7 @@ export default function VisualBuilder() {
             features={features}
             reviews={reviews}
             footer={footer}
+            ticker={ticker}
             onChange={updateSelected}
             onStyleChange={updateSelectedStyle}
           />
@@ -1479,6 +1616,28 @@ function getSelectedData(about, selected) {
     return {
       type: "stats",
       data: Array.isArray(about.stats) ? about.stats : DEFAULT_ABOUT.stats,
+    };
+  }
+
+  if (
+    typeof selected === "string" &&
+    (selected.startsWith("statValue:") || selected.startsWith("statLabel:"))
+  ) {
+    const [kind, indexRaw] = selected.split(":");
+    const index = Number(indexRaw);
+    const item = (Array.isArray(about.stats) ? about.stats : [])[index] || {};
+    const base = kind === "statValue"
+      ? about.statValue || DEFAULT_ABOUT.statValue
+      : about.statLabel || DEFAULT_ABOUT.statLabel;
+    return {
+      type: "statText",
+      data: {
+        kind,
+        index,
+        text: kind === "statValue" ? item.value ?? "" : item.label ?? "",
+        suffix: item.suffix || "",
+        style: { ...(base || {}) },
+      },
     };
   }
 
@@ -1812,6 +1971,61 @@ function getFooterSelectedData(footer, selected) {
   return { type: "ftText", data: footer, meta };
 }
 
+function getTickerSelectedData(ticker, selected) {
+  const map = {
+    text: { label: "Câu chạy" },
+    star: { label: "Dấu ✦" },
+    band: { label: "Nền dải" },
+  };
+  const meta = map[selected] || map.text;
+  return { type: selected === "band" ? "tickerBand" : "tickerText", data: ticker, meta };
+}
+
+function TickerPreview({ ticker, selected, onSelect }) {
+  const words = ticker.marqueeWords?.length ? ticker.marqueeWords : DEFAULT_TICKER.marqueeWords;
+  const textStyle = toCss(ticker.marqueeStyles?.text, { responsive: false });
+  const starStyle = toCss(ticker.marqueeStyles?.star, { responsive: false });
+  const bg = ticker.marqueeStyles?.band?.color;
+  const pick = (key) => (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onSelect(key);
+  };
+
+  const row = words.map((word, i) => (
+    <span
+      key={`${word}-${i}`}
+      className={selected === "text" ? "builder-selected" : ""}
+      data-builder-key="text"
+      style={textStyle}
+      onClick={pick("text")}
+    >
+      {word}
+      <b
+        className={selected === "star" ? "builder-selected" : ""}
+        data-builder-key="star"
+        style={starStyle}
+        onClick={pick("star")}
+      >
+        ✦
+      </b>
+    </span>
+  ));
+
+  return (
+    <div
+      className={`marquee${selected === "band" ? " builder-selected" : ""}`}
+      style={bg ? { background: bg } : undefined}
+      onClick={pick("band")}
+    >
+      <div className="marquee-track">
+        {row}
+        {row}
+      </div>
+    </div>
+  );
+}
+
 function StylePanel({
   section,
   selected,
@@ -1823,6 +2037,7 @@ function StylePanel({
   features,
   reviews,
   footer,
+  ticker,
   onChange,
   onStyleChange,
 }) {
@@ -1844,6 +2059,11 @@ function StylePanel({
     stats: "Số liệu",
   };
 
+  const statMatch =
+    section === "about" &&
+    typeof selected === "string" &&
+    selected.match(/^(statValue|statLabel):(\d+)$/);
+
   const sideLabel =
     section === "hero"
       ? data.meta?.label || HERO_FIELD_MAP[selected]?.label || selected
@@ -1859,6 +2079,10 @@ function StylePanel({
       ? data.meta?.label || REVIEWS_TEXT_MAP[selected]?.label || selected
       : section === "footer"
       ? data.meta?.label || FOOTER_FIELD_MAP[selected]?.label || selected
+      : section === "ticker"
+      ? data.meta?.label || selected
+      : statMatch
+      ? `${statMatch[1] === "statValue" ? "Chữ lớn (đồng bộ)" : "Chữ nhỏ (đồng bộ)"} #${Number(statMatch[2]) + 1}`
       : aboutTitleMap[selected] || selected;
 
   return (
@@ -1926,6 +2150,16 @@ function StylePanel({
         />
       )}
 
+      {section === "ticker" && (
+        <TickerSettings
+          selected={selected}
+          data={data}
+          ticker={ticker}
+          onChange={onChange}
+          onStyleChange={onStyleChange}
+        />
+      )}
+
       {section === "about" && data.type === "section" && (
         <SectionSettings
           data={data.data}
@@ -1945,6 +2179,14 @@ function StylePanel({
           stats={about.stats}
           about={about}
           onChange={onChange}
+        />
+      )}
+
+      {section === "about" && data.type === "statText" && (
+        <StatTextSettings
+          data={data.data}
+          onChange={onChange}
+          onStyleChange={onStyleChange}
         />
       )}
 
@@ -2464,6 +2706,56 @@ function ProductDetailSettings({
   );
 }
 
+function TickerSettings({ selected, data, ticker, onChange, onStyleChange }) {
+  if (!data) {
+    return <div className="builder-empty">Chọn một thành phần trên preview.</div>;
+  }
+
+  const styles = ticker.marqueeStyles || {};
+
+  if (selected === "band" || data.type === "tickerBand") {
+    return (
+      <SettingGroup title="Nền dải">
+        <div className="builder-field">
+          <label>Màu nền</label>
+          <input
+            type="color"
+            value={styles.band?.color || "#fffafc"}
+            onChange={(e) => onChange({ bandColor: e.target.value })}
+          />
+        </div>
+      </SettingGroup>
+    );
+  }
+
+  if (selected === "text") {
+    return (
+      <>
+        <SettingGroup title="Nội dung">
+          <div className="builder-field">
+            <label>Mỗi dòng một câu</label>
+            <textarea
+              rows={7}
+              value={(ticker.marqueeWords || []).join("\n")}
+              onChange={(e) =>
+                onChange({
+                  marqueeWords: e.target.value
+                    .split("\n")
+                    .map((line) => line.trim())
+                    .filter(Boolean),
+                })
+              }
+            />
+          </div>
+        </SettingGroup>
+        <StyleTypographyBlock style={styles.text || {}} onStyleChange={onStyleChange} />
+      </>
+    );
+  }
+
+  return <StyleTypographyBlock style={styles.star || {}} onStyleChange={onStyleChange} />;
+}
+
 function CollectionSettings({
   selected,
   data,
@@ -2784,6 +3076,73 @@ function ImageSettings({ data, onChange }) {
   );
 }
 
+function StatTextSettings({ data, onChange, onStyleChange }) {
+  const safe = data || { text: "", suffix: "", style: {}, kind: "statValue", index: 0 };
+  const style = safe.style || {};
+  const isValue = safe.kind === "statValue";
+
+  const space = (label, key) => (
+    <SelectField
+      label={label}
+      value={style[key] ?? 0}
+      options={SPACE_OPTIONS}
+      suffix="px"
+      onChange={(value) => onStyleChange({ [key]: Number(value) })}
+    />
+  );
+
+  return (
+    <>
+      <SettingGroup title={isValue ? "Nội dung chữ lớn" : "Nội dung chữ nhỏ"}>
+        <small className="builder-help">
+          {isValue
+            ? "Font, size, margin và padding áp dụng cho mọi chữ lớn."
+            : "Font, size, margin và padding áp dụng cho mọi chữ nhỏ."}
+        </small>
+        <div className="builder-field">
+          <label>{isValue ? "Chữ / số của ô này" : "Mô tả của ô này"}</label>
+          <input
+            value={safe.text ?? ""}
+            onChange={(e) => onChange({ text: e.target.value })}
+          />
+        </div>
+        {isValue && (
+          <div className="builder-field">
+            <label>Ký hiệu phía sau (+, %)</label>
+            <input
+              value={safe.suffix || ""}
+              onChange={(e) => onChange({ text: safe.text ?? "", suffix: e.target.value })}
+            />
+          </div>
+        )}
+      </SettingGroup>
+
+      <SettingGroup title="Typography">
+        <TypographyControls style={style} onChange={onStyleChange} />
+      </SettingGroup>
+
+      <SettingGroup title="Padding / margin">
+        <div className="builder-field-row">
+          {space("Margin trên", "marginTop")}
+          {space("Margin phải", "marginRight")}
+        </div>
+        <div className="builder-field-row">
+          {space("Margin dưới", "marginBottom")}
+          {space("Margin trái", "marginLeft")}
+        </div>
+        <div className="builder-field-row">
+          {space("Padding trên", "paddingTop")}
+          {space("Padding phải", "paddingRight")}
+        </div>
+        <div className="builder-field-row">
+          {space("Padding dưới", "paddingBottom")}
+          {space("Padding trái", "paddingLeft")}
+        </div>
+      </SettingGroup>
+    </>
+  );
+}
+
 function StatsSettings({ stats, about, onChange }) {
   const list = Array.isArray(stats)
     ? stats.map((item) => ({
@@ -2844,15 +3203,15 @@ function StatsSettings({ stats, about, onChange }) {
 
             <div className="builder-field-row">
               <div className="builder-field">
-                <label>Số</label>
+                <label>Chữ / số hiển thị</label>
                 <input
-                  type="number"
+                  type="text"
                   value={item.value ?? ""}
                   onChange={(e) => {
                     const next = [...list];
                     next[index] = {
                       ...next[index],
-                      value: Number(e.target.value) || 0,
+                      value: e.target.value,
                     };
                     patchList(next);
                   }}

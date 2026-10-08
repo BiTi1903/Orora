@@ -51,18 +51,18 @@ export const defaultExtras = {
 
   storyStats: [
     {
-      value: 5,
-      suffix: "+",
+      value: "test",
+      suffix: "",
       label: "Sản phẩm chọn lọc",
     },
     {
-      value: 1000,
-      suffix: "+",
+      value: "test",
+      suffix: "",
       label: "Khách hàng yêu thích",
     },
     {
-      value: 98,
-      suffix: "%",
+      value: "test",
+      suffix: "",
       label: "Hài lòng",
     },
   ],

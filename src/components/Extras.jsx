@@ -145,16 +145,23 @@ export function Marquee() {
           "Rạng rỡ mỗi ngày",
         ];
 
+  const ms = c.marqueeStyles || {};
+  const textStyle = toCss(ms.text);
+  const starStyle = toCss(ms.star);
+  const bg = ms.background || ms.band?.color;
+  const bandStyle = bg ? { background: bg } : undefined;
+
   const row = words.map((w, i) => (
-    <span key={`${w}-${i}`}>
+    <span key={`${w}-${i}`} style={textStyle}>
       {w}
-      <b>✦</b>
+      <b style={starStyle}>✦</b>
     </span>
   ));
 
   return (
     <div
       className="marquee"
+      style={bandStyle}
       aria-hidden="true"
     >
       <div className="marquee-track">

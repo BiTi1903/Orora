@@ -80,6 +80,7 @@
   position: sticky;
   top: 110px;
   width: 100%;
+  aspect-ratio: 4 / 5;
   overflow: hidden;
   border-radius: 32px;
   border: 8px solid #fff;
@@ -248,4 +249,8 @@
   .product-detail-content { width: calc(100% - 32px); }
   .product-detail-info h1 { font-size: 42px; }
   .product-detail-row { grid-template-columns: 76px 1fr; }
+}
+.product-detail-image:hover .product-slideshow img.is-active {
+  transform: scale(1.04);
+  filter: saturate(1.05);
 }

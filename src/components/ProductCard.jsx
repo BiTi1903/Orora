@@ -1,9 +1,13 @@
 import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { splitColor, toCss } from "../lib/typography";
+import ProductSlideshow from "./ProductSlideshow";
 
 function ProductCard({
   image,
+  image2,
+  image3,
+  image4,
   number,
   name,
   description,
@@ -73,8 +77,8 @@ function ProductCard({
       >
         <span className="tilt-shine" aria-hidden="true" />
 
-        <ImageWrap {...imageProps}>
-          <img src={image} alt={name} />
+        <ImageWrap className="product-slideshow-link" {...imageProps}>
+          <ProductSlideshow images={[image, image2, image3, image4]} alt={name} />
         </ImageWrap>
       </div>
 

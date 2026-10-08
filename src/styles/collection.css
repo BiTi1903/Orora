@@ -206,3 +206,89 @@
   .gallery-info p { font-size: 18px; }
   .collection-bottom { margin-top: 70px; }
 }
+/* =====================================================
+   CAROUSEL VÒNG NGANG
+===================================================== */
+.gallery-viewport {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  overflow: hidden;
+  padding: 14px 0 36px;
+  margin-top: -14px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.gallery-viewport.is-dragging {
+  cursor: grabbing;
+}
+
+.gallery-track {
+  display: flex;
+  flex-wrap: nowrap;
+  width: 100%;
+  align-items: stretch;
+  will-change: transform;
+}
+
+.gallery-track.is-animating {
+  transition: transform 0.8s cubic-bezier(0.22, 0.8, 0.28, 1);
+}
+
+.gallery-slide {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.gallery-dots {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  gap: 8px;
+  transform: translateX(-50%);
+}
+
+.gallery-dots button {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 99px;
+  background: rgba(184, 68, 109, 0.28);
+  cursor: pointer;
+  transition: width 0.35s ease, background 0.35s ease;
+}
+
+.gallery-dots button.is-active {
+  width: 22px;
+  background: var(--rose);
+}
+
+.gallery-nav {
+  position: absolute;
+  top: 38%;
+  z-index: 4;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--rose-deep);
+  font-size: 28px;
+  line-height: 1;
+  box-shadow: 0 8px 20px rgba(120, 40, 70, 0.16);
+  cursor: pointer;
+}
+
+.gallery-nav.prev { left: 8px; }
+.gallery-nav.next { right: 8px; }
+
+.gallery-slide img,
+.gallery-slide a {
+  -webkit-user-drag: none;
+  user-select: none;
+}
