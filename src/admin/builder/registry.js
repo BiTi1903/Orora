@@ -1,0 +1,282 @@
+export { DEFAULT_ABOUT, DEFAULT_STYLE } from "./defaults";
+
+const HERO_FIELD_MAP = {
+  image: { type: "heroImage", label: "Ảnh nền" },
+  eyebrow: { type: "heroText", key: "heroEyebrow", label: "Dòng nhỏ phía trên" },
+  title: { type: "heroText", key: "heroTitle", label: "Tiêu đề lớn" },
+  description: {
+    type: "heroText",
+    key: "heroDescription",
+    label: "Mô tả ngắn",
+    rows: 3,
+  },
+  rotator: { type: "heroRotator", label: "Các từ đổi liên tục" },
+  btnPrimary: {
+    type: "heroButton",
+    textKey: "heroButtonText",
+    linkKey: "heroButtonLink",
+    label: "Nút chính",
+  },
+  btnSecondary: {
+    type: "heroButton",
+    textKey: "shopButtonText",
+    linkKey: "shopButtonLink",
+    label: "Nút phụ",
+  },
+  chip1: { type: "heroText", key: "heroChip1", label: "Thẻ nổi 1" },
+  chip2: { type: "heroText", key: "heroChip2", label: "Thẻ nổi 2" },
+  chip3: { type: "heroText", key: "heroChip3", label: "Thẻ nổi 3" },
+  ring: { type: "heroText", key: "heroRingText", label: "Chữ vòng tròn" },
+  scroll: { type: "heroText", key: "heroScrollText", label: "Chữ cuộn" },
+};
+
+
+const COLLECTION_FIELD_MAP = {
+  colLabel: {
+    type: "colStyle",
+    group: "collectionStyles",
+    styleKey: "label",
+    textKey: "collectionLabel",
+    label: "Nhãn nhỏ",
+    sample: "COLLECTION",
+  },
+  colTitle: {
+    type: "colStyle",
+    group: "collectionStyles",
+    styleKey: "title",
+    textKey: "collectionTitle",
+    label: "Tiêu đề dòng 1",
+    sample: "Explore",
+  },
+  colHighlight: {
+    type: "colStyle",
+    group: "collectionStyles",
+    styleKey: "highlight",
+    textKey: "collectionHighlight",
+    label: "Tiêu đề dòng 2",
+    sample: "the details.",
+  },
+  cardNumber: {
+    type: "colStyle",
+    group: "productCardStyles",
+    styleKey: "number",
+    label: "Số thứ tự thẻ",
+    sample: "01",
+    textOnly: false,
+  },
+  cardName: {
+    type: "colStyle",
+    group: "productCardStyles",
+    styleKey: "name",
+    label: "Tên sản phẩm",
+    sample: "First Story",
+  },
+  cardDescription: {
+    type: "colStyle",
+    group: "productCardStyles",
+    styleKey: "description",
+    label: "Mô tả ngắn",
+    sample: "A beautiful piece created for your everyday moments.",
+  },
+  cardPrice: {
+    type: "colStyle",
+    group: "productCardStyles",
+    styleKey: "price",
+    label: "Giá",
+    sample: "1.290.000đ",
+  },
+  cardButton: {
+    type: "colStyle",
+    group: "productCardStyles",
+    styleKey: "button",
+    label: "Nút Xem chi tiết",
+    sample: "Xem chi tiết ↗",
+  },
+};
+
+
+const PRODUCT_DETAIL_FIELD_MAP = {
+  pdNumber: {
+    styleKey: "number",
+    label: "Số thứ tự",
+    sample: "01",
+  },
+  pdName: {
+    styleKey: "name",
+    label: "Tên sản phẩm",
+    sample: "First Story",
+  },
+  pdPrice: {
+    styleKey: "price",
+    label: "Giá",
+    sample: "1.290.000đ",
+  },
+  pdDescription: {
+    styleKey: "description",
+    label: "Mô tả ngắn",
+    sample: "A beautiful piece created for your everyday moments.",
+  },
+  pdSectionTitle: {
+    styleKey: "sectionTitle",
+    label: "Tiêu đề mục (About / Details)",
+    sample: "About the product",
+  },
+  pdAboutTitle: {
+    styleKey: "aboutTitle",
+    textKey: "text",
+    label: "Tiêu đề About the product",
+    sample: "About the product",
+  },
+  pdDetailsTitle: {
+    styleKey: "detailsTitle",
+    textKey: "text",
+    label: "Tiêu đề Details",
+    sample: "Details",
+  },
+  pdBody: {
+    styleKey: "body",
+    label: "Đoạn câu chuyện sản phẩm",
+    sample: "First Story is created with a simple idea in mind.",
+  },
+  pdRowLabel: {
+    styleKey: "rowLabel",
+    label: "Tên thông tin (Material, Size…)",
+    sample: "Material",
+  },
+  pdRowValue: {
+    styleKey: "rowValue",
+    label: "Nội dung Material / Size / Color / Origin",
+    sample: "Nội dung dùng chung font và size",
+  },
+};
+
+
+const FEATURES_TEXT_MAP = {
+  featLabel: {
+    key: "featuresLabel",
+    label: "Nhãn nhỏ",
+    styleKey: "label",
+  },
+  featTitle: {
+    key: "featuresTitle",
+    label: "Tiêu đề",
+    styleKey: "title",
+  },
+};
+
+
+const REVIEWS_TEXT_MAP = {
+  revLabel: {
+    key: "testimonialsLabel",
+    label: "Nhãn nhỏ",
+    styleKey: "label",
+  },
+  revTitle: {
+    key: "testimonialsTitle",
+    label: "Tiêu đề (trước)",
+    styleKey: "title",
+  },
+  revHighlight: {
+    key: "testimonialsHighlight",
+    label: "Chữ nổi bật",
+    styleKey: "highlight",
+  },
+  revTitleEnd: {
+    key: "testimonialsTitleEnd",
+    label: "Tiêu đề (sau)",
+    styleKey: "titleEnd",
+  },
+};
+
+
+const FOOTER_FIELD_MAP = {
+  ftLogo: {
+    key: "footerLogo",
+    label: "Tên thương hiệu",
+    styleKey: "logo",
+  },
+  ftDesc: {
+    key: "footerDescription",
+    label: "Mô tả",
+    rows: 3,
+    styleKey: "description",
+  },
+  ftInfoTitle: {
+    key: "footerInfoTitle",
+    label: "Tiêu đề Information",
+    styleKey: "columnTitle",
+  },
+  ftAbout: {
+    key: "footerAboutText",
+    label: "About us",
+    styleKey: "link",
+  },
+  ftShop: { key: "footerShopText", label: "Shop", styleKey: "link" },
+  ftTerms: {
+    key: "footerTermsText",
+    label: "Terms & Conditions",
+    styleKey: "link",
+  },
+  ftPrivacy: {
+    key: "footerPrivacyText",
+    label: "Privacy Policy",
+    styleKey: "link",
+  },
+  ftContactTitle: {
+    key: "footerContactTitle",
+    label: "Tiêu đề Contact",
+    styleKey: "columnTitle",
+  },
+  ftPhone: { key: "footerPhone", label: "Số điện thoại", styleKey: "link" },
+  ftEmail: { key: "footerEmail", label: "Email", styleKey: "link" },
+  ftAddress: {
+    key: "footerAddress",
+    label: "Địa chỉ",
+    rows: 2,
+    styleKey: "link",
+  },
+  ftSocialTitle: {
+    key: "footerSocialTitle",
+    label: "Tiêu đề mạng xã hội",
+    styleKey: "columnTitle",
+  },
+  ftInstagram: {
+    key: "footerInstagram",
+    label: "Link Instagram",
+    styleKey: "link",
+  },
+  ftFacebook: {
+    key: "footerFacebook",
+    label: "Link Facebook",
+    styleKey: "link",
+  },
+  ftTikTok: {
+    key: "footerTikTok",
+    label: "Link TikTok",
+    styleKey: "link",
+  },
+  ftYouTube: {
+    key: "footerYouTube",
+    label: "Link YouTube",
+    styleKey: "link",
+  },
+  ftCopyright: {
+    key: "footerCopyright",
+    label: "Copyright",
+    styleKey: "copyright",
+  },
+  ftCompany: {
+    key: "footerCompanyNumber",
+    label: "Thông tin công ty",
+    styleKey: "copyright",
+  },
+};
+
+export {
+  HERO_FIELD_MAP,
+  COLLECTION_FIELD_MAP,
+  PRODUCT_DETAIL_FIELD_MAP,
+  FEATURES_TEXT_MAP,
+  REVIEWS_TEXT_MAP,
+  FOOTER_FIELD_MAP,
+};
