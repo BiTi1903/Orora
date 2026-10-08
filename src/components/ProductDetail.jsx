@@ -230,15 +230,15 @@ function ProductDetail({
             {product.description}
           </p>
 
-          {product.story && (
+          {(product.story || preview) && (
             <div className="product-section">
               <h2
-                className={selectedClass("pdSectionTitle")}
-                data-builder-key={preview ? "pdSectionTitle" : undefined}
-                onClick={select("pdSectionTitle")}
-                style={css("sectionTitle")}
+                className={selectedClass("pdAboutTitle")}
+                data-builder-key={preview ? "pdAboutTitle" : undefined}
+                onClick={select("pdAboutTitle")}
+                style={css("aboutTitle")}
               >
-                About the product
+                {ps.aboutTitle?.text || "About the product"}
               </h2>
               <p
                 className={selectedClass("pdBody")}
@@ -251,15 +251,15 @@ function ProductDetail({
             </div>
           )}
 
-          {rows.length > 0 && (
+          {(rows.length > 0 || preview) && (
             <div className="product-section">
               <h2
-                className={selectedClass("pdSectionTitle")}
-                data-builder-key={preview ? "pdSectionTitle" : undefined}
-                onClick={select("pdSectionTitle")}
-                style={css("sectionTitle")}
+                className={selectedClass("pdDetailsTitle")}
+                data-builder-key={preview ? "pdDetailsTitle" : undefined}
+                onClick={select("pdDetailsTitle")}
+                style={css("detailsTitle")}
               >
-                Details
+                {ps.detailsTitle?.text || "Details"}
               </h2>
 
               {rows.map(([label, value]) => (

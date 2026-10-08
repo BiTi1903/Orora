@@ -81,14 +81,26 @@ export function toCss(style, { responsive = true } = {}) {
   if (s.marginTop != null && s.marginTop !== "") {
     css.marginTop = `${Number(s.marginTop)}px`;
   }
+  if (s.marginRight != null && s.marginRight !== "") {
+    css.marginRight = `${Number(s.marginRight)}px`;
+  }
   if (s.marginBottom != null && s.marginBottom !== "") {
     css.marginBottom = `${Number(s.marginBottom)}px`;
+  }
+  if (s.marginLeft != null && s.marginLeft !== "") {
+    css.marginLeft = `${Number(s.marginLeft)}px`;
   }
   if (s.paddingTop != null && s.paddingTop !== "") {
     css.paddingTop = `${Number(s.paddingTop)}px`;
   }
+  if (s.paddingRight != null && s.paddingRight !== "") {
+    css.paddingRight = `${Number(s.paddingRight)}px`;
+  }
   if (s.paddingBottom != null && s.paddingBottom !== "") {
     css.paddingBottom = `${Number(s.paddingBottom)}px`;
+  }
+  if (s.paddingLeft != null && s.paddingLeft !== "") {
+    css.paddingLeft = `${Number(s.paddingLeft)}px`;
   }
   if (s.maxWidth != null && s.maxWidth !== "") {
     const n = Number(s.maxWidth);

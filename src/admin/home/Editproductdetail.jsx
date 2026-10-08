@@ -81,10 +81,55 @@ export default function EditProductDetail() {
       {...h}
       onSubmit={h.save}
     >
+      <div className="admin-field">
+        <label>Tiêu đề About the product</label>
+        <input
+          value={h.form.productDetailStyles?.aboutTitle?.text ?? "About the product"}
+          onChange={(e) =>
+            h.set("productDetailStyles", {
+              ...(h.form.productDetailStyles || {}),
+              aboutTitle: {
+                ...(h.form.productDetailStyles?.aboutTitle || {}),
+                text: e.target.value,
+              },
+            })
+          }
+        />
+      </div>
+      <div className="admin-field">
+        <label>Tiêu đề Details</label>
+        <input
+          value={h.form.productDetailStyles?.detailsTitle?.text ?? "Details"}
+          onChange={(e) =>
+            h.set("productDetailStyles", {
+              ...(h.form.productDetailStyles || {}),
+              detailsTitle: {
+                ...(h.form.productDetailStyles?.detailsTitle || {}),
+                text: e.target.value,
+              },
+            })
+          }
+        />
+      </div>
+
       <StyleList
         elements={ELEMENTS}
         value={h.form.productDetailStyles}
-        onChange={(v) => h.set("productDetailStyles", v)}
+        onChange={(v) =>
+          h.set("productDetailStyles", {
+            ...v,
+            aboutTitle: {
+              ...(h.form.productDetailStyles?.aboutTitle || {}),
+              ...(v.aboutTitle || {}),
+              text: h.form.productDetailStyles?.aboutTitle?.text ?? "About the product",
+            },
+            detailsTitle: {
+              ...(h.form.productDetailStyles?.detailsTitle || {}),
+              ...(v.detailsTitle || {}),
+              text: h.form.productDetailStyles?.detailsTitle?.text ?? "Details",
+            },
+          })
+        }
       />
     </SectionShell>
   );

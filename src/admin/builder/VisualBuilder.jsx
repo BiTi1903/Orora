@@ -321,6 +321,36 @@ const DEFAULT_PRODUCT_DETAIL = {
     fontWeight: 600,
     color: "#3a1526",
   },
+  aboutTitle: {
+    text: "About the product",
+    fontFamily: '"Cormorant Garamond", serif',
+    fontSize: 26,
+    fontWeight: 600,
+    color: "#3a1526",
+    marginTop: 0,
+    marginRight: 0,
+    marginBottom: 20,
+    marginLeft: 0,
+    paddingTop: 0,
+    paddingRight: 0,
+    paddingBottom: 0,
+    paddingLeft: 0,
+  },
+  detailsTitle: {
+    text: "Details",
+    fontFamily: '"Cormorant Garamond", serif',
+    fontSize: 26,
+    fontWeight: 600,
+    color: "#3a1526",
+    marginTop: 0,
+    marginRight: 0,
+    marginBottom: 20,
+    marginLeft: 0,
+    paddingTop: 0,
+    paddingRight: 0,
+    paddingBottom: 0,
+    paddingLeft: 0,
+  },
   body: {
     fontSize: 15,
     lineHeight: 1.9,
@@ -1023,7 +1053,16 @@ export default function VisualBuilder() {
     }
 
     if (activeSection === "productdetail") {
-      // style-only section — updates go through updateSelectedStyle
+      const meta = PRODUCT_DETAIL_FIELD_MAP[selected];
+      if (meta?.textKey && patch.text != null) {
+        setProductDetail((current) => ({
+          ...current,
+          [meta.styleKey]: {
+            ...(current[meta.styleKey] || {}),
+            text: patch.text,
+          },
+        }));
+      }
       return;
     }
 
@@ -1793,6 +1832,18 @@ const PRODUCT_DETAIL_FIELD_MAP = {
     label: "Tiêu đề mục (About / Details)",
     sample: "About the product",
   },
+  pdAboutTitle: {
+    styleKey: "aboutTitle",
+    textKey: "text",
+    label: "Tiêu đề About the product",
+    sample: "About the product",
+  },
+  pdDetailsTitle: {
+    styleKey: "detailsTitle",
+    textKey: "text",
+    label: "Tiêu đề Details",
+    sample: "Details",
+  },
   pdBody: {
     styleKey: "body",
     label: "Đoạn câu chuyện sản phẩm",
@@ -2116,6 +2167,7 @@ function StylePanel({
           selected={selected}
           data={data}
           productDetail={productDetail}
+          onChange={onChange}
           onStyleChange={onStyleChange}
         />
       )}
@@ -2648,6 +2700,7 @@ function ProductDetailSettings({
   selected,
   data,
   productDetail,
+  onChange,
   onStyleChange,
 }) {
   if (!data || data.type === "pdEmpty") {
@@ -2663,7 +2716,40 @@ function ProductDetailSettings({
 
   return (
     <>
+      {meta.textKey && (
+        <SettingGroup title="Nội dung">
+          <div className="builder-field">
+            <label>Tiêu đề</label>
+            <input
+              value={style.text ?? meta.sample ?? ""}
+              onChange={(e) => onChange({ text: e.target.value })}
+            />
+          </div>
+        </SettingGroup>
+      )}
+
       <StyleTypographyBlock style={style} onStyleChange={onStyleChange} />
+
+      {meta.textKey && (
+        <SettingGroup title="Padding / margin">
+          <div className="builder-field-row">
+            <SelectField label="Margin trên" value={style.marginTop ?? 0} options={SPACE_OPTIONS} suffix="px" onChange={(value) => onStyleChange({ marginTop: Number(value) })} />
+            <SelectField label="Margin phải" value={style.marginRight ?? 0} options={SPACE_OPTIONS} suffix="px" onChange={(value) => onStyleChange({ marginRight: Number(value) })} />
+          </div>
+          <div className="builder-field-row">
+            <SelectField label="Margin dưới" value={style.marginBottom ?? 0} options={SPACE_OPTIONS} suffix="px" onChange={(value) => onStyleChange({ marginBottom: Number(value) })} />
+            <SelectField label="Margin trái" value={style.marginLeft ?? 0} options={SPACE_OPTIONS} suffix="px" onChange={(value) => onStyleChange({ marginLeft: Number(value) })} />
+          </div>
+          <div className="builder-field-row">
+            <SelectField label="Padding trên" value={style.paddingTop ?? 0} options={SPACE_OPTIONS} suffix="px" onChange={(value) => onStyleChange({ paddingTop: Number(value) })} />
+            <SelectField label="Padding phải" value={style.paddingRight ?? 0} options={SPACE_OPTIONS} suffix="px" onChange={(value) => onStyleChange({ paddingRight: Number(value) })} />
+          </div>
+          <div className="builder-field-row">
+            <SelectField label="Padding dưới" value={style.paddingBottom ?? 0} options={SPACE_OPTIONS} suffix="px" onChange={(value) => onStyleChange({ paddingBottom: Number(value) })} />
+            <SelectField label="Padding trái" value={style.paddingLeft ?? 0} options={SPACE_OPTIONS} suffix="px" onChange={(value) => onStyleChange({ paddingLeft: Number(value) })} />
+          </div>
+        </SettingGroup>
+      )}
 
       <SettingGroup title="Gợi ý">
         <p className="builder-help" style={{ margin: 0 }}>
