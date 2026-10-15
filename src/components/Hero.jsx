@@ -65,6 +65,21 @@ function Hero({
 
   const previewWord = words[0] || "dịu nhẹ";
 
+  // Chỉ gắn ảnh nền khi đã có URL thật từ admin/Firestore.
+  // Khi đang loading (chưa có snapshot) → giữ nền gradient CSS, không load /hero.jpg cũ.
+  const imageUrl =
+    c.heroImage &&
+    (preview || c.loading === false)
+      ? c.heroImage
+      : null;
+
+  // Preload ảnh mới để đổi nền mượt hơn
+  useEffect(() => {
+    if (!imageUrl || preview) return;
+    const img = new Image();
+    img.src = imageUrl;
+  }, [imageUrl, preview]);
+
   return (
     <section
       className={`hero ${preview ? "hero--preview" : ""}`}
@@ -73,8 +88,8 @@ function Hero({
       onClick={preview ? select("image") : undefined}
       data-builder-key={preview ? "image" : undefined}
       style={
-        c.heroImage
-          ? { backgroundImage: `url("${c.heroImage}")` }
+        imageUrl
+          ? { backgroundImage: `url("${imageUrl}")` }
           : undefined
       }
     >

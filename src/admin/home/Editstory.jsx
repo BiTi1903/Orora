@@ -386,7 +386,40 @@ export default function EditStory() {
       title="Câu chuyện"
       hint="Nội dung, hình ảnh và kiểu chữ của phần Câu chuyện."
       {...h}
-      onSubmit={h.save}
+      onSubmit={(e) => {
+        // Đồng bộ ảnh form cũ → aboutBuilder để Visual Builder / trang public dùng chung
+        const prevBuilder = h.form.aboutBuilder || {};
+        const nextBuilder = {
+          ...prevBuilder,
+          image: {
+            ...(prevBuilder.image || {}),
+            src: h.form.storyImage || prevBuilder.image?.src || "/about.jpg",
+            extras: Array.isArray(h.form.storyImages)
+              ? h.form.storyImages
+              : prevBuilder.image?.extras || ["", "", ""],
+          },
+          label: {
+            ...(prevBuilder.label || {}),
+            text: h.form.storyLabel ?? prevBuilder.label?.text,
+          },
+          title: {
+            ...(prevBuilder.title || {}),
+            text: h.form.storyTitle ?? prevBuilder.title?.text,
+          },
+          highlight: {
+            ...(prevBuilder.highlight || {}),
+            text: h.form.storyHighlight ?? prevBuilder.highlight?.text,
+          },
+          text: {
+            ...(prevBuilder.text || {}),
+            text: h.form.storyText ?? prevBuilder.text?.text,
+          },
+          stats: Array.isArray(h.form.storyStats)
+            ? h.form.storyStats
+            : prevBuilder.stats,
+        };
+        return h.save(e, { aboutBuilder: nextBuilder });
+      }}
     >
       <Field
         label="Nhãn nhỏ"

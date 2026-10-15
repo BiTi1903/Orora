@@ -41,6 +41,13 @@
   border-radius: 200px 200px 28px 28px;
   border: 8px solid #fff;
   box-shadow: var(--shadow-lift);
+  /* Nền mềm khi chờ ảnh từ Firestore — không dùng /about.jpg */
+  background: linear-gradient(
+    160deg,
+    #fff0f5 0%,
+    #ffe4ec 45%,
+    #fff5f8 100%
+  );
 }
 
 .about-image {

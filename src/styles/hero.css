@@ -13,7 +13,14 @@
   align-items: center;
   justify-content: center;
 
-  background-image: url("/hero.jpg");
+  /* Nền mềm khi chờ ảnh từ Firestore — KHÔNG dùng /hero.jpg để tránh flash ảnh cũ */
+  background-color: #fff5f8;
+  background-image: radial-gradient(
+    ellipse 80% 60% at 50% 40%,
+    rgba(255, 230, 240, 0.9) 0%,
+    rgba(255, 245, 248, 1) 55%,
+    #fffafc 100%
+  );
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;

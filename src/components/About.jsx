@@ -225,7 +225,8 @@ function normalizeBuilder(data) {
     },
 
     image: {
-      src: data?.storyImage || "/about.jpg",
+      // Không fallback /about.jpg — tránh flash ảnh cứng khi chờ Firestore
+      src: data?.storyImage || "",
       extras: Array.isArray(data?.storyImages) ? data.storyImages : ["", "", ""],
       width: 52,
       height: 620,
@@ -324,6 +325,36 @@ function normalizeBuilder(data) {
     image: {
       ...defaultData.image,
       ...(builder.image || {}),
+      // Đồng nhất form cũ (storyImage/storyImages) với Visual Builder (aboutBuilder.image)
+      // Ưu tiên form cũ nếu đã có ảnh, vì form chỉ ghi storyImage còn builder có thể còn src mặc định
+      src:
+        (data?.storyImage && String(data.storyImage).trim()) ||
+        (builder.image?.src &&
+        String(builder.image.src).trim() &&
+        builder.image.src !== "/about.jpg"
+          ? builder.image.src
+          : "") ||
+        "",
+      extras: (() => {
+        const fromForm = Array.isArray(data?.storyImages)
+          ? data.storyImages
+          : null;
+        const fromBuilder = Array.isArray(builder.image?.extras)
+          ? builder.image.extras
+          : null;
+        if (fromForm && fromForm.some((x) => x && String(x).trim())) {
+          return fromForm;
+        }
+        if (
+          fromBuilder &&
+          fromBuilder.some(
+            (x) => x && String(x).trim() && x !== "/about.jpg"
+          )
+        ) {
+          return fromBuilder;
+        }
+        return ["", "", ""];
+      })(),
     },
 
     stats: Array.isArray(builder.stats)
@@ -353,11 +384,15 @@ function About({
   onSelect,
 }) {
   const [home, setHome] = useState(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     loadGoogleFonts();
 
-    if (preview) return;
+    if (preview) {
+      setLoaded(true);
+      return;
+    }
 
     getHomeContent()
       .then((data) => {
@@ -368,7 +403,9 @@ function About({
           "Không thể tải nội dung Story:",
           err
         );
-      });
+        setHome({});
+      })
+      .finally(() => setLoaded(true));
   }, [preview]);
 
   const builder = preview
@@ -498,10 +535,17 @@ function About({
             style={{ position: "absolute", inset: 0 }}
           >
             <ProductSlideshow
-              images={[
-                image.src || "/about.jpg",
-                ...(Array.isArray(image.extras) ? image.extras : []),
-              ]}
+              images={
+                // Chưa load xong → không render ảnh cứng /about.jpg
+                !preview && !loaded
+                  ? []
+                  : [
+                      image.src || "",
+                      ...(Array.isArray(image.extras) ? image.extras : []),
+                    ].filter(
+                      (src) => src && String(src).trim() && src !== "/about.jpg"
+                    )
+              }
               alt="About"
             />
           </div>

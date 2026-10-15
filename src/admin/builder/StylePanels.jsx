@@ -4,11 +4,12 @@ import { TickerSettings } from "./TickerPanels";
 import { FeaturesSettings } from "./FeaturesPanels";
 import { ReviewsSettings } from "./ReviewsPanels";
 import { FooterSettings } from "./FooterPanels";
+import { NewsletterSettings } from "./NewsletterPanels";
 import { ProductDetailSettings } from "./ProductDetailPanels";
 import { CollectionSettings } from "./CollectionPanels";
 import { HeroSettings } from "./HeroPanels";
 import { SectionSettings, ImageSettings, TextSettings, StatsSettings, StatTextSettings } from "./AboutPanels";
-import { HERO_FIELD_MAP, COLLECTION_FIELD_MAP, PRODUCT_DETAIL_FIELD_MAP, FEATURES_TEXT_MAP, REVIEWS_TEXT_MAP, FOOTER_FIELD_MAP } from "./registry";
+import { HERO_FIELD_MAP, COLLECTION_FIELD_MAP, PRODUCT_DETAIL_FIELD_MAP, FEATURES_TEXT_MAP, REVIEWS_TEXT_MAP, FOOTER_FIELD_MAP, NEWSLETTER_FIELD_MAP } from "./registry";
 
 export function StylePanel({
   section,
@@ -21,6 +22,7 @@ export function StylePanel({
   detailProduct,
   features,
   reviews,
+  newsletter,
   footer,
   ticker,
   navbar,
@@ -66,6 +68,8 @@ export function StylePanel({
       ? data.meta?.label || REVIEWS_TEXT_MAP[selected]?.label || selected
       : section === "footer"
       ? data.meta?.label || FOOTER_FIELD_MAP[selected]?.label || selected
+      : section === "newsletter"
+      ? data.meta?.label || NEWSLETTER_FIELD_MAP[selected]?.label || selected
       : section === "ticker"
       ? data.meta?.label || selected
       : statMatch
@@ -134,6 +138,16 @@ export function StylePanel({
           selected={selected}
           data={data}
           footer={footer}
+          onChange={onChange}
+          onStyleChange={onStyleChange}
+        />
+      )}
+
+      {section === "newsletter" && (
+        <NewsletterSettings
+          selected={selected}
+          data={data}
+          newsletter={newsletter}
           onChange={onChange}
           onStyleChange={onStyleChange}
         />
@@ -208,4 +222,3 @@ export function StylePanel({
     </div>
   );
 }
-

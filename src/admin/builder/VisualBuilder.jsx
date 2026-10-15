@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { getHomeContent, saveHomeContent } from "../../lib/api";
+import { getHomeContent, getProducts, saveHomeContent } from "../../lib/api";
 import About from "../../components/About";
 import Hero from "../../components/Hero";
 import Collection from "../../components/Collection";
 import ProductDetail from "../../components/ProductDetail";
-import { Testimonials, Features } from "../../components/Extras";
+import { Testimonials, Features, Newsletter } from "../../components/Extras";
 import { toCss } from "../../lib/typography";
 import Footer from "../../components/Footer";
 import Navbar from "../../components/Navbar";
@@ -20,8 +20,9 @@ import { getProductDetailSelectedData } from "./ProductDetailPanels";
 import { getFeaturesSelectedData } from "./FeaturesPanels";
 import { getReviewsSelectedData } from "./ReviewsPanels";
 import { getFooterSelectedData } from "./FooterPanels";
+import { getNewsletterSelectedData } from "./NewsletterPanels";
 import { getTickerSelectedData, TickerPreview } from "./TickerPanels";
-import { HERO_FIELD_MAP, COLLECTION_FIELD_MAP, PRODUCT_DETAIL_FIELD_MAP, FEATURES_TEXT_MAP, REVIEWS_TEXT_MAP, FOOTER_FIELD_MAP } from "./registry";
+import { HERO_FIELD_MAP, COLLECTION_FIELD_MAP, PRODUCT_DETAIL_FIELD_MAP, FEATURES_TEXT_MAP, REVIEWS_TEXT_MAP, FOOTER_FIELD_MAP, NEWSLETTER_FIELD_MAP } from "./registry";
 import { DEFAULT_ABOUT, DEFAULT_STYLE } from "./defaults";
 
 const DEFAULT_HERO = {
@@ -98,6 +99,23 @@ const DEFAULT_COLLECTION = {
       fontWeight: 500,
       letterSpacing: 1,
       color: "#ffffff",
+    },
+    imageLayout: {
+      widthPercent: 100,
+      height: 0,
+      aspectRatio: "3 / 4",
+      radius: 20,
+      borderWidth: 0,
+      borderColor: "#ffffff",
+      paddingTop: 0,
+      paddingRight: 0,
+      paddingBottom: 0,
+      paddingLeft: 0,
+      marginTop: 0,
+      marginRight: 0,
+      marginBottom: 0,
+      marginLeft: 0,
+      objectFit: "cover",
     },
   },
 };
@@ -189,6 +207,43 @@ const DEFAULT_PRODUCT_DETAIL = {
     fontSize: 14,
     lineHeight: 1.7,
     color: "#7d656f",
+  },
+  // Layout khối gallery — ngang/margin cả khối; dọc chỉ ảnh chính
+  imageLayout: {
+    widthPercent: 100,
+    maxWidth: 420,
+    height: 0,
+    aspectRatio: "3 / 4",
+    objectFit: "cover",
+    radius: 28,
+    borderWidth: 6,
+    borderColor: "#ffffff",
+    paddingTop: 0,
+    paddingRight: 0,
+    paddingBottom: 0,
+    paddingLeft: 0,
+    marginTop: 0,
+    marginRight: 0,
+    marginBottom: 0,
+    marginLeft: 0,
+    gap: 14,
+  },
+  // Layout riêng hàng ảnh phụ
+  thumbsLayout: {
+    gap: 10,
+    radius: 14,
+    borderWidth: 2,
+    borderColor: "#ffffff",
+    activeBorderColor: "#b8446d",
+    paddingTop: 0,
+    paddingRight: 0,
+    paddingBottom: 0,
+    paddingLeft: 0,
+    marginTop: 0,
+    marginRight: 0,
+    marginBottom: 0,
+    marginLeft: 0,
+    height: 0,
   },
 };
 
@@ -360,6 +415,63 @@ const DEFAULT_FOOTER = {
   },
 };
 
+const DEFAULT_NEWSLETTER = {
+  newsletterTitle: "Nhận ưu đãi",
+  newsletterHighlight: "ngay",
+  newsletterText:
+    "Đăng ký email để biết sớm sản phẩm mới và quà tặng dành riêng cho bạn.",
+  newsletterPlaceholder: "Email của bạn",
+  newsletterButton: "Đăng ký",
+  newsletterStyles: {
+    title: {
+      fontFamily: '"Cormorant Garamond", serif',
+      fontSize: 48,
+      fontWeight: 600,
+      color: "#3a1526",
+    },
+    highlight: {
+      fontFamily: '"Cormorant Garamond", serif',
+      fontSize: 48,
+      fontWeight: 500,
+      fontStyle: "italic",
+      color: "#b8446d",
+    },
+    text: {
+      fontSize: 15,
+      lineHeight: 1.7,
+      color: "#7d656f",
+    },
+    input: {
+      fontSize: 14,
+      color: "#3a1526",
+    },
+    button: {
+      fontSize: 13,
+      fontWeight: 500,
+      letterSpacing: 1,
+      color: "#ffffff",
+    },
+  },
+};
+
+function createNewsletter(data = {}) {
+  return {
+    newsletterTitle:
+      data.newsletterTitle ?? DEFAULT_NEWSLETTER.newsletterTitle,
+    newsletterHighlight:
+      data.newsletterHighlight ?? DEFAULT_NEWSLETTER.newsletterHighlight,
+    newsletterText: data.newsletterText ?? DEFAULT_NEWSLETTER.newsletterText,
+    newsletterPlaceholder:
+      data.newsletterPlaceholder ?? DEFAULT_NEWSLETTER.newsletterPlaceholder,
+    newsletterButton:
+      data.newsletterButton ?? DEFAULT_NEWSLETTER.newsletterButton,
+    newsletterStyles: mergeNestedStyle(
+      DEFAULT_NEWSLETTER.newsletterStyles,
+      data.newsletterStyles
+    ),
+  };
+}
+
 const DEFAULT_NAV = {
   navLogo: "ORORA",
   navLinks: [
@@ -456,7 +568,6 @@ const SECTION_LIST = [
     key: "newsletter",
     label: "Nhận tin",
     icon: "✉",
-    disabled: true,
   },
   {
     key: "footer",
@@ -536,15 +647,24 @@ function createAbout(data = {}) {
     image: {
       ...DEFAULT_ABOUT.image,
       ...(builder.image || {}),
+      // Đồng nhất với form cũ: ưu tiên storyImage/storyImages nếu có
       src:
-        builder.image?.src ??
-        data.storyImage ??
+        (data.storyImage && String(data.storyImage).trim()) ||
+        builder.image?.src ||
         DEFAULT_ABOUT.image.src,
-      extras: Array.isArray(builder.image?.extras)
-        ? builder.image.extras
-        : Array.isArray(data.storyImages)
-        ? data.storyImages
-        : ["", "", ""],
+      extras: (() => {
+        const fromForm = Array.isArray(data.storyImages)
+          ? data.storyImages
+          : null;
+        const fromBuilder = Array.isArray(builder.image?.extras)
+          ? builder.image.extras
+          : null;
+        if (fromForm && fromForm.some((x) => x && String(x).trim())) {
+          return fromForm;
+        }
+        if (fromBuilder) return fromBuilder;
+        return ["", "", ""];
+      })(),
     },
 
     stats: Array.isArray(builder.stats)
@@ -766,6 +886,7 @@ const SECTION_DEFAULT_SELECTED = {
   productdetail: "pdName",
   features: "featTitle",
   reviews: "revTitle",
+  newsletter: "nlTitle",
   footer: "ftLogo",
   ticker: "text",
 };
@@ -779,6 +900,7 @@ export default function VisualBuilder() {
   const [detailProduct, setDetailProduct] = useState(defaultProducts[0]);
   const [features, setFeatures] = useState(DEFAULT_FEATURES);
   const [reviews, setReviews] = useState(DEFAULT_REVIEWS);
+  const [newsletter, setNewsletter] = useState(DEFAULT_NEWSLETTER);
   const [footer, setFooter] = useState(DEFAULT_FOOTER);
   const [ticker, setTicker] = useState(DEFAULT_TICKER);
   const [navbar, setNavbar] = useState(DEFAULT_NAV);
@@ -802,6 +924,17 @@ export default function VisualBuilder() {
   useEffect(() => {
     let alive = true;
 
+    // Preview chi tiết: ưu tiên sản phẩm thật (có ảnh phụ), không thì dùng mẫu
+    getProducts()
+      .then((list) => {
+        if (!alive || !list?.length) return;
+        const withExtras = list.find(
+          (p) => p.image2 || p.image3 || p.image4 || p.image5 || p.image6
+        );
+        setDetailProduct(withExtras || list[0]);
+      })
+      .catch(() => {});
+
     getHomeContent()
       .then((data) => {
         if (!alive) return;
@@ -813,6 +946,7 @@ export default function VisualBuilder() {
         setProductDetail(createProductDetail(data || {}));
         setFeatures(createFeatures(data || {}));
         setReviews(createReviews(data || {}));
+        setNewsletter(createNewsletter(data || {}));
         setFooter(createFooter(data || {}));
         setTicker(createTicker(data || {}));
         setNavbar(createNav(data || {}));
@@ -836,6 +970,7 @@ export default function VisualBuilder() {
           setProductDetail(DEFAULT_PRODUCT_DETAIL);
           setFeatures(DEFAULT_FEATURES);
           setReviews(DEFAULT_REVIEWS);
+          setNewsletter(DEFAULT_NEWSLETTER);
           setFooter(DEFAULT_FOOTER);
           setTicker(DEFAULT_TICKER);
           setNavbar(DEFAULT_NAV);
@@ -877,6 +1012,9 @@ export default function VisualBuilder() {
     if (activeSection === "reviews") {
       return getReviewsSelectedData(reviews, selected);
     }
+    if (activeSection === "newsletter") {
+      return getNewsletterSelectedData(newsletter, selected);
+    }
     if (activeSection === "footer") {
       return getFooterSelectedData(footer, selected);
     }
@@ -892,6 +1030,7 @@ export default function VisualBuilder() {
     productDetail,
     features,
     reviews,
+    newsletter,
     footer,
     ticker,
     navbar,
@@ -982,6 +1121,11 @@ export default function VisualBuilder() {
 
     if (activeSection === "footer") {
       setFooter((current) => ({ ...current, ...patch }));
+      return;
+    }
+
+    if (activeSection === "newsletter") {
+      setNewsletter((current) => ({ ...current, ...patch }));
       return;
     }
 
@@ -1197,7 +1341,7 @@ export default function VisualBuilder() {
 
     if (activeSection === "collection") {
       const meta = COLLECTION_FIELD_MAP[selected];
-      if (!meta || meta.type !== "colStyle") return;
+      if (!meta || (meta.type !== "colStyle" && meta.type !== "cardImage")) return;
       setCollection((current) => ({
         ...current,
         [meta.group]: {
@@ -1262,6 +1406,22 @@ export default function VisualBuilder() {
           ...(current.footerStyles || {}),
           [styleKey]: {
             ...(current.footerStyles?.[styleKey] || {}),
+            ...patch,
+          },
+        },
+      }));
+      return;
+    }
+
+    if (activeSection === "newsletter") {
+      const styleKey = NEWSLETTER_FIELD_MAP[selected]?.styleKey;
+      if (!styleKey) return;
+      setNewsletter((current) => ({
+        ...current,
+        newsletterStyles: {
+          ...(current.newsletterStyles || {}),
+          [styleKey]: {
+            ...(current.newsletterStyles?.[styleKey] || {}),
             ...patch,
           },
         },
@@ -1379,6 +1539,14 @@ export default function VisualBuilder() {
         testimonialsTitleEnd: reviews.testimonialsTitleEnd,
         reviews: reviews.reviews,
         testimonialsStyles: reviews.testimonialsStyles,
+
+        // Newsletter / Nhận tin
+        newsletterTitle: newsletter.newsletterTitle,
+        newsletterHighlight: newsletter.newsletterHighlight,
+        newsletterText: newsletter.newsletterText,
+        newsletterPlaceholder: newsletter.newsletterPlaceholder,
+        newsletterButton: newsletter.newsletterButton,
+        newsletterStyles: newsletter.newsletterStyles,
 
         // Footer
         footerLogo: footer.footerLogo,
@@ -1547,6 +1715,9 @@ export default function VisualBuilder() {
               activeSection === "reviews"
                 ? "builder-preview--reviews"
                 : "",
+              activeSection === "newsletter"
+                ? "builder-preview--newsletter"
+                : "",
               activeSection === "footer"
                 ? "builder-preview--footer"
                 : "",
@@ -1612,6 +1783,13 @@ export default function VisualBuilder() {
                 selectedElement={selected}
                 onSelect={setSelected}
               />
+            ) : activeSection === "newsletter" ? (
+              <Newsletter
+                preview
+                previewData={newsletter}
+                selectedElement={selected}
+                onSelect={setSelected}
+              />
             ) : activeSection === "footer" ? (
               <Footer
                 preview
@@ -1642,6 +1820,7 @@ export default function VisualBuilder() {
             detailProduct={detailProduct}
             features={features}
             reviews={reviews}
+            newsletter={newsletter}
             footer={footer}
             ticker={ticker}
             navbar={navbar}
@@ -1654,4 +1833,3 @@ export default function VisualBuilder() {
     </div>
   );
 }
-

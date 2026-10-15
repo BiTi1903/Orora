@@ -94,15 +94,18 @@
   width: 100%;
   min-width: 0;
   transition: transform 0.6s var(--ease);
+  box-sizing: border-box;
 }
 
 .gallery-item:hover { transform: translateY(-8px); }
 
-/* KHUNG ẢNH */
+/* KHUNG ẢNH — chiều cao / tỷ lệ qua biến CSS từ ProductCard */
 .gallery-image {
   position: relative;
-  width: 100%;
-  aspect-ratio: 4 / 5;
+  width: var(--pc-width, 100%);
+  max-width: 100%;
+  height: var(--pc-height, auto);
+  aspect-ratio: var(--pc-aspect, 4 / 5);
   overflow: hidden;
   background: #fff;
   border-radius: 26px;
@@ -110,6 +113,15 @@
   box-shadow: var(--shadow-soft);
   isolation: isolate;
   transition: box-shadow 0.5s ease;
+  box-sizing: border-box;
+}
+
+/* Ép chiều dọc khi chỉnh trong builder */
+.gallery-image.gallery-image--fixed-h {
+  aspect-ratio: auto !important;
+  height: var(--pc-height) !important;
+  min-height: var(--pc-height) !important;
+  max-height: var(--pc-height) !important;
 }
 
 .gallery-image img {

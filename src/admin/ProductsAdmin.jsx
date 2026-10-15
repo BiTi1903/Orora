@@ -5,7 +5,7 @@ import ImageField from "./ImageField";
 
 const empty = {
   id: "", number: "", name: "", slug: "", price: "", image: "",
-  image2: "", image3: "", image4: "",
+  image2: "", image3: "", image4: "", image5: "", image6: "",
   description: "", story: "", material: "", size: "", color: "", origin: "",
   active: true,
 };
@@ -81,6 +81,8 @@ export default function ProductsAdmin() {
         image2: (form.image2 || "").trim(),
         image3: (form.image3 || "").trim(),
         image4: (form.image4 || "").trim(),
+        image5: (form.image5 || "").trim(),
+        image6: (form.image6 || "").trim(),
       });
       say("success", "Đã lưu sản phẩm.");
       setEditing(false);
@@ -158,7 +160,8 @@ export default function ProductsAdmin() {
             width={1200}
           />
           <p className="admin-muted" style={{ margin: "4px 0 14px", fontSize: 13 }}>
-            Ảnh phụ sẽ tự chạy slideshow trên thẻ sản phẩm và trang chi tiết: hiện ảnh 1, sau 3 giây chuyển ảnh 2, rồi lần lượt. Để trống nếu không dùng.
+            Tối đa 5 ảnh phụ. Trang chi tiết hiện 2 ảnh phụ phía dưới; nếu nhiều hơn thì dùng mũi tên ‹ › để xoay.
+            Bấm ảnh phụ để đưa lên khung lớn. Thẻ sản phẩm / collection vẫn xoay tất cả ảnh.
           </p>
           <ImageField
             label="Ảnh phụ 1"
@@ -176,6 +179,18 @@ export default function ProductsAdmin() {
             label="Ảnh phụ 3"
             value={form.image4}
             onChange={(v) => setForm({ ...form, image4: v })}
+            width={1200}
+          />
+          <ImageField
+            label="Ảnh phụ 4"
+            value={form.image5}
+            onChange={(v) => setForm({ ...form, image5: v })}
+            width={1200}
+          />
+          <ImageField
+            label="Ảnh phụ 5"
+            value={form.image6}
+            onChange={(v) => setForm({ ...form, image6: v })}
             width={1200}
           />
 

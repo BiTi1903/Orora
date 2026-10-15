@@ -92,10 +92,26 @@ const COLLECTION_FIELD_MAP = {
     label: "Nút Xem chi tiết",
     sample: "Xem chi tiết ↗",
   },
+  cardImage: {
+    type: "cardImage",
+    group: "productCardStyles",
+    styleKey: "imageLayout",
+    label: "Khung ảnh sản phẩm",
+  },
 };
 
 
 const PRODUCT_DETAIL_FIELD_MAP = {
+  pdImage: {
+    type: "pdImage",
+    styleKey: "imageLayout",
+    label: "Ảnh chính",
+  },
+  pdThumbs: {
+    type: "pdThumbs",
+    styleKey: "thumbsLayout",
+    label: "Ảnh phụ",
+  },
   pdNumber: {
     styleKey: "number",
     label: "Số thứ tự",
@@ -272,6 +288,36 @@ const FOOTER_FIELD_MAP = {
   },
 };
 
+const NEWSLETTER_FIELD_MAP = {
+  nlTitle: {
+    key: "newsletterTitle",
+    label: "Tiêu đề",
+    styleKey: "title",
+  },
+  nlHighlight: {
+    key: "newsletterHighlight",
+    label: "Chữ nổi bật",
+    styleKey: "highlight",
+  },
+  nlText: {
+    key: "newsletterText",
+    label: "Mô tả",
+    styleKey: "text",
+    multiline: true,
+  },
+  nlPlaceholder: {
+    key: "newsletterPlaceholder",
+    label: "Placeholder email",
+    styleKey: "input",
+    hint: "Gợi ý trong ô nhập email",
+  },
+  nlButton: {
+    key: "newsletterButton",
+    label: "Nút đăng ký",
+    styleKey: "button",
+  },
+};
+
 export {
   HERO_FIELD_MAP,
   COLLECTION_FIELD_MAP,
@@ -279,4 +325,5 @@ export {
   FEATURES_TEXT_MAP,
   REVIEWS_TEXT_MAP,
   FOOTER_FIELD_MAP,
+  NEWSLETTER_FIELD_MAP,
 };

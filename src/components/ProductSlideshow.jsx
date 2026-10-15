@@ -4,22 +4,46 @@ function clean(images) {
   return (images || []).map((src) => (src || "").trim()).filter(Boolean);
 }
 
-export default function ProductSlideshow({ images, alt = "" }) {
+/**
+ * Slideshow ảnh sản phẩm (tự xoay như collection).
+ * - controlled: truyền activeIndex + onIndexChange
+ * - uncontrolled: tự xoay mỗi 3s
+ */
+export default function ProductSlideshow({
+  images,
+  alt = "",
+  activeIndex: controlledIndex,
+  onIndexChange,
+  interval = 3000,
+  showDots = true,
+}) {
   const list = clean(images);
-  const [index, setIndex] = useState(0);
+  const isControlled = controlledIndex != null && typeof onIndexChange === "function";
+  const [internalIndex, setInternalIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
+  const index = isControlled
+    ? Math.min(Math.max(0, controlledIndex), Math.max(0, list.length - 1))
+    : internalIndex;
+
+  const setIndex = (next) => {
+    if (isControlled) onIndexChange(next);
+    else setInternalIndex(next);
+  };
+
   useEffect(() => {
-    setIndex(0);
-  }, [list.join("|")]);
+    if (!isControlled) setInternalIndex(0);
+  }, [list.join("|"), isControlled]);
 
   useEffect(() => {
     if (list.length < 2 || paused) return undefined;
     const id = window.setInterval(() => {
-      setIndex((current) => (current + 1) % list.length);
-    }, 3000);
+      const next = (index + 1) % list.length;
+      setIndex(next);
+    }, interval);
     return () => window.clearInterval(id);
-  }, [list.length, paused, list.join("|")]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [list.length, paused, list.join("|"), index, interval, isControlled]);
 
   if (!list.length) return null;
 
@@ -39,7 +63,7 @@ export default function ProductSlideshow({ images, alt = "" }) {
         />
       ))}
 
-      {list.length > 1 && (
+      {showDots && list.length > 1 && (
         <div className="product-slideshow-dots" aria-hidden="true">
           {list.map((_, i) => (
             <button

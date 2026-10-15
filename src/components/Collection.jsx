@@ -181,6 +181,8 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
               image2={product.image2}
               image3={product.image3}
               image4={product.image4}
+              image5={product.image5}
+              image6={product.image6}
               number={product.number}
               name={product.name}
               description={product.description}
@@ -226,19 +228,35 @@ function Collection({
   selectedElement = "",
   onSelect,
   sampleProducts = null,
+  /** Loại trừ sản phẩm hiện tại (trang chi tiết → "Sản phẩm khác") */
+  excludeId = null,
+  /** Ghi đè tiêu đề khi dùng làm block liên quan */
+  forceLabel = null,
+  forceTitle = null,
+  forceHighlight = null,
+  /** class thêm (vd: related products dưới chi tiết) */
+  className = "",
 }) {
   const { products: liveProducts, loading } = useProducts();
   const liveHome = useHomeContent();
 
   const home = preview && previewData ? previewData : liveHome || {};
-  const products =
-    preview
-      ? sampleProducts || defaultProducts.slice(0, 3)
-      : liveProducts;
+  const rawProducts = preview
+    ? sampleProducts || defaultProducts.slice(0, 3)
+    : liveProducts;
 
-  const collectionLabel = home.collectionLabel || "COLLECTION";
-  const collectionTitle = home.collectionTitle || "Explore";
-  const collectionHighlight = home.collectionHighlight || "the details.";
+  const products = excludeId
+    ? rawProducts.filter(
+        (p) => p.id !== excludeId && p.slug !== excludeId
+      )
+    : rawProducts;
+
+  const collectionLabel =
+    forceLabel ?? home.collectionLabel ?? "COLLECTION";
+  const collectionTitle =
+    forceTitle ?? home.collectionTitle ?? "Explore";
+  const collectionHighlight =
+    forceHighlight ?? home.collectionHighlight ?? "the details.";
 
   const headStyles = home.collectionStyles || {};
   const cardStyles = home.productCardStyles || {};
@@ -260,8 +278,8 @@ function Collection({
 
   return (
     <section
-      className={`collection ${preview ? "collection--preview" : ""}`}
-      id={preview ? undefined : "shop"}
+      className={`collection ${preview ? "collection--preview" : ""} ${className}`.trim()}
+      id={preview || excludeId ? undefined : "shop"}
     >
       {/* HEADER */}
       <HeaderWrap>
@@ -305,6 +323,8 @@ function Collection({
                 image2={product.image2}
                 image3={product.image3}
                 image4={product.image4}
+                image5={product.image5}
+                image6={product.image6}
                 number={product.number}
                 name={product.name}
                 description={product.description}

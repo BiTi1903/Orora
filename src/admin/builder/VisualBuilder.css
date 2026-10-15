@@ -367,6 +367,10 @@
 }
 
 /* Không sticky trong khung preview (scroll cha) */
+.builder-preview--productdetail .product-detail-gallery {
+  position: relative !important;
+  top: auto !important;
+}
 .builder-preview--productdetail .product-detail-image {
   position: relative !important;
   top: auto !important;

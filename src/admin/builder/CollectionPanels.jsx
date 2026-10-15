@@ -27,6 +27,124 @@ export function CollectionSettings({
   }
 
   const meta = data.meta;
+
+  // Khung ảnh product card
+  if (meta.type === "cardImage" || selected === "cardImage") {
+    const layout =
+      collection.productCardStyles?.imageLayout || {};
+    const space = (label, key) => (
+      <SelectField
+        label={label}
+        value={layout[key] ?? 0}
+        options={SPACE_OPTIONS}
+        suffix="px"
+        onChange={(value) => onStyleChange({ [key]: Number(value) })}
+      />
+    );
+    return (
+      <>
+        <SettingGroup title="Thẻ sản phẩm (ảnh + thông tin)">
+          <small className="builder-help">
+            Ngang / margin / padding áp dụng cả thẻ — ảnh và thông tin đi cùng.
+            Chiều dọc chỉ đổi khung ảnh phía trên.
+          </small>
+        </SettingGroup>
+
+        <SettingGroup title="Kích thước">
+          <SelectField
+            label="Chiều ngang cả thẻ"
+            value={layout.widthPercent ?? 100}
+            options={[60, 70, 75, 80, 85, 90, 95, 100]}
+            suffix="%"
+            onChange={(value) =>
+              onStyleChange({ widthPercent: Number(value) })
+            }
+          />
+          <SelectField
+            label="Chiều dọc khung ảnh"
+            value={layout.height ?? 0}
+            options={[0, 220, 260, 280, 300, 320, 360, 400, 440, 480, 520]}
+            suffix="px"
+            onChange={(value) => onStyleChange({ height: Number(value) })}
+          />
+          <small className="builder-help" style={{ display: "block", marginTop: -6 }}>
+            Chiều dọc = 0 → dùng tỷ lệ khung. Thông tin sản phẩm luôn nằm dưới ảnh.
+          </small>
+          <SelectField
+            label="Tỷ lệ khung ảnh"
+            value={layout.aspectRatio ?? "4 / 5"}
+            options={["1 / 1", "3 / 4", "4 / 5", "2 / 3", "3 / 5", "16 / 9"]}
+            onChange={(value) => onStyleChange({ aspectRatio: value })}
+          />
+          <SelectField
+            label="Cách cắt ảnh"
+            value={layout.objectFit ?? "cover"}
+            options={["cover", "contain", "fill"]}
+            onChange={(value) => onStyleChange({ objectFit: value })}
+          />
+        </SettingGroup>
+
+        <SettingGroup title="Bo góc & viền">
+          <SelectField
+            label="Bo góc"
+            value={layout.radius ?? 20}
+            options={[0, 8, 12, 16, 20, 24, 28, 32, 40, 48]}
+            suffix="px"
+            onChange={(value) => onStyleChange({ radius: Number(value) })}
+          />
+          <SelectField
+            label="Độ dày viền"
+            value={layout.borderWidth ?? 0}
+            options={[0, 1, 2, 3, 4, 5, 6, 8]}
+            suffix="px"
+            onChange={(value) =>
+              onStyleChange({ borderWidth: Number(value) })
+            }
+          />
+          <div className="builder-field">
+            <label>Màu viền</label>
+            <input
+              type="color"
+              value={layout.borderColor || "#ffffff"}
+              onChange={(e) =>
+                onStyleChange({ borderColor: e.target.value })
+              }
+              style={{
+                width: 48,
+                height: 32,
+                padding: 0,
+                border: "none",
+                cursor: "pointer",
+              }}
+            />
+          </div>
+        </SettingGroup>
+
+        <SettingGroup title="Padding (trên · phải · dưới · trái)">
+          <div className="builder-field-row">
+            {space("Trên", "paddingTop")}
+            {space("Phải", "paddingRight")}
+          </div>
+          <div className="builder-field-row">
+            {space("Dưới", "paddingBottom")}
+            {space("Trái", "paddingLeft")}
+          </div>
+        </SettingGroup>
+
+        <SettingGroup title="Margin (trên · phải · dưới · trái)">
+          <div className="builder-field-row">
+            {space("Trên", "marginTop")}
+            {space("Phải", "marginRight")}
+          </div>
+          <div className="builder-field-row">
+            {space("Dưới", "marginBottom")}
+            {space("Trái", "marginLeft")}
+          </div>
+        </SettingGroup>
+      </>
+    );
+  }
+
   const style =
     collection[meta.group]?.[meta.styleKey] || {};
 

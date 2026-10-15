@@ -507,48 +507,97 @@ export function Testimonials({
 
 /* ---------- Đăng ký nhận tin ---------- */
 
-export function Newsletter() {
-  const c = useHomeContent();
+export function Newsletter({
+  preview = false,
+  previewData = null,
+  selectedElement = "",
+  onSelect,
+}) {
+  const live = useHomeContent();
+  const c = preview && previewData ? previewData : live || {};
+  const styles = c.newsletterStyles || {};
   const [done, setDone] = useState(false);
 
-  return (
-    <section className="newsletter">
-      <Reveal>
-        <h2 className="ex-title">
-          {c.newsletterTitle ||
-            "Nhận ưu đãi"}{" "}
-          <em>
-            {c.newsletterHighlight ||
-              "ngay"}
-          </em>
-        </h2>
+  const select = (key) => (e) => {
+    if (!preview || !onSelect) return;
+    e.preventDefault();
+    e.stopPropagation();
+    onSelect(key);
+  };
 
-        <p className="newsletter-p">
-          {c.newsletterText ||
-            "Đăng ký email để biết sớm sản phẩm mới và quà tặng dành riêng cho bạn."}
-        </p>
+  const selectedClass = (key) =>
+    preview && selectedElement === key ? "builder-selected" : "";
 
-        <form
-          className="news-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setDone(true);
-          }}
+  const css = (key) => toCss(styles[key], { responsive: !preview });
+
+  const Content = (
+    <>
+      <h2 className="ex-title">
+        <span
+          className={selectedClass("nlTitle")}
+          data-builder-key={preview ? "nlTitle" : undefined}
+          onClick={select("nlTitle")}
+          style={css("title")}
         >
-          <input
-            type="email"
-            required
-            placeholder="Email của bạn"
-            aria-label="Email"
-          />
+          {c.newsletterTitle || "Nhận ưu đãi"}{" "}
+        </span>
+        <em
+          className={selectedClass("nlHighlight")}
+          data-builder-key={preview ? "nlHighlight" : undefined}
+          onClick={select("nlHighlight")}
+          style={css("highlight")}
+        >
+          {c.newsletterHighlight || "ngay"}
+        </em>
+      </h2>
 
-          <button type="submit">
-            {done
-              ? "Cảm ơn bạn ♡"
-              : "Đăng ký"}
-          </button>
-        </form>
-      </Reveal>
+      <p
+        className={`newsletter-p ${selectedClass("nlText")}`}
+        data-builder-key={preview ? "nlText" : undefined}
+        onClick={select("nlText")}
+        style={css("text")}
+      >
+        {c.newsletterText ||
+          "Đăng ký email để biết sớm sản phẩm mới và quà tặng dành riêng cho bạn."}
+      </p>
+
+      <form
+        className="news-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!preview) setDone(true);
+        }}
+      >
+        <input
+          type="email"
+          required={!preview}
+          placeholder={c.newsletterPlaceholder || "Email của bạn"}
+          aria-label="Email"
+          className={selectedClass("nlPlaceholder")}
+          data-builder-key={preview ? "nlPlaceholder" : undefined}
+          onClick={select("nlPlaceholder")}
+          style={css("input")}
+          readOnly={preview}
+        />
+
+        <button
+          type="submit"
+          className={selectedClass("nlButton")}
+          data-builder-key={preview ? "nlButton" : undefined}
+          onClick={select("nlButton")}
+          style={css("button")}
+        >
+          {done ? "Cảm ơn bạn ♡" : c.newsletterButton || "Đăng ký"}
+        </button>
+      </form>
+    </>
+  );
+
+  return (
+    <section
+      className={`newsletter ${preview ? "newsletter--preview" : ""}`}
+    >
+      {preview ? Content : <Reveal>{Content}</Reveal>}
     </section>
   );
 }
