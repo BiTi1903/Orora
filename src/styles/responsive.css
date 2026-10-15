@@ -8,10 +8,6 @@
     gap: 5%;
   }
 
-  .about-image-wrapper {
-    width: 54%;
-  }
-
   .about-content {
     width: 41%;
   }
@@ -98,10 +94,16 @@
     align-items: stretch;
   }
 
+  .about-visual {
+    width: 100% !important;
+    max-width: 100%;
+  }
+
   .about-image-wrapper {
-    width: 100%;
-    height: 60vh;
-    min-height: 400px;
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 4 / 5;
+    min-height: 380px;
     border-radius: 10px;
   }
 
@@ -121,18 +123,30 @@
   }
 
   .collection-header {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
     margin-bottom: 70px;
   }
 
   .collection-label {
+    margin-top: 0;
     margin-bottom: 30px;
+    text-align: center;
   }
 
   .collection-header h2 {
     width: 100%;
+    align-items: center;
+    text-align: center;
     font-size: 65px;
     letter-spacing: -4px;
+  }
+
+  /* !important để đè textAlign inline từ Visual Builder */
+  .collection-title-line {
+    text-align: center !important;
   }
 
   /* GALLERY */
@@ -198,7 +212,7 @@
   }
 
   .about-image-wrapper {
-    height: 55vh;
+    min-height: 360px;
   }
 
   .about-content h2 {

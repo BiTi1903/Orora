@@ -69,7 +69,6 @@ function ProductCard({
     ? {}
     : { to: `/product/${slug}` };
 
-  // Layout cả thẻ (ảnh + thông tin đi cùng nhau)
   const imageLayout = styles.imageLayout || {};
   const n = (v) => {
     const x = Number(v);
@@ -77,55 +76,43 @@ function ProductCard({
   };
   const px = (v) => `${n(v)}px`;
 
-  const widthPercent = Math.min(
-    100,
-    Math.max(10, n(imageLayout.widthPercent) || 100)
-  );
+  // Ngang: % thẻ; trừ margin trái/phải để margin phải/trái nhìn thấy được
+  const widthPercent = Math.min(100, Math.max(10, n(imageLayout.widthPercent) || 100));
   const mL = n(imageLayout.marginLeft);
   const mR = n(imageLayout.marginRight);
   const mT = n(imageLayout.marginTop);
   const mB = n(imageLayout.marginBottom);
-  const pT = n(imageLayout.paddingTop);
-  const pR = n(imageLayout.paddingRight);
-  const pB = n(imageLayout.paddingBottom);
-  const pL = n(imageLayout.paddingLeft);
-  const imgHeight =
+  const fixedHeight =
     imageLayout.height != null && n(imageLayout.height) > 0
       ? n(imageLayout.height)
       : null;
 
-  // Cả thẻ: ngang + margin + padding → ảnh và chữ đi theo
-  const cardWidth =
+  // Padding: absolute con → inset thủ công
+  const padT = px(imageLayout.paddingTop);
+  const padR = px(imageLayout.paddingRight);
+  const padB = px(imageLayout.paddingBottom);
+  const padL = px(imageLayout.paddingLeft);
+
+  const widthExpr =
     mL || mR
       ? `calc(${widthPercent}% - ${mL + mR}px)`
       : `${widthPercent}%`;
 
-  const cardStyle = {
-    width: cardWidth,
-    maxWidth: "100%",
-    marginTop: px(mT),
-    marginRight: px(mR),
-    marginBottom: px(mB),
-    marginLeft: px(mL),
-    paddingTop: px(pT),
-    paddingRight: px(pR),
-    paddingBottom: px(pB),
-    paddingLeft: px(pL),
-    boxSizing: "border-box",
-  };
-
-  // Chỉ khung ảnh: chiều dọc / tỷ lệ / viền
   const imageFrameStyle = {
-    width: "100%",
-    ["--pc-width"]: "100%",
-    ["--pc-height"]: imgHeight != null ? `${imgHeight}px` : "auto",
+    // Biến CSS để thắng rule trong collection.css
+    ["--pc-width"]: widthExpr,
+    ["--pc-height"]: fixedHeight != null ? `${fixedHeight}px` : "auto",
     ["--pc-aspect"]:
-      imgHeight != null ? "auto" : imageLayout.aspectRatio || "4 / 5",
-    height: imgHeight != null ? `${imgHeight}px` : undefined,
-    minHeight: imgHeight != null ? `${imgHeight}px` : undefined,
-    maxHeight: imgHeight != null ? `${imgHeight}px` : undefined,
+      fixedHeight != null
+        ? "unset"
+        : imageLayout.aspectRatio || "4 / 5",
+    width: widthExpr,
+    maxWidth: "100%",
+    height: fixedHeight != null ? `${fixedHeight}px` : "auto",
     aspectRatio:
-      imgHeight != null ? "auto" : imageLayout.aspectRatio || undefined,
+      fixedHeight != null
+        ? "unset"
+        : imageLayout.aspectRatio || undefined,
     borderRadius: imageLayout.radius != null ? px(imageLayout.radius) : undefined,
     borderWidth:
       imageLayout.borderWidth != null ? px(imageLayout.borderWidth) : undefined,
@@ -134,27 +121,39 @@ function ProductCard({
       imageLayout.borderWidth != null && n(imageLayout.borderWidth) > 0
         ? "solid"
         : undefined,
+    marginTop: px(mT),
+    marginRight: px(mR),
+    marginBottom: px(mB),
+    marginLeft: px(mL),
     boxSizing: "border-box",
     ["--pc-object-fit"]: imageLayout.objectFit || "cover",
   };
 
+  const mediaInsetStyle = {
+    top: padT,
+    right: padR,
+    bottom: padB,
+    left: padL,
+  };
+
   return (
-    <div
-      className={`gallery-item ${preview ? "gallery-item--preview" : ""} ${selectedClass("cardImage")}`}
-      style={cardStyle}
-      data-builder-key={preview ? "cardImage" : undefined}
-      onClick={select("cardImage")}
-    >
+    <div className={`gallery-item ${preview ? "gallery-item--preview" : ""}`}>
       <div
-        className={`gallery-image tilt${imgHeight != null ? " gallery-image--fixed-h" : ""}`}
+        className={`gallery-image tilt ${selectedClass("cardImage")}`}
         ref={frameRef}
         onMouseMove={handleMove}
         onMouseLeave={handleLeave}
         style={imageFrameStyle}
+        data-builder-key={preview ? "cardImage" : undefined}
+        onClick={select("cardImage")}
       >
         <span className="tilt-shine" aria-hidden="true" />
 
-        <ImageWrap className="product-slideshow-link" {...imageProps}>
+        <ImageWrap
+          className="product-slideshow-link"
+          style={mediaInsetStyle}
+          {...imageProps}
+        >
           <ProductSlideshow
             images={[image, image2, image3, image4, image5, image6]}
             alt={name}
