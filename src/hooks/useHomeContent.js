@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebase";
-import { defaultHomeContent } from "../data/content";
 
 /* Đọc nội dung trang chủ từ Firestore (settings/home), tự cập nhật ngay khi admin lưu */
 export default function useHomeContent() {
@@ -14,7 +13,7 @@ export default function useHomeContent() {
         "[home] Firebase chưa được cấu hình (thiếu biến môi trường VITE_FIREBASE_...)."
       );
 
-      setContent(defaultHomeContent);
+      setContent({});
       setLoading(false);
       return;
     }
@@ -23,16 +22,13 @@ export default function useHomeContent() {
       doc(db, "settings", "home"),
       (snap) => {
         if (snap.exists()) {
-          setContent({
-            ...defaultHomeContent,
-            ...snap.data(),
-          });
+          setContent(snap.data());
         } else {
           console.info(
             "[home] Chưa có tài liệu settings/home, đang dùng nội dung mặc định."
           );
 
-          setContent(defaultHomeContent);
+          setContent({});
         }
 
         setLoading(false);
@@ -44,7 +40,7 @@ export default function useHomeContent() {
           err.message
         );
 
-        setContent(defaultHomeContent);
+        setContent({});
         setLoading(false);
       }
     );

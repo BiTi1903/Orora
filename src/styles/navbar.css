@@ -71,7 +71,7 @@
 .nav-links a:hover { color: var(--rose-deep); }
 .nav-links a:hover::after { width: 100%; }
 
-/* MENU (mobile) */
+/* MENU (mobile) — hamburger → X */
 .menu {
   display: none;
   width: 42px;
@@ -85,12 +85,131 @@
   font-size: 20px;
   cursor: pointer;
   transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+  position: relative;
+  z-index: 1010;
 }
 
 .menu:hover {
   background: var(--petal);
   border-color: var(--rose-soft);
   transform: scale(1.06);
+}
+
+/* Icon hamburger bằng CSS */
+.menu-icon,
+.menu-icon::before,
+.menu-icon::after {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--rose-deep);
+  border-radius: 2px;
+  transition: transform 0.35s var(--ease), opacity 0.25s ease;
+}
+.menu-icon { position: relative; }
+.menu-icon::before,
+.menu-icon::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 100%;
+}
+.menu-icon::before { top: -6px; }
+.menu-icon::after  { top: 6px;  }
+
+/* Khi menu mở → chuyển thành X */
+.menu--open .menu-icon {
+  background: transparent;
+}
+.menu--open .menu-icon::before {
+  top: 0;
+  transform: rotate(45deg);
+}
+.menu--open .menu-icon::after {
+  top: 0;
+  transform: rotate(-45deg);
+}
+
+/* =====================================================
+   MOBILE OVERLAY
+===================================================== */
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(58, 21, 38, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+.mobile-overlay.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* =====================================================
+   MOBILE DRAWER
+===================================================== */
+.mobile-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1000;
+  width: min(320px, 85vw);
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 28px;
+  background: rgba(255, 250, 252, 0.96);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border-left: 1px solid var(--line);
+  box-shadow: -16px 0 50px rgba(184, 68, 109, 0.12);
+  transform: translateX(100%);
+  transition: transform 0.45s var(--ease);
+  overflow-y: auto;
+}
+
+.mobile-drawer.is-open {
+  transform: translateX(0);
+}
+
+.mobile-drawer-header {
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.mobile-drawer-header .logo {
+  font-size: 24px;
+}
+
+.mobile-drawer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mobile-drawer-links a {
+  display: block;
+  padding: 14px 16px;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  color: var(--plum);
+  border-radius: 14px;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease;
+}
+
+.mobile-drawer-links a:hover,
+.mobile-drawer-links a:active {
+  background: var(--petal);
+  color: var(--rose-deep);
+  transform: translateX(6px);
 }
 
 @media (max-width: 900px) {
@@ -107,8 +226,21 @@
 @media (max-width: 480px) {
   .navbar { padding: 14px 20px; }
   .logo { font-size: 22px; }
-  .menu { width: 38px; height: 38px; font-size: 18px; }
+  .menu { width: 38px; height: 38px; }
+  .menu-icon, .menu-icon::before, .menu-icon::after { width: 17px; }
+  .menu-icon::before { top: -5px; }
+  .menu-icon::after  { top: 5px; }
+  .mobile-drawer { width: min(290px, 85vw); padding: 22px; }
 }
+
+/* Desktop — ẩn drawer */
+@media (min-width: 769px) {
+  .mobile-overlay,
+  .mobile-drawer {
+    display: none !important;
+  }
+}
+
 .navbar--preview {
   position: relative;
   top: auto;

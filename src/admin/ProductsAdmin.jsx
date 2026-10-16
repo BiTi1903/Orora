@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { defaultProducts } from "../data/content";
 import { explainError, getProducts, removeProduct, saveProduct } from "../lib/api";
 import ImageField from "./ImageField";
 
@@ -104,18 +103,6 @@ export default function ProductsAdmin() {
     }
   };
 
-  const seed = async () => {
-    setBusy(true);
-    try {
-      for (const p of defaultProducts) await saveProduct(p);
-      say("success", "Đã nhập sản phẩm mẫu.");
-      await load();
-    } catch (err) {
-      say("error", explainError(err));
-    }
-    setBusy(false);
-  };
-
   return (
     <section>
       <div className="admin-top">
@@ -217,7 +204,6 @@ export default function ProductsAdmin() {
         {!loading && items.length === 0 ? (
           <div className="admin-empty">
             <p>Chưa có sản phẩm nào trên Firestore.</p>
-            <button className="admin-btn" onClick={seed} disabled={busy}>Nhập 3 sản phẩm mẫu</button>
           </div>
         ) : (
           <div style={{ overflowX: "auto" }}>

@@ -33,9 +33,9 @@ export const defaultExtras = {
     },
   ],
 
-  collectionLabel: "COLLECTION",
-  collectionTitle: "Explore",
-  collectionHighlight: "the details.",
+  collectionLabel: "",
+  collectionTitle: "",
+  collectionHighlight: "",
 
   philosophyLabel: "✦ TRIẾT LÝ CỦA CHÚNG TÔI ✦",
   philosophyText:

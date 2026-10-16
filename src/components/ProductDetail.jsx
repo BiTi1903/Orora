@@ -4,7 +4,7 @@ import gsap from "gsap";
 import { getProduct } from "../lib/api";
 import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
-import { defaultProducts } from "../data/content";
+import useProducts from "../hooks/useProducts";
 import Collection from "./Collection";
 
 function ProductDetail({
@@ -18,6 +18,7 @@ function ProductDetail({
   const pageRef = useRef(null);
 
   const home = useHomeContent();
+  const { products: allProducts } = useProducts();
   const ps = preview && previewStyles
     ? previewStyles
     : {
@@ -30,13 +31,13 @@ function ProductDetail({
 
   // undefined = đang tải, null = không tìm thấy
   const [product, setProduct] = useState(
-    preview ? previewProduct || defaultProducts[0] : undefined
+    preview ? previewProduct || null : undefined
   );
 
   /* ---------- lấy sản phẩm từ Firestore ---------- */
   useEffect(() => {
     if (preview) {
-      setProduct(previewProduct || defaultProducts[0]);
+      setProduct(previewProduct || null);
       return;
     }
 
@@ -44,17 +45,14 @@ function ProductDetail({
     setProduct(undefined);
     window.scrollTo({ top: 0 });
 
-    const fallback = () =>
-      defaultProducts.find((p) => p.slug === id) || null;
-
     getProduct(id)
       .then((p) => {
         if (!alive) return;
         if (p) setProduct(p.active === false ? null : p);
-        else setProduct(fallback());
+        else setProduct(null);
       })
       .catch(() => {
-        if (alive) setProduct(fallback());
+        if (alive) setProduct(null);
       });
 
     return () => {
@@ -651,7 +649,7 @@ function ProductDetail({
         className="product-detail-related"
         sampleProducts={
           preview
-            ? defaultProducts
+            ? allProducts
                 .filter(
                   (p) =>
                     p.id !== (product.id || product.slug) &&

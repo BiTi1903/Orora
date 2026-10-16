@@ -9,7 +9,6 @@ import { toCss } from "../../lib/typography";
 import Footer from "../../components/Footer";
 import Navbar from "../../components/Navbar";
 import ScrollText from "../../components/ScrollText";
-import { defaultProducts } from "../../data/content";
 import "./VisualBuilder.css";
 import { FONT_OPTIONS } from "./options";
 import { StylePanel } from "./StylePanels";
@@ -35,7 +34,7 @@ const DEFAULT_HERO = {
   shopButtonText: "Xem sản phẩm",
   shopButtonLink: "#shop",
   heroImage: "/hero.jpg",
-    heroImageMobile: "",
+  heroMobileImage: "",
   heroChip1: "Dịu nhẹ cho da",
   heroChip2: "Thành phần thuần khiết",
   heroChip3: "Cấp ẩm sâu",
@@ -44,9 +43,9 @@ const DEFAULT_HERO = {
 };
 
 const DEFAULT_COLLECTION = {
-  collectionLabel: "COLLECTION",
-  collectionTitle: "Explore",
-  collectionHighlight: "the details.",
+  collectionLabel: "",
+  collectionTitle: "",
+  collectionHighlight: "",
   collectionStyles: {
     label: {
       fontSize: 12,
@@ -60,7 +59,7 @@ const DEFAULT_COLLECTION = {
       fontWeight: 600,
       letterSpacing: -3,
       lineHeight: 0.92,
-      color: "#3a1526",
+      color: "#e2678f",
     },
     highlight: {
       fontFamily: '"Cormorant Garamond", serif',
@@ -701,7 +700,7 @@ function createHero(data = {}) {
     shopButtonText: data.shopButtonText ?? DEFAULT_HERO.shopButtonText,
     shopButtonLink: data.shopButtonLink ?? DEFAULT_HERO.shopButtonLink,
     heroImage: data.heroImage ?? DEFAULT_HERO.heroImage,
-        heroImageMobile: data.heroImageMobile ?? "",
+    heroMobileImage: data.heroMobileImage ?? DEFAULT_HERO.heroMobileImage,
     heroChip1: data.heroChip1 ?? DEFAULT_HERO.heroChip1,
     heroChip2: data.heroChip2 ?? DEFAULT_HERO.heroChip2,
     heroChip3: data.heroChip3 ?? DEFAULT_HERO.heroChip3,
@@ -768,49 +767,10 @@ function createCollection(data = {}) {
 }
 
 function createProductDetail(data = {}) {
-  /* Mục "Sản phẩm khác": mặc định lấy đúng kiểu đang dùng ở Collection trang chủ
-     (nên giao diện không đổi), sau đó admin chỉnh riêng cho trang chi tiết. */
-  const coll = createCollection(data);
-  const saved = data.productDetailStyles || {};
-  const accentDefault = coll.collectionStyles.highlight?.color || "#e2678f";
-
-  const relatedDefaults = {
-    relLabel: { text: "SẢN PHẨM KHÁC", ...coll.collectionStyles.label },
-    relTitle: {
-      text: "Khám phá\nthêm nữa",
-      accentCount: 8,
-      accentColor: accentDefault,
-      ...coll.collectionStyles.title,
-    },
-    relNumber: { ...coll.productCardStyles.number },
-    relName: { ...coll.productCardStyles.name },
-    relDescription: { ...coll.productCardStyles.description },
-    relPrice: { ...coll.productCardStyles.price },
-    relButton: { ...coll.productCardStyles.button },
-    relImage: { ...coll.productCardStyles.imageLayout },
-  };
-
-  const result = mergeNestedStyle(
-    { ...DEFAULT_PRODUCT_DETAIL, ...relatedDefaults },
-    saved
+  return mergeNestedStyle(
+    DEFAULT_PRODUCT_DETAIL,
+    data.productDetailStyles
   );
-
-  /* Dữ liệu cũ: tiêu đề tách 2 dòng (relTitle + relHighlight) → gộp thành 1 */
-  if (saved.relTitle && saved.relTitle.accentCount == null) {
-    if (saved.relHighlight) {
-      const hl = saved.relHighlight.text ?? "thêm nữa";
-      result.relTitle = {
-        ...result.relTitle,
-        text: `${saved.relTitle.text ?? "Khám phá"}\n${hl}`,
-        accentCount: Array.from(hl).length,
-        accentColor: saved.relHighlight.color || accentDefault,
-      };
-    } else {
-      result.relTitle = { ...result.relTitle, accentCount: 0 };
-    }
-  }
-  delete result.relHighlight;
-  return result;
 }
 
 function createFeatures(data = {}) {
@@ -937,8 +897,9 @@ export default function VisualBuilder() {
   const [about, setAbout] = useState(DEFAULT_ABOUT);
   const [hero, setHero] = useState(DEFAULT_HERO);
   const [collection, setCollection] = useState(DEFAULT_COLLECTION);
-  const [productDetail, setProductDetail] = useState(() => createProductDetail({}));
-  const [detailProduct, setDetailProduct] = useState(defaultProducts[0]);
+  const [productDetail, setProductDetail] = useState(DEFAULT_PRODUCT_DETAIL);
+  const [sampleProducts, setSampleProducts] = useState([]);
+  const [detailProduct, setDetailProduct] = useState(null);
   const [features, setFeatures] = useState(DEFAULT_FEATURES);
   const [reviews, setReviews] = useState(DEFAULT_REVIEWS);
   const [newsletter, setNewsletter] = useState(DEFAULT_NEWSLETTER);
@@ -969,6 +930,7 @@ export default function VisualBuilder() {
     getProducts()
       .then((list) => {
         if (!alive || !list?.length) return;
+        setSampleProducts(list);
         const withExtras = list.find(
           (p) => p.image2 || p.image3 || p.image4 || p.image5 || p.image6
         );
@@ -1008,7 +970,7 @@ export default function VisualBuilder() {
           setAbout(DEFAULT_ABOUT);
           setHero(DEFAULT_HERO);
           setCollection(DEFAULT_COLLECTION);
-          setProductDetail(createProductDetail({}));
+          setProductDetail(DEFAULT_PRODUCT_DETAIL);
           setFeatures(DEFAULT_FEATURES);
           setReviews(DEFAULT_REVIEWS);
           setNewsletter(DEFAULT_NEWSLETTER);
@@ -1550,7 +1512,7 @@ export default function VisualBuilder() {
         shopButtonText: hero.shopButtonText,
         shopButtonLink: hero.shopButtonLink,
         heroImage: hero.heroImage,
-                heroImageMobile: hero.heroImageMobile,
+        heroMobileImage: hero.heroMobileImage,
         heroChip1: hero.heroChip1,
         heroChip2: hero.heroChip2,
         heroChip3: hero.heroChip3,
@@ -1801,7 +1763,7 @@ export default function VisualBuilder() {
                 previewData={collection}
                 selectedElement={selected}
                 onSelect={setSelected}
-                sampleProducts={defaultProducts.slice(0, 3)}
+                sampleProducts={sampleProducts.slice(0, 3)}
               />
             ) : activeSection === "productdetail" ? (
               <ProductDetail

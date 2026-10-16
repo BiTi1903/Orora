@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { getProducts } from "../lib/api";
-import { defaultProducts } from "../data/content";
 
 export default function useProducts() {
   const [products, setProducts] = useState([]);
@@ -14,8 +13,7 @@ export default function useProducts() {
         if (alive) setProducts(list.filter((p) => p.active !== false));
       })
       .catch(() => {
-        // Firestore lỗi thì vẫn hiện sản phẩm mẫu để web không bị trống
-        if (alive) setProducts(defaultProducts);
+        if (alive) setProducts([]);
       })
       .finally(() => {
         if (alive) setLoading(false);

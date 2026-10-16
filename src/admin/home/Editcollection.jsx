@@ -20,7 +20,7 @@ const ELEMENTS = [
       fontWeight: 600,
       letterSpacing: -3,
       lineHeight: 0.92,
-      color: "#3a1526",
+      color: "#e2678f",
     },
   },
   {
@@ -55,7 +55,12 @@ export default function EditCollection() {
       onSubmit={h.save}
     >
       <Field label="Nhãn nhỏ" name="collectionLabel" {...h} />
-      <Field label="Tiêu đề dòng 1" name="collectionTitle" {...h} />
+      <Field
+        label="Tiêu đề (nhấn Enter để xuống dòng)"
+        name="collectionTitle"
+        rows={3}
+        {...h}
+      />
       <Field label="Tiêu đề dòng 2" name="collectionHighlight" {...h} />
 
       <StyleList
