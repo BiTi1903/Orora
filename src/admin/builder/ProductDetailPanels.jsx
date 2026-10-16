@@ -1,4 +1,5 @@
 import { SettingGroup, SelectField, StyleTypographyBlock, TypographyControls } from "./ui";
+import { CollectionSettings } from "./CollectionPanels";
 import { SPACE_OPTIONS, FONT_OPTIONS, SIZE_OPTIONS, toFullFontFamily, toBareFontFamily } from "./options";
 import { DEFAULT_ABOUT, DEFAULT_STYLE, HERO_FIELD_MAP, COLLECTION_FIELD_MAP, PRODUCT_DETAIL_FIELD_MAP, FEATURES_TEXT_MAP, REVIEWS_TEXT_MAP, FOOTER_FIELD_MAP } from "./registry";
 
@@ -33,6 +34,9 @@ export function getProductDetailSelectedData(productDetail, selected, detailProd
   if (!meta) {
     return { type: "pdEmpty", data: null };
   }
+  if (meta.type === "pdRelImage" || selected === "relImage") {
+    return { type: "pdRelImage", data: productDetail, meta };
+  }
   if (meta.type === "pdImage" || selected === "pdImage") {
     return { type: "pdImage", data: productDetail, meta };
   }
@@ -56,6 +60,141 @@ export function ProductDetailSettings({
       <div className="builder-empty">
         Chọn một thành phần trên preview.
       </div>
+    );
+  }
+  /* Tiêu đề "Sản phẩm khác": 1 ô, Enter xuống dòng, đổi màu N chữ cuối */
+  if (selected === "relTitle") {
+    const style = productDetail.relTitle || {};
+    const total = Array.from(style.text || "").filter((ch) => ch !== "\n").length;
+    const side = (label, key) => (
+      <SelectField
+        label={label}
+        value={style[key] ?? 0}
+        options={SPACE_OPTIONS}
+        suffix="px"
+        onChange={(value) => onStyleChange({ [key]: Number(value) })}
+      />
+    );
+    return (
+      <>
+        <SettingGroup title="Nội dung">
+          <div className="builder-field">
+            <label>Tiêu đề (nhấn Enter để xuống dòng)</label>
+            <textarea
+              rows={3}
+              value={style.text ?? ""}
+              onChange={(e) => onChange({ text: e.target.value })}
+              style={{ width: "100%", resize: "vertical", font: "inherit" }}
+            />
+          </div>
+        </SettingGroup>
+
+        <SettingGroup title="Đổi màu chữ cuối">
+          <div className="builder-field">
+            <label>Số chữ cuối cùng đổi màu (0 = không đổi)</label>
+            <input
+              type="number"
+              min={0}
+              max={total}
+              value={style.accentCount ?? 0}
+              onChange={(e) =>
+                onStyleChange({
+                  accentCount: Math.min(total, Math.max(0, Number(e.target.value) || 0)),
+                })
+              }
+            />
+            <small className="builder-help">
+              Tiêu đề hiện có {total} ký tự (tính cả dấu cách, không tính xuống dòng).
+            </small>
+          </div>
+          <div className="builder-field">
+            <label>Màu của các chữ đó</label>
+            <input
+              type="color"
+              value={style.accentColor || "#e2678f"}
+              onChange={(e) => onStyleChange({ accentColor: e.target.value })}
+              style={{ width: 48, height: 32, padding: 0, border: "none", cursor: "pointer" }}
+            />
+          </div>
+        </SettingGroup>
+
+        <StyleTypographyBlock style={style} onStyleChange={onStyleChange} />
+
+        <SettingGroup title="Margin / padding trái - phải">
+          <div className="builder-field-row">
+            {side("Margin trái", "marginLeft")}
+            {side("Margin phải", "marginRight")}
+          </div>
+          <div className="builder-field-row">
+            {side("Padding trái", "paddingLeft")}
+            {side("Padding phải", "paddingRight")}
+          </div>
+        </SettingGroup>
+      </>
+    );
+  }
+
+  /* Khối tiêu đề / cả khu vực "Sản phẩm khác": chỉnh khoảng cách */
+  if (selected === "relHeader" || selected === "relSection") {
+    const style = productDetail[selected] || {};
+    const GAP_OPTIONS = [0, 4, 8, 12, 16, 20, 24, 32, 40, 48, 60, 80, 100, 120, 140, 180, 220];
+    const sp = (label, key) => (
+      <SelectField
+        label={label}
+        value={style[key] ?? ""}
+        options={GAP_OPTIONS}
+        suffix="px"
+        onChange={(value) => onStyleChange({ [key]: Number(value) })}
+      />
+    );
+    return (
+      <>
+        <SettingGroup title={selected === "relHeader" ? "Khối tiêu đề" : "Cả khu vực Sản phẩm khác"}>
+          <small className="builder-help">
+            {selected === "relHeader"
+              ? "Margin dưới = khoảng cách giữa tiêu đề và các thẻ sản phẩm. Để trống (—) là dùng mặc định."
+              : "Margin / padding của cả khu vực Sản phẩm khác. Để trống (—) là dùng mặc định."}
+          </small>
+        </SettingGroup>
+        <SettingGroup title="Margin">
+          <div className="builder-field-row">
+            {sp("Trên", "marginTop")}
+            {sp("Dưới", "marginBottom")}
+          </div>
+          <div className="builder-field-row">
+            {sp("Trái", "marginLeft")}
+            {sp("Phải", "marginRight")}
+          </div>
+        </SettingGroup>
+        <SettingGroup title="Padding">
+          <div className="builder-field-row">
+            {sp("Trên", "paddingTop")}
+            {sp("Dưới", "paddingBottom")}
+          </div>
+          <div className="builder-field-row">
+            {sp("Trái", "paddingLeft")}
+            {sp("Phải", "paddingRight")}
+          </div>
+        </SettingGroup>
+      </>
+    );
+  }
+  /* Khung thẻ "Sản phẩm khác": dùng lại đúng bảng chỉnh thẻ của Collection */
+  if (data.type === "pdRelImage" || selected === "relImage") {
+    return (
+      <>
+        <small className="builder-help" style={{ display: "block", marginBottom: 10 }}>
+          Chỉ áp dụng cho các thẻ trong mục "Sản phẩm khác" ở trang chi tiết.
+          Thẻ ở trang chủ không bị ảnh hưởng.
+        </small>
+        <CollectionSettings
+          selected="cardImage"
+          data={{ type: "cardImage", meta: { type: "cardImage" } }}
+          collection={{ productCardStyles: { imageLayout: productDetail.relImage || {} } }}
+          onChange={onChange}
+          onStyleChange={onStyleChange}
+        />
+      </>
     );
   }
 
@@ -463,7 +602,7 @@ export function ProductDetailSettings({
         <StyleTypographyBlock style={style} onStyleChange={onStyleChange} />
       )}
 
-      {meta.textKey && (
+        {(meta.textKey || String(selected || "").startsWith("rel")) && (
         <SettingGroup title="Padding / margin">
           <div className="builder-field-row">
             {/* <SelectField label="Margin trên" value={style.marginTop ?? 0} options={SPACE_OPTIONS} suffix="px" onChange={(value) => onStyleChange({ marginTop: Number(value) })} /> */}
@@ -486,9 +625,18 @@ export function ProductDetailSettings({
 
       <SettingGroup title="Gợi ý">
         <p className="builder-help" style={{ margin: 0 }}>
-          Kiểu chữ này áp dụng cho trang chi tiết của{" "}
-          <strong>mọi sản phẩm</strong>. Nội dung từng SP sửa ở mục
-          Sản phẩm.
+          {String(selected || "").startsWith("rel") ? (
+            <>
+              Kiểu chữ này chỉ áp dụng cho mục <strong>Sản phẩm khác</strong>{" "}
+              ở trang chi tiết (không đổi Collection ở trang chủ).
+            </>
+          ) : (
+            <>
+              Kiểu chữ này áp dụng cho trang chi tiết của{" "}
+              <strong>mọi sản phẩm</strong>. Nội dung từng SP sửa ở mục
+              Sản phẩm.
+            </>
+          )}
         </p>
         {/* {meta.sample && (
           <div

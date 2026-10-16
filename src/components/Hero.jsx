@@ -67,18 +67,25 @@ function Hero({
 
   // Chỉ gắn ảnh nền khi đã có URL thật từ admin/Firestore.
   // Khi đang loading (chưa có snapshot) → giữ nền gradient CSS, không load /hero.jpg cũ.
-  const imageUrl =
-    c.heroImage &&
-    (preview || c.loading === false)
-      ? c.heroImage
-      : null;
+  const ready = preview || c.loading === false;
+  const imageUrl = c.heroImage && ready ? c.heroImage : null;
+  // Ảnh riêng cho điện thoại; để trống thì dùng ảnh desktop
+  const imageMobileUrl = c.heroImageMobile && ready ? c.heroImageMobile : null;
 
-  // Preload ảnh mới để đổi nền mượt hơn
+  // Preload đúng ảnh sẽ hiển thị (điện thoại chỉ tải ảnh mobile, không tải ảnh desktop)
   useEffect(() => {
-    if (!imageUrl || preview) return;
+    if (preview) return;
+    const isMobile = window.matchMedia("(max-width: 600px)").matches;
+    const src = (isMobile && imageMobileUrl) || imageUrl;
+    if (!src) return;
     const img = new Image();
-    img.src = imageUrl;
-  }, [imageUrl, preview]);
+    img.src = src;
+  }, [imageUrl, imageMobileUrl, preview]);
+
+  // Ảnh nền đi qua biến CSS để hero.css chọn ảnh theo bề rộng màn hình
+  const heroBgVars = {};
+  if (imageUrl) heroBgVars["--hero-bg"] = `url("${imageUrl}")`;
+  if (imageMobileUrl) heroBgVars["--hero-bg-mobile"] = `url("${imageMobileUrl}")`;
 
   return (
     <section
@@ -87,11 +94,7 @@ function Hero({
       onMouseLeave={handleLeave}
       onClick={preview ? select("image") : undefined}
       data-builder-key={preview ? "image" : undefined}
-      style={
-        imageUrl
-          ? { backgroundImage: `url("${imageUrl}")` }
-          : undefined
-      }
+            style={Object.keys(heroBgVars).length ? heroBgVars : undefined}
     >
       {!preview && <Sparkles />}
 

@@ -21,7 +21,7 @@ function usePerView() {
   return perView;
 }
 
-function ProductCarousel({ products, cardStyles, preview, selectedElement, onSelect }) {
+function ProductCarousel({ products, cardStyles, preview, selectedElement, onSelect, keyMap }) {
   const perView = usePerView();
   const viewRef = useRef(null);
   const dragRef = useRef(null);
@@ -192,6 +192,9 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
               preview={preview}
               selectedElement={selectedElement}
               onSelect={onSelect}
+              keyMap={keyMap}
+                            groupLayout={!!keyMap}
+
             />
           </div>
         ))}
@@ -236,7 +239,23 @@ function Collection({
   forceHighlight = null,
   /** class thêm (vd: related products dưới chi tiết) */
   className = "",
+  /** Kiểu chữ riêng (ghi đè từng phần kiểu của Collection trang chủ) */
+  headStylesOverride = null,
+  cardStylesOverride = null,
+    /** Gộp tiêu đề thành 1 ô (Enter = xuống dòng) + đổi màu N chữ cuối */
+  singleTitle = false,
+  titleAccent = null,
+  /** Đổi tên key khi chọn trong builder (colTitle → relTitle, ...) */
+  keyMap = null,
 }) {
+  const k = (name) => keyMap?.[name] || name;
+  const mergeGroup = (base, over) => {
+    const out = { ...(base || {}) };
+    Object.keys(over || {}).forEach((key) => {
+      out[key] = { ...(base?.[key] || {}), ...(over[key] || {}) };
+    });
+    return out;
+  };
   const { products: liveProducts, loading } = useProducts();
   const liveHome = useHomeContent();
 
@@ -258,8 +277,8 @@ function Collection({
   const collectionHighlight =
     forceHighlight ?? home.collectionHighlight ?? "the details.";
 
-  const headStyles = home.collectionStyles || {};
-  const cardStyles = home.productCardStyles || {};
+  const headStyles = mergeGroup(home.collectionStyles, headStylesOverride);
+  const cardStyles = mergeGroup(home.productCardStyles, cardStylesOverride);
 
   const select = (key) => (e) => {
     if (!preview || !onSelect) return;
@@ -271,47 +290,120 @@ function Collection({
   const selectedClass = (key) =>
     preview && selectedElement === key ? "builder-selected" : "";
 
-  const HeaderWrap = ({ children }) => {
-    if (preview) return <div className="collection-header">{children}</div>;
-    return <div className="collection-header">{children}</div>;
+    /* Trang chi tiết (có keyMap): nhãn + tiêu đề luôn nằm giữa màn hình */
+  // const centered = !!keyMap;
+  // const centeredHeader = centered
+  //   ? {
+  //       flexDirection: "column",
+  //       alignItems: "center",
+  //       justifyContent: "center",
+  //       textAlign: "center",
+  //       gap: 16,
+  //     }
+  //   : {};
+  // const centeredTitle = centered
+  //   ? { width: "100%", alignItems: "center", textAlign: "center" }
+  //   : undefined;
+  /* Chỉ cho chọn khối tiêu đề / khu vực khi trang cha có keyMap (trang chi tiết) */
+  const extra = (name) =>
+    keyMap?.[name]
+      ? {
+          "data-builder-key": preview ? keyMap[name] : undefined,
+          onClick: select(keyMap[name]),
+        }
+      : {};
+  const extraClass = (name) =>
+    keyMap?.[name] ? selectedClass(keyMap[name]) : "";
+
+  /* Tách theo ký tự hiển thị để chữ tiếng Việt có dấu không bị cắt đôi */
+  const splitChars = (text) =>
+    typeof Intl !== "undefined" && Intl.Segmenter
+      ? Array.from(
+          new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(text),
+          (s) => s.segment
+        )
+      : Array.from(text);
+
+  const withBreaks = (text, keyBase) =>
+    text.split("\n").flatMap((part, i) =>
+      i === 0 ? [part] : [<br key={`${keyBase}-${i}`} />, part]
+    );
+
+  const renderTitle = (text, count, color) => {
+    const chars = splitChars(text || "");
+    let remaining = Math.max(0, Number(count) || 0);
+    let start = chars.length;
+    for (let i = chars.length - 1; i >= 0 && remaining > 0; i--) {
+      if (chars[i] !== "\n") remaining--;
+      start = i;
+    }
+    const head = chars.slice(0, start).join("");
+    const tail = chars.slice(start).join("");
+    return (
+      <>
+        {withBreaks(head, "h")}
+        {tail && <span style={{ color }}>{withBreaks(tail, "t")}</span>}
+      </>
+    );
   };
 
   return (
-    <section
-      className={`collection ${preview ? "collection--preview" : ""} ${className}`.trim()}
+        <section
+      className={`collection ${preview ? "collection--preview" : ""} ${className} ${extraClass("colSection")}`.trim()}
       id={preview || excludeId ? undefined : "shop"}
+      style={toCss(headStyles.section, { responsive: !preview })}
+      {...extra("colSection")}
     >
       {/* HEADER */}
-      <HeaderWrap>
+      <div
+        className={`collection-header ${extraClass("colHeader")}`.trim()}
+                  style={toCss(headStyles.header, { responsive: !preview })}      {...extra("colHeader")}
+      >
         <p
-          className={`collection-label ${selectedClass("colLabel")}`}
-          data-builder-key={preview ? "colLabel" : undefined}
-          onClick={select("colLabel")}
+          className={`collection-label ${selectedClass(k("colLabel"))}`}
+          data-builder-key={preview ? k("colLabel") : undefined}
+          onClick={select(k("colLabel"))}
           style={toCss(headStyles.label, { responsive: !preview })}
         >
           {collectionLabel}
         </p>
 
-        <h2>
-          <span
-            className={`collection-title-line ${selectedClass("colTitle")}`}
-            data-builder-key={preview ? "colTitle" : undefined}
-            onClick={select("colTitle")}
-            style={toCss(headStyles.title, { responsive: !preview })}
-          >
-            {collectionTitle}
-          </span>
+        <h2>          {singleTitle ? (
+            <span
+              className={`collection-title-line ${selectedClass(k("colTitle"))}`}
+              data-builder-key={preview ? k("colTitle") : undefined}
+              onClick={select(k("colTitle"))}
+              style={toCss(headStyles.title, { responsive: !preview })}
+            >
+              {renderTitle(
+                collectionTitle,
+                titleAccent?.count,
+                titleAccent?.color || headStyles.highlight?.color
+              )}
+            </span>
+          ) : (
+            <>
+              <span
+                className={`collection-title-line ${selectedClass(k("colTitle"))}`}
+                data-builder-key={preview ? k("colTitle") : undefined}
+                onClick={select(k("colTitle"))}
+                style={toCss(headStyles.title, { responsive: !preview })}
+              >
+                {collectionTitle}
+              </span>
 
-          <span
-            className={`collection-title-line ${selectedClass("colHighlight")}`}
-            data-builder-key={preview ? "colHighlight" : undefined}
-            onClick={select("colHighlight")}
-            style={toCss(headStyles.highlight, { responsive: !preview })}
-          >
-            {collectionHighlight}
-          </span>
+              <span
+                className={`collection-title-line ${selectedClass(k("colHighlight"))}`}
+                data-builder-key={preview ? k("colHighlight") : undefined}
+                onClick={select(k("colHighlight"))}
+                style={toCss(headStyles.highlight, { responsive: !preview })}
+              >
+                {collectionHighlight}
+              </span>
+            </>
+          )}
         </h2>
-      </HeaderWrap>
+      </div>
 
       {/* PRODUCTS */}
       {preview ? (
@@ -334,6 +426,9 @@ function Collection({
                 preview={preview}
                 selectedElement={selectedElement}
                 onSelect={onSelect}
+                keyMap={keyMap}
+                
+                              groupLayout={!!keyMap}
               />
             </div>
           ))}
@@ -345,6 +440,7 @@ function Collection({
           preview={preview}
           selectedElement={selectedElement}
           onSelect={onSelect}
+          keyMap={keyMap}
         />
       )}
 

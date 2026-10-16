@@ -19,8 +19,13 @@ function ProductCard({
   preview = false,
   selectedElement = "",
   onSelect,
+  /* Đổi tên key khi chọn trong builder (vd: cardName → relName ở trang chi tiết) */
+  keyMap = null,
+    /* true = ngang/margin áp dụng cả thẻ (ảnh + tên + mô tả + giá đi cùng) */
+  groupLayout = false,
 }) {
   const frameRef = useRef(null);
+  const k = (name) => keyMap?.[name] || name;
 
   /* màu tên đi qua biến CSS để giữ hiệu ứng đổi màu khi rê chuột */
   const { color: nameColor, rest: nameRest } = splitColor(styles.name);
@@ -128,7 +133,32 @@ function ProductCard({
     boxSizing: "border-box",
     ["--pc-object-fit"]: imageLayout.objectFit || "cover",
   };
+  /* Cả thẻ: chiều ngang + margin nằm ở khung ngoài, nên tên / mô tả / giá đi theo ảnh.
+     Khung ảnh bên trong luôn đầy 100% bề ngang của thẻ (chiều dọc, bo góc, viền vẫn ở ảnh). */
+  const frameStyle = groupLayout
+    ? {
+        ...imageFrameStyle,
+        ["--pc-width"]: "100%",
+        width: "100%",
+        marginTop: 0,
+        marginRight: 0,
+        marginBottom: 0,
+        marginLeft: 0,
+      }
+    : imageFrameStyle;
 
+    const itemStyle = groupLayout
+    ? {
+        width: widthExpr,
+        maxWidth: "100%",
+        marginTop: px(mT),
+        marginBottom: px(mB),
+        /* Không đặt margin trái/phải → tự căn giữa; có đặt thì dùng đúng số admin nhập */
+        marginRight: mR ? px(mR) : "auto",
+        marginLeft: mL ? px(mL) : "auto",
+        boxSizing: "border-box",
+      }
+    : undefined;
   const mediaInsetStyle = {
     top: padT,
     right: padR,
@@ -137,15 +167,16 @@ function ProductCard({
   };
 
   return (
-    <div className={`gallery-item ${preview ? "gallery-item--preview" : ""}`}>
-      <div
-        className={`gallery-image tilt ${selectedClass("cardImage")}`}
+    <div
+      className={`gallery-item ${preview ? "gallery-item--preview" : ""}`}
+      style={itemStyle}
+    >      <div
+        className={`gallery-image tilt ${selectedClass(k("cardImage"))}`}
         ref={frameRef}
         onMouseMove={handleMove}
         onMouseLeave={handleLeave}
-        style={imageFrameStyle}
-        data-builder-key={preview ? "cardImage" : undefined}
-        onClick={select("cardImage")}
+style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined}
+        onClick={select(k("cardImage"))}
       >
         <span className="tilt-shine" aria-hidden="true" />
 
@@ -155,26 +186,26 @@ function ProductCard({
           {...imageProps}
         >
           <ProductSlideshow
-            images={[image, image2, image3, image4, image5, image6]}
-            alt={name}
-            showDots={false}
-          />
+  images={[image]}
+  alt={name}
+  showDots={false}
+/>
         </ImageWrap>
       </div>
 
       <div className="gallery-info">
         <span
-          className={selectedClass("cardNumber")}
-          data-builder-key={preview ? "cardNumber" : undefined}
-          onClick={select("cardNumber")}
+          className={selectedClass(k("cardNumber"))}
+          data-builder-key={preview ? k("cardNumber") : undefined}
+          onClick={select(k("cardNumber"))}
           style={toCss(styles.number, { responsive: !preview })}
         >
           {number}
         </span>
         <p
-          className={selectedClass("cardName")}
-          data-builder-key={preview ? "cardName" : undefined}
-          onClick={select("cardName")}
+          className={selectedClass(k("cardName"))}
+          data-builder-key={preview ? k("cardName") : undefined}
+          onClick={select(k("cardName"))}
           style={nameStyle}
         >
           {name}
@@ -183,9 +214,9 @@ function ProductCard({
 
       <div className="product-details">
         <p
-          className={`product-description ${selectedClass("cardDescription")}`}
-          data-builder-key={preview ? "cardDescription" : undefined}
-          onClick={select("cardDescription")}
+          className={`product-description ${selectedClass(k("cardDescription"))}`}
+          data-builder-key={preview ? k("cardDescription") : undefined}
+          onClick={select(k("cardDescription"))}
           style={toCss(styles.description, { responsive: !preview })}
         >
           {description}
@@ -193,9 +224,9 @@ function ProductCard({
 
         <div className="product-bottom">
           <span
-            className={`product-price ${selectedClass("cardPrice")}`}
-            data-builder-key={preview ? "cardPrice" : undefined}
-            onClick={select("cardPrice")}
+            className={`product-price ${selectedClass(k("cardPrice"))}`}
+            data-builder-key={preview ? k("cardPrice") : undefined}
+            onClick={select(k("cardPrice"))}
             style={toCss(styles.price, { responsive: !preview })}
           >
             {price}
@@ -203,9 +234,9 @@ function ProductCard({
 
           <ButtonWrap
             {...buttonProps}
-            className={`buy-button ${selectedClass("cardButton")}`}
-            data-builder-key={preview ? "cardButton" : undefined}
-            onClick={select("cardButton")}
+            className={`buy-button ${selectedClass(k("cardButton"))}`}
+            data-builder-key={preview ? k("cardButton") : undefined}
+            onClick={select(k("cardButton"))}
             style={toCss(styles.button, { responsive: !preview })}
           >
             Xem chi tiết

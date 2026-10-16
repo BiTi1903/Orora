@@ -35,6 +35,7 @@ const DEFAULT_HERO = {
   shopButtonText: "Xem sản phẩm",
   shopButtonLink: "#shop",
   heroImage: "/hero.jpg",
+    heroImageMobile: "",
   heroChip1: "Dịu nhẹ cho da",
   heroChip2: "Thành phần thuần khiết",
   heroChip3: "Cấp ẩm sâu",
@@ -700,6 +701,7 @@ function createHero(data = {}) {
     shopButtonText: data.shopButtonText ?? DEFAULT_HERO.shopButtonText,
     shopButtonLink: data.shopButtonLink ?? DEFAULT_HERO.shopButtonLink,
     heroImage: data.heroImage ?? DEFAULT_HERO.heroImage,
+        heroImageMobile: data.heroImageMobile ?? "",
     heroChip1: data.heroChip1 ?? DEFAULT_HERO.heroChip1,
     heroChip2: data.heroChip2 ?? DEFAULT_HERO.heroChip2,
     heroChip3: data.heroChip3 ?? DEFAULT_HERO.heroChip3,
@@ -766,10 +768,49 @@ function createCollection(data = {}) {
 }
 
 function createProductDetail(data = {}) {
-  return mergeNestedStyle(
-    DEFAULT_PRODUCT_DETAIL,
-    data.productDetailStyles
+  /* Mục "Sản phẩm khác": mặc định lấy đúng kiểu đang dùng ở Collection trang chủ
+     (nên giao diện không đổi), sau đó admin chỉnh riêng cho trang chi tiết. */
+  const coll = createCollection(data);
+  const saved = data.productDetailStyles || {};
+  const accentDefault = coll.collectionStyles.highlight?.color || "#e2678f";
+
+  const relatedDefaults = {
+    relLabel: { text: "SẢN PHẨM KHÁC", ...coll.collectionStyles.label },
+    relTitle: {
+      text: "Khám phá\nthêm nữa",
+      accentCount: 8,
+      accentColor: accentDefault,
+      ...coll.collectionStyles.title,
+    },
+    relNumber: { ...coll.productCardStyles.number },
+    relName: { ...coll.productCardStyles.name },
+    relDescription: { ...coll.productCardStyles.description },
+    relPrice: { ...coll.productCardStyles.price },
+    relButton: { ...coll.productCardStyles.button },
+    relImage: { ...coll.productCardStyles.imageLayout },
+  };
+
+  const result = mergeNestedStyle(
+    { ...DEFAULT_PRODUCT_DETAIL, ...relatedDefaults },
+    saved
   );
+
+  /* Dữ liệu cũ: tiêu đề tách 2 dòng (relTitle + relHighlight) → gộp thành 1 */
+  if (saved.relTitle && saved.relTitle.accentCount == null) {
+    if (saved.relHighlight) {
+      const hl = saved.relHighlight.text ?? "thêm nữa";
+      result.relTitle = {
+        ...result.relTitle,
+        text: `${saved.relTitle.text ?? "Khám phá"}\n${hl}`,
+        accentCount: Array.from(hl).length,
+        accentColor: saved.relHighlight.color || accentDefault,
+      };
+    } else {
+      result.relTitle = { ...result.relTitle, accentCount: 0 };
+    }
+  }
+  delete result.relHighlight;
+  return result;
 }
 
 function createFeatures(data = {}) {
@@ -896,7 +937,7 @@ export default function VisualBuilder() {
   const [about, setAbout] = useState(DEFAULT_ABOUT);
   const [hero, setHero] = useState(DEFAULT_HERO);
   const [collection, setCollection] = useState(DEFAULT_COLLECTION);
-  const [productDetail, setProductDetail] = useState(DEFAULT_PRODUCT_DETAIL);
+  const [productDetail, setProductDetail] = useState(() => createProductDetail({}));
   const [detailProduct, setDetailProduct] = useState(defaultProducts[0]);
   const [features, setFeatures] = useState(DEFAULT_FEATURES);
   const [reviews, setReviews] = useState(DEFAULT_REVIEWS);
@@ -967,7 +1008,7 @@ export default function VisualBuilder() {
           setAbout(DEFAULT_ABOUT);
           setHero(DEFAULT_HERO);
           setCollection(DEFAULT_COLLECTION);
-          setProductDetail(DEFAULT_PRODUCT_DETAIL);
+          setProductDetail(createProductDetail({}));
           setFeatures(DEFAULT_FEATURES);
           setReviews(DEFAULT_REVIEWS);
           setNewsletter(DEFAULT_NEWSLETTER);
@@ -1509,6 +1550,7 @@ export default function VisualBuilder() {
         shopButtonText: hero.shopButtonText,
         shopButtonLink: hero.shopButtonLink,
         heroImage: hero.heroImage,
+                heroImageMobile: hero.heroImageMobile,
         heroChip1: hero.heroChip1,
         heroChip2: hero.heroChip2,
         heroChip3: hero.heroChip3,

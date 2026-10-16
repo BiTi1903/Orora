@@ -376,3 +376,35 @@
   margin-top: 20px;
   border-top: 1px solid rgba(184, 68, 109, 0.1);
 }
+/* Sản phẩm khác: nhãn nằm bên trái, tiêu đề cố định ở giữa màn hình */
+.product-detail-related .collection-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+}
+
+.product-detail-related .collection-header .collection-label {
+  grid-column: 1;
+  justify-self: start;
+}
+
+.product-detail-related .collection-header h2 {
+  grid-column: 2;
+  width: auto;
+  max-width: 100%;
+  align-items: center;
+  text-align: center;
+}
+
+/* Màn hình nhỏ: xếp dọc, nhãn trên - tiêu đề dưới, cùng căn giữa */
+@media (max-width: 1000px) {
+  .product-detail-related .collection-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .product-detail-related .collection-header h2 {
+    width: 100%;
+  }
+}

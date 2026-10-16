@@ -122,7 +122,7 @@ function ProductDetail({
           },
           "-=0.4"
         )
-        .from(
+                .from(
           ".product-section",
           {
             y: 50,
@@ -132,6 +132,40 @@ function ProductDetail({
           },
           "-=0.4"
         );
+
+      /* Ảnh phụ: lần lượt trượt lên + phóng nhẹ ra, sau khi ảnh chính hiện ra */
+      const thumbs = Array.from(
+        pageRef.current?.querySelectorAll(".product-detail-thumb") || []
+      );
+      if (thumbs.length) {
+        // Tắt transition CSS trong lúc chạy hiệu ứng để GSAP không bị giật
+        thumbs.forEach((el) => {
+          el.style.transition = "none";
+        });
+        gsap.from(thumbs, {
+          y: 50,
+          scale: 0.8,
+          opacity: 0,
+          duration: 0.75,
+          stagger: 0.14,
+          delay: 1.0,
+          ease: "back.out(1.6)",
+          onComplete: () => {
+            thumbs.forEach((el) => {
+              el.style.transition = "";
+            });
+            gsap.set(thumbs, { clearProps: "transform,opacity" });
+          },
+        });
+      }
+      gsap.from(".product-detail-thumb-nav", {
+        opacity: 0,
+        scale: 0.6,
+        duration: 0.5,
+        delay: 1.5,
+        ease: "back.out(2)",
+        clearProps: "transform,opacity",
+      });
     }, pageRef);
 
     return () => ctx.revert();
@@ -195,6 +229,48 @@ function ProductDetail({
   ].filter(([, , value]) => value || preview);
 
   const css = (key) => toCss(ps[key], { responsive: !preview });
+
+  // Kiểu riêng cho mục "Sản phẩm khác" (admin chỉnh ở Visual Builder → Chi tiết SP)
+    const relTitleStyle = ps.relTitle || {};
+  // Dữ liệu cũ (tiêu đề tách 2 dòng) vẫn hiển thị đúng cho tới khi admin lưu lại
+  const legacyHl = relTitleStyle.accentCount == null ? ps.relHighlight : null;
+  const relTitleText = legacyHl
+    ? `${relTitleStyle.text || "Khám phá"}\n${legacyHl.text || "thêm nữa"}`
+    : relTitleStyle.text ?? "Khám phá\nthêm nữa";
+  const relAccentCount =
+    relTitleStyle.accentCount ??
+    (legacyHl
+      ? Array.from(legacyHl.text || "thêm nữa").length
+      : relTitleStyle.text == null
+      ? 8
+      : 0);
+  const relAccentColor = relTitleStyle.accentColor || legacyHl?.color;
+
+  const relatedHeadStyles = {
+    label: ps.relLabel,
+    title: ps.relTitle,
+    header: ps.relHeader,
+    section: ps.relSection,
+  };
+  const relatedCardStyles = {
+    number: ps.relNumber,
+    name: ps.relName,
+    description: ps.relDescription,
+    price: ps.relPrice,
+    button: ps.relButton,
+    imageLayout: ps.relImage,
+  };
+  const relatedKeyMap = {
+    colLabel: "relLabel",
+    colTitle: "relTitle",
+    colHeader: "relHeader",
+    colSection: "relSection",    cardNumber: "relNumber",
+    cardName: "relName",
+    cardDescription: "relDescription",
+    cardPrice: "relPrice",
+    cardButton: "relButton",
+    cardImage: "relImage",
+  };
 
   // order[0] = đang hiện khung lớn; còn lại = hàng đợi dưới (xoay 2 ảnh, ảnh vừa rời khung lớn nằm cuối)
   const mainImage = (product.image || "").trim();
@@ -562,10 +638,16 @@ function ProductDetail({
       {/* Sản phẩm khác — dùng lại Collection, bỏ sản phẩm đang xem */}
       <Collection
         preview={preview}
+        selectedElement={selectedElement}
+        onSelect={onSelect}
         excludeId={product.id || product.slug || id}
-        forceLabel="SẢN PHẨM KHÁC"
-        forceTitle="Khám phá"
-        forceHighlight="thêm nữa"
+        forceLabel={ps.relLabel?.text || "SẢN PHẨM KHÁC"}
+        forceTitle={relTitleText}
+        singleTitle
+        titleAccent={{ count: relAccentCount, color: relAccentColor }}
+        headStylesOverride={relatedHeadStyles}
+        cardStylesOverride={relatedCardStyles}
+        keyMap={relatedKeyMap}
         className="product-detail-related"
         sampleProducts={
           preview

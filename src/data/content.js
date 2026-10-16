@@ -66,4 +66,6 @@ export const defaultHomeContent = {
   shopButtonLink: "#shop",
   // Không đặt /hero.jpg mặc định — tránh flash ảnh cũ trước khi Firestore trả về ảnh admin
   heroImage: "",
+    // Ảnh riêng cho điện thoại (≤600px). Để trống → dùng heroImage
+  heroImageMobile: "",
 };

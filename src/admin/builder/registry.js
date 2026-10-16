@@ -164,6 +164,64 @@ const PRODUCT_DETAIL_FIELD_MAP = {
     label: "Nội dung Material / Size / Color / Origin",
     sample: "Nội dung dùng chung font và size",
   },
+
+  /* ---- Mục "Sản phẩm khác" cuối trang chi tiết ---- */
+  relLabel: {
+    styleKey: "relLabel",
+    textKey: "text",
+    label: "Sản phẩm khác — Nhãn nhỏ",
+    sample: "SẢN PHẨM KHÁC",
+  },
+  relTitle: {
+    styleKey: "relTitle",
+    textKey: "text",
+    label: "Sản phẩm khác — Tiêu đề dòng 1",
+    sample: "Khám phá",
+  },
+    relTitle: {
+    styleKey: "relTitle",
+    textKey: "text",
+    label: "Sản phẩm khác — Tiêu đề",
+    sample: "Khám phá\nthêm nữa",
+  },
+  relHeader: {
+    styleKey: "relHeader",
+    label: "Sản phẩm khác — Khối tiêu đề",
+  },
+  relSection: {
+    styleKey: "relSection",
+    label: "Sản phẩm khác — Cả khu vực",
+  },
+  relNumber: {
+    styleKey: "relNumber",
+    label: "Sản phẩm khác — Số thứ tự thẻ",
+    sample: "01",
+  },
+  relName: {
+    styleKey: "relName",
+    label: "Sản phẩm khác — Tên sản phẩm",
+    sample: "First Story",
+  },
+  relDescription: {
+    styleKey: "relDescription",
+    label: "Sản phẩm khác — Mô tả ngắn",
+    sample: "A beautiful piece created for your everyday moments.",
+  },
+  relPrice: {
+    styleKey: "relPrice",
+    label: "Sản phẩm khác — Giá",
+    sample: "1.290.000đ",
+  },
+  relButton: {
+    styleKey: "relButton",
+    label: "Sản phẩm khác — Nút Xem chi tiết",
+    sample: "Xem chi tiết ↗",
+  },
+  relImage: {
+    type: "pdRelImage",
+    styleKey: "relImage",
+    label: "Sản phẩm khác — Khung thẻ / ảnh",
+  },
 };
 
 

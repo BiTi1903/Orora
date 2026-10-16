@@ -101,6 +101,15 @@ export default function EditHero() {
           h.set("heroImage", v)
         }
         width={2000}
+        
+      />
+            <ImageField
+        label="Ảnh nền cho điện thoại (để trống = dùng ảnh trên)"
+        value={form.heroImageMobile ?? ""}
+        onChange={(v) =>
+          h.set("heroImageMobile", v)
+        }
+        width={1000}
       />
 
       <div className="admin-field">

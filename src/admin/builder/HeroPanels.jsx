@@ -51,6 +51,36 @@ export function HeroSettings({ selected, data, hero, onChange }) {
             }}
           />
         )}
+                <div className="builder-field" style={{ marginTop: 18 }}>
+          <label>URL ảnh nền cho điện thoại</label>
+          <input
+            value={hero.heroImageMobile || ""}
+            onChange={(e) =>
+              onChange({ heroImageMobile: e.target.value })
+            }
+            placeholder="Để trống = dùng ảnh desktop"
+          />
+          <small className="builder-help">
+            Chỉ dùng khi màn hình ≤ 600px. Nên dùng ảnh dọc (khoảng 4:5 hoặc 9:16).
+            Muốn xem thử: thu nhỏ cửa sổ trình duyệt xuống ≤ 600px.
+          </small>
+        </div>
+
+        {hero.heroImageMobile && (
+          <div
+            style={{
+              marginTop: 8,
+              borderRadius: 12,
+              overflow: "hidden",
+              border: "1px solid #ead9e0",
+              height: 160,
+              width: 100,
+              backgroundImage: `url("${hero.heroImageMobile}")`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          />
+        )}
       </SettingGroup>
     );
   }

@@ -15,12 +15,14 @@
 
   /* Nền mềm khi chờ ảnh từ Firestore — KHÔNG dùng /hero.jpg để tránh flash ảnh cũ */
   background-color: #fff5f8;
-  background-image: radial-gradient(
+    --hero-fallback: radial-gradient(
     ellipse 80% 60% at 50% 40%,
     rgba(255, 230, 240, 0.9) 0%,
     rgba(255, 245, 248, 1) 55%,
     #fffafc 100%
   );
+  /* --hero-bg do Hero.jsx gán từ ảnh admin; chưa có thì dùng gradient */
+  background-image: var(--hero-bg, var(--hero-fallback));
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
@@ -450,8 +452,8 @@
 @media (max-width: 600px) {
   .hero {
     min-height: 680px;
-    background-image: url("/hero-mobile.jpg");
-    background-size: cover;
+    /* ảnh mobile (nếu admin có đặt) → không thì ảnh desktop → không thì gradient */
+    background-image: var(--hero-bg-mobile, var(--hero-bg, var(--hero-fallback)));    background-size: cover;
     background-position: center center;
   }
 
