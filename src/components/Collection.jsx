@@ -20,7 +20,7 @@ function usePerView() {
   return perView;
 }
 
-function ProductCarousel({ products, cardStyles, preview, selectedElement, onSelect }) {
+function ProductCarousel({ products, cardStyles, preview, selectedElement, onSelect, keyMap = null }) {
   const perView = usePerView();
   const viewRef = useRef(null);
   const dragRef = useRef(null);
@@ -191,6 +191,7 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
               preview={preview}
               selectedElement={selectedElement}
               onSelect={onSelect}
+              keyMap={keyMap}
             />
           </div>
         ))}
@@ -233,6 +234,14 @@ function Collection({
   forceLabel = null,
   forceTitle = null,
   forceHighlight = null,
+  /** Tiêu đề 1 ô (xuống dòng bằng \n) + đổi màu N ký tự cuối */
+  singleTitle = false,
+  titleAccent = null,
+  /** Kiểu riêng khi dùng làm "Sản phẩm khác" (không đụng tới Collection ở trang chủ) */
+  headStylesOverride = null,
+  cardStylesOverride = null,
+  /** Đổi key khi chọn trong builder (colTitle → relTitle, cardName → relName...) */
+  keyMap = null,
   /** class thêm (vd: related products dưới chi tiết) */
   className = "",
 }) {
@@ -259,8 +268,10 @@ function Collection({
   const collectionTitle = pick(forceTitle, home.collectionTitle, "Tiêu đề dòng 1");
   const collectionHighlight = pick(forceHighlight, home.collectionHighlight, "Tiêu đề dòng 2");
 
-  const headStyles = home.collectionStyles || {};
-  const cardStyles = home.productCardStyles || {};
+  const headStyles = headStylesOverride || home.collectionStyles || {};
+  const cardStyles = cardStylesOverride || home.productCardStyles || {};
+  const k = (name) => keyMap?.[name] || name;
+  const isRelated = !!headStylesOverride;
 
   const alignSelfMap = { left: "flex-start", center: "center", right: "flex-end" };
   const labelAlign = headStyles.label?.textAlign || "left";
@@ -275,22 +286,53 @@ function Collection({
   const selectedClass = (key) =>
     preview && selectedElement === key ? "builder-selected" : "";
 
-  const HeaderWrap = ({ children }) => {
-    if (preview) return <div className="collection-header">{children}</div>;
-    return <div className="collection-header">{children}</div>;
+  /* Tiêu đề 1 ô: giữ xuống dòng, đổi màu N ký tự cuối (không tính \n) */
+  const renderTitle = () => {
+    const count = Number(titleAccent?.count) || 0;
+    if (!singleTitle || count <= 0) return collectionTitle;
+    const chars = Array.from(collectionTitle);
+    let seen = 0;
+    let cut = chars.length;
+    while (cut > 0 && seen < count) {
+      cut -= 1;
+      if (chars[cut] !== "\n") seen += 1;
+    }
+    return (
+      <>
+        {chars.slice(0, cut).join("")}
+        <span style={{ color: titleAccent?.color || "#e2678f" }}>
+          {chars.slice(cut).join("")}
+        </span>
+      </>
+    );
   };
+
+  const sectionStyle = isRelated
+    ? toCss(headStyles.section, { responsive: !preview })
+    : undefined;
+  const headerStyle = isRelated
+    ? toCss(headStyles.header, { responsive: !preview })
+    : undefined;
 
   return (
     <section
-      className={`collection ${preview ? "collection--preview" : ""} ${className}`.trim()}
+      className={`collection ${preview ? "collection--preview" : ""} ${className} ${selectedClass(k("colSection"))}`.trim()}
       id={preview || excludeId ? undefined : "shop"}
+      style={sectionStyle}
+      data-builder-key={preview && isRelated ? k("colSection") : undefined}
+      onClick={isRelated ? select(k("colSection")) : undefined}
     >
       {/* HEADER */}
-      <HeaderWrap>
+      <div
+        className={`collection-header ${selectedClass(k("colHeader"))}`.trim()}
+        style={headerStyle}
+        data-builder-key={preview && isRelated ? k("colHeader") : undefined}
+        onClick={isRelated ? select(k("colHeader")) : undefined}
+      >
         <p
-          className={`collection-label ${selectedClass("colLabel")}`}
-          data-builder-key={preview ? "colLabel" : undefined}
-          onClick={select("colLabel")}
+          className={`collection-label ${selectedClass(k("colLabel"))}`}
+          data-builder-key={preview ? k("colLabel") : undefined}
+          onClick={select(k("colLabel"))}
           style={{
             ...toCss(headStyles.label, { responsive: !preview }),
             textAlign: labelAlign,
@@ -303,30 +345,32 @@ function Collection({
 
         <h2>
           <span
-            className={`collection-title-line ${selectedClass("colTitle")}`}
-            data-builder-key={preview ? "colTitle" : undefined}
-            onClick={select("colTitle")}
+            className={`collection-title-line ${selectedClass(k("colTitle"))}`}
+            data-builder-key={preview ? k("colTitle") : undefined}
+            onClick={select(k("colTitle"))}
             style={{
               textAlign: "center",
               ...toCss(headStyles.title, { responsive: !preview }),
             }}
           >
-            {collectionTitle}
+            {renderTitle()}
           </span>
 
-          <span
-            className={`collection-title-line ${selectedClass("colHighlight")}`}
-            data-builder-key={preview ? "colHighlight" : undefined}
-            onClick={select("colHighlight")}
-            style={{
-              textAlign: "center",
-              ...toCss(headStyles.highlight, { responsive: !preview }),
-            }}
-          >
-            {collectionHighlight}
-          </span>
+          {!singleTitle && (
+            <span
+              className={`collection-title-line ${selectedClass(k("colHighlight"))}`}
+              data-builder-key={preview ? k("colHighlight") : undefined}
+              onClick={select(k("colHighlight"))}
+              style={{
+                textAlign: "center",
+                ...toCss(headStyles.highlight, { responsive: !preview }),
+              }}
+            >
+              {collectionHighlight}
+            </span>
+          )}
         </h2>
-      </HeaderWrap>
+      </div>
 
       {/* PRODUCTS */}
       {preview ? (
@@ -349,6 +393,7 @@ function Collection({
                 preview={preview}
                 selectedElement={selectedElement}
                 onSelect={onSelect}
+                keyMap={keyMap}
               />
             </div>
           ))}
@@ -360,6 +405,7 @@ function Collection({
           preview={preview}
           selectedElement={selectedElement}
           onSelect={onSelect}
+          keyMap={keyMap}
         />
       )}
 

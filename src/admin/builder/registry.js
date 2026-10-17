@@ -175,12 +175,6 @@ const PRODUCT_DETAIL_FIELD_MAP = {
   relTitle: {
     styleKey: "relTitle",
     textKey: "text",
-    label: "Sản phẩm khác — Tiêu đề dòng 1",
-    sample: "Khám phá",
-  },
-    relTitle: {
-    styleKey: "relTitle",
-    textKey: "text",
     label: "Sản phẩm khác — Tiêu đề",
     sample: "Khám phá\nthêm nữa",
   },
