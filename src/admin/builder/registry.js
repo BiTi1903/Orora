@@ -361,7 +361,7 @@ const NEWSLETTER_FIELD_MAP = {
     key: "newsletterPlaceholder",
     label: "Placeholder email",
     styleKey: "input",
-    hint: "Gợi ý trong ô nhập email",
+    hint: "Gợi ý trong ô nhập emailll",
   },
   nlButton: {
     key: "newsletterButton",
