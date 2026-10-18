@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { splitColor, toCss } from "../lib/typography";
 import ProductSlideshow from "./ProductSlideshow";
+import { cdnSrc, CARD } from "../lib/cloudinary";
 
 function ProductCard({
   image,
@@ -186,7 +187,7 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
           {...imageProps}
         >
           <ProductSlideshow
-  images={[image]}
+  images={[cdnSrc(image, CARD)]}
   alt={name}
   showDots={false}
 />

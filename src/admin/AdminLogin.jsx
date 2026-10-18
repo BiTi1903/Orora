@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth, firebaseConfigured } from "../lib/firebase";
+import { firebaseConfigured } from "../lib/firebase";
+import { auth } from "../lib/firebaseAuth";
 import "../styles/admin.css";
 
 export default function AdminLogin({ onLoggedIn }) {

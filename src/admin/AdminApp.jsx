@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { auth } from "../lib/firebase";
+import { auth } from "../lib/firebaseAuth";
 import AdminLogin from "./AdminLogin";
 import Dashboard from "./Dashboard";
 import HomeAdmin from "./HomeAdmin";

@@ -6,6 +6,7 @@ import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
 import useProducts from "../hooks/useProducts";
 import Collection from "./Collection";
+import { cdnSrc, THUMB, MAIN } from "../lib/cloudinary";
 
 function ProductDetail({
   preview = false,
@@ -81,6 +82,7 @@ function ProductDetail({
             scale: 1.12,
             opacity: 0,
             duration: 1.2,
+            clearProps: "transform,opacity",
           },
           "-=0.3"
         )
@@ -453,7 +455,7 @@ function ProductDetail({
             {displaySrc ? (
               <img
                 key={displaySrc}
-                src={displaySrc}
+                src={cdnSrc(displaySrc, MAIN)}
                 alt={product.name}
                 className="product-detail-main-img"
                 style={{ objectFit: objectFitValue }}
@@ -516,7 +518,7 @@ function ProductDetail({
                         if (preview && onSelect) onSelect("pdThumbs");
                       }}
                     >
-                      <img src={src} alt="" />
+                      <img src={cdnSrc(src, THUMB)} alt="" draggable={false} />
                     </button>
                   );
                 })}

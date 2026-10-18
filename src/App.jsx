@@ -1,5 +1,4 @@
-import AdminApp from "./admin/AdminApp";
-import { useLayoutEffect, useRef } from "react";
+import { lazy, Suspense, useLayoutEffect, useRef } from "react";
    import { Marquee, Features, Testimonials, Newsletter } from "./components/Extras";
      import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -21,6 +20,9 @@ import ScrollToTop from "./components/ScrollToTop";
 import Petals from "./components/Petals";
 import ScrollText from "./components/ScrollText";
 import "./App.css";
+// Trang quản trị chỉ tải khi vào /admin
+const AdminApp = lazy(() => import("./admin/AdminApp"));
+
 gsap.registerPlugin(ScrollTrigger);
 
 
@@ -318,7 +320,14 @@ function App() {
       <ScrollToTop />
 
       <Routes>
-<Route path="/admin" element={<AdminApp />} />
+<Route
+          path="/admin"
+          element={
+            <Suspense fallback={null}>
+              <AdminApp />
+            </Suspense>
+          }
+        />
         {/* =========================
             HOME
         ========================= */}
