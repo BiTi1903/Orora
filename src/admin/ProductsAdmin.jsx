@@ -143,7 +143,7 @@ export default function ProductsAdmin() {
           <ImageField
             label="Ảnh chính"
             value={form.image}
-            onChange={(v) => setForm({ ...form, image: v })}
+            onChange={(v) => setForm((f) => ({ ...f, image: v }))}
             width={1200}
           />
           <p className="admin-muted" style={{ margin: "4px 0 14px", fontSize: 13 }}>
@@ -153,31 +153,31 @@ export default function ProductsAdmin() {
           <ImageField
             label="Ảnh phụ 1"
             value={form.image2}
-            onChange={(v) => setForm({ ...form, image2: v })}
+            onChange={(v) => setForm((f) => ({ ...f, image2: v }))}
             width={1200}
           />
           <ImageField
             label="Ảnh phụ 2"
             value={form.image3}
-            onChange={(v) => setForm({ ...form, image3: v })}
+            onChange={(v) => setForm((f) => ({ ...f, image3: v }))}
             width={1200}
           />
           <ImageField
             label="Ảnh phụ 3"
             value={form.image4}
-            onChange={(v) => setForm({ ...form, image4: v })}
+            onChange={(v) => setForm((f) => ({ ...f, image4: v }))}
             width={1200}
           />
           <ImageField
             label="Ảnh phụ 4"
             value={form.image5}
-            onChange={(v) => setForm({ ...form, image5: v })}
+            onChange={(v) => setForm((f) => ({ ...f, image5: v }))}
             width={1200}
           />
           <ImageField
             label="Ảnh phụ 5"
             value={form.image6}
-            onChange={(v) => setForm({ ...form, image6: v })}
+            onChange={(v) => setForm((f) => ({ ...f, image6: v }))}
             width={1200}
           />
 

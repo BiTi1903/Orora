@@ -408,3 +408,10 @@
     width: 100%;
   }
 }
+
+/* Khu "Sản phẩm khác" dùng lại .collection (min-height: 100vh) → bỏ để không thừa khoảng trống */
+.collection.product-detail-related {
+  min-height: auto;
+  padding-top: 100px;
+  padding-bottom: 90px;
+}

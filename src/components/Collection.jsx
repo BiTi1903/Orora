@@ -20,7 +20,7 @@ function usePerView() {
   return perView;
 }
 
-function ProductCarousel({ products, cardStyles, preview, selectedElement, onSelect, keyMap = null }) {
+function ProductCarousel({ products, cardStyles, preview, selectedElement, onSelect, keyMap = null, groupLayout = false }) {
   const perView = usePerView();
   const viewRef = useRef(null);
   const dragRef = useRef(null);
@@ -192,6 +192,7 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
               selectedElement={selectedElement}
               onSelect={onSelect}
               keyMap={keyMap}
+              groupLayout={groupLayout}
             />
           </div>
         ))}
@@ -394,6 +395,7 @@ function Collection({
                 selectedElement={selectedElement}
                 onSelect={onSelect}
                 keyMap={keyMap}
+                groupLayout
               />
             </div>
           ))}
@@ -406,6 +408,7 @@ function Collection({
           selectedElement={selectedElement}
           onSelect={onSelect}
           keyMap={keyMap}
+          groupLayout
         />
       )}
 

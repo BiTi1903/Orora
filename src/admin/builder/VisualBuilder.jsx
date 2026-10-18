@@ -500,9 +500,12 @@ function createNav(data = {}) {
   return {
     navLogo: data.navLogo || DEFAULT_NAV.navLogo,
     navLinks: Array.isArray(data.navLinks) && data.navLinks.length
-      ? data.navLinks.map((item) => ({
+      ? data.navLinks.map((item, index) => ({
           label: item.label || "",
-          href: item.href || "/",
+          href:
+            item.href && item.href !== "/"
+              ? item.href
+              : DEFAULT_NAV.navLinks[index]?.href || "/",
         }))
       : DEFAULT_NAV.navLinks.map((item) => ({ ...item })),
     navStyles: {

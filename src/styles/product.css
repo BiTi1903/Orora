@@ -171,11 +171,6 @@
   z-index: 1;
 }
 
-.gallery-image {
-  overflow: hidden;
-  box-sizing: border-box;
-}
-
 .product-slideshow img.is-active {
   opacity: 1;
   transform: scale(1);
@@ -213,4 +208,16 @@
 .product-slideshow-dots button.is-active {
   width: 18px;
   background: #fff;
+}
+
+/* =====================================================
+   THẺ SẢN PHẨM — thu nhỏ chữ khi 2 thẻ/hàng trên màn hình hẹp
+   (trước đây nằm ở responsive.css nhưng bị product.css đè nên không có tác dụng)
+===================================================== */
+@media (min-width: 561px) and (max-width: 768px) {
+  .product-details { padding: 16px 7px 0; }
+  .product-description { font-size: 11px; }
+  .product-bottom { margin-top: 16px; }
+  .product-price { font-size: 13px; }
+  .buy-button { padding: 10px 14px; font-size: 10px; }
 }

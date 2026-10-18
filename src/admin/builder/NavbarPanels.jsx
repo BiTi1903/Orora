@@ -46,6 +46,10 @@ export function NavbarSettings({ selected, navbar, onChange, onStyleChange }) {
                 onChange={(e) => onChange({ _linkIndex: linkIndex, _link: { href: e.target.value } })}
               />
             </div>
+            <small className="builder-help">
+              Mặc định: Về Chúng Tôi → /#about, Sản phẩm → /#shop, Liên Hệ → /#contact (footer).
+              Để trống hoặc "/" sẽ dùng link mặc định.
+            </small>
             <small className="builder-help">Font, căn lề, margin và padding dùng chung cho mọi link.</small>
           </>
         )}

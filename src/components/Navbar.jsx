@@ -9,6 +9,14 @@ const DEFAULT_LINKS = [
   { label: "Liên Hệ", href: "/#contact" },
 ];
 
+/* Link để trống / chỉ "/" → dùng link mặc định theo vị trí (Về Chúng Tôi → about, Sản phẩm → shop, Liên Hệ → contact).
+   "#about" → "/#about" để bấm từ trang chi tiết sản phẩm vẫn về đúng mục ở trang chủ. */
+function resolveHref(item, index) {
+  const raw = (item?.href || "").trim();
+  if (!raw || raw === "/") return DEFAULT_LINKS[index]?.href || "/";
+  return raw.startsWith("#") ? `/${raw}` : raw;
+}
+
 function Navbar({
   preview = false,
   previewData = null,
@@ -73,7 +81,7 @@ function Navbar({
           {links.map((item, index) => (
             <Link
               key={index}
-              to={item.href || "/"}
+              to={resolveHref(item, index)}
               className={selectedClass(`navLink:${index}`)}
               data-builder-key={preview ? `navLink:${index}` : undefined}
               onClick={select(`navLink:${index}`)}
@@ -112,7 +120,7 @@ function Navbar({
           {links.map((item, index) => (
             <Link
               key={index}
-              to={item.href || "/"}
+              to={resolveHref(item, index)}
               onClick={closeMenu}
             >
               {item.label}

@@ -3,7 +3,9 @@ import { uploadImage, cloudinaryConfigured } from "../lib/cloudinary";
 
 export default function ImageField({ label, value, onChange, width = 1200 }) {
   const inputRef = useRef(null);
+  const abortRef = useRef(null);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
 
   const pick = async (e) => {
@@ -14,14 +16,29 @@ export default function ImageField({ label, value, onChange, width = 1200 }) {
     if (!file.type.startsWith("image/")) return setError("Vui lòng chọn file ảnh.");
     if (file.size > 10 * 1024 * 1024) return setError("Ảnh quá lớn (tối đa 10MB).");
 
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setProgress(0);
     setBusy(true);
     try {
-      onChange(await uploadImage(file, { width }));
+      const url = await uploadImage(file, {
+        width,
+        signal: controller.signal,
+        onProgress: setProgress,
+      });
+      onChange(url);
     } catch (err) {
-      setError(err.message);
+      // Hủy chủ động thì không cần hiện lỗi
+      if (!controller.signal.aborted) setError(err.message || "Tải ảnh lên không thành công.");
+    } finally {
+      // Luôn tắt trạng thái "đang tải", dù thành công, lỗi hay hủy
+      abortRef.current = null;
+      setBusy(false);
+      setProgress(0);
     }
-    setBusy(false);
   };
+
+  const cancel = () => abortRef.current?.abort();
 
   return (
     <div className="admin-field">
@@ -39,8 +56,13 @@ export default function ImageField({ label, value, onChange, width = 1200 }) {
               onClick={() => inputRef.current?.click()}
               disabled={busy || !cloudinaryConfigured}
             >
-              {busy ? "Đang tải lên..." : "Tải ảnh lên"}
+              {busy ? (progress > 0 && progress < 100 ? `Đang tải lên ${progress}%` : "Đang xử lý...") : "Tải ảnh lên"}
             </button>
+            {busy && (
+              <button type="button" className="admin-btn danger" onClick={cancel}>
+                Hủy
+              </button>
+            )}
             {value && (
               <button type="button" className="admin-btn danger" onClick={() => onChange("")}>
                 Bỏ ảnh
