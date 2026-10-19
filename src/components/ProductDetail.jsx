@@ -8,6 +8,12 @@ import useProducts from "../hooks/useProducts";
 import Collection from "./Collection";
 import { cdnSrc, THUMB, MAIN } from "../lib/cloudinary";
 
+/* Giữ xuống dòng khi admin nhấn Enter — chèn <br /> thật, không phụ thuộc CSS */
+const renderLines = (text) =>
+  String(text ?? "")
+    .split(/\r?\n/)
+    .flatMap((line, i) => (i === 0 ? [line] : [<br key={i} />, line]));
+
 function ProductDetail({
   preview = false,
   previewStyles = null,
@@ -575,7 +581,7 @@ function ProductDetail({
             onClick={select("pdDescription")}
             style={css("description")}
           >
-            {product.description}
+            {renderLines(product.description)}
           </p>
 
           {(product.story || preview) && (
@@ -594,7 +600,7 @@ function ProductDetail({
                 onClick={select("pdBody")}
                 style={css("body")}
               >
-                {product.story}
+                {renderLines(product.story)}
               </p>
             </div>
           )}
@@ -626,7 +632,7 @@ function ProductDetail({
                     onClick={select("pdRowValue")}
                     style={{ ...css("rowValue"), cursor: preview ? "pointer" : undefined }}
                   >
-                    {value}
+                    {renderLines(value)}
                   </p>
                 </div>
               ))}
