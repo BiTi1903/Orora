@@ -34,10 +34,11 @@ const DEFAULT_HERO = {
   shopButtonText: "Xem sản phẩm",
   shopButtonLink: "#shop",
   heroImage: "/hero.jpg",
+    heroImageMobile: "",
   heroMobileImage: "",
   heroChip1: "Dịu nhẹ cho da",
   heroChip2: "Thành phần thuần khiết",
-  heroChip3: "Cấp ẩm sâu",
+  heroChip3: "Cấp ẩm sâu",  
   heroRingText: "ORORA ✦ SẢN PHẨM ✦ ORORA ✦",
   heroScrollText: "CUỘN",
 };

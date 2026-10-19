@@ -14,6 +14,7 @@ const FIELDS = [
   "shopButtonText",
   "shopButtonLink",
   "heroImage",
+    "heroImageMobile",
   "heroRotator",
 
   "heroChip1",
