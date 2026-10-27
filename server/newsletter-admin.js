@@ -98,10 +98,10 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, env
         const rawEmail = body.testEmail === undefined ? user.email : body.testEmail;
         const email = typeof rawEmail === "string" ? rawEmail.trim().toLowerCase() : "";
         if (email.length > 254 || !/^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/.test(email)) {
-          return reply(400, { message: "Nhập một địa chỉ email hợp lệ để nhận thư thử." });
+          return reply(400, { message: "Nhập một địa chỉ email hợp lệ để nhận thư." });
         }
         await sendMail(email, validateMessage(body));
-        return reply(200, { message: `Microsoft đã nhận thư thử gửi tới ${email}. Kiểm tra cả mục thư rác.` });
+        return reply(200, { message: `Microsoft đã nhận thư gửi tới ${email}. Kiểm tra cả mục thư rác.` });
       }
       if (!["createCampaign", "sendBatch"].includes(body.action) || !validId(body.id)) return reply(400, { message: "Thao tác không hợp lệ." });
       if (!env.MS_TENANT_ID || !env.MS_CLIENT_ID || !env.MS_CLIENT_SECRET) return reply(503, { message: "Chưa cấu hình Microsoft 365 trên máy chủ." });
@@ -117,7 +117,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, env
           }
           tx.set(campaign, { ...message, createdAt: new Date(), createdBy: user.uid, status: "draft", cursor: null, accepted: 0, failed: 0, unknown: 0 });
         });
-        return reply(200, { id: body.id, message: "Đã tạo chiến dịch. Chưa gửi email." });
+        return reply(200, { id: body.id, message: "Đã tạo thư. Chưa gửi email." });
       }
       const lease = randomUUID();
       const state = await db.runTransaction(async (tx) => {
@@ -215,9 +215,9 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, env
         mail_send_failed: [503, "Microsoft chưa chấp nhận gửi thư. Kiểm tra quyền của phương thức gửi đang chọn, admin consent, phạm vi hộp thư và hạn mức gửi."],
         mail_configuration_missing: [503, "Thiếu cấu hình Microsoft 365 trên máy chủ."],
         invalid_message: [400, "Nhập tiêu đề (tối đa 200 ký tự) và nội dung (tối đa 20.000 ký tự)."],
-        campaign_conflict: [409, "Mã chiến dịch đã dùng cho nội dung khác."],
-        campaign_missing: [404, "Không tìm thấy chiến dịch."],
-        campaign_busy: [409, "Chiến dịch đang gửi ở một phiên khác. Vui lòng chờ tối đa 2 phút rồi tải lại."],
+        campaign_conflict: [409, "Mã thư đã dùng cho nội dung khác."],
+        campaign_missing: [404, "Không tìm thấy thư."],
+        campaign_busy: [409, "Thư đang được gửi ở một phiên khác. Vui lòng chờ tối đa 2 phút rồi tải lại."],
         unsubscribe_configuration_missing: [503, "Chưa cấu hình NEWSLETTER_UNSUBSCRIBE_SECRET (ít nhất 32 ký tự)."],
       };
       const [status, message] = messages[error.message] || [503, "Chưa thực hiện được. Kiểm tra cấu hình Firebase/Microsoft trên máy chủ và thử lại."];

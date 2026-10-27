@@ -103,7 +103,7 @@ export default function NewsletterAdmin() {
       setNotice({ error: true, text: "Chọn tối đa 100 email cho mỗi lần thao tác." });
       return;
     }
-    if (operation === "delete" && !window.confirm(`Xóa ${ids.length} email khỏi danh sách? Không thể hoàn tác thao tác này. Lịch sử chiến dịch đã gửi vẫn được giữ.`)) return;
+    if (operation === "delete" && !window.confirm(`Xóa ${ids.length} email khỏi danh sách? Không thể hoàn tác thao tác này. Lịch sử thư đã gửi vẫn được giữ.`)) return;
     perform(async () => {
       const result = await request({ action: "manageContacts", operation, ids });
       if (!alive.current) return;
@@ -123,22 +123,22 @@ export default function NewsletterAdmin() {
         if (!alive.current) return;
         setCampaigns((items) => items.map((item) => item.id === id ? result.campaign : item));
         if (result.paused) {
-          setNotice({ error: true, text: "Đã tạm dừng do có thư gửi lỗi hoặc chưa rõ kết quả. Kiểm tra cấu hình Microsoft trước khi tiếp tục. Các địa chỉ đã xử lý sẽ không tự gửi lại trong chiến dịch này." });
+          setNotice({ error: true, text: "Đã tạm dừng do có thư gửi lỗi hoặc chưa rõ kết quả. Kiểm tra cấu hình Microsoft trước khi tiếp tục. Các địa chỉ đã xử lý sẽ không tự gửi lại trong lần gửi này." });
           return;
         }
         if (result.completed) {
-          setNotice({ text: "Chiến dịch đã xử lý xong. “Microsoft đã nhận” chưa có nghĩa thư đã vào hộp thư khách." });
+          setNotice({ text: "Đã xử lý xong thư. “Microsoft đã nhận” chưa có nghĩa thư đã vào hộp thư khách." });
           return;
         }
         await new Promise((resolve) => window.setTimeout(resolve, 5000));
       }
-      if (alive.current) setNotice({ text: "Đã tạm dừng. Bạn có thể tiếp tục từ lịch sử chiến dịch." });
+      if (alive.current) setNotice({ text: "Đã tạm dừng. Bạn có thể tiếp tục từ lịch sử thư." });
     } finally { if (alive.current) setSending(false); }
   };
 
   const sendCampaign = (event) => {
     event.preventDefault();
-    if (!window.confirm(`Gửi “${draft.subject}” đến tất cả khách đang đăng ký trước thời điểm tạo chiến dịch? Mỗi khách nhận một thư riêng.`)) return;
+    if (!window.confirm(`Gửi “${draft.subject}” đến tất cả khách đang đăng ký trước thời điểm tạo thư? Mỗi khách nhận một thư riêng.`)) return;
     perform(async () => {
       const id = crypto.randomUUID();
       await request({ action: "createCampaign", id, ...draft });
@@ -150,7 +150,7 @@ export default function NewsletterAdmin() {
   return (
     <section>
       <div className="admin-top">
-        <div><h1>Email marketing</h1><p className="admin-muted">Lưu người đăng ký, gửi thư tự động và gửi chiến dịch từ sales@ororavn.com.</p></div>
+        <div><h1>Email marketing</h1><p className="admin-muted">Lưu người đăng ký, gửi thư tự động và gửi thư từ sales@ororavn.com.</p></div>
         <button className="admin-btn" disabled={busy} onClick={() => perform(load)}>Tải lại</button>
       </div>
       {notice && <div role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</div>}
@@ -175,28 +175,28 @@ export default function NewsletterAdmin() {
               setNotice({ text: result.message });
             });
           }}>
-            <h2>Gửi thử mẫu thư</h2>
+            <h2>Gửi thư</h2>
             <div className="admin-field">
-              <label htmlFor="newsletter-test-email">Email nhận thư thử</label>
+              <label htmlFor="newsletter-test-email">Email nhận thư</label>
               <input id="newsletter-test-email" type="email" required maxLength={254} value={testEmail} onChange={(event) => setTestEmail(event.target.value)} disabled={busy} />
             </div>
             <p className="admin-muted">Nhập hộp thư bạn có thể mở để kiểm tra mẫu thư bên trên. Thao tác này gửi một thư đến địa chỉ đã nhập, không gửi đến danh sách khách.</p>
-            <button className="admin-btn" disabled={busy || !welcome.subject.trim() || !welcome.text.trim()}>Gửi thư thử</button>
+            <button className="admin-btn" disabled={busy || !welcome.subject.trim() || !welcome.text.trim()}>Gửi thư</button>
           </form>
           <form className="admin-card admin-form" onSubmit={sendCampaign}>
-            <h2>Soạn chiến dịch mới</h2>
+            <h2>Soạn thư mới</h2>
             <MessageFields prefix="campaign" value={draft} onChange={setDraft} disabled={busy} />
             <details><summary>Xem trước nội dung</summary><h3>{draft.subject}</h3><p style={{ whiteSpace: "pre-wrap" }}>{draft.text}</p></details>
-            <p className="admin-muted">Giữ trang này mở trong lúc gửi. Có thể tạm dừng và tiếp tục bằng chiến dịch cũ để tránh gửi trùng.</p>
+            <p className="admin-muted">Giữ trang này mở trong lúc gửi. Có thể tạm dừng và tiếp tục bằng thư đã tạo để tránh gửi trùng.</p>
             <button className="admin-btn primary" disabled={busy}>Gửi đến khách đang đăng ký</button>
           </form>
           <div className="admin-card">
-            <h2>Lịch sử 20 chiến dịch gần nhất</h2>
+            <h2>Lịch sử 20 thư gần nhất</h2>
             <div style={{ overflowX: "auto" }}><table className="admin-table"><thead><tr><th>Tiêu đề</th><th>Trạng thái</th><th>Microsoft đã nhận</th><th>Lỗi</th><th>Chưa rõ</th><th>Thao tác</th></tr></thead>
               <tbody>{campaigns.map((item) => <tr key={item.id}>
                 <td>{item.subject}</td><td>{STATUS[item.status] || item.status}</td><td>{item.accepted || 0}</td><td>{item.failed || 0}</td><td>{item.unknown || 0}</td>
                 <td>{item.status !== "completed" && <button className="admin-btn" disabled={busy} onClick={() => {
-                  if (window.confirm(`Tiếp tục gửi chiến dịch “${item.subject}”?`)) perform(() => run(item.id));
+                  if (window.confirm(`Tiếp tục gửi thư “${item.subject}”?`)) perform(() => run(item.id));
                 }}>Tiếp tục gửi</button>}</td>
               </tr>)}</tbody></table></div>
             <p className="admin-muted">Thư bị lỗi hoặc chưa rõ kết quả không được tự gửi lại. “Hoàn tất” nghĩa là đã quét xong danh sách, không bảo đảm mọi thư gửi thành công.</p>
@@ -215,7 +215,7 @@ export default function NewsletterAdmin() {
                 <option value="unsubscribed">Đã hủy đăng ký</option>
               </select>
             </div>
-            <p className="admin-muted">Chọn tối đa 100 email mỗi lần. Chỉ email Hoạt động được nhận chiến dịch. Bộ lọc áp dụng cho danh sách đã tải.</p>
+            <p className="admin-muted">Chọn tối đa 100 email mỗi lần. Chỉ email Hoạt động được nhận thư. Bộ lọc áp dụng cho danh sách đã tải.</p>
             <div style={{ overflowX: "auto" }}><table className="admin-table newsletter-contact-table"><thead><tr>
               <th><input type="checkbox" aria-label="Chọn tất cả email đang hiển thị" disabled={busy || !visibleContacts.length} checked={allVisibleSelected} onChange={(event) => {
                 const ids = visibleContacts.map((item) => item.id);
