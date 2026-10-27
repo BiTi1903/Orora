@@ -7,7 +7,8 @@ Có thể thử phương thức SMTP OAuth2 thay cho Graph theo [SMTP-SETUP.md](
 - Form ở website gửi đến `/api/subscribe`: chuẩn hóa email, ghi Firestore cùng thời điểm đồng ý nhận tin, sau đó gửi mẫu thư tự động.
 - Quản trị → **Email marketing**: xem danh sách email, sửa mẫu tự động, gửi thử đến email do quản trị nhập, soạn và gửi chiến dịch.
 - Mỗi khách nhận một thư riêng từ `sales@ororavn.com`, không lộ danh sách khách khác.
-- Mỗi thư có liên kết hủy đăng ký. Mở liên kết chỉ hiện trang xác nhận; khách bấm xác nhận mới ngừng nhận tin.
+- Thư thử, thư tự động và chiến dịch dùng nguyên nội dung đã nhập; không tự nối website hoặc liên kết hủy đăng ký. Các liên kết đã phát hành trong thư cũ vẫn hoạt động.
+- Danh sách khách hỗ trợ chọn nhiều (tối đa 100/lần), Hoạt động, Tạm ngưng, Xóa email và lọc trạng thái trong các email đã tải. Chỉ trạng thái `active` được gửi chiến dịch. Xóa khỏi danh sách không xóa lịch sử chiến dịch/deliveries.
 - Chiến dịch lưu tiến độ, gửi tối đa 2 thư/mỗi yêu cầu; giao diện chờ 5 giây giữa các đợt. Giữ trang quản trị mở khi gửi. Tạm dừng/đóng trang chỉ dừng các đợt tiếp theo; đợt đã gọi máy chủ vẫn có thể hoàn tất.
 - Tiếp tục **chiến dịch cũ** khi mất kết nối. Không tạo chiến dịch mới cho cùng nội dung chỉ vì chưa thấy kết quả: chiến dịch mới có thể gửi lại cho toàn bộ khách.
 - Chỉ gửi đến khách đang có trạng thái `active`, đã đồng ý trước thời điểm tạo chiến dịch. Email được đánh dấu lỗi/chưa rõ kết quả không tự gửi lại trong chiến dịch đó.
@@ -58,7 +59,7 @@ Vào project → **Settings → Environment Variables**. Những giá trị nh�
 | `FIREBASE_SERVICE_ACCOUNT_JSON` | Toàn bộ JSON khóa Firebase Admin, chỉ server |
 | `NEWSLETTER_SITE_ORIGIN` | Origin chính xác nơi form và admin chạy, ví dụ `https://ororavn.com`; nếu website dùng `www`, đặt đúng origin `https://www.ororavn.com` |
 | `NEWSLETTER_ADMIN_UIDS` | UID Firebase của người được quyền xem danh sách và gửi chiến dịch |
-| `NEWSLETTER_UNSUBSCRIBE_SECRET` | Chuỗi ngẫu nhiên ít nhất 32 ký tự, chỉ server, dùng ký liên kết hủy đăng ký |
+| `NEWSLETTER_UNSUBSCRIBE_SECRET` | Giữ nguyên khóa cũ nếu đã phát hành liên kết hủy đăng ký; không còn bắt buộc cho việc gửi thư mới |
 
 Tạo khóa ngẫu nhiên bằng trình quản lý mật khẩu hoặc `openssl rand -hex 32` **trên máy của bạn**, rồi nhập trực tiếp vào Vercel. Giữ khóa này ổn định: thay khóa sẽ làm các liên kết hủy đăng ký cũ không còn hợp lệ.
 
@@ -73,7 +74,7 @@ Mẫu tên biến trống có trong `.env.example`. Nếu dùng `.env.local` đ�
 3. Đăng nhập `/admin` → **Email marketing**. Nếu báo thiếu UID/quyền, đối chiếu UID người đăng nhập với `NEWSLETTER_ADMIN_UIDS`.
 4. Sửa mẫu thư tự động, bấm **Lưu mẫu thư tự động**. Sau đó nhập hộp thư bạn sử dụng vào ô **Email nhận thư thử** và bấm **Gửi thư thử**. Có thể khác email đăng nhập Firebase. Thao tác này gửi email thật đến một địa chỉ đã nhập, không gửi đến danh sách khách.
 5. Trên website, đăng ký bằng email thử do bạn sở hữu và tích đồng ý. Kiểm tra email đã xuất hiện trong quản trị và thư thật đến inbox/thư rác.
-6. Mở liên kết hủy đăng ký trong thư thử, bấm xác nhận. Quản trị sẽ hiển thị `Đã hủy`. Khách đó không được nhận các chiến dịch tiếp theo.
+6. Trong danh sách, chọn email thử → **Tạm ngưng** → **Áp dụng**. Email đó bị loại khỏi các đợt chiến dịch tiếp theo. Có thể chuyển lại **Hoạt động** hoặc **Xóa email** sau xác nhận. Thao tác xóa không hoàn tác và giữ lịch sử chiến dịch cũ.
 7. Ban đầu chỉ dùng danh sách thử của bạn. Soạn chiến dịch, xem trước, bấm **Gửi đến khách đang đăng ký** và xác nhận. Theo dõi `Microsoft đã nhận`, `Lỗi`, `Chưa rõ` trong lịch sử.
 
 Kiểm thử tự động trong repository dùng Firestore và Microsoft giả lập; **không gửi email thật** và chưa xác minh quyền tenant hoặc khả năng thư vào inbox. Cần hoàn tất các bước kiểm tra production ở trên.

@@ -4,7 +4,7 @@ import { createNewsletterAdminHandler } from "../server/newsletter-admin.js";
 import { createSubscribeHandler } from "../server/newsletter.js";
 import { createUnsubscribeHandler } from "../server/unsubscribe.js";
 import { createMicrosoftMailer } from "../server/microsoft-mail.js";
-import { DEFAULT_WELCOME, sendWelcomeMessage, subscriberId, unsubscribeLink, withUnsubscribe } from "../server/newsletter-content.js";
+import { sendWelcomeMessage, subscriberId, unsubscribeLink } from "../server/newsletter-content.js";
 import { memoryDb, response } from "./firestore-memory.js";
 
 const env = {
@@ -55,7 +55,7 @@ test("campaign creation is idempotent; resumes in batches and never resends a co
   assert.equal(result.body.completed, true); assert.equal(result.body.campaign.accepted, 5);
   await call({ action: "sendBatch", id: body.id });
   assert.equal(new Set(sent.map(([email]) => email)).size, 5); assert.equal(sent.length, 5);
-  assert.match(sent[0][1].text, /Hủy đăng ký: https:\/\/orora.example\/api\/unsubscribe/);
+  assert.equal(sent[0][1].text, message.text);
 });
 
 test("unsubscribed recipients and contacts who consent after creation are excluded", async () => {
@@ -102,11 +102,11 @@ test("a delivery reserved before a crash is marked unknown and never sent again"
   assert.equal(result.body.campaign.unknown, 1); assert.equal(sent.length, 0);
 });
 
-test("welcome template can be saved and is applied with a signed unsubscribe link", async () => {
+test("welcome template is sent exactly as saved without appended footer", async () => {
   const db = memoryDb(); const { call } = admin(db); let received;
   assert.equal((await call({ action: "saveWelcome", ...message })).statusCode, 200);
   await sendWelcomeMessage("a@example.com", { getDb: async () => db, env, sendMail: async (email, text) => { received = { email, text }; } });
-  assert.equal(received.text.subject, message.subject); assert.match(received.text.text, /api\/unsubscribe\?id=/);
+  assert.deepEqual(received.text, message);
   assert.equal((await call({ action: "saveWelcome", subject: "\n", text: "" })).statusCode, 400);
 });
 
@@ -155,11 +155,11 @@ test("Microsoft adapter caches access token and sends a private message to each 
   assert.ok(calls[1].url.includes("sales%40ororavn.com"));
 });
 
-test("test send goes only to authenticated admin's email; text footer is appended", async () => {
+test("test send defaults to authenticated admin and preserves the message body", async () => {
   const { call, sent } = admin(memoryDb());
   assert.equal((await call({ action: "sendTest", ...message, email: "unrelated@example.com" })).statusCode, 200);
   assert.equal(sent[0][0], "owner@example.com");
-  assert.match(withUnsubscribe(DEFAULT_WELCOME, subscriberId("a@example.com"), env).text, /Hủy đăng ký/);
+  assert.deepEqual(sent[0][1], message);
 });
 
 test("campaign scans past a full page of inactive contacts and resumes at the saved cursor", async () => {
@@ -221,7 +221,7 @@ test("authorized admin can choose a single test mailbox distinct from Firebase l
   assert.equal(sent.length, 1);
   assert.equal(sent[0][0], "admin@ororavn.onmicrosoft.com");
   assert.match(result.body.message, /admin@ororavn\.onmicrosoft\.com/);
-  assert.match(sent[0][1].text, new RegExp(subscriberId("admin@ororavn.onmicrosoft.com")));
+  assert.equal(sent[0][1].text, message.text);
 });
 
 test("test mailbox selection rejects invalid/multiple recipients and remains admin-only", async () => {
@@ -233,4 +233,63 @@ test("test mailbox selection rejects invalid/multiple recipients and remains adm
   const unprivileged = admin(memoryDb(), { verifyToken: async () => ({ uid: "not-admin" }) });
   assert.equal((await unprivileged.call({ action: "sendTest", ...message, testEmail: "admin@ororavn.onmicrosoft.com" })).statusCode, 403);
   assert.equal(unprivileged.sent.length, 0);
+});
+
+test("admin can pause and reactivate selected contacts without rewriting consent", async () => {
+  const db = memoryDb(); await seed(db, 3); const { call, sent } = admin(db);
+  const ids = [subscriberId("customer0@example.com"), subscriberId("customer1@example.com")];
+  const consent = (await db.collection("newsletterSubscribers").doc(ids[0]).get()).data().consentAt;
+  const paused = await call({ action: "manageContacts", operation: "pause", ids: [...ids, ids[0]] });
+  assert.equal(paused.statusCode, 200); assert.equal(paused.body.updated.length, 2);
+  assert.equal((await db.collection("newsletterSubscribers").doc(ids[0]).get()).data().status, "paused");
+  await call({ action: "createCampaign", id: "paused-filter", ...message });
+  const campaign = await call({ action: "sendBatch", id: "paused-filter" });
+  assert.equal(campaign.body.completed, true);
+  assert.deepEqual(sent.map(([email]) => email), ["customer2@example.com"]);
+  const active = await call({ action: "manageContacts", operation: "activate", ids });
+  assert.equal(active.statusCode, 200);
+  const person = (await db.collection("newsletterSubscribers").doc(ids[0]).get()).data();
+  assert.equal(person.status, "active"); assert.deepEqual(person.consentAt, consent);
+});
+
+test("delete removes contacts from subsequent campaigns while preserving existing campaign history", async () => {
+  const db = memoryDb(); await seed(db, 1); const { call, sent } = admin(db);
+  const id = subscriberId("customer0@example.com");
+  await call({ action: "createCampaign", id: "historical", ...message });
+  await call({ action: "sendBatch", id: "historical" });
+  const deletion = await call({ action: "manageContacts", operation: "delete", ids: [id] });
+  assert.equal(deletion.statusCode, 200);
+  assert.equal((await db.collection("newsletterSubscribers").doc(id).get()).exists, false);
+  assert.equal((await db.collection("newsletterCampaigns").doc("historical").collection("deliveries").doc(id).get()).exists, true);
+  await call({ action: "createCampaign", id: "after-delete", ...message });
+  await call({ action: "sendBatch", id: "after-delete" });
+  assert.equal(sent.length, 1);
+});
+
+test("contact operations require admin access and reject invalid identifiers and oversized selections", async () => {
+  const db = memoryDb(); await seed(db, 1); const { call } = admin(db);
+  const id = subscriberId("customer0@example.com");
+  for (const body of [
+    { operation: "invalid", ids: [id] }, { operation: "delete", ids: [] },
+    { operation: "delete", ids: ["../settings"] }, { operation: "delete", ids: Array(101).fill(id) },
+  ]) assert.equal((await call({ action: "manageContacts", ...body })).statusCode, 400);
+  const stranger = admin(db, { verifyToken: async () => ({ uid: "stranger" }) });
+  assert.equal((await stranger.call({ action: "manageContacts", operation: "delete", ids: [id] })).statusCode, 403);
+  assert.equal((await db.collection("newsletterSubscribers").doc(id).get()).exists, true);
+  const missing = subscriberId("missing@example.com");
+  await call({ action: "manageContacts", operation: "activate", ids: [missing] });
+  assert.equal((await db.collection("newsletterSubscribers").doc(missing).get()).exists, false);
+});
+
+test("welcome, test and campaign messages preserve custom body spacing and add no footer", async () => {
+  const db = memoryDb(); const { call, sent } = admin(db, { env: { ...env, NEWSLETTER_UNSUBSCRIBE_SECRET: "" } });
+  const custom = { subject: "My content", text: "\nNội dung riêng của tôi.\n\nGiữ nguyên dòng trống.  \n" };
+  await call({ action: "saveWelcome", ...custom });
+  await sendWelcomeMessage("welcome@example.com", { getDb: async () => db, sendMail: async (email, body) => sent.push([email, body]) });
+  assert.equal((await call({ action: "sendTest", ...custom })).statusCode, 200);
+  await seed(db, 1);
+  assert.equal((await call({ action: "createCampaign", id: "no-footer", ...custom })).statusCode, 200);
+  await call({ action: "sendBatch", id: "no-footer" });
+  assert.equal(sent.length, 3);
+  for (const [, body] of sent) assert.deepEqual(body, custom);
 });

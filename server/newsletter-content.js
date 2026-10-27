@@ -9,8 +9,8 @@ export const subscriberId = (email) => createHash("sha256").update(email).digest
 
 export function validateMessage(value) {
   const subject = typeof value?.subject === "string" ? value.subject.trim() : "";
-  const text = typeof value?.text === "string" ? value.text.trim() : "";
-  if (!subject || subject.length > 200 || /[\r\n]/.test(subject) || !text || text.length > 20000) {
+  const text = typeof value?.text === "string" ? value.text : "";
+  if (!subject || subject.length > 200 || /[\r\n]/.test(subject) || !text.trim() || text.length > 20000) {
     throw new Error("invalid_message");
   }
   return { subject, text };
@@ -33,17 +33,9 @@ export function validUnsubscribe(id, token, env = process.env) {
   return timingSafeEqual(Buffer.from(signature(id, env), "hex"), Buffer.from(token, "hex"));
 }
 
-export function withUnsubscribe(message, id, env = process.env) {
-  const link = unsubscribeLink(id, env);
-  return {
-    ...validateMessage(message),
-    text: `${message.text.trim()}\n\nWebsite ORORA: ${new URL(env.NEWSLETTER_SITE_ORIGIN).origin}\nBạn nhận thư vì đã đăng ký nhận tin từ ORORA.\nHủy đăng ký: ${link}`,
-  };
-}
-
-export async function sendWelcomeMessage(email, { getDb, sendMail, env = process.env }) {
+export async function sendWelcomeMessage(email, { getDb, sendMail }) {
   const db = await getDb();
   const saved = await db.collection("newsletterSettings").doc("welcome").get();
   const message = saved.exists ? validateMessage(saved.data()) : DEFAULT_WELCOME;
-  return sendMail(email, withUnsubscribe(message, subscriberId(email), env));
+  return sendMail(email, message);
 }

@@ -195,3 +195,20 @@
 .admin-image-preview img { width: 100%; height: 100%; object-fit: cover; }
 
 .admin-image-side { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 10px; }
+.newsletter-bulk-toolbar, .newsletter-contact-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.newsletter-bulk-toolbar { margin: 16px 0 10px; }
+.newsletter-contact-actions select, .newsletter-contact-filter {
+  min-height: 42px; max-width: 100%; padding: 9px 12px; border: 1px solid var(--a-line);
+  border-radius: 12px; background: #fff; color: var(--a-ink, #3a1526); font: inherit; font-size: 13px;
+}
+.newsletter-contact-actions select:focus-visible, .newsletter-contact-filter:focus-visible { outline: 2px solid var(--a-deep); outline-offset: 2px; }
+.newsletter-contact-actions select:disabled { opacity: 0.6; }
+.newsletter-contact-table input[type="checkbox"] { appearance: auto; width: 18px; height: 18px; accent-color: var(--a-deep); cursor: pointer; }
+.newsletter-contact-table td:first-child, .newsletter-contact-table th:first-child { width: 44px; }
+.newsletter-contact-status { display: inline-block; padding: 5px 10px; border-radius: 20px; white-space: nowrap; font-size: 12px; background: #f4eeee; color: #69535d; }
+.newsletter-contact-status.active { background: #e9f6ee; color: #246140; }
+.newsletter-contact-status.paused { background: #fff3dc; color: #805a12; }
+@media (max-width: 600px) {
+  .newsletter-bulk-toolbar { align-items: flex-start; flex-direction: column; }
+  .newsletter-bulk-toolbar > .newsletter-contact-actions, .newsletter-contact-filter { width: 100%; }
+}

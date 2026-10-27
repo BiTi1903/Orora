@@ -1,6 +1,6 @@
 import { firebaseAuthFailure } from "./firebase-auth-error.js";
 import { randomUUID } from "node:crypto";
-import { DEFAULT_WELCOME, subscriberId, validateMessage, withUnsubscribe } from "./newsletter-content.js";
+import { DEFAULT_WELCOME, validateMessage } from "./newsletter-content.js";
 
 const millis = (value) => value?.toMillis?.() ?? (value ? new Date(value).getTime() : 0);
 const publicContact = (doc) => ({
@@ -65,6 +65,27 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, env
         await settings.set({ ...message, updatedAt: new Date(), updatedBy: user.uid });
         return reply(200, { message: "Đã lưu mẫu thư gửi cho người đăng ký mới." });
       }
+      if (body.action === "manageContacts") {
+        const operations = { activate: "active", pause: "paused", delete: "deleted" };
+        if (!Object.hasOwn(operations, body.operation) || !Array.isArray(body.ids) || !body.ids.length || body.ids.length > 100 || body.ids.some((id) => typeof id !== "string" || !/^[a-f0-9]{64}$/.test(id))) {
+          return reply(400, { message: "Chọn thao tác hợp lệ và từ 1 đến 100 email mỗi lần." });
+        }
+        const ids = [...new Set(body.ids)];
+        const updated = await db.runTransaction(async (tx) => {
+          const refs = ids.map((id) => contacts.doc(id));
+          const snapshots = await tx.getAll(...refs);
+          const changed = [];
+          snapshots.forEach((snapshot, index) => {
+            if (!snapshot.exists) return;
+            if (body.operation === "delete") tx.delete(refs[index]);
+            else tx.set(refs[index], { status: operations[body.operation], updatedAt: new Date(), updatedBy: user.uid }, { merge: true });
+            changed.push({ id: ids[index], status: operations[body.operation] });
+          });
+          return changed;
+        });
+        const labels = { activate: "chuyển sang hoạt động", pause: "tạm ngưng", delete: "xóa khỏi danh sách" };
+        return reply(200, { updated, message: `Đã ${labels[body.operation]} ${updated.length} email.` });
+      }
       if (body.action === "unsubscribe") {
         if (!/^[a-f0-9]{64}$/.test(body.id || "")) return reply(400, { message: "Email không hợp lệ." });
         const ref = contacts.doc(body.id);
@@ -79,13 +100,11 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, env
         if (email.length > 254 || !/^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/.test(email)) {
           return reply(400, { message: "Nhập một địa chỉ email hợp lệ để nhận thư thử." });
         }
-        await sendMail(email, withUnsubscribe(validateMessage(body), subscriberId(email), env));
+        await sendMail(email, validateMessage(body));
         return reply(200, { message: `Microsoft đã nhận thư thử gửi tới ${email}. Kiểm tra cả mục thư rác.` });
       }
       if (!["createCampaign", "sendBatch"].includes(body.action) || !validId(body.id)) return reply(400, { message: "Thao tác không hợp lệ." });
       if (!env.MS_TENANT_ID || !env.MS_CLIENT_ID || !env.MS_CLIENT_SECRET) return reply(503, { message: "Chưa cấu hình Microsoft 365 trên máy chủ." });
-      // Validate signing/origin settings before reserving a recipient or creating a campaign.
-      withUnsubscribe(DEFAULT_WELCOME, "0".repeat(64), env);
       const campaign = campaigns.doc(body.id);
       if (body.action === "createCampaign") {
         const message = validateMessage(body);
@@ -138,7 +157,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, env
           if (claim) {
             let result = "accepted";
             try {
-              await sendMail(claim.email, withUnsubscribe(state, doc.id, env));
+              await sendMail(claim.email, validateMessage(state));
             } catch (error) {
               // A timeout may happen AFTER Microsoft accepts a message. Never resend it automatically.
               result = ["mail_auth_failed", "mail_send_failed", "mail_configuration_missing", "mail_smtp_auth_failed", "mail_smtp_connection_failed", "mail_transport_invalid"].includes(error.message) ? "failed" : "unknown";

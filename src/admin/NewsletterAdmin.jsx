@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { auth } from "../lib/firebaseAuth";
 
 const EMPTY = { subject: "", text: "" };
+const CONTACT_STATUS = { active: "Hoạt động", paused: "Tạm ngưng", unsubscribed: "Đã hủy đăng ký" };
 const STATUS = { draft: "Chưa gửi", sending: "Đang xử lý", paused: "Tạm dừng", completed: "Hoàn tất" };
 
 async function request(body, cursor) {
@@ -29,8 +30,26 @@ function MessageFields({ value, onChange, disabled, prefix }) {
         <label htmlFor={`${prefix}-text`}>Nội dung thư</label>
         <textarea id={`${prefix}-text`} required rows={9} maxLength={20000} value={value.text} onChange={(e) => onChange({ ...value, text: e.target.value })} disabled={disabled} />
       </div>
-      <p className="admin-muted">Thư được gửi dạng văn bản. Website và liên kết hủy đăng ký sẽ được thêm tự động ở cuối thư.</p>
+      <p className="admin-muted">Thư dạng văn bản, giữ nguyên nội dung bạn nhập.</p>
     </>
+  );
+}
+
+function ContactActions({ label, disabled, onApply }) {
+  const [action, setAction] = useState("");
+  return (
+    <div className="newsletter-contact-actions">
+      <select aria-label={label} value={action} onChange={(event) => setAction(event.target.value)} disabled={disabled}>
+        <option value="">Chọn thao tác</option>
+        <option value="activate">Hoạt động</option>
+        <option value="pause">Tạm ngưng</option>
+        <option value="delete">Xóa email</option>
+      </select>
+      <button type="button" className="admin-btn" aria-label={`Áp dụng: ${label}`} disabled={disabled || !action} onClick={() => {
+        onApply(action);
+        setAction("");
+      }}>Áp dụng</button>
+    </div>
   );
 }
 
@@ -39,6 +58,8 @@ export default function NewsletterAdmin() {
   const [draft, setDraft] = useState(EMPTY);
   const [testEmail, setTestEmail] = useState(() => auth?.currentUser?.email || "");
   const [contacts, setContacts] = useState([]);
+  const [selectedContacts, setSelectedContacts] = useState([]);
+  const [contactFilter, setContactFilter] = useState("all");
   const [campaigns, setCampaigns] = useState([]);
   const [cursor, setCursor] = useState(null);
   const [ready, setReady] = useState(false);
@@ -52,6 +73,7 @@ export default function NewsletterAdmin() {
     const data = await request();
     if (!alive.current) return;
     setContacts(data.contacts);
+    setSelectedContacts([]);
     setCursor(data.nextCursor);
     setCampaigns(data.campaigns);
     setWelcome(data.welcome);
@@ -70,6 +92,26 @@ export default function NewsletterAdmin() {
     setNotice(null);
     try { await action(); } catch (error) { if (alive.current) setNotice({ error: true, text: error.message }); }
     finally { if (alive.current) setBusy(false); }
+  };
+
+  const visibleContacts = contacts.filter((item) => contactFilter === "all" || item.status === contactFilter);
+  const allVisibleSelected = visibleContacts.length > 0 && visibleContacts.every((item) => selectedContacts.includes(item.id));
+
+  const manageContacts = (ids, operation) => {
+    if (busy || !ids.length) return;
+    if (ids.length > 100) {
+      setNotice({ error: true, text: "Chọn tối đa 100 email cho mỗi lần thao tác." });
+      return;
+    }
+    if (operation === "delete" && !window.confirm(`Xóa ${ids.length} email khỏi danh sách? Không thể hoàn tác thao tác này. Lịch sử chiến dịch đã gửi vẫn được giữ.`)) return;
+    perform(async () => {
+      const result = await request({ action: "manageContacts", operation, ids });
+      if (!alive.current) return;
+      const changed = new Map(result.updated.map((item) => [item.id, item.status]));
+      setContacts((items) => items.filter((item) => changed.get(item.id) !== "deleted").map((item) => changed.has(item.id) ? { ...item, status: changed.get(item.id) } : item));
+      setSelectedContacts((selected) => selected.filter((id) => !ids.includes(id)));
+      setNotice({ text: result.message });
+    });
   };
 
   const run = async (id) => {
@@ -144,7 +186,7 @@ export default function NewsletterAdmin() {
           <form className="admin-card admin-form" onSubmit={sendCampaign}>
             <h2>Soạn chiến dịch mới</h2>
             <MessageFields prefix="campaign" value={draft} onChange={setDraft} disabled={busy} />
-            <details><summary>Xem trước nội dung</summary><h3>{draft.subject}</h3><p style={{ whiteSpace: "pre-wrap" }}>{draft.text}</p><p>Website ORORA và liên kết hủy đăng ký sẽ nằm ở cuối thư.</p></details>
+            <details><summary>Xem trước nội dung</summary><h3>{draft.subject}</h3><p style={{ whiteSpace: "pre-wrap" }}>{draft.text}</p></details>
             <p className="admin-muted">Giữ trang này mở trong lúc gửi. Có thể tạm dừng và tiếp tục bằng chiến dịch cũ để tránh gửi trùng.</p>
             <button className="admin-btn primary" disabled={busy}>Gửi đến khách đang đăng ký</button>
           </form>
@@ -161,12 +203,35 @@ export default function NewsletterAdmin() {
           </div>
           <div className="admin-card">
             <h2>Email đã đăng ký ({contacts.length} đã tải)</h2>
-            <div style={{ overflowX: "auto" }}><table className="admin-table"><thead><tr><th>Email</th><th>Đăng ký</th><th>Thư tự động</th><th>Thao tác</th></tr></thead>
-              <tbody>{contacts.map((item) => <tr key={item.id}><td>{item.email}</td><td>{item.status === "active" ? "Đang nhận tin" : "Đã hủy"}</td><td>{{ accepted: "Microsoft đã nhận", pending: "Đang xử lý", failed: "Lỗi", unknown: "Chưa rõ" }[item.mailStatus] || "—"}</td>
-                <td>{item.status === "active" && <button className="admin-btn" disabled={busy} onClick={() => {
-                  if (window.confirm(`Ngừng gửi thư tới ${item.email}?`)) perform(async () => { await request({ action: "unsubscribe", id: item.id }); await load(); });
-                }}>Ngừng gửi</button>}</td>
+            <div className="newsletter-bulk-toolbar">
+              <ContactActions label="Thao tác cho email đã chọn" disabled={busy || !selectedContacts.length} onApply={(operation) => manageContacts(selectedContacts, operation)} />
+              <span className="admin-muted">Đã chọn {selectedContacts.length}</span>
+              <select className="newsletter-contact-filter" aria-label="Lọc trạng thái email đã tải" value={contactFilter} disabled={busy} onChange={(event) => {
+                setContactFilter(event.target.value); setSelectedContacts([]);
+              }}>
+                <option value="all">Tất cả trạng thái</option>
+                <option value="active">Hoạt động</option>
+                <option value="paused">Tạm ngưng</option>
+                <option value="unsubscribed">Đã hủy đăng ký</option>
+              </select>
+            </div>
+            <p className="admin-muted">Chọn tối đa 100 email mỗi lần. Chỉ email Hoạt động được nhận chiến dịch. Bộ lọc áp dụng cho danh sách đã tải.</p>
+            <div style={{ overflowX: "auto" }}><table className="admin-table newsletter-contact-table"><thead><tr>
+              <th><input type="checkbox" aria-label="Chọn tất cả email đang hiển thị" disabled={busy || !visibleContacts.length} checked={allVisibleSelected} onChange={(event) => {
+                const ids = visibleContacts.map((item) => item.id);
+                setSelectedContacts((selected) => event.target.checked ? [...new Set([...selected, ...ids])] : selected.filter((id) => !ids.includes(id)));
+              }} /></th>
+              <th>Email</th><th>Trạng thái</th><th>Thư tự động</th><th>Thao tác</th></tr></thead>
+              <tbody>{visibleContacts.map((item) => <tr key={item.id}>
+                <td><input type="checkbox" aria-label={`Chọn ${item.email}`} disabled={busy} checked={selectedContacts.includes(item.id)} onChange={(event) => {
+                  setSelectedContacts((selected) => event.target.checked ? [...selected, item.id] : selected.filter((id) => id !== item.id));
+                }} /></td>
+                <td>{item.email}</td>
+                <td><span className={`newsletter-contact-status ${item.status}`}>{CONTACT_STATUS[item.status] || item.status}</span></td>
+                <td>{{ accepted: "Microsoft đã nhận", pending: "Đang xử lý", failed: "Lỗi", unknown: "Chưa rõ" }[item.mailStatus] || "—"}</td>
+                <td><ContactActions label={`Thao tác cho ${item.email}`} disabled={busy} onApply={(operation) => manageContacts([item.id], operation)} /></td>
               </tr>)}</tbody></table></div>
+            {!visibleContacts.length && <p className="admin-muted">Không có email phù hợp.</p>}
             {cursor && <button className="admin-btn" disabled={busy} onClick={() => perform(async () => {
               const page = await request(null, cursor);
               setContacts((items) => [...items, ...page.contacts]); setCursor(page.nextCursor);

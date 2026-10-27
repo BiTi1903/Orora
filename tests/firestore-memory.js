@@ -8,6 +8,7 @@ export function memoryDb() {
     path, id: path.split("/").at(-1),
     get: async () => snap(ref(path)),
     set: async (value, options) => { records.set(path, options?.merge ? { ...records.get(path), ...structuredClone(value) } : structuredClone(value)); },
+    delete: async () => { records.delete(path); },
     collection: (name) => query(`${path}/${name}`),
   });
   const query = (path, settings = {}) => ({
@@ -31,6 +32,7 @@ export function memoryDb() {
           get: async (reference) => snap(reference),
           getAll: async (...refs) => refs.map(snap),
           set: (reference, value, options) => writes.push(() => reference.set(value, options)),
+          delete: (reference) => writes.push(() => reference.delete()),
         };
         const result = await work(tx);
         for (const write of writes) await write();
