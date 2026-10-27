@@ -1,15 +1,5 @@
-import { SettingGroup, SelectField, StyleTypographyBlock, TypographyControls } from "./ui";
-import { SPACE_OPTIONS, FONT_OPTIONS, SIZE_OPTIONS, toFullFontFamily, toBareFontFamily } from "./options";
-import { DEFAULT_ABOUT, DEFAULT_STYLE, HERO_FIELD_MAP, COLLECTION_FIELD_MAP, PRODUCT_DETAIL_FIELD_MAP, FEATURES_TEXT_MAP, REVIEWS_TEXT_MAP, FOOTER_FIELD_MAP } from "./registry";
-
-export function getCollectionSelectedData(collection, selected) {
-  const meta = COLLECTION_FIELD_MAP[selected];
-  if (!meta) {
-    return { type: "colEmpty", data: null };
-  }
-  return { type: meta.type, data: collection, meta };
-}
-
+import { SettingGroup, SelectField, StyleTypographyBlock } from "./ui";
+import { SPACE_OPTIONS } from "./options";
 
 export function CollectionSettings({
   selected,
@@ -181,7 +171,6 @@ export function CollectionSettings({
               border: "1px dashed #ead9e0",
               background:
                 meta.styleKey === "button" ? "#d9628a" : "#fffafd",
-              color: meta.styleKey === "button" ? "#fff" : undefined,
               fontFamily: style.fontFamily
                 ? `"${style.fontFamily}", serif`
                 : undefined,

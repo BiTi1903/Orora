@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ProductCard from "./ProductCard";
 import useProducts from "../hooks/useProducts";
 import useHomeContent from "../hooks/useHomeContent";
@@ -41,23 +41,23 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
   const slides = looping ? [...products, ...clones.slice(0, pad)] : products;
   const gap = perView === 1 ? 0 : 30;
 
-  const setSlide = (next) => {
+  const setSlide = useCallback((next) => {
     indexRef.current = next;
     setIndex(next);
-  };
+  }, []);
 
-  const stepSize = () => {
+  const stepSize = useCallback(() => {
     const view = viewRef.current;
     if (!view) return 240;
     return (view.clientWidth - (perView - 1) * gap) / perView + gap;
-  };
+  }, [perView, gap]);
 
-  const goNext = () => {
+  const goNext = useCallback(() => {
     setAnimating(true);
     setSlide(indexRef.current + 1);
-  };
+  }, [setSlide]);
 
-  const goPrev = () => {
+  const goPrev = useCallback(() => {
     if (indexRef.current > 0) {
       setAnimating(true);
       setSlide(indexRef.current - 1);
@@ -71,20 +71,26 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
         setSlide(count - 1);
       });
     });
-  };
+  }, [count, setSlide]);
 
-  useEffect(() => {
+  const layoutKey = `${count}:${perView}`;
+  const [previousLayoutKey, setPreviousLayoutKey] = useState(layoutKey);
+  if (previousLayoutKey !== layoutKey) {
+    setPreviousLayoutKey(layoutKey);
     setAnimating(false);
-    setSlide(0);
+    setIndex(0);
+  }
+  useEffect(() => {
+    indexRef.current = 0;
     const id = window.requestAnimationFrame(() => setAnimating(true));
     return () => window.cancelAnimationFrame(id);
-  }, [count, perView]);
+  }, [layoutKey]);
 
   useEffect(() => {
     if (!looping || paused || dragging) return undefined;
     const id = window.setInterval(goNext, 3000);
     return () => window.clearInterval(id);
-  }, [looping, paused, dragging, count, perView]);
+  }, [looping, paused, dragging, count, perView, goNext]);
 
   useEffect(() => {
     if (!looping || index < count) return undefined;
@@ -93,7 +99,7 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
       setSlide(0);
     }, 820);
     return () => window.clearTimeout(id);
-  }, [index, looping, count]);
+  }, [index, looping, count, setSlide]);
 
   useEffect(() => {
     const el = viewRef.current;
@@ -141,7 +147,7 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
       window.removeEventListener("pointerup", end);
       window.removeEventListener("pointercancel", end);
     };
-  }, [looping, count, perView]);
+  }, [looping, count, perView, goNext, goPrev, stepSize]);
 
   const slideWidth = `calc((100% - ${(perView - 1) * gap}px) / ${perView})`;
   const offset = `calc(${index} * (-1 * (${slideWidth} + ${gap}px)) + ${dragX}px)`;

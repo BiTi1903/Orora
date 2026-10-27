@@ -1,3 +1,5 @@
+import { DEFAULT_WELCOME } from "./newsletter-content.js";
+
 export function createMicrosoftMailer(
   env = process.env,
   request = fetch
@@ -5,7 +7,7 @@ export function createMicrosoftMailer(
   let cachedToken;
   let expiresAt = 0;
 
-  return async function sendWelcome(email) {
+  return async function sendMail(email, message = DEFAULT_WELCOME) {
     const tenant = env.MS_TENANT_ID;
     const client = env.MS_CLIENT_ID;
     const secret = env.MS_CLIENT_SECRET;
@@ -54,21 +56,6 @@ export function createMicrosoftMailer(
           1000;
     }
 
-    // Nội dung email gửi cho khách.
-    const content = [
-      "Chào bạn,",
-      "",
-      "Cảm ơn bạn đã đăng ký nhận tin từ ORORA!",
-      "",
-      "Chúng mình đã ghi nhận email của bạn để cập nhật sản phẩm mới và các ưu đãi.",
-      "",
-      "Nếu bạn không thực hiện đăng ký này hoặc muốn ngừng nhận tin, hãy trả lời email với nội dung “Hủy đăng ký” để ORORA hỗ trợ.",
-      "",
-      "Thân mến,",
-      "ORORA",
-      "sales@ororavn.com",
-    ].join("\n");
-
     const response = await request(
       `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(
         sender
@@ -81,10 +68,10 @@ export function createMicrosoftMailer(
         },
         body: JSON.stringify({
           message: {
-            subject: "ORORA – Cảm ơn bạn đã đăng ký nhận tin",
+            subject: message.subject,
             body: {
               contentType: "Text",
-              content,
+              content: message.text,
             },
             toRecipients: [
               {
@@ -106,7 +93,9 @@ export function createMicrosoftMailer(
         cachedToken = undefined;
       }
 
-      throw new Error("mail_send_failed");
+      const error = new Error("mail_send_failed");
+      error.status = response.status;
+      throw error;
     }
   };
 }

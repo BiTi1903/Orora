@@ -1,3 +1,5 @@
+Hướng dẫn thiết lập đăng ký nhận tin, thư tự động và gửi chiến dịch Microsoft 365: [docs/EMAIL-SETUP.md](docs/EMAIL-SETUP.md).
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

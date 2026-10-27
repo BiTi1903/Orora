@@ -1,6 +1,4 @@
-import { SettingGroup, SelectField, StyleTypographyBlock, TypographyControls } from "./ui";
-import { SPACE_OPTIONS, FONT_OPTIONS, SIZE_OPTIONS, toFullFontFamily, toBareFontFamily } from "./options";
-import { DEFAULT_ABOUT, DEFAULT_STYLE, HERO_FIELD_MAP, COLLECTION_FIELD_MAP, PRODUCT_DETAIL_FIELD_MAP, FEATURES_TEXT_MAP, REVIEWS_TEXT_MAP, FOOTER_FIELD_MAP } from "./registry";
+import { SettingGroup, StyleTypographyBlock } from "./ui";
 
 export function PhilosophySettings({ selected, philosophy, onChange, onStyleChange }) {
   const styles = philosophy.philosophyStyles || {};

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ImageField from "../ImageField";
 
 import useHomeForm from "./Usehomeform";
@@ -28,19 +28,11 @@ const FIELDS = [
 export default function EditHero() {
   const h = useHomeForm(FIELDS);
 
-  const { form, loading } = h;
+  const { form } = h;
 
-  const [rotator, setRotator] = useState("");
+  const [rotatorDraft, setRotator] = useState(null);
+  const rotator = rotatorDraft ?? (form.heroRotator || []).join("\n");
 
-  useEffect(() => {
-    if (!loading) {
-      setRotator(
-        (form.heroRotator || []).join("\n")
-      );
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading]);
 
   return (
     <SectionShell

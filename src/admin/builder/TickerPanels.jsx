@@ -1,18 +1,6 @@
+import { DEFAULT_TICKER } from "./defaults";
 import { toCss } from "../../lib/typography";
-import { SettingGroup, SelectField, StyleTypographyBlock, TypographyControls } from "./ui";
-import { SPACE_OPTIONS, FONT_OPTIONS, SIZE_OPTIONS, toFullFontFamily, toBareFontFamily } from "./options";
-import { DEFAULT_ABOUT, DEFAULT_STYLE, HERO_FIELD_MAP, COLLECTION_FIELD_MAP, PRODUCT_DETAIL_FIELD_MAP, FEATURES_TEXT_MAP, REVIEWS_TEXT_MAP, FOOTER_FIELD_MAP } from "./registry";
-
-export function getTickerSelectedData(ticker, selected) {
-  const map = {
-    text: { label: "Câu chạy" },
-    star: { label: "Dấu ✦" },
-    band: { label: "Nền dải" },
-  };
-  const meta = map[selected] || map.text;
-  return { type: selected === "band" ? "tickerBand" : "tickerText", data: ticker, meta };
-}
-
+import { SettingGroup, StyleTypographyBlock } from "./ui";
 
 export function TickerPreview({ ticker, selected, onSelect }) {
   const words = ticker.marqueeWords?.length ? ticker.marqueeWords : DEFAULT_TICKER.marqueeWords;
@@ -58,7 +46,6 @@ export function TickerPreview({ ticker, selected, onSelect }) {
     </div>
   );
 }
-
 
 export function TickerSettings({ selected, data, ticker, onChange, onStyleChange }) {
   if (!data) {
