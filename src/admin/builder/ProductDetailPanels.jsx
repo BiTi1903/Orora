@@ -1,11 +1,57 @@
-import { SettingGroup, SelectField, StyleTypographyBlock } from "./ui";
+import { SettingGroup, SelectField, StyleTypographyBlock, TypographyControls } from "./ui";
 import { CollectionSettings } from "./CollectionPanels";
 import { SPACE_OPTIONS, FONT_OPTIONS, SIZE_OPTIONS, toFullFontFamily, toBareFontFamily } from "./options";
+import { DEFAULT_ABOUT, DEFAULT_STYLE, HERO_FIELD_MAP, COLLECTION_FIELD_MAP, PRODUCT_DETAIL_FIELD_MAP, FEATURES_TEXT_MAP, REVIEWS_TEXT_MAP, FOOTER_FIELD_MAP } from "./registry";
+
+export function getProductDetailSelectedData(productDetail, selected, detailProduct) {
+  if (typeof selected === "string" && selected.startsWith("pdValue:")) {
+    const key = selected.split(":")[1];
+    return {
+      type: "pdValue",
+      data: productDetail,
+      meta: {
+        key,
+        label: `Nội dung ${key}`,
+        text: detailProduct?.[key] || "",
+      },
+    };
+  }
+  if (typeof selected === "string" && selected.startsWith("pdLabel:")) {
+    const key = selected.split(":")[1];
+    const styleKey = `${key}Label`;
+    return {
+      type: "pdFieldLabel",
+      data: productDetail,
+      meta: {
+        key,
+        styleKey,
+        label: `Tên mục ${key}`,
+        sample: key[0].toUpperCase() + key.slice(1),
+      },
+    };
+  }
+  const meta = PRODUCT_DETAIL_FIELD_MAP[selected];
+  if (!meta) {
+    return { type: "pdEmpty", data: null };
+  }
+  if (meta.type === "pdRelImage" || selected === "relImage") {
+    return { type: "pdRelImage", data: productDetail, meta };
+  }
+  if (meta.type === "pdImage" || selected === "pdImage") {
+    return { type: "pdImage", data: productDetail, meta };
+  }
+  if (meta.type === "pdThumbs" || selected === "pdThumbs") {
+    return { type: "pdThumbs", data: productDetail, meta };
+  }
+  return { type: "pdStyle", data: productDetail, meta };
+}
+
 
 export function ProductDetailSettings({
   selected,
   data,
   productDetail,
+  detailProduct,
   onChange,
   onStyleChange,
 }) {
@@ -441,6 +487,7 @@ export function ProductDetailSettings({
   }
 
   if (data.type === "pdFieldLabel") {
+    const meta = data.meta;
     const labelStyle = productDetail.rowLabel || {};
     const fields = [
       ["material", "Material"],
@@ -471,6 +518,7 @@ export function ProductDetailSettings({
 
   const meta = data.meta;
   const style = productDetail[meta.styleKey] || {};
+  const showDetailNames = meta.styleKey === "rowLabel" || selected === "pdDetailsTitle";
   const valueStyleOnly = meta.styleKey === "rowValue";
 
   return (

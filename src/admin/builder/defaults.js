@@ -125,29 +125,3 @@ const DEFAULT_ABOUT = {
 
 
 export { DEFAULT_STYLE, DEFAULT_ABOUT };
-export const DEFAULT_TICKER = {
-  marqueeWords: [
-    "Dịu nhẹ cho da",
-    "Thành phần thuần khiết",
-    "Không paraben",
-    "Cấp ẩm sâu",
-    "Rạng rỡ mỗi ngày",
-  ],
-  marqueeStyles: {
-    text: {
-      fontFamily: '"Cormorant Garamond", serif',
-      fontSize: 28,
-      fontWeight: 400,
-      fontStyle: "italic",
-      color: "#3a1526",
-    },
-    star: {
-      fontSize: 14,
-      fontWeight: 400,
-      color: "#e2678f",
-    },
-    band: {
-      color: "#fffafc",
-    },
-  },
-};

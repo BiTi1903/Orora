@@ -5,22 +5,23 @@ import AdminLogin from "./AdminLogin";
 import Dashboard from "./Dashboard";
 import HomeAdmin from "./HomeAdmin";
 import ProductsAdmin from "./ProductsAdmin";
-import NewsletterAdmin from "./NewsletterAdmin";
 import "../styles/admin.css";
 
 const TABS = [
   ["dashboard", "Tổng quan"],
   ["home", "Trang chủ"],
   ["products", "Sản phẩm"],
-  ["newsletter", "Email marketing"],
 ];
 
 export default function AdminApp() {
-  const [user, setUser] = useState(() => auth ? undefined : null);
+  const [user, setUser] = useState(undefined);
   const [tab, setTab] = useState("dashboard");
 
   useEffect(() => {
-    if (!auth) return;
+    if (!auth) {
+      setUser(null);
+      return;
+    }
     return onAuthStateChanged(auth, setUser);
   }, []);
 
@@ -56,7 +57,6 @@ export default function AdminApp() {
         {tab === "dashboard" && <Dashboard />}
         {tab === "home" && <HomeAdmin />}
         {tab === "products" && <ProductsAdmin />}
-        {tab === "newsletter" && <NewsletterAdmin />}
       </main>
     </div>
   );

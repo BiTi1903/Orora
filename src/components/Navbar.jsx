@@ -23,14 +23,8 @@ function Navbar({
   selectedElement = "",
   onSelect,
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
-  const [menuPath, setMenuPath] = useState(null);
-  const [previousPath, setPreviousPath] = useState(location.pathname);
-  if (previousPath !== location.pathname) {
-    setPreviousPath(location.pathname);
-    setMenuPath(null);
-  }
-  const menuOpen = menuPath === location.pathname;
   const home = useHomeContent();
   const data = preview && previewData ? previewData : home || {};
   const logo = data.navLogo || "ORORA";
@@ -38,6 +32,11 @@ function Navbar({
     ? data.navLinks
     : DEFAULT_LINKS;
   const styles = data.navStyles || {};
+
+  // Đóng menu khi chuyển trang
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
 
   // Lock body scroll khi menu mở
   useEffect(() => {
@@ -51,8 +50,8 @@ function Navbar({
     };
   }, [menuOpen]);
 
-  const toggleMenu = () => setMenuPath(menuOpen ? null : location.pathname);
-  const closeMenu = () => setMenuPath(null);
+  const toggleMenu = () => setMenuOpen((prev) => !prev);
+  const closeMenu = () => setMenuOpen(false);
 
   const select = (key) => (e) => {
     if (!preview || !onSelect) return;

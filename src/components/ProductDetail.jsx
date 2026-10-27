@@ -37,31 +37,35 @@ function ProductDetail({
       };
 
   // undefined = đang tải, null = không tìm thấy
-  const [loadedProduct, setLoadedProduct] = useState(null);
-  const product = preview
-    ? previewProduct || null
-    : loadedProduct?.id === id ? loadedProduct.product : undefined;
+  const [product, setProduct] = useState(
+    preview ? previewProduct || null : undefined
+  );
 
   /* ---------- lấy sản phẩm từ Firestore ---------- */
   useEffect(() => {
-    if (preview) return;
+    if (preview) {
+      setProduct(previewProduct || null);
+      return;
+    }
 
     let alive = true;
+    setProduct(undefined);
     window.scrollTo({ top: 0 });
 
     getProduct(id)
       .then((p) => {
         if (!alive) return;
-        setLoadedProduct({ id, product: p && p.active !== false ? p : null });
+        if (p) setProduct(p.active === false ? null : p);
+        else setProduct(null);
       })
       .catch(() => {
-        if (alive) setLoadedProduct({ id, product: null });
+        if (alive) setProduct(null);
       });
 
     return () => {
       alive = false;
     };
-  }, [id, preview]);
+  }, [id, preview, previewProduct]);
 
   /* ---------- hiệu ứng GSAP ---------- */
   useLayoutEffect(() => {
@@ -184,18 +188,24 @@ function ProductDetail({
     preview && selectedElement === key ? "builder-selected" : "";
 
   // Hàng đợi vòng: order[0] = khung lớn; order[1..] = dưới (ảnh vừa rời khung lớn → cuối hàng)
-  const images = [product?.image, product?.image2, product?.image3,
-    product?.image4, product?.image5, product?.image6]
-    .map((src) => (src || "").trim()).filter(Boolean);
-  const galleryKey = JSON.stringify([product?.id, product?.slug, ...images]);
-  const [previousGalleryKey, setPreviousGalleryKey] = useState(galleryKey);
-  const [order, setOrder] = useState(images);
+  const [order, setOrder] = useState([]);
   const [thumbStart, setThumbStart] = useState(0);
-  if (previousGalleryKey !== galleryKey) {
-    setPreviousGalleryKey(galleryKey);
-    setOrder(images);
+
+  useEffect(() => {
+    if (!product) return;
+    const main = (product.image || "").trim();
+    const sides = [
+      product.image2,
+      product.image3,
+      product.image4,
+      product.image5,
+      product.image6,
+    ]
+      .map((src) => (src || "").trim())
+      .filter(Boolean);
+    setOrder([main, ...sides].filter(Boolean));
     setThumbStart(0);
-  }
+  }, [product?.id, product?.slug, product?.image]);
 
   /* ---------- đang tải ---------- */
   if (product === undefined) {
