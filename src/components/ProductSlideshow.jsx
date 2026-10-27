@@ -19,7 +19,13 @@ export default function ProductSlideshow({
 }) {
   const list = clean(images);
   const isControlled = controlledIndex != null && typeof onIndexChange === "function";
+  const imagesKey = JSON.stringify(list);
+  const [previousImagesKey, setPreviousImagesKey] = useState(imagesKey);
   const [internalIndex, setInternalIndex] = useState(0);
+  if (previousImagesKey !== imagesKey) {
+    setPreviousImagesKey(imagesKey);
+    setInternalIndex(0);
+  }
   const [paused, setPaused] = useState(false);
 
   const index = isControlled
@@ -32,18 +38,14 @@ export default function ProductSlideshow({
   };
 
   useEffect(() => {
-    if (!isControlled) setInternalIndex(0);
-  }, [list.join("|"), isControlled]);
-
-  useEffect(() => {
     if (list.length < 2 || paused) return undefined;
     const id = window.setInterval(() => {
       const next = (index + 1) % list.length;
-      setIndex(next);
+      if (isControlled) onIndexChange(next);
+      else setInternalIndex(next);
     }, interval);
     return () => window.clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [list.length, paused, list.join("|"), index, interval, isControlled]);
+  }, [list.length, paused, imagesKey, index, interval, isControlled, onIndexChange]);
 
   if (!list.length) return null;
 

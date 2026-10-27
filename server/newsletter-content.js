@@ -1,0 +1,49 @@
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
+
+export const DEFAULT_WELCOME = {
+  subject: "ORORA – Chào mừng bạn đến với thế giới chăm sóc làn da",
+  text: "Chào bạn,\n\nCảm ơn bạn đã đăng ký nhận tin từ ORORA!\n\nKhám phá các sản phẩm chăm sóc da và cập nhật ưu đãi mới nhất tại website của chúng mình. ORORA sẽ gửi đến bạn những thông tin về sản phẩm mới và chương trình dành riêng cho người đăng ký.\n\nThân mến,\nORORA\nsales@ororavn.com",
+};
+
+export const subscriberId = (email) => createHash("sha256").update(email).digest("hex");
+
+export function validateMessage(value) {
+  const subject = typeof value?.subject === "string" ? value.subject.trim() : "";
+  const text = typeof value?.text === "string" ? value.text.trim() : "";
+  if (!subject || subject.length > 200 || /[\r\n]/.test(subject) || !text || text.length > 20000) {
+    throw new Error("invalid_message");
+  }
+  return { subject, text };
+}
+
+function signature(id, env) {
+  if (!env.NEWSLETTER_UNSUBSCRIBE_SECRET || env.NEWSLETTER_UNSUBSCRIBE_SECRET.length < 32) {
+    throw new Error("unsubscribe_configuration_missing");
+  }
+  return createHmac("sha256", env.NEWSLETTER_UNSUBSCRIBE_SECRET).update(id).digest("hex");
+}
+
+export function unsubscribeLink(id, env = process.env) {
+  const origin = new URL(env.NEWSLETTER_SITE_ORIGIN).origin;
+  return `${origin}/api/unsubscribe?id=${id}&token=${signature(id, env)}`;
+}
+
+export function validUnsubscribe(id, token, env = process.env) {
+  if (!/^[a-f0-9]{64}$/.test(id || "") || !/^[a-f0-9]{64}$/.test(token || "")) return false;
+  return timingSafeEqual(Buffer.from(signature(id, env), "hex"), Buffer.from(token, "hex"));
+}
+
+export function withUnsubscribe(message, id, env = process.env) {
+  const link = unsubscribeLink(id, env);
+  return {
+    ...validateMessage(message),
+    text: `${message.text.trim()}\n\nWebsite ORORA: ${new URL(env.NEWSLETTER_SITE_ORIGIN).origin}\nBạn nhận thư vì đã đăng ký nhận tin từ ORORA.\nHủy đăng ký: ${link}`,
+  };
+}
+
+export async function sendWelcomeMessage(email, { getDb, sendMail, env = process.env }) {
+  const db = await getDb();
+  const saved = await db.collection("newsletterSettings").doc("welcome").get();
+  const message = saved.exists ? validateMessage(saved.data()) : DEFAULT_WELCOME;
+  return sendMail(email, withUnsubscribe(message, subscriberId(email), env));
+}

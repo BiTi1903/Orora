@@ -2,6 +2,26 @@ import { useEffect, useState } from "react";
 import { getHomeContent } from "../lib/api";
 import { toCss } from "../lib/typography";
 
+function LinkOrSpan({ href, children, className, sel, preview, selectedClass, select, style }) {
+  if (preview) {
+    return (
+      <span
+        className={`${className || ""} ${selectedClass(sel)}`}
+        data-builder-key={sel}
+        onClick={select(sel)}
+        style={style}
+      >
+        {children}
+      </span>
+    );
+  }
+  return (
+    <a href={href} className={className} style={style}>
+      {children}
+    </a>
+  );
+}
+
 function Footer({
   preview = false,
   previewData = null,
@@ -64,25 +84,6 @@ function Footer({
   const selectedClass = (key) =>
     preview && selectedElement === key ? "builder-selected" : "";
 
-  const LinkOrSpan = ({ href, children, className, sel }) => {
-    if (preview) {
-      return (
-        <span
-          className={`${className || ""} ${selectedClass(sel)}`}
-          data-builder-key={sel}
-          onClick={select(sel)}
-          style={css("link")}
-        >
-          {children}
-        </span>
-      );
-    }
-    return (
-      <a href={href} className={className} style={css("link")}>
-        {children}
-      </a>
-    );
-  };
 
   return (
     <footer
@@ -122,16 +123,16 @@ function Footer({
             {infoTitle}
           </h3>
 
-          <LinkOrSpan href="#about" sel="ftAbout">
+          <LinkOrSpan preview={preview} selectedClass={selectedClass} select={select} style={css("link")} href="#about" sel="ftAbout">
             {aboutText}
           </LinkOrSpan>
-          <LinkOrSpan href="#shop" sel="ftShop">
+          <LinkOrSpan preview={preview} selectedClass={selectedClass} select={select} style={css("link")} href="#shop" sel="ftShop">
             {shopText}
           </LinkOrSpan>
-          <LinkOrSpan href="#" sel="ftTerms">
+          <LinkOrSpan preview={preview} selectedClass={selectedClass} select={select} style={css("link")} href="#" sel="ftTerms">
             {termsText}
           </LinkOrSpan>
-          <LinkOrSpan href="#" sel="ftPrivacy">
+          <LinkOrSpan preview={preview} selectedClass={selectedClass} select={select} style={css("link")} href="#" sel="ftPrivacy">
             {privacyText}
           </LinkOrSpan>
         </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Reveal, CountUp } from "./Extras";
+import { Reveal } from "./Extras";
 import { getHomeContent } from "../lib/api";
 import ProductSlideshow from "./ProductSlideshow";
 
@@ -377,6 +377,30 @@ function normalizeBuilder(data) {
   return result;
 }
 
+function RevealBox({
+  preview,
+  children,
+  delay = 0,
+  className = "",
+}) {
+  if (preview) {
+    return (
+      <div className={className}>
+        {children}
+      </div>
+    );
+  }
+
+  return (
+    <Reveal
+      delay={delay}
+      className={className}
+    >
+      {children}
+    </Reveal>
+  );
+}
+
 function About({
   preview = false,
   previewData = null,
@@ -389,10 +413,7 @@ function About({
   useEffect(() => {
     loadGoogleFonts();
 
-    if (preview) {
-      setLoaded(true);
-      return;
-    }
+    if (preview) return;
 
     getHomeContent()
       .then((data) => {
@@ -450,25 +471,6 @@ function About({
         : undefined,
   };
 
-  const imageStyle = {
-    height:
-      image.height != null
-        ? `${Number(image.height)}px`
-        : undefined,
-
-    borderRadius:
-      image.radius != null
-        ? `${Number(image.radius)}px ${Number(
-            image.radius
-          )}px 28px 28px`
-        : undefined,
-
-    borderWidth:
-      image.borderWidth != null
-        ? `${Number(image.borderWidth)}px`
-        : undefined,
-  };
-
   const imageVisualWidth = {
     width:
       image.width != null
@@ -476,28 +478,6 @@ function About({
         : undefined,
   };
 
-  const RevealBox = ({
-    children,
-    delay = 0,
-    className = "",
-  }) => {
-    if (preview) {
-      return (
-        <div className={className}>
-          {children}
-        </div>
-      );
-    }
-
-    return (
-      <Reveal
-        delay={delay}
-        className={className}
-      >
-        {children}
-      </Reveal>
-    );
-  };
 
   return (
     <section
@@ -520,7 +500,7 @@ function About({
         className="about-visual"
         style={imageVisualWidth}
       >
-        <RevealBox
+        <RevealBox preview={preview}
           className={`about-image-wrapper ${selectedClass(
             "image"
           )}`}
@@ -553,7 +533,7 @@ function About({
       </div>
 
       <div className="about-content">
-        <RevealBox>
+        <RevealBox preview={preview}>
           <p
             className={`about-label ${selectedClass(
               "label"
@@ -575,7 +555,7 @@ function About({
           </p>
         </RevealBox>
 
-        <RevealBox delay={80}>
+        <RevealBox preview={preview} delay={80}>
           <h2
             className={selectedClass("title")}
             style={createTextStyle(
@@ -595,7 +575,7 @@ function About({
           </h2>
         </RevealBox>
 
-        <RevealBox delay={120}>
+        <RevealBox preview={preview} delay={120}>
           <div
             className={selectedClass(
               "highlight"
@@ -620,7 +600,7 @@ function About({
           </div>
         </RevealBox>
 
-        <RevealBox delay={160}>
+        <RevealBox preview={preview} delay={160}>
           <p
             className={`about-text ${selectedClass(
               "text"
@@ -645,7 +625,7 @@ function About({
           </p>
         </RevealBox>
 
-        <RevealBox delay={240}>
+        <RevealBox preview={preview} delay={240}>
           <div className="about-stats">
             {(Array.isArray(stats) ? stats : []).map((item, index) => (
               <div key={index}>

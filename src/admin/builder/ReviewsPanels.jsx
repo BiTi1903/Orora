@@ -1,24 +1,7 @@
-import { SettingGroup, SelectField, StyleTypographyBlock, TypographyControls } from "./ui";
-import { SPACE_OPTIONS, FONT_OPTIONS, SIZE_OPTIONS, toFullFontFamily, toBareFontFamily } from "./options";
-import { DEFAULT_ABOUT, DEFAULT_STYLE, HERO_FIELD_MAP, COLLECTION_FIELD_MAP, PRODUCT_DETAIL_FIELD_MAP, FEATURES_TEXT_MAP, REVIEWS_TEXT_MAP, FOOTER_FIELD_MAP } from "./registry";
-
-export function getReviewsSelectedData(reviews, selected) {
-  if (selected?.startsWith("revCard-")) {
-    const index = Number(selected.replace("revCard-", ""));
-    return {
-      type: "revCard",
-      data: reviews,
-      meta: { index, label: `Đánh giá ${index + 1}` },
-    };
-  }
-  const meta = REVIEWS_TEXT_MAP[selected];
-  if (!meta) return { type: "revEmpty", data: null };
-  return { type: "revText", data: reviews, meta };
-}
-
+import { SettingGroup, StyleTypographyBlock, TypographyControls } from "./ui";
+import { toFullFontFamily, toBareFontFamily } from "./options";
 
 export function ReviewsSettings({
-  selected,
   data,
   reviews,
   onChange,
