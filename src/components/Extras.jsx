@@ -585,36 +585,38 @@ export function Newsletter({
         className="news-form"
         onSubmit={subscribe}
       >
-        <input
-          type="email"
-          name="email"
-          autoComplete="email"
-          maxLength={254}
-          required={!preview}
-          placeholder={c.newsletterPlaceholder || "Email của bạn"}
-          aria-label="Email"
-          className={selectedClass("nlPlaceholder")}
-          data-builder-key={preview ? "nlPlaceholder" : undefined}
-          onClick={select("nlPlaceholder")}
-          style={css("input")}
-          readOnly={preview}
-        />
+        <div className="news-form-row">
+          <input
+            type="email"
+            name="email"
+            autoComplete="email"
+            maxLength={254}
+            required={!preview}
+            placeholder={c.newsletterPlaceholder || "Email của bạn"}
+            aria-label="Email"
+            className={selectedClass("nlPlaceholder")}
+            data-builder-key={preview ? "nlPlaceholder" : undefined}
+            onClick={select("nlPlaceholder")}
+            style={css("input")}
+            readOnly={preview}
+          />
 
-        <button
-          type="submit"
-          disabled={!preview && submission.busy}
-          className={selectedClass("nlButton")}
-          data-builder-key={preview ? "nlButton" : undefined}
-          onClick={select("nlButton")}
-          style={css("button")}
-        >
-          {submission.busy ? "Đang đăng ký…" : c.newsletterButton || "Đăng ký"}
-        </button>
+          <button
+            type="submit"
+            disabled={!preview && submission.busy}
+            className={selectedClass("nlButton")}
+            data-builder-key={preview ? "nlButton" : undefined}
+            onClick={select("nlButton")}
+            style={css("button")}
+          >
+            {submission.busy ? "Đang đăng ký…" : c.newsletterButton || "Đăng ký"}
+          </button>
+        </div>
         {!preview && (
           <>
             <label className="newsletter-consent">
               <input type="checkbox" name="consent" required />
-              Tôi đồng ý nhận email về sản phẩm và ưu đãi từ ORORA. Có thể hủy đăng ký bất cứ lúc nào.
+              <span>Tôi đồng ý nhận email về sản phẩm và ưu đãi từ ORORA. Có thể hủy đăng ký bất cứ lúc nào.</span>
             </label>
             <label style={{ display: "none" }} aria-hidden="true">
               Website<input name="website" tabIndex={-1} autoComplete="off" />
