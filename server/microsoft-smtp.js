@@ -3,6 +3,22 @@ import { DEFAULT_WELCOME } from "./newsletter-content.js";
 
 const failure = (message, status) => Object.assign(new Error(message), status ? { status } : {});
 
+function authDetails(error) {
+  // Keep only status codes and fixed categories, never the raw server response.
+  const response = typeof error.response === "string" ? error.response : "";
+  const responseCode = Number(error.responseCode);
+  let reason = "authentication_rejected";
+  if (/smtpclientauthentication is disabled|smtp auth(?:entication)? is disabled/i.test(response)) reason = "smtp_auth_disabled";
+  else if (/security defaults|blocked by.*policy|disabled by.*security/i.test(response)) reason = "security_policy";
+  else if (/invalid (?:access )?token|token (?:has )?expired/i.test(response)) reason = "access_token_invalid";
+  return {
+    responseCode: Number.isInteger(responseCode) && responseCode >= 400 && responseCode <= 599 ? responseCode : undefined,
+    enhancedCode: response.match(/\b[245]\.\d{1,3}\.\d{1,3}\b/)?.[0],
+    reason,
+  };
+}
+
+
 export function createMicrosoftSmtpMailer(env = process.env, request = fetch, createTransport = nodemailer.createTransport) {
   let cachedToken;
   let expiresAt = 0;
@@ -60,7 +76,7 @@ export function createMicrosoftSmtpMailer(env = process.env, request = fetch, cr
       if (error.code === "EAUTH") {
         cachedToken = undefined;
         expiresAt = 0;
-        throw failure("mail_smtp_auth_failed");
+        throw Object.assign(failure("mail_smtp_auth_failed"), { smtp: authDetails(error) });
       }
       if (Number(error.responseCode) >= 400 && Number(error.responseCode) <= 599) {
         throw failure("mail_send_failed", Number(error.responseCode));

@@ -172,6 +172,21 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, env
         throw error;
       }
     } catch (error) {
+      if (error.message === "mail_smtp_auth_failed" && error.smtp) {
+        const hints = {
+          smtp_auth_disabled: "Microsoft báo SMTP AUTH vẫn bị vô hiệu hóa. Đối chiếu cấu hình hộp thư và chính sách tổ chức trước khi thay đổi.",
+          security_policy: "Microsoft báo bị chặn bởi chính sách bảo mật. Không tự tắt MFA hoặc bảo mật toàn tổ chức.",
+          access_token_invalid: "Microsoft báo token không hợp lệ hoặc hết hạn. Kiểm tra quyền SMTP của ứng dụng.",
+          authentication_rejected: "Kiểm tra SMTP.SendAsApp, consent, service principal và quyền hộp thư trong Exchange.",
+        };
+        const codes = [error.smtp.responseCode, error.smtp.enhancedCode].filter(Boolean).join(" ");
+        console.error("Newsletter SMTP authentication rejected", error.smtp);
+        return reply(503, {
+          code: "mail_smtp_auth_failed",
+          smtp: error.smtp,
+          message: `SMTP OAuth2 bị từ chối${codes ? ` (${codes})` : ""}. ${hints[error.smtp.reason] || hints.authentication_rejected}`,
+        });
+      }
       const messages = {
         mail_transport_invalid: [503, "MS_MAIL_TRANSPORT phải là smtp hoặc graph."],
         mail_smtp_auth_failed: [503, "SMTP OAuth2 bị từ chối. Kiểm tra Application SMTP.SendAsApp, admin consent, service principal và quyền hộp thư trong Exchange, cùng SMTP AUTH của hộp thư."],

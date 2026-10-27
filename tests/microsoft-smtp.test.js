@@ -108,3 +108,27 @@ test("SMTP campaigns send one recipient per invocation to fit the serverless tim
   assert.equal((await call({ action: "sendBatch", id: "smtp-campaign" })).body.completed, true);
   assert.equal(sends, 2);
 });
+
+test("SMTP auth diagnostic retains server codes without leaking raw responses or credentials", async () => {
+  const mail = createMicrosoftSmtpMailer(env, tokenResponse, () => ({
+    sendMail: async () => { throw Object.assign(new Error("private server details"), {
+      code: "EAUTH", responseCode: 535,
+      response: "535 5.7.139 Authentication unsuccessful, SmtpClientAuthentication is disabled for the Tenant. PRIVATE-CONTENT smtp-test-token test-secret",
+    }); },
+  }));
+  let failure;
+  try { await mail("customer@example.com", message); } catch (error) { failure = error; }
+  assert.equal(failure.message, "mail_smtp_auth_failed");
+  assert.deepEqual(failure.smtp, { responseCode: 535, enhancedCode: "5.7.139", reason: "smtp_auth_disabled" });
+  assert.doesNotMatch(JSON.stringify(failure), /PRIVATE-CONTENT|smtp-test-token|test-secret/);
+
+  const db = memoryDb();
+  const config = { ...env, NEWSLETTER_ADMIN_UIDS: "owner", NEWSLETTER_SITE_ORIGIN: "https://orora.example", NEWSLETTER_UNSUBSCRIBE_SECRET: "test-only-secret-at-least-32-characters" };
+  const handler = createNewsletterAdminHandler({ getDb: async () => db, verifyToken: async () => ({ uid: "owner", email: "owner@example.com" }), sendMail: async () => { throw failure; }, env: config });
+  const res = response();
+  await handler({ method: "POST", headers: { origin: config.NEWSLETTER_SITE_ORIGIN, authorization: "Bearer test", "content-type": "application/json" }, body: { action: "sendTest", ...message } }, res);
+  assert.equal(res.statusCode, 503);
+  assert.match(res.body.message, /535 5\.7\.139/);
+  assert.equal(res.body.smtp.reason, "smtp_auth_disabled");
+  assert.doesNotMatch(JSON.stringify(res.body), /PRIVATE-CONTENT|smtp-test-token|test-secret/);
+});
