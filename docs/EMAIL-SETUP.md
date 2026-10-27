@@ -1,5 +1,7 @@
 # Thiết lập email ORORA với Microsoft 365
 
+Có thể thử phương thức SMTP OAuth2 thay cho Graph theo [SMTP-SETUP.md](SMTP-SETUP.md). Graph vẫn là mặc định cho đến khi cấu hình `MS_MAIL_TRANSPORT=smtp`.
+
 ## Các tính năng đã bổ sung
 
 - Form ở website gửi đến `/api/subscribe`: chuẩn hóa email, ghi Firestore cùng thời điểm đồng ý nhận tin, sau đó gửi mẫu thư tự động.

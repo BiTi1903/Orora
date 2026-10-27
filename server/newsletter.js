@@ -252,6 +252,9 @@ export function createSubscribeHandler({
         "mail_auth_failed",
         "mail_send_failed",
         "mail_configuration_missing",
+        "mail_smtp_auth_failed",
+        "mail_smtp_connection_failed",
+        "mail_transport_invalid",
         "unsubscribe_configuration_missing",
         "invalid_message",
       ].includes(error.message);

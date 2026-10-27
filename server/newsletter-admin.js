@@ -141,7 +141,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, env
               await sendMail(claim.email, withUnsubscribe(state, doc.id, env));
             } catch (error) {
               // A timeout may happen AFTER Microsoft accepts a message. Never resend it automatically.
-              result = ["mail_auth_failed", "mail_send_failed", "mail_configuration_missing"].includes(error.message) ? "failed" : "unknown";
+              result = ["mail_auth_failed", "mail_send_failed", "mail_configuration_missing", "mail_smtp_auth_failed", "mail_smtp_connection_failed", "mail_transport_invalid"].includes(error.message) ? "failed" : "unknown";
               paused = true;
             }
             await db.runTransaction(async (tx) => {
@@ -153,7 +153,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, env
             sent += 1;
           }
           cursor = doc.id;
-          if (paused || sent >= 2) break;
+          if (paused || sent >= (env.MS_MAIL_TRANSPORT?.trim().toLowerCase() === "smtp" ? 1 : 2)) break;
         }
         const completed = !paused && page.docs.length < 20 && (!page.docs.length || cursor === page.docs.at(-1).id);
         await db.runTransaction(async (tx) => {
@@ -173,8 +173,12 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, env
       }
     } catch (error) {
       const messages = {
+        mail_transport_invalid: [503, "MS_MAIL_TRANSPORT phải là smtp hoặc graph."],
+        mail_smtp_auth_failed: [503, "SMTP OAuth2 bị từ chối. Kiểm tra Application SMTP.SendAsApp, admin consent, service principal và quyền hộp thư trong Exchange, cùng SMTP AUTH của hộp thư."],
+        mail_smtp_connection_failed: [503, "Chưa kết nối được smtp.office365.com:587 bằng STARTTLS. Kiểm tra kết nối đi ra từ máy chủ."],
+        mail_smtp_outcome_unknown: [503, "Kết nối SMTP bị gián đoạn, chưa rõ thư đã được nhận hay chưa. Kiểm tra hộp thư trước khi gửi lại."],
         mail_auth_failed: [503, "Microsoft từ chối xác thực. Kiểm tra Tenant ID, Client ID và Client Secret (giá trị, không phải Secret ID)."],
-        mail_send_failed: [503, "Microsoft chưa chấp nhận gửi thư. Kiểm tra quyền Application Mail.Send, admin consent, phạm vi hộp thư và hạn mức gửi."],
+        mail_send_failed: [503, "Microsoft chưa chấp nhận gửi thư. Kiểm tra quyền của phương thức gửi đang chọn, admin consent, phạm vi hộp thư và hạn mức gửi."],
         mail_configuration_missing: [503, "Thiếu cấu hình Microsoft 365 trên máy chủ."],
         invalid_message: [400, "Nhập tiêu đề (tối đa 200 ký tự) và nội dung (tối đa 20.000 ký tự)."],
         campaign_conflict: [409, "Mã chiến dịch đã dùng cho nội dung khác."],

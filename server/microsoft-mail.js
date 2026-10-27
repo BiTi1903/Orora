@@ -1,6 +1,7 @@
+import { createMicrosoftSmtpMailer } from "./microsoft-smtp.js";
 import { DEFAULT_WELCOME } from "./newsletter-content.js";
 
-export function createMicrosoftMailer(
+function createGraphMailer(
   env = process.env,
   request = fetch
 ) {
@@ -98,4 +99,13 @@ export function createMicrosoftMailer(
       throw error;
     }
   };
+}
+
+// Keep Graph active until SMTP permissions are configured. Never retry via a
+// different transport automatically: the first submission may already exist.
+export function createMicrosoftMailer(env = process.env, request = fetch) {
+  const transport = String(env.MS_MAIL_TRANSPORT || "graph").trim().toLowerCase();
+  if (transport === "smtp") return createMicrosoftSmtpMailer(env, request);
+  if (transport === "graph") return createGraphMailer(env, request);
+  return async () => { throw new Error("mail_transport_invalid"); };
 }
