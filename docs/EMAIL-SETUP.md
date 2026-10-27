@@ -78,6 +78,8 @@ Kiểm thử tự động trong repository dùng Firestore và Microsoft giả l
 
 ## 6. Xử lý lỗi và giới hạn vận hành
 
+- **API lỗi `ERR_REQUIRE_ESM` tại `jwks-rsa` / `jose`:** một số loader Vercel Node.js 22 không hỗ trợ chuỗi CommonJS `require()` sang ESM của Firebase Admin 14. Dự án ghim `firebase-admin` ở `13.10.0` cùng lockfile để dùng chuỗi dependency CommonJS tương thích. Kiểm thử `tests/api-startup.test.js` nạp các API thật với `--no-experimental-require-module` để bắt lại lỗi này. Sau khi cập nhật mã, deploy lại; không cần đổi khóa Microsoft vì lỗi này.
+
 - **Website chỉ báo lỗi kết nối API:** không chạy bằng Vite thuần để thử phần gửi mail; kiểm tra deploy Vercel Functions và domain.
 - **Microsoft từ chối xác thực:** kiểm tra Tenant ID, Client ID, giá trị secret và hạn dùng.
 - **Microsoft từ chối gửi:** kiểm tra `Application Mail.Send`, admin consent, phạm vi Exchange, hộp thư người gửi, các giới hạn tài khoản. Với 429, dừng gửi và chờ Microsoft bỏ giới hạn, không tạo chiến dịch mới để thử liên tục.
