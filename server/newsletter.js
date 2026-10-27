@@ -113,17 +113,6 @@ export function createSubscribeHandler({
       );
     }
 
-    if (
-      !env.MS_TENANT_ID ||
-      !env.MS_CLIENT_ID ||
-      !env.MS_CLIENT_SECRET
-    ) {
-      return reply(
-        503,
-        "Tính năng gửi email chưa được cấu hình."
-      );
-    }
-
     const ip = String(
       req.headers["x-vercel-forwarded-for"] ||
         req.socket?.remoteAddress ||
@@ -263,6 +252,8 @@ export function createSubscribeHandler({
         "mail_auth_failed",
         "mail_send_failed",
         "mail_configuration_missing",
+        "unsubscribe_configuration_missing",
+        "invalid_message",
       ].includes(error.message);
 
       try {

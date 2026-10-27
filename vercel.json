@@ -17,8 +17,19 @@
     {
       "source": "/(.*)\\.(jpg|jpeg|png|webp|svg|ico)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=86400" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800, stale-while-revalidate=86400"
+        }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/newsletter.js": {
+      "maxDuration": 60
+    },
+    "api/subscribe.js": {
+      "maxDuration": 60
+    }
+  }
 }

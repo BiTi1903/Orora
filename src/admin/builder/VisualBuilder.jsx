@@ -1,3 +1,4 @@
+import { DEFAULT_TICKER } from "./defaults";
 import { useEffect, useMemo, useState } from "react";
 import { getHomeContent, getProducts, saveHomeContent } from "../../lib/api";
 import About from "../../components/About";
@@ -5,24 +6,25 @@ import Hero from "../../components/Hero";
 import Collection from "../../components/Collection";
 import ProductDetail from "../../components/ProductDetail";
 import { Testimonials, Features, Newsletter } from "../../components/Extras";
-import { toCss } from "../../lib/typography";
+
 import Footer from "../../components/Footer";
 import Navbar from "../../components/Navbar";
 import ScrollText from "../../components/ScrollText";
 import "./VisualBuilder.css";
-import { FONT_OPTIONS } from "./options";
+
 import { StylePanel } from "./StylePanels";
-import { getSelectedData } from "./AboutPanels";
-import { getHeroSelectedData } from "./HeroPanels";
-import { getCollectionSelectedData } from "./CollectionPanels";
-import { getProductDetailSelectedData } from "./ProductDetailPanels";
-import { getFeaturesSelectedData } from "./FeaturesPanels";
-import { getReviewsSelectedData } from "./ReviewsPanels";
-import { getFooterSelectedData } from "./FooterPanels";
-import { getNewsletterSelectedData } from "./NewsletterPanels";
-import { getTickerSelectedData, TickerPreview } from "./TickerPanels";
-import { HERO_FIELD_MAP, COLLECTION_FIELD_MAP, PRODUCT_DETAIL_FIELD_MAP, FEATURES_TEXT_MAP, REVIEWS_TEXT_MAP, FOOTER_FIELD_MAP, NEWSLETTER_FIELD_MAP } from "./registry";
-import { DEFAULT_ABOUT, DEFAULT_STYLE } from "./defaults";
+import { getSelectedData } from "./AboutPanels.helpers";
+import { getHeroSelectedData } from "./HeroPanels.helpers";
+import { getCollectionSelectedData } from "./CollectionPanels.helpers";
+import { getProductDetailSelectedData } from "./ProductDetailPanels.helpers";
+import { getFeaturesSelectedData } from "./FeaturesPanels.helpers";
+import { getReviewsSelectedData } from "./ReviewsPanels.helpers";
+import { getFooterSelectedData } from "./FooterPanels.helpers";
+import { getNewsletterSelectedData } from "./NewsletterPanels.helpers";
+import { TickerPreview } from "./TickerPanels";
+import { getTickerSelectedData } from "./TickerPanels.helpers";
+import { COLLECTION_FIELD_MAP, PRODUCT_DETAIL_FIELD_MAP, FEATURES_TEXT_MAP, REVIEWS_TEXT_MAP, FOOTER_FIELD_MAP, NEWSLETTER_FIELD_MAP } from "./registry";
+import { DEFAULT_ABOUT } from "./defaults";
 
 const DEFAULT_HERO = {
   heroEyebrow: "WELCOME TO",
@@ -726,31 +728,6 @@ function mergeNestedStyle(base, custom) {
   return result;
 }
 
-const SERIF_FONTS = new Set([
-  "Cormorant Garamond",
-  "Playfair Display",
-  "Lora",
-  "Noto Serif",
-  "Georgia",
-  "Times New Roman",
-]);
-
-/** "Cormorant Garamond" → '"Cormorant Garamond", serif' (for toCss) */
-function toFullFontFamily(name) {
-  if (!name) return name;
-  if (String(name).includes(",")) return name;
-  const stack = SERIF_FONTS.has(name) ? "serif" : "sans-serif";
-  return `"${name}", ${stack}`;
-}
-
-/** '"Cormorant Garamond", serif' → "Cormorant Garamond" (for select) */
-function toBareFontFamily(value) {
-  if (!value) return "";
-  const m = String(value).match(/"([^"]+)"/);
-  if (m) return m[1];
-  return String(value).split(",")[0].trim().replace(/"/g, "");
-}
-
 function createCollection(data = {}) {
   return {
     collectionLabel:
@@ -836,33 +813,6 @@ function createFooter(data = {}) {
   return result;
 }
 
-const DEFAULT_TICKER = {
-  marqueeWords: [
-    "Dịu nhẹ cho da",
-    "Thành phần thuần khiết",
-    "Không paraben",
-    "Cấp ẩm sâu",
-    "Rạng rỡ mỗi ngày",
-  ],
-  marqueeStyles: {
-    text: {
-      fontFamily: '"Cormorant Garamond", serif',
-      fontSize: 28,
-      fontWeight: 400,
-      fontStyle: "italic",
-      color: "#3a1526",
-    },
-    star: {
-      fontSize: 14,
-      fontWeight: 400,
-      color: "#e2678f",
-    },
-    band: {
-      color: "#fffafc",
-    },
-  },
-};
-
 function createTicker(data = {}) {
   const styles = data.marqueeStyles || {};
   const bandColor =
@@ -897,7 +847,6 @@ const SECTION_DEFAULT_SELECTED = {
 };
 
 export default function VisualBuilder() {
-  const [home, setHome] = useState(null);
   const [about, setAbout] = useState(DEFAULT_ABOUT);
   const [hero, setHero] = useState(DEFAULT_HERO);
   const [collection, setCollection] = useState(DEFAULT_COLLECTION);
@@ -946,7 +895,6 @@ export default function VisualBuilder() {
       .then((data) => {
         if (!alive) return;
 
-        setHome(data || {});
         setAbout(createAbout(data || {}));
         setHero(createHero(data || {}));
         setCollection(createCollection(data || {}));
@@ -970,7 +918,6 @@ export default function VisualBuilder() {
       .catch((err) => {
         console.error(err);
         if (alive) {
-          setHome({});
           setAbout(DEFAULT_ABOUT);
           setHero(DEFAULT_HERO);
           setCollection(DEFAULT_COLLECTION);
@@ -1584,11 +1531,6 @@ export default function VisualBuilder() {
       };
 
       await saveHomeContent(payload);
-
-      setHome((current) => ({
-        ...(current || {}),
-        ...payload,
-      }));
 
       setMessage({
         type: "success",

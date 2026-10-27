@@ -3,9 +3,6 @@ import useHomeContent from "../hooks/useHomeContent";
 import { splitColor, toCss } from "../lib/typography";
 import "../styles/scroll-text.css";
 
-const DEFAULT_TEXT =
-  "✦ TRIẾT LÝ CỦA CHÚNG TÔI ✦\nTRÂN TRỌNG TỪNG CHÚT YÊU THƯƠNG DÀNH CHO CHÍNH MÌNH.";
-
 function ScrollText({
   preview = false,
   previewData = null,
@@ -67,7 +64,6 @@ function ScrollText({
     };
   }, [text, accentCount]);
 
-  let wordIndex = 0;
 
   return (
     <section className="scroll-text" ref={secRef}>
@@ -85,11 +81,11 @@ function ScrollText({
       >
         {lines.map((line, lineIndex) => {
           const lineWords = line.split(/\s+/).filter(Boolean);
+          const offset = lines.slice(0, lineIndex).reduce((sum, previous) => sum + previous.split(/\s+/).filter(Boolean).length, 0);
           return (
             <span key={lineIndex} className="st-line">
-              {lineWords.map((w) => {
-                const i = wordIndex;
-                wordIndex += 1;
+              {lineWords.map((w, wordIndex) => {
+                const i = offset + wordIndex;
                 return (
                   <span
                     key={`${lineIndex}-${i}`}

@@ -4,8 +4,8 @@ import { db } from "../lib/firebase";
 
 /* Đọc nội dung trang chủ từ Firestore (settings/home), tự cập nhật ngay khi admin lưu */
 export default function useHomeContent() {
-  const [content, setContent] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [content, setContent] = useState(() => db ? null : {});
+  const [loading, setLoading] = useState(() => Boolean(db));
 
   useEffect(() => {
     if (!db) {
@@ -13,8 +13,6 @@ export default function useHomeContent() {
         "[home] Firebase chưa được cấu hình (thiếu biến môi trường VITE_FIREBASE_...)."
       );
 
-      setContent({});
-      setLoading(false);
       return;
     }
 

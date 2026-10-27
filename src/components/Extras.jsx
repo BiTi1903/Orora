@@ -516,7 +516,27 @@ export function Newsletter({
   const live = useHomeContent();
   const c = preview && previewData ? previewData : live || {};
   const styles = c.newsletterStyles || {};
-  const [done, setDone] = useState(false);
+  const [submission, setSubmission] = useState({ busy: false, ok: false, message: "" });
+
+  const subscribe = async (event) => {
+    event.preventDefault();
+    if (preview || submission.busy) return;
+    const form = event.currentTarget;
+    const fields = new FormData(form);
+    setSubmission({ busy: true, ok: false, message: "" });
+    try {
+      const response = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: fields.get("email"), consent: fields.get("consent") === "on", website: fields.get("website") }),
+      });
+      const result = await response.json();
+      setSubmission({ busy: false, ok: response.ok, message: result.message || "Chưa thực hiện được. Vui lòng thử lại." });
+      if (response.ok) form.reset();
+    } catch {
+      setSubmission({ busy: false, ok: false, message: "Chưa kết nối được máy chủ. Vui lòng thử lại sau." });
+    }
+  };
 
   const select = (key) => (e) => {
     if (!preview || !onSelect) return;
@@ -563,13 +583,13 @@ export function Newsletter({
 
       <form
         className="news-form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (!preview) setDone(true);
-        }}
+        onSubmit={subscribe}
       >
         <input
           type="email"
+          name="email"
+          autoComplete="email"
+          maxLength={254}
           required={!preview}
           placeholder={c.newsletterPlaceholder || "Email của bạn"}
           aria-label="Email"
@@ -582,14 +602,29 @@ export function Newsletter({
 
         <button
           type="submit"
+          disabled={!preview && submission.busy}
           className={selectedClass("nlButton")}
           data-builder-key={preview ? "nlButton" : undefined}
           onClick={select("nlButton")}
           style={css("button")}
         >
-          {done ? "Cảm ơn bạn ♡" : c.newsletterButton || "Đăng ký"}
+          {submission.busy ? "Đang đăng ký…" : c.newsletterButton || "Đăng ký"}
         </button>
+        {!preview && (
+          <>
+            <label className="newsletter-consent">
+              <input type="checkbox" name="consent" required />
+              Tôi đồng ý nhận email về sản phẩm và ưu đãi từ ORORA. Có thể hủy đăng ký bất cứ lúc nào.
+            </label>
+            <label style={{ display: "none" }} aria-hidden="true">
+              Website<input name="website" tabIndex={-1} autoComplete="off" />
+            </label>
+          </>
+        )}
       </form>
+      {!preview && submission.message && (
+        <p role="status" className={`newsletter-result ${submission.ok ? "success" : "error"}`}>{submission.message}</p>
+      )}
     </>
   );
 

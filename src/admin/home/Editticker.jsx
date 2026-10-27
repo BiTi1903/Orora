@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import useHomeForm from "./Usehomeform";
 import { toLines } from "./Defaults";
 import { SectionShell } from "./Ui";
@@ -32,13 +32,9 @@ const ELEMENTS = [
 
 export default function EditTicker() {
   const h = useHomeForm(["marqueeWords", "marqueeStyles"]);
-  const [text, setText] = useState("");
+  const [textDraft, setText] = useState(null);
+  const text = textDraft ?? (h.form.marqueeWords || []).join("\n");
   const styles = h.form.marqueeStyles || {};
-
-  useEffect(() => {
-    if (!h.loading) setText((h.form.marqueeWords || []).join("\n"));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [h.loading]);
 
   const setStyles = (next) => {
     const background = styles.background;

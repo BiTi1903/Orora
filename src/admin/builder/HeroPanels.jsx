@@ -1,17 +1,6 @@
-import { SettingGroup, SelectField, StyleTypographyBlock, TypographyControls } from "./ui";
-import { SPACE_OPTIONS, FONT_OPTIONS, SIZE_OPTIONS, toFullFontFamily, toBareFontFamily } from "./options";
-import { DEFAULT_ABOUT, DEFAULT_STYLE, HERO_FIELD_MAP, COLLECTION_FIELD_MAP, PRODUCT_DETAIL_FIELD_MAP, FEATURES_TEXT_MAP, REVIEWS_TEXT_MAP, FOOTER_FIELD_MAP } from "./registry";
+import { SettingGroup } from "./ui";
 
-export function getHeroSelectedData(hero, selected) {
-  const meta = HERO_FIELD_MAP[selected];
-  if (!meta) {
-    return { type: "heroEmpty", data: null };
-  }
-  return { type: meta.type, data: hero, meta };
-}
-
-
-export function HeroSettings({ selected, data, hero, onChange }) {
+export function HeroSettings({ data, hero, onChange }) {
   if (!data || data.type === "heroEmpty") {
     return (
       <div className="builder-empty">

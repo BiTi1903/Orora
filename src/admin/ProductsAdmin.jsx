@@ -42,7 +42,14 @@ export default function ProductsAdmin() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    let alive = true;
+    getProducts()
+      .then((products) => { if (alive) setItems(products); })
+      .catch((err) => { if (alive) setMessage({ type: "error", text: explainError(err) }); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, []);
 
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
