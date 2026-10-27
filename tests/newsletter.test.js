@@ -213,3 +213,24 @@ test("expired or revoked sessions still fail closed with 401", async () => {
     assert.equal(result.body.code, code);
   }
 });
+
+test("authorized admin can choose a single test mailbox distinct from Firebase login", async () => {
+  const { call, sent } = admin(memoryDb());
+  const result = await call({ action: "sendTest", ...message, testEmail: " Admin@Ororavn.onmicrosoft.com " });
+  assert.equal(result.statusCode, 200);
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0][0], "admin@ororavn.onmicrosoft.com");
+  assert.match(result.body.message, /admin@ororavn\.onmicrosoft\.com/);
+  assert.match(sent[0][1].text, new RegExp(subscriberId("admin@ororavn.onmicrosoft.com")));
+});
+
+test("test mailbox selection rejects invalid/multiple recipients and remains admin-only", async () => {
+  const { call, sent } = admin(memoryDb());
+  for (const testEmail of ["", "not-an-email", "a@example.com,b@example.com", ["a@example.com"], "a@example.com\r\nBcc:b@example.com"]) {
+    assert.equal((await call({ action: "sendTest", ...message, testEmail })).statusCode, 400);
+  }
+  assert.equal(sent.length, 0);
+  const unprivileged = admin(memoryDb(), { verifyToken: async () => ({ uid: "not-admin" }) });
+  assert.equal((await unprivileged.call({ action: "sendTest", ...message, testEmail: "admin@ororavn.onmicrosoft.com" })).statusCode, 403);
+  assert.equal(unprivileged.sent.length, 0);
+});

@@ -37,6 +37,7 @@ function MessageFields({ value, onChange, disabled, prefix }) {
 export default function NewsletterAdmin() {
   const [welcome, setWelcome] = useState(EMPTY);
   const [draft, setDraft] = useState(EMPTY);
+  const [testEmail, setTestEmail] = useState(() => auth?.currentUser?.email || "");
   const [contacts, setContacts] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
   const [cursor, setCursor] = useState(null);
@@ -123,13 +124,22 @@ export default function NewsletterAdmin() {
           }}>
             <h2>Thư tự động sau khi đăng ký</h2>
             <MessageFields prefix="welcome" value={welcome} onChange={setWelcome} disabled={busy} />
-            <div className="admin-actions">
-              <button className="admin-btn primary" disabled={busy}>Lưu mẫu thư tự động</button>
-              <button type="button" className="admin-btn" disabled={busy || !welcome.subject.trim() || !welcome.text.trim()} onClick={() => perform(async () => {
-                const result = await request({ action: "sendTest", ...welcome });
-                setNotice({ text: result.message });
-              })}>Gửi thử tới email quản trị của tôi</button>
+            <button className="admin-btn primary" disabled={busy}>Lưu mẫu thư tự động</button>
+          </form>
+          <form className="admin-card admin-form" onSubmit={(event) => {
+            event.preventDefault();
+            perform(async () => {
+              const result = await request({ action: "sendTest", ...welcome, testEmail });
+              setNotice({ text: result.message });
+            });
+          }}>
+            <h2>Gửi thử mẫu thư</h2>
+            <div className="admin-field">
+              <label htmlFor="newsletter-test-email">Email nhận thư thử</label>
+              <input id="newsletter-test-email" type="email" required maxLength={254} value={testEmail} onChange={(event) => setTestEmail(event.target.value)} disabled={busy} />
             </div>
+            <p className="admin-muted">Nhập hộp thư bạn có thể mở để kiểm tra mẫu thư bên trên. Thao tác này gửi một thư đến địa chỉ đã nhập, không gửi đến danh sách khách.</p>
+            <button className="admin-btn" disabled={busy || !welcome.subject.trim() || !welcome.text.trim()}>Gửi thư thử</button>
           </form>
           <form className="admin-card admin-form" onSubmit={sendCampaign}>
             <h2>Soạn chiến dịch mới</h2>

@@ -74,9 +74,13 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, env
         return reply(200, { message: "Đã ngừng gửi đến email này." });
       }
       if (body.action === "sendTest") {
-        if (!user.email) return reply(400, { message: "Tài khoản quản trị chưa có email nhận thư thử." });
-        await sendMail(user.email, withUnsubscribe(validateMessage(body), subscriberId(user.email.toLowerCase()), env));
-        return reply(200, { message: `Microsoft đã nhận thư thử gửi tới ${user.email}. Kiểm tra cả mục thư rác.` });
+        const rawEmail = body.testEmail === undefined ? user.email : body.testEmail;
+        const email = typeof rawEmail === "string" ? rawEmail.trim().toLowerCase() : "";
+        if (email.length > 254 || !/^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/.test(email)) {
+          return reply(400, { message: "Nhập một địa chỉ email hợp lệ để nhận thư thử." });
+        }
+        await sendMail(email, withUnsubscribe(validateMessage(body), subscriberId(email), env));
+        return reply(200, { message: `Microsoft đã nhận thư thử gửi tới ${email}. Kiểm tra cả mục thư rác.` });
       }
       if (!["createCampaign", "sendBatch"].includes(body.action) || !validId(body.id)) return reply(400, { message: "Thao tác không hợp lệ." });
       if (!env.MS_TENANT_ID || !env.MS_CLIENT_ID || !env.MS_CLIENT_SECRET) return reply(503, { message: "Chưa cấu hình Microsoft 365 trên máy chủ." });

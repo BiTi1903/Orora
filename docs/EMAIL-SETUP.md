@@ -3,7 +3,7 @@
 ## Các tính năng đã bổ sung
 
 - Form ở website gửi đến `/api/subscribe`: chuẩn hóa email, ghi Firestore cùng thời điểm đồng ý nhận tin, sau đó gửi mẫu thư tự động.
-- Quản trị → **Email marketing**: xem danh sách email, sửa mẫu tự động, gửi thử đến email đang đăng nhập, soạn và gửi chiến dịch.
+- Quản trị → **Email marketing**: xem danh sách email, sửa mẫu tự động, gửi thử đến email do quản trị nhập, soạn và gửi chiến dịch.
 - Mỗi khách nhận một thư riêng từ `sales@ororavn.com`, không lộ danh sách khách khác.
 - Mỗi thư có liên kết hủy đăng ký. Mở liên kết chỉ hiện trang xác nhận; khách bấm xác nhận mới ngừng nhận tin.
 - Chiến dịch lưu tiến độ, gửi tối đa 2 thư/mỗi yêu cầu; giao diện chờ 5 giây giữa các đợt. Giữ trang quản trị mở khi gửi. Tạm dừng/đóng trang chỉ dừng các đợt tiếp theo; đợt đã gọi máy chủ vẫn có thể hoàn tất.
@@ -69,7 +69,7 @@ Mẫu tên biến trống có trong `.env.example`. Nếu dùng `.env.local` đ�
 1. Chạy `npm test`, `npm run lint -- --max-warnings 0` và `npm run build`.
 2. Deploy trên Vercel sau khi điền biến môi trường.
 3. Đăng nhập `/admin` → **Email marketing**. Nếu báo thiếu UID/quyền, đối chiếu UID người đăng nhập với `NEWSLETTER_ADMIN_UIDS`.
-4. Sửa mẫu thư tự động, bấm **Lưu mẫu thư tự động**. Sau đó bấm **Gửi thử tới email quản trị của tôi**. Thao tác này gửi email thật đến tài khoản quản trị, không gửi đến danh sách khách.
+4. Sửa mẫu thư tự động, bấm **Lưu mẫu thư tự động**. Sau đó nhập hộp thư bạn sử dụng vào ô **Email nhận thư thử** và bấm **Gửi thư thử**. Có thể khác email đăng nhập Firebase. Thao tác này gửi email thật đến một địa chỉ đã nhập, không gửi đến danh sách khách.
 5. Trên website, đăng ký bằng email thử do bạn sở hữu và tích đồng ý. Kiểm tra email đã xuất hiện trong quản trị và thư thật đến inbox/thư rác.
 6. Mở liên kết hủy đăng ký trong thư thử, bấm xác nhận. Quản trị sẽ hiển thị `Đã hủy`. Khách đó không được nhận các chiến dịch tiếp theo.
 7. Ban đầu chỉ dùng danh sách thử của bạn. Soạn chiến dịch, xem trước, bấm **Gửi đến khách đang đăng ký** và xác nhận. Theo dõi `Microsoft đã nhận`, `Lỗi`, `Chưa rõ` trong lịch sử.
