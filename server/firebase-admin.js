@@ -5,9 +5,18 @@ import { getAuth } from "firebase-admin/auth";
 function getApp() {
   const existing = getApps().find((app) => app.name === "newsletter");
   if (existing) return existing;
-  const credentials = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON || "{}");
-  if (!credentials.project_id || !credentials.client_email || !credentials.private_key) {
-    throw new Error("firebase_server_configuration_missing");
+  let credentials;
+  try {
+    credentials = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON || "{}");
+  } catch {
+    const error = new Error("firebase_server_configuration_invalid");
+    error.code = "firebase_server_configuration_invalid";
+    throw error;
+  }
+  if (!credentials?.project_id || !credentials?.client_email || !credentials?.private_key) {
+    const error = new Error("firebase_server_configuration_missing");
+    error.code = "firebase_server_configuration_missing";
+    throw error;
   }
   return initializeApp({ credential: cert(credentials) }, "newsletter");
 }

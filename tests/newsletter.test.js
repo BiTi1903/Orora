@@ -180,3 +180,36 @@ test("mail configuration and message validation fail before creating a campaign"
   const configured = admin(db);
   assert.equal((await configured.call({ action: "createCampaign", id: "bad", subject: "Injected\nSubject", text: "Content" })).statusCode, 400);
 });
+
+test("server credential failures are not misreported as an expired login", async () => {
+  const privateError = "DO-NOT-EXPOSE-PRIVATE-CREDENTIAL";
+  for (const code of ["firebase_server_configuration_missing", "firebase_server_configuration_invalid", "app/invalid-credential", "auth/insufficient-permission", "auth/internal-error"]) {
+    const { call } = admin(memoryDb(), { verifyToken: async () => { throw Object.assign(new Error(privateError), { code }); } });
+    const result = await call({});
+    assert.equal(result.statusCode, 503);
+    assert.ok(result.body.code);
+    assert.equal(JSON.stringify(result.body).includes(privateError), false);
+  }
+});
+
+test("wrong Firebase project is reported without accepting token or exposing its claims", async () => {
+  let accessedDb = false;
+  const { call } = admin(memoryDb(), {
+    getDb: async () => { accessedDb = true; throw new Error("must not read data"); },
+    verifyToken: async () => { throw Object.assign(new Error('Firebase ID token has incorrect "aud" (audience) claim. Private metadata here.'), { code: "auth/argument-error" }); },
+  });
+  const result = await call({});
+  assert.equal(result.statusCode, 503);
+  assert.equal(result.body.code, "firebase_project_mismatch");
+  assert.equal(accessedDb, false);
+  assert.equal(result.body.message.includes("Private metadata"), false);
+});
+
+test("expired or revoked sessions still fail closed with 401", async () => {
+  for (const code of ["auth/id-token-expired", "auth/id-token-revoked", "auth/user-disabled"]) {
+    const { call } = admin(memoryDb(), { verifyToken: async () => { throw Object.assign(new Error("private metadata"), { code }); } });
+    const result = await call({});
+    assert.equal(result.statusCode, 401);
+    assert.equal(result.body.code, code);
+  }
+});

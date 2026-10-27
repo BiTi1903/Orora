@@ -1,3 +1,4 @@
+import { firebaseAuthFailure } from "./firebase-auth-error.js";
 import { randomUUID } from "node:crypto";
 import { DEFAULT_WELCOME, subscriberId, validateMessage, withUnsubscribe } from "./newsletter-content.js";
 
@@ -20,7 +21,14 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, env
     if (!admins.length) return reply(503, { message: "Chưa cấu hình NEWSLETTER_ADMIN_UIDS trên máy chủ." });
     const token = /^Bearer (.+)$/.exec(req.headers.authorization || "")?.[1];
     let user;
-    try { user = token ? await verifyToken(token) : null; } catch { /* Invalid/expired session. */ }
+    try {
+      user = token ? await verifyToken(token) : null;
+    } catch (error) {
+      const failure = firebaseAuthFailure(error);
+      const sdkCode = /^(auth|app)\/[a-z0-9-]+$/.test(error.code || "") ? error.code : undefined;
+      console.error("Newsletter authentication failed", { code: failure.code, sdkCode });
+      return reply(failure.status, { code: failure.code, message: failure.message });
+    }
     if (!user) return reply(401, { message: "Vui lòng đăng nhập lại." });
     if (!admins.includes(user.uid)) return reply(403, { message: "Tài khoản này chưa được cấp quyền gửi email." });
     if (req.method === "POST") {
