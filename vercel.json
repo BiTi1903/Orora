@@ -1,6 +1,22 @@
 {
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/san-pham",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/ve-orora",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/lien-he",
+      "destination": "/index.html"
+    },
+    {
       "source": "/product/(.*)",
       "destination": "/index.html"
     },
@@ -20,6 +36,15 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=604800, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/admin/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
         }
       ]
     }

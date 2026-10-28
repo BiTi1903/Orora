@@ -58,3 +58,5 @@ img { max-width: 100%; }
   }
   html { scroll-behavior: auto; }
 }
+.page-heading { padding: 140px 7% 32px; margin: 0; color: var(--plum); font-family: var(--font-display); font-size: clamp(36px, 6vw, 72px); }
+.page-heading + .collection, .page-heading + .about { padding-top: 48px; }

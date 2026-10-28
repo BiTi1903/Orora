@@ -122,10 +122,10 @@ function Footer({
             {infoTitle}
           </h3>
 
-          <LinkOrSpan preview={preview} selectedClass={selectedClass} select={select} style={css("link")} href="#about" sel="ftAbout">
+          <LinkOrSpan preview={preview} selectedClass={selectedClass} select={select} style={css("link")} href="/ve-orora" sel="ftAbout">
             {aboutText}
           </LinkOrSpan>
-          <LinkOrSpan preview={preview} selectedClass={selectedClass} select={select} style={css("link")} href="#shop" sel="ftShop">
+          <LinkOrSpan preview={preview} selectedClass={selectedClass} select={select} style={css("link")} href="/san-pham" sel="ftShop">
             {shopText}
           </LinkOrSpan>
           <LinkOrSpan preview={preview} selectedClass={selectedClass} select={select} style={css("link")} href="#" sel="ftTerms">

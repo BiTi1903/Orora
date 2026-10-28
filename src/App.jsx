@@ -18,6 +18,7 @@ import Collection from "./components/Collection";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 import Petals from "./components/Petals";
+import Seo from "./components/Seo";
 import ScrollText from "./components/ScrollText";
 import "./App.css";
 // Trang quản trị chỉ tải khi vào /admin
@@ -317,6 +318,7 @@ function App() {
   return (
     <>
 
+      <Seo />
       <ScrollToTop />
 
       <Routes>
@@ -360,6 +362,11 @@ function App() {
           }
         />
 
+
+        <Route path="/san-pham" element={<main><Navbar /><h1 className="page-heading">Sản phẩm</h1><Collection /><Footer /></main>} />
+        <Route path="/ve-orora" element={<main><Navbar /><h1 className="page-heading">Về ORORA</h1><About /><Features /><Footer /></main>} />
+        <Route path="/lien-he" element={<main><Navbar /><h1 className="page-heading">Liên hệ ORORA</h1><Footer /></main>} />
+        <Route path="*" element={<main><Navbar /><h1 className="page-heading">Trang không tồn tại</h1><Footer /></main>} />
 
         {/* =========================
             PRODUCT DETAIL
