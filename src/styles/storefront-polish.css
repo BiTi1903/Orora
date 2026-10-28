@@ -1,0 +1,68 @@
+/* Presentation only. Saved Firebase content and admin previews are unchanged. */
+#root > main [id] { scroll-margin-top: 92px; }
+#root > main a:focus-visible, #root > main button:focus-visible {
+  outline: 2px solid var(--rose-deep); outline-offset: 4px;
+}
+#root > main .footer-column a { overflow-wrap: anywhere; }
+#root > main .product-detail-info, #root > main .product-detail-row > * { min-width: 0; }
+#root > main .product-detail-info h1, #root > main .product-detail-description,
+#root > main .product-section p { overflow-wrap: anywhere; }
+.product-contact-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin: 24px 0; }
+.product-contact-actions a {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 46px; padding: 12px 20px; border: 1px solid var(--line);
+  border-radius: 24px; font-size: 14px; color: var(--rose-deep); background: #fff;
+}
+.product-contact-actions .product-contact-primary { background: var(--rose-deep); color: #fff; border-color: var(--rose-deep); }
+.catalog-loading { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.loading-placeholder { width: 100%; aspect-ratio: 1; border-radius: 18px; background: linear-gradient(100deg, #f5e8ee 25%, #fff7fa 45%, #f5e8ee 65%); background-size: 250% 100%; animation: loading-shimmer 1.5s linear infinite; }
+.loading-line { aspect-ratio: auto; height: 18px; width: 65%; margin-top: 16px; border-radius: 8px; }
+.detail-loading { width: min(320px, 80vw); text-align: center; }
+.detail-loading p { margin-top: 16px; }
+@keyframes loading-shimmer { to { background-position: -250% 0; } }
+@media (prefers-reduced-motion: reduce) { .loading-placeholder { animation: none; } }
+
+@media (max-width: 768px) {
+  #root > main .hero { min-height: max(580px, 85svh); }
+  #root > main .hero-content { max-width: 100%; padding-inline: 20px; }
+  #root > main .hero-actions { gap: 10px; }
+  #root > main .hero-btn { min-height: 46px; }
+  #root > main .marquee { padding-block: 16px; }
+  #root > main .marquee span { font-size: 20px; gap: 22px; padding-right: 22px; }
+  #root > main .about { padding: 64px 20px !important; gap: 32px !important; }
+  #root > main .about-image-wrapper { min-height: 0; max-height: 420px; }
+  #root > main .about-label { margin-bottom: 16px; max-width: 100%; }
+  #root > main .about-content h2 { margin-bottom: 20px; }
+  #root > main .about-text { margin-bottom: 24px; }
+  #root > main .about-stats { gap: 20px; }
+  #root > main .collection { padding-block: 64px; }
+  #root > main .collection-header { margin-bottom: 28px; gap: 12px; }
+  #root > main .collection-header h2 { font-size: clamp(36px, 10vw, 52px); letter-spacing: -1px; line-height: 1.05; }
+  #root > main .collection-categories { margin-bottom: 16px; }
+  #root > main .scroll-text, #root > main .ex-section { padding: 64px 20px; }
+  #root > main .scroll-text-label { margin-bottom: 24px; letter-spacing: 2px; }
+  #root > main .feature-grid, #root > main .review-grid { margin-top: 28px; gap: 16px; }
+  #root > main .feature-card, #root > main .review { padding: 24px; border-radius: 20px; }
+  #root > main .newsletter { margin: 0 16px 56px; padding: 36px 20px; border-radius: 24px; }
+  #root > main .footer { padding: 48px 20px 24px; }
+  #root > main .footer-main { gap: 28px; padding-bottom: 28px; }
+  #root > main .product-detail-content { width: calc(100% - 32px); gap: 24px; padding-bottom: 48px; }
+  #root > main .product-detail-gallery { width: 100% !important; max-width: 420px; }
+  #root > main .product-detail-image,
+  #root > main .product-detail-image.product-detail-image--fixed-h {
+    height: auto !important; min-height: 0 !important; max-height: none !important;
+    aspect-ratio: 1 / 1 !important; border-width: 4px; border-radius: 20px;
+  }
+  #root > main .product-detail-info h1 { font-size: clamp(30px, 8vw, 44px) !important; line-height: 1.15 !important; margin-bottom: 16px; }
+  #root > main .product-detail-price { font-size: 26px !important; margin-bottom: 16px; }
+  #root > main .product-detail-description { font-size: 15px; line-height: 1.75; }
+  #root > main .product-section { margin-top: 28px; }
+  #root > main .product-section > p, #root > main .product-detail-row p { font-size: 14px; line-height: 1.75; }
+  #root > main .product-detail-row { grid-template-columns: minmax(70px, 28%) minmax(0, 1fr); }
+  #root > main .product-contact-actions { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 10px; }
+  #root > main .product-contact-actions a { padding: 12px 10px; font-size: 13px; }
+  #root > main .product-contact-actions a:only-child { grid-column: 1 / -1; }
+  #root > main .collection.product-detail-related { padding-block: 48px; }
+  #root > main .chat-button { right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); }
+  #root > main .back-to-top { bottom: calc(max(16px, env(safe-area-inset-bottom)) + 66px); }
+}

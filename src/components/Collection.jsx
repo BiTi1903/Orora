@@ -417,6 +417,10 @@ function Collection({
             </div>
           ))}
         </div>
+      ) : loading ? (
+        <div className="catalog-loading" role="status" aria-label="Đang tải sản phẩm" aria-busy="true">
+          {[0, 1].map((item) => <div key={item}><div className="loading-placeholder" /><div className="loading-placeholder loading-line" /></div>)}
+        </div>
       ) : (
         <ProductCarousel
           key={categoryId}

@@ -5,6 +5,7 @@ import { getProduct } from "../lib/api";
 import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
 import useProducts from "../hooks/useProducts";
+import { contactLinks } from "../lib/contact";
 import Collection from "./Collection";
 import { cdnSrc, THUMB, MAIN } from "../lib/cloudinary";
 
@@ -201,7 +202,7 @@ function ProductDetail({
   if (product === undefined) {
     return (
       <div className="product-not-found">
-        <p>Loading...</p>
+        <div className="detail-loading" role="status" aria-live="polite"><div className="loading-placeholder" /><p>Đang tải sản phẩm…</p></div>
       </div>
     );
   }
@@ -210,12 +211,13 @@ function ProductDetail({
   if (product === null) {
     return (
       <div className="product-not-found">
-        <h1>Product not found</h1>
-        <Link to="/">← Back to Collection</Link>
+        <h1>Không tìm thấy sản phẩm</h1>
+        <Link to="/#shop">← Về danh sách sản phẩm</Link>
       </div>
     );
   }
 
+  const contact = contactLinks(home, product.name);
   const detailLabels = ps.detailLabels || {};
   const rows = [
     ["material", detailLabels.material || ps.materialLabel?.text || "Material", product.material],
@@ -427,10 +429,10 @@ function ProductDetail({
     >
       <div className="product-detail-top">
         {preview ? (
-          <span className="product-back">← Back to Collection</span>
+          <span className="product-back">← Về danh sách sản phẩm</span>
         ) : (
-          <Link to="/" className="product-back">
-            ← Back to Collection
+          <Link to="/#shop" className="product-back">
+            ← Về danh sách sản phẩm
           </Link>
         )}
       </div>
@@ -573,6 +575,14 @@ function ProductDetail({
           >
             {renderLines(product.description)}
           </p>
+
+          {!preview && (contact.zalo || contact.email) && (
+            <div className="product-contact-actions" aria-label="Tư vấn sản phẩm">
+              {contact.zalo && <a className="product-contact-primary" href={contact.zalo} target="_blank" rel="noreferrer">Tư vấn qua Zalo <span aria-hidden="true">↗</span></a>}
+              {contact.phone && <a href={contact.phone}>Gọi tư vấn</a>}
+              {!contact.zalo && contact.email && <a className="product-contact-primary" href={contact.email}>Liên hệ qua email</a>}
+            </div>
+          )}
 
           {(product.story || preview) && (
             <div className="product-section">
