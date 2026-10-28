@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { explainError, getProducts, removeProduct, saveProduct } from "../lib/api";
+import { explainError, getProducts, removeProduct, saveProduct, saveCategory } from "../lib/api";
+import useCategories from "../hooks/useCategories";
 import ImageField from "./ImageField";
 
 const empty = {
   id: "", number: "", name: "", slug: "", price: "", image: "",
   image2: "", image3: "", image4: "", image5: "", image6: "",
   description: "", story: "", material: "", size: "", color: "", origin: "",
-  active: true,
+  active: true, categoryId: "",
 };
 
 const LONG = [
@@ -23,6 +24,10 @@ const toSlug = (s) =>
     .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
 export default function ProductsAdmin() {
+  const { categories, error: categoriesError } = useCategories();
+  const [categoryName, setCategoryName] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [categoryBusy, setCategoryBusy] = useState(false);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(empty);
@@ -122,6 +127,31 @@ export default function ProductsAdmin() {
 
       {message && <div className={`admin-${message.type}`} style={{ marginBottom: 16 }}>{message.text}</div>}
 
+      {categoriesError && <div className="admin-error">Không tải được danh mục: {explainError(categoriesError)}</div>}
+      <form className="admin-card admin-form" style={{ marginBottom: 20 }} onSubmit={async (event) => {
+        event.preventDefault();
+        setCategoryBusy(true);
+        try {
+          await saveCategory({ id: categoryId, name: categoryName });
+          setCategoryName(""); setCategoryId("");
+          say("success", "Đã lưu danh mục.");
+        } catch (err) { say("error", explainError(err)); }
+        finally { setCategoryBusy(false); }
+      }}>
+        <h2>Danh mục sản phẩm</h2>
+        <div className="admin-field">
+          <label htmlFor="category-name">{categoryId ? "Đổi tên danh mục" : "Thêm danh mục"}</label>
+          <input id="category-name" required maxLength={80} value={categoryName} disabled={categoryBusy} onChange={(event) => setCategoryName(event.target.value)} />
+        </div>
+        <div className="admin-actions">
+          <button className="admin-btn primary" disabled={categoryBusy}>{categoryBusy ? "Đang lưu…" : categoryId ? "Lưu tên" : "Thêm danh mục"}</button>
+          {categoryId && <button type="button" className="admin-btn" disabled={categoryBusy} onClick={() => { setCategoryId(""); setCategoryName(""); }}>Hủy</button>}
+        </div>
+        <div className="admin-actions" style={{ marginTop: 12, flexWrap: "wrap" }}>
+          {categories.map((category) => <button type="button" className="admin-btn" key={category.id} disabled={categoryBusy} onClick={() => { setCategoryId(category.id); setCategoryName(category.name); }}>{category.name} · Sửa tên</button>)}
+        </div>
+      </form>
+
       {editing && (
         <form className="admin-card admin-form" onSubmit={save} style={{ marginBottom: 20 }}>
           <h2>{isNew ? "Thêm sản phẩm" : "Chỉnh sửa sản phẩm"}</h2>
@@ -147,6 +177,14 @@ export default function ProductsAdmin() {
             )}
           </div>
 
+          <div className="admin-field">
+            <label htmlFor="product-category">Danh mục</label>
+            <select id="product-category" name="categoryId" value={form.categoryId} onChange={change} disabled={busy || !!categoriesError}>
+              <option value="">Chưa phân loại</option>
+              {form.categoryId && !categories.some((category) => category.id === form.categoryId) && <option value={form.categoryId}>Danh mục chưa tải</option>}
+              {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+            </select>
+          </div>
           <ImageField
             label="Ảnh chính"
             value={form.image}
@@ -216,7 +254,7 @@ export default function ProductsAdmin() {
           <div style={{ overflowX: "auto" }}>
             <table className="admin-table">
               <thead>
-                <tr><th>#</th><th>Ảnh</th><th>Sản phẩm</th><th>Giá</th><th>Trạng thái</th><th>Thao tác</th></tr>
+                <tr><th>#</th><th>Ảnh</th><th>Sản phẩm</th><th>Danh mục</th><th>Giá</th><th>Trạng thái</th><th>Thao tác</th></tr>
               </thead>
               <tbody>
                 {items.map((p) => (
@@ -224,6 +262,7 @@ export default function ProductsAdmin() {
                     <td>{p.number}</td>
                     <td>{p.image && <img className="admin-thumb" src={p.image} alt="" />}</td>
                     <td>{p.name}</td>
+                    <td>{categories.find((category) => category.id === p.categoryId)?.name || "Chưa phân loại"}</td>
                     <td>{p.price}</td>
                     <td><span className={`admin-badge ${p.active === false ? "off" : ""}`}>{p.active === false ? "Ẩn" : "Hiện"}</span></td>
                     <td>

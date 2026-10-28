@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import ProductCard from "./ProductCard";
+import useCategories from "../hooks/useCategories";
 import useProducts from "../hooks/useProducts";
 import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
@@ -10,7 +11,7 @@ function usePerView() {
   useEffect(() => {
     const update = () => {
       const w = window.innerWidth;
-      setPerView(w <= 560 ? 1 : w <= 1000 ? 2 : 3);
+      setPerView(w <= 1000 ? 2 : 3);
     };
     update();
     window.addEventListener("resize", update);
@@ -32,14 +33,14 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const count = products.length;
-  const looping = count > 1;
+  const looping = count > perView;
   const pad = Math.max(perView, 1);
   const clones = [];
   if (looping) {
     while (clones.length < pad) clones.push(...products);
   }
   const slides = looping ? [...products, ...clones.slice(0, pad)] : products;
-  const gap = perView === 1 ? 0 : 30;
+  const gap = perView === 2 ? 12 : 30;
 
   const setSlide = useCallback((next) => {
     indexRef.current = next;
@@ -254,16 +255,20 @@ function Collection({
 }) {
   const { products: liveProducts, loading } = useProducts();
   const liveHome = useHomeContent();
+  const { categories } = useCategories();
+  const [categoryId, setCategoryId] = useState("");
   const homeLoading = !preview && liveHome.loading !== false;
 
   const home = preview && previewData ? previewData : liveHome || {};
   const rawProducts = preview ? sampleProducts || [] : liveProducts;
 
-  const products = excludeId
+  const availableProducts = excludeId
     ? rawProducts.filter(
         (p) => p.id !== excludeId && p.slug !== excludeId
       )
     : rawProducts;
+
+  const products = categoryId ? availableProducts.filter((product) => product.categoryId === categoryId) : availableProducts;
 
   // Không có chữ mặc định: chờ dữ liệu Firebase tải xong rồi mới hiện (tránh nháy dữ liệu cũ)
   const pick = (forced, own, hint) => {
@@ -379,6 +384,12 @@ function Collection({
         </h2>
       </div>
 
+      {!preview && !isRelated && categories.length > 0 && (
+        <nav className="collection-categories" aria-label="Danh mục sản phẩm">
+          <button type="button" aria-pressed={!categoryId} onClick={() => setCategoryId("")}>Tất cả</button>
+          {categories.map((category) => <button type="button" key={category.id} aria-pressed={categoryId === category.id} onClick={() => setCategoryId(category.id)}>{category.name}</button>)}
+        </nav>
+      )}
       {/* PRODUCTS */}
       {preview ? (
         <div className="gallery">
@@ -408,6 +419,7 @@ function Collection({
         </div>
       ) : (
         <ProductCarousel
+          key={categoryId}
           products={products}
           cardStyles={cardStyles}
           preview={preview}
@@ -427,7 +439,7 @@ function Collection({
             opacity: 0.6,
           }}
         >
-          Sản phẩm sẽ sớm được cập nhật.
+          {categoryId ? "Danh mục này chưa có sản phẩm." : "Sản phẩm sẽ sớm được cập nhật."}
         </p>
       )}
     </section>

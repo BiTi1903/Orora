@@ -5,6 +5,7 @@ import {
   getDoc,
   getDocs,
   setDoc,
+  runTransaction,
 } from "firebase/firestore";
 
 import { db } from "./firebase";
@@ -84,3 +85,22 @@ export const explainError = (err) =>
   err?.code === "permission-denied"
     ? "Tài khoản này chưa có quyền ghi. Kiểm tra lại UID trong Firestore Rules."
     : err?.message || "Có lỗi xảy ra.";
+export async function saveCategory({ id, name }) {
+  needDb();
+  const trimmed = name.trim();
+  if (!trimmed || trimmed.length > 80) throw new Error("Tên danh mục cần từ 1 đến 80 ký tự.");
+  const categoryId = id || crypto.randomUUID();
+  await runTransaction(db, async (transaction) => {
+    const ref = doc(db, "settings", "productCategories");
+    const snapshot = await transaction.get(ref);
+    const items = snapshot.data()?.items || [];
+    if (items.some((item) => item.id !== categoryId && item.name.toLocaleLowerCase("vi") === trimmed.toLocaleLowerCase("vi"))) {
+      throw new Error("Tên danh mục đã tồn tại.");
+    }
+    const category = { id: categoryId, name: trimmed };
+    transaction.set(ref, { items: items.some((item) => item.id === categoryId)
+      ? items.map((item) => item.id === categoryId ? category : item)
+      : [...items, category] }, { merge: true });
+  });
+  return categoryId;
+}
