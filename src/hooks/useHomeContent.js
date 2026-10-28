@@ -23,7 +23,7 @@ export default function useHomeContent() {
           setContent(snap.data());
         } else {
           console.info(
-            "[home] Chưa có tài liệu settings/home, đang dùng nội dung mặc định."
+            "[home] Chưa có tài liệu settings/home, không có nội dung để hiển thị."
           );
 
           setContent({});

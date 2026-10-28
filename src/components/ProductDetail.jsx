@@ -231,12 +231,12 @@ function ProductDetail({
   // Dữ liệu cũ (tiêu đề tách 2 dòng) vẫn hiển thị đúng cho tới khi admin lưu lại
   const legacyHl = relTitleStyle.accentCount == null ? ps.relHighlight : null;
   const relTitleText = legacyHl
-    ? `${relTitleStyle.text || "Khám phá"}\n${legacyHl.text || "thêm nữa"}`
-    : relTitleStyle.text ?? "Khám phá\nthêm nữa";
+    ? `${relTitleStyle.text || ""}\n${legacyHl.text || ""}`
+    : relTitleStyle.text ?? "";
   const relAccentCount =
     relTitleStyle.accentCount ??
     (legacyHl
-      ? Array.from(legacyHl.text || "thêm nữa").length
+      ? Array.from(legacyHl.text || "").length
       : relTitleStyle.text == null
       ? 8
       : 0);
@@ -637,7 +637,7 @@ function ProductDetail({
         selectedElement={selectedElement}
         onSelect={onSelect}
         excludeId={product.id || product.slug || id}
-        forceLabel={ps.relLabel?.text || "SẢN PHẨM KHÁC"}
+        forceLabel={ps.relLabel?.text || ""}
         forceTitle={relTitleText}
         singleTitle
         titleAccent={{ count: relAccentCount, color: relAccentColor }}

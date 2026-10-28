@@ -33,10 +33,10 @@ function Navbar({
   const menuOpen = menuPath === location.pathname;
   const home = useHomeContent();
   const data = preview && previewData ? previewData : home || {};
-  const logo = data.navLogo || "ORORA";
+  const logo = data.navLogo || "";
   const links = Array.isArray(data.navLinks) && data.navLinks.length
     ? data.navLinks
-    : DEFAULT_LINKS;
+    : [];
   const styles = data.navStyles || {};
 
   // Lock body scroll khi menu mở

@@ -134,22 +134,15 @@ export function Sparkles() {
 export function Marquee() {
   const c = useHomeContent();
 
-  const words =
-    c.marqueeWords?.length
-      ? c.marqueeWords
-      : [
-          "Dịu nhẹ cho da",
-          "Thành phần thuần khiết",
-          "Không paraben",
-          "Cấp ẩm sâu",
-          "Rạng rỡ mỗi ngày",
-        ];
+  const words = Array.isArray(c.marqueeWords) ? c.marqueeWords : [];
 
   const ms = c.marqueeStyles || {};
   const textStyle = toCss(ms.text);
   const starStyle = toCss(ms.star);
   const bg = ms.background || ms.band?.color;
   const bandStyle = bg ? { background: bg } : undefined;
+
+  if (c.loading || !words.length) return null;
 
   const row = words.map((w, i) => (
     <span key={`${w}-${i}`} style={textStyle}>
@@ -214,7 +207,7 @@ export function Features({
           onClick={select("featLabel")}
           style={css("label")}
         >
-          {c.featuresLabel || "ORORA"}
+          {c.featuresLabel}
         </p>
       </LabelWrap>
 
@@ -225,7 +218,7 @@ export function Features({
           onClick={select("featTitle")}
           style={css("title")}
         >
-          {c.featuresTitle || "Nâng cấp bản thân"}
+          {c.featuresTitle}
         </h2>
       </TitleWrap>
 
@@ -291,18 +284,15 @@ export function Story() {
       <div className="story-text">
         <Reveal>
           <p className="ex-label">
-            {c.storyLabel ||
-              "CÂU CHUYỆN CỦA CHÚNG TÔI"}
+            {c.storyLabel}
           </p>
         </Reveal>
 
         <Reveal delay={80}>
           <h2 className="ex-title left">
-            {c.storyTitle ||
-              "Đẹp từ những điều"}{" "}
+            {c.storyTitle}{" "}
             <em>
-              {c.storyHighlight ||
-                "giản dị"}
+              {c.storyHighlight}
             </em>
           </h2>
         </Reveal>
@@ -350,18 +340,15 @@ export function Ritual() {
     <section className="ex-section ritual">
       <Reveal>
         <p className="ex-label">
-          {c.ritualLabel ||
-            "QUY TRÌNH ĐƠN GIẢN"}
+          {c.ritualLabel}
         </p>
       </Reveal>
 
       <Reveal delay={80}>
         <h2 className="ex-title">
-          {c.ritualTitle ||
-            "3 bước cho làn da"}{" "}
+          {c.ritualTitle}{" "}
           <em>
-            {c.ritualHighlight ||
-              "rạng rỡ"}
+            {c.ritualHighlight}
           </em>
         </h2>
       </Reveal>
@@ -427,7 +414,7 @@ export function Testimonials({
           onClick={select("revLabel")}
           style={css("label")}
         >
-          {c.testimonialsLabel || "CẢM NHẬN"}
+          {c.testimonialsLabel}
         </p>
       </LabelWrap>
 
@@ -439,7 +426,7 @@ export function Testimonials({
             onClick={select("revTitle")}
             style={css("title")}
           >
-            {c.testimonialsTitle || "Được"}
+            {c.testimonialsTitle}
           </span>{" "}
           <em
             className={selectedClass("revHighlight")}
@@ -447,7 +434,7 @@ export function Testimonials({
             onClick={select("revHighlight")}
             style={css("highlight")}
           >
-            {c.testimonialsHighlight || "yêu thích"}
+            {c.testimonialsHighlight}
           </em>{" "}
           <span
             className={selectedClass("revTitleEnd")}
@@ -455,7 +442,7 @@ export function Testimonials({
             onClick={select("revTitleEnd")}
             style={css("titleEnd")}
           >
-            {c.testimonialsTitleEnd || "bởi những cô nàng như bạn"}
+            {c.testimonialsTitleEnd}
           </span>
         </h2>
       </TitleWrap>
@@ -559,7 +546,7 @@ export function Newsletter({
           onClick={select("nlTitle")}
           style={css("title")}
         >
-          {c.newsletterTitle || "Nhận ưu đãi"}{" "}
+          {c.newsletterTitle}{" "}
         </span>
         <em
           className={selectedClass("nlHighlight")}
@@ -567,7 +554,7 @@ export function Newsletter({
           onClick={select("nlHighlight")}
           style={css("highlight")}
         >
-          {c.newsletterHighlight || "ngay"}
+          {c.newsletterHighlight}
         </em>
       </h2>
 
@@ -577,8 +564,7 @@ export function Newsletter({
         onClick={select("nlText")}
         style={css("text")}
       >
-        {c.newsletterText ||
-          "Đăng ký email để biết sớm sản phẩm mới và quà tặng dành riêng cho bạn."}
+        {c.newsletterText}
       </p>
 
       <form
@@ -647,12 +633,11 @@ export function Footer() {
   return (
     <footer className="footer">
       <div className="footer-logo">
-        {c.footerLogo || "ORORA"}
+        {c.footerLogo}
       </div>
 
       <p>
-        {c.footerDescription ||
-          "Chăm sóc làn da, nuôi dưỡng sự tự tin."}
+        {c.footerDescription}
       </p>
 
       <div className="footer-links">
@@ -682,8 +667,7 @@ export function Footer() {
       </div>
 
       <small>
-        {c.footerCopyright ||
-          "© 2026 ORORA. All rights reserved."}
+        {c.footerCopyright}
       </small>
     </footer>
   );

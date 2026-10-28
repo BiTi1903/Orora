@@ -46,33 +46,32 @@ function Footer({
   const fs = data.footerStyles || {};
   const css = (key) => toCss(fs[key], { responsive: !preview });
 
-  const footerLogo = data.footerLogo || "ORORA";
+  const footerLogo = data.footerLogo || "";
   const footerDescription =
-    data.footerDescription ||
-    "Creating beautiful things with meaning and purpose.";
+    data.footerDescription || "";
 
-  const infoTitle = data.footerInfoTitle || "Information";
-  const aboutText = data.footerAboutText || "About us";
-  const shopText = data.footerShopText || "Shop";
-  const termsText = data.footerTermsText || "Terms & Conditions";
-  const privacyText = data.footerPrivacyText || "Privacy Policy";
+  const infoTitle = data.footerInfoTitle || "";
+  const aboutText = data.footerAboutText || "";
+  const shopText = data.footerShopText || "";
+  const termsText = data.footerTermsText || "";
+  const privacyText = data.footerPrivacyText || "";
 
-  const contactTitle = data.footerContactTitle || "Contact";
-  const phone = data.footerPhone || "0822.466.800";
-  const email = data.footerEmail || "sales@ororavn.com";
+  const contactTitle = data.footerContactTitle || "";
+  const phone = data.footerPhone || "";
+  const email = data.footerEmail || "";
   const address =
-    data.footerAddress || "207A Nguyễn Văn Thủ, Tân Định, HCM";
+    data.footerAddress || "";
 
-  const socialTitle = data.footerSocialTitle || "Follow us";
-  const instagram = data.footerInstagram || "#";
-  const facebook = data.footerFacebook || "#";
-  const tikTok = data.footerTikTok || "#";
-  const youtube = data.footerYouTube || "#";
+  const socialTitle = data.footerSocialTitle || "";
+  const instagram = data.footerInstagram || "";
+  const facebook = data.footerFacebook || "";
+  const tikTok = data.footerTikTok || "";
+  const youtube = data.footerYouTube || "";
 
   const copyright =
-    data.footerCopyright || "© 2026 ORORA. All rights reserved.";
+    data.footerCopyright || "";
   const companyNumber =
-    data.footerCompanyNumber || "CTY TNHH ORORA No. 0123456789";
+    data.footerCompanyNumber || "";
 
   const select = (key) => (e) => {
     if (!preview || !onSelect) return;
@@ -177,12 +176,12 @@ function Footer({
             </>
           ) : (
             <>
-              <a href={`tel:${phone}`} style={css("link")}>
+              {phone && <a href={`tel:${phone}`} style={css("link")}>
                 {phone}
-              </a>
-              <a href={`mailto:${email}`} style={css("link")}>
+              </a>}
+              {email && <a href={`mailto:${email}`} style={css("link")}>
                 {email}
-              </a>
+              </a>}
               <p style={css("link")}>{address}</p>
             </>
           )}
@@ -236,38 +235,38 @@ function Footer({
             </>
           ) : (
             <>
-              <a
+              {instagram && <a
                 href={instagram}
                 target="_blank"
                 rel="noreferrer"
                 style={css("link")}
               >
                 Instagram
-              </a>
-              <a
+              </a>}
+              {facebook && <a
                 href={facebook}
                 target="_blank"
                 rel="noreferrer"
                 style={css("link")}
               >
                 Facebook
-              </a>
-              <a
+              </a>}
+              {tikTok && <a
                 href={tikTok}
                 target="_blank"
                 rel="noreferrer"
                 style={css("link")}
               >
                 TikTok
-              </a>
-              <a
+              </a>}
+              {youtube && <a
                 href={youtube}
                 target="_blank"
                 rel="noreferrer"
                 style={css("link")}
               >
                 YouTube
-              </a>
+              </a>}
             </>
           )}
         </div>

@@ -12,8 +12,8 @@ function ScrollText({
   const secRef = useRef(null);
   const home = useHomeContent();
   const c = preview && previewData ? previewData : home || {};
-  const label = c.philosophyLabel || "✦ TRIẾT LÝ CỦA CHÚNG TÔI ✦";
-  const text = c.philosophyBody || c.philosophyText || "TRÂN TRỌNG TỪNG CHÚT YÊU THƯƠNG DÀNH CHO CHÍNH MÌNH.";
+  const label = c.philosophyLabel || "";
+  const text = c.philosophyBody || c.philosophyText || "";
   const parsed = parseInt(c.philosophyAccentCount, 10);
   const accentCount = Number.isFinite(parsed) ? Math.max(parsed, 0) : 4;
   const lines = text.split("\n");

@@ -160,8 +160,7 @@ function normalizeBuilder(data) {
 
     label: {
       text:
-        data?.storyLabel ||
-        "CÂU CHUYỆN CỦA CHÚNG TÔI",
+        data?.storyLabel || "",
 
       style: {
         ...defaultStyle,
@@ -176,8 +175,7 @@ function normalizeBuilder(data) {
 
     title: {
       text:
-        data?.storyTitle ||
-        "Đẹp từ những điều",
+        data?.storyTitle || "",
 
       style: {
         ...defaultStyle,
@@ -192,8 +190,7 @@ function normalizeBuilder(data) {
 
     highlight: {
       text:
-        data?.storyHighlight ||
-        "giản dị",
+        data?.storyHighlight || "",
 
       style: {
         ...defaultStyle,
@@ -210,8 +207,7 @@ function normalizeBuilder(data) {
 
     text: {
       text:
-        data?.storyText ||
-        "A simple space to tell your story.",
+        data?.storyText || "",
 
       style: {
         ...defaultStyle,
@@ -237,23 +233,7 @@ function normalizeBuilder(data) {
     stats:
       data?.storyStats?.length
         ? data.storyStats
-        : [
-            {
-              value: "test",
-              suffix: "",
-              label: "Sản phẩm",
-            },
-            {
-              value: "test",
-              suffix: "",
-              label: "Khách hàng",
-            },
-            {
-              value: "test",
-              suffix: "",
-              label: "Hài lòng",
-            },
-          ],
+        : [],
 
     statValue: {
       ...defaultStyle,
