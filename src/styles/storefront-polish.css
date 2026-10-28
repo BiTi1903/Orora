@@ -71,12 +71,3 @@
   #root > main .product-detail-image img { object-fit: var(--mobile-image-fit, cover) !important; }
   [style*="--mobile-font-size"] { font-size: var(--mobile-font-size) !important; }
 }
-
-/* Keep product browsing steady and align the information within grid rows. */
-#root > main .gallery-item:hover, #root > main .gallery-image.tilt,
-#root > main .gallery-item:hover .gallery-image img { transform: none !important; }
-#root > main .gallery > div { display: flex; }
-#root > main .gallery-item { display: flex; flex-direction: column; }
-#root > main .gallery .product-details { display: flex; flex-direction: column; flex: 1; }
-#root > main .gallery .product-description { margin-bottom: 12px; }
-#root > main .gallery .product-bottom { margin-top: auto; }

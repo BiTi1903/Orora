@@ -325,9 +325,3 @@
 }
 .collection-categories button[aria-pressed="true"] { background: var(--rose-deep); color: #fff; }
 .collection-categories button:focus-visible { outline: 2px solid var(--rose-deep); outline-offset: 2px; }
-
-.collection-pagination { position: relative; z-index: 2; text-align: center; margin-top: 32px; }
-.collection-pagination p { margin: 0 0 14px; font-size: 13px; color: var(--plum-soft); }
-.collection-load-more { min-height: 46px; padding: 12px 28px; border: 1px solid var(--rose-deep); border-radius: 28px; color: var(--rose-deep); background: #fff; font: inherit; font-size: 14px; cursor: pointer; }
-.collection-load-more:hover { background: var(--rose-deep); color: #fff; }
-.gallery > div { min-width: 0; }

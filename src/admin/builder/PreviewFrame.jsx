@@ -9,8 +9,8 @@ html { scrollbar-width: none; } body { margin: 0; }
 .reveal, .hero-letter, .hero-title-line, .rotator-box em { opacity: 1 !important; transform: none !important; }
 .gallery-item:hover, .gallery-image.tilt, .gallery-image:hover img, .gallery-item:hover .product-slideshow img, .hero-btn:hover { transform: none !important; }
 .st-word { color: var(--st-on, var(--plum)); } .st-word.accent { color: var(--st-accent, var(--rose)); }
-#root > main .gallery > :nth-child(n+4) { display: none; }
-@media(max-width: 768px) { #root > main .gallery > :nth-child(n+3) { display: none; } }
+.gallery { padding: 14px 0 36px; } .gallery > :nth-child(n+4) { display: none; }
+@media(max-width: 768px) { .gallery > :nth-child(n+3) { display: none; } }
 `;
 
 export default function PreviewFrame({ device, children }) {
