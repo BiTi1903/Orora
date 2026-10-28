@@ -1,3 +1,5 @@
+import { auth } from "../../lib/firebaseAuth";
+import { builderDraftKey, saveBuilderDraft, readBuilderDraft } from "./drafts";
 import PreviewFrame from "./PreviewFrame";
 import { PREVIEW_PRODUCTS } from "./preview-products";
 import { DEFAULT_TICKER } from "./defaults";
@@ -877,6 +879,7 @@ export default function VisualBuilder() {
   const [selected, setSelected] = useState("title");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
@@ -985,6 +988,7 @@ export default function VisualBuilder() {
   ]);
 
   const updateSelected = (patch) => {
+    setDirty(true);
     if (activeSection === "philosophy") {
       setPhilosophy((current) => ({ ...current, ...patch }));
       return;
@@ -1220,6 +1224,7 @@ export default function VisualBuilder() {
   };
 
   const updateSelectedStyle = (patch) => {
+    setDirty(true);
     if (activeSection === "philosophy") {
       const styleKey = patch._styleKey || (selected === "philLabel" ? "label" : "text");
       const nextPatch = { ...patch };
@@ -1410,6 +1415,26 @@ export default function VisualBuilder() {
     });
   };
 
+  const draftKey = builderDraftKey(auth?.currentUser?.uid || "local");
+  const saveDraft = () => {
+    try {
+      saveBuilderDraft(localStorage, draftKey, { about, hero, collection, productDetail, features, reviews, newsletter, footer, ticker, navbar, philosophy });
+      setMessage({ type: "success", text: "Đã lưu bản nháp trên trình duyệt này. Website chưa thay đổi." });
+    } catch { setMessage({ type: "error", text: "Không lưu được bản nháp. Kiểm tra dung lượng lưu trữ của trình duyệt." }); }
+  };
+  const restoreDraft = () => {
+    try {
+      const draft = readBuilderDraft(localStorage, draftKey);
+      if (!draft) return setMessage({ type: "error", text: "Chưa có bản nháp trên trình duyệt này." });
+      const data = draft.sections;
+      setAbout(data.about); setHero(data.hero); setCollection(data.collection); setProductDetail(data.productDetail);
+      setFeatures(data.features); setReviews(data.reviews); setNewsletter(data.newsletter); setFooter(data.footer);
+      setTicker(data.ticker); setNavbar(data.navbar); setPhilosophy(data.philosophy);
+      setDirty(true);
+      setMessage({ type: "success", text: "Đã mở bản nháp để xem trước. Chưa áp dụng lên website." });
+    } catch { setMessage({ type: "error", text: "Không mở được bản nháp đã lưu." }); }
+  };
+
   const save = async () => {
     setSaving(true);
     setMessage(null);
@@ -1522,10 +1547,11 @@ export default function VisualBuilder() {
       };
 
       await saveHomeContent(payload);
+      setDirty(false);
 
       setMessage({
         type: "success",
-        text: "Đã lưu toàn bộ thay đổi.",
+        text: "Đã áp dụng giao diện lên website.",
       });
     } catch (err) {
       console.error(err);
@@ -1556,7 +1582,7 @@ export default function VisualBuilder() {
         <div>
           <strong>Visual Page Builder</strong>
           <span>
-            Chọn một phần trên preview để chỉnh sửa.
+            {dirty ? "Có thay đổi chưa áp dụng lên website." : "Chọn thành phần để chỉnh. Website chỉ đổi khi bấm Áp dụng."}
           </span>
         </div>
 
@@ -1573,13 +1599,15 @@ export default function VisualBuilder() {
             </span>
           )}
 
+          <button type="button" className="admin-btn" disabled={saving} onClick={restoreDraft}>Mở bản nháp</button>
+          <button type="button" className="admin-btn" disabled={saving} onClick={saveDraft}>Lưu bản nháp</button>
           <button
             type="button"
             className="admin-btn primary"
             onClick={save}
             disabled={saving}
           >
-            {saving ? "Đang lưu..." : "💾 Lưu tất cả"}
+            {saving ? "Đang áp dụng…" : "Áp dụng lên website"}
           </button>
         </div>
       </div>

@@ -247,6 +247,9 @@ export function TypographyControls({ style, onChange }) {
 
 
 export function SettingGroup({ title, children }) {
+  if (/margin|padding|spacing/i.test(title || "")) {
+    return <details className="builder-setting-group builder-advanced"><summary>Nâng cao · {title}</summary><div className="builder-setting-content">{children}</div></details>;
+  }
   return (
     <div className="builder-setting-group">
       <h3>{title}</h3>

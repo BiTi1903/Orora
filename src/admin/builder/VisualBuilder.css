@@ -810,3 +810,8 @@
 
 .builder-frame-host { width: 100%; min-width: 0; overflow: auto; padding: 8px 0 16px; }
 .builder-preview-frame { display: block; border: 0; background: #fffafc; border-radius: 0; }
+
+.builder-toolbar-actions { flex-wrap: wrap; justify-content: flex-end; }
+.builder-toolbar-actions .builder-message { flex-basis: 100%; text-align: right; }
+.builder-advanced summary { padding: 14px; font-size: 13px; font-weight: 600; color: #765564; cursor: pointer; }
+.builder-advanced[open] summary { border-bottom: 1px solid #ecdde4; }
