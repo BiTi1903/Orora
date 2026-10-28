@@ -28,10 +28,6 @@
 @media (max-width: 768px) {
 
   /* HERO */
-  .hero {
-    min-height: 650px;
-  }
-
   .hero-content {
     padding: 0 20px;
   }

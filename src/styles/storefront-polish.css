@@ -23,7 +23,6 @@
 @media (prefers-reduced-motion: reduce) { .loading-placeholder { animation: none; } }
 
 @media (max-width: 768px) {
-  #root > main .hero { min-height: max(580px, 85svh); }
   #root > main .hero-content { max-width: 100%; padding-inline: 20px; }
   #root > main .hero-actions { gap: 10px; }
   #root > main .hero-btn { min-height: 46px; }
