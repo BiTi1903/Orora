@@ -196,7 +196,7 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
           className={selectedClass(k("cardNumber"))}
           data-builder-key={preview ? k("cardNumber") : undefined}
           onClick={select(k("cardNumber"))}
-          style={toCss(styles.number, { responsive: !preview })}
+          style={toCss(styles.number, { responsive: true })}
         >
           {number}
         </span>
@@ -215,7 +215,7 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
           className={`product-description ${selectedClass(k("cardDescription"))}`}
           data-builder-key={preview ? k("cardDescription") : undefined}
           onClick={select(k("cardDescription"))}
-          style={toCss(styles.description, { responsive: !preview })}
+          style={toCss(styles.description, { responsive: true })}
         >
           {description}
         </p>
@@ -225,7 +225,7 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
             className={`product-price ${selectedClass(k("cardPrice"))}`}
             data-builder-key={preview ? k("cardPrice") : undefined}
             onClick={select(k("cardPrice"))}
-            style={toCss(styles.price, { responsive: !preview })}
+            style={toCss(styles.price, { responsive: true })}
           >
             {price}
           </span>
@@ -235,7 +235,7 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
             className={`buy-button ${selectedClass(k("cardButton"))}`}
             data-builder-key={preview ? k("cardButton") : undefined}
             onClick={select(k("cardButton"))}
-            style={toCss(styles.button, { responsive: !preview })}
+            style={toCss(styles.button, { responsive: true })}
           >
             Xem chi tiết
             <span>↗</span>

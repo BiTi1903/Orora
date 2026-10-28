@@ -807,3 +807,6 @@
 .builder-preview--mobile .product-bottom { flex-direction: column; align-items: stretch; }
 .builder-preview--mobile .buy-button { padding: 10px 8px; font-size: 10px; }
 .builder-preview--mobile [style*="--mobile-font-size"] { font-size: var(--mobile-font-size) !important; }
+
+.builder-frame-host { width: 100%; min-width: 0; overflow: auto; padding: 8px 0 16px; }
+.builder-preview-frame { display: block; border: 0; background: #fffafc; border-radius: 0; }

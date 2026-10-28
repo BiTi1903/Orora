@@ -16,11 +16,12 @@ function loadProducts() {
   return promise;
 }
 
-export default function useProducts() {
+export default function useProducts({ enabled = true } = {}) {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
 
   useEffect(() => {
+    if (!enabled) return;
     let alive = true;
 
     loadProducts()
@@ -37,7 +38,7 @@ export default function useProducts() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [enabled]);
 
   return { products, loading };
 }

@@ -16,6 +16,7 @@ export default function ProductSlideshow({
   onIndexChange,
   interval = 3000,
   showDots = true,
+  autoPlay = true,
 }) {
   const list = clean(images);
   const isControlled = controlledIndex != null && typeof onIndexChange === "function";
@@ -38,14 +39,14 @@ export default function ProductSlideshow({
   };
 
   useEffect(() => {
-    if (list.length < 2 || paused) return undefined;
+    if (!autoPlay || list.length < 2 || paused) return undefined;
     const id = window.setInterval(() => {
       const next = (index + 1) % list.length;
       if (isControlled) onIndexChange(next);
       else setInternalIndex(next);
     }, interval);
     return () => window.clearInterval(id);
-  }, [list.length, paused, imagesKey, index, interval, isControlled, onIndexChange]);
+  }, [autoPlay, list.length, paused, imagesKey, index, interval, isControlled, onIndexChange]);
 
   if (!list.length) return null;
 

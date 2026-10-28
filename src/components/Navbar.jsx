@@ -73,7 +73,7 @@ function Navbar({
           className={`logo ${selectedClass("navLogo")}`}
           data-builder-key={preview ? "navLogo" : undefined}
           onClick={select("navLogo")}
-          style={toCss(styles.logo, { responsive: !preview })}
+          style={toCss(styles.logo, { responsive: true })}
         >
           {logo}
           <span></span>
@@ -87,7 +87,7 @@ function Navbar({
               className={selectedClass(`navLink:${index}`)}
               data-builder-key={preview ? `navLink:${index}` : undefined}
               onClick={select(`navLink:${index}`)}
-              style={toCss(styles.link, { responsive: !preview })}
+              style={toCss(styles.link, { responsive: true })}
             >
               {item.label}
             </Link>

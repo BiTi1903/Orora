@@ -180,7 +180,7 @@ export function Features({
 
   const features = c.features?.length ? c.features : [];
   const fs = c.featuresStyles || {};
-  const css = (key) => toCss(fs[key], { responsive: !preview });
+  const css = (key) => toCss(fs[key], { responsive: true });
 
   const select = (key) => (e) => {
     if (!preview || !onSelect) return;
@@ -401,7 +401,7 @@ export function Testimonials({
 
   const LabelWrap = preview ? "div" : Reveal;
   const TitleWrap = preview ? "div" : Reveal;
-  const css = (key) => toCss(ts[key], { responsive: !preview });
+  const css = (key) => toCss(ts[key], { responsive: true });
 
   return (
     <section
@@ -535,7 +535,7 @@ export function Newsletter({
   const selectedClass = (key) =>
     preview && selectedElement === key ? "builder-selected" : "";
 
-  const css = (key) => toCss(styles[key], { responsive: !preview });
+  const css = (key) => toCss(styles[key], { responsive: true });
 
   const Content = (
     <>

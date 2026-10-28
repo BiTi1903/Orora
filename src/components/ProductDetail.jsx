@@ -5,7 +5,6 @@ import gsap from "gsap";
 import { getProduct } from "../lib/api";
 import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
-import useProducts from "../hooks/useProducts";
 import { contactLinks } from "../lib/contact";
 import Collection from "./Collection";
 import { cdnSrc, THUMB, MAIN } from "../lib/cloudinary";
@@ -20,6 +19,7 @@ function ProductDetail({
   preview = false,
   previewStyles = null,
   previewProduct = null,
+  previewProducts = [],
   selectedElement = "",
   onSelect,
 }) {
@@ -27,7 +27,6 @@ function ProductDetail({
   const pageRef = useRef(null);
 
   const home = useHomeContent();
-  const { products: allProducts } = useProducts();
   const ps = preview && previewStyles
     ? previewStyles
     : {
@@ -227,7 +226,7 @@ function ProductDetail({
     ["origin", detailLabels.origin || ps.originLabel?.text || "Origin", product.origin],
   ].filter(([, , value]) => value || preview);
 
-  const css = (key) => toCss(ps[key], { responsive: !preview });
+  const css = (key) => toCss(ps[key], { responsive: true });
 
   // Kiểu riêng cho mục "Sản phẩm khác" (admin chỉnh ở Visual Builder → Chi tiết SP)
     const relTitleStyle = ps.relTitle || {};
@@ -578,7 +577,7 @@ function ProductDetail({
             {renderLines(product.description)}
           </p>
 
-          {!preview && (contact.zalo || contact.email) && (
+          {(contact.zalo || contact.email) && (
             <div className="product-contact-actions" aria-label="Tư vấn sản phẩm">
               {contact.zalo && <a className="product-contact-primary" href={contact.zalo} target="_blank" rel="noreferrer">Tư vấn qua Zalo <span aria-hidden="true">↗</span></a>}
               {contact.phone && <a href={contact.phone}>Gọi tư vấn</a>}
@@ -659,7 +658,7 @@ function ProductDetail({
         className="product-detail-related"
         sampleProducts={
           preview
-            ? allProducts
+            ? previewProducts
                 .filter(
                   (p) =>
                     p.id !== (product.id || product.slug) &&

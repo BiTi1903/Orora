@@ -1,0 +1,63 @@
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+
+const STATIC_STYLE = `
+*, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+html { scrollbar-width: none; } body { margin: 0; }
+[data-builder-key] { cursor: pointer; }
+.builder-selected { outline: 2px solid #b8446d !important; outline-offset: 3px; }
+.reveal, .hero-letter, .hero-title-line, .rotator-box em { opacity: 1 !important; transform: none !important; }
+.gallery-item:hover, .gallery-image.tilt, .gallery-image:hover img, .gallery-item:hover .product-slideshow img, .hero-btn:hover { transform: none !important; }
+.st-word { color: var(--st-on, var(--plum)); } .st-word.accent { color: var(--st-accent, var(--rose)); }
+.gallery { padding: 14px 0 36px; } .gallery > :nth-child(n+4) { display: none; }
+@media(max-width: 768px) { .gallery > :nth-child(n+3) { display: none; } }
+`;
+
+export default function PreviewFrame({ device, children }) {
+  const host = useRef(null);
+  const [frameDocument, setFrameDocument] = useState(null);
+  const [availableWidth, setAvailableWidth] = useState(0);
+  const width = device === "mobile" ? 390 : 1440;
+  const height = 900;
+  const scale = availableWidth > 0 ? Math.min(1, availableWidth / width) : 1;
+
+  useEffect(() => {
+    const observer = new ResizeObserver(([entry]) => setAvailableWidth(entry.contentRect.width));
+    observer.observe(host.current);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!frameDocument) return;
+    const syncStyles = () => {
+      frameDocument.head.querySelectorAll("[data-preview-style]").forEach((node) => node.remove());
+      document.head.querySelectorAll('style, link[rel="stylesheet"]').forEach((node) => {
+        const clone = node.cloneNode(true);
+        clone.setAttribute("data-preview-style", "");
+        frameDocument.head.append(clone);
+      });
+      const staticStyle = frameDocument.createElement("style");
+      staticStyle.setAttribute("data-preview-style", "");
+      staticStyle.textContent = STATIC_STYLE;
+      frameDocument.head.append(staticStyle);
+    };
+    syncStyles();
+    const observer = new MutationObserver(syncStyles);
+    observer.observe(document.head, { childList: true, subtree: true, characterData: true });
+    const preventNavigation = (event) => { if (event.target.closest("a")) event.preventDefault(); };
+    frameDocument.addEventListener("click", preventNavigation);
+    return () => { observer.disconnect(); frameDocument.removeEventListener("click", preventNavigation); };
+  }, [frameDocument]);
+
+  return (
+    <div className="builder-frame-host" ref={host}>
+      <div style={{ width: width * scale, height: height * scale, margin: "0 auto" }}>
+        <iframe title={`Xem trước ${device === "mobile" ? "Mobile 390px" : "Desktop 1440px"}`} className="builder-preview-frame"
+          style={{ width, height, transform: `scale(${scale})`, transformOrigin: "top left" }}
+          srcDoc={'<!doctype html><html lang="vi"><head><meta name="viewport" content="width=device-width,initial-scale=1" /></head><body><div id="root"><main id="preview-root"></main></div></body></html>'}
+          onLoad={(event) => setFrameDocument(event.currentTarget.contentDocument)} />
+      </div>
+      {frameDocument && createPortal(children, frameDocument.getElementById("preview-root"))}
+    </div>
+  );
+}

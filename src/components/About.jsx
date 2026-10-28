@@ -495,6 +495,7 @@ function About({
             style={{ position: "absolute", inset: 0 }}
           >
             <ProductSlideshow
+              autoPlay={!preview}
               images={
                 // Chưa load xong → không render ảnh cứng /about.jpg
                 !preview && !loaded

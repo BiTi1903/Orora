@@ -44,7 +44,7 @@ function Footer({
 
   const data = preview && previewData ? previewData : home || {};
   const fs = data.footerStyles || {};
-  const css = (key) => toCss(fs[key], { responsive: !preview });
+  const css = (key) => toCss(fs[key], { responsive: true });
 
   const footerLogo = data.footerLogo || "";
   const footerDescription =

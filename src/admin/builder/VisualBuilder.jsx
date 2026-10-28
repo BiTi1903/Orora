@@ -1,6 +1,8 @@
+import PreviewFrame from "./PreviewFrame";
+import { PREVIEW_PRODUCTS } from "./preview-products";
 import { DEFAULT_TICKER } from "./defaults";
 import { useEffect, useMemo, useState } from "react";
-import { getHomeContent, getProducts, saveHomeContent } from "../../lib/api";
+import { getHomeContent, saveHomeContent } from "../../lib/api";
 import About from "../../components/About";
 import Hero from "../../components/Hero";
 import Collection from "../../components/Collection";
@@ -852,8 +854,8 @@ export default function VisualBuilder() {
   const [hero, setHero] = useState(DEFAULT_HERO);
   const [collection, setCollection] = useState(DEFAULT_COLLECTION);
   const [productDetail, setProductDetail] = useState(DEFAULT_PRODUCT_DETAIL);
-  const [sampleProducts, setSampleProducts] = useState([]);
-  const [detailProduct, setDetailProduct] = useState(null);
+  const sampleProducts = PREVIEW_PRODUCTS;
+  const detailProduct = PREVIEW_PRODUCTS[0];
   const [features, setFeatures] = useState(DEFAULT_FEATURES);
   const [reviews, setReviews] = useState(DEFAULT_REVIEWS);
   const [newsletter, setNewsletter] = useState(DEFAULT_NEWSLETTER);
@@ -879,18 +881,6 @@ export default function VisualBuilder() {
 
   useEffect(() => {
     let alive = true;
-
-    // Preview chi tiết: ưu tiên sản phẩm thật (có ảnh phụ), không thì dùng mẫu
-    getProducts()
-      .then((list) => {
-        if (!alive || !list?.length) return;
-        setSampleProducts(list);
-        const withExtras = list.find(
-          (p) => p.image2 || p.image3 || p.image4 || p.image5 || p.image6
-        );
-        setDetailProduct(withExtras || list[0]);
-      })
-      .catch(() => {});
 
     getHomeContent()
       .then((data) => {
@@ -1643,7 +1633,7 @@ export default function VisualBuilder() {
 
         <main className="builder-canvas">
           <div className="builder-canvas-head">
-            <span>Preview — kích thước thật (full width cột giữa)</span>
+            <span>Sản phẩm mẫu · Xem trước tĩnh · Không thay đổi dữ liệu</span>
 
             <div className="builder-device" role="group" aria-label="Thiết bị xem trước">
               <button type="button" aria-pressed={previewDevice === "desktop"} onClick={() => setPreviewDevice("desktop")}>Desktop</button>
@@ -1651,34 +1641,7 @@ export default function VisualBuilder() {
             </div>
           </div>
 
-          <div
-            className={[
-              "builder-preview",
-              previewDevice === "mobile" ? "builder-preview--mobile" : "",
-              activeSection === "hero" ? "builder-preview--hero" : "",
-              activeSection === "collection"
-                ? "builder-preview--collection"
-                : "",
-              activeSection === "productdetail"
-                ? "builder-preview--productdetail"
-                : "",
-              activeSection === "features"
-                ? "builder-preview--features"
-                : "",
-              activeSection === "reviews"
-                ? "builder-preview--reviews"
-                : "",
-              activeSection === "newsletter"
-                ? "builder-preview--newsletter"
-                : "",
-              activeSection === "footer"
-                ? "builder-preview--footer"
-                : "",
-              activeSection === "ticker"
-                ? "builder-preview--ticker"
-                : "",
-            ].join(" ")}
-          >
+          <PreviewFrame device={previewDevice}>
             {activeSection === "ticker" ? (
               <TickerPreview
                 ticker={ticker}
@@ -1719,6 +1682,7 @@ export default function VisualBuilder() {
                 preview
                 previewStyles={productDetail}
                 previewProduct={detailProduct}
+                previewProducts={sampleProducts}
                 selectedElement={selected}
                 onSelect={setSelected}
               />
@@ -1758,7 +1722,7 @@ export default function VisualBuilder() {
                 onSelect={setSelected}
               />
             )}
-          </div>
+          </PreviewFrame>
         </main>
 
         <aside className="builder-settings">

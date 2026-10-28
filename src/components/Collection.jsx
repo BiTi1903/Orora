@@ -253,7 +253,7 @@ function Collection({
   /** class thêm (vd: related products dưới chi tiết) */
   className = "",
 }) {
-  const { products: liveProducts, loading } = useProducts();
+  const { products: liveProducts, loading } = useProducts({ enabled: !preview });
   const liveHome = useHomeContent();
   const { categories } = useCategories();
   const [categoryId, setCategoryId] = useState("");
@@ -320,10 +320,10 @@ function Collection({
   };
 
   const sectionStyle = isRelated
-    ? toCss(headStyles.section, { responsive: !preview })
+    ? toCss(headStyles.section, { responsive: true })
     : undefined;
   const headerStyle = isRelated
-    ? toCss(headStyles.header, { responsive: !preview })
+    ? toCss(headStyles.header, { responsive: true })
     : undefined;
 
   return (
@@ -346,7 +346,7 @@ function Collection({
           data-builder-key={preview ? k("colLabel") : undefined}
           onClick={select(k("colLabel"))}
           style={{
-            ...toCss(headStyles.label, { responsive: !preview }),
+            ...toCss(headStyles.label, { responsive: true }),
             textAlign: labelAlign,
             alignSelf: alignSelfMap[labelAlign] || "flex-start",
             ...(collectionLabel ? {} : { display: "none" }),
@@ -362,7 +362,7 @@ function Collection({
             onClick={select(k("colTitle"))}
             style={{
               textAlign: "center",
-              ...toCss(headStyles.title, { responsive: !preview }),
+              ...toCss(headStyles.title, { responsive: true }),
             }}
           >
             {renderTitle()}
@@ -375,7 +375,7 @@ function Collection({
               onClick={select(k("colHighlight"))}
               style={{
                 textAlign: "center",
-                ...toCss(headStyles.highlight, { responsive: !preview }),
+                ...toCss(headStyles.highlight, { responsive: true }),
               }}
             >
               {collectionHighlight}

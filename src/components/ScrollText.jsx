@@ -69,7 +69,7 @@ function ScrollText({
     <section className="scroll-text" ref={secRef}>
       <p
         className={`scroll-text-label${preview && selectedElement === "philLabel" ? " builder-selected" : ""}`}
-        style={{ ...toCss(st.label, { responsive: !preview }), whiteSpace: "pre-line" }}
+        style={{ ...toCss(st.label, { responsive: true }), whiteSpace: "pre-line" }}
         onClick={select("philLabel")}
       >
         {label}
