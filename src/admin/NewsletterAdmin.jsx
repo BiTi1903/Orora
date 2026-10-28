@@ -60,6 +60,7 @@ export default function NewsletterAdmin() {
   const [contacts, setContacts] = useState([]);
   const [selectedContacts, setSelectedContacts] = useState([]);
   const [contactFilter, setContactFilter] = useState("all");
+  const [emailSearch, setEmailSearch] = useState("");
   const [campaigns, setCampaigns] = useState([]);
   const [cursor, setCursor] = useState(null);
   const [ready, setReady] = useState(false);
@@ -94,7 +95,45 @@ export default function NewsletterAdmin() {
     finally { if (alive.current) setBusy(false); }
   };
 
-  const visibleContacts = contacts.filter((item) => contactFilter === "all" || item.status === contactFilter);
+  const filterContacts = (items) => items.filter((item) =>
+    (contactFilter === "all" || item.status === contactFilter) &&
+    item.email.toLowerCase().includes(emailSearch.trim().toLowerCase()));
+  const visibleContacts = filterContacts(contacts);
+
+  const loadRemainingContacts = async () => {
+    let items = contacts;
+    let next = cursor;
+    while (next) {
+      const page = await request(null, next);
+      if (!alive.current) return null;
+      items = [...new Map([...items, ...page.contacts].map((item) => [item.id, item])).values()];
+      next = page.nextCursor;
+      setContacts(items);
+      setCursor(next);
+    }
+    return items;
+  };
+
+  const exportContacts = () => perform(async () => {
+    const items = await loadRemainingContacts();
+    if (!items) return;
+    const rows = filterContacts(items);
+    if (!rows.length) {
+      setNotice({ text: "Không có email phù hợp để xuất." });
+      return;
+    }
+    const { default: writeXlsxFile } = await import("write-excel-file/browser");
+    const data = [
+      ["Email", "Trạng thái", "Thư tự động"].map((value) => ({ value, fontWeight: "bold" })),
+      ...rows.map((item) => [item.email, CONTACT_STATUS[item.status] || item.status,
+        { accepted: "Microsoft đã nhận", pending: "Đang xử lý", failed: "Lỗi", unknown: "Chưa rõ" }[item.mailStatus] || "—"
+      ].map((value) => ({ type: String, value }))),
+    ];
+    await writeXlsxFile(data, {
+      columns: [{ width: 42 }, { width: 24 }, { width: 24 }],
+    }).toFile(`ORORA-email-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    if (alive.current) setNotice({ text: `Đã xuất ${rows.length} email ra Excel.` });
+  });
   const allVisibleSelected = visibleContacts.length > 0 && visibleContacts.every((item) => selectedContacts.includes(item.id));
 
   const manageContacts = (ids, operation) => {
@@ -203,6 +242,15 @@ export default function NewsletterAdmin() {
           </div>
           <div className="admin-card">
             <h2>Email đã đăng ký ({contacts.length} đã tải)</h2>
+            <div className="newsletter-search-toolbar">
+              <div className="admin-field">
+                <label htmlFor="newsletter-email-search">Tìm kiếm email</label>
+                <input id="newsletter-email-search" type="search" placeholder="Nhập email cần tìm…" value={emailSearch}
+                  onFocus={() => { if (cursor && !busy) perform(loadRemainingContacts); }}
+                  onChange={(event) => { setEmailSearch(event.target.value); setSelectedContacts([]); }} />
+              </div>
+              <button type="button" className="admin-btn" disabled={busy} onClick={exportContacts}>Xuất Excel</button>
+            </div>
             <div className="newsletter-bulk-toolbar">
               <ContactActions label="Thao tác cho email đã chọn" disabled={busy || !selectedContacts.length} onApply={(operation) => manageContacts(selectedContacts, operation)} />
               <span className="admin-muted">Đã chọn {selectedContacts.length}</span>
@@ -215,8 +263,9 @@ export default function NewsletterAdmin() {
                 <option value="unsubscribed">Đã hủy đăng ký</option>
               </select>
             </div>
-            <p className="admin-muted">Chọn tối đa 100 email mỗi lần. Chỉ email Hoạt động được nhận thư. Bộ lọc áp dụng cho danh sách đã tải.</p>
-            <div style={{ overflowX: "auto" }}><table className="admin-table newsletter-contact-table"><thead><tr>
+            <p className="admin-muted">Chọn tối đa 100 email mỗi lần. Chỉ email Hoạt động được nhận thư. Tìm kiếm và xuất Excel sẽ tải toàn bộ danh sách, áp dụng từ khóa và bộ lọc trạng thái hiện tại.</p>
+            <p className="admin-muted" role="status">{busy ? "Đang xử lý…" : `Hiển thị ${visibleContacts.length} email`}</p>
+            <div className="newsletter-contact-scroll" role="region" aria-label="Danh sách email đã đăng ký" tabIndex={0}><table className="admin-table newsletter-contact-table"><thead><tr>
               <th><input type="checkbox" aria-label="Chọn tất cả email đang hiển thị" disabled={busy || !visibleContacts.length} checked={allVisibleSelected} onChange={(event) => {
                 const ids = visibleContacts.map((item) => item.id);
                 setSelectedContacts((selected) => event.target.checked ? [...new Set([...selected, ...ids])] : selected.filter((id) => !ids.includes(id)));

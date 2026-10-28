@@ -212,3 +212,9 @@
   .newsletter-bulk-toolbar { align-items: flex-start; flex-direction: column; }
   .newsletter-bulk-toolbar > .newsletter-contact-actions, .newsletter-contact-filter { width: 100%; }
 }
+
+.newsletter-search-toolbar { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.newsletter-search-toolbar .admin-field { flex: 1; min-width: 200px; margin: 0; }
+.newsletter-contact-scroll { max-height: 520px; overflow: auto; scrollbar-gutter: stable; }
+.newsletter-contact-scroll:focus-visible { outline: 2px solid var(--a-deep); outline-offset: 2px; }
+.newsletter-contact-table thead th { position: sticky; top: 0; z-index: 1; background: #fff; }
