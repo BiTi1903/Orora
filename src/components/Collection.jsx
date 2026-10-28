@@ -40,7 +40,7 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
     while (clones.length < pad) clones.push(...products);
   }
   const slides = looping ? [...products, ...clones.slice(0, pad)] : products;
-  const gap = perView === 2 ? 12 : 30;
+  const gap = perView === 2 ? 20 : 30;
 
   const setSlide = useCallback((next) => {
     indexRef.current = next;

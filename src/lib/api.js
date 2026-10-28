@@ -6,6 +6,7 @@ import {
   getDocs,
   setDoc,
   runTransaction,
+  updateDoc,
 } from "firebase/firestore";
 
 import { db } from "./firebase";
@@ -103,4 +104,10 @@ export async function saveCategory({ id, name }) {
       : [...items, category] }, { merge: true });
   });
   return categoryId;
+}
+
+export async function setProductCategory(id, categoryId) {
+  needDb();
+  if (!id || typeof categoryId !== "string") throw new Error("Danh mục không hợp lệ.");
+  await updateDoc(doc(db, "products", id), { categoryId });
 }

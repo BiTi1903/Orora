@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { explainError, getProducts, removeProduct, saveProduct, saveCategory } from "../lib/api";
+import { explainError, getProducts, removeProduct, saveProduct, saveCategory, setProductCategory } from "../lib/api";
 import useCategories from "../hooks/useCategories";
 import ImageField from "./ImageField";
 
@@ -28,6 +28,7 @@ export default function ProductsAdmin() {
   const [categoryName, setCategoryName] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [categoryBusy, setCategoryBusy] = useState(false);
+  const [categorySaving, setCategorySaving] = useState("");
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(empty);
@@ -102,6 +103,18 @@ export default function ProductsAdmin() {
       say("error", explainError(err));
     }
     setBusy(false);
+  };
+
+  const changeProductCategory = async (product, categoryId) => {
+    if (categorySaving || busy) return;
+    setCategorySaving(product.id);
+    try {
+      await setProductCategory(product.id, categoryId);
+      setItems((current) => current.map((item) => item.id === product.id ? { ...item, categoryId } : item));
+      setForm((current) => current.id === product.id ? { ...current, categoryId } : current);
+      say("success", `Đã cập nhật danh mục cho ${product.name}.`);
+    } catch (err) { say("error", explainError(err)); }
+    finally { setCategorySaving(""); }
   };
 
   const del = async (p) => {
@@ -239,7 +252,7 @@ export default function ProductsAdmin() {
           </label>
 
           <div className="admin-actions">
-            <button className="admin-btn primary" disabled={busy}>{busy ? "Đang lưu..." : "Lưu"}</button>
+            <button className="admin-btn primary" disabled={busy || !!categorySaving}>{busy ? "Đang lưu..." : "Lưu"}</button>
             <button type="button" className="admin-btn" onClick={() => setEditing(false)}>Hủy</button>
           </div>
         </form>
@@ -266,9 +279,15 @@ export default function ProductsAdmin() {
                     <td>{p.price}</td>
                     <td><span className={`admin-badge ${p.active === false ? "off" : ""}`}>{p.active === false ? "Ẩn" : "Hiện"}</span></td>
                     <td>
-                      <div className="admin-actions">
-                        <button className="admin-btn" onClick={() => edit(p)}>Sửa</button>
-                        <button className="admin-btn danger" onClick={() => del(p)}>Xóa</button>
+                      <div className="admin-actions product-row-actions">
+                        <select aria-label={`Danh mục của ${p.name}`} value={p.categoryId || ""} disabled={busy || !!categorySaving || !!categoriesError} onChange={(event) => changeProductCategory(p, event.target.value)}>
+                          <option value="">Chưa phân loại</option>
+                          {p.categoryId && !categories.some((category) => category.id === p.categoryId) && <option value={p.categoryId}>Danh mục chưa tải</option>}
+                          {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+                        </select>
+                        {categorySaving === p.id && <span role="status" className="admin-muted">Đang lưu…</span>}
+                        <button className="admin-btn" disabled={busy || !!categorySaving} onClick={() => edit(p)}>Sửa</button>
+                        <button className="admin-btn danger" disabled={busy || !!categorySaving} onClick={() => del(p)}>Xóa</button>
                       </div>
                     </td>
                   </tr>
