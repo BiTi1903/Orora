@@ -123,6 +123,10 @@ function StyleFields({ style, fields, onChange }) {
         </SelectControl>
       )}
 
+      {show("fontSize") && <SelectControl label="Cỡ chữ mobile (0 = tự động)" value={style.mobileFontSize ?? 0} onChange={(v) => update("mobileFontSize", Number(v))}>
+        {[0, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 28, 32, 36, 40, 44, 48, 56, 64].map((size) => <option key={size} value={size}>{size === 0 ? "Tự động" : `${size}px`}</option>)}
+      </SelectControl>}
+
       {show("fontWeight") && (
         <SelectControl
           label="Độ đậm"

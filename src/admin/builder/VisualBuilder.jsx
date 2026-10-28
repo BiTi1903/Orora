@@ -847,6 +847,7 @@ const SECTION_DEFAULT_SELECTED = {
 };
 
 export default function VisualBuilder() {
+  const [previewDevice, setPreviewDevice] = useState("desktop");
   const [about, setAbout] = useState(DEFAULT_ABOUT);
   const [hero, setHero] = useState(DEFAULT_HERO);
   const [collection, setCollection] = useState(DEFAULT_COLLECTION);
@@ -1644,14 +1645,16 @@ export default function VisualBuilder() {
           <div className="builder-canvas-head">
             <span>Preview — kích thước thật (full width cột giữa)</span>
 
-            <span className="builder-device">
-              Desktop 1:1
-            </span>
+            <div className="builder-device" role="group" aria-label="Thiết bị xem trước">
+              <button type="button" aria-pressed={previewDevice === "desktop"} onClick={() => setPreviewDevice("desktop")}>Desktop</button>
+              <button type="button" aria-pressed={previewDevice === "mobile"} onClick={() => setPreviewDevice("mobile")}>Mobile</button>
+            </div>
           </div>
 
           <div
             className={[
               "builder-preview",
+              previewDevice === "mobile" ? "builder-preview--mobile" : "",
               activeSection === "hero" ? "builder-preview--hero" : "",
               activeSection === "collection"
                 ? "builder-preview--collection"

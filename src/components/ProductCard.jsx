@@ -1,3 +1,4 @@
+import { mobileImageVars } from "../lib/image-layout";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { splitColor, toCss } from "../lib/typography";
@@ -100,6 +101,7 @@ function ProductCard({
       : `${widthPercent}%`;
 
   const imageFrameStyle = {
+    ...mobileImageVars(imageLayout),
     // Biến CSS để thắng rule trong collection.css
     ["--pc-width"]: widthExpr,
     ["--pc-height"]: fixedHeight != null ? `${fixedHeight}px` : "auto",

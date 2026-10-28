@@ -1,3 +1,4 @@
+import MobileImageSettings from "./MobileImageSettings";
 import { SettingGroup, SelectField, StyleTypographyBlock } from "./ui";
 import { SPACE_OPTIONS } from "./options";
 
@@ -40,7 +41,8 @@ export function CollectionSettings({
           </small>
         </SettingGroup>
 
-        <SettingGroup title="Kích thước">
+        <MobileImageSettings layout={layout} onChange={onStyleChange} />
+        <SettingGroup title="Kích thước desktop">
           <SelectField
             label="Chiều ngang cả thẻ"
             value={layout.widthPercent ?? 100}

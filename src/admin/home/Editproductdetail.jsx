@@ -1,3 +1,4 @@
+import MobileImageSettings from "../builder/MobileImageSettings";
 import useHomeForm from "./Usehomeform";
 import { SectionShell } from "./Ui";
 import { StyleList } from "./StyleEditor";
@@ -112,6 +113,7 @@ export default function EditProductDetail() {
         />
       </div>
 
+      <MobileImageSettings layout={h.form.productDetailStyles?.imageLayout || {}} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, imageLayout: { ...h.form.productDetailStyles?.imageLayout, ...patch } })} />
       <StyleList
         elements={ELEMENTS}
         value={h.form.productDetailStyles}

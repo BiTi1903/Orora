@@ -17,6 +17,7 @@ export function StyleTypographyBlock({ style = {}, onStyleChange, title = "Typog
         style={{
           fontFamily: toBareFontFamily(style.fontFamily),
           fontSize: style.fontSize ?? "",
+          mobileFontSize: style.mobileFontSize ?? 0,
           fontWeight: style.fontWeight ?? "",
           color: style.color || "",
           letterSpacing: style.letterSpacing ?? "",
@@ -58,6 +59,7 @@ export function TypographyControls({ style, onChange }) {
         }
       />
 
+      <SelectField label="Cỡ chữ mobile (0 = tự động)" value={s.mobileFontSize ?? 0} options={[0, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 28, 32, 36, 40, 44, 48, 56, 64]} suffix="px" onChange={(value) => onChange({ mobileFontSize: Number(value) })} />
       <div className="builder-field-row">
         <SelectField
           label="Size"

@@ -29,7 +29,7 @@
   #root > main .hero-btn { min-height: 46px; }
   #root > main .marquee { padding-block: 16px; }
   #root > main .marquee span { font-size: 20px; gap: 22px; padding-right: 22px; }
-  #root > main .about { padding: 64px 20px !important; gap: 32px !important; }
+  #root > main .about { padding: 64px 20px; gap: 32px; }
   #root > main .about-image-wrapper { min-height: 0; max-height: 420px; }
   #root > main .about-label { margin-bottom: 16px; max-width: 100%; }
   #root > main .about-content h2 { margin-bottom: 20px; }
@@ -50,11 +50,11 @@
   #root > main .product-detail-gallery { width: 100% !important; max-width: 420px; }
   #root > main .product-detail-image,
   #root > main .product-detail-image.product-detail-image--fixed-h {
-    height: auto !important; min-height: 0 !important; max-height: none !important;
-    aspect-ratio: 1 / 1 !important; border-width: 4px; border-radius: 20px;
+    height: var(--mobile-image-height, auto) !important; min-height: 0 !important; max-height: none !important;
+    aspect-ratio: var(--mobile-image-aspect, 1 / 1) !important; border-width: 4px; border-radius: var(--mobile-image-radius, 20px) !important;
   }
-  #root > main .product-detail-info h1 { font-size: clamp(30px, 8vw, 44px) !important; line-height: 1.15 !important; margin-bottom: 16px; }
-  #root > main .product-detail-price { font-size: 26px !important; margin-bottom: 16px; }
+  #root > main .product-detail-info h1 { font-size: clamp(30px, 8vw, 44px); line-height: 1.15; margin-bottom: 16px; }
+  #root > main .product-detail-price { font-size: 26px; margin-bottom: 16px; }
   #root > main .product-detail-description { font-size: 15px; line-height: 1.75; }
   #root > main .product-section { margin-top: 28px; }
   #root > main .product-section > p, #root > main .product-detail-row p { font-size: 14px; line-height: 1.75; }
@@ -65,4 +65,9 @@
   #root > main .collection.product-detail-related { padding-block: 48px; }
   #root > main .chat-button { right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); }
   #root > main .back-to-top { bottom: calc(max(16px, env(safe-area-inset-bottom)) + 66px); }
+}
+
+@media (max-width: 768px) {
+  #root > main .product-detail-image img { object-fit: var(--mobile-image-fit, cover) !important; }
+  [style*="--mobile-font-size"] { font-size: var(--mobile-font-size) !important; }
 }

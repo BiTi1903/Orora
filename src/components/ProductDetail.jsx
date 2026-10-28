@@ -1,3 +1,4 @@
+import { mobileImageVars } from "../lib/image-layout";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import gsap from "gsap";
@@ -340,6 +341,7 @@ function ProductDetail({
   };
 
   const mainImageBoxStyle = {
+    ...mobileImageVars(imageLayout),
     width: "100%",
     ["--pd-height"]: fixedHeight != null ? `${fixedHeight}px` : "auto",
     ["--pd-aspect"]:

@@ -1,3 +1,4 @@
+import MobileImageSettings from "../builder/MobileImageSettings";
 import useHomeForm from "./Usehomeform";
 import { SectionShell } from "./Ui";
 import { StyleList } from "./StyleEditor";
@@ -58,6 +59,7 @@ export default function EditProductCard() {
       {...h}
       onSubmit={h.save}
     >
+      <MobileImageSettings layout={h.form.productCardStyles?.imageLayout || {}} onChange={(patch) => h.set("productCardStyles", { ...h.form.productCardStyles, imageLayout: { ...h.form.productCardStyles?.imageLayout, ...patch } })} />
       <StyleList
         elements={ELEMENTS}
         value={h.form.productCardStyles}

@@ -55,6 +55,7 @@ const has = (v) => v !== undefined && v !== null && v !== "";
 export function toCss(style, { responsive = true } = {}) {
   const s = style || {};
   const css = {};
+  if (Number(s.mobileFontSize) > 0) css["--mobile-font-size"] = `${Number(s.mobileFontSize)}px`;
 
   if (has(s.fontFamily)) css.fontFamily = s.fontFamily;
   if (has(s.fontSize) && Number(s.fontSize) > 0) {
