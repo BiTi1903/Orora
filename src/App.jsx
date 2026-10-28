@@ -5,6 +5,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import CursorSparkle from "./components/CursorSparkle"; 
 import {
   Routes,
+  Navigate,
   Route,
   useLocation,
 } from "react-router-dom";
@@ -363,9 +364,9 @@ function App() {
         />
 
 
-        <Route path="/san-pham" element={<main><Navbar /><h1 className="page-heading">Sản phẩm</h1><Collection /><Footer /></main>} />
-        <Route path="/ve-orora" element={<main><Navbar /><h1 className="page-heading">Về ORORA</h1><About /><Features /><Footer /></main>} />
-        <Route path="/lien-he" element={<main><Navbar /><h1 className="page-heading">Liên hệ ORORA</h1><Footer /></main>} />
+        <Route path="/san-pham" element={<Navigate to="/#shop" replace />} />
+        <Route path="/ve-orora" element={<Navigate to="/#about" replace />} />
+        <Route path="/lien-he" element={<Navigate to="/#contact" replace />} />
         <Route path="*" element={<main><Navbar /><h1 className="page-heading">Trang không tồn tại</h1><Footer /></main>} />
 
         {/* =========================

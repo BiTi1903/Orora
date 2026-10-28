@@ -8,7 +8,7 @@ export function createSitemapHandler({ getDb }) {
     }
     try {
       const snapshot = await getDb().collection("products").get();
-      const paths = ["/", "/san-pham", "/ve-orora", "/lien-he", ...snapshot.docs.filter((item) => item.data().active !== false).map((item) => `/product/${encodeURIComponent(item.id)}`)];
+      const paths = ["/", ...snapshot.docs.filter((item) => item.data().active !== false).map((item) => `/product/${encodeURIComponent(item.id)}`)];
       const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${[...new Set(paths)].map((path) => `\n  <url><loc>${escapeXml(ORIGIN + path)}</loc></url>`).join("")}\n</urlset>`;
       res.setHeader("Content-Type", "application/xml; charset=utf-8");
       res.setHeader("Cache-Control", "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400");

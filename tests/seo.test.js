@@ -15,13 +15,13 @@ test("product SEO uses its own canonical, description and breadcrumb without fab
   assert.equal(product.aggregateRating, undefined);
   assert.equal(product.offers.availability, undefined);
   const crumbs = seo.structuredData["@graph"].find((entry) => entry["@type"] === "BreadcrumbList");
-  assert.deepEqual(crumbs.itemListElement.map((entry) => entry.name), ["Trang chủ", "Sản phẩm", "Serum ORORA"]);
+  assert.deepEqual(crumbs.itemListElement.map((entry) => entry.name), ["Trang chủ", "Serum ORORA"]);
 });
 
-test("editorial pages have separate canonicals; admin and hidden products are not indexed", () => {
+test("old section URLs canonicalize to the homepage; admin and hidden products are not indexed", () => {
   for (const path of ["/", "/san-pham", "/ve-orora", "/lien-he"]) {
     const seo = pageSeo(path);
-    assert.equal(seo.url, `https://ororavn.com${path}`);
+    assert.equal(seo.url, "https://ororavn.com/");
     assert.ok(!seo.noindex);
   }
   assert.equal(pageSeo("/admin").noindex, true);
@@ -40,7 +40,9 @@ test("sitemap tracks published Firebase products and excludes hidden or sample r
   await createSitemapHandler({ getDb: () => db })({ method: "GET" }, res);
   assert.equal(res.statusCode, 200);
   assert.match(res.body, /https:\/\/ororavn.com\/product\/serum/);
-  assert.match(res.body, /https:\/\/ororavn.com\/san-pham/);
+  assert.ok(!res.body.includes("/san-pham"));
+  assert.ok(!res.body.includes("/ve-orora"));
+  assert.ok(!res.body.includes("/lien-he"));
   assert.ok(!res.body.includes("hidden"));
   assert.ok(!res.body.includes("first-story"));
   await db.collection("products").doc("serum").delete();

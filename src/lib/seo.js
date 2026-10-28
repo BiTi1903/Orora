@@ -7,12 +7,10 @@ const imageUrl = (value) => {
 const description = (value) => compact(value).slice(0, 160);
 
 export function pageSeo(pathname, home = {}, products = [], productsLoading = false) {
-  const path = pathname.replace(/\/$/, "") || "/";
+  const normalized = pathname.replace(/\/$/, "") || "/";
+  const path = ["/san-pham", "/ve-orora", "/lien-he"].includes(normalized) ? "/" : normalized;
   const pages = {
     "/": { name: SITE_NAME, title: "ORORA VN — Mỹ phẩm & chăm sóc da", description: description(home.footerDescription) || "Khám phá sản phẩm làm đẹp và chăm sóc da của ORORA VN. Tìm hiểu sản phẩm và liên hệ ORORA." },
-    "/san-pham": { name: "Sản phẩm", title: "Sản phẩm | ORORA VN", description: "Khám phá các sản phẩm của ORORA VN, lọc theo danh mục và xem thông tin chi tiết từng sản phẩm." },
-    "/ve-orora": { name: "Về ORORA", title: "Về ORORA | ORORA VN", description: description(home.aboutBuilder?.text?.text || home.storyText || home.footerDescription) || "Tìm hiểu câu chuyện và thương hiệu ORORA VN." },
-    "/lien-he": { name: "Liên hệ", title: "Liên hệ | ORORA VN", description: description(["Liên hệ ORORA VN.", home.footerEmail, home.footerPhone, home.footerAddress].filter(Boolean).join(" ")) },
   };
   let page = pages[path];
   let product;
@@ -38,7 +36,6 @@ export function pageSeo(pathname, home = {}, products = [], productsLoading = fa
   ];
   if (path !== "/" && !page.noindex) {
     const crumbs = [{ name: "Trang chủ", item: `${SITE_URL}/` }];
-    if (product) crumbs.push({ name: "Sản phẩm", item: `${SITE_URL}/san-pham` });
     crumbs.push({ name: page.name, item: url });
     graph.push({ "@type": "BreadcrumbList", itemListElement: crumbs.map((crumb, index) => ({ "@type": "ListItem", position: index + 1, ...crumb })) });
   }

@@ -4,9 +4,9 @@ import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
 
 const DEFAULT_LINKS = [
-  { label: "Về Chúng Tôi", href: "/ve-orora" },
-  { label: "Sản phẩm", href: "/san-pham" },
-  { label: "Liên Hệ", href: "/lien-he" },
+  { label: "Về Chúng Tôi", href: "/#about" },
+  { label: "Sản phẩm", href: "/#shop" },
+  { label: "Liên Hệ", href: "/#contact" },
 ];
 
 /* Link để trống / chỉ "/" → dùng link mặc định theo vị trí (Về Chúng Tôi → about, Sản phẩm → shop, Liên Hệ → contact).
@@ -15,7 +15,7 @@ function resolveHref(item, index) {
   const raw = (item?.href || "").trim();
   if (!raw || raw === "/") return DEFAULT_LINKS[index]?.href || "/";
   const path = raw.startsWith("#") ? `/${raw}` : raw;
-  return ({ "/#about": "/ve-orora", "/#shop": "/san-pham", "/#contact": "/lien-he" })[path] || path;
+  return ({ "/ve-orora": "/#about", "/san-pham": "/#shop", "/lien-he": "/#contact" })[path] || path;
 }
 
 function Navbar({
