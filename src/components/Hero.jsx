@@ -11,15 +11,12 @@ function Hero({
   const live = useHomeContent();
   const c = preview && previewData ? previewData : live;
 
-  const words =
-    c.heroRotator && c.heroRotator.length
-      ? c.heroRotator
-      : ["dịu nhẹ"];
+  const words = Array.isArray(c.heroRotator) ? c.heroRotator : [];
 
   const [i, setI] = useState(0);
 
   useEffect(() => {
-    if (preview) return;
+    if (preview || words.length < 2) return;
 
     const t = setInterval(
       () => setI((v) => (v + 1) % words.length),
@@ -63,7 +60,7 @@ function Hero({
   const selectedClass = (key) =>
     preview && selectedElement === key ? "builder-selected" : "";
 
-  const previewWord = words[0] || "dịu nhẹ";
+  const previewWord = words[0] || "";
 
   // Chỉ gắn ảnh nền khi đã có URL thật từ admin/Firestore.
   // Khi đang loading (chưa có snapshot) → giữ nền gradient CSS, không load /hero.jpg cũ.
@@ -98,46 +95,47 @@ function Hero({
     >
       {!preview && <Sparkles />}
 
+      {ready && <>
       {/* =========================
           THẺ KÍNH NỔI
       ========================= */}
-      <div
+      {(preview || c.heroChip1) && <div
         className={`hero-chip chip-1 ${selectedClass("chip1")}`}
         style={{ "--d": 40 }}
         data-builder-key={preview ? "chip1" : undefined}
         onClick={select("chip1")}
       >
         <span className="chip-in">
-          <b>✦</b> {c.heroChip1 || "Dịu nhẹ cho da"}
+          <b>✦</b> {c.heroChip1}
         </span>
-      </div>
+      </div>}
 
-      <div
+      {(preview || c.heroChip2) && <div
         className={`hero-chip chip-2 ${selectedClass("chip2")}`}
         style={{ "--d": -55 }}
         data-builder-key={preview ? "chip2" : undefined}
         onClick={select("chip2")}
       >
         <span className="chip-in">
-          <b>♡</b> {c.heroChip2 || "Thành phần thuần khiết"}
+          <b>♡</b> {c.heroChip2}
         </span>
-      </div>
+      </div>}
 
-      <div
+      {(preview || c.heroChip3) && <div
         className={`hero-chip chip-3 ${selectedClass("chip3")}`}
         style={{ "--d": 30 }}
         data-builder-key={preview ? "chip3" : undefined}
         onClick={select("chip3")}
       >
         <span className="chip-in">
-          <b>✧</b> {c.heroChip3 || "Cấp ẩm sâu"}
+          <b>✧</b> {c.heroChip3}
         </span>
-      </div>
+      </div>}
 
       {/* =========================
           VÒNG CHỮ XOAY
       ========================= */}
-      <a
+      {(preview || c.heroRingText) && <a
         href={preview ? undefined : "#shop"}
         className={`hero-ring ${selectedClass("ring")}`}
         aria-label="Xem sản phẩm"
@@ -154,13 +152,13 @@ function Hero({
 
           <text>
             <textPath href={preview ? "#ringPathPreview" : "#ringPath"}>
-              {c.heroRingText || "ORORA ✦ SẢN PHẨM ✦ ORORA ✦"}
+              {c.heroRingText}
             </textPath>
           </text>
         </svg>
 
         <b>✿</b>
-      </a>
+      </a>}
 
       {/* =========================
           NỘI DUNG HERO
@@ -203,7 +201,7 @@ function Hero({
           {c.heroDescription}
         </p>
 
-        <p
+        {(preview || words.length > 0) && <p
           className={`hero-rotator ${selectedClass("rotator")}`}
           data-builder-key={preview ? "rotator" : undefined}
           onClick={select("rotator")}
@@ -215,7 +213,7 @@ function Hero({
             </em>
           </span>{" "}
           mỗi ngày
-        </p>
+        </p>}
 
         {/* =========================
             BUTTONS
@@ -245,14 +243,15 @@ function Hero({
       {/* =========================
           CUỘN
       ========================= */}
-      <div
+      {(preview || c.heroScrollText) && <div
         className={`scroll ${selectedClass("scroll")}`}
         data-builder-key={preview ? "scroll" : undefined}
         onClick={select("scroll")}
       >
-        <span>{c.heroScrollText || "CUỘN"}</span>
+        <span>{c.heroScrollText}</span>
         <div />
-      </div>
+      </div>}
+      </>}
     </section>
   );
 }
