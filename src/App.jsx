@@ -342,8 +342,10 @@ function App() {
 
               <Navbar />
 
-              <Hero />
-   <Marquee />
+              <div className="home-first-screen">
+                <Hero />
+                <Marquee />
+              </div>
 
               <About />
 

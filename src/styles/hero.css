@@ -7,7 +7,7 @@
   position: relative;
   width: 100%;
   height: auto;
-  min-height: clamp(620px, 88svh, 840px);
+  min-height: 100svh;
   padding: 110px 0 90px;
   overflow: hidden;
   display: flex;
@@ -470,8 +470,13 @@
 }
 /* Compact hero spacing, shared by the storefront and editor preview. */
 @media (max-width: 768px) {
-  .hero { min-height: clamp(520px, 82svh, 640px); padding: 96px 0 70px; }
+  .hero { min-height: 100svh; padding: 96px 0 70px; }
   .hero-content { padding-inline: 20px; }
   .hero .description { margin-top: 14px; line-height: 1.6; }
   .hero .hero-actions { margin-top: 20px; }
 }
+
+/* Hero and the actual ticker share the first screen, whatever its text height. */
+.home-first-screen { display: flex; flex-direction: column; min-height: 100svh; }
+.home-first-screen > .hero { flex: 1; min-height: 0; }
+.home-first-screen > .marquee { flex: 0 0 auto; }
