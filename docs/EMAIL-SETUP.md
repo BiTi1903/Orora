@@ -129,9 +129,9 @@ Kho mẫu được quản lý tập trung trong mục **Mẫu Thư** cạnh **Th
 
 ### Kho Mẫu Thư độc lập
 
-**Email marketing → Mẫu Thư** có ô soạn tên, loại (thông thường/đơn hàng), tiêu đề, nội dung; lưu nhiều mẫu, chỉnh mẫu đã lưu, tìm kiếm và xem trước. Các mẫu lưu tại collection riêng `newsletterTemplates`, chỉ đọc/ghi qua API có kiểm tra UID. Lưu hoặc chỉnh mẫu trong kho không gửi email, không thay đổi mẫu chào mừng/xác nhận đơn tự động hay lịch sử cũ.
+**Email marketing → Mẫu Thư** có ô soạn tên, loại (thư riêng cho khách/đơn hàng gửi riêng/xác nhận đơn tự động), tiêu đề, nội dung; lưu nhiều mẫu, chỉnh mẫu đã lưu, tìm kiếm và xem trước. Các mẫu lưu tại collection riêng `newsletterTemplates`, chỉ đọc/ghi qua API có kiểm tra UID. Lưu hoặc chỉnh mẫu trong kho không gửi email, không thay đổi mẫu chào mừng/xác nhận đơn tự động hay lịch sử cũ.
 
-Có sẵn mẫu đang dùng và mẫu lấy từ lịch sử thư để lưu bản sao. Từ lịch sử đơn có thể bấm mẫu → **Lưu vào Mẫu Thư**. Mẫu thông thường được chép vào ô soạn thư; mẫu đơn hàng được chép vào nội dung gửi riêng. Chỉ thao tác gửi rõ ràng mới phát thư.
+Kho chỉ hiển thị các mẫu đã lưu, không tự tạo thêm các hàng “Mẫu thư 1, 2…” từ lịch sử. Mẫu thư cho khách được chép vào ô soạn thư cho khách; mẫu đơn hàng gửi riêng được chép vào nội dung gửi riêng; mẫu xác nhận tự động được chép vào cấu hình tự động và cần bấm Lưu mới áp dụng. Chỉ thao tác gửi rõ ràng mới phát thư.
 
 Cửa sổ xem mẫu/thư sử dụng modal giữa màn hình, cuộn được nội dung dài, đóng bằng nút Đóng, phím Esc hoặc bấm nền bên ngoài. Người dùng bàn phím được giữ focus trong cửa sổ và quay về nút đã mở khi đóng.
 
@@ -142,3 +142,15 @@ Trong **Mẫu Thư**, mỗi mẫu đã lưu có nút **Xóa mẫu** và hộp x�
 **Thư đơn hàng** chỉ chỉnh nội dung xác nhận tự động. Nút **Chọn mẫu có sẵn** nằm cùng hàng với **Lưu mẫu thư đơn hàng**: chọn mẫu chỉ điền vào ô soạn, bấm Lưu mới áp dụng cho đơn mới.
 
 **Gửi thư đơn hàng** là mục độc lập để chọn đơn, xem rõ email người nhận, chọn mẫu hoặc soạn nội dung riêng, xem trước và gửi. Dùng lại mẫu đơn từ kho hoặc lịch sử sẽ mở mục này. Gửi riêng không sửa cấu hình thư tự động.
+
+### Phiên bản mẫu và lịch sử bất biến
+
+Ba loại mẫu riêng: `general` (thư riêng cho khách), `order` (đơn hàng gửi riêng), `order_auto` (xác nhận đơn tự động). Cửa sổ chọn chỉ hiển thị loại tương ứng, ghi rõ loại và số mẫu của từng loại, có lối vào Quản lý Mẫu Thư. Mẫu cũ giữ nguyên loại đã lưu; admin có thể chỉnh loại trong kho, không tự chuyển dữ liệu hàng loạt.
+
+Mỗi lần đổi tên/loại/nội dung mẫu tạo phiên bản mới. Khi chọn mẫu, phía máy chủ kiểm tra ID, phiên bản, loại và nội dung còn khớp. Nếu mẫu bị sửa/xóa trước lúc gửi, cần chọn lại hoặc tự soạn; không tự dùng bản mới mà người gửi chưa xem.
+
+Thư đơn hàng và thư gửi danh sách khách lưu tên mẫu, ID, phiên bản, nội dung mẫu và nội dung thực gửi tại thời điểm tạo/gửi. Lịch sử không tra tên hiện tại trong kho. Sửa hoặc xóa mẫu không đổi bản thư đã gửi. Cấu hình tự động cũng giữ bản mẫu đã áp dụng, không tự chạy theo lần sửa trong kho.
+
+Khi Microsoft chấp nhận gửi, kho ghi nhận phiên bản đã dùng. Nhãn **Chưa gửi**, **Đã gửi · phiên bản hiện tại**, **Đã sửa · bản hiện tại chưa gửi** phản ánh đúng phiên bản; chấp nhận gửi chưa bảo đảm thư tới inbox. Thư/dữ liệu cũ thiếu tên mẫu hoặc liên kết được ghi rõ là bản cũ/chưa có thống kê, không gán tên hoặc trạng thái giả.
+
+Phần gửi đơn riêng khởi đầu bằng nội dung trống, không tự dùng mẫu xác nhận tự động. Chọn mẫu lưu rồi sửa nội dung sẽ trở thành thư tự soạn, không gắn nhầm tên mẫu gốc. Các danh sách mẫu tự sinh và nút sao chép/xem trùng đã được bỏ; bấm tên để xem, dùng Chỉnh sửa/Xóa trong kho, và Soạn thư mới từ bản này trong lịch sử.

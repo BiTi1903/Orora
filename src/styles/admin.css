@@ -350,3 +350,7 @@
 .admin-template-link:focus-visible { outline: 2px solid var(--a-deep); outline-offset: 3px; }
 @media (min-width: 1280px) { .mail-library-layout { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); } }
 @media (max-width: 600px) { .mail-dialog-heading, .mail-dialog-content, .mail-dialog-actions { padding: 16px; } }
+
+.admin-mail-dialog { position: fixed; inset: 0; margin: auto; }
+.mail-usage-badge { display: inline-block; border-radius: 20px; padding: 5px 10px; font-size: 12px; background: #fff2d6; color: #775313; margin: 6px 0; }
+.mail-usage-badge.sent { background: #e5f5ec; color: #276544; }

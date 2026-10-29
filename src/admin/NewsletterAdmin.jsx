@@ -2,7 +2,7 @@ import OrderEmailSender from "./OrderEmailSender";
 import MailTemplateLibrary from "./MailTemplateLibrary";
 import MailPreviewDialog from "./MailPreviewDialog";
 import MailTemplatePicker from "./MailTemplatePicker";
-import { mailActorLabel, groupMailTemplates } from "../lib/mail-templates";
+import { mailActorLabel, groupMailTemplates, templateReference } from "../lib/mail-templates";
 import OrderMailHistory from "./OrderMailHistory";
 import OrderEmailSettings from "./OrderEmailSettings";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -73,6 +73,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
   const [reusedOrderTemplate, setReusedOrderTemplate] = useState(null);
   const [orderTemplate, setOrderTemplate] = useState(null);
   const [welcome, setWelcome] = useState(EMPTY);
+  const [campaignTemplateRef, setCampaignTemplateRef] = useState(null);
   const [draft, setDraft] = useState(EMPTY);
   const [testEmail, setTestEmail] = useState(() => auth?.currentUser?.email || "");
   const [contacts, setContacts] = useState([]);
@@ -195,12 +196,13 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
   };
 
   const campaignTemplates = groupMailTemplates(campaigns);
-  const availableTemplates = [{ id: "current-welcome", name: "Thư chào mừng đang dùng", kind: "general", ...welcome }, ...(orderTemplate ? [{ id: "current-order", name: "Thư đơn hàng đang dùng", kind: "order", ...orderTemplate }] : []), ...campaignTemplates.templates.map((item) => ({ id: `campaign-${item.id}`, name: item.label, kind: "general", ...item.message }))];
+  const availableTemplates = [...(orderTemplate ? [{ id: "current-order", name: "Xác nhận đơn tự động đang áp dụng", kind: "order_auto", ...orderTemplate }] : [])];
   const prepareTemplate = (message, kind = "general", name = "Mẫu thư mới") => { setLibrarySeed({ id: crypto.randomUUID(), message: { name, kind, ...message } }); setView("templates"); };
   const applyTemplate = (item) => {
-    if (item.kind === "order") { setReusedOrderTemplate({ id: crypto.randomUUID(), message: { subject: item.subject, text: item.text } }); setView("orderSend"); }
-    else { if ((draft.subject || draft.text) && !window.confirm("Thay nội dung đang soạn bằng mẫu này?")) return; setDraft({ subject: item.subject, text: item.text }); setView("compose"); }
-    setPicker(null); setPreview(null); setNotice({ text: "Đã chép mẫu vào thư đang soạn. Kiểm tra người nhận và nội dung trước khi gửi." });
+    if (item.kind === "order_auto") { setAutomaticTemplateChoice({ id: crypto.randomUUID(), message: { subject: item.subject, text: item.text, ...(templateReference(item) ? { templateRef: templateReference(item) } : {}) } }); setView("orders"); }
+    else if (item.kind === "order") { setReusedOrderTemplate({ id: crypto.randomUUID(), message: { subject: item.subject, text: item.text, ...(templateReference(item) ? { templateRef: templateReference(item) } : {}) } }); setView("orderSend"); }
+    else { if ((draft.subject || draft.text) && !window.confirm("Thay nội dung đang soạn bằng mẫu này?")) return; setDraft({ subject: item.subject, text: item.text }); setCampaignTemplateRef(templateReference(item) || null); setView("compose"); }
+    setPicker(null); setPreview(null); setNotice({ text: item.kind === "order_auto" ? "Đã chép mẫu vào thư tự động. Bấm Lưu mẫu thư đơn hàng để áp dụng." : "Đã chép mẫu vào thư đang soạn. Kiểm tra người nhận và nội dung trước khi gửi." });
   };
   const activeContacts = contacts.filter((item) => item.status === "active");
   const eligibleIds = recipientIds.filter((id) => activeContacts.some((item) => item.id === id));
@@ -216,7 +218,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
     if (!window.confirm(`Gửi “${draft.subject}” đến ${recipientMode === "selected" ? `${eligibleIds.length} email đã chọn:\n${eligibleIds.map((id) => activeContacts.find((item) => item.id === id)?.email).join("\n")}\n` : "toàn bộ email đang hoạt động trước thời điểm tạo thư"}? Mỗi khách nhận một thư riêng.`)) return;
     perform(async () => {
       const id = crypto.randomUUID();
-      await request({ action: "createCampaign", id, ...draft, ...(recipientMode === "selected" ? { recipientIds: eligibleIds } : {}) });
+      await request({ action: "createCampaign", id, ...draft, ...(campaignTemplateRef ? { templateRef: campaignTemplateRef } : {}), ...(recipientMode === "selected" ? { recipientIds: eligibleIds } : {}) });
       await load();
       await run(id);
     });
@@ -233,14 +235,14 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
       {!ready ? <p className="admin-muted">Cần kết nối API email để tải dữ liệu. Nếu có lỗi, kiểm tra cấu hình rồi bấm Tải lại.</p> : (
         <>
           <nav className="admin-section-tabs" aria-label="Các mục email marketing">
-            {[["contacts", "Danh sách email"], ["compose", "Soạn và gửi thư"], ["welcome", "Thư chào mừng"], ["orders", "Thư đơn hàng"], ["orderSend", "Gửi thư đơn hàng"], ["orderHistory", "Thư đơn hàng đã gửi"], ["templates", "Mẫu Thư"]].map(([key, label]) => <button type="button" key={key} aria-current={view === key ? "page" : undefined} onClick={() => setView(key)}>{label}</button>)}
+            {[["contacts", "Danh sách email"], ["compose", "Gửi thư cho khách"], ["welcome", "Thư chào mừng"], ["orders", "Thư đơn hàng"], ["orderSend", "Gửi thư đơn hàng"], ["orderHistory", "Thư đơn hàng đã gửi"], ["templates", "Mẫu Thư"]].map(([key, label]) => <button type="button" key={key} aria-current={view === key ? "page" : undefined} onClick={() => setView(key)}>{label}</button>)}
           </nav>
-          {view === "orderHistory" && <OrderMailHistory onSaveTemplate={(message, name) => prepareTemplate(message, "order", name)} onReuse={(message, original) => { setReusedOrderTemplate({ id: crypto.randomUUID(), message }); setView("orderSend"); setNotice({ text: original ? "Đã chép mẫu vào nội dung gửi riêng. Kiểm tra và chọn đơn trước khi gửi; mẫu tự động không thay đổi." : "Đã chép nội dung thư cũ vào nội dung gửi riêng. Hãy sửa thông tin khách và mã đơn cũ trước khi gửi." }); }} />}
-          <div hidden={view !== "templates"}><MailTemplateLibrary key={librarySeed?.id || "library"} request={request} seed={librarySeed} available={availableTemplates} onUse={applyTemplate} /></div>
+          {view === "orderHistory" && <OrderMailHistory onReuse={(message, original) => { setReusedOrderTemplate({ id: crypto.randomUUID(), message }); setView("orderSend"); setNotice({ text: original ? "Đã chép mẫu vào nội dung gửi riêng. Kiểm tra và chọn đơn trước khi gửi; mẫu tự động không thay đổi." : "Đã chép nội dung thư cũ vào nội dung gửi riêng. Hãy sửa thông tin khách và mã đơn cũ trước khi gửi." }); }} />}
+          <div hidden={view !== "templates"}><MailTemplateLibrary key={librarySeed?.id || "library"} request={request} active={view === "templates"} seed={librarySeed} onUse={applyTemplate} /></div>
           <div className="admin-email-panel" hidden={view !== "orders"}>
-          <OrderEmailSettings key={JSON.stringify(orderTemplate)} initialTemplate={orderTemplate} selectedTemplate={automaticTemplateChoice} onChooseTemplate={() => setPicker("orderAutomatic")} onSaveLibrary={(message) => prepareTemplate(message, "order")} onSave={async (message) => { const result = await request({ action: "saveOrderTemplate", ...message }); setOrderTemplate({ ...message }); setAutomaticTemplateChoice({ id: crypto.randomUUID(), message: { ...message } }); setNotice({ text: result.message }); return result; }} />
+          <OrderEmailSettings key={JSON.stringify(orderTemplate)} initialTemplate={orderTemplate} selectedTemplate={automaticTemplateChoice} onChooseTemplate={() => setPicker("orderAutomatic")} onSave={async (message) => { const result = await request({ action: "saveOrderTemplate", ...message }); setOrderTemplate({ ...message }); setAutomaticTemplateChoice({ id: crypto.randomUUID(), message: { ...message } }); setNotice({ text: result.message }); return result; }} />
           </div>
-          <div className="admin-email-panel" hidden={view !== "orderSend"}><OrderEmailSender savedTemplate={orderTemplate} reuseTemplate={reusedOrderTemplate} onChooseTemplate={() => setPicker("order")} onSaveLibrary={(message) => prepareTemplate(message, "order")} /></div>
+          <div className="admin-email-panel" hidden={view !== "orderSend"}><OrderEmailSender reuseTemplate={reusedOrderTemplate} onChooseTemplate={() => setPicker("order")} onSaveLibrary={(message) => prepareTemplate(message, "order")} /></div>
           <div className="admin-email-panel" hidden={view !== "welcome"}>
           <form className="admin-card admin-form" onSubmit={(event) => {
             event.preventDefault();
@@ -271,7 +273,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
           </div>
           <div className="admin-email-panel" hidden={view !== "compose"}>
           <form className="admin-card admin-form" onSubmit={sendCampaign}>
-            <h2>Soạn thư mới</h2><div className="admin-actions"><button type="button" className="admin-btn" disabled={busy} onClick={() => setPicker("general")}>Chọn mẫu thư</button><button type="button" className="admin-btn" disabled={busy} onClick={() => prepareTemplate(draft)}>Lưu nội dung thành mẫu</button></div>
+            <h2>Soạn thư mới</h2><div className="admin-actions"><button type="button" className="admin-btn" disabled={busy} onClick={() => setPicker("general")}>Chọn mẫu thư</button><button type="button" className="admin-btn" disabled={busy || !!campaignTemplateRef || !draft.subject.trim() || !draft.text.trim()} onClick={() => prepareTemplate(draft)}>Lưu thành mẫu cho khách</button></div>
             <fieldset className="newsletter-recipient-picker" disabled={busy}>
               <legend>Người nhận thư</legend>
               <label className="admin-check"><input type="radio" name="recipient-mode" checked={recipientMode === "selected"} onChange={() => setRecipientMode("selected")} />Chọn email cụ thể</label>
@@ -288,7 +290,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
                 <p className="admin-muted">Chỉ gửi đến email đã chọn, kể cả khi bạn đổi từ khóa tìm kiếm. Email tạm ngưng hoặc hủy đăng ký không nhận thư.</p>
               </> : <p className="admin-muted">Gửi đến toàn bộ email đang hoạt động, gồm cả email chưa tải trên màn hình. Danh sách được kiểm tra lại khi gửi.</p>}
             </fieldset>
-            <MessageFields prefix="campaign" value={draft} onChange={setDraft} disabled={busy} />
+            <MessageFields prefix="campaign" value={draft} onChange={(message) => { setDraft(message); setCampaignTemplateRef(null); }} disabled={busy} />
             <button type="button" className="admin-btn" onClick={() => setPreview({ title: "Xem trước nội dung", message: draft, kind: "general" })}>Xem trước nội dung</button>
             <p className="admin-muted">Giữ trang này mở trong lúc gửi. Có thể tạm dừng và tiếp tục bằng thư đã tạo để tránh gửi trùng.</p>
             <button className="admin-btn primary" disabled={busy || (recipientMode === "selected" && !eligibleIds.length)}>{recipientMode === "selected" ? `Gửi tới ${eligibleIds.length} email đã chọn` : "Gửi đến toàn bộ email hoạt động"}</button>
@@ -298,7 +300,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
             <h2>Lịch sử gửi đến danh sách đăng ký</h2>
             <p className="admin-muted">20 thư gần nhất. Lịch sử thư xác nhận mua hàng nằm trong chi tiết từng đơn.</p>
 
-            <div style={{ overflowX: "auto" }}><table className="admin-table"><thead><tr><th>Tiêu đề</th><th>Mẫu thư</th><th>Tài khoản thao tác</th><th>Người nhận</th><th>Trạng thái</th><th>Microsoft đã nhận</th><th>Lỗi</th><th>Chưa rõ</th><th>Thao tác</th></tr></thead>
+            <div style={{ overflowX: "auto" }}><table className="admin-table"><thead><tr><th>Tiêu đề</th><th>Mẫu lúc gửi</th><th>Tài khoản thao tác</th><th>Người nhận</th><th>Trạng thái</th><th>Microsoft đã nhận</th><th>Lỗi</th><th>Chưa rõ</th><th>Thao tác</th></tr></thead>
               <tbody>{campaigns.map((item) => <tr key={item.id}>
                 <td className="mail-history-subject" title={item.subject}>{item.subject}</td><td><button type="button" className="admin-template-link" onClick={() => setPreview({ title: campaignTemplates.byMail.get(item.id)?.label || "Mẫu thư đã gửi", message: { subject: item.subject, text: item.text }, kind: "general" })}>{campaignTemplates.byMail.get(item.id)?.label || "Xem mẫu"}</button></td><td>{mailActorLabel(item)}</td><td>{item.recipientIds ? <details className="newsletter-history-recipients"><summary>{item.recipientIds.length} email đã chọn</summary><ul>{item.recipientIds.map((id, index) => <li key={id}>{item.recipientEmails?.[index] || `Email cũ không còn trong danh sách (${id.slice(0, 8)}…)`}</li>)}</ul></details> : "Toàn bộ email hoạt động"}</td><td>{STATUS[item.status] || item.status}</td><td>{item.accepted || 0}</td><td>{item.failed || 0}</td><td>{item.unknown || 0}</td>
                 <td>{item.status !== "completed" && <button className="admin-btn" disabled={busy} onClick={() => {
@@ -356,7 +358,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
           </div>
         </>
       )}
-      {picker && <MailTemplatePicker request={request} kind={picker === "orderAutomatic" ? "order" : picker} available={availableTemplates} onUse={(item) => { if (picker === "orderAutomatic") { setAutomaticTemplateChoice({ id: crypto.randomUUID(), message: { subject: item.subject, text: item.text } }); setPicker(null); setView("orders"); setNotice({ text: "Đã chọn mẫu cho thư tự động. Bấm Lưu mẫu thư đơn hàng để áp dụng." }); } else applyTemplate(item); }} onClose={() => setPicker(null)} />}
+      {picker && <MailTemplatePicker request={request} kind={picker === "orderAutomatic" ? "order_auto" : picker} available={availableTemplates} onUse={(item) => { if (picker === "orderAutomatic") { setAutomaticTemplateChoice({ id: crypto.randomUUID(), message: { subject: item.subject, text: item.text, ...(templateReference(item) ? { templateRef: templateReference(item) } : {}) } }); setPicker(null); setView("orders"); setNotice({ text: "Đã chọn mẫu cho thư tự động. Bấm Lưu mẫu thư đơn hàng để áp dụng." }); } else applyTemplate(item); }} onClose={() => setPicker(null)} onManage={() => { setPicker(null); setView("templates"); }} />}
       {preview && <MailPreviewDialog title={preview.title} message={preview.message} onClose={() => setPreview(null)}><button type="button" className="admin-btn" onClick={() => { prepareTemplate(preview.message, preview.kind, preview.title); setPreview(null); }}>Lưu thành mẫu mới</button><button type="button" className="admin-btn" onClick={() => applyTemplate({ ...preview.message, kind: preview.kind })}>Dùng mẫu này</button></MailPreviewDialog>}
     </section>
   );

@@ -87,3 +87,40 @@ test("manual order mail records verified account and reusable source template wi
   assert.equal(event.templateSubject, message.subject); assert.equal(event.templateText, message.text);
   assert.deepEqual((await db.collection("newsletterSettings").doc("orderConfirmation").get()).data(), original);
 });
+
+test("sent order snapshots keep template name and content across rename, edits and deletion; stale picks cannot send", async () => {
+  const { db, orderId } = await setup(); const sent = [];
+  const handler = createNewsletterAdminHandler({ getDb: () => db, env, verifyToken: async () => ({ uid: "owner" }), sendMail: async () => {} });
+  const call = async (body) => { const res = response(); await handler({ method: "POST", headers, body }, res); return res; };
+  const original = { action: "saveLibraryTemplate", id: "manual-template", name: "Cảm ơn ban đầu", kind: "order", subject: "Đơn {{orderCode}}", text: "Chào {{customerName}}" };
+  await call(original);
+  const templateRef = { id: original.id, revision: 1 };
+  await sendOrderConfirmation({ db, orderId, manual: true, requestId: randomUUID(), message: original, templateRef, sendMail: async (...args) => sent.push(args) });
+  let saved = (await db.collection("newsletterTemplates").doc(original.id).get()).data();
+  assert.equal(saved.sentCount, 1); assert.deepEqual(saved.usedRevisions, [1]);
+  await call({ ...original, name: "Đổi tên mới", text: "Nội dung mới {{orderCode}}" });
+  saved = (await db.collection("newsletterTemplates").doc(original.id).get()).data();
+  assert.equal(saved.revision, 2); assert.equal(saved.sentCount, 1); assert.deepEqual(saved.usedRevisions, [1]);
+  const event = (await db.collection("orders").doc(orderId).collection("mailEvents").get()).docs[0].data();
+  assert.equal(event.templateName, original.name); assert.equal(event.templateRevision, 1); assert.equal(event.templateText, original.text); assert.equal(event.text, "Chào Khách thử");
+  await assert.rejects(sendOrderConfirmation({ db, orderId, manual: true, requestId: randomUUID(), message: original, templateRef, confirmResend: true, sendMail: async (...args) => sent.push(args) }), /template_changed/);
+  assert.equal(sent.length, 1);
+  await call({ action: "deleteLibraryTemplate", id: original.id });
+  assert.equal((await db.collection("orders").doc(orderId).collection("mailEvents").get()).docs[0].data().templateName, original.name);
+});
+
+test("automatic template applies a snapshot and keeps it when the library changes later", async () => {
+  const { db, orderId } = await setup();
+  const admin = createNewsletterAdminHandler({ getDb: () => db, env, verifyToken: async () => ({ uid: "owner" }), sendMail: async () => {} });
+  const call = async (body) => { const res = response(); await admin({ method: "POST", headers, body }, res); return res; };
+  const template = { id: "automatic-template", name: "Tự động v1", kind: "order_auto", subject: "Đơn {{orderCode}}", text: "Nội dung gốc" };
+  assert.equal((await call({ action: "saveLibraryTemplate", ...template })).statusCode, 200);
+  assert.equal((await call({ action: "saveOrderTemplate", ...template, templateRef: { id: template.id, revision: 1 } })).statusCode, 200);
+  await call({ action: "saveLibraryTemplate", ...template, name: "Đổi tên v2", text: "Nội dung khác" });
+  const sent = []; await sendOrderConfirmation({ db, orderId, sendMail: async (...args) => sent.push(args) });
+  assert.equal(sent[0][1].text, "Nội dung gốc");
+  const event = (await db.collection("orders").doc(orderId).collection("mailEvents").get()).docs[0].data();
+  assert.equal(event.templateName, "Tự động v1"); assert.equal(event.templateRevision, 1);
+  const current = (await db.collection("newsletterTemplates").doc(template.id).get()).data();
+  assert.equal(current.revision, 2); assert.deepEqual(current.usedRevisions, [1]);
+});

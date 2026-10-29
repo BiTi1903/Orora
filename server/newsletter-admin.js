@@ -1,3 +1,4 @@
+import { captureTemplate, recordTemplateUse, templateIdentity } from "./template-snapshot.js";
 import { mailActor, resolveMailActors } from "./mail-actor.js";
 import { DEFAULT_ORDER_MESSAGE, validateOrderTemplate } from "./order-mail.js";
 import { firebaseAuthFailure } from "./firebase-auth-error.js";
@@ -51,7 +52,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         let query = db.collection("newsletterTemplates").orderBy("__name__").limit(50);
         if (cursor) query = query.startAfter(cursor);
         const page = await query.get();
-        return reply(200, { templates: page.docs.map((doc) => ({ id: doc.id, ...doc.data(), createdAt: millis(doc.data().createdAt), updatedAt: millis(doc.data().updatedAt) })), nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
+        return reply(200, { templates: page.docs.map((doc) => ({ id: doc.id, ...doc.data(), revision: doc.data().revision || 1, createdAt: millis(doc.data().createdAt), updatedAt: millis(doc.data().updatedAt) })), nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
       }
       if (req.method === "GET") {
         const cursor = req.query?.cursor;
@@ -77,7 +78,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         return reply(200, {
           contacts: page.docs.map(publicContact),
           nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null,
-          orderTemplate: orderTemplate.exists ? { subject: String(orderTemplate.data().subject || ""), text: String(orderTemplate.data().text || "") } : DEFAULT_ORDER_MESSAGE,
+          orderTemplate: orderTemplate.exists ? { subject: String(orderTemplate.data().subject || ""), text: String(orderTemplate.data().text || ""), ...templateIdentity(orderTemplate.data()) } : DEFAULT_ORDER_MESSAGE,
           welcome: welcome.exists ? validateMessage(welcome.data()) : DEFAULT_WELCOME,
           campaigns: await resolveMailActors(campaignHistory, lookupUser),
         });
@@ -90,19 +91,25 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         return reply(200, { id: body.id, message: "Đã xóa mẫu khỏi kho. Mẫu tự động và lịch sử thư vẫn được giữ." });
       }
       if (body.action === "saveLibraryTemplate") {
-        if (!validId(body.id) || typeof body.name !== "string" || !body.name.trim() || body.name.trim().length > 100 || !["general", "order"].includes(body.kind)) return reply(400, { message: "Nhập tên mẫu (tối đa 100 ký tự) và chọn loại mẫu hợp lệ." });
-        const message = body.kind === "order" ? validateOrderTemplate(body) : validateMessage(body);
+        if (!validId(body.id) || typeof body.name !== "string" || !body.name.trim() || body.name.trim().length > 100 || !["general", "order", "order_auto"].includes(body.kind)) return reply(400, { message: "Nhập tên mẫu (tối đa 100 ký tự) và chọn loại mẫu hợp lệ." });
+        const message = body.kind !== "general" ? validateOrderTemplate(body) : validateMessage(body);
         const ref = db.collection("newsletterTemplates").doc(body.id);
         await db.runTransaction(async (tx) => {
           const saved = await tx.get(ref); const updatedAt = new Date();
-          tx.set(ref, { name: body.name.trim(), kind: body.kind, ...message, ...mailActor(user), createdAt: saved.exists ? saved.data().createdAt : updatedAt, updatedAt });
+          const previous = saved.data() || {};
+          const changed = ["name", "kind", "subject", "text"].some((key) => previous[key] !== ({ name: body.name.trim(), kind: body.kind, ...message })[key]);
+          tx.set(ref, { ...previous, name: body.name.trim(), kind: body.kind, ...message, ...mailActor(user), revision: saved.exists ? (previous.revision || 1) + (changed ? 1 : 0) : 1, usageTracked: saved.exists ? previous.usageTracked === true : true, sentCount: previous.sentCount || 0, usedRevisions: previous.usedRevisions || [], createdAt: saved.exists ? previous.createdAt : updatedAt, updatedAt });
         });
         return reply(200, { id: body.id, message: "Đã lưu vào Mẫu Thư. Chưa gửi email hoặc thay đổi mẫu tự động." });
       }
       if (body.action === "saveOrderTemplate") {
         let message;
         try { message = validateOrderTemplate(body); } catch { return reply(400, { message: "Kiểm tra tiêu đề, nội dung và tên biến trong mẫu thư đơn hàng." }); }
-        await db.collection("newsletterSettings").doc("orderConfirmation").set({ ...message, updatedAt: new Date(), updatedBy: user.uid });
+        await db.runTransaction(async (tx) => {
+          const current = await tx.get(db.collection("newsletterSettings").doc("orderConfirmation"));
+          const snapshot = body.templateRef ? await captureTemplate(tx, db, body.templateRef, message, "order_auto") : current.exists && current.data().subject === message.subject && current.data().text === message.text ? templateIdentity(current.data()) : {};
+          tx.set(db.collection("newsletterSettings").doc("orderConfirmation"), { ...message, ...snapshot, updatedAt: new Date(), updatedBy: user.uid });
+        });
         return reply(200, { message: "Đã lưu mẫu thư xác nhận đơn hàng." });
       }
       if (body.action === "saveWelcome") {
@@ -169,7 +176,8 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
             if (people.some((person) => !person.exists || person.data().status !== "active")) throw new Error("invalid_recipients");
             recipientEmails = people.map((person) => person.data().email);
           }
-          tx.set(campaign, { ...message, recipientIds: recipients, recipientEmails, createdAt: new Date(), createdBy: user.uid, ...mailActor(user), status: "draft", cursor: null, accepted: 0, failed: 0, unknown: 0 });
+          const snapshot = await captureTemplate(tx, db, body.templateRef, message, "general");
+          tx.set(campaign, { ...message, ...snapshot, templateName: snapshot.templateName || "Thư soạn riêng cho khách", recipientIds: recipients, recipientEmails, createdAt: new Date(), createdBy: user.uid, ...mailActor(user), status: "draft", cursor: null, accepted: 0, failed: 0, unknown: 0 });
         });
         return reply(200, { id: body.id, message: "Đã tạo thư. Chưa gửi email." });
       }
@@ -222,6 +230,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
             await db.runTransaction(async (tx) => {
               const current = await tx.get(campaign);
               if (current.data().lease !== lease) throw new Error("campaign_busy");
+              if (result === "accepted" && !(current.data().accepted > 0)) await recordTemplateUse(tx, db, current.data());
               tx.set(delivery, { status: result, updatedAt: new Date() }, { merge: true });
               tx.set(campaign, { [result]: (current.data()[result] || 0) + 1 }, { merge: true });
             });
@@ -273,6 +282,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         invalid_order_token: [400, "Tên biến trong mẫu đơn hàng chưa hợp lệ."],
         invalid_message: [400, "Nhập tiêu đề (tối đa 200 ký tự) và nội dung (tối đa 20.000 ký tự)."],
         invalid_recipients: [400, "Một email đã ngừng hoạt động hoặc bị xóa. Tải lại danh sách người nhận trước khi gửi."],
+        template_changed: [409, "Mẫu đã được sửa hoặc xóa. Chọn lại mẫu hiện tại, hoặc sửa nội dung để gửi như thư soạn riêng."],
         campaign_conflict: [409, "Mã thư đã dùng cho nội dung khác."],
         campaign_missing: [404, "Không tìm thấy thư."],
         campaign_busy: [409, "Thư đang được gửi ở một phiên khác. Vui lòng chờ tối đa 2 phút rồi tải lại."],

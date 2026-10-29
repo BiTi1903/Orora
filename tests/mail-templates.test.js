@@ -18,3 +18,13 @@ test("actor names reflect real accounts; old UID profiles resolve once, automati
   const missing = await resolveMailActors([{ manual: true, actor: "deleted" }], async () => { throw Error("Not found"); });
   assert.match(mailActorLabel(missing[0]), /deleted/);
 });
+
+test("history labels use sent snapshots, never transient numbering or live template names", async () => {
+  const { templateUsageLabel } = await import("../src/lib/mail-templates.js");
+  const mails = [{ id: "sent-1", createdAt: 1, subject: "Sent title", text: "Sent body", templateName: "Tên lúc gửi", templateId: "saved", templateRevision: 1 }];
+  assert.equal(groupMailTemplates(mails).byMail.get("sent-1").label, "Tên lúc gửi · v1");
+  assert.match(templateUsageLabel({ revision: 1, usedRevisions: [1], sentCount: 1 }), /Đã gửi/);
+  assert.match(templateUsageLabel({ revision: 2, usedRevisions: [1], sentCount: 1 }), /bản hiện tại chưa gửi/);
+  assert.equal(templateUsageLabel({ revision: 1, usageTracked: true }), "Chưa gửi");
+  assert.match(templateUsageLabel({}), /Lịch sử cũ/);
+});

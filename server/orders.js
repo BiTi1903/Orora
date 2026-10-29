@@ -1,3 +1,4 @@
+import { templateIdentity } from "./template-snapshot.js";
 import { mailActor, resolveMailActors } from "./mail-actor.js";
 import { sendOrderConfirmation, validOrderEmail } from "./order-mail.js";
 import { createHash, randomUUID } from "node:crypto";
@@ -111,7 +112,7 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
         if (historyOnly) {
           const histories = await Promise.all(page.docs.map(async (order) => {
             const history = await orders.doc(order.id).collection("mailEvents").get();
-            return history.docs.map((event) => ({ id: `${order.id}/${event.id}`, orderId: order.id, orderCode: order.data().code, customerName: order.data().customer?.name || "", actor: event.data().actor || "", actorName: event.data().actorName || "", actorEmail: event.data().actorEmail || "", ...(typeof event.data().templateSubject === "string" && typeof event.data().templateText === "string" ? { templateSubject: event.data().templateSubject, templateText: event.data().templateText } : {}), subject: event.data().subject || "", text: event.data().text || "", recipient: event.data().recipient || "", state: event.data().state || "unknown", manual: event.data().manual === true, errorCode: event.data().errorCode || "", createdAt: millis(event.data().createdAt), updatedAt: millis(event.data().updatedAt) }));
+            return history.docs.map((event) => ({ id: `${order.id}/${event.id}`, orderId: order.id, orderCode: order.data().code, customerName: order.data().customer?.name || "", ...templateIdentity(event.data()), actor: event.data().actor || "", actorName: event.data().actorName || "", actorEmail: event.data().actorEmail || "", ...(typeof event.data().templateSubject === "string" && typeof event.data().templateText === "string" ? { templateSubject: event.data().templateSubject, templateText: event.data().templateText } : {}), subject: event.data().subject || "", text: event.data().text || "", recipient: event.data().recipient || "", state: event.data().state || "unknown", manual: event.data().manual === true, errorCode: event.data().errorCode || "", createdAt: millis(event.data().createdAt), updatedAt: millis(event.data().updatedAt) }));
           }));
           return res.status(200).json({ mails: await resolveMailActors(histories.flat(), lookupUser), scannedOrders: page.docs.length, nextCursor: page.docs.length === pageSize ? page.docs.at(-1).id : null });
         }
@@ -124,7 +125,7 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
       const body = readBody(req, env, 40000);
       if (body.action === "sendOrderEmail") {
         if (!uuid(body.id) || !uuid(body.requestId)) return res.status(400).json({ message: "Yêu cầu gửi thư không hợp lệ." });
-        const result = await sendOrderConfirmation({ db, orderId: body.id, sendMail, manual: true, requestId: body.requestId, confirmResend: body.confirmResend === true, ...mailActor(user), message: body.message });
+        const result = await sendOrderConfirmation({ db, orderId: body.id, sendMail, manual: true, requestId: body.requestId, confirmResend: body.confirmResend === true, ...mailActor(user), message: body.message, templateRef: body.templateRef });
         return res.status(200).json({ ...result, message: result.state === "failed" ? "Gửi thư bị lỗi. Xem lịch sử của đơn hàng." : result.state === "unknown" ? "Chưa rõ kết quả gửi. Kiểm tra Microsoft trước khi gửi lại." : "Đã xử lý yêu cầu gửi thư cho đơn hàng." });
       }
       if (!uuid(body.id) || (body.status !== undefined ? !["new", "confirmed", "shipping", "completed", "cancelled"].includes(body.status) : !["unpaid", "paid"].includes(body.paymentStatus))) return res.status(400).json({ message: "Đơn hàng hoặc trạng thái không hợp lệ." });
@@ -134,6 +135,6 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
         tx.set(ref, { ...(body.status !== undefined ? { status: body.status, ...(body.status === "completed" ? { paymentStatus: "paid" } : {}) } : { paymentStatus: body.paymentStatus }), updatedAt: new Date(), updatedBy: user.uid }, { merge: true });
       });
       return res.status(200).json({ message: body.status === "completed" ? "Đã hoàn tất đơn hàng và ghi nhận đã thanh toán." : "Đã cập nhật trạng thái đơn hàng." });
-    } catch (error) { return res.status(error.status || 503).json({ message: error.status ? error.message : "Không tải hoặc cập nhật được đơn hàng." }); }
+    } catch (error) { return res.status(error.status || 503).json({ message: error.message === "template_changed" ? "Mẫu đã được sửa hoặc xóa. Chọn lại mẫu hiện tại hoặc soạn nội dung riêng." : error.status ? error.message : "Không tải hoặc cập nhật được đơn hàng." }); }
   };
 }

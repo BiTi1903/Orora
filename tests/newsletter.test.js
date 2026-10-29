@@ -370,3 +370,19 @@ test("deleting a library template preserves automatic templates and sent history
   assert.deepEqual((await db.collection("newsletterSettings").doc("orderConfirmation").get()).data(), original);
   assert.equal((await db.collection("newsletterCampaigns").doc("sent-before").get()).data().text, "Sent content");
 });
+
+test("customer mail records a frozen template snapshot and counts use once per campaign", async () => {
+  const db = memoryDb(); await seed(db, 4); const { call, sent } = admin(db);
+  const template = { action: "saveLibraryTemplate", id: "customer-template", name: "Tên cũ", kind: "general", ...message };
+  await call(template);
+  await call({ action: "createCampaign", id: "frozen", ...message, templateRef: { id: template.id, revision: 1 } });
+  await call({ ...template, name: "Tên mới", text: "Khác nội dung" });
+  let result;
+  for (let i = 0; i < 5; i++) { result = await call({ action: "sendBatch", id: "frozen" }); if (result.body.completed) break; }
+  assert.equal(sent.length, 4); assert.equal(sent[0][1].text, message.text);
+  const campaign = (await db.collection("newsletterCampaigns").doc("frozen").get()).data();
+  assert.equal(campaign.templateName, "Tên cũ"); assert.equal(campaign.templateRevision, 1);
+  const current = (await db.collection("newsletterTemplates").doc(template.id).get()).data();
+  assert.equal(current.name, "Tên mới"); assert.equal(current.sentCount, 1); assert.deepEqual(current.usedRevisions, [1]);
+  assert.equal((await call({ action: "createCampaign", id: "wrong-kind", ...message, templateRef: { id: template.id, revision: 1 } })).statusCode, 409);
+});
