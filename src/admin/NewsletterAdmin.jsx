@@ -166,7 +166,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
         if (!alive.current) return;
         setCampaigns((items) => items.map((item) => item.id === id ? result.campaign : item));
         if (result.paused) {
-          setNotice({ error: true, text: "Đã tạm dừng do có thư gửi lỗi hoặc chưa rõ kết quả. Kiểm tra cấu hình Microsoft trước khi tiếp tục. Các địa chỉ đã xử lý sẽ không tự gửi lại trong lần gửi này." });
+          setNotice({ error: true, text: result.message || "Đã tạm dừng do có thư gửi lỗi hoặc chưa rõ kết quả. Kiểm tra cấu hình Microsoft trước khi tiếp tục. Các địa chỉ đã xử lý sẽ không tự gửi lại trong lần gửi này." });
           return;
         }
         if (result.completed) {

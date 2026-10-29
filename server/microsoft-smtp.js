@@ -83,7 +83,8 @@ export function createMicrosoftSmtpMailer(env = process.env, request = fetch, cr
         throw tracked(Object.assign(failure("mail_smtp_auth_failed"), { smtp: authDetails(error) }));
       }
       if (Number(error.responseCode) >= 400 && Number(error.responseCode) <= 599) {
-        throw tracked(failure("mail_send_failed", Number(error.responseCode)));
+        const { responseCode, enhancedCode } = authDetails(error);
+        throw tracked(Object.assign(failure("mail_send_failed", Number(error.responseCode)), { smtp: { responseCode, enhancedCode } }));
       }
       if (error.command === "CONN") throw tracked(failure("mail_smtp_connection_failed"));
       // A dropped connection during DATA can occur after acceptance. Do not auto-resend.

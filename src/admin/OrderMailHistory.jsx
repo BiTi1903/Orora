@@ -57,7 +57,7 @@ export default function OrderMailHistory({ onReuse }) {
 
       </div>
     </>}
-    {selected && <MailPreviewDialog title={selected.mail ? "Bản thư đã gửi — giữ nguyên lúc gửi" : `Mẫu tại thời điểm gửi: ${selected.template.label}`} message={selected.mail || selected.template.message} onClose={() => setSelected(null)} metadata={selected.mail && <><p>Người nhận: {selected.mail.recipient} · {selected.mail.orderCode}</p><p>Tài khoản thao tác: {mailActorLabel(selected.mail)}</p>{selected.mail.errorCode && <p className="admin-error">Mã lỗi: {selected.mail.errorCode}</p>}</>}>
+    {selected && <MailPreviewDialog title={selected.mail ? "Bản thư đã gửi — giữ nguyên lúc gửi" : `Mẫu tại thời điểm gửi: ${selected.template.label}`} message={selected.mail || selected.template.message} onClose={() => setSelected(null)} metadata={selected.mail && <><p>Người nhận: {selected.mail.recipient} · {selected.mail.orderCode}</p><p>Tài khoản thao tác: {mailActorLabel(selected.mail)}</p>{selected.mail.errorCode && <p className="admin-error">Mã lỗi: {selected.mail.errorCode}{selected.mail.errorMessage ? ` · ${selected.mail.errorMessage}` : ""}</p>}</>}>
       {onReuse && <button className="admin-btn" onClick={() => onReuse(selected.template.message, selected.template.original)}>Soạn thư mới từ bản này</button>}
     </MailPreviewDialog>}
     {!busy && !error && !filtered.length && <p className="admin-muted">Chưa có thư đơn hàng phù hợp.</p>}

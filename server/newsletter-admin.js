@@ -1,3 +1,4 @@
+import { describeMailError } from "./mail-error.js";
 import { safeMailTracking } from "./mail-tracking.js";
 import { syncOutlookStatus, OUTLOOK_ERROR_MESSAGES } from "./outlook-status.js";
 import { ensureDefaultMailTemplates } from "./default-mail-templates.js";
@@ -94,7 +95,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         let query = campaigns.doc(body.id).collection("deliveries").orderBy("__name__").limit(50);
         if (body.cursor) query = query.startAfter(body.cursor);
         const page = await query.get();
-        return reply(200, { deliveries: page.docs.map((doc) => ({ id: doc.id, email: doc.data().email, status: doc.data().status, outlook: doc.data().outlook || null })), nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
+        return reply(200, { deliveries: page.docs.map((doc) => ({ id: doc.id, email: doc.data().email, status: doc.data().status, errorCode: doc.data().errorCode || "", errorMessage: doc.data().errorMessage || "", outlook: doc.data().outlook || null })), nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
       }
       if (body.action === "checkCampaignOutlook") {
         if (!validId(body.id) || !/^[a-f0-9]{64}$/.test(body.deliveryId || "")) return reply(400, { message: "Bản ghi gửi thư không hợp lệ." });
@@ -258,6 +259,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
       if (state.status === "completed") return reply(200, { completed: true, campaign: { id: body.id, ...state } });
       let query = contacts.orderBy("__name__").limit(20);
       if (state.cursor) query = query.startAfter(state.cursor);
+      let lastError = null;
       let sent = 0;
       let paused = false;
       let cursor = state.cursor;
@@ -283,11 +285,12 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
             return contact;
           });
           if (claim) {
-            let result = "accepted"; let tracking = {};
+            let result = "accepted"; let tracking = {}; let diagnostic = {};
             try {
               tracking = safeMailTracking(await sendMail(claim.email, validateMessage(state)));
             } catch (error) {
               tracking = safeMailTracking(error.mailTracking);
+              diagnostic = describeMailError(error); lastError = diagnostic;
               // A timeout may happen AFTER Microsoft accepts a message. Never resend it automatically.
               result = ["mail_auth_failed", "mail_send_failed", "mail_configuration_missing", "mail_smtp_auth_failed", "mail_smtp_connection_failed", "mail_transport_invalid"].includes(error.message) ? "failed" : "unknown";
               paused = true;
@@ -296,7 +299,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
               const current = await tx.get(campaign);
               if (current.data().lease !== lease) throw new Error("campaign_busy");
               if (result === "accepted" && !(current.data().accepted > 0)) await recordTemplateUse(tx, db, current.data());
-              tx.set(delivery, { status: result, ...tracking, updatedAt: new Date() }, { merge: true });
+              tx.set(delivery, { status: result, ...diagnostic, ...tracking, updatedAt: new Date() }, { merge: true });
               tx.set(campaign, { [result]: (current.data()[result] || 0) + 1 }, { merge: true });
             });
             sent += 1;
@@ -311,7 +314,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
           tx.set(campaign, { cursor, status: completed ? "completed" : "paused", leaseUntil: 0, updatedAt: new Date() }, { merge: true });
         });
         const saved = (await campaign.get()).data();
-        return reply(200, { completed, paused, campaign: { id: body.id, ...saved } });
+        return reply(200, { completed, paused, ...(lastError ? { message: lastError.errorMessage } : {}), campaign: { id: body.id, ...saved } });
       } catch (error) {
         // Release only our lease. Reserved deliveries remain non-retryable if their outcome is unknown.
         await db.runTransaction(async (tx) => {

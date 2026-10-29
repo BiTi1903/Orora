@@ -98,6 +98,6 @@ export default function OrdersAdmin({ onOpenEmailMarketing }) {
       <p className="admin-muted">“Microsoft đã nhận” là chấp nhận yêu cầu gửi, chưa bảo đảm thư vào hộp thư khách. Chỉ đánh dấu thanh toán sau khi kiểm tra tiền thực nhận.</p>
     </article>}
     </div>
-    {mailPreview && <MailPreviewDialog title="Thư của đơn hàng" message={mailPreview} onClose={() => setMailPreview(null)} metadata={<><p>Gửi tới: {mailPreview.recipient}</p><p>Tài khoản thao tác: {mailActorLabel(mailPreview)}</p>{mailPreview.errorCode && <p className="admin-error">Mã lỗi: {mailPreview.errorCode}</p>}</>} />}
+    {mailPreview && <MailPreviewDialog title="Thư của đơn hàng" message={mailPreview} onClose={() => setMailPreview(null)} metadata={<><p>Gửi tới: {mailPreview.recipient}</p><p>Tài khoản thao tác: {mailActorLabel(mailPreview)}</p>{mailPreview.errorCode && <p className="admin-error">Mã lỗi: {mailPreview.errorCode}{mailPreview.errorMessage ? ` · ${mailPreview.errorMessage}` : ""}</p>}</>} />}
   </section>;
 }
