@@ -91,6 +91,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
   const alive = useRef(true);
 
   const load = useCallback(async () => {
+    await request({ action: "ensureDefaultTemplates" });
     const data = await request();
     if (!alive.current) return;
     setContacts(data.contacts);
@@ -197,7 +198,6 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
   };
 
   const campaignTemplates = groupMailTemplates(campaigns);
-  const availableTemplates = [...(orderTemplate ? [{ id: "current-order", name: "Xác nhận đơn tự động đang áp dụng", kind: "order_auto", ...orderTemplate }] : []), { id: "current-welcome", name: "Chào mừng tự động đang áp dụng", kind: "welcome_auto", ...welcome }];
   const applyTemplate = (item) => {
     const choice = { id: crypto.randomUUID(), name: item.name, message: { subject: item.subject, text: item.text, ...(templateReference(item) ? { templateRef: templateReference(item) } : {}) } };
     if (item.kind === "order_auto") { setAutomaticTemplateChoice(choice); setView("orders"); }
@@ -243,11 +243,11 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
           {view === "orderHistory" && <OrderMailHistory onReuse={(message, original) => { setReusedOrderTemplate({ id: crypto.randomUUID(), message }); setView("orderSend"); setNotice({ text: original ? "Đã chép mẫu vào nội dung gửi riêng. Kiểm tra và chọn đơn trước khi gửi; mẫu tự động không thay đổi." : "Đã chép nội dung thư cũ vào nội dung gửi riêng. Hãy sửa thông tin khách và mã đơn cũ trước khi gửi." }); }} />}
           <div hidden={view !== "templates"}><MailTemplateLibrary request={request} active={view === "templates"} onUse={applyTemplate} /></div>
           <div className="admin-email-panel" hidden={view !== "orders"}>
-          <OrderEmailSettings key={JSON.stringify(orderTemplate)} initialTemplate={orderTemplate} selectedTemplate={automaticTemplateChoice} onChooseTemplate={() => setPicker("order_auto")} onSave={async (message) => { const result = await request({ action: "saveOrderTemplate", ...message }); setOrderTemplate({ ...message }); setAutomaticTemplateChoice((choice) => choice ? { ...choice, message: { ...message } } : null); setNotice({ text: result.message }); return result; }} />
+          <OrderEmailSettings key={JSON.stringify(orderTemplate)} initialTemplate={orderTemplate} selectedTemplate={automaticTemplateChoice} onChooseTemplate={() => setPicker("order_auto")} onSave={async (message) => { const result = await request({ action: "saveOrderTemplate", ...message }); setOrderTemplate({ ...message }); setAutomaticTemplateChoice((choice) => ({ id: crypto.randomUUID(), name: message.templateRef ? choice?.name : "Nội dung đã lưu trực tiếp", message: { ...message } })); setNotice({ text: result.message }); return result; }} />
           </div>
           <div className="admin-email-panel" hidden={view !== "orderSend"}><OrderEmailSender reuseTemplate={reusedOrderTemplate} onChooseTemplate={() => setPicker("orderPrivate")} /></div>
           <div className="admin-email-panel" hidden={view !== "welcome"}>
-          <OrderEmailSettings title="Thư chào mừng tự động" saveLabel="Áp dụng mẫu chào mừng" initialTemplate={welcome} selectedTemplate={welcomeTemplateChoice} onChooseTemplate={() => setPicker("welcome_auto")} onSave={async (message) => { const result = await request({ action: "saveWelcome", ...message }); setWelcome({ ...message }); setNotice({ text: result.message }); return result; }} />
+          <OrderEmailSettings title="Thư chào mừng tự động" prefix="welcome" saveLabel="Áp dụng mẫu chào mừng" initialTemplate={welcome} selectedTemplate={welcomeTemplateChoice} onChooseTemplate={() => setPicker("welcome_auto")} onSave={async (message) => { const result = await request({ action: "saveWelcome", ...message }); setWelcome({ ...message }); setWelcomeTemplateChoice((choice) => ({ id: crypto.randomUUID(), name: message.templateRef ? choice?.name : "Nội dung đã lưu trực tiếp", message: { ...message } })); setNotice({ text: result.message }); return result; }} />
           <form className="admin-card admin-form" onSubmit={(event) => {
             event.preventDefault();
             perform(async () => {
@@ -350,7 +350,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
           </div>
         </>
       )}
-      {picker && <MailTemplatePicker request={request} kind={picker === "orderPrivate" ? "private" : picker} orderContext={picker === "orderPrivate"} available={availableTemplates} onUse={applyTemplate} onClose={() => setPicker(null)} onManage={() => { setPicker(null); setView("templates"); }} />}
+      {picker && <MailTemplatePicker request={request} kind={picker === "orderPrivate" ? "private" : picker} orderContext={picker === "orderPrivate"} onUse={applyTemplate} onClose={() => setPicker(null)} onManage={() => { setPicker(null); setView("templates"); }} />}
       {preview && <MailPreviewDialog title={preview.title} message={preview.message} onClose={() => setPreview(null)}><button type="button" className="admin-btn" onClick={() => applyTemplate({ ...preview.message, kind: preview.kind })}>Dùng mẫu này</button></MailPreviewDialog>}
     </section>
   );

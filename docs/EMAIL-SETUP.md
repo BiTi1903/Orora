@@ -159,8 +159,16 @@ Phần gửi đơn riêng khởi đầu bằng nội dung trống, không tự d
 
 Chỉ tạo/sửa mẫu trong **Mẫu Thư**: nhập tên, chọn **Mẫu thư gửi riêng**, **Mẫu thư xác nhận tự động** hoặc **Mẫu thư chào mừng tự động**, rồi lưu. Loại cũ `general`/`order` được đọc tương thích thành gửi riêng; không viết lại hàng loạt các mẫu hoặc lịch sử cũ.
 
-Các mục tự động chỉ chọn và áp dụng mẫu đã lưu, không có ô soạn trùng với kho. Mẫu chào mừng đã áp dụng giữ tên/phiên bản/nội dung độc lập với lần chỉnh sửa trong kho, và ghi nhận phiên bản đã dùng khi gửi chào mừng thành công.
+Các mục tự động có ô tiêu đề/nội dung để viết trực tiếp hoặc chọn mẫu đã lưu rồi chỉnh. Chỉ bấm Áp dụng mới cập nhật cấu hình đang chạy; không ghi đè bản mẫu trong kho. Mẫu chào mừng đã áp dụng giữ tên/phiên bản/nội dung độc lập với lần chỉnh sửa trong kho, và ghi nhận phiên bản đã dùng khi gửi chào mừng thành công.
 
 Gửi riêng dùng chung một loại mẫu: mẫu tĩnh dùng cho email khách hoặc đơn cụ thể; mẫu có biến đơn chỉ dùng khi chọn đơn. Danh sách khách và mẫu chào mừng không được nhận các biến đơn chưa điền.
 
-Đã bỏ toàn bộ nút xem trước ở nội dung đang nhập, cũng như lối tạo/lưu mẫu rải rác ở các màn hình gửi. Cửa sổ xem mẫu đã lưu và thư đã gửi vẫn giữ để đọc bản lưu. Việc chọn mẫu không tự gửi email hoặc áp dụng cấu hình tự động.
+Đã bỏ toàn bộ nút xem trước ở nội dung đang nhập. Kho mẫu vẫn có một form tạo mẫu và chọn loại khi lưu; không chia thành ba tab. Cửa sổ xem mẫu đã lưu và thư đã gửi vẫn giữ để đọc bản lưu. Việc chọn mẫu không tự gửi email hoặc áp dụng cấu hình tự động.
+
+### Danh sách mẫu chung và nội dung tự động có thể chỉnh trực tiếp
+
+**Mẫu Thư** hiển thị một danh sách chung, bỏ hàng tab theo loại. Loại chỉ là tùy chọn trong form lưu mẫu. Chọn mẫu từ các phần tự động sẽ tìm trong các bản đã lưu của danh sách này; có ô tìm tên/tiêu đề, không thêm hàng mẫu ảo đang dùng vào cửa sổ chọn.
+
+Khi mở trang quản trị ở bản mới, API được xác thực sẽ lưu một lần hai mẫu tự động hiện có (chào mừng và xác nhận đơn) vào kho, lấy đúng nội dung đang cấu hình; nếu chưa có cấu hình thì lấy mẫu mặc định. Mẫu được liên kết sẵn hoặc bản có ID mặc định đã tồn tại không bị ghi đè. Dấu mốc `newsletterSettings/libraryDefaultsSeed` ngăn tạo trùng và ngăn phục hồi mẫu mà admin chủ động xóa sau đó. Không đổi cấu hình tự động hoặc lịch sử trong bước này.
+
+**Thư chào mừng** và **Thư đơn hàng** có lại ô tiêu đề, nội dung cùng nút **Chọn mẫu có sẵn** và **Áp dụng**. Có thể viết trực tiếp, hoặc chọn mẫu rồi sửa. Nội dung chỉnh trực tiếp được tách khỏi liên kết mẫu đã chọn, để lịch sử không gắn nhầm tên mẫu gốc. Bản mẫu trong kho và thư đã gửi không bị sửa theo.

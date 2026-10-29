@@ -10,7 +10,6 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState(null);
-  const [kindFilter, setKindFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [preview, setPreview] = useState(null);
   const [version, setVersion] = useState(0);
@@ -48,12 +47,11 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
     finally { setBusy(false); }
   };
   const query = search.trim().toLowerCase();
-  const visible = templates.filter((item) => (kindFilter === "all" || item.kind === kindFilter) && [item.name, item.subject].some((value) => value.toLowerCase().includes(query)));
+  const visible = templates.filter((item) => [item.name, item.subject].some((value) => value.toLowerCase().includes(query)));
   const card = (item) => <div className="mail-library-row" key={item.id || item.name}><div><button type="button" className="admin-template-link" onClick={() => setPreview({ ...item, saved: true })}>{item.name}</button><p className="admin-muted">{TEMPLATE_KINDS[item.kind] || item.kind} · v{item.revision || 1}</p><span className={`mail-usage-badge ${item.usedRevisions?.includes(item.revision || 1) ? "sent" : ""}`}>{templateUsageLabel(item)}</span><p className="admin-muted">{item.subject}</p></div><div className="admin-actions"><button type="button" className="admin-btn" disabled={busy} onClick={() => edit(item)}>Chỉnh sửa</button><button type="button" className="admin-btn danger" disabled={busy} aria-label={`Xóa mẫu ${item.name}`} onClick={() => remove(item)}>Xóa mẫu</button></div></div>;
   return <div>
-    <div className="admin-top"><div><h2>Mẫu Thư</h2><p className="admin-muted">Tạo mẫu tại đây rồi chọn: gửi riêng, xác nhận tự động hoặc chào mừng tự động. Bản thư đã gửi luôn được giữ nguyên.</p></div><button type="button" className="admin-btn" disabled={loading || busy} onClick={() => setVersion((value) => value + 1)}>Tải lại mẫu</button></div>
+    <div className="admin-top"><div><h2>Mẫu Thư</h2><p className="admin-muted">Một danh sách mẫu chung. Khi lưu, chọn mục đích sử dụng trong ô Loại mẫu thư.</p></div><button type="button" className="admin-btn" disabled={loading || busy} onClick={() => setVersion((value) => value + 1)}>Tải lại mẫu</button></div>
     {notice && <p role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
-    <nav className="admin-section-tabs" aria-label="Loại mẫu thư"><button type="button" aria-current={kindFilter === "all" ? "page" : undefined} onClick={() => setKindFilter("all")}>Tất cả</button>{Object.entries(TEMPLATE_KINDS).map(([key, label]) => <button key={key} type="button" aria-current={kindFilter === key ? "page" : undefined} onClick={() => setKindFilter(key)}>{label} ({templates.filter((item) => item.kind === key).length})</button>)}</nav>
     <div className="mail-library-layout">
       <form className="admin-card admin-form" onSubmit={async (event) => {
         event.preventDefault(); if (busy) return; setBusy(true); setNotice(null);
@@ -67,7 +65,7 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
         <div className="admin-field"><label htmlFor="library-subject">Tiêu đề mẫu thư</label><input id="library-subject" required maxLength={200} disabled={busy} value={draft.subject} onChange={(event) => setDraft({ ...draft, subject: event.target.value })} /></div>
         <div className="admin-field"><label htmlFor="library-text">Nội dung mẫu thư</label><textarea id="library-text" required rows={10} maxLength={20000} disabled={busy} value={draft.text} onChange={(event) => setDraft({ ...draft, text: event.target.value })} /></div>
         {draft.kind !== "welcome_auto" && <p className="admin-muted">Biến đơn hàng: {"{{customerName}}, {{orderCode}}, {{productName}}, {{quantity}}, {{subtotal}}, {{paymentMethod}}, {{address}}, {{phone}}, {{email}}"}.</p>}
-        <div className="admin-actions"><button className="admin-btn primary" disabled={busy}>{id ? "Lưu thay đổi mẫu" : "Lưu mẫu thư"}</button><button type="button" className="admin-btn" disabled={busy} onClick={() => { pendingId.current = null; setId(null); setDraft({ ...empty, kind: kindFilter === "all" ? "private" : kindFilter }); }}>Tạo mẫu mới</button></div>
+        <div className="admin-actions"><button className="admin-btn primary" disabled={busy}>{id ? "Lưu thay đổi mẫu" : "Lưu mẫu thư"}</button><button type="button" className="admin-btn" disabled={busy} onClick={() => { pendingId.current = null; setId(null); setDraft(empty); }}>Tạo mẫu mới</button></div>
       </form>
       <div className="admin-card"><h3>Mẫu đã lưu ({templates.length})</h3><div className="admin-field"><label htmlFor="library-search">Tìm mẫu đã lưu</label><input id="library-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} /></div>{loading ? <p>Đang tải mẫu…</p> : <div className="mail-library-list">{visible.map(card)}{!visible.length && <p className="admin-muted">Chưa có mẫu phù hợp. Tạo mẫu, nhập nội dung và chọn loại ngay trong form bên cạnh.</p>}</div>}</div>
     </div>

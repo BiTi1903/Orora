@@ -1,3 +1,4 @@
+import { ensureDefaultMailTemplates } from "./default-mail-templates.js";
 import { TEMPLATE_KINDS, normalizeTemplateKind, hasOrderTokens } from "../src/lib/template-kinds.js";
 import { captureTemplate, recordTemplateUse, templateIdentity } from "./template-snapshot.js";
 import { mailActor, resolveMailActors } from "./mail-actor.js";
@@ -86,6 +87,10 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
       }
       const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
       if (!body || JSON.stringify(body).length > 40000) return reply(400, { message: "Dữ liệu không hợp lệ." });
+      if (body.action === "ensureDefaultTemplates") {
+        const created = await ensureDefaultMailTemplates(db, user);
+        return reply(200, { created, message: "Hai mẫu tự động hiện có đã sẵn sàng trong danh sách." });
+      }
       if (body.action === "deleteLibraryTemplate") {
         if (!validId(body.id)) return reply(400, { message: "Mẫu thư không hợp lệ." });
         await db.collection("newsletterTemplates").doc(body.id).delete();
