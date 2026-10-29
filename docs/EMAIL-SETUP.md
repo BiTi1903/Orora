@@ -172,3 +172,16 @@ Gửi riêng dùng chung một loại mẫu: mẫu tĩnh dùng cho email khách 
 Khi mở trang quản trị ở bản mới, API được xác thực sẽ lưu một lần hai mẫu tự động hiện có (chào mừng và xác nhận đơn) vào kho, lấy đúng nội dung đang cấu hình; nếu chưa có cấu hình thì lấy mẫu mặc định. Mẫu được liên kết sẵn hoặc bản có ID mặc định đã tồn tại không bị ghi đè. Dấu mốc `newsletterSettings/libraryDefaultsSeed` ngăn tạo trùng và ngăn phục hồi mẫu mà admin chủ động xóa sau đó. Không đổi cấu hình tự động hoặc lịch sử trong bước này.
 
 **Thư chào mừng** và **Thư đơn hàng** có lại ô tiêu đề, nội dung cùng nút **Chọn mẫu có sẵn** và **Áp dụng**. Có thể viết trực tiếp, hoặc chọn mẫu rồi sửa. Nội dung chỉnh trực tiếp được tách khỏi liên kết mẫu đã chọn, để lịch sử không gắn nhầm tên mẫu gốc. Bản mẫu trong kho và thư đã gửi không bị sửa theo.
+
+### Viết Thư hợp nhất
+
+Thanh điều hướng hiện gồm **Danh sách email**, **Viết Thư**, **Thư đơn hàng đã gửi**, **Mẫu Thư**. Các màn hình soạn riêng cũ đã được bỏ.
+
+Trong **Viết Thư**, chọn **Thư Đăng Ký** (tên mới của thư chào mừng), **Thư Đơn Hàng** hoặc **Gửi riêng**. Hai loại tự động nạp nội dung đang cấu hình. Mỗi loại giữ bản đang soạn riêng khi đổi lựa chọn. Chọn mẫu từ kho sẽ chép vào cùng ô tiêu đề/nội dung; sửa nội dung tách khỏi liên kết mẫu gốc.
+
+- **Lưu làm thư tự động** chỉ cập nhật cấu hình cho lần gửi tự động sau đó.
+- **Gửi thử** chỉ gửi bản đang soạn tới email thử được nhập, không ghi trạng thái gửi cho đơn hay gửi thêm tới khách. Thư Đơn Hàng điền biến từ đơn đang chọn; khi chưa chọn đơn dùng dữ liệu minh họa. Việc đọc dữ liệu đơn để gửi thử vẫn cần quyền quản lý đơn.
+- **Gửi cho đơn đã chọn** gửi nội dung đang soạn tới email thật lưu trong đơn và ghi lịch sử; không đổi cấu hình tự động. Mẫu gửi riêng hoặc mẫu xác nhận đều có thể dùng trong ngữ cảnh có đơn.
+- **Gửi riêng** giữ lựa chọn người nhận/tìm kiếm/gửi theo đợt như trước.
+
+**Mẫu Thư** có form tạo/sửa và chọn loại ở trái. Có thể **Thêm loại mẫu** riêng (nhóm dùng cho gửi riêng), được lưu trong `newsletterTemplateTypes`. Ở phải, mặc định chưa liệt kê mẫu; chọn loại trong **Chọn loại để xem mẫu** mới hiện danh sách và ô tìm kiếm. Mẫu thuộc loại riêng được dùng ở Viết Thư như mẫu gửi riêng. Không thêm trigger tự động cho loại tùy chỉnh.

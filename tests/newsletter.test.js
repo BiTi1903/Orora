@@ -435,3 +435,32 @@ test("saving the two current automatic templates is idempotent, preserves settin
   assert.deepEqual((await db.collection("newsletterSettings").doc("orderConfirmation").get()).data(), order);
   assert.equal(sent.length, 0);
 });
+
+test("order test mail renders the current draft but sends only to the entered test address without touching orders", async () => {
+  const db = memoryDb(); const { call, sent } = admin(db);
+  const order = { code: "OR-REAL", customer: { name: "Buyer", email: "real-buyer@example.com", address: "Hà Nội", phone: "0900000000" }, product: { name: "Serum" }, quantity: 2, subtotal: 500000, paymentMethod: "cod", confirmationMail: { state: "pending" } };
+  await db.collection("orders").doc("test-order").set(order);
+  const draft = { action: "sendTest", mailType: "order", orderId: "test-order", testEmail: "test@example.com", subject: "Đơn {{orderCode}}", text: "Chào {{customerName}}: {{productName}}" };
+  assert.equal((await call(draft)).statusCode, 200);
+  assert.equal(sent.length, 1); assert.equal(sent[0][0], "test@example.com"); assert.equal(sent[0][1].subject, "Đơn OR-REAL"); assert.equal(sent[0][1].text, "Chào Buyer: Serum");
+  assert.deepEqual((await db.collection("orders").doc("test-order").get()).data(), order);
+  assert.equal((await db.collection("orders").doc("test-order").collection("mailEvents").get()).docs.length, 0);
+  assert.equal((await call({ ...draft, orderId: undefined })).statusCode, 200);
+  assert.match(sent[1][1].subject, /OR-GUI-THU/);
+  assert.equal((await call({ ...draft, mailType: "registration" })).statusCode, 400);
+  const restricted = admin(db, { env: { ...env, ORDER_ADMIN_UIDS: "another-admin" } });
+  assert.equal((await restricted.call(draft)).statusCode, 403);
+});
+
+test("custom template types persist once and validate template categorization", async () => {
+  const db = memoryDb(); const { call } = admin(db);
+  const result = await call({ action: "addTemplateType", name: "Chăm sóc khách" });
+  assert.equal(result.statusCode, 200); const type = result.body.type;
+  assert.equal((await call({ action: "addTemplateType", name: " CHĂM SÓC KHÁCH " })).body.type.id, type.id);
+  assert.equal((await db.collection("newsletterTemplateTypes").get()).docs.length, 1);
+  assert.equal((await call({ action: "saveLibraryTemplate", id: "custom-category", name: "Hỏi thăm", kind: "private", categoryId: type.id, ...message })).statusCode, 200);
+  const page = await call(null, { method: "GET", query: { templates: "1" } });
+  assert.equal(page.body.types[0].name, "Chăm sóc khách"); assert.equal(page.body.templates[0].categoryName, "Chăm sóc khách");
+  assert.equal((await call({ action: "saveLibraryTemplate", id: "bad-category", name: "Bad", kind: "order_auto", categoryId: type.id, ...message })).statusCode, 400);
+  assert.equal((await call({ action: "saveLibraryTemplate", id: "missing-category", name: "Bad", kind: "private", categoryId: "missing", ...message })).statusCode, 400);
+});

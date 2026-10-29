@@ -20,7 +20,7 @@ export async function ensureDefaultMailTemplates(db, user) {
       const message = messages[index];
       const alreadySaved = linked.some((snapshot) => snapshot.exists && normalizeTemplateKind(snapshot.data().kind) === kinds[index] && snapshot.data().subject === message.subject && snapshot.data().text === message.text);
       if (existing[index].exists || alreadySaved) return;
-      tx.set(ref, { name: index === 0 ? "Chào mừng tự động có sẵn" : "Xác nhận đơn tự động có sẵn", kind: kinds[index], ...message, ...mailActor(user), revision: 1, usageTracked: false, sentCount: 0, usedRevisions: [], createdAt: now, updatedAt: now });
+      tx.set(ref, { name: index === 0 ? "Đăng ký tự động có sẵn" : "Xác nhận đơn tự động có sẵn", kind: kinds[index], ...message, ...mailActor(user), revision: 1, usageTracked: false, sentCount: 0, usedRevisions: [], createdAt: now, updatedAt: now });
       created.push(ref.id);
     });
     tx.set(marker, { seededAt: now, seededBy: user.uid });

@@ -2,9 +2,9 @@ import { ensureDefaultMailTemplates } from "./default-mail-templates.js";
 import { TEMPLATE_KINDS, normalizeTemplateKind, hasOrderTokens } from "../src/lib/template-kinds.js";
 import { captureTemplate, recordTemplateUse, templateIdentity } from "./template-snapshot.js";
 import { mailActor, resolveMailActors } from "./mail-actor.js";
-import { DEFAULT_ORDER_MESSAGE, validateOrderTemplate } from "./order-mail.js";
+import { DEFAULT_ORDER_MESSAGE, validateOrderTemplate, renderOrderMessage } from "./order-mail.js";
 import { firebaseAuthFailure } from "./firebase-auth-error.js";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import { DEFAULT_WELCOME, validateMessage } from "./newsletter-content.js";
 
 const millis = (value) => value?.toMillis?.() ?? (value ? new Date(value).getTime() : 0);
@@ -53,8 +53,8 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         if (cursor && !validId(cursor)) return reply(400, { message: "Trang mẫu thư không hợp lệ." });
         let query = db.collection("newsletterTemplates").orderBy("__name__").limit(50);
         if (cursor) query = query.startAfter(cursor);
-        const page = await query.get();
-        return reply(200, { templates: page.docs.map((doc) => ({ id: doc.id, ...doc.data(), kind: normalizeTemplateKind(doc.data().kind), revision: doc.data().revision || 1, createdAt: millis(doc.data().createdAt), updatedAt: millis(doc.data().updatedAt) })), nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
+        const [page, typeList] = await Promise.all([query.get(), db.collection("newsletterTemplateTypes").get()]);
+        return reply(200, { types: typeList.docs.map((doc) => ({ id: doc.id, name: doc.data().name })), templates: page.docs.map((doc) => ({ id: doc.id, ...doc.data(), kind: normalizeTemplateKind(doc.data().kind), revision: doc.data().revision || 1, createdAt: millis(doc.data().createdAt), updatedAt: millis(doc.data().updatedAt) })), nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
       }
       if (req.method === "GET") {
         const cursor = req.query?.cursor;
@@ -87,6 +87,14 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
       }
       const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
       if (!body || JSON.stringify(body).length > 40000) return reply(400, { message: "Dữ liệu không hợp lệ." });
+      if (body.action === "addTemplateType") {
+        const name = typeof body.name === "string" ? body.name.trim() : "";
+        if (!name || name.length > 60) return reply(400, { message: "Nhập tên loại mẫu từ 1 đến 60 ký tự." });
+        const id = `type-${createHash("sha256").update(name.normalize("NFC").toLowerCase()).digest("hex").slice(0, 24)}`;
+        const ref = db.collection("newsletterTemplateTypes").doc(id);
+        const type = await db.runTransaction(async (tx) => { const saved = await tx.get(ref); if (saved.exists) return { id, name: saved.data().name }; tx.set(ref, { name, createdAt: new Date(), createdBy: user.uid }); return { id, name }; });
+        return reply(200, { type, message: "Đã thêm loại mẫu." });
+      }
       if (body.action === "ensureDefaultTemplates") {
         const created = await ensureDefaultMailTemplates(db, user);
         return reply(200, { created, message: "Hai mẫu tự động hiện có đã sẵn sàng trong danh sách." });
@@ -103,10 +111,18 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         if (kind === "welcome_auto" && hasOrderTokens(message)) throw new Error("order_context_required");
         const ref = db.collection("newsletterTemplates").doc(body.id);
         await db.runTransaction(async (tx) => {
-          const saved = await tx.get(ref); const updatedAt = new Date();
+          const saved = await tx.get(ref);
+          let category = null;
+          if (body.categoryId) {
+            if (kind !== "private" || !validId(body.categoryId)) throw new Error("invalid_template_type");
+            const type = await tx.get(db.collection("newsletterTemplateTypes").doc(body.categoryId));
+            if (!type.exists) throw new Error("invalid_template_type");
+            category = { id: type.id, name: type.data().name };
+          }
+          const updatedAt = new Date();
           const previous = saved.data() || {};
-          const changed = ["name", "kind", "subject", "text"].some((key) => (key === "kind" ? normalizeTemplateKind(previous[key]) : previous[key]) !== ({ name: body.name.trim(), kind, ...message })[key]);
-          tx.set(ref, { ...previous, name: body.name.trim(), kind, ...message, ...mailActor(user), revision: saved.exists ? (previous.revision || 1) + (changed ? 1 : 0) : 1, usageTracked: saved.exists ? previous.usageTracked === true : true, sentCount: previous.sentCount || 0, usedRevisions: previous.usedRevisions || [], createdAt: saved.exists ? previous.createdAt : updatedAt, updatedAt });
+          const changed = ["name", "kind", "subject", "text", "categoryId"].some((key) => (key === "kind" ? normalizeTemplateKind(previous[key]) : key === "categoryId" ? previous[key] || "" : previous[key]) !== ({ name: body.name.trim(), kind, ...message, categoryId: category?.id || "" })[key]);
+          tx.set(ref, { ...previous, name: body.name.trim(), kind, categoryId: category?.id || "", categoryName: category?.name || "", ...message, ...mailActor(user), revision: saved.exists ? (previous.revision || 1) + (changed ? 1 : 0) : 1, usageTracked: saved.exists ? previous.usageTracked === true : true, sentCount: previous.sentCount || 0, usedRevisions: previous.usedRevisions || [], createdAt: saved.exists ? previous.createdAt : updatedAt, updatedAt });
         });
         return reply(200, { id: body.id, message: "Đã lưu vào Mẫu Thư. Chưa gửi email hoặc thay đổi mẫu tự động." });
       }
@@ -115,7 +131,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         try { message = validateOrderTemplate(body); } catch { return reply(400, { message: "Kiểm tra tiêu đề, nội dung và tên biến trong mẫu thư đơn hàng." }); }
         await db.runTransaction(async (tx) => {
           const current = await tx.get(db.collection("newsletterSettings").doc("orderConfirmation"));
-          const snapshot = body.templateRef ? await captureTemplate(tx, db, body.templateRef, message, "order_auto") : current.exists && current.data().subject === message.subject && current.data().text === message.text ? templateIdentity(current.data()) : {};
+          const snapshot = body.templateRef ? await captureTemplate(tx, db, body.templateRef, message, ["order_auto", "private"]) : current.exists && current.data().subject === message.subject && current.data().text === message.text ? templateIdentity(current.data()) : {};
           tx.set(db.collection("newsletterSettings").doc("orderConfirmation"), { ...message, ...snapshot, updatedAt: new Date(), updatedBy: user.uid });
         });
         return reply(200, { message: "Đã lưu mẫu thư xác nhận đơn hàng." });
@@ -125,7 +141,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         if (hasOrderTokens(message)) throw new Error("order_context_required");
         await db.runTransaction(async (tx) => {
           const current = await tx.get(settings);
-          const snapshot = body.templateRef ? await captureTemplate(tx, db, body.templateRef, message, "welcome_auto") : current.exists && current.data().subject === message.subject && current.data().text === message.text ? templateIdentity(current.data()) : {};
+          const snapshot = body.templateRef ? await captureTemplate(tx, db, body.templateRef, message, ["welcome_auto", "private"]) : current.exists && current.data().subject === message.subject && current.data().text === message.text ? templateIdentity(current.data()) : {};
           tx.set(settings, { ...message, ...snapshot, updatedAt: new Date(), updatedBy: user.uid });
         });
         return reply(200, { message: "Đã lưu mẫu thư gửi cho người đăng ký mới." });
@@ -165,7 +181,20 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         if (email.length > 254 || !/^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/.test(email)) {
           return reply(400, { message: "Nhập một địa chỉ email hợp lệ để nhận thư." });
         }
-        await sendMail(email, validateMessage(body));
+        let message = validateMessage(body);
+        if (body.mailType === "order") {
+          let order;
+          if (body.orderId) {
+            const orderAdmins = String(env.ORDER_ADMIN_UIDS || env.NEWSLETTER_ADMIN_UIDS || "").split(",").map((value) => value.trim());
+            if (!orderAdmins.includes(user.uid)) return reply(403, { message: "Tài khoản chưa có quyền xem đơn để gửi thử." });
+            if (!validId(body.orderId)) return reply(400, { message: "Đơn gửi thử không hợp lệ." });
+            const saved = await db.collection("orders").doc(body.orderId).get();
+            if (!saved.exists) return reply(404, { message: "Không tìm thấy đơn gửi thử." });
+            order = saved.data();
+          } else order = { code: "OR-GUI-THU", customer: { name: "Khách thử nghiệm", email, phone: "0900000000", address: "Địa chỉ minh họa" }, product: { name: "Sản phẩm minh họa" }, quantity: 1, subtotal: 0, paymentMethod: "cod" };
+          message = renderOrderMessage(validateOrderTemplate(body), order);
+        } else if (body.mailType && hasOrderTokens(message)) throw new Error("order_context_required");
+        await sendMail(email, message);
         return reply(200, { message: `Microsoft đã nhận thư gửi tới ${email}. Kiểm tra cả mục thư rác.` });
       }
       if (!["createCampaign", "sendBatch"].includes(body.action) || !validId(body.id)) return reply(400, { message: "Thao tác không hợp lệ." });
@@ -294,6 +323,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         mail_send_failed: [503, "Microsoft chưa chấp nhận gửi thư. Kiểm tra quyền của phương thức gửi đang chọn, admin consent, phạm vi hộp thư và hạn mức gửi."],
         mail_configuration_missing: [503, "Thiếu cấu hình Microsoft 365 trên máy chủ."],
         order_context_required: [400, "Mẫu có biến đơn hàng chỉ dùng khi gửi cho một đơn cụ thể, không dùng cho thư chào mừng hoặc gửi danh sách khách."],
+        invalid_template_type: [400, "Loại mẫu đã chọn không hợp lệ. Hãy tải lại danh sách loại."],
         invalid_order_token: [400, "Tên biến trong mẫu đơn hàng chưa hợp lệ."],
         invalid_message: [400, "Nhập tiêu đề (tối đa 200 ký tự) và nội dung (tối đa 20.000 ký tự)."],
         invalid_recipients: [400, "Một email đã ngừng hoạt động hoặc bị xóa. Tải lại danh sách người nhận trước khi gửi."],

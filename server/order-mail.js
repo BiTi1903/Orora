@@ -33,7 +33,7 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
     let message; let sourceTemplate; let templateError = false;
     try { sourceTemplate = manual && customMessage ? validateOrderTemplate(customMessage) : template.exists ? validateOrderTemplate(template.data()) : DEFAULT_ORDER_MESSAGE; message = renderOrderMessage(sourceTemplate, data); }
     catch { message = { subject: "Không tạo được thư xác nhận đơn", text: "" }; templateError = true; }
-    const snapshot = manual && customMessage ? await captureTemplate(tx, db, templateRef, sourceTemplate || {}, "order") : template.exists ? templateIdentity(template.data()) : {};
+    const snapshot = manual && customMessage ? await captureTemplate(tx, db, templateRef, sourceTemplate || {}, ["private", "order_auto"]) : template.exists ? templateIdentity(template.data()) : {};
     const createdAt = new Date();
     tx.set(eventRef, { type: "orderConfirmation", recipient: data.customer.email, ...message, ...snapshot, templateName: snapshot.templateName || (manual && customMessage ? "Nội dung soạn riêng cho đơn" : "Xác nhận đơn tự động"), state: templateError ? "failed" : "sending", errorCode: templateError ? "mail_template_invalid" : "", createdAt, updatedAt: createdAt, actor, actorName, actorEmail, manual, ...(sourceTemplate ? { templateSubject: sourceTemplate.subject, templateText: sourceTemplate.text } : {}) });
     tx.set(orderRef, { confirmationMail: { state: templateError ? "failed" : "sending", eventId: eventRef.id, updatedAt: createdAt } }, { merge: true });
