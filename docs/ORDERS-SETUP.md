@@ -39,3 +39,9 @@ Thông tin sản phẩm được chụp tại lúc nhận đơn, nên đổi tê
 Vào **Admin → Email marketing → Thư xác nhận đơn hàng** để sửa mẫu thư, chèn biến thông tin đơn và gửi lại cho email đã lưu trong đơn. Lưu mẫu trước khi gửi. Mẫu được lưu riêng ở `newsletterSettings/orderConfirmation`, không ghi đè mẫu chào mừng người đăng ký nhận tin. Khách đặt hàng không tự được thêm vào danh sách email marketing.
 
 Lịch sử tại `orders/{id}/mailEvents` lưu người nhận, nội dung đã gửi, thời gian, gửi tự động/thủ công và kết quả. “Microsoft đã nhận” chỉ là hệ thống gửi đã chấp nhận, chưa bảo đảm phát tới hộp thư khách. Nếu gửi thất bại, đơn vẫn được lưu. Yêu cầu đặt lại do lỗi mạng không gửi trùng thư tự động. Kết quả chưa rõ hoặc đang xử lý sẽ chặn gửi lại để tránh trùng; cần đối chiếu thư đã gửi trên Microsoft. Khi gửi lại thư đã được Microsoft nhận, admin phải xác nhận.
+
+## Thanh toán và thống kê theo email
+
+Danh sách đơn hiển thị **Thanh toán khi nhận hàng (COD)** cho đơn COD chưa thu tiền; đơn chuyển khoản chưa được admin đánh dấu nhận tiền hiển thị **Chưa thanh toán**. Cả hai chỉ hiện **Đã thanh toán** khi admin đánh dấu xác nhận tiền thực nhận. Phương thức `paymentMethod` của đơn luôn được giữ riêng, không bị đổi khi cập nhật thanh toán.
+
+Trong **Đơn hàng → Khách hàng theo email**, hệ thống tải tất cả các trang đơn để tổng hợp số đơn, tổng tạm tính, số tiền đã thanh toán và chưa thu theo email (không phân biệt hoa thường). Có tìm kiếm khách hàng và nút mở các đơn của email đó. Số đơn gồm đơn hủy, nhưng cột tiền loại đơn hủy, chưa tính phí giao hàng và không cộng đơn chờ báo giá. Đơn cũ thiếu email được báo số lượng riêng; không sửa dữ liệu cũ để tự gán người mua. Đây là thống kê đơn hàng, không phải báo cáo doanh thu hay đối soát thanh toán.

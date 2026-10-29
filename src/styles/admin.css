@@ -288,3 +288,8 @@
 .newsletter-recipient-list .admin-check { padding: 10px 4px; overflow-wrap: anywhere; }
 .newsletter-recipient-picker input[type="checkbox"], .newsletter-recipient-picker input[type="radio"] { flex: 0 0 18px; padding: 0; }
 .newsletter-recipient-list:focus-visible { outline: 2px solid var(--a-deep); outline-offset: 2px; }
+
+.admin-customer-order-scroll { margin-top: 18px; overflow-x: auto; }
+.admin-customer-order-scroll table { min-width: 760px; }
+.admin-customer-order-scroll td:first-child { overflow-wrap: anywhere; }
+.order-summary-note { display: block; margin-top: 6px; color: var(--a-deep); }
