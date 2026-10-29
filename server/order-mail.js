@@ -17,7 +17,7 @@ export function renderOrderMessage(template, order) {
   const fill = (text, subject = false) => text.replace(/\{\{(\w+)\}\}/g, (_, key) => subject ? String(values[key] ?? "").replace(/[\r\n]/g, " ") : String(values[key] ?? ""));
   return validateMessage({ subject: fill(template.subject, true), text: fill(template.text) });
 }
-export async function sendOrderConfirmation({ db, orderId, sendMail, manual = false, requestId, confirmResend = false, actor = "automatic" }) {
+export async function sendOrderConfirmation({ db, orderId, sendMail, manual = false, requestId, confirmResend = false, actor = "automatic", actorName = "", actorEmail = "", message: customMessage }) {
   const orderRef = db.collection("orders").doc(orderId);
   const eventRef = orderRef.collection("mailEvents").doc(manual ? `manual-${requestId || randomUUID()}` : "confirmation-auto");
   const claimed = await db.runTransaction(async (tx) => {
@@ -29,11 +29,11 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
     const previous = data.confirmationMail?.state;
     if (["sending", "unknown"].includes(previous)) throw Object.assign(new Error("Kết quả gửi trước chưa rõ hoặc đang xử lý. Kiểm tra thư đã gửi trên Microsoft trước khi gửi lại."), { status: 409 });
     if (manual && previous === "accepted" && !confirmResend) throw Object.assign(new Error("Thư đã được Microsoft nhận. Cần xác nhận gửi lại để tránh gửi trùng."), { status: 409 });
-    let message; let templateError = false;
-    try { message = renderOrderMessage(template.exists ? validateOrderTemplate(template.data()) : DEFAULT_ORDER_MESSAGE, data); }
+    let message; let sourceTemplate; let templateError = false;
+    try { sourceTemplate = manual && customMessage ? validateOrderTemplate(customMessage) : template.exists ? validateOrderTemplate(template.data()) : DEFAULT_ORDER_MESSAGE; message = renderOrderMessage(sourceTemplate, data); }
     catch { message = { subject: "Không tạo được thư xác nhận đơn", text: "" }; templateError = true; }
     const createdAt = new Date();
-    tx.set(eventRef, { type: "orderConfirmation", recipient: data.customer.email, ...message, state: templateError ? "failed" : "sending", errorCode: templateError ? "mail_template_invalid" : "", createdAt, updatedAt: createdAt, actor, manual });
+    tx.set(eventRef, { type: "orderConfirmation", recipient: data.customer.email, ...message, state: templateError ? "failed" : "sending", errorCode: templateError ? "mail_template_invalid" : "", createdAt, updatedAt: createdAt, actor, actorName, actorEmail, manual, ...(sourceTemplate ? { templateSubject: sourceTemplate.subject, templateText: sourceTemplate.text } : {}) });
     tx.set(orderRef, { confirmationMail: { state: templateError ? "failed" : "sending", eventId: eventRef.id, updatedAt: createdAt } }, { merge: true });
     return { recipient: data.customer.email, message, templateError };
   });

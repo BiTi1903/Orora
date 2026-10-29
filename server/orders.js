@@ -1,3 +1,4 @@
+import { mailActor, resolveMailActors } from "./mail-actor.js";
 import { sendOrderConfirmation, validOrderEmail } from "./order-mail.js";
 import { createHash, randomUUID } from "node:crypto";
 import { parseVndPrice, availablePaymentMethods, PAYMENT_LABELS } from "../src/lib/commerce.js";
@@ -6,14 +7,14 @@ import { firebaseAuthFailure } from "./firebase-auth-error.js";
 const uuid = (value) => typeof value === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value);
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 const millis = (value) => value?.toMillis?.() ?? (value ? new Date(value).getTime() : 0);
-function readBody(req, env) {
+function readBody(req, env, maxBytes = 8000) {
   const expected = new URL(env.NEWSLETTER_SITE_ORIGIN || "https://ororavn.com").origin;
   if (req.headers.origin !== expected) throw Object.assign(new Error("Vui lòng đặt hàng trực tiếp trên website."), { status: 403 });
   if (!String(req.headers["content-type"] || "").startsWith("application/json")) throw Object.assign(new Error("Chỉ nhận dữ liệu JSON."), { status: 415 });
-  if (Number(req.headers["content-length"] || 0) > 8000) throw Object.assign(new Error("Nội dung quá dài."), { status: 413 });
+  if (Number(req.headers["content-length"] || 0) > maxBytes) throw Object.assign(new Error("Nội dung quá dài."), { status: 413 });
   let body;
   try { body = typeof req.body === "string" ? JSON.parse(req.body) : req.body; } catch { throw Object.assign(new Error("Dữ liệu không hợp lệ."), { status: 400 }); }
-  if (!body || Buffer.byteLength(JSON.stringify(body)) > 8000) throw Object.assign(new Error("Dữ liệu không hợp lệ."), { status: 400 });
+  if (!body || Buffer.byteLength(JSON.stringify(body)) > maxBytes) throw Object.assign(new Error("Dữ liệu không hợp lệ."), { status: 400 });
   return body;
 }
 export function createOrderHandler({ getDb, sendMail, env = process.env, now = () => Date.now() }) {
@@ -72,7 +73,7 @@ export function createOrderHandler({ getDb, sendMail, env = process.env, now = (
     }
   };
 }
-export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, env = process.env }) {
+export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupUser, env = process.env }) {
   return async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
     if (!["GET", "POST"].includes(req.method)) { res.setHeader("Allow", "GET, POST"); return res.status(405).json({ message: "Phương thức không được hỗ trợ." }); }
@@ -94,7 +95,7 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, env = p
         const [order, history] = await Promise.all([ref.get(), ref.collection("mailEvents").orderBy("createdAt", "desc").limit(50).get()]);
         if (!order.exists) return res.status(404).json({ message: "Không tìm thấy đơn hàng." });
         const data = { ...order.data() }; delete data.requestHash;
-        return res.status(200).json({ order: { id: order.id, ...data, createdAt: millis(data.createdAt), updatedAt: millis(data.updatedAt) }, mails: history.docs.map((doc) => ({ id: doc.id, ...doc.data(), createdAt: millis(doc.data().createdAt), updatedAt: millis(doc.data().updatedAt) })) });
+        return res.status(200).json({ order: { id: order.id, ...data, createdAt: millis(data.createdAt), updatedAt: millis(data.updatedAt) }, mails: await resolveMailActors(history.docs.map((doc) => ({ id: doc.id, ...doc.data(), createdAt: millis(doc.data().createdAt), updatedAt: millis(doc.data().updatedAt) })), lookupUser) });
       }
       if (req.method === "GET") {
         const historyOnly = req.query?.mailHistory === "1";
@@ -110,9 +111,9 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, env = p
         if (historyOnly) {
           const histories = await Promise.all(page.docs.map(async (order) => {
             const history = await orders.doc(order.id).collection("mailEvents").get();
-            return history.docs.map((event) => ({ id: `${order.id}/${event.id}`, orderId: order.id, orderCode: order.data().code, customerName: order.data().customer?.name || "", subject: event.data().subject || "", text: event.data().text || "", recipient: event.data().recipient || "", state: event.data().state || "unknown", manual: event.data().manual === true, errorCode: event.data().errorCode || "", createdAt: millis(event.data().createdAt), updatedAt: millis(event.data().updatedAt) }));
+            return history.docs.map((event) => ({ id: `${order.id}/${event.id}`, orderId: order.id, orderCode: order.data().code, customerName: order.data().customer?.name || "", actor: event.data().actor || "", actorName: event.data().actorName || "", actorEmail: event.data().actorEmail || "", ...(typeof event.data().templateSubject === "string" && typeof event.data().templateText === "string" ? { templateSubject: event.data().templateSubject, templateText: event.data().templateText } : {}), subject: event.data().subject || "", text: event.data().text || "", recipient: event.data().recipient || "", state: event.data().state || "unknown", manual: event.data().manual === true, errorCode: event.data().errorCode || "", createdAt: millis(event.data().createdAt), updatedAt: millis(event.data().updatedAt) }));
           }));
-          return res.status(200).json({ mails: histories.flat(), scannedOrders: page.docs.length, nextCursor: page.docs.length === pageSize ? page.docs.at(-1).id : null });
+          return res.status(200).json({ mails: await resolveMailActors(histories.flat(), lookupUser), scannedOrders: page.docs.length, nextCursor: page.docs.length === pageSize ? page.docs.at(-1).id : null });
         }
         return res.status(200).json({ orders: page.docs.map((doc) => {
           const { requestHash: _private, ...data } = doc.data();
@@ -120,10 +121,10 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, env = p
           return { id: doc.id, ...data, createdAt: millis(data.createdAt), updatedAt: millis(data.updatedAt) };
         }), nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
       }
-      const body = readBody(req, env);
+      const body = readBody(req, env, 40000);
       if (body.action === "sendOrderEmail") {
         if (!uuid(body.id) || !uuid(body.requestId)) return res.status(400).json({ message: "Yêu cầu gửi thư không hợp lệ." });
-        const result = await sendOrderConfirmation({ db, orderId: body.id, sendMail, manual: true, requestId: body.requestId, confirmResend: body.confirmResend === true, actor: user.uid });
+        const result = await sendOrderConfirmation({ db, orderId: body.id, sendMail, manual: true, requestId: body.requestId, confirmResend: body.confirmResend === true, ...mailActor(user), message: body.message });
         return res.status(200).json({ ...result, message: result.state === "failed" ? "Gửi thư bị lỗi. Xem lịch sử của đơn hàng." : result.state === "unknown" ? "Chưa rõ kết quả gửi. Kiểm tra Microsoft trước khi gửi lại." : "Đã xử lý yêu cầu gửi thư cho đơn hàng." });
       }
       if (!uuid(body.id) || (body.status !== undefined ? !["new", "confirmed", "shipping", "completed", "cancelled"].includes(body.status) : !["unpaid", "paid"].includes(body.paymentStatus))) return res.status(400).json({ message: "Đơn hàng hoặc trạng thái không hợp lệ." });

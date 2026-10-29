@@ -23,3 +23,5 @@ function getApp() {
 
 export const getNewsletterDb = () => getFirestore(getApp());
 export const verifyAdminToken = (token) => getAuth(getApp()).verifyIdToken(token, true);
+
+export const getNewsletterUser = (uid) => getAuth(getApp()).getUser(uid);

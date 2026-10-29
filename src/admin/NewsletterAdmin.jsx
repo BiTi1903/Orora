@@ -1,3 +1,4 @@
+import { mailActorLabel, groupMailTemplates } from "../lib/mail-templates";
 import OrderMailHistory from "./OrderMailHistory";
 import OrderEmailSettings from "./OrderEmailSettings";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -60,6 +61,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
   const [recipientMode, setRecipientMode] = useState("selected");
   const [recipientIds, setRecipientIds] = useState([]);
   const [recipientSearch, setRecipientSearch] = useState("");
+  const [reusedOrderTemplate, setReusedOrderTemplate] = useState(null);
   const [orderTemplate, setOrderTemplate] = useState(null);
   const [welcome, setWelcome] = useState(EMPTY);
   const [draft, setDraft] = useState(EMPTY);
@@ -183,6 +185,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
     } finally { if (alive.current) setSending(false); }
   };
 
+  const campaignTemplates = groupMailTemplates(campaigns);
   const activeContacts = contacts.filter((item) => item.status === "active");
   const eligibleIds = recipientIds.filter((id) => activeContacts.some((item) => item.id === id));
   const recipientOptions = activeContacts.filter((item) => item.email.toLowerCase().includes(recipientSearch.trim().toLowerCase()));
@@ -216,9 +219,9 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
           <nav className="admin-section-tabs" aria-label="Các mục email marketing">
             {[["contacts", "Danh sách email"], ["compose", "Soạn và gửi thư"], ["welcome", "Thư chào mừng"], ["orders", "Thư đơn hàng"], ["orderHistory", "Thư đơn hàng đã gửi"]].map(([key, label]) => <button type="button" key={key} aria-current={view === key ? "page" : undefined} onClick={() => setView(key)}>{label}</button>)}
           </nav>
-          {view === "orderHistory" && <OrderMailHistory />}
+          {view === "orderHistory" && <OrderMailHistory onReuse={(message, original) => { setReusedOrderTemplate({ id: crypto.randomUUID(), message }); setView("orders"); setNotice({ text: original ? "Đã chép mẫu vào nội dung gửi riêng. Kiểm tra và chọn đơn trước khi gửi; mẫu tự động không thay đổi." : "Đã chép nội dung thư cũ vào nội dung gửi riêng. Hãy sửa thông tin khách và mã đơn cũ trước khi gửi." }); }} />}
           <div className="admin-email-panel" hidden={view !== "orders"}>
-          <OrderEmailSettings key={JSON.stringify(orderTemplate)} initialTemplate={orderTemplate} onSave={(message) => request({ action: "saveOrderTemplate", ...message })} />
+          <OrderEmailSettings key={JSON.stringify(orderTemplate)} initialTemplate={orderTemplate} reuseTemplate={reusedOrderTemplate} onSave={(message) => request({ action: "saveOrderTemplate", ...message })} />
           </div>
           <div className="admin-email-panel" hidden={view !== "welcome"}>
           <form className="admin-card admin-form" onSubmit={(event) => {
@@ -274,9 +277,10 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
           <div className="admin-card">
             <h2>Lịch sử gửi đến danh sách đăng ký</h2>
             <p className="admin-muted">20 thư gần nhất. Lịch sử thư xác nhận mua hàng nằm trong chi tiết từng đơn.</p>
-            <div style={{ overflowX: "auto" }}><table className="admin-table"><thead><tr><th>Tiêu đề</th><th>Người nhận</th><th>Trạng thái</th><th>Microsoft đã nhận</th><th>Lỗi</th><th>Chưa rõ</th><th>Thao tác</th></tr></thead>
+            <details className="admin-filter-panel"><summary>Các mẫu thư đã gửi ({campaignTemplates.templates.length})</summary>{campaignTemplates.templates.map((template) => <div className="mail-template-row" key={template.id}><div><strong>{template.label}</strong><p className="admin-muted">{template.message.subject}</p></div><button type="button" className="admin-btn" disabled={busy} onClick={() => { if ((draft.subject || draft.text) && !window.confirm("Thay nội dung đang soạn bằng mẫu này?")) return; setDraft({ ...template.message }); setNotice({ text: "Đã chép mẫu vào phần Soạn thư mới. Kiểm tra nội dung và người nhận trước khi gửi." }); }}>Dùng lại {template.label.toLowerCase()}</button></div>)}</details>
+            <div style={{ overflowX: "auto" }}><table className="admin-table"><thead><tr><th>Tiêu đề</th><th>Mẫu thư</th><th>Tài khoản thao tác</th><th>Người nhận</th><th>Trạng thái</th><th>Microsoft đã nhận</th><th>Lỗi</th><th>Chưa rõ</th><th>Thao tác</th></tr></thead>
               <tbody>{campaigns.map((item) => <tr key={item.id}>
-                <td>{item.subject}</td><td>{item.recipientIds ? `${item.recipientIds.length} email đã chọn` : "Toàn bộ email hoạt động"}</td><td>{STATUS[item.status] || item.status}</td><td>{item.accepted || 0}</td><td>{item.failed || 0}</td><td>{item.unknown || 0}</td>
+                <td className="mail-history-subject" title={item.subject}>{item.subject}</td><td>{campaignTemplates.byMail.get(item.id)?.label}</td><td>{mailActorLabel(item)}</td><td>{item.recipientIds ? `${item.recipientIds.length} email đã chọn` : "Toàn bộ email hoạt động"}</td><td>{STATUS[item.status] || item.status}</td><td>{item.accepted || 0}</td><td>{item.failed || 0}</td><td>{item.unknown || 0}</td>
                 <td>{item.status !== "completed" && <button className="admin-btn" disabled={busy} onClick={() => {
                   if (window.confirm(`Tiếp tục gửi thư “${item.subject}”?`)) perform(() => run(item.id));
                 }}>Tiếp tục gửi</button>}</td>

@@ -73,3 +73,17 @@ test("receipt template is managed through Email marketing and history remains pr
   const authorized = createAdminOrdersHandler({ getDb: () => db, verifyToken: async () => ({ uid: "owner" }), env });
   const yes = response(); await authorized({ method: "GET", headers, query: { id: orderId } }, yes); assert.equal(yes.body.mails[0].recipient, "buyer@example.com"); assert.equal(yes.body.mails[0].subject, "Đơn OR-TEST");
 });
+
+test("manual order mail records verified account and reusable source template without replacing automatic settings", async () => {
+  const { db, orderId } = await setup(); const sent = [];
+  const original = { subject: "Automatic {{orderCode}}", text: "Automatic {{customerName}}" };
+  await db.collection("newsletterSettings").doc("orderConfirmation").set(original);
+  const handler = createAdminOrdersHandler({ getDb: () => db, env, verifyToken: async () => ({ uid: "owner", name: "Linh", email: "linh@ororavn.com" }), sendMail: async (...args) => sent.push(args) });
+  const message = { subject: "Riêng {{orderCode}}", text: "Chào {{customerName}}, nội dung riêng." };
+  const res = response(); await handler({ method: "POST", headers, body: { action: "sendOrderEmail", id: orderId, requestId: randomUUID(), message, actorName: "Forged" } }, res);
+  assert.equal(res.statusCode, 200); assert.equal(sent[0][1].subject, "Riêng OR-TEST");
+  const event = (await db.collection("orders").doc(orderId).collection("mailEvents").get()).docs[0].data();
+  assert.equal(event.actorName, "Linh"); assert.equal(event.actorEmail, "linh@ororavn.com"); assert.equal(event.actor, "owner");
+  assert.equal(event.templateSubject, message.subject); assert.equal(event.templateText, message.text);
+  assert.deepEqual((await db.collection("newsletterSettings").doc("orderConfirmation").get()).data(), original);
+});

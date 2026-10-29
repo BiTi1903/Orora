@@ -1,8 +1,11 @@
+import { groupMailTemplates, mailActorLabel } from "../lib/mail-templates";
 import { useEffect, useState } from "react";
 import { orderRequest, MAIL_STATES } from "./order-api";
 const date = (value) => value ? new Date(value).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "—";
 
-export default function OrderMailHistory() {
+export default function OrderMailHistory({ onReuse }) {
+  const [selected, setSelected] = useState(null);
+  const [templateFilter, setTemplateFilter] = useState("all");
   const [mails, setMails] = useState([]);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
@@ -15,7 +18,7 @@ export default function OrderMailHistory() {
   useEffect(() => {
     let alive = true;
     async function load() {
-      setBusy(true); setError(""); setCount(0); setMails([]);
+      setBusy(true); setError(""); setCount(0); setMails([]); setSelected(null); setTemplateFilter("all");
       const items = new Map(); const seen = new Set(); let cursor; let scanned = 0;
       try {
         do {
@@ -32,21 +35,31 @@ export default function OrderMailHistory() {
     }
     load(); return () => { alive = false; };
   }, [version]);
+  const { templates, byMail } = groupMailTemplates(mails);
   const query = search.trim().toLowerCase();
-  const filtered = mails.filter((mail) => (kind === "all" || (kind === "manual" ? mail.manual : !mail.manual)) && (state === "all" || mail.state === state) && [mail.recipient, mail.orderId, mail.orderCode, mail.subject, mail.customerName].some((value) => String(value || "").toLowerCase().includes(query)));
+  const filtered = mails.filter((mail) => (templateFilter === "all" || byMail.get(mail.id)?.id === templateFilter) && (kind === "all" || (kind === "manual" ? mail.manual : !mail.manual)) && (state === "all" || mail.state === state) && [mail.recipient, mail.orderId, mail.orderCode, mail.subject, mail.customerName, mail.actorName, mail.actorEmail, mail.actor].some((value) => String(value || "").toLowerCase().includes(query)));
   return <div>
-    <div className="admin-top"><div><h2>Thư đơn hàng đã gửi</h2><p className="admin-muted">Thư xác nhận mua hàng tự động và thư gửi riêng từ admin, tách khỏi thư gửi danh sách đăng ký.</p></div><button className="admin-btn" disabled={busy} onClick={() => { setVisibleCount(30); setVersion((value) => value + 1); }}>Tải lại lịch sử thư</button></div>
+    <div className="admin-top"><div><h2>Thư đơn hàng đã gửi</h2><p className="admin-muted">Thư xác nhận mua hàng tự động và thư gửi riêng từ tài khoản đăng nhập, tách khỏi thư gửi danh sách đăng ký.</p></div><button className="admin-btn" disabled={busy} onClick={() => { setVisibleCount(30); setVersion((value) => value + 1); }}>Tải lại lịch sử thư</button></div>
     <div className="admin-form-grid order-mail-history-filters">
       <div className="admin-field"><label htmlFor="order-mail-history-search">Tìm thư đơn hàng</label><input id="order-mail-history-search" type="search" placeholder="Email, mã/ID đơn, tên khách hoặc tiêu đề" value={search} onChange={(event) => { setSearch(event.target.value); setVisibleCount(30); }} /></div>
-      <div className="admin-field"><label htmlFor="order-mail-history-kind">Cách gửi</label><select id="order-mail-history-kind" value={kind} onChange={(event) => { setKind(event.target.value); setVisibleCount(30); }}><option value="all">Tất cả cách gửi</option><option value="manual">Gửi riêng từ admin</option><option value="automatic">Tự động khi đặt hàng</option></select></div>
+      <div className="admin-field"><label htmlFor="order-mail-history-kind">Cách gửi</label><select id="order-mail-history-kind" value={kind} onChange={(event) => { setKind(event.target.value); setVisibleCount(30); }}><option value="all">Tất cả cách gửi</option><option value="manual">Gửi bởi tài khoản</option><option value="automatic">Tự động khi đặt hàng</option></select></div>
       <div className="admin-field"><label htmlFor="order-mail-history-state">Kết quả gửi</label><select id="order-mail-history-state" value={state} onChange={(event) => { setState(event.target.value); setVisibleCount(30); }}><option value="all">Tất cả kết quả</option>{Object.entries(MAIL_STATES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
     </div>
     <p className="admin-muted" role="status">{busy ? `Đang tải lịch sử… Đã kiểm tra ${count} đơn.` : `Có ${filtered.length} thư phù hợp · Đã kiểm tra ${count} đơn.`}</p>
     {error && <p className="admin-error" role="alert">{error} Lịch sử đang hiển thị chưa đầy đủ.</p>}
-    <div className="order-mail-history-list">{filtered.slice(0, visibleCount).map((mail) => <details key={mail.id} className="order-mail-event">
-      <summary><strong>{mail.subject}</strong><span className="order-summary-note">{mail.recipient} · {mail.orderCode} · {MAIL_STATES[mail.state] || mail.state}</span><span className="order-summary-note">{mail.manual ? "Gửi riêng từ admin" : "Tự động khi đặt hàng"} · {date(mail.createdAt)}</span></summary>
-      <p>Người nhận: {mail.customerName} · {mail.recipient}</p><p>Mã đơn: {mail.orderCode}</p><p>Cập nhật: {date(mail.updatedAt)}</p>{mail.errorCode && <p className="admin-error">Mã lỗi: {mail.errorCode}</p>}<pre>{mail.text}</pre>
-    </details>)}</div>
+    <div className="admin-field"><label htmlFor="order-mail-template-filter">Lọc mẫu thư</label><select id="order-mail-template-filter" className="mail-template-select" value={templateFilter} onChange={(event) => { setTemplateFilter(event.target.value); setVisibleCount(30); }}><option value="all">Tất cả mẫu thư</option>{templates.map((template) => <option key={template.id} value={template.id}>{template.label} · {template.count} lượt gửi</option>)}</select></div>
+    {!busy && <>
+      <details className="admin-filter-panel"><summary>Các mẫu đã dùng ({templates.length})</summary>
+        <div className="mail-template-library">{templates.map((template) => <div className="mail-template-row" key={template.id}><div><strong>{template.label}</strong><p className="admin-muted">{template.message.subject} · {template.count} lượt gửi</p></div><div className="admin-actions"><button className="admin-btn" onClick={() => setSelected({ template })}>Xem mẫu {template.label.replace("Mẫu thư ", "")}</button>{onReuse && <button className="admin-btn" onClick={() => onReuse(template.message, template.original)}>Dùng lại {template.label.toLowerCase()}</button>}</div></div>)}</div>
+        <p className="admin-muted">Thư mới được gom theo mẫu gốc, không theo tên hoặc mã đơn đã điền. Thư cũ chưa lưu mẫu gốc được gom theo nội dung thực tế; khi dùng lại cần kiểm tra thông tin khách cũ.</p>
+      </details>
+      <div className="admin-card mail-history-table-scroll"><table className="admin-table"><thead><tr><th>Thời gian / Mã đơn</th><th>Người nhận</th><th>Tài khoản thao tác</th><th>Mẫu thư</th><th>Kết quả</th><th /></tr></thead><tbody>{filtered.slice(0, visibleCount).map((mail) => <tr key={mail.id}><td>{date(mail.createdAt)}<br /><small>{mail.orderCode}</small></td><td>{mail.recipient}</td><td>{mailActorLabel(mail)}{mail.actorName && mail.actorEmail && <small className="order-summary-note">{mail.actorEmail}</small>}</td><td>{byMail.get(mail.id)?.label}</td><td>{MAIL_STATES[mail.state] || mail.state}</td><td><button className="admin-btn" onClick={() => setSelected({ mail, template: byMail.get(mail.id) })}>Xem thư</button></td></tr>)}</tbody></table></div>
+    </>}
+    {selected && <div className="admin-card mail-history-detail"><div className="admin-order-heading"><h3>{selected.mail ? "Nội dung đã gửi" : selected.template.label}</h3><button className="admin-btn" onClick={() => setSelected(null)}>Đóng nội dung</button></div>
+      {selected.mail && <><p>Người nhận: {selected.mail.recipient} · {selected.mail.orderCode}</p><p>Tài khoản thao tác: {mailActorLabel(selected.mail)}</p>{selected.mail.errorCode && <p className="admin-error">Mã lỗi: {selected.mail.errorCode}</p>}</>}
+      <h4>{selected.mail?.subject ?? selected.template.message.subject}</h4><pre>{selected.mail?.text ?? selected.template.message.text}</pre>
+      {onReuse && <button className="admin-btn" onClick={() => onReuse(selected.template.message, selected.template.original)}>Dùng lại mẫu này</button>}
+    </div>}
     {!busy && !error && !filtered.length && <p className="admin-muted">Chưa có thư đơn hàng phù hợp.</p>}
     {filtered.length > visibleCount && <button className="admin-btn" onClick={() => setVisibleCount((value) => value + 30)}>Hiển thị thêm thư</button>}
     <p className="admin-muted">“Microsoft đã nhận” chưa bảo đảm thư đã tới hộp thư khách. Lịch sử này gồm thư gửi từ website; thư soạn trực tiếp trong Outlook không được đồng bộ.</p>

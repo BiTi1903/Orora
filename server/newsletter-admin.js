@@ -1,3 +1,4 @@
+import { mailActor, resolveMailActors } from "./mail-actor.js";
 import { DEFAULT_ORDER_MESSAGE, validateOrderTemplate } from "./order-mail.js";
 import { firebaseAuthFailure } from "./firebase-auth-error.js";
 import { randomUUID } from "node:crypto";
@@ -10,7 +11,7 @@ const publicContact = (doc) => ({
 });
 const validId = (value) => typeof value === "string" && /^[a-zA-Z0-9_-]{1,100}$/.test(value);
 
-export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, env = process.env }) {
+export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, lookupUser, env = process.env }) {
   return async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
     const reply = (status, data) => res.status(status).json(data);
@@ -58,7 +59,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, env
           nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null,
           orderTemplate: orderTemplate.exists ? { subject: String(orderTemplate.data().subject || ""), text: String(orderTemplate.data().text || "") } : DEFAULT_ORDER_MESSAGE,
           welcome: welcome.exists ? validateMessage(welcome.data()) : DEFAULT_WELCOME,
-          campaigns: history.docs.map((doc) => ({ id: doc.id, ...doc.data(), createdAt: millis(doc.data().createdAt) })),
+          campaigns: await resolveMailActors(history.docs.map((doc) => ({ id: doc.id, ...doc.data(), actor: doc.data().actor || doc.data().createdBy || "", manual: true, createdAt: millis(doc.data().createdAt) })), lookupUser),
         });
       }
       const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
@@ -131,7 +132,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, env
             const people = await tx.getAll(...recipients.map((id) => contacts.doc(id)));
             if (people.some((person) => !person.exists || person.data().status !== "active")) throw new Error("invalid_recipients");
           }
-          tx.set(campaign, { ...message, recipientIds: recipients, createdAt: new Date(), createdBy: user.uid, status: "draft", cursor: null, accepted: 0, failed: 0, unknown: 0 });
+          tx.set(campaign, { ...message, recipientIds: recipients, createdAt: new Date(), createdBy: user.uid, ...mailActor(user), status: "draft", cursor: null, accepted: 0, failed: 0, unknown: 0 });
         });
         return reply(200, { id: body.id, message: "Đã tạo thư. Chưa gửi email." });
       }

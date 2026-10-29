@@ -112,3 +112,11 @@ Thư lưu danh sách ID người nhận tại lúc tạo để tiếp tục gử
 ### Lịch sử thư đơn hàng
 
 **Email marketing → Thư đơn hàng đã gửi** tổng hợp các bản ghi `orders/{id}/mailEvents` hiện có, gồm thư tự động và thư gửi riêng từ admin, kể cả lần gửi lỗi/chưa rõ kết quả. Có tìm theo email, tên khách, mã/ID đơn, tiêu đề; lọc cách gửi và kết quả. Bấm một thư để xem đúng nội dung, người nhận và thời gian đã lưu. Danh sách tải lịch sử qua các trang đơn, không cần tạo lại hoặc di chuyển dữ liệu cũ. Chỉ tài khoản có quyền quản lý đơn được đọc lịch sử. Thư gửi trực tiếp từ Outlook không nằm trong lịch sử website.
+
+### Tài khoản thao tác và dùng lại mẫu
+
+Lịch sử hiển thị tên/email tài khoản đã đăng nhập khi gửi (từ token Firebase đã xác thực); địa chỉ gửi Microsoft vẫn là hộp thư đã cấu hình. Thư tự động ghi rõ tự động khi đặt hàng. Bản ghi cũ chỉ có UID sẽ được tra hồ sơ Firebase nếu còn tài khoản; nếu không tìm được, giữ UID thay vì gán tên người đang xem. Không sửa dữ liệu lịch sử cũ.
+
+Lịch sử thư đơn hàng dùng bảng gọn với cột mẫu riêng. **Các mẫu đã dùng** gom các thư theo tiêu đề/nội dung mẫu gốc; các giá trị như mã đơn và tên khách đã điền không tạo mẫu mới. Thư cũ chưa lưu mẫu gốc chỉ gom được theo nội dung thực tế. Bấm **Xem thư** hoặc **Xem mẫu** mới mở nội dung. **Dùng lại mẫu** chép sang **nội dung gửi riêng**, không ghi đè mẫu tự động. Chọn đơn và kiểm tra nội dung trước khi bấm gửi. Thư cũ có thể chứa thông tin khách cũ cần sửa trước khi dùng lại.
+
+Lịch sử thư gửi danh sách đăng ký cũng có cột tài khoản thao tác, cột mẫu và nút dùng lại để chép sang phần Soạn thư mới.
