@@ -1,3 +1,4 @@
+import { useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ProductCard from "./ProductCard";
 import useCategories from "../hooks/useCategories";
@@ -256,7 +257,16 @@ function Collection({
   const { products: liveProducts, loading } = useProducts({ enabled: !preview });
   const liveHome = useHomeContent();
   const { categories } = useCategories();
-  const [categoryId, setCategoryId] = useState("");
+  const [localCategoryId, setLocalCategoryId] = useState("");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const categoryId = preview || excludeId ? localCategoryId : new URLSearchParams(location.search).get("category") || "";
+  const setCategoryId = (id) => {
+    if (preview || excludeId) { setLocalCategoryId(id); return; }
+    const params = new URLSearchParams(location.search);
+    if (id) params.set("category", id); else params.delete("category");
+    navigate({ pathname: location.pathname, search: params.toString(), hash: "#shop" }, { replace: true, preventScrollReset: true });
+  };
   const homeLoading = !preview && liveHome.loading !== false;
 
   const home = preview && previewData ? previewData : liveHome || {};

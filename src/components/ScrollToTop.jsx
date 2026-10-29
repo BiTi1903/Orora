@@ -5,7 +5,7 @@ import { useLocation } from "react-router-dom";
    Link có #hash (vd: /#about, /#shop, /#contact) → cuộn tới đúng mục đó,
    kể cả khi đang ở trang khác (trang chi tiết sản phẩm) hoặc đã ở trang chủ. */
 function ScrollToTop() {
-  const { pathname, hash } = useLocation();
+  const { pathname, hash, search } = useLocation();
   const lastPath = useRef(null);
 
   useLayoutEffect(() => {
@@ -42,7 +42,7 @@ function ScrollToTop() {
     }
 
     return () => timers.forEach((t) => window.clearTimeout(t));
-  }, [pathname, hash]);
+  }, [pathname, hash, search]);
 
   return null;
 }
