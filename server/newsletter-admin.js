@@ -1,3 +1,4 @@
+import { TEMPLATE_KINDS, normalizeTemplateKind, hasOrderTokens } from "../src/lib/template-kinds.js";
 import { captureTemplate, recordTemplateUse, templateIdentity } from "./template-snapshot.js";
 import { mailActor, resolveMailActors } from "./mail-actor.js";
 import { DEFAULT_ORDER_MESSAGE, validateOrderTemplate } from "./order-mail.js";
@@ -52,7 +53,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         let query = db.collection("newsletterTemplates").orderBy("__name__").limit(50);
         if (cursor) query = query.startAfter(cursor);
         const page = await query.get();
-        return reply(200, { templates: page.docs.map((doc) => ({ id: doc.id, ...doc.data(), revision: doc.data().revision || 1, createdAt: millis(doc.data().createdAt), updatedAt: millis(doc.data().updatedAt) })), nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
+        return reply(200, { templates: page.docs.map((doc) => ({ id: doc.id, ...doc.data(), kind: normalizeTemplateKind(doc.data().kind), revision: doc.data().revision || 1, createdAt: millis(doc.data().createdAt), updatedAt: millis(doc.data().updatedAt) })), nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
       }
       if (req.method === "GET") {
         const cursor = req.query?.cursor;
@@ -79,7 +80,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
           contacts: page.docs.map(publicContact),
           nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null,
           orderTemplate: orderTemplate.exists ? { subject: String(orderTemplate.data().subject || ""), text: String(orderTemplate.data().text || ""), ...templateIdentity(orderTemplate.data()) } : DEFAULT_ORDER_MESSAGE,
-          welcome: welcome.exists ? validateMessage(welcome.data()) : DEFAULT_WELCOME,
+          welcome: welcome.exists ? { ...validateMessage(welcome.data()), ...templateIdentity(welcome.data()) } : DEFAULT_WELCOME,
           campaigns: await resolveMailActors(campaignHistory, lookupUser),
         });
       }
@@ -91,14 +92,16 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         return reply(200, { id: body.id, message: "Đã xóa mẫu khỏi kho. Mẫu tự động và lịch sử thư vẫn được giữ." });
       }
       if (body.action === "saveLibraryTemplate") {
-        if (!validId(body.id) || typeof body.name !== "string" || !body.name.trim() || body.name.trim().length > 100 || !["general", "order", "order_auto"].includes(body.kind)) return reply(400, { message: "Nhập tên mẫu (tối đa 100 ký tự) và chọn loại mẫu hợp lệ." });
-        const message = body.kind !== "general" ? validateOrderTemplate(body) : validateMessage(body);
+        if (!validId(body.id) || typeof body.name !== "string" || !body.name.trim() || body.name.trim().length > 100 || !Object.hasOwn(TEMPLATE_KINDS, normalizeTemplateKind(body.kind))) return reply(400, { message: "Nhập tên mẫu (tối đa 100 ký tự) và chọn loại mẫu hợp lệ." });
+        const kind = normalizeTemplateKind(body.kind);
+        const message = kind === "welcome_auto" ? validateMessage(body) : validateOrderTemplate(body);
+        if (kind === "welcome_auto" && hasOrderTokens(message)) throw new Error("order_context_required");
         const ref = db.collection("newsletterTemplates").doc(body.id);
         await db.runTransaction(async (tx) => {
           const saved = await tx.get(ref); const updatedAt = new Date();
           const previous = saved.data() || {};
-          const changed = ["name", "kind", "subject", "text"].some((key) => previous[key] !== ({ name: body.name.trim(), kind: body.kind, ...message })[key]);
-          tx.set(ref, { ...previous, name: body.name.trim(), kind: body.kind, ...message, ...mailActor(user), revision: saved.exists ? (previous.revision || 1) + (changed ? 1 : 0) : 1, usageTracked: saved.exists ? previous.usageTracked === true : true, sentCount: previous.sentCount || 0, usedRevisions: previous.usedRevisions || [], createdAt: saved.exists ? previous.createdAt : updatedAt, updatedAt });
+          const changed = ["name", "kind", "subject", "text"].some((key) => (key === "kind" ? normalizeTemplateKind(previous[key]) : previous[key]) !== ({ name: body.name.trim(), kind, ...message })[key]);
+          tx.set(ref, { ...previous, name: body.name.trim(), kind, ...message, ...mailActor(user), revision: saved.exists ? (previous.revision || 1) + (changed ? 1 : 0) : 1, usageTracked: saved.exists ? previous.usageTracked === true : true, sentCount: previous.sentCount || 0, usedRevisions: previous.usedRevisions || [], createdAt: saved.exists ? previous.createdAt : updatedAt, updatedAt });
         });
         return reply(200, { id: body.id, message: "Đã lưu vào Mẫu Thư. Chưa gửi email hoặc thay đổi mẫu tự động." });
       }
@@ -114,7 +117,12 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
       }
       if (body.action === "saveWelcome") {
         const message = validateMessage(body);
-        await settings.set({ ...message, updatedAt: new Date(), updatedBy: user.uid });
+        if (hasOrderTokens(message)) throw new Error("order_context_required");
+        await db.runTransaction(async (tx) => {
+          const current = await tx.get(settings);
+          const snapshot = body.templateRef ? await captureTemplate(tx, db, body.templateRef, message, "welcome_auto") : current.exists && current.data().subject === message.subject && current.data().text === message.text ? templateIdentity(current.data()) : {};
+          tx.set(settings, { ...message, ...snapshot, updatedAt: new Date(), updatedBy: user.uid });
+        });
         return reply(200, { message: "Đã lưu mẫu thư gửi cho người đăng ký mới." });
       }
       if (body.action === "manageContacts") {
@@ -160,6 +168,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
       const campaign = campaigns.doc(body.id);
       if (body.action === "createCampaign") {
         const message = validateMessage(body);
+        if (hasOrderTokens(message)) throw new Error("order_context_required");
         const recipientIds = body.recipientIds === undefined ? null : body.recipientIds;
         if (recipientIds !== null && (!Array.isArray(recipientIds) || !recipientIds.length || recipientIds.length > 100 || recipientIds.some((id) => typeof id !== "string" || !/^[a-f0-9]{64}$/.test(id)))) return reply(400, { message: "Chọn từ 1 đến 100 email đang hoạt động." });
         const recipients = recipientIds === null ? null : [...new Set(recipientIds)].sort();
@@ -279,6 +288,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         mail_auth_failed: [503, "Microsoft từ chối xác thực. Kiểm tra Tenant ID, Client ID và Client Secret (giá trị, không phải Secret ID)."],
         mail_send_failed: [503, "Microsoft chưa chấp nhận gửi thư. Kiểm tra quyền của phương thức gửi đang chọn, admin consent, phạm vi hộp thư và hạn mức gửi."],
         mail_configuration_missing: [503, "Thiếu cấu hình Microsoft 365 trên máy chủ."],
+        order_context_required: [400, "Mẫu có biến đơn hàng chỉ dùng khi gửi cho một đơn cụ thể, không dùng cho thư chào mừng hoặc gửi danh sách khách."],
         invalid_order_token: [400, "Tên biến trong mẫu đơn hàng chưa hợp lệ."],
         invalid_message: [400, "Nhập tiêu đề (tối đa 200 ký tự) và nội dung (tối đa 20.000 ký tự)."],
         invalid_recipients: [400, "Một email đã ngừng hoạt động hoặc bị xóa. Tải lại danh sách người nhận trước khi gửi."],

@@ -12,7 +12,7 @@ export function groupMailTemplates(mails) {
   return { templates: [...groups.values()], byMail };
 }
 
-export const TEMPLATE_KINDS = { general: "Thư riêng cho khách", order: "Đơn hàng gửi riêng", order_auto: "Xác nhận đơn tự động" };
+export { TEMPLATE_KINDS } from "./template-kinds.js";
 export const templateReference = (item) => item.saved && item.id && item.revision ? { id: item.id, revision: item.revision } : undefined;
 export function templateUsageLabel(item) {
   const revision = item.revision || 1;

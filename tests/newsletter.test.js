@@ -386,3 +386,31 @@ test("customer mail records a frozen template snapshot and counts use once per c
   assert.equal(current.name, "Tên mới"); assert.equal(current.sentCount, 1); assert.deepEqual(current.usedRevisions, [1]);
   assert.equal((await call({ action: "createCampaign", id: "wrong-kind", ...message, templateRef: { id: template.id, revision: 1 } })).statusCode, 409);
 });
+
+test("unified template types preserve legacy private templates and support a frozen welcome template", async () => {
+  const db = memoryDb(); const { call } = admin(db);
+  await db.collection("newsletterTemplates").doc("legacy-private").set({ name: "Legacy", kind: "order", ...message, createdAt: new Date(), updatedAt: new Date() });
+  const page = await call(null, { method: "GET", query: { templates: "1" } });
+  assert.equal(page.body.templates[0].kind, "private");
+  assert.equal((await db.collection("newsletterTemplates").doc("legacy-private").get()).data().kind, "order");
+  const welcome = { id: "welcome-library", name: "Chào mừng ban đầu", kind: "welcome_auto", subject: "Chào bạn", text: "Cảm ơn đã đăng ký." };
+  assert.equal((await call({ action: "saveLibraryTemplate", ...welcome })).statusCode, 200);
+  assert.equal((await call({ action: "saveWelcome", ...welcome, templateRef: { id: welcome.id, revision: 1 } })).statusCode, 200);
+  await call({ action: "saveLibraryTemplate", ...welcome, name: "Đã đổi tên", text: "Nội dung mới" });
+  const sent = [];
+  await sendWelcomeMessage("new@example.com", { getDb: () => db, sendMail: async (...args) => sent.push(args) });
+  assert.equal(sent[0][1].text, welcome.text);
+  const active = (await db.collection("newsletterSettings").doc("welcome").get()).data();
+  assert.equal(active.templateName, welcome.name); assert.equal(active.templateRevision, 1);
+  const current = (await db.collection("newsletterTemplates").doc(welcome.id).get()).data();
+  assert.equal(current.revision, 2); assert.deepEqual(current.usedRevisions, [1]);
+});
+
+test("private order placeholders cannot be sent unfilled to a customer list or automatic welcome", async () => {
+  const db = memoryDb(); const { call, sent } = admin(db);
+  const orderMessage = { subject: "Đơn {{orderCode}}", text: "Chào {{customerName}}" };
+  assert.equal((await call({ action: "saveLibraryTemplate", id: "private-order", kind: "private", name: "Riêng", ...orderMessage })).statusCode, 200);
+  assert.equal((await call({ action: "createCampaign", id: "bad-context", ...orderMessage })).statusCode, 400);
+  assert.equal((await call({ action: "saveLibraryTemplate", id: "bad-welcome", kind: "welcome_auto", name: "Welcome", ...orderMessage })).statusCode, 400);
+  assert.equal(sent.length, 0);
+});

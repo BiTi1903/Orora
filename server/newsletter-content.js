@@ -1,3 +1,4 @@
+import { recordTemplateUse } from "./template-snapshot.js";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
 export const DEFAULT_WELCOME = {
@@ -37,5 +38,10 @@ export async function sendWelcomeMessage(email, { getDb, sendMail }) {
   const db = await getDb();
   const saved = await db.collection("newsletterSettings").doc("welcome").get();
   const message = saved.exists ? validateMessage(saved.data()) : DEFAULT_WELCOME;
-  return sendMail(email, message);
+  const result = await sendMail(email, message);
+  if (saved.data()?.templateId) {
+    try { await db.runTransaction((tx) => recordTemplateUse(tx, db, saved.data())); }
+    catch { console.error("Welcome template usage could not be recorded"); }
+  }
+  return result;
 }

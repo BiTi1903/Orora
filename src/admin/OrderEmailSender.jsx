@@ -1,8 +1,6 @@
-import MailPreviewDialog from "./MailPreviewDialog";
 import { useEffect, useRef, useState } from "react";
 import { orderRequest, MAIL_STATES } from "./order-api";
-export default function OrderEmailSender({ reuseTemplate, onChooseTemplate, onSaveLibrary }) {
-  const [preview, setPreview] = useState(null);
+export default function OrderEmailSender({ reuseTemplate, onChooseTemplate }) {
   const attempt = useRef(null);
   const panel = useRef(null);
   useEffect(() => { if (reuseTemplate?.id) panel.current?.scrollIntoView({ block: "start", behavior: "smooth" }); }, [reuseTemplate?.id]);
@@ -24,7 +22,6 @@ export default function OrderEmailSender({ reuseTemplate, onChooseTemplate, onSa
     {selected && <p className="admin-muted">Người nhận: <strong>{selected.customer.email || "Đơn cũ chưa có email."}</strong> · {MAIL_STATES[selected.confirmationMail?.state] || "Chưa có lịch sử"}</p>}
     <div className="admin-actions"><button type="button" className="admin-btn" disabled={busy} onClick={onChooseTemplate}>Chọn mẫu thư đơn hàng</button></div>
     {message ? <div className="admin-form order-mail-custom"><h3>Nội dung gửi riêng</h3><div className="admin-field"><label htmlFor="manual-order-subject">Tiêu đề gửi riêng</label><input id="manual-order-subject" maxLength={200} disabled={busy} value={message.subject} onChange={(event) => setMessage({ ...message, subject: event.target.value })} /></div><div className="admin-field"><label htmlFor="manual-order-text">Nội dung gửi riêng</label><textarea id="manual-order-text" rows={10} maxLength={20000} disabled={busy} value={message.text} onChange={(event) => setMessage({ ...message, text: event.target.value })} /></div></div> : null}
-    <div className="admin-actions"><button type="button" className="admin-btn" onClick={() => setPreview(message)}>Xem mẫu gửi riêng</button>{onSaveLibrary && <button type="button" className="admin-btn" disabled={busy || !!message?.templateRef || !message?.subject.trim() || !message?.text.trim()} onClick={() => onSaveLibrary(message)}>Lưu nội dung vào Mẫu Thư</button>}</div>
     <div className="admin-actions"><button className="admin-btn primary" type="button" disabled={busy || (message && (!message.subject.trim() || !message.text.trim())) || !selected?.customer.email || ['sending','unknown'].includes(selected?.confirmationMail?.state)} onClick={() => {
       const confirmResend = selected.confirmationMail?.state === "accepted";
       if (confirmResend && !window.confirm(`Microsoft đã nhận thư trước đó của đơn ${selected.code}. Bạn vẫn muốn gửi lại?`)) return;
@@ -38,7 +35,6 @@ export default function OrderEmailSender({ reuseTemplate, onChooseTemplate, onSa
       });
     }}>Gửi thư xác nhận đơn đã chọn</button><button className="admin-btn" type="button" disabled={busy} onClick={() => perform(async () => { const page = await orderRequest(); setOrders(page.orders); setCursor(page.nextCursor); setId(""); attempt.current = null; })}>Tải lại đơn hàng</button></div>
     {cursor && <button type="button" className="admin-btn" disabled={busy} onClick={() => perform(async () => { const page = await orderRequest(null, { cursor }); setOrders((items) => [...new Map([...items, ...page.orders].map((item) => [item.id, item])).values()]); setCursor(page.nextCursor); })}>Tải thêm đơn hàng</button>}
-    {preview && <MailPreviewDialog title="Mẫu gửi riêng cho đơn hàng" message={preview} onClose={() => setPreview(null)} />}
     {notice && <p role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
   </div>;
 }
