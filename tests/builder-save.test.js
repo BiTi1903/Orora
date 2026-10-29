@@ -33,3 +33,15 @@ test("explicit list clearing and zero values are saved without discarding other 
   const { changedValues } = await import("../src/admin/builder/save-sections.js");
   assert.deepEqual(changedValues({ marqueeWords: ["old"], styles: { radius: 20 } }, { marqueeWords: [], styles: { radius: 0 } }), { marqueeWords: [], styles: { radius: 0 } });
 });
+
+test("section visibility saves only changed switches and preserves content and other hidden sections", async () => {
+  const { changedValues, mergeSavedValues } = await import("../src/admin/builder/save-sections.js");
+  const saved = { heroTitle: "Nội dung đã lưu", footerPhone: "0900000000", sectionVisibility: { hero: true, footer: false } };
+  const edited = { ...saved, sectionVisibility: { ...saved.sectionVisibility, hero: false } };
+  const patch = changedValues(saved, editedSectionPayload(edited, ["visibility"]));
+  assert.deepEqual(patch, { sectionVisibility: { hero: false } });
+  assert.deepEqual(mergeSavedValues(saved, patch), edited);
+  assert.deepEqual(editedSectionPayload(edited, ["hero"]), { heroTitle: saved.heroTitle });
+  const enabled = { ...edited, sectionVisibility: { ...edited.sectionVisibility, hero: true } };
+  assert.deepEqual(changedValues(edited, editedSectionPayload(enabled, ["visibility"])), { sectionVisibility: { hero: true } });
+});

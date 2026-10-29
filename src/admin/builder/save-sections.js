@@ -1,4 +1,5 @@
 const FIELDS = {
+  visibility: ["sectionVisibility"],
   navbar: ["navLogo", "navLinks", "navStyles"],
   hero: ["heroEyebrow", "heroTitle", "heroDescription", "heroRotator", "heroButtonText", "heroButtonLink", "shopButtonText", "shopButtonLink", "heroImage", "heroImageMobile", "heroChip1", "heroChip2", "heroChip3", "heroRingText", "heroScrollText"],
   about: ["storyLabel", "storyTitle", "storyHighlight", "storyText", "storyImage", "storyImages", "storyStats", "aboutBuilder", "aboutStyles"],

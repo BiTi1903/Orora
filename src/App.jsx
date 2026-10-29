@@ -1,3 +1,4 @@
+import useHomeContent from "./hooks/useHomeContent";
 import { lazy, Suspense, useLayoutEffect, useRef } from "react";
    import { Marquee, Features, Testimonials, Newsletter } from "./components/Extras";
      import gsap from "gsap";
@@ -33,12 +34,15 @@ function App() {
   const pageRef = useRef(null);
 
   const location = useLocation();
+  const home = useHomeContent();
+  const visibility = JSON.stringify(home.sectionVisibility || {});
+  const visible = (key) => !home.loading && home.sectionVisibility?.[key] !== false;
 
 
   useLayoutEffect(() => {
 
     // Chỉ chạy animation ở trang chủ
-    if (location.pathname !== "/") {
+    if (location.pathname !== "/" || home.loading) {
       return;
     }
 
@@ -313,7 +317,7 @@ function App() {
     };
 
 
-  }, [location.pathname]);
+  }, [location.pathname, home.loading, visibility]);
 
 
   return (
@@ -340,23 +344,23 @@ function App() {
           element={
             <main ref={pageRef}>
 
-              <Navbar />
+              {visible("navbar") && <Navbar />}
 
-              <div className="home-first-screen">
-                <Hero />
-                <Marquee />
+              <div className={visible("hero") ? "home-first-screen" : undefined}>
+                {visible("hero") && <Hero />}
+                {visible("ticker") && <Marquee />}
               </div>
 
-              <About />
+              {visible("about") && <About />}
 
-              <Collection />
-              <ScrollText />
+              {visible("collection") && <Collection />}
+              {visible("philosophy") && <ScrollText />}
 
-              <Features />
+              {visible("features") && <Features />}
               {/* <Ritual /> */}
-                 <Testimonials />
-   <Newsletter />
-              <Footer />
+                 {visible("reviews") && <Testimonials />}
+   {visible("newsletter") && <Newsletter />}
+              {visible("footer") && <Footer />}
 <ChatButton />
 <BackToTop />
 <CursorSparkle />
@@ -369,7 +373,7 @@ function App() {
         <Route path="/san-pham" element={<Navigate to="/#shop" replace />} />
         <Route path="/ve-orora" element={<Navigate to="/#about" replace />} />
         <Route path="/lien-he" element={<Navigate to="/#contact" replace />} />
-        <Route path="*" element={<main><Navbar /><h1 className="page-heading">Trang không tồn tại</h1><Footer /></main>} />
+        <Route path="*" element={<main>{visible("navbar") && <Navbar />}<h1 className="page-heading">Trang không tồn tại</h1>{visible("footer") && <Footer />}</main>} />
 
         {/* =========================
             PRODUCT DETAIL
@@ -380,11 +384,11 @@ function App() {
           element={
             <main>
 
-              <Navbar />
+              {visible("navbar") && <Navbar />}
 
-              <ProductDetail />
+              {visible("productdetail") ? <ProductDetail /> : !home.loading && <section className="product-not-found"><h1>Trang chi tiết sản phẩm đang tạm ẩn</h1><a href="/">← Về trang chủ</a></section>}
 
-              <Footer />
+              {visible("footer") && <Footer />}
             </main>
           }
         />

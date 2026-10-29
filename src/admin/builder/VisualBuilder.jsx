@@ -982,6 +982,7 @@ export default function VisualBuilder() {
       color: "#3a1526",
     },
   });
+  const [sectionVisibility, setSectionVisibility] = useState({});
   const [activeSection, setActiveSection] = useState("about");
   const [selected, setSelected] = useState("title");
   const [loading, setLoading] = useState(true);
@@ -998,6 +999,7 @@ export default function VisualBuilder() {
       .then((data) => {
         if (!alive) return;
 
+        setSectionVisibility(data?.sectionVisibility || {});
         setAbout(createAbout(data || {}));
         setHero(createHero(data || {}));
         setCollection(createCollection(data || {}));
@@ -1526,7 +1528,7 @@ export default function VisualBuilder() {
     });
   };
 
-  const payload = useMemo(() => buildHomePayload({ about, hero, collection, productDetail, features, reviews, newsletter, footer, ticker, navbar, philosophy }), [about, hero, collection, productDetail, features, reviews, newsletter, footer, ticker, navbar, philosophy]);
+  const payload = useMemo(() => ({ ...buildHomePayload({ about, hero, collection, productDetail, features, reviews, newsletter, footer, ticker, navbar, philosophy }), sectionVisibility }), [about, hero, collection, productDetail, features, reviews, newsletter, footer, ticker, navbar, philosophy, sectionVisibility]);
   useEffect(() => {
     if (!loading && !loadError && baseline.current === null) baseline.current = payload;
   }, [loading, loadError, payload]);
@@ -1618,6 +1620,7 @@ export default function VisualBuilder() {
 
           <div className="builder-section-list">
             {SECTION_LIST.map((section) => (
+              <div className="builder-section-row" key={section.key}>
               <button
                 key={section.key}
                 type="button"
@@ -1642,6 +1645,8 @@ export default function VisualBuilder() {
                   <small>
                     {section.disabled
                       ? "Sắp có"
+                      : sectionVisibility[section.key] === false
+                      ? "Đang ẩn trên website"
                       : activeSection === section.key
                       ? "Đang chỉnh sửa"
                       : "Sẵn sàng"}
@@ -1652,13 +1657,20 @@ export default function VisualBuilder() {
                   <span className="builder-dot" />
                 )}
               </button>
+              <button type="button" role="switch" className="builder-section-visibility" aria-label={`Hiển thị ${section.label} trên website`} aria-checked={sectionVisibility[section.key] !== false} disabled={loading || loadError || saving || section.disabled} onClick={() => {
+                dirtySections.current.add("visibility");
+                setSectionVisibility((current) => ({ ...current, [section.key]: current[section.key] === false }));
+              }}><span aria-hidden="true" /></button>
+              </div>
             ))}
           </div>
+          <p className="builder-visibility-help">Tắt để ẩn mục trên website. Bấm Lưu để áp dụng; nội dung vẫn được giữ.</p>
         </aside>
 
         <div className="builder-canvas">
           <div className="builder-canvas-head">
-            <span>Sản phẩm mẫu · Xem trước tĩnh · Không thay đổi dữ liệu</span>
+            <span>{sectionVisibility[activeSection] === false ? "Mục này đang tắt trên website · Vẫn có thể chỉnh sửa tại đây" : "Sản phẩm mẫu · Xem trước tĩnh · Không thay đổi dữ liệu"}</span>
+
 
             <div className="builder-device" role="group" aria-label="Thiết bị xem trước">
               <button type="button" aria-pressed={previewDevice === "desktop"} onClick={() => setPreviewDevice("desktop")}>Desktop</button>
