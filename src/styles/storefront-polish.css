@@ -62,8 +62,8 @@
   #root > main .product-contact-actions a { padding: 12px 10px; font-size: 13px; }
   #root > main .product-contact-actions a:only-child { grid-column: 1 / -1; }
   #root > main .collection.product-detail-related { padding-block: 48px; }
-  #root > main .chat-button { right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); }
-  #root > main .back-to-top { bottom: calc(max(16px, env(safe-area-inset-bottom)) + 66px); }
+  #root > main .chat-button { right: 16px; bottom: calc(112px + env(safe-area-inset-bottom, 0px)); }
+  #root > main .back-to-top { bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
 }
 
 @media (max-width: 768px) {

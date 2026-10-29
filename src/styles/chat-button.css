@@ -2,7 +2,7 @@
   position: fixed;
   right: 24px;
   bottom: 24px;
-  z-index: 900;
+  z-index: 1100;
   display: flex;
   align-items: center;
   gap: 0;
@@ -47,6 +47,13 @@
 .chat-button:hover { gap: 10px; padding: 0 22px 0 17px; transform: translateY(-3px); }
 .chat-button:hover .chat-text { max-width: 180px; }
 
-@media (max-width: 600px) {
-  .chat-button { right: 16px; bottom: 16px; height: 52px; }
+@media (max-width: 768px) {
+  .chat-button { right: 16px; bottom: calc(112px + env(safe-area-inset-bottom, 0px)); width: 52px; height: 52px; padding: 0; justify-content: center; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  .chat-button:hover { gap: 0; padding: 0; transform: none; }
+  .chat-text { display: none; }
 }
+.chat-button.is-positioned { width: 58px; padding: 0; justify-content: center; }
+.chat-button.is-positioned .chat-text { display: none; }
+.chat-button.is-dragging { cursor: grabbing; transform: none; transition: none; }
+.chat-button.is-dragging::before { animation: none; }
+@media (max-width: 768px) { .chat-button.is-positioned { width: 52px; } }
