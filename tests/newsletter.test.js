@@ -293,3 +293,32 @@ test("welcome, test and campaign messages preserve custom body spacing and add n
   assert.equal(sent.length, 3);
   for (const [, body] of sent) assert.deepEqual(body, custom);
 });
+
+test("chosen-recipient campaigns send only to their saved selection and keep that selection on resume", async () => {
+  const db = memoryDb(); await seed(db, 25); const { call, sent } = admin(db);
+  const ids = Array.from({ length: 22 }, (_, i) => subscriberId(`customer${i}@example.com`));
+  const body = { action: "createCampaign", id: "chosen", ...message, recipientIds: [...ids, ids[0]] };
+  assert.equal((await call(body)).statusCode, 200);
+  assert.equal((await call({ ...body, recipientIds: [...ids].reverse() })).statusCode, 200);
+  assert.equal((await call({ ...body, recipientIds: [ids[0]] })).statusCode, 409);
+  assert.equal((await call({ action: "createCampaign", id: "chosen", ...message })).statusCode, 409);
+  await db.collection("newsletterSubscribers").doc(ids[0]).set({ status: "paused" }, { merge: true });
+  await db.collection("newsletterSubscribers").doc(ids[1]).delete();
+  let result;
+  for (let i = 0; i < 20; i++) { result = await call({ action: "sendBatch", id: "chosen" }); if (result.body.completed) break; }
+  assert.equal(result.body.completed, true);
+  assert.equal(sent.length, 20);
+  assert.deepEqual(new Set(sent.map(([email]) => email)), new Set(Array.from({ length: 20 }, (_, i) => `customer${i + 2}@example.com`)));
+  await call({ action: "sendBatch", id: "chosen" }); assert.equal(sent.length, 20);
+});
+
+test("chosen-recipient campaigns reject empty, malformed, oversized or inactive selections before creation", async () => {
+  const db = memoryDb(); await seed(db, 1); const { call } = admin(db);
+  const id = subscriberId("customer0@example.com");
+  for (const recipientIds of [[], "all", ["not-a-contact"], Array(101).fill(id), [subscriberId("missing@example.com")]]) {
+    assert.equal((await call({ action: "createCampaign", id: "invalid-selection", ...message, recipientIds })).statusCode, 400);
+  }
+  await db.collection("newsletterSubscribers").doc(id).set({ status: "unsubscribed" }, { merge: true });
+  assert.equal((await call({ action: "createCampaign", id: "invalid-selection", ...message, recipientIds: [id] })).statusCode, 400);
+  assert.equal((await db.collection("newsletterCampaigns").doc("invalid-selection").get()).exists, false);
+});

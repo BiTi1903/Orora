@@ -102,3 +102,9 @@ Kiểm thử tự động trong repository dùng Firestore và Microsoft giả l
 - `newsletterLimits`: bộ đếm chống lạm dụng form công khai.
 
 Không xóa lịch sử deliveries của chiến dịch đang gửi hoặc đang tạm dừng. Không chia sẻ dữ liệu khách hàng hoặc khóa cấu hình qua repository công khai.
+
+### Chọn người nhận khi soạn thư
+
+Trong **Email marketing → Soạn và gửi thư**, mặc định chọn email cụ thể từ danh sách đang hoạt động. Có tìm kiếm, chọn tất cả kết quả đang hiển thị và bỏ chọn; tối đa 100 địa chỉ mỗi thư ở chế độ này. Tìm kiếm không bỏ các địa chỉ đã chọn trước đó. Có thể chọn **Toàn bộ email đang hoạt động** để gửi tới cả những địa chỉ chưa tải trên màn hình.
+
+Thư lưu danh sách ID người nhận tại lúc tạo để tiếp tục gửi đúng danh sách. Máy chủ đọc địa chỉ từ dữ liệu đã lưu, kiểm tra lại trạng thái và bỏ qua email đã tạm ngưng, hủy đăng ký hoặc bị xóa. Các thư cũ không có danh sách người nhận riêng vẫn giữ hành vi gửi toàn bộ email hoạt động như trước.

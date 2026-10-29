@@ -117,14 +117,21 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, env
       const campaign = campaigns.doc(body.id);
       if (body.action === "createCampaign") {
         const message = validateMessage(body);
+        const recipientIds = body.recipientIds === undefined ? null : body.recipientIds;
+        if (recipientIds !== null && (!Array.isArray(recipientIds) || !recipientIds.length || recipientIds.length > 100 || recipientIds.some((id) => typeof id !== "string" || !/^[a-f0-9]{64}$/.test(id)))) return reply(400, { message: "Chọn từ 1 đến 100 email đang hoạt động." });
+        const recipients = recipientIds === null ? null : [...new Set(recipientIds)].sort();
         await db.runTransaction(async (tx) => {
           const existing = await tx.get(campaign);
           if (existing.exists) {
             const saved = existing.data();
-            if (saved.subject !== message.subject || saved.text !== message.text) throw new Error("campaign_conflict");
+            if (saved.subject !== message.subject || saved.text !== message.text || JSON.stringify(saved.recipientIds || null) !== JSON.stringify(recipients)) throw new Error("campaign_conflict");
             return;
           }
-          tx.set(campaign, { ...message, createdAt: new Date(), createdBy: user.uid, status: "draft", cursor: null, accepted: 0, failed: 0, unknown: 0 });
+          if (recipients) {
+            const people = await tx.getAll(...recipients.map((id) => contacts.doc(id)));
+            if (people.some((person) => !person.exists || person.data().status !== "active")) throw new Error("invalid_recipients");
+          }
+          tx.set(campaign, { ...message, recipientIds: recipients, createdAt: new Date(), createdBy: user.uid, status: "draft", cursor: null, accepted: 0, failed: 0, unknown: 0 });
         });
         return reply(200, { id: body.id, message: "Đã tạo thư. Chưa gửi email." });
       }
@@ -145,7 +152,9 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, env
       let paused = false;
       let cursor = state.cursor;
       try {
-        const page = await query.get();
+        const page = state.recipientIds
+          ? { docs: await Promise.all(state.recipientIds.filter((id) => !state.cursor || id > state.cursor).slice(0, 20).map((id) => contacts.doc(id).get())) }
+          : await query.get();
         for (const doc of page.docs) {
           const delivery = campaign.collection("deliveries").doc(doc.id);
           const claim = await db.runTransaction(async (tx) => {
@@ -224,6 +233,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, env
         mail_send_failed: [503, "Microsoft chưa chấp nhận gửi thư. Kiểm tra quyền của phương thức gửi đang chọn, admin consent, phạm vi hộp thư và hạn mức gửi."],
         mail_configuration_missing: [503, "Thiếu cấu hình Microsoft 365 trên máy chủ."],
         invalid_message: [400, "Nhập tiêu đề (tối đa 200 ký tự) và nội dung (tối đa 20.000 ký tự)."],
+        invalid_recipients: [400, "Một email đã ngừng hoạt động hoặc bị xóa. Tải lại danh sách người nhận trước khi gửi."],
         campaign_conflict: [409, "Mã thư đã dùng cho nội dung khác."],
         campaign_missing: [404, "Không tìm thấy thư."],
         campaign_busy: [409, "Thư đang được gửi ở một phiên khác. Vui lòng chờ tối đa 2 phút rồi tải lại."],
