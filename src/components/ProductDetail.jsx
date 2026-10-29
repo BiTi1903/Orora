@@ -1,3 +1,5 @@
+import OrderForm from "./OrderForm";
+import { socialShopUrl } from "../lib/commerce";
 import { mobileImageVars } from "../lib/image-layout";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -25,6 +27,7 @@ function ProductDetail({
 }) {
   const { id } = useParams();
   const pageRef = useRef(null);
+  const [orderProductId, setOrderProductId] = useState(null);
 
   const home = useHomeContent();
   const ps = preview && previewStyles
@@ -70,7 +73,7 @@ function ProductDetail({
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const ctx = gsap.context(() => {
-      const selectors = [".product-back", ".product-detail-image", ".product-detail-thumbs-wrap", ".product-detail-number", ".product-detail-info h1", ".product-detail-price", ".product-detail-description", ".product-contact-actions", ".product-section", ".product-detail-related"];
+      const selectors = [".product-back", ".product-detail-image", ".product-detail-thumbs-wrap", ".product-detail-number", ".product-detail-info h1", ".product-detail-price", ".product-detail-description", ".purchase-options", ".product-contact-actions", ".product-section", ".product-detail-related"];
       const nodes = selectors.flatMap((selector) => Array.from(pageRef.current.querySelectorAll(selector)));
       gsap.from(nodes, {
         y: 18, autoAlpha: 0, duration: 0.5, stagger: 0.1,
@@ -124,6 +127,9 @@ function ProductDetail({
     );
   }
 
+  const purchase = ps.purchaseOptions || {};
+  const tiktokShop = socialShopUrl(home.shopLinks?.tiktokUrl, "tiktok");
+  const facebookShop = socialShopUrl(home.shopLinks?.facebookUrl, "facebook");
   const contactSettings = ps.contactActions || {};
   const contact = contactLinks(home, product.name, contactSettings);
   const showZalo = contactSettings.showZalo !== false && !!contact.zalo;
@@ -486,6 +492,16 @@ function ProductDetail({
           >
             {renderLines(product.description)}
           </p>
+
+          <section className={`purchase-options ${selectedClass("pdPurchaseOptions")}`} aria-label="Chọn kênh mua hàng" data-builder-key={preview ? "pdPurchaseOptions" : undefined} onClick={preview ? select("pdPurchaseOptions") : undefined}>
+            <h2>{purchase.heading?.trim() || "Chọn cách mua hàng"}</h2>
+            <button type="button" className="purchase-website" style={{ ...css("purchaseOptions"), background: purchase.websiteBackground }} onClick={preview ? select("pdPurchaseOptions") : () => setOrderProductId(product.id || product.slug)} aria-expanded={!preview && orderProductId === (product.id || product.slug)}>{purchase.websiteLabel?.trim() || "Đặt hàng trên website"}</button>
+            {(preview || tiktokShop || facebookShop) && <div className="purchase-social">
+              {(preview || tiktokShop) && <a className="purchase-tiktok" href={preview ? undefined : tiktokShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.tiktokBackground }}>{purchase.tiktokLabel?.trim() || "Mua trên TikTok"} <span aria-hidden="true">↗</span></a>}
+              {(preview || facebookShop) && <a className="purchase-facebook" href={preview ? undefined : facebookShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.facebookBackground }}>{purchase.facebookLabel?.trim() || "Mua qua Facebook"} <span aria-hidden="true">↗</span></a>}
+            </div>}
+            {!preview && orderProductId === (product.id || product.slug) && <OrderForm key={product.id || product.slug} product={product} home={home} onClose={() => setOrderProductId(null)} />}
+          </section>
 
           {(preview || showZalo || showCall || (!contact.zalo && contact.email && contactSettings.showZalo !== false)) && (
             <div className={`product-contact-actions ${selectedClass("pdContactActions")}`} aria-label="Tư vấn sản phẩm" data-builder-key={preview ? "pdContactActions" : undefined} onClick={preview ? select("pdContactActions") : undefined}>

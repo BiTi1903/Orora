@@ -1,3 +1,4 @@
+import PurchaseOptionsSettings from "../builder/PurchaseOptionsSettings";
 import ProductContactSettings from "../builder/ProductContactSettings";
 import MobileImageSettings from "../builder/MobileImageSettings";
 import useHomeForm from "./Usehomeform";
@@ -114,6 +115,7 @@ export default function EditProductDetail() {
         />
       </div>
 
+      <PurchaseOptionsSettings value={h.form.productDetailStyles?.purchaseOptions || {}} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, purchaseOptions: { ...h.form.productDetailStyles?.purchaseOptions, ...patch } })} />
       <ProductContactSettings value={h.form.productDetailStyles?.contactActions || {}} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, contactActions: { ...h.form.productDetailStyles?.contactActions, ...patch } })} />
       <MobileImageSettings layout={h.form.productDetailStyles?.imageLayout || {}} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, imageLayout: { ...h.form.productDetailStyles?.imageLayout, ...patch } })} />
       <StyleList

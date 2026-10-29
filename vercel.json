@@ -55,6 +55,12 @@
     },
     "api/subscribe.js": {
       "maxDuration": 60
+    },
+    "api/orders.js": {
+      "maxDuration": 60
+    },
+    "api/admin-orders.js": {
+      "maxDuration": 60
     }
   }
 }

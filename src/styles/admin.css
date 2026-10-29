@@ -226,3 +226,11 @@
   background: #fff; color: var(--a-ink); font: inherit; font-size: 13px;
 }
 .product-row-actions select:focus-visible { outline: 2px solid var(--a-deep); outline-offset: 2px; }
+
+.admin-orders-list { display: grid; gap: 16px; }
+.admin-order-heading { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
+.admin-order > p { margin: 10px 0; font-size: 14px; overflow-wrap: anywhere; }
+.admin-order summary { cursor: pointer; padding-block: 10px; font-size: 14px; }
+.admin-order-customer p { margin: 8px 0; font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.admin-order-heading h2 { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }

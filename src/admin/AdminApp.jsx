@@ -5,6 +5,7 @@ import AdminLogin from "./AdminLogin";
 import Dashboard from "./Dashboard";
 import HomeAdmin from "./HomeAdmin";
 import ProductsAdmin from "./ProductsAdmin";
+import OrdersAdmin from "./OrdersAdmin";
 import NewsletterAdmin from "./NewsletterAdmin";
 import "../styles/admin.css";
 
@@ -12,6 +13,7 @@ const TABS = [
   ["dashboard", "Tổng quan"],
   ["home", "Trang chủ"],
   ["products", "Sản phẩm"],
+  ["orders", "Đơn hàng"],
   ["newsletter", "Email marketing"],
 ];
 
@@ -56,6 +58,7 @@ export default function AdminApp() {
         {tab === "dashboard" && <Dashboard sectionCount={TABS.length} />}
         {tab === "home" && <HomeAdmin />}
         {tab === "products" && <ProductsAdmin />}
+        {tab === "orders" && <OrdersAdmin key={user.uid} />}
         {tab === "newsletter" && <NewsletterAdmin />}
       </main>
     </div>

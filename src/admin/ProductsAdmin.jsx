@@ -1,3 +1,4 @@
+import ShopLinksSettings from "./ShopLinksSettings";
 import { useEffect, useState } from "react";
 import { explainError, getProducts, removeProduct, saveProduct, saveCategory, setProductCategory } from "../lib/api";
 import useCategories from "../hooks/useCategories";
@@ -140,6 +141,7 @@ export default function ProductsAdmin() {
 
       {message && <div className={`admin-${message.type}`} style={{ marginBottom: 16 }}>{message.text}</div>}
 
+      <ShopLinksSettings />
       {categoriesError && <div className="admin-error">Không tải được danh mục: {explainError(categoriesError)}</div>}
       <form className="admin-card admin-form" style={{ marginBottom: 20 }} onSubmit={async (event) => {
         event.preventDefault();

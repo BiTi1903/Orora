@@ -19,7 +19,10 @@ export function memoryDb() {
     get: async () => {
       let docs = [...records.keys()].filter((key) => key.startsWith(`${path}/`) && key.slice(path.length + 1).indexOf("/") === -1).map((key) => snap(ref(key)));
       docs.sort((a, b) => settings.field === "createdAt" ? (a.data().createdAt - b.data().createdAt) * (settings.direction === "desc" ? -1 : 1) : a.id.localeCompare(b.id));
-      if (settings.cursor) docs = docs.filter((doc) => doc.id > settings.cursor);
+      if (settings.cursor?.data) {
+        const timestamp = Number(settings.cursor.data()[settings.field]);
+        docs = docs.filter((doc) => settings.direction === "desc" ? Number(doc.data()[settings.field]) < timestamp : Number(doc.data()[settings.field]) > timestamp);
+      } else if (settings.cursor) docs = docs.filter((doc) => doc.id > settings.cursor);
       return { docs: docs.slice(0, settings.limit || Infinity) };
     },
   });
