@@ -1,9 +1,10 @@
+import MailPreviewDialog from "./MailPreviewDialog";
 import { groupMailTemplates, mailActorLabel } from "../lib/mail-templates";
 import { useEffect, useState } from "react";
 import { orderRequest, MAIL_STATES } from "./order-api";
 const date = (value) => value ? new Date(value).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "—";
 
-export default function OrderMailHistory({ onReuse }) {
+export default function OrderMailHistory({ onReuse, onSaveTemplate }) {
   const [selected, setSelected] = useState(null);
   const [templateFilter, setTemplateFilter] = useState("all");
   const [mails, setMails] = useState([]);
@@ -50,19 +51,15 @@ export default function OrderMailHistory({ onReuse }) {
     <div className="admin-field"><label htmlFor="order-mail-template-filter">Lọc mẫu thư</label><select id="order-mail-template-filter" className="mail-template-select" value={templateFilter} onChange={(event) => { setTemplateFilter(event.target.value); setVisibleCount(30); }}><option value="all">Tất cả mẫu thư</option>{templates.map((template) => <option key={template.id} value={template.id}>{template.label} · {template.count} lượt gửi</option>)}</select></div>
     {!busy && <>
 
-      <div className="newsletter-history-layout">
-      <div className="admin-card mail-history-table-scroll"><table className="admin-table"><thead><tr><th>Thời gian / Mã đơn</th><th>Người nhận</th><th>Tài khoản thao tác</th><th>Mẫu thư</th><th>Kết quả</th><th /></tr></thead><tbody>{filtered.slice(0, visibleCount).map((mail) => <tr key={mail.id}><td>{date(mail.createdAt)}<br /><small>{mail.orderCode}</small></td><td>{mail.recipient}</td><td>{mailActorLabel(mail)}{mail.actorName && mail.actorEmail && <small className="order-summary-note">{mail.actorEmail}</small>}</td><td>{byMail.get(mail.id)?.label}</td><td>{MAIL_STATES[mail.state] || mail.state}</td><td><button className="admin-btn" onClick={() => setSelected({ mail, template: byMail.get(mail.id) })}>Xem thư</button></td></tr>)}</tbody></table></div>
-      <aside className="admin-card newsletter-template-column" aria-label="Mẫu thư đơn hàng"><h3>Các mẫu đã dùng ({templates.length})</h3>
-        <div className="mail-template-library">{templates.map((template) => <div className="mail-template-row" key={template.id}><div><strong>{template.label}</strong><p className="admin-muted">{template.message.subject} · {template.count} lượt gửi</p></div><div className="admin-actions"><button className="admin-btn" onClick={() => setSelected({ template })}>Xem mẫu {template.label.replace("Mẫu thư ", "")}</button>{onReuse && <button className="admin-btn" onClick={() => onReuse(template.message, template.original)}>Dùng lại {template.label.toLowerCase()}</button>}</div></div>)}</div>
-        <p className="admin-muted">Thư mới được gom theo mẫu gốc, không theo tên hoặc mã đơn đã điền. Thư cũ chưa lưu mẫu gốc được gom theo nội dung thực tế; khi dùng lại cần kiểm tra thông tin khách cũ.</p>
-      </aside>
+      <div>
+      <div className="admin-card mail-history-table-scroll"><table className="admin-table"><thead><tr><th>Thời gian / Mã đơn</th><th>Người nhận</th><th>Tài khoản thao tác</th><th>Mẫu thư</th><th>Kết quả</th><th /></tr></thead><tbody>{filtered.slice(0, visibleCount).map((mail) => <tr key={mail.id}><td>{date(mail.createdAt)}<br /><small>{mail.orderCode}</small></td><td>{mail.recipient}</td><td>{mailActorLabel(mail)}{mail.actorName && mail.actorEmail && <small className="order-summary-note">{mail.actorEmail}</small>}</td><td><button className="admin-template-link" onClick={() => setSelected({ template: byMail.get(mail.id) })}>{byMail.get(mail.id)?.label}</button></td><td>{MAIL_STATES[mail.state] || mail.state}</td><td><button className="admin-btn" onClick={() => setSelected({ mail, template: byMail.get(mail.id) })}>Xem thư</button></td></tr>)}</tbody></table></div>
+
       </div>
     </>}
-    {selected && <div className="admin-card mail-history-detail"><div className="admin-order-heading"><h3>{selected.mail ? "Nội dung đã gửi" : selected.template.label}</h3><button className="admin-btn" onClick={() => setSelected(null)}>Đóng nội dung</button></div>
-      {selected.mail && <><p>Người nhận: {selected.mail.recipient} · {selected.mail.orderCode}</p><p>Tài khoản thao tác: {mailActorLabel(selected.mail)}</p>{selected.mail.errorCode && <p className="admin-error">Mã lỗi: {selected.mail.errorCode}</p>}</>}
-      <h4>{selected.mail?.subject ?? selected.template.message.subject}</h4><pre>{selected.mail?.text ?? selected.template.message.text}</pre>
+    {selected && <MailPreviewDialog title={selected.mail ? "Nội dung đã gửi" : selected.template.label} message={selected.mail || selected.template.message} onClose={() => setSelected(null)} metadata={selected.mail && <><p>Người nhận: {selected.mail.recipient} · {selected.mail.orderCode}</p><p>Tài khoản thao tác: {mailActorLabel(selected.mail)}</p>{selected.mail.errorCode && <p className="admin-error">Mã lỗi: {selected.mail.errorCode}</p>}</>}>
+      {onSaveTemplate && <button className="admin-btn" onClick={() => onSaveTemplate(selected.template.message, selected.template.label)}>Lưu vào Mẫu Thư</button>}
       {onReuse && <button className="admin-btn" onClick={() => onReuse(selected.template.message, selected.template.original)}>Dùng lại mẫu này</button>}
-    </div>}
+    </MailPreviewDialog>}
     {!busy && !error && !filtered.length && <p className="admin-muted">Chưa có thư đơn hàng phù hợp.</p>}
     {filtered.length > visibleCount && <button className="admin-btn" onClick={() => setVisibleCount((value) => value + 30)}>Hiển thị thêm thư</button>}
     <p className="admin-muted">“Microsoft đã nhận” chưa bảo đảm thư đã tới hộp thư khách. Lịch sử này gồm thư gửi từ website; thư soạn trực tiếp trong Outlook không được đồng bộ.</p>

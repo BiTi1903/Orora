@@ -117,7 +117,7 @@ Thư lưu danh sách ID người nhận tại lúc tạo để tiếp tục gử
 
 Lịch sử hiển thị tên/email tài khoản đã đăng nhập khi gửi (từ token Firebase đã xác thực); địa chỉ gửi Microsoft vẫn là hộp thư đã cấu hình. Thư tự động ghi rõ tự động khi đặt hàng. Bản ghi cũ chỉ có UID sẽ được tra hồ sơ Firebase nếu còn tài khoản; nếu không tìm được, giữ UID thay vì gán tên người đang xem. Không sửa dữ liệu lịch sử cũ.
 
-Lịch sử thư đơn hàng dùng bảng gọn với cột mẫu riêng. **Các mẫu đã dùng** gom các thư theo tiêu đề/nội dung mẫu gốc; các giá trị như mã đơn và tên khách đã điền không tạo mẫu mới. Thư cũ chưa lưu mẫu gốc chỉ gom được theo nội dung thực tế. Bấm **Xem thư** hoặc **Xem mẫu** mới mở nội dung. **Dùng lại mẫu** chép sang **nội dung gửi riêng**, không ghi đè mẫu tự động. Chọn đơn và kiểm tra nội dung trước khi bấm gửi. Thư cũ có thể chứa thông tin khách cũ cần sửa trước khi dùng lại.
+Lịch sử thư đơn hàng dùng bảng gọn với cột mẫu riêng. Các nhãn mẫu trong lịch sử gom các thư theo tiêu đề/nội dung mẫu gốc; các giá trị như mã đơn và tên khách đã điền không tạo mẫu mới. Thư cũ chưa lưu mẫu gốc chỉ gom được theo nội dung thực tế. Bấm tên mẫu, **Xem thư** hoặc **Xem mẫu** để mở nội dung trong cửa sổ lớn giữa màn hình. **Dùng lại mẫu** chép sang **nội dung gửi riêng**, không ghi đè mẫu tự động. Chọn đơn và kiểm tra nội dung trước khi bấm gửi. Thư cũ có thể chứa thông tin khách cũ cần sửa trước khi dùng lại.
 
 Lịch sử thư gửi danh sách đăng ký cũng có cột tài khoản thao tác, cột mẫu và nút dùng lại để chép sang phần Soạn thư mới.
 
@@ -125,4 +125,12 @@ Lịch sử thư gửi danh sách đăng ký cũng có cột tài khoản thao t
 
 Phần soạn thư luôn hiện riêng **Email đã chọn**, giữ danh sách này khi đổi từ khóa tìm kiếm và có nút bỏ từng địa chỉ. Hộp xác nhận gửi cũng liệt kê các email cụ thể. Trong lịch sử gửi, bấm số email ở cột Người nhận để xem danh sách: thư mới lưu lại địa chỉ tại lúc tạo, nên vẫn xem được khi liên hệ đã bị xóa sau này. Thư cũ chưa lưu địa chỉ sẽ đối chiếu liên hệ còn tồn tại; nếu không còn thì báo rõ thay vì đoán địa chỉ.
 
-Kho mẫu nằm ở cột bên cạnh phần soạn thư hoặc lịch sử thư đơn hàng trên màn hình rộng. Trên mobile, kho mẫu nằm ở khối riêng phía dưới; có thể xem nội dung hoặc dùng lại mà không đổi người nhận đã chọn.
+Kho mẫu được quản lý tập trung trong mục **Mẫu Thư** cạnh **Thư đơn hàng đã gửi**. Các khu vực soạn/gửi dùng nút chọn mẫu hoặc tên mẫu có thể bấm để mở cửa sổ xem lớn, không đặt kho mẫu ở cột bên cạnh nữa. Chọn mẫu không đổi người nhận đã chọn.
+
+### Kho Mẫu Thư độc lập
+
+**Email marketing → Mẫu Thư** có ô soạn tên, loại (thông thường/đơn hàng), tiêu đề, nội dung; lưu nhiều mẫu, chỉnh mẫu đã lưu, tìm kiếm và xem trước. Các mẫu lưu tại collection riêng `newsletterTemplates`, chỉ đọc/ghi qua API có kiểm tra UID. Lưu hoặc chỉnh mẫu trong kho không gửi email, không thay đổi mẫu chào mừng/xác nhận đơn tự động hay lịch sử cũ.
+
+Có sẵn mẫu đang dùng và mẫu lấy từ lịch sử thư để lưu bản sao. Từ lịch sử đơn có thể bấm mẫu → **Lưu vào Mẫu Thư**. Mẫu thông thường được chép vào ô soạn thư; mẫu đơn hàng được chép vào nội dung gửi riêng. Chỉ thao tác gửi rõ ràng mới phát thư.
+
+Cửa sổ xem mẫu/thư sử dụng modal giữa màn hình, cuộn được nội dung dài, đóng bằng nút Đóng, phím Esc hoặc bấm nền bên ngoài. Người dùng bàn phím được giữ focus trong cửa sổ và quay về nút đã mở khi đóng.

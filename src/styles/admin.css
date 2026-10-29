@@ -334,3 +334,19 @@
 .newsletter-history-recipients ul { max-height: 200px; min-width: 200px; overflow: auto; padding-left: 18px; font-size: 13px; overflow-wrap: anywhere; }
 .newsletter-history-layout .mail-history-table-scroll { margin-top: 0; }
 @media (min-width: 1280px) { .newsletter-compose-layout, .newsletter-history-layout { grid-template-columns: minmax(0, 1fr) 280px; } }
+
+.admin-mail-dialog { width: min(920px, calc(100vw - 32px)); max-height: 90dvh; padding: 0; border: 1px solid var(--a-line); border-radius: 20px; background: #fff; color: var(--a-plum); box-shadow: 0 24px 90px #3a152644; overflow: auto; }
+.admin-mail-dialog::backdrop { background: #21141d99; }
+.mail-dialog-heading { position: sticky; top: 0; z-index: 1; display: flex; align-items: start; justify-content: space-between; gap: 16px; padding: 20px 24px; background: #fff; border-bottom: 1px solid var(--a-line); }
+.mail-dialog-heading h2 { margin: 0; overflow-wrap: anywhere; }
+.mail-dialog-content { padding: 24px; overflow-wrap: anywhere; }
+.mail-dialog-content pre { font: inherit; font-size: 15px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
+.mail-dialog-actions { position: sticky; bottom: 0; background: #fff; border-top: 1px solid var(--a-line); padding: 16px 24px; }
+.mail-library-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
+.mail-library-list { max-height: 540px; overflow: auto; }
+.mail-library-row { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--a-line); padding: 16px 0; overflow-wrap: anywhere; }
+.mail-library-row > div { min-width: 0; }
+.admin-template-link { padding: 5px 0; border: 0; background: transparent; color: var(--a-deep); text-decoration: underline; text-underline-offset: 3px; font: inherit; font-size: 14px; cursor: pointer; text-align: left; overflow-wrap: anywhere; }
+.admin-template-link:focus-visible { outline: 2px solid var(--a-deep); outline-offset: 3px; }
+@media (min-width: 1280px) { .mail-library-layout { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); } }
+@media (max-width: 600px) { .mail-dialog-heading, .mail-dialog-content, .mail-dialog-actions { padding: 16px; } }

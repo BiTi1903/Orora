@@ -333,3 +333,24 @@ test("chosen campaign history preserves email addresses even if contacts are del
   assert.deepEqual(new Set(item.recipientEmails), new Set(["customer0@example.com", "customer1@example.com"]));
   item.recipientIds.forEach((id, index) => assert.equal(subscriberId(item.recipientEmails[index]), id));
 });
+
+test("template library saves and edits reusable messages without sending or replacing automatic settings", async () => {
+  const db = memoryDb(); const { call, sent } = admin(db);
+  const welcome = { subject: "Welcome", text: "Original welcome" }; const order = { subject: "Order", text: "Original order" };
+  await db.collection("newsletterSettings").doc("welcome").set(welcome);
+  await db.collection("newsletterSettings").doc("orderConfirmation").set(order);
+  const body = { action: "saveLibraryTemplate", id: "saved-template", name: "Xác nhận", kind: "order", subject: "Đơn {{orderCode}}", text: "Chào {{customerName}}", actorName: "Forged" };
+  assert.equal((await call(body)).statusCode, 200);
+  const original = (await db.collection("newsletterTemplates").doc(body.id).get()).data();
+  assert.equal(original.actor, "owner-uid"); assert.notEqual(original.actorName, "Forged");
+  assert.equal((await call({ ...body, name: "Đã sửa", text: "Nội dung mới {{orderCode}}" })).statusCode, 200);
+  const page = await call(null, { method: "GET", query: { templates: "1" } });
+  assert.equal(page.body.templates.length, 1); assert.equal(page.body.templates[0].name, "Đã sửa");
+  assert.equal(page.body.templates[0].createdAt, original.createdAt.getTime());
+  assert.deepEqual((await db.collection("newsletterSettings").doc("welcome").get()).data(), welcome);
+  assert.deepEqual((await db.collection("newsletterSettings").doc("orderConfirmation").get()).data(), order);
+  assert.equal(sent.length, 0);
+  for (const patch of [{ name: "" }, { kind: "invalid" }, { subject: "Injected\nSubject" }, { text: "{{notAnOrderVariable}}" }]) assert.equal((await call({ ...body, ...patch })).statusCode, 400);
+  assert.equal((await admin(db, { verifyToken: async () => ({ uid: "other" }) }).call(body)).statusCode, 403);
+  assert.equal((await admin(db, { verifyToken: async () => ({ uid: "other" }) }).call(null, { method: "GET", query: { templates: "1" } })).statusCode, 403);
+});

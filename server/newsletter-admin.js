@@ -45,6 +45,14 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
       const settings = db.collection("newsletterSettings").doc("welcome");
       const campaigns = db.collection("newsletterCampaigns");
       const contacts = db.collection("newsletterSubscribers");
+      if (req.method === "GET" && req.query?.templates === "1") {
+        const cursor = req.query.cursor;
+        if (cursor && !validId(cursor)) return reply(400, { message: "Trang mẫu thư không hợp lệ." });
+        let query = db.collection("newsletterTemplates").orderBy("__name__").limit(50);
+        if (cursor) query = query.startAfter(cursor);
+        const page = await query.get();
+        return reply(200, { templates: page.docs.map((doc) => ({ id: doc.id, ...doc.data(), createdAt: millis(doc.data().createdAt), updatedAt: millis(doc.data().updatedAt) })), nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
+      }
       if (req.method === "GET") {
         const cursor = req.query?.cursor;
         if (cursor && !/^[a-f0-9]{64}$/.test(cursor)) return reply(400, { message: "Trang không hợp lệ." });
@@ -76,6 +84,16 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
       }
       const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
       if (!body || JSON.stringify(body).length > 40000) return reply(400, { message: "Dữ liệu không hợp lệ." });
+      if (body.action === "saveLibraryTemplate") {
+        if (!validId(body.id) || typeof body.name !== "string" || !body.name.trim() || body.name.trim().length > 100 || !["general", "order"].includes(body.kind)) return reply(400, { message: "Nhập tên mẫu (tối đa 100 ký tự) và chọn loại mẫu hợp lệ." });
+        const message = body.kind === "order" ? validateOrderTemplate(body) : validateMessage(body);
+        const ref = db.collection("newsletterTemplates").doc(body.id);
+        await db.runTransaction(async (tx) => {
+          const saved = await tx.get(ref); const updatedAt = new Date();
+          tx.set(ref, { name: body.name.trim(), kind: body.kind, ...message, ...mailActor(user), createdAt: saved.exists ? saved.data().createdAt : updatedAt, updatedAt });
+        });
+        return reply(200, { id: body.id, message: "Đã lưu vào Mẫu Thư. Chưa gửi email hoặc thay đổi mẫu tự động." });
+      }
       if (body.action === "saveOrderTemplate") {
         let message;
         try { message = validateOrderTemplate(body); } catch { return reply(400, { message: "Kiểm tra tiêu đề, nội dung và tên biến trong mẫu thư đơn hàng." }); }
@@ -247,6 +265,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         mail_auth_failed: [503, "Microsoft từ chối xác thực. Kiểm tra Tenant ID, Client ID và Client Secret (giá trị, không phải Secret ID)."],
         mail_send_failed: [503, "Microsoft chưa chấp nhận gửi thư. Kiểm tra quyền của phương thức gửi đang chọn, admin consent, phạm vi hộp thư và hạn mức gửi."],
         mail_configuration_missing: [503, "Thiếu cấu hình Microsoft 365 trên máy chủ."],
+        invalid_order_token: [400, "Tên biến trong mẫu đơn hàng chưa hợp lệ."],
         invalid_message: [400, "Nhập tiêu đề (tối đa 200 ký tự) và nội dung (tối đa 20.000 ký tự)."],
         invalid_recipients: [400, "Một email đã ngừng hoạt động hoặc bị xóa. Tải lại danh sách người nhận trước khi gửi."],
         campaign_conflict: [409, "Mã thư đã dùng cho nội dung khác."],

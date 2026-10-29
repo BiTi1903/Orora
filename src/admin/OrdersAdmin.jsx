@@ -1,3 +1,4 @@
+import MailPreviewDialog from "./MailPreviewDialog";
 import { mailActorLabel } from "../lib/mail-templates";
 import { EMPTY_ORDER_FILTERS, filterOrderDetails, invalidMoneyRange } from "../lib/order-filters";
 import OrderCustomers from "./OrderCustomers";
@@ -8,6 +9,7 @@ import { orderRequest, MAIL_STATES } from "./order-api";
 const STATUSES = { new: "Mới nhận", confirmed: "Đã xác nhận", shipping: "Đang giao", completed: "Hoàn tất", cancelled: "Đã hủy" };
 const date = (value) => value ? new Date(value).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "—";
 export default function OrdersAdmin({ onOpenEmailMarketing }) {
+  const [mailPreview, setMailPreview] = useState(null);
   const [filters, setFilters] = useState(EMPTY_ORDER_FILTERS);
   const [customerEmail, setCustomerEmail] = useState("");
   const [view, setView] = useState("orders");
@@ -91,9 +93,10 @@ export default function OrdersAdmin({ onOpenEmailMarketing }) {
       <p className="admin-muted">Chọn Hoàn tất sẽ ghi nhận đã thanh toán. Đổi sang trạng thái khác không tự xóa ghi nhận tiền; dùng ô Đã thanh toán để điều chỉnh.</p>
       <h3>Lịch sử email của đơn</h3>
       <div className="admin-actions"><button type="button" className="admin-btn" onClick={() => showDetail(selected)}>Tải lại lịch sử</button>{onOpenEmailMarketing && <button className="admin-btn" type="button" onClick={onOpenEmailMarketing}>Mẫu thư và gửi thư trong Email marketing</button>}</div>
-      {detail.loading ? <p>Đang tải chi tiết…</p> : !detail.mails.length ? <p className="admin-muted">Chưa có lịch sử gửi thư.</p> : detail.mails.map((mail) => <details className="order-mail-event" key={mail.id}><summary>{mail.subject} · {MAIL_STATES[mail.state] || mail.state}</summary><p>Gửi tới: {mail.recipient}</p><p>{mailActorLabel(mail)} · {date(mail.createdAt)}</p>{mail.errorCode && <p className="admin-error">Mã lỗi: {mail.errorCode}</p>}<pre>{mail.text}</pre></details>)}
+      {detail.loading ? <p>Đang tải chi tiết…</p> : !detail.mails.length ? <p className="admin-muted">Chưa có lịch sử gửi thư.</p> : detail.mails.map((mail) => <div className="order-mail-event" key={mail.id}><button type="button" className="admin-template-link" onClick={() => setMailPreview(mail)}>{mail.subject} · {MAIL_STATES[mail.state] || mail.state}</button><p>{mailActorLabel(mail)} · {date(mail.createdAt)}</p></div>)}
       <p className="admin-muted">“Microsoft đã nhận” là chấp nhận yêu cầu gửi, chưa bảo đảm thư vào hộp thư khách. Chỉ đánh dấu thanh toán sau khi kiểm tra tiền thực nhận.</p>
     </article>}
     </div>
+    {mailPreview && <MailPreviewDialog title="Thư của đơn hàng" message={mailPreview} onClose={() => setMailPreview(null)} metadata={<><p>Gửi tới: {mailPreview.recipient}</p><p>Tài khoản thao tác: {mailActorLabel(mailPreview)}</p>{mailPreview.errorCode && <p className="admin-error">Mã lỗi: {mailPreview.errorCode}</p>}</>} />}
   </section>;
 }
