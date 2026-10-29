@@ -54,7 +54,8 @@ function ContactActions({ label, disabled, onApply }) {
   );
 }
 
-export default function NewsletterAdmin() {
+export default function NewsletterAdmin({ initialView = "contacts" }) {
+  const [view, setView] = useState(initialView);
   const [orderTemplate, setOrderTemplate] = useState(null);
   const [welcome, setWelcome] = useState(EMPTY);
   const [draft, setDraft] = useState(EMPTY);
@@ -199,7 +200,13 @@ export default function NewsletterAdmin() {
       {sending && <button className="admin-btn" onClick={() => { stop.current = true; }}>Tạm dừng sau đợt hiện tại</button>}
       {!ready ? <p className="admin-muted">Cần kết nối API email để tải dữ liệu. Nếu có lỗi, kiểm tra cấu hình rồi bấm Tải lại.</p> : (
         <>
+          <nav className="admin-section-tabs" aria-label="Các mục email marketing">
+            {[["contacts", "Danh sách email"], ["compose", "Soạn và gửi thư"], ["welcome", "Thư chào mừng"], ["orders", "Thư đơn hàng"]].map(([key, label]) => <button type="button" key={key} aria-current={view === key ? "page" : undefined} onClick={() => setView(key)}>{label}</button>)}
+          </nav>
+          <div className="admin-email-panel" hidden={view !== "orders"}>
           <OrderEmailSettings key={JSON.stringify(orderTemplate)} initialTemplate={orderTemplate} onSave={(message) => request({ action: "saveOrderTemplate", ...message })} />
+          </div>
+          <div className="admin-email-panel" hidden={view !== "welcome"}>
           <form className="admin-card admin-form" onSubmit={(event) => {
             event.preventDefault();
             perform(async () => {
@@ -218,7 +225,7 @@ export default function NewsletterAdmin() {
               setNotice({ text: result.message });
             });
           }}>
-            <h2>Gửi thư</h2>
+            <h2>Gửi mẫu chào mừng</h2>
             <div className="admin-field">
               <label htmlFor="newsletter-test-email">Email nhận thư</label>
               <input id="newsletter-test-email" type="email" required maxLength={254} value={testEmail} onChange={(event) => setTestEmail(event.target.value)} disabled={busy} />
@@ -226,6 +233,8 @@ export default function NewsletterAdmin() {
             <p className="admin-muted">Nhập hộp thư bạn có thể mở để kiểm tra mẫu thư bên trên. Thao tác này gửi một thư đến địa chỉ đã nhập, không gửi đến danh sách khách.</p>
             <button className="admin-btn" disabled={busy || !welcome.subject.trim() || !welcome.text.trim()}>Gửi thư</button>
           </form>
+          </div>
+          <div className="admin-email-panel" hidden={view !== "compose"}>
           <form className="admin-card admin-form" onSubmit={sendCampaign}>
             <h2>Soạn thư mới</h2>
             <MessageFields prefix="campaign" value={draft} onChange={setDraft} disabled={busy} />
@@ -234,7 +243,8 @@ export default function NewsletterAdmin() {
             <button className="admin-btn primary" disabled={busy}>Gửi đến khách đang đăng ký</button>
           </form>
           <div className="admin-card">
-            <h2>Lịch sử 20 thư gần nhất</h2>
+            <h2>Lịch sử gửi đến danh sách đăng ký</h2>
+            <p className="admin-muted">20 thư gần nhất. Lịch sử thư xác nhận mua hàng nằm trong chi tiết từng đơn.</p>
             <div style={{ overflowX: "auto" }}><table className="admin-table"><thead><tr><th>Tiêu đề</th><th>Trạng thái</th><th>Microsoft đã nhận</th><th>Lỗi</th><th>Chưa rõ</th><th>Thao tác</th></tr></thead>
               <tbody>{campaigns.map((item) => <tr key={item.id}>
                 <td>{item.subject}</td><td>{STATUS[item.status] || item.status}</td><td>{item.accepted || 0}</td><td>{item.failed || 0}</td><td>{item.unknown || 0}</td>
@@ -244,7 +254,8 @@ export default function NewsletterAdmin() {
               </tr>)}</tbody></table></div>
             <p className="admin-muted">Thư bị lỗi hoặc chưa rõ kết quả không được tự gửi lại. “Hoàn tất” nghĩa là đã quét xong danh sách, không bảo đảm mọi thư gửi thành công.</p>
           </div>
-          <div className="admin-card">
+          </div>
+          <div hidden={view !== "contacts"} className="admin-card">
             <h2>Email đã đăng ký ({contacts.length} đã tải)</h2>
             <div className="newsletter-search-toolbar">
               <div className="admin-field">
