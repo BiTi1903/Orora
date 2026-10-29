@@ -206,3 +206,7 @@ Kiểm thử repository dùng Microsoft giả lập và Firestore bộ nhớ; ch
 ### Xác nhận đơn hàng ở nền
 
 `/api/orders` chỉ trả mã đơn thành công sau khi giao dịch Firestore đã lưu đơn và giá sản phẩm trên máy chủ. Trên Vercel, `waitUntil` tiếp tục xử lý email xác nhận sau phản hồi, trong giới hạn 60 giây của Function. Khách không phải chờ SMTP; giao diện hiển thị email đang xử lý. Lỗi gửi không hủy đơn và được ghi trong lịch sử admin. Đây không phải hàng đợi có worker tự thử lại. Mã yêu cầu đơn và sự kiện `confirmation-auto` ngăn tạo đơn hoặc gửi thư trùng khi khách gửi lại.
+
+### Mã đơn dễ đọc
+
+Đơn mới dùng `OW` + số thứ tự + ngày hai chữ số + tháng hai chữ số, ví dụ `OW22910` là đơn thứ 2 ngày 29/10. Bộ đếm `orderDailyCounters/{YYYY-MM-DD}` tính theo `Asia/Ho_Chi_Minh`, được tăng cùng giao dịch lưu đơn để các lượt đặt đồng thời không lấy cùng số. Gửi lại cùng yêu cầu không tăng số; yêu cầu không hợp lệ cũng không chiếm số. Ngày mới bắt đầu từ 1. Mã `OW` không chứa năm; ngày đầy đủ của đơn vẫn có trong admin và trường `orderDate`. ID nội bộ của đơn và mã các đơn cũ không đổi; bộ đếm mới chỉ cấp số cho đơn tạo theo cơ chế này.

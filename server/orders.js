@@ -2,7 +2,7 @@ import { syncOutlookStatus, OUTLOOK_ERROR_MESSAGES } from "./outlook-status.js";
 import { templateIdentity } from "./template-snapshot.js";
 import { mailActor, resolveMailActors } from "./mail-actor.js";
 import { sendOrderConfirmation, validOrderEmail } from "./order-mail.js";
-import { createHash, randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 import { parseVndPrice, availablePaymentMethods, PAYMENT_LABELS } from "../src/lib/commerce.js";
 import { firebaseAuthFailure } from "./firebase-auth-error.js";
 
@@ -38,8 +38,11 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
       const rate = db.collection("orderRateLimits").doc(hash(ip));
       const globalRate = db.collection("orderRateLimits").doc("global");
       const createdAt = new Date(now());
+      const parts = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(createdAt).map(({ type, value }) => [type, value]));
+      const orderDate = `${parts.year}-${parts.month}-${parts.day}`;
+      const dailyCounter = db.collection("orderDailyCounters").doc(orderDate);
       const result = await db.runTransaction(async (tx) => {
-        const [existing, product, settings, perIp, site] = await tx.getAll(order, db.collection("products").doc(body.productId), db.collection("settings").doc("home"), rate, globalRate);
+        const [existing, product, settings, perIp, site, counter] = await tx.getAll(order, db.collection("products").doc(body.productId), db.collection("settings").doc("home"), rate, globalRate, dailyCounter);
         if (existing.exists) {
           if (existing.data().requestHash !== digest) throw Object.assign(new Error("Đơn này đã được tiếp nhận. Vui lòng liên hệ ORORA nếu muốn thay đổi thông tin."), { status: 409 });
           return existing.data();
@@ -57,14 +60,18 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
         const data = product.data();
         const unitPrice = parseVndPrice(data.price);
         if (body.expectedPriceText !== undefined && String(body.expectedPriceText).trim() !== String(data.price ?? "").trim()) throw Object.assign(new Error("Giá sản phẩm vừa thay đổi. Hãy tải lại trang để xem giá mới trước khi đặt."), { status: 409 });
+        const count = counter.data()?.count ?? 0;
+        if (!Number.isSafeInteger(count) || count < 0 || count >= Number.MAX_SAFE_INTEGER) throw new Error("Invalid daily order counter");
+        const dailySequence = count + 1;
         const record = {
-          code: `OR-${randomUUID().replace(/-/g, "").slice(0, 12).toUpperCase()}`,
+          code: `OW${dailySequence}${parts.day}${parts.month}`,
+          orderDate, dailySequence,
           customer, quantity: body.quantity, product: { id: product.id, name: String(data.name || ""), image: String(data.image || ""), priceText: String(data.price ?? ""), unitPrice },
           subtotal: unitPrice === null ? null : unitPrice * body.quantity,
           paymentMethod: body.paymentMethod,
           confirmationMail: { state: "pending", updatedAt: createdAt }, paymentStatus: "unpaid", shippingFee: null, status: "new", channel: "website", createdAt, requestHash: digest,
         };
-        tx.set(order, record); tx.set(rate, ipRate); tx.set(globalRate, siteRate);
+        tx.set(order, record); tx.set(dailyCounter, { count: dailySequence, updatedAt: createdAt }); tx.set(rate, ipRate); tx.set(globalRate, siteRate);
         return record;
       });
       let mailStatus = result.confirmationMail?.state || "pending";
