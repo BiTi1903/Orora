@@ -134,3 +134,11 @@ Kho mẫu được quản lý tập trung trong mục **Mẫu Thư** cạnh **Th
 Có sẵn mẫu đang dùng và mẫu lấy từ lịch sử thư để lưu bản sao. Từ lịch sử đơn có thể bấm mẫu → **Lưu vào Mẫu Thư**. Mẫu thông thường được chép vào ô soạn thư; mẫu đơn hàng được chép vào nội dung gửi riêng. Chỉ thao tác gửi rõ ràng mới phát thư.
 
 Cửa sổ xem mẫu/thư sử dụng modal giữa màn hình, cuộn được nội dung dài, đóng bằng nút Đóng, phím Esc hoặc bấm nền bên ngoài. Người dùng bàn phím được giữ focus trong cửa sổ và quay về nút đã mở khi đóng.
+
+### Xóa mẫu và tách gửi thư đơn hàng
+
+Trong **Mẫu Thư**, mỗi mẫu đã lưu có nút **Xóa mẫu** và hộp xác nhận. Xóa chỉ tác động bản ghi trong `newsletterTemplates`; mẫu tự động đã áp dụng và lịch sử thư đã gửi không bị xóa. Các mẫu nguồn “đang dùng” không có nút xóa vì đó là cấu hình hoạt động, không phải bản sao trong kho.
+
+**Thư đơn hàng** chỉ chỉnh nội dung xác nhận tự động. Nút **Chọn mẫu có sẵn** nằm cùng hàng với **Lưu mẫu thư đơn hàng**: chọn mẫu chỉ điền vào ô soạn, bấm Lưu mới áp dụng cho đơn mới.
+
+**Gửi thư đơn hàng** là mục độc lập để chọn đơn, xem rõ email người nhận, chọn mẫu hoặc soạn nội dung riêng, xem trước và gửi. Dùng lại mẫu đơn từ kho hoặc lịch sử sẽ mở mục này. Gửi riêng không sửa cấu hình thư tự động.

@@ -84,6 +84,11 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
       }
       const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
       if (!body || JSON.stringify(body).length > 40000) return reply(400, { message: "Dữ liệu không hợp lệ." });
+      if (body.action === "deleteLibraryTemplate") {
+        if (!validId(body.id)) return reply(400, { message: "Mẫu thư không hợp lệ." });
+        await db.collection("newsletterTemplates").doc(body.id).delete();
+        return reply(200, { id: body.id, message: "Đã xóa mẫu khỏi kho. Mẫu tự động và lịch sử thư vẫn được giữ." });
+      }
       if (body.action === "saveLibraryTemplate") {
         if (!validId(body.id) || typeof body.name !== "string" || !body.name.trim() || body.name.trim().length > 100 || !["general", "order"].includes(body.kind)) return reply(400, { message: "Nhập tên mẫu (tối đa 100 ký tự) và chọn loại mẫu hợp lệ." });
         const message = body.kind === "order" ? validateOrderTemplate(body) : validateMessage(body);

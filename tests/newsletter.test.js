@@ -354,3 +354,19 @@ test("template library saves and edits reusable messages without sending or repl
   assert.equal((await admin(db, { verifyToken: async () => ({ uid: "other" }) }).call(body)).statusCode, 403);
   assert.equal((await admin(db, { verifyToken: async () => ({ uid: "other" }) }).call(null, { method: "GET", query: { templates: "1" } })).statusCode, 403);
 });
+
+test("deleting a library template preserves automatic templates and sent history and is safe to retry", async () => {
+  const db = memoryDb(); const { call } = admin(db);
+  const original = { subject: "Order", text: "Existing automatic content" };
+  await db.collection("newsletterSettings").doc("orderConfirmation").set(original);
+  await db.collection("newsletterCampaigns").doc("sent-before").set({ subject: "Old", text: "Sent content", createdAt: new Date() });
+  await call({ action: "saveLibraryTemplate", id: "delete-me", name: "Delete me", kind: "general", subject: "Sample", text: "Draft" });
+  const deletion = { action: "deleteLibraryTemplate", id: "delete-me" };
+  assert.equal((await admin(db, { verifyToken: async () => ({ uid: "other" }) }).call(deletion)).statusCode, 403);
+  assert.equal((await db.collection("newsletterTemplates").doc("delete-me").get()).exists, true);
+  assert.equal((await call({ ...deletion, id: "../welcome" })).statusCode, 400);
+  assert.equal((await call(deletion)).statusCode, 200); assert.equal((await call(deletion)).statusCode, 200);
+  assert.equal((await db.collection("newsletterTemplates").doc("delete-me").get()).exists, false);
+  assert.deepEqual((await db.collection("newsletterSettings").doc("orderConfirmation").get()).data(), original);
+  assert.equal((await db.collection("newsletterCampaigns").doc("sent-before").get()).data().text, "Sent content");
+});
