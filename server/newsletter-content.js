@@ -43,5 +43,5 @@ export async function sendWelcomeMessage(email, { getDb, sendMail }) {
     try { await db.runTransaction((tx) => recordTemplateUse(tx, db, saved.data())); }
     catch { console.error("Welcome template usage could not be recorded"); }
   }
-  return result;
+  return result?.trackingId ? { ...result, subject: message.subject, createdAt: new Date().toISOString() } : result;
 }

@@ -134,3 +134,16 @@ test("order mail history includes existing automatic and manual events across pa
   assert.equal(mails.filter((mail) => mail.manual).length, 21);
   assert.ok(mails.every((mail) => mail.text === "Exact old content" && mail.requestHash === undefined && mail.customer === undefined));
 });
+
+test("Outlook order checks require order authorization and preserve immutable send history", async () => {
+  const db = memoryDb(); const id = randomUUID(); const eventId = `manual-${randomUUID()}`;
+  const ref = db.collection("orders").doc(id).collection("mailEvents").doc(eventId);
+  await ref.set({ subject: "Original", text: "Sent body", state: "accepted", recipient: "buyer@example.com", trackingId: randomUUID() });
+  let reads = 0;
+  const check = async () => { reads++; return { state: "bounced", diagnosticCode: "5.7.708", checkedAt: new Date().toISOString() }; };
+  const call = async (uid) => { const res = response(); const handler = createAdminOrdersHandler({ getDb: () => db, verifyToken: async () => ({ uid }), checkOutlook: check, env }); await handler({ method: "POST", headers: { ...headers, authorization: "Bearer test" }, body: { action: "checkOrderOutlook", id, eventId } }, res); return res; };
+  assert.equal((await call("other")).statusCode, 403); assert.equal(reads, 0);
+  assert.equal((await call("owner")).body.outlook.state, "bounced");
+  await call("owner"); assert.equal(reads, 1);
+  const saved = (await ref.get()).data(); assert.equal(saved.subject, "Original"); assert.equal(saved.text, "Sent body"); assert.equal(saved.state, "accepted");
+});

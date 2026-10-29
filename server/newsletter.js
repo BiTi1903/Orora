@@ -245,8 +245,9 @@ export function createSubscribeHandler({
       );
     }
 
+    let welcomeTracking;
     try {
-      await sendWelcome(email);
+      welcomeTracking = await sendWelcome(email);
     } catch (error) {
       const knownFailure = [
         "mail_auth_failed",
@@ -294,6 +295,7 @@ export function createSubscribeHandler({
       await subscriber.set(
         {
           mailStatus: "accepted",
+          ...(welcomeTracking?.trackingId ? { welcomeTracking, outlook: null } : {}),
           mailAcceptedAt: new Date(),
           updatedAt: new Date(),
         },

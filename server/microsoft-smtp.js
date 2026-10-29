@@ -1,3 +1,4 @@
+import { newMailTracking } from "./mail-tracking.js";
 import nodemailer from "nodemailer";
 import { DEFAULT_WELCOME } from "./newsletter-content.js";
 
@@ -61,29 +62,32 @@ export function createMicrosoftSmtpMailer(env = process.env, request = fetch, cr
       connectionTimeout: 5000, greetingTimeout: 5000, socketTimeout: 10000,
       disableFileAccess: true, disableUrlAccess: true,
     });
+    const tracking = { ...newMailTracking(sender), transport: "smtp" };
     try {
       const result = await transport.sendMail({
         from: { name: "ORORA", address: sender },
         to: [{ address: email }],
         envelope: { from: sender, to: [email] },
-        subject: message.subject, text: message.text,
+        subject: message.subject, text: message.text, messageId: tracking.internetMessageId, headers: { "X-Orora-Mail-Id": tracking.trackingId },
       });
       const accepted = (result.accepted || []).some((recipient) => String(recipient.address || recipient).toLowerCase() === email.toLowerCase());
       if (!accepted) throw failure("mail_send_failed");
       // SMTP acceptance confirms queue submission, not final delivery.
+      return tracking;
     } catch (error) {
-      if (error.message === "mail_send_failed") throw error;
+      const tracked = (value) => Object.assign(value, { mailTracking: tracking });
+      if (error.message === "mail_send_failed") throw tracked(error);
       if (error.code === "EAUTH") {
         cachedToken = undefined;
         expiresAt = 0;
-        throw Object.assign(failure("mail_smtp_auth_failed"), { smtp: authDetails(error) });
+        throw tracked(Object.assign(failure("mail_smtp_auth_failed"), { smtp: authDetails(error) }));
       }
       if (Number(error.responseCode) >= 400 && Number(error.responseCode) <= 599) {
-        throw failure("mail_send_failed", Number(error.responseCode));
+        throw tracked(failure("mail_send_failed", Number(error.responseCode)));
       }
-      if (error.command === "CONN") throw failure("mail_smtp_connection_failed");
+      if (error.command === "CONN") throw tracked(failure("mail_smtp_connection_failed"));
       // A dropped connection during DATA can occur after acceptance. Do not auto-resend.
-      throw failure("mail_smtp_outcome_unknown");
+      throw tracked(failure("mail_smtp_outcome_unknown"));
     } finally {
       transport.close?.();
     }

@@ -1,3 +1,4 @@
+import { safeMailTracking } from "./mail-tracking.js";
 import { captureTemplate, recordTemplateUse, templateIdentity } from "./template-snapshot.js";
 import { randomUUID } from "node:crypto";
 import { validateMessage } from "./newsletter-content.js";
@@ -41,11 +42,12 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
   });
   if (!claimed) return { duplicate: true };
   if (claimed.templateError) return { state: "failed" };
-  let state = "accepted"; let errorCode = "";
+  let state = "accepted"; let errorCode = ""; let tracking = {};
   try {
     if (typeof sendMail !== "function") throw new Error("mail_configuration_missing");
-    await sendMail(claimed.recipient, claimed.message);
+    tracking = safeMailTracking(await sendMail(claimed.recipient, claimed.message));
   } catch (error) {
+    tracking = safeMailTracking(error.mailTracking);
     const known = ["mail_configuration_missing", "mail_transport_invalid", "mail_auth_failed", "mail_send_failed", "mail_smtp_auth_failed", "mail_smtp_connection_failed"].includes(error.message);
     state = known ? "failed" : "unknown";
     errorCode = known ? error.message : "mail_outcome_unknown";
@@ -54,7 +56,7 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
   // If writing the result fails, leave 'sending' in place; never automatically resend.
   await db.runTransaction(async (tx) => {
     if (state === "accepted") await recordTemplateUse(tx, db, claimed.snapshot);
-    tx.set(eventRef, { state, errorCode, updatedAt }, { merge: true });
+    tx.set(eventRef, { state, errorCode, ...tracking, updatedAt }, { merge: true });
     tx.set(orderRef, { confirmationMail: { state, eventId: eventRef.id, updatedAt } }, { merge: true });
   });
   return { state };

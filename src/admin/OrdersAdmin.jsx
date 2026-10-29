@@ -1,3 +1,4 @@
+import OutlookCheck from "./OutlookCheck";
 import MailPreviewDialog from "./MailPreviewDialog";
 import { mailActorLabel } from "../lib/mail-templates";
 import { EMPTY_ORDER_FILTERS, filterOrderDetails, invalidMoneyRange } from "../lib/order-filters";
@@ -93,7 +94,7 @@ export default function OrdersAdmin({ onOpenEmailMarketing }) {
       <p className="admin-muted">Chọn Hoàn tất sẽ ghi nhận đã thanh toán. Đổi sang trạng thái khác không tự xóa ghi nhận tiền; dùng ô Đã thanh toán để điều chỉnh.</p>
       <h3>Lịch sử email của đơn</h3>
       <div className="admin-actions"><button type="button" className="admin-btn" onClick={() => showDetail(selected)}>Tải lại lịch sử</button>{onOpenEmailMarketing && <button className="admin-btn" type="button" onClick={onOpenEmailMarketing}>Mẫu thư và gửi thư trong Email marketing</button>}</div>
-      {detail.loading ? <p>Đang tải chi tiết…</p> : !detail.mails.length ? <p className="admin-muted">Chưa có lịch sử gửi thư.</p> : detail.mails.map((mail) => <div className="order-mail-event" key={mail.id}><button type="button" className="admin-template-link" onClick={() => setMailPreview(mail)}>{mail.subject} · {MAIL_STATES[mail.state] || mail.state}</button><p>{mailActorLabel(mail)} · {date(mail.createdAt)}</p></div>)}
+      {detail.loading ? <p>Đang tải chi tiết…</p> : !detail.mails.length ? <p className="admin-muted">Chưa có lịch sử gửi thư.</p> : detail.mails.map((mail) => <div className="order-mail-event" key={mail.id}><button type="button" className="admin-template-link" onClick={() => setMailPreview(mail)}>{mail.subject} · {MAIL_STATES[mail.state] || mail.state}</button><p>{mailActorLabel(mail)} · {date(mail.createdAt)}</p><OutlookCheck outlook={mail.outlook} label={`${selected.code} · ${mail.recipient}`} check={() => orderRequest({ action: "checkOrderOutlook", id: selected.id, eventId: mail.id })} /></div>)}
       <p className="admin-muted">“Microsoft đã nhận” là chấp nhận yêu cầu gửi, chưa bảo đảm thư vào hộp thư khách. Chỉ đánh dấu thanh toán sau khi kiểm tra tiền thực nhận.</p>
     </article>}
     </div>

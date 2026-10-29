@@ -185,3 +185,19 @@ Trong **Viết Thư**, chọn **Thư Đăng Ký** (tên mới của thư chào m
 - **Gửi riêng** giữ lựa chọn người nhận/tìm kiếm/gửi theo đợt như trước.
 
 **Mẫu Thư** có form tạo/sửa và chọn loại ở trái. Có thể **Thêm loại mẫu** riêng (nhóm dùng cho gửi riêng), được lưu trong `newsletterTemplateTypes`. Ở phải, mặc định chưa liệt kê mẫu; chọn loại trong **Chọn loại để xem mẫu** mới hiện danh sách và ô tìm kiếm. Mẫu thuộc loại riêng được dùng ở Viết Thư như mẫu gửi riêng. Không thêm trigger tự động cho loại tùy chỉnh.
+
+### Kiểm tra trạng thái Outlook trong admin
+
+Nút **Kiểm tra Outlook** có ở lịch sử từng thư đơn, danh sách email đăng ký và **Trạng thái Outlook** theo người nhận của một lần gửi danh sách. Thao tác này chỉ đọc Microsoft và ghi lại kết quả đối chiếu; không gửi lại thư, không đổi nội dung, người gửi hoặc kết quả tiếp nhận ban đầu. Kết quả được lưu, có thời gian kiểm tra và cache 60 giây cho cùng một mã thư.
+
+Cần cấp cho ứng dụng đang dùng `MS_CLIENT_ID` quyền **Microsoft Graph → Application permissions → Mail.Read**, rồi **Grant admin consent**. SMTP.SendAsApp hoặc Mail.Send không cấp quyền đọc. Giới hạn quyền ứng dụng vào hộp thư `MS_SENDER_EMAIL` (mặc định sales@ororavn.com) qua chính sách truy cập ứng dụng/RBAC Exchange phù hợp. Không đổi `MS_MAIL_TRANSPORT`, không bật/tắt SMTP AUTH để cấu hình tính năng đọc. Thiếu quyền sẽ báo rõ trong admin và giữ kết quả cũ; sau khi cấp quyền có thể kiểm tra lại.
+
+- **Microsoft đã nhận**: kết quả tiếp nhận ở API/SMTP, được giữ riêng.
+- **Có trong Đã gửi**: tìm được bản lưu bằng mã thư, không chứng minh khách nhận.
+- **Có thư báo trả lại (NDR)** hoặc **Có thư báo gửi chậm**: tìm được báo cáo chứa đúng Message-ID gốc và email người nhận. Hiển thị mã như 5.7.708 và liên kết Outlook nếu có.
+- **Chưa tìm thấy bằng mã đối chiếu**: chưa có bằng chứng trong phạm vi đọc. Hệ thống giới hạn số trang thư để tránh gọi Graph quá nhiều, nên không kết luận thư đã phát/không phát khi chưa tìm thấy NDR.
+- **Thư cũ chưa có mã đối chiếu**: không đoán theo tiêu đề/email. Bản ghi cũ được giữ nguyên.
+
+Thư mới gửi SMTP có Message-ID riêng và header `X-Orora-Mail-Id`; Graph có header đối chiếu và lưu bản trong Sent Items. SMTP có thể không lưu bản Sent Items: vẫn có thể đối chiếu NDR bằng Message-ID, nhưng thiếu bản Đã gửi không đồng nghĩa gửi thất bại. Thư đăng ký mới giữ mã của lần gửi mới, không dùng trạng thái bounce của lần cũ.
+
+Kiểm thử repository dùng Microsoft giả lập và Firestore bộ nhớ; chưa xác minh Mail.Read hoặc đọc hộp thư thật trong phiên sửa mã này. Muốn xác nhận đã phát tới máy chủ người nhận cần Message Trace của Exchange; không gán trạng thái đã giao hoặc đã đọc chỉ dựa trên Sent Items/việc chưa thấy NDR. Thư Outlook soạn trực tiếp và thư gửi thử chưa có trang lịch sử riêng không được tự nhập vào lịch sử website.

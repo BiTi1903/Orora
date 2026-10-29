@@ -1,3 +1,5 @@
+import OutlookCheck from "./OutlookCheck";
+import CampaignOutlookStatus from "./CampaignOutlookStatus";
 import { hasOrderTokens } from "../lib/template-kinds";
 import MailWriter from "./MailWriter";
 import MailTemplateLibrary from "./MailTemplateLibrary";
@@ -46,6 +48,7 @@ function ContactActions({ label, disabled, onApply }) {
 }
 
 export default function NewsletterAdmin({ initialView = "contacts" }) {
+  const [outlookCampaign, setOutlookCampaign] = useState(null);
   const [preview, setPreview] = useState(null);
   const [picker, setPicker] = useState(null);
   const [view, setView] = useState(["compose", "welcome", "orders", "orderSend"].includes(initialView) ? "write" : initialView);
@@ -249,7 +252,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
             <div style={{ overflowX: "auto" }}><table className="admin-table"><thead><tr><th>Tiêu đề</th><th>Mẫu lúc gửi</th><th>Tài khoản thao tác</th><th>Người nhận</th><th>Trạng thái</th><th>Microsoft đã nhận</th><th>Lỗi</th><th>Chưa rõ</th><th>Thao tác</th></tr></thead>
               <tbody>{campaigns.map((item) => <tr key={item.id}>
                 <td className="mail-history-subject" title={item.subject}>{item.subject}</td><td><button type="button" className="admin-template-link" onClick={() => setPreview({ title: campaignTemplates.byMail.get(item.id)?.label || "Mẫu thư đã gửi", message: { subject: item.subject, text: item.text }, kind: "private" })}>{campaignTemplates.byMail.get(item.id)?.label || "Xem mẫu"}</button></td><td>{mailActorLabel(item)}</td><td>{item.recipientIds ? <details className="newsletter-history-recipients"><summary>{item.recipientIds.length} email đã chọn</summary><ul>{item.recipientIds.map((id, index) => <li key={id}>{item.recipientEmails?.[index] || `Email cũ không còn trong danh sách (${id.slice(0, 8)}…)`}</li>)}</ul></details> : "Toàn bộ email hoạt động"}</td><td>{STATUS[item.status] || item.status}</td><td>{item.accepted || 0}</td><td>{item.failed || 0}</td><td>{item.unknown || 0}</td>
-                <td>{item.status !== "completed" && <button className="admin-btn" disabled={busy} onClick={() => {
+                <td><button type="button" className="admin-btn" onClick={() => setOutlookCampaign(item)}>Trạng thái Outlook</button>{item.status !== "completed" && <button className="admin-btn" disabled={busy} onClick={() => {
                   if (window.confirm(`Tiếp tục gửi thư “${item.subject}”?`)) perform(() => run(item.id));
                 }}>Tiếp tục gửi</button>}</td>
               </tr>)}</tbody></table></div>
@@ -293,7 +296,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
                 }} /></td>
                 <td>{item.email}</td>
                 <td><span className={`newsletter-contact-status ${item.status}`}>{CONTACT_STATUS[item.status] || item.status}</span></td>
-                <td>{{ accepted: "Microsoft đã nhận", pending: "Đang xử lý", failed: "Lỗi", unknown: "Chưa rõ" }[item.mailStatus] || "—"}</td>
+                <td>{{ accepted: "Microsoft đã nhận", pending: "Đang xử lý", failed: "Lỗi", unknown: "Chưa rõ" }[item.mailStatus] || "—"}<OutlookCheck outlook={item.outlook} label={item.email} check={() => request({ action: "checkWelcomeOutlook", id: item.id })} /></td>
                 <td><ContactActions label={`Thao tác cho ${item.email}`} disabled={busy} onApply={(operation) => manageContacts([item.id], operation)} /></td>
               </tr>)}</tbody></table></div>
             {!visibleContacts.length && <p className="admin-muted">Không có email phù hợp.</p>}
@@ -304,6 +307,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
           </div>
         </>
       )}
+      {outlookCampaign && <CampaignOutlookStatus campaign={outlookCampaign} request={request} onClose={() => setOutlookCampaign(null)} />}
       {picker && <MailTemplatePicker request={request} kind={picker} orderContext={writerMode === "order_auto"} includePrivate={writerMode !== "private"} onUse={applyTemplate} onClose={() => setPicker(null)} onManage={() => { setPicker(null); setView("templates"); }} />}
       {preview && <MailPreviewDialog title={preview.title} message={preview.message} onClose={() => setPreview(null)}><button type="button" className="admin-btn" onClick={() => applyTemplate({ ...preview.message, kind: preview.kind })}>Dùng mẫu này</button></MailPreviewDialog>}
     </section>

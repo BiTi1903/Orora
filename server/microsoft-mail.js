@@ -1,3 +1,4 @@
+import { newMailTracking } from "./mail-tracking.js";
 import { createMicrosoftSmtpMailer } from "./microsoft-smtp.js";
 import { DEFAULT_WELCOME } from "./newsletter-content.js";
 
@@ -57,7 +58,9 @@ function createGraphMailer(
           1000;
     }
 
-    const response = await request(
+    const tracking = { trackingId: newMailTracking(sender).trackingId, transport: "graph" };
+    let response;
+    try { response = await request(
       `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(
         sender
       )}/sendMail`,
@@ -69,6 +72,7 @@ function createGraphMailer(
         },
         body: JSON.stringify({
           message: {
+            internetMessageHeaders: [{ name: "x-orora-mail-id", value: tracking.trackingId }],
             subject: message.subject,
             body: {
               contentType: "Text",
@@ -87,6 +91,7 @@ function createGraphMailer(
         signal: AbortSignal.timeout(10000),
       }
     );
+    } catch (error) { throw Object.assign(error, { mailTracking: tracking }); }
 
     // 202 nghĩa là Microsoft đã tiếp nhận yêu cầu gửi.
     if (response.status !== 202) {
@@ -96,8 +101,9 @@ function createGraphMailer(
 
       const error = new Error("mail_send_failed");
       error.status = response.status;
-      throw error;
+      throw Object.assign(error, { mailTracking: tracking });
     }
+    return tracking;
   };
 }
 

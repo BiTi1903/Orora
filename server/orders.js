@@ -1,3 +1,4 @@
+import { syncOutlookStatus, OUTLOOK_ERROR_MESSAGES } from "./outlook-status.js";
 import { templateIdentity } from "./template-snapshot.js";
 import { mailActor, resolveMailActors } from "./mail-actor.js";
 import { sendOrderConfirmation, validOrderEmail } from "./order-mail.js";
@@ -74,7 +75,7 @@ export function createOrderHandler({ getDb, sendMail, env = process.env, now = (
     }
   };
 }
-export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupUser, env = process.env }) {
+export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupUser, checkOutlook, env = process.env }) {
   return async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
     if (!["GET", "POST"].includes(req.method)) { res.setHeader("Allow", "GET, POST"); return res.status(405).json({ message: "Phương thức không được hỗ trợ." }); }
@@ -112,7 +113,7 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
         if (historyOnly) {
           const histories = await Promise.all(page.docs.map(async (order) => {
             const history = await orders.doc(order.id).collection("mailEvents").get();
-            return history.docs.map((event) => ({ id: `${order.id}/${event.id}`, orderId: order.id, orderCode: order.data().code, customerName: order.data().customer?.name || "", ...templateIdentity(event.data()), actor: event.data().actor || "", actorName: event.data().actorName || "", actorEmail: event.data().actorEmail || "", ...(typeof event.data().templateSubject === "string" && typeof event.data().templateText === "string" ? { templateSubject: event.data().templateSubject, templateText: event.data().templateText } : {}), subject: event.data().subject || "", text: event.data().text || "", recipient: event.data().recipient || "", state: event.data().state || "unknown", manual: event.data().manual === true, errorCode: event.data().errorCode || "", createdAt: millis(event.data().createdAt), updatedAt: millis(event.data().updatedAt) }));
+            return history.docs.map((event) => ({ id: `${order.id}/${event.id}`, orderId: order.id, orderCode: order.data().code, customerName: order.data().customer?.name || "", ...templateIdentity(event.data()), actor: event.data().actor || "", actorName: event.data().actorName || "", actorEmail: event.data().actorEmail || "", ...(typeof event.data().templateSubject === "string" && typeof event.data().templateText === "string" ? { templateSubject: event.data().templateSubject, templateText: event.data().templateText } : {}), subject: event.data().subject || "", text: event.data().text || "", recipient: event.data().recipient || "", outlook: event.data().outlook || null, state: event.data().state || "unknown", manual: event.data().manual === true, errorCode: event.data().errorCode || "", createdAt: millis(event.data().createdAt), updatedAt: millis(event.data().updatedAt) }));
           }));
           return res.status(200).json({ mails: await resolveMailActors(histories.flat(), lookupUser), scannedOrders: page.docs.length, nextCursor: page.docs.length === pageSize ? page.docs.at(-1).id : null });
         }
@@ -123,6 +124,11 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
         }), nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
       }
       const body = readBody(req, env, 40000);
+      if (body.action === "checkOrderOutlook") {
+        if (!uuid(body.id) || !/^(confirmation-auto|manual-[a-f0-9-]{36})$/i.test(body.eventId || "")) return res.status(400).json({ message: "Bản ghi gửi thư không hợp lệ." });
+        const outlook = await syncOutlookStatus(orders.doc(body.id).collection("mailEvents").doc(body.eventId), checkOutlook);
+        return res.status(200).json({ outlook });
+      }
       if (body.action === "sendOrderEmail") {
         if (!uuid(body.id) || !uuid(body.requestId)) return res.status(400).json({ message: "Yêu cầu gửi thư không hợp lệ." });
         const result = await sendOrderConfirmation({ db, orderId: body.id, sendMail, manual: true, requestId: body.requestId, confirmResend: body.confirmResend === true, ...mailActor(user), message: body.message, templateRef: body.templateRef });
@@ -135,6 +141,6 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
         tx.set(ref, { ...(body.status !== undefined ? { status: body.status, ...(body.status === "completed" ? { paymentStatus: "paid" } : {}) } : { paymentStatus: body.paymentStatus }), updatedAt: new Date(), updatedBy: user.uid }, { merge: true });
       });
       return res.status(200).json({ message: body.status === "completed" ? "Đã hoàn tất đơn hàng và ghi nhận đã thanh toán." : "Đã cập nhật trạng thái đơn hàng." });
-    } catch (error) { return res.status(error.status || 503).json({ message: error.message === "template_changed" ? "Mẫu đã được sửa hoặc xóa. Chọn lại mẫu hiện tại hoặc soạn nội dung riêng." : error.status ? error.message : "Không tải hoặc cập nhật được đơn hàng." }); }
+    } catch (error) { if (OUTLOOK_ERROR_MESSAGES[error.message]) return res.status(503).json({ code: error.message, message: OUTLOOK_ERROR_MESSAGES[error.message] }); return res.status(error.status || 503).json({ message: error.message === "template_changed" ? "Mẫu đã được sửa hoặc xóa. Chọn lại mẫu hiện tại hoặc soạn nội dung riêng." : error.status ? error.message : "Không tải hoặc cập nhật được đơn hàng." }); }
   };
 }

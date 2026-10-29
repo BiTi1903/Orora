@@ -1,3 +1,4 @@
+import OutlookCheck from "./OutlookCheck";
 import MailPreviewDialog from "./MailPreviewDialog";
 import { groupMailTemplates, mailActorLabel } from "../lib/mail-templates";
 import { useEffect, useState } from "react";
@@ -52,7 +53,7 @@ export default function OrderMailHistory({ onReuse }) {
     {!busy && <>
 
       <div>
-      <div className="admin-card mail-history-table-scroll"><table className="admin-table"><thead><tr><th>Thời gian / Mã đơn</th><th>Người nhận</th><th>Tài khoản thao tác</th><th>Mẫu lúc gửi</th><th>Kết quả</th><th /></tr></thead><tbody>{filtered.slice(0, visibleCount).map((mail) => <tr key={mail.id}><td>{date(mail.createdAt)}<br /><small>{mail.orderCode}</small></td><td>{mail.recipient}</td><td>{mailActorLabel(mail)}{mail.actorName && mail.actorEmail && <small className="order-summary-note">{mail.actorEmail}</small>}</td><td><button className="admin-template-link" onClick={() => setSelected({ template: byMail.get(mail.id) })}>{byMail.get(mail.id)?.label}</button></td><td>{MAIL_STATES[mail.state] || mail.state}</td><td><button className="admin-btn" onClick={() => setSelected({ mail, template: byMail.get(mail.id) })}>Xem thư</button></td></tr>)}</tbody></table></div>
+      <div className="admin-card mail-history-table-scroll"><table className="admin-table"><thead><tr><th>Thời gian / Mã đơn</th><th>Người nhận</th><th>Tài khoản thao tác</th><th>Mẫu lúc gửi</th><th>Kết quả gửi</th><th>Outlook</th><th /></tr></thead><tbody>{filtered.slice(0, visibleCount).map((mail) => <tr key={mail.id}><td>{date(mail.createdAt)}<br /><small>{mail.orderCode}</small></td><td>{mail.recipient}</td><td>{mailActorLabel(mail)}{mail.actorName && mail.actorEmail && <small className="order-summary-note">{mail.actorEmail}</small>}</td><td><button className="admin-template-link" onClick={() => setSelected({ template: byMail.get(mail.id) })}>{byMail.get(mail.id)?.label}</button></td><td>{MAIL_STATES[mail.state] || mail.state}</td><td><OutlookCheck outlook={mail.outlook} label={`${mail.orderCode} · ${mail.recipient}`} check={() => orderRequest({ action: "checkOrderOutlook", id: mail.orderId, eventId: mail.id.slice(mail.orderId.length + 1) })} /></td><td><button className="admin-btn" onClick={() => setSelected({ mail, template: byMail.get(mail.id) })}>Xem thư</button></td></tr>)}</tbody></table></div>
 
       </div>
     </>}
@@ -61,6 +62,6 @@ export default function OrderMailHistory({ onReuse }) {
     </MailPreviewDialog>}
     {!busy && !error && !filtered.length && <p className="admin-muted">Chưa có thư đơn hàng phù hợp.</p>}
     {filtered.length > visibleCount && <button className="admin-btn" onClick={() => setVisibleCount((value) => value + 30)}>Hiển thị thêm thư</button>}
-    <p className="admin-muted">“Microsoft đã nhận” chưa bảo đảm thư đã tới hộp thư khách. Lịch sử này gồm thư gửi từ website; thư soạn trực tiếp trong Outlook không được đồng bộ.</p>
+    <p className="admin-muted">“Microsoft đã nhận” chưa bảo đảm thư đã tới hộp thư khách. Đối chiếu Outlook cần quyền Graph Mail.Read. Không có NDR không đồng nghĩa đã nhận thư. Lịch sử này gồm thư gửi từ website; thư soạn trực tiếp trong Outlook không được đồng bộ.</p>
   </div>;
 }

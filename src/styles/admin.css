@@ -360,3 +360,9 @@
 .writer-fields > *, .writer-fields .admin-field, .writer-block > * { min-width: 0; }
 .writer-fields select { width: 100%; min-width: 0; }
 .writer-fields p { overflow-wrap: anywhere; }
+.outlook-check { display: grid; gap: 7px; min-width: 170px; max-width: 300px; font-size: 12px; overflow-wrap: anywhere; }
+.outlook-check .admin-btn { justify-self: start; padding: 8px 12px; font-size: 12px; }
+.outlook-check small { color: #76626b; }
+.outlook-check-error, .outlook-bounced { color: #a82f35; }
+.outlook-check-error { margin: 0; font-size: 12px; }
+.outlook-delivery-list { max-height: 60vh; overflow: auto; }

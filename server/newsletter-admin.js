@@ -1,3 +1,5 @@
+import { safeMailTracking } from "./mail-tracking.js";
+import { syncOutlookStatus, OUTLOOK_ERROR_MESSAGES } from "./outlook-status.js";
 import { ensureDefaultMailTemplates } from "./default-mail-templates.js";
 import { TEMPLATE_KINDS, normalizeTemplateKind, hasOrderTokens } from "../src/lib/template-kinds.js";
 import { captureTemplate, recordTemplateUse, templateIdentity } from "./template-snapshot.js";
@@ -10,11 +12,11 @@ import { DEFAULT_WELCOME, validateMessage } from "./newsletter-content.js";
 const millis = (value) => value?.toMillis?.() ?? (value ? new Date(value).getTime() : 0);
 const publicContact = (doc) => ({
   id: doc.id, email: doc.data().email, status: doc.data().status,
-  mailStatus: doc.data().mailStatus || "", createdAt: millis(doc.data().createdAt),
+  mailStatus: doc.data().mailStatus || "", outlook: doc.data().outlook || null, createdAt: millis(doc.data().createdAt),
 });
 const validId = (value) => typeof value === "string" && /^[a-zA-Z0-9_-]{1,100}$/.test(value);
 
-export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, lookupUser, env = process.env }) {
+export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, lookupUser, checkOutlook, env = process.env }) {
   return async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
     const reply = (status, data) => res.status(status).json(data);
@@ -87,6 +89,25 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
       }
       const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
       if (!body || JSON.stringify(body).length > 40000) return reply(400, { message: "Dữ liệu không hợp lệ." });
+      if (body.action === "campaignDeliveryStatuses") {
+        if (!validId(body.id) || (body.cursor && !/^[a-f0-9]{64}$/.test(body.cursor))) return reply(400, { message: "Thư hoặc trang không hợp lệ." });
+        let query = campaigns.doc(body.id).collection("deliveries").orderBy("__name__").limit(50);
+        if (body.cursor) query = query.startAfter(body.cursor);
+        const page = await query.get();
+        return reply(200, { deliveries: page.docs.map((doc) => ({ id: doc.id, email: doc.data().email, status: doc.data().status, outlook: doc.data().outlook || null })), nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
+      }
+      if (body.action === "checkCampaignOutlook") {
+        if (!validId(body.id) || !/^[a-f0-9]{64}$/.test(body.deliveryId || "")) return reply(400, { message: "Bản ghi gửi thư không hợp lệ." });
+        const ref = campaigns.doc(body.id).collection("deliveries").doc(body.deliveryId);
+        const outlook = await syncOutlookStatus(ref, checkOutlook, { recipient: (await ref.get()).data()?.email || "" });
+        return reply(200, { outlook });
+      }
+      if (body.action === "checkWelcomeOutlook") {
+        if (!/^[a-f0-9]{64}$/.test(body.id || "")) return reply(400, { message: "Email không hợp lệ." });
+        const ref = contacts.doc(body.id); const person = await ref.get();
+        const outlook = await syncOutlookStatus(ref, checkOutlook, { ...(person.data()?.welcomeTracking || {}), recipient: person.data()?.email || "" });
+        return reply(200, { outlook });
+      }
       if (body.action === "addTemplateType") {
         const name = typeof body.name === "string" ? body.name.trim() : "";
         if (!name || name.length > 60) return reply(400, { message: "Nhập tên loại mẫu từ 1 đến 60 ký tự." });
@@ -262,10 +283,11 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
             return contact;
           });
           if (claim) {
-            let result = "accepted";
+            let result = "accepted"; let tracking = {};
             try {
-              await sendMail(claim.email, validateMessage(state));
+              tracking = safeMailTracking(await sendMail(claim.email, validateMessage(state)));
             } catch (error) {
+              tracking = safeMailTracking(error.mailTracking);
               // A timeout may happen AFTER Microsoft accepts a message. Never resend it automatically.
               result = ["mail_auth_failed", "mail_send_failed", "mail_configuration_missing", "mail_smtp_auth_failed", "mail_smtp_connection_failed", "mail_transport_invalid"].includes(error.message) ? "failed" : "unknown";
               paused = true;
@@ -274,7 +296,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
               const current = await tx.get(campaign);
               if (current.data().lease !== lease) throw new Error("campaign_busy");
               if (result === "accepted" && !(current.data().accepted > 0)) await recordTemplateUse(tx, db, current.data());
-              tx.set(delivery, { status: result, updatedAt: new Date() }, { merge: true });
+              tx.set(delivery, { status: result, ...tracking, updatedAt: new Date() }, { merge: true });
               tx.set(campaign, { [result]: (current.data()[result] || 0) + 1 }, { merge: true });
             });
             sent += 1;
@@ -299,6 +321,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         throw error;
       }
     } catch (error) {
+      if (OUTLOOK_ERROR_MESSAGES[error.message]) return reply(503, { code: error.message, message: OUTLOOK_ERROR_MESSAGES[error.message] });
       if (error.message === "mail_smtp_auth_failed" && error.smtp) {
         const hints = {
           smtp_auth_disabled: "Microsoft báo SMTP AUTH vẫn bị vô hiệu hóa. Đối chiếu cấu hình hộp thư và chính sách tổ chức trước khi thay đổi.",

@@ -464,3 +464,17 @@ test("custom template types persist once and validate template categorization", 
   assert.equal((await call({ action: "saveLibraryTemplate", id: "bad-category", name: "Bad", kind: "order_auto", categoryId: type.id, ...message })).statusCode, 400);
   assert.equal((await call({ action: "saveLibraryTemplate", id: "missing-category", name: "Bad", kind: "private", categoryId: "missing", ...message })).statusCode, 400);
 });
+
+test("Outlook statuses on campaign deliveries and registration mail do not send mail or alter submission counts", async () => {
+  const db = memoryDb(); const id = subscriberId("customer@example.com");
+  await db.collection("newsletterCampaigns").doc("outlook-campaign").set({ accepted: 1, subject: "Sent subject" });
+  await db.collection("newsletterCampaigns").doc("outlook-campaign").collection("deliveries").doc(id).set({ email: "customer@example.com", status: "accepted" });
+  await db.collection("newsletterSubscribers").doc(id).set({ email: "customer@example.com", mailStatus: "accepted" });
+  const { call, sent } = admin(db, { checkOutlook: async () => ({ state: "sent_item", checkedAt: new Date().toISOString() }) });
+  const page = await call({ action: "campaignDeliveryStatuses", id: "outlook-campaign" }); assert.equal(page.body.deliveries.length, 1);
+  assert.equal((await call({ action: "checkCampaignOutlook", id: "outlook-campaign", deliveryId: id })).body.outlook.state, "sent_item");
+  assert.equal((await call({ action: "checkWelcomeOutlook", id })).body.outlook.state, "sent_item");
+  assert.equal((await db.collection("newsletterCampaigns").doc("outlook-campaign").get()).data().accepted, 1);
+  assert.equal((await db.collection("newsletterSubscribers").doc(id).get()).data().mailStatus, "accepted");
+  assert.equal(sent.length, 0);
+});
