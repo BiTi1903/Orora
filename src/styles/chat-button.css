@@ -7,12 +7,19 @@
   align-items: center;
   gap: 0;
   height: 58px;
-  padding: 0 17px;
+  width: 58px;
+  padding: 0;
+  justify-content: center;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
   border-radius: 40px;
   color: #fff;
   background: linear-gradient(135deg, #ee7fa2, var(--rose-deep));
   box-shadow: 0 14px 34px rgba(184, 68, 109, 0.4);
-  overflow: hidden;
+  overflow: visible;
   transition: gap 0.4s var(--ease), padding 0.4s var(--ease), transform 0.4s var(--ease);
 }
 
@@ -35,17 +42,14 @@
 .chat-icon { font-size: 24px; line-height: 1; }
 
 .chat-text {
-  max-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  transition: max-width 0.5s var(--ease);
+  position: absolute; right: calc(100% + 10px); width: max-content; max-width: 200px;
+  padding: 9px 12px; border-radius: 12px; background: var(--rose-deep); color: #fff;
+  font-size: 13px; font-weight: 500; white-space: nowrap;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
 }
-
-.chat-button:hover { gap: 10px; padding: 0 22px 0 17px; transform: translateY(-3px); }
-.chat-button:hover .chat-text { max-width: 180px; }
+.chat-button:hover, .chat-button:focus-visible { gap: 0; padding: 0; transform: none; }
+.chat-button:hover .chat-text, .chat-button:focus-visible .chat-text { opacity: 1; visibility: visible; }
 
 @media (max-width: 768px) {
   .chat-button { right: 16px; bottom: calc(112px + env(safe-area-inset-bottom, 0px)); width: 52px; height: 52px; padding: 0; justify-content: center; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }

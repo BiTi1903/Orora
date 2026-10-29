@@ -40,7 +40,7 @@ function ChatButton() {
       style={position ? { left: position.x, top: position.y, right: "auto", bottom: "auto" } : undefined}
       onDragStart={(event) => event.preventDefault()}
       onPointerDown={(event) => {
-        if (!window.matchMedia("(max-width: 768px)").matches || event.button !== 0 || !event.isPrimary) return;
+        if (event.button !== 0 || !event.isPrimary) return;
         const rect = event.currentTarget.getBoundingClientRect();
         suppressClick.current = false;
         drag.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, x: rect.left, y: rect.top, moved: false };
@@ -68,6 +68,7 @@ function ChatButton() {
       target="_blank"
       rel="noreferrer"
       aria-label="Chat với chúng tôi"
+      title="Bấm để chat, kéo để di chuyển"
     >
       <span className="chat-icon">💬</span>
       <span className="chat-text">Chat với chúng tôi</span>
