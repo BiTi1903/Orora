@@ -1,3 +1,4 @@
+import OrderEmailSettings from "./OrderEmailSettings";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { auth } from "../lib/firebaseAuth";
 
@@ -54,6 +55,7 @@ function ContactActions({ label, disabled, onApply }) {
 }
 
 export default function NewsletterAdmin() {
+  const [orderTemplate, setOrderTemplate] = useState(null);
   const [welcome, setWelcome] = useState(EMPTY);
   const [draft, setDraft] = useState(EMPTY);
   const [testEmail, setTestEmail] = useState(() => auth?.currentUser?.email || "");
@@ -78,6 +80,7 @@ export default function NewsletterAdmin() {
     setCursor(data.nextCursor);
     setCampaigns(data.campaigns);
     setWelcome(data.welcome);
+    setOrderTemplate(data.orderTemplate);
     setReady(true);
   }, []);
 
@@ -196,6 +199,7 @@ export default function NewsletterAdmin() {
       {sending && <button className="admin-btn" onClick={() => { stop.current = true; }}>Tạm dừng sau đợt hiện tại</button>}
       {!ready ? <p className="admin-muted">Cần kết nối API email để tải dữ liệu. Nếu có lỗi, kiểm tra cấu hình rồi bấm Tải lại.</p> : (
         <>
+          <OrderEmailSettings key={JSON.stringify(orderTemplate)} initialTemplate={orderTemplate} onSave={(message) => request({ action: "saveOrderTemplate", ...message })} />
           <form className="admin-card admin-form" onSubmit={(event) => {
             event.preventDefault();
             perform(async () => {

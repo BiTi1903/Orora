@@ -1,3 +1,4 @@
+import { sendOrderConfirmation, validOrderEmail } from "./order-mail.js";
 import { createHash, randomUUID } from "node:crypto";
 import { parseVndPrice, availablePaymentMethods, PAYMENT_LABELS } from "../src/lib/commerce.js";
 import { firebaseAuthFailure } from "./firebase-auth-error.js";
@@ -15,16 +16,17 @@ function readBody(req, env) {
   if (!body || Buffer.byteLength(JSON.stringify(body)) > 8000) throw Object.assign(new Error("Dữ liệu không hợp lệ."), { status: 400 });
   return body;
 }
-export function createOrderHandler({ getDb, env = process.env, now = () => Date.now() }) {
+export function createOrderHandler({ getDb, sendMail, env = process.env, now = () => Date.now() }) {
   return async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
     if (req.method !== "POST") { res.setHeader("Allow", "POST"); return res.status(405).json({ message: "Chỉ nhận đơn bằng POST." }); }
     try {
       const body = readBody(req, env);
-      const customer = Object.fromEntries(["name", "phone", "address", "note"].map((key) => [key, typeof body[key] === "string" ? body[key].trim() : ""]));
+      const customer = Object.fromEntries(["name", "phone", "email", "address", "note"].map((key) => [key, typeof body[key] === "string" ? body[key].trim() : ""]));
+      customer.email = customer.email.toLowerCase();
       customer.phone = customer.phone.replace(/[\s().-]/g, "");
-      if (!uuid(body.requestId) || typeof body.productId !== "string" || !/^[a-zA-Z0-9_-]{1,150}$/.test(body.productId) || !Number.isInteger(body.quantity) || body.quantity < 1 || body.quantity > 20 || customer.name.length < 2 || customer.name.length > 100 || !/^\+?\d{7,15}$/.test(customer.phone) || customer.address.length < 10 || customer.address.length > 500 || customer.note.length > 1000 || body.consent !== true || !Object.hasOwn(PAYMENT_LABELS, body.paymentMethod) || body.website) {
-        return res.status(400).json({ message: "Kiểm tra họ tên, số điện thoại, địa chỉ, số lượng và xác nhận đồng ý." });
+      if (!uuid(body.requestId) || typeof body.productId !== "string" || !/^[a-zA-Z0-9_-]{1,150}$/.test(body.productId) || !Number.isInteger(body.quantity) || body.quantity < 1 || body.quantity > 20 || customer.name.length < 2 || customer.name.length > 100 || !/^\+?\d{7,15}$/.test(customer.phone) || !validOrderEmail(customer.email) || customer.address.length < 10 || customer.address.length > 500 || customer.note.length > 1000 || body.consent !== true || !Object.hasOwn(PAYMENT_LABELS, body.paymentMethod) || body.website) {
+        return res.status(400).json({ message: "Kiểm tra họ tên, số điện thoại, email, địa chỉ, số lượng và xác nhận đồng ý." });
       }
       const digest = hash(JSON.stringify({ productId: body.productId, quantity: body.quantity, paymentMethod: body.paymentMethod, customer }));
       const db = await getDb();
@@ -57,18 +59,20 @@ export function createOrderHandler({ getDb, env = process.env, now = () => Date.
           customer, quantity: body.quantity, product: { id: product.id, name: String(data.name || ""), image: String(data.image || ""), priceText: String(data.price ?? ""), unitPrice },
           subtotal: unitPrice === null ? null : unitPrice * body.quantity,
           paymentMethod: body.paymentMethod,
-          paymentStatus: "unpaid", shippingFee: null, status: "new", channel: "website", createdAt, requestHash: digest,
+          confirmationMail: { state: "pending", updatedAt: createdAt }, paymentStatus: "unpaid", shippingFee: null, status: "new", channel: "website", createdAt, requestHash: digest,
         };
         tx.set(order, record); tx.set(rate, ipRate); tx.set(globalRate, siteRate);
         return record;
       });
-      return res.status(201).json({ code: result.code, subtotal: result.subtotal, paymentMethod: result.paymentMethod, message: "Đã nhận đơn hàng. ORORA sẽ liên hệ xác nhận sản phẩm, phí giao hàng và cách thanh toán." });
+      let mailStatus = result.confirmationMail?.state || "pending";
+      try { const outcome = await sendOrderConfirmation({ db, orderId: body.requestId, sendMail }); mailStatus = outcome.state || mailStatus; } catch { /* Order remains accepted; admin can inspect the send state. */ }
+      return res.status(201).json({ code: result.code, mailStatus, subtotal: result.subtotal, paymentMethod: result.paymentMethod, message: "Đã nhận đơn hàng. ORORA sẽ liên hệ xác nhận sản phẩm, phí giao hàng và cách thanh toán." });
     } catch (error) {
       return res.status(error.status || 503).json({ message: error.status ? error.message : "Chưa xác nhận được đơn. Vui lòng thử gửi lại hoặc liên hệ ORORA." });
     }
   };
 }
-export function createAdminOrdersHandler({ getDb, verifyToken, env = process.env }) {
+export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, env = process.env }) {
   return async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
     if (!["GET", "POST"].includes(req.method)) { res.setHeader("Allow", "GET, POST"); return res.status(405).json({ message: "Phương thức không được hỗ trợ." }); }
@@ -84,6 +88,14 @@ export function createAdminOrdersHandler({ getDb, verifyToken, env = process.env
     try {
       const db = await getDb();
       const orders = db.collection("orders");
+      if (req.method === "GET" && req.query?.id) {
+        if (!uuid(req.query.id)) return res.status(400).json({ message: "Đơn hàng không hợp lệ." });
+        const ref = orders.doc(req.query.id);
+        const [order, history] = await Promise.all([ref.get(), ref.collection("mailEvents").orderBy("createdAt", "desc").limit(50).get()]);
+        if (!order.exists) return res.status(404).json({ message: "Không tìm thấy đơn hàng." });
+        const data = { ...order.data() }; delete data.requestHash;
+        return res.status(200).json({ order: { id: order.id, ...data, createdAt: millis(data.createdAt), updatedAt: millis(data.updatedAt) }, mails: history.docs.map((doc) => ({ id: doc.id, ...doc.data(), createdAt: millis(doc.data().createdAt), updatedAt: millis(doc.data().updatedAt) })) });
+      }
       if (req.method === "GET") {
         let query = orders.orderBy("createdAt", "desc").limit(50);
         if (req.query?.cursor) {
@@ -100,6 +112,11 @@ export function createAdminOrdersHandler({ getDb, verifyToken, env = process.env
         }), nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
       }
       const body = readBody(req, env);
+      if (body.action === "sendOrderEmail") {
+        if (!uuid(body.id) || !uuid(body.requestId)) return res.status(400).json({ message: "Yêu cầu gửi thư không hợp lệ." });
+        const result = await sendOrderConfirmation({ db, orderId: body.id, sendMail, manual: true, requestId: body.requestId, confirmResend: body.confirmResend === true, actor: user.uid });
+        return res.status(200).json({ ...result, message: result.state === "failed" ? "Gửi thư bị lỗi. Xem lịch sử của đơn hàng." : result.state === "unknown" ? "Chưa rõ kết quả gửi. Kiểm tra Microsoft trước khi gửi lại." : "Đã xử lý yêu cầu gửi thư cho đơn hàng." });
+      }
       if (!uuid(body.id) || (body.status !== undefined ? !["new", "confirmed", "shipping", "completed", "cancelled"].includes(body.status) : !["unpaid", "paid"].includes(body.paymentStatus))) return res.status(400).json({ message: "Đơn hàng hoặc trạng thái không hợp lệ." });
       await db.runTransaction(async (tx) => {
         const ref = orders.doc(body.id); const current = await tx.get(ref);

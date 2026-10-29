@@ -6,7 +6,7 @@ import { memoryDb, response } from "./firestore-memory.js";
 import { socialShopUrl, parseVndPrice, availablePaymentMethods } from "../src/lib/commerce.js";
 const env = { NEWSLETTER_SITE_ORIGIN: "https://orora.example", NEWSLETTER_ADMIN_UIDS: "owner" };
 const headers = { origin: env.NEWSLETTER_SITE_ORIGIN, "content-type": "application/json", "x-forwarded-for": "192.0.2.1" };
-const body = () => ({ requestId: randomUUID(), productId: "serum", quantity: 2, name: "Khách thử nghiệm", phone: "0900000000", address: "Địa chỉ thử nghiệm tại Hà Nội", note: "Ghi chú thử", paymentMethod: "cod", consent: true, website: "" });
+const body = () => ({ requestId: randomUUID(), productId: "serum", quantity: 2, name: "Khách thử nghiệm", phone: "0900000000", email: "buyer@example.com", address: "Địa chỉ thử nghiệm tại Hà Nội", note: "Ghi chú thử", paymentMethod: "cod", consent: true, website: "" });
 async function setup() {
   const db = memoryDb();
   await db.collection("products").doc("serum").set({ name: "Serum", price: "250.000đ", active: true });

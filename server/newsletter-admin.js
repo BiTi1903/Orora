@@ -1,3 +1,4 @@
+import { DEFAULT_ORDER_MESSAGE, validateOrderTemplate } from "./order-mail.js";
 import { firebaseAuthFailure } from "./firebase-auth-error.js";
 import { randomUUID } from "node:crypto";
 import { DEFAULT_WELCOME, validateMessage } from "./newsletter-content.js";
@@ -48,18 +49,26 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, env
         if (cursor && !/^[a-f0-9]{64}$/.test(cursor)) return reply(400, { message: "Trang không hợp lệ." });
         let query = contacts.orderBy("__name__").limit(50);
         if (cursor) query = query.startAfter(cursor);
-        const [page, welcome, history] = await Promise.all([
+        const [page, welcome, history, orderTemplate] = await Promise.all([
           query.get(), settings.get(), campaigns.orderBy("createdAt", "desc").limit(20).get(),
+          db.collection("newsletterSettings").doc("orderConfirmation").get(),
         ]);
         return reply(200, {
           contacts: page.docs.map(publicContact),
           nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null,
+          orderTemplate: orderTemplate.exists ? { subject: String(orderTemplate.data().subject || ""), text: String(orderTemplate.data().text || "") } : DEFAULT_ORDER_MESSAGE,
           welcome: welcome.exists ? validateMessage(welcome.data()) : DEFAULT_WELCOME,
           campaigns: history.docs.map((doc) => ({ id: doc.id, ...doc.data(), createdAt: millis(doc.data().createdAt) })),
         });
       }
       const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
       if (!body || JSON.stringify(body).length > 40000) return reply(400, { message: "Dữ liệu không hợp lệ." });
+      if (body.action === "saveOrderTemplate") {
+        let message;
+        try { message = validateOrderTemplate(body); } catch { return reply(400, { message: "Kiểm tra tiêu đề, nội dung và tên biến trong mẫu thư đơn hàng." }); }
+        await db.collection("newsletterSettings").doc("orderConfirmation").set({ ...message, updatedAt: new Date(), updatedBy: user.uid });
+        return reply(200, { message: "Đã lưu mẫu thư xác nhận đơn hàng." });
+      }
       if (body.action === "saveWelcome") {
         const message = validateMessage(body);
         await settings.set({ ...message, updatedAt: new Date(), updatedBy: user.uid });

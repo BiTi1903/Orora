@@ -58,7 +58,7 @@ export default function AdminApp() {
         {tab === "dashboard" && <Dashboard sectionCount={TABS.length} />}
         {tab === "home" && <HomeAdmin />}
         {tab === "products" && <ProductsAdmin />}
-        {tab === "orders" && <OrdersAdmin key={user.uid} />}
+        {tab === "orders" && <OrdersAdmin key={user.uid} onOpenEmailMarketing={() => setTab("newsletter")} />}
         {tab === "newsletter" && <NewsletterAdmin />}
       </main>
     </div>
