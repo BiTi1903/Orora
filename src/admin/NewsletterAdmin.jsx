@@ -1,3 +1,4 @@
+import OrderMailHistory from "./OrderMailHistory";
 import OrderEmailSettings from "./OrderEmailSettings";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { auth } from "../lib/firebaseAuth";
@@ -213,8 +214,9 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
       {!ready ? <p className="admin-muted">Cần kết nối API email để tải dữ liệu. Nếu có lỗi, kiểm tra cấu hình rồi bấm Tải lại.</p> : (
         <>
           <nav className="admin-section-tabs" aria-label="Các mục email marketing">
-            {[["contacts", "Danh sách email"], ["compose", "Soạn và gửi thư"], ["welcome", "Thư chào mừng"], ["orders", "Thư đơn hàng"]].map(([key, label]) => <button type="button" key={key} aria-current={view === key ? "page" : undefined} onClick={() => setView(key)}>{label}</button>)}
+            {[["contacts", "Danh sách email"], ["compose", "Soạn và gửi thư"], ["welcome", "Thư chào mừng"], ["orders", "Thư đơn hàng"], ["orderHistory", "Thư đơn hàng đã gửi"]].map(([key, label]) => <button type="button" key={key} aria-current={view === key ? "page" : undefined} onClick={() => setView(key)}>{label}</button>)}
           </nav>
+          {view === "orderHistory" && <OrderMailHistory />}
           <div className="admin-email-panel" hidden={view !== "orders"}>
           <OrderEmailSettings key={JSON.stringify(orderTemplate)} initialTemplate={orderTemplate} onSave={(message) => request({ action: "saveOrderTemplate", ...message })} />
           </div>

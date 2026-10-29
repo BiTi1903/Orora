@@ -112,3 +112,25 @@ test("completing an order records payment atomically without changing method, am
     assert.equal((await db.collection("orders").doc(data.requestId).get()).data().paymentStatus, "unpaid");
   }
 });
+
+test("order mail history includes existing automatic and manual events across pages and requires order authorization", async () => {
+  const db = memoryDb(); const ids = [];
+  for (let i = 0; i < 21; i++) {
+    const id = randomUUID(); ids.push(id);
+    const ref = db.collection("orders").doc(id);
+    await ref.set({ code: `ORDER-${i}`, customer: { name: "Buyer", address: "Private address", email: "buyer@example.com" }, createdAt: new Date(100000 - i * 1000), requestHash: "private-hash" });
+    for (const manual of [false, true]) await ref.collection("mailEvents").doc(manual ? "manual-test" : "confirmation-auto").set({ subject: "Stored receipt", text: "Exact old content", recipient: "buyer@example.com", state: manual ? "failed" : "accepted", manual, createdAt: new Date(500000 + i), updatedAt: new Date(600000 + i) });
+  }
+  const options = { query: { mailHistory: "1" } };
+  assert.equal((await admin(db, { uid: "other" })(null, options)).statusCode, 403);
+  assert.equal((await admin(db)(null, { ...options, headers: {} })).statusCode, 401);
+  const page1 = await admin(db)(null, options);
+  assert.equal(page1.statusCode, 200); assert.equal(page1.body.scannedOrders, 20); assert.equal(page1.body.mails.length, 40);
+  assert.equal(page1.body.nextCursor, ids[19]);
+  const page2 = await admin(db)(null, { query: { mailHistory: "1", cursor: page1.body.nextCursor } });
+  assert.equal(page2.body.mails.length, 2); assert.equal(page2.body.nextCursor, null);
+  const mails = [...page1.body.mails, ...page2.body.mails];
+  assert.equal(new Set(mails.map((mail) => mail.id)).size, 42);
+  assert.equal(mails.filter((mail) => mail.manual).length, 21);
+  assert.ok(mails.every((mail) => mail.text === "Exact old content" && mail.requestHash === undefined && mail.customer === undefined));
+});

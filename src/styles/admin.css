@@ -293,3 +293,16 @@
 .admin-customer-order-scroll table { min-width: 760px; }
 .admin-customer-order-scroll td:first-child { overflow-wrap: anywhere; }
 .order-summary-note { display: block; margin-top: 6px; color: var(--a-deep); }
+
+.order-mail-history-filters { margin-bottom: 18px; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); }
+.order-mail-history-filters select { width: 100%; min-height: 44px; padding: 11px; background: #fffafc; color: var(--a-plum); border: 1px solid var(--a-line); border-radius: 12px; font: inherit; font-size: 14px; }
+.order-mail-history-filters select:focus-visible { outline: 2px solid var(--a-deep); outline-offset: 2px; }
+.order-mail-history-list { max-height: 650px; overflow-y: auto; }
+@media (max-width: 600px) { .order-mail-history-filters { grid-template-columns: minmax(0, 1fr); } }
+
+.admin-filter-panel { margin: 16px 0; padding: 16px; border: 1px solid var(--a-line); border-radius: 14px; background: #fff; }
+.admin-filter-panel summary { cursor: pointer; font-size: 14px; color: var(--a-deep); }
+.admin-filter-panel[open] summary { margin-bottom: 18px; }
+.admin-filter-panel select { width: 100%; min-height: 44px; padding: 10px; border: 1px solid var(--a-line); border-radius: 12px; background: #fffafc; color: var(--a-plum); font: inherit; font-size: 14px; }
+.admin-filter-panel select:focus-visible { outline: 2px solid var(--a-deep); outline-offset: 2px; }
+@media (max-width: 600px) { .admin-filter-panel .admin-form-grid { grid-template-columns: minmax(0, 1fr); } }

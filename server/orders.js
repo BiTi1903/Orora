@@ -97,7 +97,9 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, env = p
         return res.status(200).json({ order: { id: order.id, ...data, createdAt: millis(data.createdAt), updatedAt: millis(data.updatedAt) }, mails: history.docs.map((doc) => ({ id: doc.id, ...doc.data(), createdAt: millis(doc.data().createdAt), updatedAt: millis(doc.data().updatedAt) })) });
       }
       if (req.method === "GET") {
-        let query = orders.orderBy("createdAt", "desc").limit(50);
+        const historyOnly = req.query?.mailHistory === "1";
+        const pageSize = historyOnly ? 20 : 50;
+        let query = orders.orderBy("createdAt", "desc").limit(pageSize);
         if (req.query?.cursor) {
           if (!uuid(req.query.cursor)) return res.status(400).json({ message: "Trang không hợp lệ." });
           const last = await orders.doc(req.query.cursor).get();
@@ -105,6 +107,13 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, env = p
           else return res.status(400).json({ message: "Không tìm thấy mốc phân trang. Hãy tải lại danh sách." });
         }
         const page = await query.get();
+        if (historyOnly) {
+          const histories = await Promise.all(page.docs.map(async (order) => {
+            const history = await orders.doc(order.id).collection("mailEvents").get();
+            return history.docs.map((event) => ({ id: `${order.id}/${event.id}`, orderId: order.id, orderCode: order.data().code, customerName: order.data().customer?.name || "", subject: event.data().subject || "", text: event.data().text || "", recipient: event.data().recipient || "", state: event.data().state || "unknown", manual: event.data().manual === true, errorCode: event.data().errorCode || "", createdAt: millis(event.data().createdAt), updatedAt: millis(event.data().updatedAt) }));
+          }));
+          return res.status(200).json({ mails: histories.flat(), scannedOrders: page.docs.length, nextCursor: page.docs.length === pageSize ? page.docs.at(-1).id : null });
+        }
         return res.status(200).json({ orders: page.docs.map((doc) => {
           const { requestHash: _private, ...data } = doc.data();
           void _private;

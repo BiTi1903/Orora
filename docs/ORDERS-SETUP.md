@@ -45,3 +45,9 @@ Lịch sử tại `orders/{id}/mailEvents` lưu người nhận, nội dung đã
 Danh sách đơn hiển thị **Thanh toán khi nhận hàng (COD)** cho đơn COD chưa thu tiền; đơn chuyển khoản chưa được admin đánh dấu nhận tiền hiển thị **Chưa thanh toán**. Cả hai hiện **Đã thanh toán** khi admin tích ô xác nhận nhận tiền hoặc chọn trạng thái **Hoàn tất**. Chuyển khỏi Hoàn tất không tự bỏ ghi nhận thanh toán; admin điều chỉnh bằng ô thanh toán. Đơn đã hoàn tất trước thay đổi này không bị tự sửa hàng loạt: tích ô thanh toán nếu đã nhận tiền. Phương thức `paymentMethod` của đơn luôn được giữ riêng, không bị đổi khi cập nhật thanh toán.
 
 Trong **Đơn hàng → Khách hàng theo email**, hệ thống tải tất cả các trang đơn để tổng hợp số đơn, tổng tạm tính, số tiền đã thanh toán và chưa thu theo email (không phân biệt hoa thường). Có tìm kiếm khách hàng và nút mở các đơn của email đó. Số đơn gồm đơn hủy, nhưng cột tiền loại đơn hủy, chưa tính phí giao hàng và không cộng đơn chờ báo giá. Đơn cũ thiếu email được báo số lượng riêng; không sửa dữ liệu cũ để tự gán người mua. Đây là thống kê đơn hàng, không phải báo cáo doanh thu hay đối soát thanh toán.
+
+## Bộ lọc
+
+Danh sách đơn có tìm mã/ID, tên, email hoặc điện thoại; lọc trạng thái và bộ lọc nâng cao theo khoảng tạm tính, ngày đặt (giờ Việt Nam), tình trạng thu tiền và phương thức thanh toán. Có sắp xếp mới/cũ hoặc số tiền tăng/giảm. Bộ lọc áp dụng cho các đơn đã tải; dùng **Tải toàn bộ đơn để lọc** nếu cần tìm trên tất cả các trang. Đơn chưa có giá không thuộc khoảng tiền đã nhập. **Xóa bộ lọc đơn** khôi phục cách xem mặc định.
+
+Thống kê khách hàng có lọc khoảng tổng giá trị và sắp xếp theo số đơn, tổng giá trị, tiền đã thanh toán hoặc tên. Những bộ lọc này chỉ thay đổi cách hiển thị, không cập nhật đơn hoặc dữ liệu khách.

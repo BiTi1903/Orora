@@ -108,3 +108,7 @@ Không xóa lịch sử deliveries của chiến dịch đang gửi hoặc đang
 Trong **Email marketing → Soạn và gửi thư**, mặc định chọn email cụ thể từ danh sách đang hoạt động. Có tìm kiếm, chọn tất cả kết quả đang hiển thị và bỏ chọn; tối đa 100 địa chỉ mỗi thư ở chế độ này. Tìm kiếm không bỏ các địa chỉ đã chọn trước đó. Có thể chọn **Toàn bộ email đang hoạt động** để gửi tới cả những địa chỉ chưa tải trên màn hình.
 
 Thư lưu danh sách ID người nhận tại lúc tạo để tiếp tục gửi đúng danh sách. Máy chủ đọc địa chỉ từ dữ liệu đã lưu, kiểm tra lại trạng thái và bỏ qua email đã tạm ngưng, hủy đăng ký hoặc bị xóa. Các thư cũ không có danh sách người nhận riêng vẫn giữ hành vi gửi toàn bộ email hoạt động như trước.
+
+### Lịch sử thư đơn hàng
+
+**Email marketing → Thư đơn hàng đã gửi** tổng hợp các bản ghi `orders/{id}/mailEvents` hiện có, gồm thư tự động và thư gửi riêng từ admin, kể cả lần gửi lỗi/chưa rõ kết quả. Có tìm theo email, tên khách, mã/ID đơn, tiêu đề; lọc cách gửi và kết quả. Bấm một thư để xem đúng nội dung, người nhận và thời gian đã lưu. Danh sách tải lịch sử qua các trang đơn, không cần tạo lại hoặc di chuyển dữ liệu cũ. Chỉ tài khoản có quyền quản lý đơn được đọc lịch sử. Thư gửi trực tiếp từ Outlook không nằm trong lịch sử website.
