@@ -10,6 +10,7 @@ const body = () => ({ requestId: randomUUID(), productId: "serum", quantity: 2, 
 async function setup() {
   const db = memoryDb();
   await db.collection("products").doc("serum").set({ name: "Serum", price: "250.000đ", active: true });
+  await db.collection("inventory").doc("serum").set({ quantity: 100, version: 1 });
   const handler = createOrderHandler({ getDb: () => db, env, now: () => 1700000000000 });
   return { db, call: async (data, overrides = {}) => { const res = response(); await handler({ method: "POST", headers, body: data, ...overrides }, res); return res; } };
 }

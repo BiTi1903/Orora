@@ -191,7 +191,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
   return (
     <section>
       <div className="admin-top">
-        <div><h1>Email marketing</h1><p className="admin-muted">Lưu người đăng ký, gửi thư tự động và gửi thư từ sales@ororavn.com.</p></div>
+        <div><h1>Email</h1><p className="admin-muted">Lưu người đăng ký, gửi thư tự động và gửi thư từ sales@ororavn.com.</p></div>
         <button className="admin-btn" disabled={busy} onClick={() => perform(load)}>Tải lại</button>
       </div>
       {notice && <div role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</div>}

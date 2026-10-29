@@ -12,12 +12,14 @@ export function memoryDb() {
     collection: (name) => query(`${path}/${name}`),
   });
   const query = (path, settings = {}) => ({
+    where: (field, operator, value) => { if (operator !== "==") throw Error("Unsupported query"); return query(path, { ...settings, where: [...(settings.where || []), { field, value }] }); },
     doc: (id) => ref(`${path}/${id}`),
     orderBy: (field, direction) => query(path, { ...settings, field, direction }),
     limit: (limit) => query(path, { ...settings, limit }),
     startAfter: (cursor) => query(path, { ...settings, cursor }),
     get: async () => {
       let docs = [...records.keys()].filter((key) => key.startsWith(`${path}/`) && key.slice(path.length + 1).indexOf("/") === -1).map((key) => snap(ref(key)));
+      for (const condition of settings.where || []) docs = docs.filter((doc) => condition.field.split(".").reduce((value, key) => value?.[key], doc.data()) === condition.value);
       docs.sort((a, b) => settings.field === "createdAt" ? (a.data().createdAt - b.data().createdAt) * (settings.direction === "desc" ? -1 : 1) : a.id.localeCompare(b.id));
       if (settings.cursor?.data) {
         const timestamp = Number(settings.cursor.data()[settings.field]);
@@ -32,7 +34,7 @@ export function memoryDb() {
       const run = queue.then(async () => {
         const writes = [];
         const tx = {
-          get: async (reference) => snap(reference),
+          get: async (reference) => reference.path ? snap(reference) : reference.get(),
           getAll: async (...refs) => refs.map(snap),
           set: (reference, value, options) => writes.push(() => reference.set(value, options)),
           delete: (reference) => writes.push(() => reference.delete()),

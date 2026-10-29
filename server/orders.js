@@ -1,3 +1,4 @@
+import { reserveOrderInventory, settleOrderInventory } from "./inventory.js";
 import { syncOutlookStatus, OUTLOOK_ERROR_MESSAGES } from "./outlook-status.js";
 import { templateIdentity } from "./template-snapshot.js";
 import { mailActor, resolveMailActors } from "./mail-actor.js";
@@ -71,6 +72,7 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
           paymentMethod: body.paymentMethod,
           confirmationMail: { state: "pending", updatedAt: createdAt }, paymentStatus: "unpaid", shippingFee: null, status: "new", channel: "website", createdAt, requestHash: digest,
         };
+        await reserveOrderInventory(tx, db, product.id, body.quantity);
         tx.set(order, record); tx.set(dailyCounter, { count: dailySequence, updatedAt: createdAt }); tx.set(rate, ipRate); tx.set(globalRate, siteRate);
         return record;
       });
@@ -148,13 +150,33 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
         const result = await sendOrderConfirmation({ db, orderId: body.id, sendMail, manual: true, requestId: body.requestId, confirmResend: body.confirmResend === true, ...mailActor(user), message: body.message, templateRef: body.templateRef });
         return res.status(200).json({ ...result, message: result.errorMessage || (result.state === "failed" ? "Gửi thư bị lỗi. Xem lịch sử của đơn hàng." : result.state === "unknown" ? "Chưa rõ kết quả gửi. Kiểm tra Microsoft trước khi gửi lại." : "Đã xử lý yêu cầu gửi thư cho đơn hàng.") });
       }
+      if (body.action === "restockOrder") {
+        if (!uuid(body.id)) throw Object.assign(new Error("Đơn không hợp lệ."), { status: 400 });
+        await db.runTransaction(async (tx) => {
+          const ref = orders.doc(body.id); const saved = await tx.get(ref); const order = saved.data();
+          if (!saved.exists || order.status !== "cancelled") throw Object.assign(new Error("Chỉ hoàn kho cho đơn đã hủy và đã nhận lại hàng."), { status: 409 });
+          if (order.inventory?.state === "restocked") return;
+          if (order.inventory?.state !== "deducted") throw Object.assign(new Error("Đơn này chưa có lần trừ kho để hoàn lại."), { status: 409 });
+          const stockRef = db.collection("inventory").doc(order.inventory.productId); const stock = (await tx.get(stockRef)).data();
+          if (!stock || !Number.isSafeInteger(stock.quantity) || stock.quantity < 0 || stock.quantity + order.inventory.quantity > 1_000_000_000) throw Object.assign(new Error("Kiểm tra số tồn kho hiện tại trước khi hoàn hàng."), { status: 409 });
+          const now = new Date();
+          tx.set(stockRef, { quantity: stock.quantity + order.inventory.quantity, version: (stock.version || 0) + 1, updatedAt: now, updatedBy: user.uid }, { merge: true });
+          tx.set(db.collection("inventoryMovements").doc(`return-${body.id}`), { type: "order_return", productId: order.inventory.productId, orderId: body.id, change: order.inventory.quantity, before: stock.quantity, after: stock.quantity + order.inventory.quantity, createdAt: now, actor: user.uid });
+          tx.set(ref, { inventory: { ...order.inventory, state: "restocked", restockedAt: now }, updatedAt: now, updatedBy: user.uid }, { merge: true });
+        });
+        return res.status(200).json({ message: "Đã ghi nhận nhận lại hàng và hoàn kho." });
+      }
       if (!uuid(body.id) || (body.status !== undefined ? !["new", "confirmed", "shipping", "completed", "cancelled"].includes(body.status) : !["unpaid", "paid"].includes(body.paymentStatus))) return res.status(400).json({ message: "Đơn hàng hoặc trạng thái không hợp lệ." });
-      await db.runTransaction(async (tx) => {
+      const inventory = await db.runTransaction(async (tx) => {
         const ref = orders.doc(body.id); const current = await tx.get(ref);
         if (!current.exists) throw Object.assign(new Error("Không tìm thấy đơn hàng."), { status: 404 });
-        tx.set(ref, { ...(body.status !== undefined ? { status: body.status, ...(body.status === "completed" ? { paymentStatus: "paid" } : {}) } : { paymentStatus: body.paymentStatus }), updatedAt: new Date(), updatedBy: user.uid }, { merge: true });
+        if (current.data().status === "cancelled" && body.status && body.status !== "cancelled") throw Object.assign(new Error("Đơn đã hủy không mở lại. Tạo đơn mới để số lượng và lịch sử kho được ghi nhận đúng."), { status: 409 });
+        const nextPaymentStatus = body.status === "completed" ? "paid" : body.status !== undefined ? current.data().paymentStatus : body.paymentStatus;
+        const stockPatch = await settleOrderInventory(tx, db, current.data(), nextPaymentStatus, body.id, user.uid, body.status ?? current.data().status);
+        tx.set(ref, { ...stockPatch, ...(body.status !== undefined ? { status: body.status, ...(body.status === "completed" ? { paymentStatus: "paid" } : {}) } : { paymentStatus: body.paymentStatus }), updatedAt: new Date(), updatedBy: user.uid }, { merge: true });
+        return stockPatch.inventory || current.data().inventory || null;
       });
-      return res.status(200).json({ message: body.status === "completed" ? "Đã hoàn tất đơn hàng và ghi nhận đã thanh toán." : "Đã cập nhật trạng thái đơn hàng." });
+      return res.status(200).json({ inventory, message: body.status === "completed" ? "Đã hoàn tất đơn hàng và ghi nhận đã thanh toán." : "Đã cập nhật trạng thái đơn hàng." });
     } catch (error) { if (OUTLOOK_ERROR_MESSAGES[error.message]) return res.status(503).json({ code: error.message, message: OUTLOOK_ERROR_MESSAGES[error.message] }); return res.status(error.status || 503).json({ message: error.message === "template_changed" ? "Mẫu đã được sửa hoặc xóa. Chọn lại mẫu hiện tại hoặc soạn nội dung riêng." : error.status ? error.message : "Không tải hoặc cập nhật được đơn hàng." }); }
   };
 }

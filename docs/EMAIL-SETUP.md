@@ -210,3 +210,16 @@ Kiểm thử repository dùng Microsoft giả lập và Firestore bộ nhớ; ch
 ### Mã đơn dễ đọc
 
 Đơn mới dùng `OW` + số thứ tự + ngày hai chữ số + tháng hai chữ số, ví dụ `OW22910` là đơn thứ 2 ngày 29/10. Bộ đếm `orderDailyCounters/{YYYY-MM-DD}` tính theo `Asia/Ho_Chi_Minh`, được tăng cùng giao dịch lưu đơn để các lượt đặt đồng thời không lấy cùng số. Gửi lại cùng yêu cầu không tăng số; yêu cầu không hợp lệ cũng không chiếm số. Ngày mới bắt đầu từ 1. Mã `OW` không chứa năm; ngày đầy đủ của đơn vẫn có trong admin và trường `orderDate`. ID nội bộ của đơn và mã các đơn cũ không đổi; bộ đếm mới chỉ cấp số cho đơn tạo theo cơ chế này.
+
+### Kiểm Hàng
+
+Mục Email marketing đổi tên thành **Email**. **Kiểm Hàng** nằm ngay bên dưới, dùng API riêng có cùng danh sách quyền `ORDER_ADMIN_UIDS` (nếu chưa có thì dùng `NEWSLETTER_ADMIN_UIDS`). Danh sách lấy tên và ID của sản phẩm đã tạo; tồn được lưu riêng trong `inventory/{productId}`, không sửa nội dung sản phẩm. Nhập **tồn thực tế** là số lượng tuyệt đối đang kiểm đếm, không phải số lượng cộng thêm.
+
+- Đơn mới chưa thanh toán và chưa giao giữ số lượng ở **Chờ xác nhận**. **Còn có thể bán = tồn thực tế − số lượng chờ**. Đơn hủy không giữ hàng. Thống kê chờ đọc đủ các trang đơn, không trả thông tin khách qua API kho.
+- Sau khi đã nhập tồn, giao dịch tạo đơn kiểm tra hàng còn có thể đặt và đồng bộ phiên bản kho, tránh hai đơn cùng giữ những sản phẩm cuối. Chưa nhập tồn vẫn tiếp nhận đơn để tránh thay đổi hành vi website cũ; cần nhập tồn trước khi xác nhận thanh toán/giao hàng. Các đơn chờ cũ cũng được tính khi kiểm tra hàng giữ.
+- Xác nhận **Đã thanh toán**, **Đang giao** (kể cả COD chưa thu tiền) hoặc **Hoàn tất** sẽ xuất kho một lần. Tồn và dấu mốc trên đơn được cập nhật cùng giao dịch; không đủ hàng/chưa nhập tồn thì không cập nhật trạng thái. Đổi lại chưa thanh toán không tự cộng kho hoặc trừ thêm lần nữa.
+- Hủy đơn chưa xuất giải phóng hàng chờ. Đơn đã xuất chỉ cộng lại qua **Đã nhận hàng trả — Hoàn kho**, sau khi admin xác nhận đã thực tế nhận đủ hàng. Thao tác lặp không hoàn lần hai. Đơn đã hủy không mở lại; tạo đơn mới để giữ đúng lịch sử.
+- Các đơn cũ đã thanh toán/đang giao/hoàn tất không bị tự trừ hồi tố. Nhập tồn ban đầu theo số thực tế; dữ liệu đơn, email và sản phẩm cũ được giữ nguyên.
+- Khi số lượng thay đổi bởi đơn hàng hoặc người khác, bản nhập tồn cũ bị từ chối để tránh ghi đè giao dịch. Bấm **Tải lại tồn kho** và kiểm tra lại trước khi lưu. Lịch sử điều chỉnh/xuất/hoàn được lưu riêng ở `inventoryMovements`.
+
+Việc xác nhận thanh toán hiện do admin thực hiện, chưa có cổng thanh toán tự đối soát. Bộ thử dùng Firestore giả lập trong bộ nhớ, SMTP giả và trình duyệt; không ghi tồn hoặc gửi thư thật trên Production.

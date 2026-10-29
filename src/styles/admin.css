@@ -366,3 +366,17 @@
 .outlook-check-error, .outlook-bounced { color: #a82f35; }
 .outlook-check-error { margin: 0; font-size: 12px; }
 .outlook-delivery-list { max-height: 60vh; overflow: auto; }
+
+.inventory-table { overflow-x: auto; }
+.inventory-stock-form { display: flex; align-items: center; gap: 8px; }
+.inventory-stock-form input { width: 150px; max-width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--plum); font: inherit; }
+@media (max-width: 600px) {
+  .inventory-table .admin-table thead { display: none; }
+  .inventory-table .admin-table, .inventory-table .admin-table tbody { display: block; }
+  .inventory-table .admin-table tr { display: block; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .inventory-table .admin-table td { display: block; padding: 6px 0; border: 0; overflow-wrap: anywhere; }
+  .inventory-table .admin-table td::before { content: attr(data-label); display: block; margin-bottom: 4px; color: var(--plum-soft); font-size: 12px; }
+}
+.inventory-search { margin: 18px 0; }
+.inventory-search label { display: block; margin-bottom: 7px; font-size: 13px; }
+.inventory-search input { width: 100%; max-width: 420px; min-height: 42px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--plum); font: inherit; }
