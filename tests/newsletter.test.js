@@ -478,3 +478,38 @@ test("Outlook statuses on campaign deliveries and registration mail do not send 
   assert.equal((await db.collection("newsletterSubscribers").doc(id).get()).data().mailStatus, "accepted");
   assert.equal(sent.length, 0);
 });
+
+test("registration returns after saving while welcome sends in background, and double clicks do not send duplicate mail", async () => {
+  const db = memoryDb(); const tasks = []; let sent = 0; let release;
+  const gate = new Promise((resolve) => { release = resolve; });
+  const handler = createSubscribeHandler({ getDb: () => db, env, schedule: (task) => tasks.push(task), sendWelcome: async () => { sent++; await gate; } });
+  const req = { method: "POST", headers, body: { email: "background@example.com", consent: true } };
+  const first = response(); await handler(req, first);
+  assert.equal(first.statusCode, 200); assert.match(first.body.message, /thành công/);
+  const ref = db.collection("newsletterSubscribers").doc(subscriberId(req.body.email));
+  assert.equal((await ref.get()).data().mailStatus, "pending"); assert.equal(tasks.length, 1);
+  const duplicate = response(); await handler(req, duplicate); assert.equal(duplicate.statusCode, 200); assert.equal(sent, 1); assert.equal(tasks.length, 1);
+  release(); await tasks[0]; assert.equal((await ref.get()).data().mailStatus, "accepted");
+});
+
+test("background SMTP failure remains an admin issue rather than failing the saved signup", async () => {
+  const db = memoryDb(); const tasks = [];
+  const handler = createSubscribeHandler({ getDb: () => db, env, schedule: (task) => tasks.push(task), sendWelcome: async () => { throw Error("mail_auth_failed"); } });
+  const result = response(); await handler({ method: "POST", headers, body: { email: "saved@example.com", consent: true } }, result);
+  assert.equal(result.statusCode, 200); await tasks[0];
+  const person = (await db.collection("newsletterSubscribers").doc(subscriberId("saved@example.com")).get()).data();
+  assert.equal(person.status, "active"); assert.equal(person.mailStatus, "failed");
+});
+
+test("old IP/site limits, hidden website field and prior failure cooldown no longer block valid registrations", async () => {
+  const db = memoryDb(); let sent = 0;
+  const limit = { count: 99999, resetAt: Date.now() + 86400000 };
+  await db.collection("newsletterLimits").doc("global").set(limit);
+  await db.collection("newsletterSubscribers").doc(subscriberId("retry-now@example.com")).set({ email: "retry-now@example.com", status: "active", mailStatus: "failed", nextAttemptAt: Date.now() + 86400000 });
+  const handler = createSubscribeHandler({ getDb: () => db, env, sendWelcome: async () => { sent++; } });
+  for (const email of ["retry-now@example.com", ...Array.from({ length: 7 }, (_, i) => `same-ip-${i}@example.com`)]) {
+    const result = response(); await handler({ method: "POST", headers, socket: { remoteAddress: "127.0.0.1" }, body: { email, consent: true, website: "not-blocked" } }, result);
+    assert.equal(result.statusCode, 200);
+  }
+  assert.equal(sent, 8); assert.deepEqual((await db.collection("newsletterLimits").doc("global").get()).data(), limit);
+});

@@ -86,7 +86,8 @@ Kiểm thử tự động trong repository dùng Firestore và Microsoft giả l
 - **Website chỉ báo lỗi kết nối API:** không chạy bằng Vite thuần để thử phần gửi mail; kiểm tra deploy Vercel Functions và domain.
 - **Microsoft từ chối xác thực:** kiểm tra Tenant ID, Client ID, giá trị secret và hạn dùng.
 - **Microsoft từ chối gửi:** kiểm tra `Application Mail.Send`, admin consent, phạm vi Exchange, hộp thư người gửi, các giới hạn tài khoản. Với 429, dừng gửi và chờ Microsoft bỏ giới hạn, không tạo chiến dịch mới để thử liên tục.
-- **Email đã lưu nhưng gửi lỗi:** contact vẫn ở Firestore. Thư tự động giới hạn 5 lượt/IP/giờ, 100 lượt website/24 giờ; retry lỗi xác định có thời gian chờ. Không báo gửi thành công khi Microsoft chưa nhận.
+- **Đăng ký nhận tin:** API lưu email vào Firestore trước rồi trả thành công; Vercel tiếp tục gửi thư chào mừng bằng `waitUntil` trong thời gian thực thi của Function (tối đa 60 giây). Thành công đăng ký không có nghĩa thư đã được giao. Lỗi gửi được lưu trong trạng thái thư tự động để quản trị viên kiểm tra. Đây không phải hàng đợi bền vững có worker tự thử lại.
+- **Không chặn spam trên form đăng ký:** không giới hạn IP, tổng lượt website, thời gian chờ hay honeypot. Vẫn kiểm tra email hợp lệ và đồng ý nhận tin. Email đang gửi, đã được Microsoft nhận hoặc chưa rõ kết quả có thể đăng ký lại thành công nhưng không gửi thư lặp. Lỗi gửi xác định cho phép thử lại ngay.
 - **Mất kết nối khi gửi chiến dịch:** đợi đợt đang chạy kết thúc; nếu gặp khóa phiên, chờ tối đa 2 phút, tải lại và chọn tiếp tục chiến dịch cũ. Thư đã đặt chỗ nhưng chưa rõ Microsoft nhận hay chưa được đánh dấu `Chưa rõ`, không gửi lại tự động để tránh trùng.
 - **Khách ngừng nhận trong khi đang có một thư gửi đi:** các lần xử lý tiếp theo sẽ bỏ qua khách đó; thư đã gửi/đã bắt đầu xử lý có thể vẫn đến.
 - **Danh sách lớn:** giải pháp này xử lý các đợt nhỏ bằng trang quản trị đang mở; không phải worker chạy nền khi bạn đóng trình duyệt. Hạn mức Exchange phụ thuộc tenant và hộp thư. Với nhu cầu marketing lớn hoặc cần theo dõi bounce/delivery, nên chuyển adapter gửi sang dịch vụ email marketing có queue và webhook.
@@ -99,7 +100,7 @@ Kiểm thử tự động trong repository dùng Firestore và Microsoft giả l
 - `newsletterSettings/welcome`: tiêu đề/nội dung mẫu gửi cho người mới.
 - `newsletterCampaigns/{id}`: nội dung chiến dịch, tiến độ, số Microsoft nhận/lỗi/chưa rõ, lease chống chạy đồng thời.
 - `newsletterCampaigns/{id}/deliveries/{subscriberId}`: trạng thái xử lý từng người của chiến dịch, dùng để tránh gửi trùng.
-- `newsletterLimits`: bộ đếm chống lạm dụng form công khai.
+- `newsletterLimits`: dữ liệu bộ đếm cũ được giữ nguyên nhưng form đăng ký không còn đọc hoặc áp dụng.
 
 Không xóa lịch sử deliveries của chiến dịch đang gửi hoặc đang tạm dừng. Không chia sẻ dữ liệu khách hàng hoặc khóa cấu hình qua repository công khai.
 

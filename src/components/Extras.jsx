@@ -515,7 +515,7 @@ export function Newsletter({
       const response = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: fields.get("email"), consent: fields.get("consent") === "on", website: fields.get("website") }),
+        body: JSON.stringify({ email: fields.get("email"), consent: fields.get("consent") === "on" }),
       });
       const result = await response.json();
       setSubmission({ busy: false, ok: response.ok, message: result.message || "Chưa thực hiện được. Vui lòng thử lại." });
@@ -595,7 +595,7 @@ export function Newsletter({
             onClick={select("nlButton")}
             style={css("button")}
           >
-            {submission.busy ? "Đang đăng ký…" : c.newsletterButton || "Đăng ký"}
+            {submission.busy ? "Đang lưu email…" : c.newsletterButton || "Đăng ký"}
           </button>
         </div>
         {!preview && (
@@ -603,9 +603,6 @@ export function Newsletter({
             <label className="newsletter-consent">
               <input type="checkbox" name="consent" required />
               <span>Tôi đồng ý nhận email về sản phẩm và ưu đãi từ ORORA. Có thể hủy đăng ký bất cứ lúc nào.</span>
-            </label>
-            <label style={{ display: "none" }} aria-hidden="true">
-              Website<input name="website" tabIndex={-1} autoComplete="off" />
             </label>
           </>
         )}
