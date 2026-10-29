@@ -68,106 +68,13 @@ function ProductDetail({
   useLayoutEffect(() => {
     if (preview || !product) return;
 
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const ctx = gsap.context(() => {
-      const timeline = gsap.timeline({
-        defaults: { ease: "power4.out" },
-      });
-
-      timeline
-        .from(".product-back", {
-          y: -20,
-          opacity: 0,
-          duration: 0.7,
-        })
-        .from(
-          ".product-detail-image",
-          {
-            scale: 1.12,
-            opacity: 0,
-            duration: 1.2,
-            clearProps: "transform,opacity",
-          },
-          "-=0.3"
-        )
-        .from(
-          ".product-detail-number",
-          {
-            y: 30,
-            opacity: 0,
-            duration: 0.6,
-          },
-          "-=0.7"
-        )
-        .from(
-          ".product-detail-info h1",
-          {
-            y: 80,
-            opacity: 0,
-            duration: 0.9,
-          },
-          "-=0.5"
-        )
-        .from(
-          ".product-detail-price",
-          {
-            y: 30,
-            opacity: 0,
-            duration: 0.6,
-          },
-          "-=0.5"
-        )
-        .from(
-          ".product-detail-description",
-          {
-            y: 30,
-            opacity: 0,
-            duration: 0.7,
-          },
-          "-=0.4"
-        )
-                .from(
-          ".product-section",
-          {
-            y: 50,
-            opacity: 0,
-            duration: 0.8,
-            stagger: 0.15,
-          },
-          "-=0.4"
-        );
-
-      /* Ảnh phụ: lần lượt trượt lên + phóng nhẹ ra, sau khi ảnh chính hiện ra */
-      const thumbs = Array.from(
-        pageRef.current?.querySelectorAll(".product-detail-thumb") || []
-      );
-      if (thumbs.length) {
-        // Tắt transition CSS trong lúc chạy hiệu ứng để GSAP không bị giật
-        thumbs.forEach((el) => {
-          el.style.transition = "none";
-        });
-        gsap.from(thumbs, {
-          y: 50,
-          scale: 0.8,
-          opacity: 0,
-          duration: 0.75,
-          stagger: 0.14,
-          delay: 1.0,
-          ease: "back.out(1.6)",
-          onComplete: () => {
-            thumbs.forEach((el) => {
-              el.style.transition = "";
-            });
-            gsap.set(thumbs, { clearProps: "transform,opacity" });
-          },
-        });
-      }
-      gsap.from(".product-detail-thumb-nav", {
-        opacity: 0,
-        scale: 0.6,
-        duration: 0.5,
-        delay: 1.5,
-        ease: "back.out(2)",
-        clearProps: "transform,opacity",
+      const selectors = [".product-back", ".product-detail-image", ".product-detail-thumbs-wrap", ".product-detail-number", ".product-detail-info h1", ".product-detail-price", ".product-detail-description", ".product-contact-actions", ".product-section", ".product-detail-related"];
+      const nodes = selectors.flatMap((selector) => Array.from(pageRef.current.querySelectorAll(selector)));
+      gsap.from(nodes, {
+        y: 18, autoAlpha: 0, duration: 0.5, stagger: 0.1,
+        ease: "power2.out", clearProps: "transform,opacity,visibility",
       });
     }, pageRef);
 
@@ -217,7 +124,10 @@ function ProductDetail({
     );
   }
 
-  const contact = contactLinks(home, product.name);
+  const contactSettings = ps.contactActions || {};
+  const contact = contactLinks(home, product.name, contactSettings);
+  const showZalo = contactSettings.showZalo !== false && !!contact.zalo;
+  const showCall = contactSettings.showCall !== false && !!contact.phone;
   const detailLabels = ps.detailLabels || {};
   const rows = [
     ["material", detailLabels.material || ps.materialLabel?.text || "Material", product.material],
@@ -577,11 +487,11 @@ function ProductDetail({
             {renderLines(product.description)}
           </p>
 
-          {(contact.zalo || contact.email) && (
-            <div className="product-contact-actions" aria-label="Tư vấn sản phẩm">
-              {contact.zalo && <a className="product-contact-primary" href={contact.zalo} target="_blank" rel="noreferrer">Tư vấn qua Zalo <span aria-hidden="true">↗</span></a>}
-              {contact.phone && <a href={contact.phone}>Gọi tư vấn</a>}
-              {!contact.zalo && contact.email && <a className="product-contact-primary" href={contact.email}>Liên hệ qua email</a>}
+          {(preview || showZalo || showCall || (!contact.zalo && contact.email && contactSettings.showZalo !== false)) && (
+            <div className={`product-contact-actions ${selectedClass("pdContactActions")}`} aria-label="Tư vấn sản phẩm" data-builder-key={preview ? "pdContactActions" : undefined} onClick={preview ? select("pdContactActions") : undefined}>
+              {(preview || showZalo) && <a className="product-contact-primary" href={preview ? undefined : contact.zalo} target={preview ? undefined : "_blank"} rel="noreferrer" style={{ ...css("contactActions"), background: contactSettings.primaryBackground, borderColor: contactSettings.primaryBackground, color: contactSettings.primaryColor, ...(preview && contactSettings.showZalo === false ? { opacity: 0.4 } : {}) }}>{contactSettings.zaloLabel?.trim() || "Tư vấn qua Zalo"} <span aria-hidden="true">↗</span></a>}
+              {(preview || showCall) && <a href={preview ? undefined : contact.phone} style={{ ...css("contactActions"), background: contactSettings.secondaryBackground, color: contactSettings.secondaryColor, ...(preview && contactSettings.showCall === false ? { opacity: 0.4 } : {}) }}>{contactSettings.callLabel?.trim() || "Gọi tư vấn"}</a>}
+              {!preview && !contact.zalo && contact.email && contactSettings.showZalo !== false && <a className="product-contact-primary" href={contact.email}>Liên hệ qua email</a>}
             </div>
           )}
 

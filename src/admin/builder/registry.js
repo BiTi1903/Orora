@@ -102,6 +102,7 @@ const COLLECTION_FIELD_MAP = {
 
 
 const PRODUCT_DETAIL_FIELD_MAP = {
+  pdContactActions: { type: "pdContactActions", styleKey: "contactActions", label: "Nút tư vấn Zalo / gọi" },
   pdImage: {
     type: "pdImage",
     styleKey: "imageLayout",

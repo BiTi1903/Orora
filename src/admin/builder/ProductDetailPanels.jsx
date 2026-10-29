@@ -1,3 +1,4 @@
+import ProductContactSettings from "./ProductContactSettings";
 import MobileImageSettings from "./MobileImageSettings";
 import { SettingGroup, SelectField, StyleTypographyBlock } from "./ui";
 import { CollectionSettings } from "./CollectionPanels";
@@ -17,6 +18,8 @@ export function ProductDetailSettings({
       </div>
     );
   }
+  if (selected === "pdContactActions") return <ProductContactSettings value={productDetail.contactActions || {}} onChange={onStyleChange} />;
+
   /* Tiêu đề "Sản phẩm khác": 1 ô, Enter xuống dòng, đổi màu N chữ cuối */
   if (selected === "relTitle") {
     const style = productDetail.relTitle || {};
