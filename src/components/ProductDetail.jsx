@@ -507,11 +507,18 @@ function ProductDetail({
           </section>
 
           {(preview || showZalo || showCall || (!contact.zalo && contact.email && contactSettings.showZalo !== false)) && (
-            <div className={`product-contact-actions ${selectedClass("pdContactActions")}`} aria-label="Tư vấn sản phẩm" data-builder-key={preview ? "pdContactActions" : undefined} onClick={preview ? select("pdContactActions") : undefined}>
-              {(preview || showZalo) && <a className="product-contact-primary" href={preview ? undefined : contact.zalo} target={preview ? undefined : "_blank"} rel="noreferrer" style={{ ...css("contactActions"), background: contactSettings.primaryBackground, borderColor: contactSettings.primaryBackground, color: contactSettings.primaryColor, ...(preview && contactSettings.showZalo === false ? { opacity: 0.4 } : {}) }}>{contactSettings.zaloLabel?.trim() || "Tư vấn qua Zalo"} <span aria-hidden="true">↗</span></a>}
+            <details open={preview ? true : undefined} className={`product-contact-actions product-consultation ${selectedClass("pdContactActions")}`} aria-label="Tư vấn sản phẩm" data-builder-key={preview ? "pdContactActions" : undefined} onClick={preview ? select("pdContactActions") : undefined}>
+              <summary className="product-consultation-toggle" style={css("contactActions")}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5H4l-2 2V11.5a9.5 9.5 0 0 1 19 0Z"/><path d="M7 11h10M7 15h6"/></svg>
+                <span>{contactSettings.triggerLabel?.trim() || "Tư vấn"}</span>
+                <svg className="product-consultation-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </summary>
+              <div className="product-consultation-options" aria-label="Chọn hình thức tư vấn">
+              {(preview || showZalo) && <a className="product-contact-primary" href={preview ? undefined : contact.zalo} target={preview ? undefined : "_blank"} rel="noreferrer" style={{ ...css("contactActions"), background: contactSettings.primaryBackground, borderColor: contactSettings.primaryBackground, color: contactSettings.primaryColor, ...(preview && contactSettings.showZalo === false ? { opacity: 0.4 } : {}) }}>{contactSettings.zaloLabel?.trim() || "Tư vấn qua Zalo"}</a>}
               {(preview || showCall) && <a href={preview ? undefined : contact.phone} style={{ ...css("contactActions"), background: contactSettings.secondaryBackground, color: contactSettings.secondaryColor, ...(preview && contactSettings.showCall === false ? { opacity: 0.4 } : {}) }}>{contactSettings.callLabel?.trim() || "Gọi tư vấn"}</a>}
               {!preview && !contact.zalo && contact.email && contactSettings.showZalo !== false && <a className="product-contact-primary" href={contact.email}>Liên hệ qua email</a>}
-            </div>
+              </div>
+            </details>
           )}
 
           {(product.story || preview) && (

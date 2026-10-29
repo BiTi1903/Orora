@@ -4,6 +4,7 @@ import { contactLinks } from "../../lib/contact";
 export default function ProductContactSettings({ value = {}, onChange }) {
   return <>
     <SettingGroup title="Nút tư vấn sản phẩm">
+      <div className="builder-field"><label>Tên nút tư vấn</label><input maxLength={80} value={value.triggerLabel ?? ""} placeholder="Tư vấn" onChange={(event) => onChange({ triggerLabel: event.target.value })} /></div>
       <small className="builder-help">Để trống số gọi hoặc link Zalo để dùng số liên hệ ở chân trang. Chỉ ghi cấu hình khi bạn bấm Lưu.</small>
       <label className="builder-field"><span><input style={{ width: 18, height: 18, padding: 0, marginRight: 8, verticalAlign: "middle" }} type="checkbox" checked={value.showZalo !== false} onChange={(event) => onChange({ showZalo: event.target.checked })} /> Hiện nút Zalo</span></label>
       <div className="builder-field"><label>Tên nút Zalo</label><input maxLength={80} value={value.zaloLabel ?? ""} placeholder="Tư vấn qua Zalo" onChange={(event) => onChange({ zaloLabel: event.target.value })} /></div>

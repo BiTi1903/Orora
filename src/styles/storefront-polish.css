@@ -70,3 +70,16 @@
   #root > main .product-detail-image img { object-fit: var(--mobile-image-fit, cover) !important; }
   [style*="--mobile-font-size"] { font-size: var(--mobile-font-size) !important; }
 }
+
+/* One compact consultation control, with channels revealed on demand. */
+#root > main .product-contact-actions.product-consultation,
+.product-contact-actions.product-consultation { display: block; width: 100%; max-width: 360px; margin: 16px 0 24px; }
+.product-consultation-toggle { display: flex; align-items: center; justify-content: center; gap: 9px; width: fit-content; min-height: 40px; padding: 9px 18px; border: 1px solid var(--line); border-radius: 999px; color: var(--rose-deep); background: rgba(255,255,255,.8); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; list-style: none; }
+.product-consultation-toggle::-webkit-details-marker { display: none; }
+.product-consultation-toggle:focus-visible { outline: 2px solid var(--rose-deep); outline-offset: 3px; }
+.product-consultation-chevron { transition: transform .15s; }
+.product-consultation[open] .product-consultation-chevron { transform: rotate(180deg); }
+.product-consultation-options { display: grid; gap: 8px; margin-top: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255,255,255,.85); }
+#root > main .product-consultation-options a,
+.product-consultation-options a { display: flex; width: 100%; min-width: 0; min-height: 40px; padding: 10px 14px; border-radius: 10px; font-size: 13px; text-decoration: none; }
+.product-consultation-options a:hover { box-shadow: 0 2px 8px #0000000c; }
