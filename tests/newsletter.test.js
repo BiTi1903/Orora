@@ -322,3 +322,14 @@ test("chosen-recipient campaigns reject empty, malformed, oversized or inactive 
   assert.equal((await call({ action: "createCampaign", id: "invalid-selection", ...message, recipientIds: [id] })).statusCode, 400);
   assert.equal((await db.collection("newsletterCampaigns").doc("invalid-selection").get()).exists, false);
 });
+
+test("chosen campaign history preserves email addresses even if contacts are deleted later", async () => {
+  const db = memoryDb(); await seed(db, 2); const { call } = admin(db);
+  const ids = [subscriberId("customer1@example.com"), subscriberId("customer0@example.com")];
+  assert.equal((await call({ action: "createCampaign", id: "recipient-snapshot", ...message, recipientIds: ids })).statusCode, 200);
+  await db.collection("newsletterSubscribers").doc(ids[0]).delete();
+  const history = await call(null, { method: "GET", query: {} });
+  const item = history.body.campaigns.find((entry) => entry.id === "recipient-snapshot");
+  assert.deepEqual(new Set(item.recipientEmails), new Set(["customer0@example.com", "customer1@example.com"]));
+  item.recipientIds.forEach((id, index) => assert.equal(subscriberId(item.recipientEmails[index]), id));
+});

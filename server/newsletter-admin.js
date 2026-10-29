@@ -54,12 +54,24 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
           query.get(), settings.get(), campaigns.orderBy("createdAt", "desc").limit(20).get(),
           db.collection("newsletterSettings").doc("orderConfirmation").get(),
         ]);
+        const emailCache = new Map();
+        const campaignHistory = await Promise.all(history.docs.map(async (doc) => {
+          const data = doc.data();
+          let recipientEmails = data.recipientEmails;
+          if (data.recipientIds && !Array.isArray(recipientEmails)) {
+            recipientEmails = await Promise.all(data.recipientIds.map(async (id) => {
+              if (!emailCache.has(id)) emailCache.set(id, contacts.doc(id).get().then((person) => person.data()?.email || ""));
+              return emailCache.get(id);
+            }));
+          }
+          return { id: doc.id, ...data, ...(recipientEmails ? { recipientEmails } : {}), actor: data.actor || data.createdBy || "", manual: true, createdAt: millis(data.createdAt) };
+        }));
         return reply(200, {
           contacts: page.docs.map(publicContact),
           nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null,
           orderTemplate: orderTemplate.exists ? { subject: String(orderTemplate.data().subject || ""), text: String(orderTemplate.data().text || "") } : DEFAULT_ORDER_MESSAGE,
           welcome: welcome.exists ? validateMessage(welcome.data()) : DEFAULT_WELCOME,
-          campaigns: await resolveMailActors(history.docs.map((doc) => ({ id: doc.id, ...doc.data(), actor: doc.data().actor || doc.data().createdBy || "", manual: true, createdAt: millis(doc.data().createdAt) })), lookupUser),
+          campaigns: await resolveMailActors(campaignHistory, lookupUser),
         });
       }
       const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
@@ -128,11 +140,13 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
             if (saved.subject !== message.subject || saved.text !== message.text || JSON.stringify(saved.recipientIds || null) !== JSON.stringify(recipients)) throw new Error("campaign_conflict");
             return;
           }
+          let recipientEmails = null;
           if (recipients) {
             const people = await tx.getAll(...recipients.map((id) => contacts.doc(id)));
             if (people.some((person) => !person.exists || person.data().status !== "active")) throw new Error("invalid_recipients");
+            recipientEmails = people.map((person) => person.data().email);
           }
-          tx.set(campaign, { ...message, recipientIds: recipients, createdAt: new Date(), createdBy: user.uid, ...mailActor(user), status: "draft", cursor: null, accepted: 0, failed: 0, unknown: 0 });
+          tx.set(campaign, { ...message, recipientIds: recipients, recipientEmails, createdAt: new Date(), createdBy: user.uid, ...mailActor(user), status: "draft", cursor: null, accepted: 0, failed: 0, unknown: 0 });
         });
         return reply(200, { id: body.id, message: "Đã tạo thư. Chưa gửi email." });
       }

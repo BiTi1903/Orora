@@ -120,3 +120,9 @@ Lịch sử hiển thị tên/email tài khoản đã đăng nhập khi gửi (t
 Lịch sử thư đơn hàng dùng bảng gọn với cột mẫu riêng. **Các mẫu đã dùng** gom các thư theo tiêu đề/nội dung mẫu gốc; các giá trị như mã đơn và tên khách đã điền không tạo mẫu mới. Thư cũ chưa lưu mẫu gốc chỉ gom được theo nội dung thực tế. Bấm **Xem thư** hoặc **Xem mẫu** mới mở nội dung. **Dùng lại mẫu** chép sang **nội dung gửi riêng**, không ghi đè mẫu tự động. Chọn đơn và kiểm tra nội dung trước khi bấm gửi. Thư cũ có thể chứa thông tin khách cũ cần sửa trước khi dùng lại.
 
 Lịch sử thư gửi danh sách đăng ký cũng có cột tài khoản thao tác, cột mẫu và nút dùng lại để chép sang phần Soạn thư mới.
+
+### Xem người nhận và cột mẫu thư
+
+Phần soạn thư luôn hiện riêng **Email đã chọn**, giữ danh sách này khi đổi từ khóa tìm kiếm và có nút bỏ từng địa chỉ. Hộp xác nhận gửi cũng liệt kê các email cụ thể. Trong lịch sử gửi, bấm số email ở cột Người nhận để xem danh sách: thư mới lưu lại địa chỉ tại lúc tạo, nên vẫn xem được khi liên hệ đã bị xóa sau này. Thư cũ chưa lưu địa chỉ sẽ đối chiếu liên hệ còn tồn tại; nếu không còn thì báo rõ thay vì đoán địa chỉ.
+
+Kho mẫu nằm ở cột bên cạnh phần soạn thư hoặc lịch sử thư đơn hàng trên màn hình rộng. Trên mobile, kho mẫu nằm ở khối riêng phía dưới; có thể xem nội dung hoặc dùng lại mà không đổi người nhận đã chọn.

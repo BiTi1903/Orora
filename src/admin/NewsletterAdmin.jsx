@@ -197,7 +197,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
   const sendCampaign = (event) => {
     event.preventDefault();
     if (recipientMode === "selected" && !eligibleIds.length) return;
-    if (!window.confirm(`Gửi “${draft.subject}” đến ${recipientMode === "selected" ? `${eligibleIds.length} email đã chọn` : "toàn bộ email đang hoạt động trước thời điểm tạo thư"}? Mỗi khách nhận một thư riêng.`)) return;
+    if (!window.confirm(`Gửi “${draft.subject}” đến ${recipientMode === "selected" ? `${eligibleIds.length} email đã chọn:\n${eligibleIds.map((id) => activeContacts.find((item) => item.id === id)?.email).join("\n")}\n` : "toàn bộ email đang hoạt động trước thời điểm tạo thư"}? Mỗi khách nhận một thư riêng.`)) return;
     perform(async () => {
       const id = crypto.randomUUID();
       await request({ action: "createCampaign", id, ...draft, ...(recipientMode === "selected" ? { recipientIds: eligibleIds } : {}) });
@@ -252,6 +252,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
           </form>
           </div>
           <div className="admin-email-panel" hidden={view !== "compose"}>
+          <div className="newsletter-compose-layout">
           <form className="admin-card admin-form" onSubmit={sendCampaign}>
             <h2>Soạn thư mới</h2>
             <fieldset className="newsletter-recipient-picker" disabled={busy}>
@@ -266,6 +267,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
                   {!recipientOptions.length && <p className="admin-muted">Không có email đang hoạt động phù hợp.</p>}
                 </div>
                 <div className="admin-actions"><span className="admin-muted" role="status">Đã chọn {eligibleIds.length} người nhận (tối đa 100).</span><button type="button" className="admin-btn" disabled={!eligibleIds.length} onClick={() => setRecipientIds([])}>Bỏ chọn tất cả</button>{cursor && <button type="button" className="admin-btn" onClick={() => perform(loadRemainingContacts)}>Tải toàn bộ email</button>}</div>
+                <div className="newsletter-selected-recipients" role="region" aria-label="Email đã chọn để gửi"><strong>Email đã chọn ({eligibleIds.length})</strong><div className="newsletter-selected-list">{eligibleIds.map((id) => { const email = activeContacts.find((item) => item.id === id)?.email; return <span className="newsletter-recipient-chip" key={id}><span>{email}</span><button type="button" aria-label={`Bỏ chọn ${email}`} onClick={() => chooseRecipients([id], false)}>×</button></span>; })}{!eligibleIds.length && <p className="admin-muted">Chưa chọn người nhận.</p>}</div></div>
                 <p className="admin-muted">Chỉ gửi đến email đã chọn, kể cả khi bạn đổi từ khóa tìm kiếm. Email tạm ngưng hoặc hủy đăng ký không nhận thư.</p>
               </> : <p className="admin-muted">Gửi đến toàn bộ email đang hoạt động, gồm cả email chưa tải trên màn hình. Danh sách được kiểm tra lại khi gửi.</p>}
             </fieldset>
@@ -274,13 +276,15 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
             <p className="admin-muted">Giữ trang này mở trong lúc gửi. Có thể tạm dừng và tiếp tục bằng thư đã tạo để tránh gửi trùng.</p>
             <button className="admin-btn primary" disabled={busy || (recipientMode === "selected" && !eligibleIds.length)}>{recipientMode === "selected" ? `Gửi tới ${eligibleIds.length} email đã chọn` : "Gửi đến toàn bộ email hoạt động"}</button>
           </form>
+            <aside className="admin-card newsletter-template-column" aria-label="Mẫu thư gửi danh sách"><h2>Mẫu thư đã gửi</h2><p className="admin-muted">Chọn mẫu để chép vào thư mới. Người nhận đang chọn được giữ nguyên.</p><div className="newsletter-template-list">{campaignTemplates.templates.map((template) => <div className="mail-template-row" key={template.id}><div><strong>{template.label}</strong><p className="admin-muted">{template.message.subject}</p><details><summary>Xem nội dung mẫu</summary><pre className="mail-template-preview">{template.message.text}</pre></details></div><button type="button" className="admin-btn" disabled={busy} onClick={() => { if ((draft.subject || draft.text) && !window.confirm("Thay nội dung đang soạn bằng mẫu này?")) return; setDraft({ ...template.message }); setNotice({ text: "Đã chép mẫu vào phần Soạn thư mới. Kiểm tra nội dung và người nhận trước khi gửi." }); }}>Dùng lại {template.label.toLowerCase()}</button></div>)}</div>{!campaignTemplates.templates.length && <p className="admin-muted">Chưa có mẫu từ thư đã gửi.</p>}</aside>
+          </div>
           <div className="admin-card">
             <h2>Lịch sử gửi đến danh sách đăng ký</h2>
             <p className="admin-muted">20 thư gần nhất. Lịch sử thư xác nhận mua hàng nằm trong chi tiết từng đơn.</p>
-            <details className="admin-filter-panel"><summary>Các mẫu thư đã gửi ({campaignTemplates.templates.length})</summary>{campaignTemplates.templates.map((template) => <div className="mail-template-row" key={template.id}><div><strong>{template.label}</strong><p className="admin-muted">{template.message.subject}</p></div><button type="button" className="admin-btn" disabled={busy} onClick={() => { if ((draft.subject || draft.text) && !window.confirm("Thay nội dung đang soạn bằng mẫu này?")) return; setDraft({ ...template.message }); setNotice({ text: "Đã chép mẫu vào phần Soạn thư mới. Kiểm tra nội dung và người nhận trước khi gửi." }); }}>Dùng lại {template.label.toLowerCase()}</button></div>)}</details>
+
             <div style={{ overflowX: "auto" }}><table className="admin-table"><thead><tr><th>Tiêu đề</th><th>Mẫu thư</th><th>Tài khoản thao tác</th><th>Người nhận</th><th>Trạng thái</th><th>Microsoft đã nhận</th><th>Lỗi</th><th>Chưa rõ</th><th>Thao tác</th></tr></thead>
               <tbody>{campaigns.map((item) => <tr key={item.id}>
-                <td className="mail-history-subject" title={item.subject}>{item.subject}</td><td>{campaignTemplates.byMail.get(item.id)?.label}</td><td>{mailActorLabel(item)}</td><td>{item.recipientIds ? `${item.recipientIds.length} email đã chọn` : "Toàn bộ email hoạt động"}</td><td>{STATUS[item.status] || item.status}</td><td>{item.accepted || 0}</td><td>{item.failed || 0}</td><td>{item.unknown || 0}</td>
+                <td className="mail-history-subject" title={item.subject}>{item.subject}</td><td>{campaignTemplates.byMail.get(item.id)?.label}</td><td>{mailActorLabel(item)}</td><td>{item.recipientIds ? <details className="newsletter-history-recipients"><summary>{item.recipientIds.length} email đã chọn</summary><ul>{item.recipientIds.map((id, index) => <li key={id}>{item.recipientEmails?.[index] || `Email cũ không còn trong danh sách (${id.slice(0, 8)}…)`}</li>)}</ul></details> : "Toàn bộ email hoạt động"}</td><td>{STATUS[item.status] || item.status}</td><td>{item.accepted || 0}</td><td>{item.failed || 0}</td><td>{item.unknown || 0}</td>
                 <td>{item.status !== "completed" && <button className="admin-btn" disabled={busy} onClick={() => {
                   if (window.confirm(`Tiếp tục gửi thư “${item.subject}”?`)) perform(() => run(item.id));
                 }}>Tiếp tục gửi</button>}</td>

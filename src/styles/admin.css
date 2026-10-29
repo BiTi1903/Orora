@@ -318,3 +318,19 @@
 .order-mail-custom { margin: 18px 0; padding: 16px; border: 1px solid var(--a-line); border-radius: 14px; }
 
 .mail-history-subject { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.newsletter-compose-layout, .newsletter-history-layout { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 20px; }
+.newsletter-template-column { min-width: 0; }
+.newsletter-template-column .mail-template-row { display: grid; gap: 12px; }
+.newsletter-template-column p { overflow-wrap: anywhere; }
+.newsletter-template-list, .newsletter-template-column .mail-template-library { max-height: 620px; overflow-y: auto; }
+.mail-template-preview { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 13px; line-height: 1.6; }
+.newsletter-selected-recipients { border: 1px solid var(--a-line); border-radius: 12px; padding: 12px; background: #fff8fb; min-width: 0; }
+.newsletter-selected-list { display: flex; flex-wrap: wrap; gap: 8px; max-height: 200px; overflow: auto; margin-top: 10px; }
+.newsletter-recipient-chip { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 6px 10px; background: #fff; border: 1px solid var(--a-line); border-radius: 12px; font-size: 13px; }
+.newsletter-recipient-chip > span { min-width: 0; overflow-wrap: anywhere; }
+.newsletter-recipient-chip button { border: 0; background: transparent; color: var(--a-deep); padding: 4px 8px; font-size: 20px; cursor: pointer; }
+.newsletter-history-recipients summary { cursor: pointer; white-space: nowrap; }
+.newsletter-history-recipients ul { max-height: 200px; min-width: 200px; overflow: auto; padding-left: 18px; font-size: 13px; overflow-wrap: anywhere; }
+.newsletter-history-layout .mail-history-table-scroll { margin-top: 0; }
+@media (min-width: 1280px) { .newsletter-compose-layout, .newsletter-history-layout { grid-template-columns: minmax(0, 1fr) 280px; } }
