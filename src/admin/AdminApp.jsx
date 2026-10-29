@@ -53,7 +53,7 @@ export default function AdminApp() {
       </aside>
 
       <main className="admin-main">
-        {tab === "dashboard" && <Dashboard />}
+        {tab === "dashboard" && <Dashboard sectionCount={TABS.length} />}
         {tab === "home" && <HomeAdmin />}
         {tab === "products" && <ProductsAdmin />}
         {tab === "newsletter" && <NewsletterAdmin />}

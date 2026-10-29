@@ -67,7 +67,8 @@ function Hero({
   const ready = preview || c.loading === false;
   const imageUrl = c.heroImage && ready ? c.heroImage : null;
   // Ảnh riêng cho điện thoại; để trống thì dùng ảnh desktop
-  const imageMobileUrl = c.heroImageMobile && ready ? c.heroImageMobile : null;
+  const mobileImage = c.heroImageMobile ?? c.heroMobileImage;
+  const imageMobileUrl = mobileImage && ready ? mobileImage : null;
 
   // Preload đúng ảnh sẽ hiển thị (điện thoại chỉ tải ảnh mobile, không tải ảnh desktop)
   useEffect(() => {

@@ -334,7 +334,7 @@ function ProductDetail({
   };
 
   return (
-    <main
+    <article
       className={`product-detail ${preview ? "product-detail--preview" : ""}`}
       ref={pageRef}
     >
@@ -578,7 +578,7 @@ function ProductDetail({
             : null
         }
       />
-    </main>
+    </article>
   );
 }
 

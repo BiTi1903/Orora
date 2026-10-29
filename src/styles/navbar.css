@@ -248,3 +248,7 @@
   z-index: 1;
 }
 .builder-preview .nav-links { display: flex !important; }
+
+.mobile-drawer-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.drawer-close { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 40px; width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 50%; background: #fff; color: var(--rose-deep); font: inherit; font-size: 26px; cursor: pointer; }
+.drawer-close:focus-visible { outline: 2px solid var(--rose-deep); outline-offset: 3px; }

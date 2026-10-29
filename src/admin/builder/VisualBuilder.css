@@ -810,3 +810,10 @@
 
 .builder-frame-host { width: 100%; min-width: 0; overflow: auto; padding: 8px 0 16px; }
 .builder-preview-frame { display: block; border: 0; background: #fffafc; border-radius: 0; }
+
+/* Keep controls readable when the canvas is narrow. */
+.builder-canvas-head { height: auto; min-height: 46px; padding: 10px 12px; gap: 10px; flex-wrap: wrap; flex-shrink: 0; }
+.builder-canvas-head > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.builder-device { flex-shrink: 0; }
+.builder-toolbar-actions { min-width: 0; flex-wrap: wrap; gap: 8px; }
+.builder-toolbar-actions .builder-message { max-width: 100%; overflow-wrap: anywhere; }

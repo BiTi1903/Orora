@@ -51,7 +51,7 @@ export function HeroSettings({ data, hero, onChange }) {
           />
           <small className="builder-help">
             Chỉ dùng khi màn hình ≤ 600px. Nên dùng ảnh dọc (khoảng 4:5 hoặc 9:16).
-            Muốn xem thử: thu nhỏ cửa sổ trình duyệt xuống ≤ 600px.
+            Muốn xem thử: chọn Mobile ở phía trên phần xem trước.
           </small>
         </div>
 

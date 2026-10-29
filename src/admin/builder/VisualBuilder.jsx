@@ -1,7 +1,8 @@
+import { editedSectionPayload, changedValues, mergeSavedValues } from "./save-sections";
 import PreviewFrame from "./PreviewFrame";
 import { PREVIEW_PRODUCTS } from "./preview-products";
 import { DEFAULT_TICKER } from "./defaults";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getHomeContent, saveHomeContent } from "../../lib/api";
 import About from "../../components/About";
 import Hero from "../../components/Hero";
@@ -39,7 +40,6 @@ const DEFAULT_HERO = {
   shopButtonLink: "#shop",
   heroImage: "/hero.jpg",
     heroImageMobile: "",
-  heroMobileImage: "",
   heroChip1: "Dịu nhẹ cho da",
   heroChip2: "Thành phần thuần khiết",
   heroChip3: "Cấp ẩm sâu",  
@@ -503,9 +503,10 @@ const DEFAULT_NAV = {
 
 function createNav(data = {}) {
   return {
-    navLogo: data.navLogo || DEFAULT_NAV.navLogo,
-    navLinks: Array.isArray(data.navLinks) && data.navLinks.length
+    navLogo: data.navLogo ?? DEFAULT_NAV.navLogo,
+    navLinks: Array.isArray(data.navLinks)
       ? data.navLinks.map((item, index) => ({
+          ...item,
           label: item.label || "",
           href:
             item.href && item.href !== "/"
@@ -700,7 +701,7 @@ function createHero(data = {}) {
     heroTitle: data.heroTitle ?? DEFAULT_HERO.heroTitle,
     heroDescription: data.heroDescription ?? DEFAULT_HERO.heroDescription,
     heroRotator:
-      data.heroRotator?.length > 0
+      Array.isArray(data.heroRotator)
         ? data.heroRotator
         : DEFAULT_HERO.heroRotator,
     heroButtonText: data.heroButtonText ?? DEFAULT_HERO.heroButtonText,
@@ -708,7 +709,7 @@ function createHero(data = {}) {
     shopButtonText: data.shopButtonText ?? DEFAULT_HERO.shopButtonText,
     shopButtonLink: data.shopButtonLink ?? DEFAULT_HERO.shopButtonLink,
     heroImage: data.heroImage ?? DEFAULT_HERO.heroImage,
-    heroMobileImage: data.heroMobileImage ?? DEFAULT_HERO.heroMobileImage,
+    heroImageMobile: data.heroImageMobile ?? data.heroMobileImage ?? DEFAULT_HERO.heroImageMobile,
     heroChip1: data.heroChip1 ?? DEFAULT_HERO.heroChip1,
     heroChip2: data.heroChip2 ?? DEFAULT_HERO.heroChip2,
     heroChip3: data.heroChip3 ?? DEFAULT_HERO.heroChip3,
@@ -750,10 +751,8 @@ function createCollection(data = {}) {
 }
 
 function createProductDetail(data = {}) {
-  return mergeNestedStyle(
-    DEFAULT_PRODUCT_DETAIL,
-    data.productDetailStyles
-  );
+  const styles = mergeNestedStyle(DEFAULT_PRODUCT_DETAIL, data.productDetailStyles);
+  return { ...styles, detailLabels: { ...(DEFAULT_PRODUCT_DETAIL.detailLabels || {}), ...(data.detailLabels || {}), ...(data.productDetailStyles?.detailLabels || {}) } };
 }
 
 function createFeatures(data = {}) {
@@ -761,8 +760,9 @@ function createFeatures(data = {}) {
     featuresLabel: data.featuresLabel ?? DEFAULT_FEATURES.featuresLabel,
     featuresTitle: data.featuresTitle ?? DEFAULT_FEATURES.featuresTitle,
     features:
-      data.features?.length > 0
+      Array.isArray(data.features)
         ? data.features.map((f) => ({
+            ...f,
             icon: f.icon || "✦",
             title: f.title || "",
             text: f.text || "",
@@ -786,8 +786,9 @@ function createReviews(data = {}) {
     testimonialsTitleEnd:
       data.testimonialsTitleEnd ?? DEFAULT_REVIEWS.testimonialsTitleEnd,
     reviews:
-      data.reviews?.length > 0
+      Array.isArray(data.reviews)
         ? data.reviews.map((r) => ({
+            ...r,
             name: r.name || "",
             text: r.text || "",
             image: r.image || "",
@@ -804,7 +805,7 @@ function createFooter(data = {}) {
   const result = { ...DEFAULT_FOOTER };
   for (const key of Object.keys(DEFAULT_FOOTER)) {
     if (key === "footerStyles") continue;
-    if (data[key] != null && data[key] !== "") {
+    if (data[key] != null) {
       result[key] = data[key];
     }
   }
@@ -823,7 +824,7 @@ function createTicker(data = {}) {
     DEFAULT_TICKER.marqueeStyles.band.color;
 
   return {
-    marqueeWords: data.marqueeWords?.length
+    marqueeWords: Array.isArray(data.marqueeWords)
       ? [...data.marqueeWords]
       : [...DEFAULT_TICKER.marqueeWords],
     marqueeStyles: {
@@ -847,6 +848,114 @@ const SECTION_DEFAULT_SELECTED = {
   footer: "ftLogo",
   ticker: "text",
 };
+
+function buildHomePayload({ about, hero, collection, productDetail, features, reviews, newsletter, footer, ticker, navbar, philosophy }) {
+  return {
+    // About / Story
+    storyLabel: about.label.text,
+    storyTitle: about.title.text,
+    storyHighlight: about.highlight.text,
+    storyText: about.text.text,
+    storyImage: about.image.src,
+    storyImages: Array.isArray(about.image.extras) ? about.image.extras : ["", "", ""],
+    storyStats: Array.isArray(about.stats) ? about.stats : DEFAULT_ABOUT.stats,
+
+    aboutBuilder: about,
+
+    aboutStyles: {
+      label: about.label.style,
+      title: about.title.style,
+      highlight: about.highlight.style,
+      text: about.text.style,
+      statValue: about.statValue,
+      statLabel: about.statLabel,
+    },
+
+    // Hero
+    navLogo: navbar.navLogo,
+    navLinks: navbar.navLinks,
+    navStyles: navbar.navStyles,
+    philosophyLabel: philosophy.philosophyLabel,
+    philosophyBody: philosophy.philosophyBody,
+    philosophyAccentCount: philosophy.philosophyAccentCount,
+    philosophyStyles: philosophy.philosophyStyles,
+
+    heroEyebrow: hero.heroEyebrow,
+    heroTitle: hero.heroTitle,
+    heroDescription: hero.heroDescription,
+    heroRotator: hero.heroRotator,
+    heroButtonText: hero.heroButtonText,
+    heroButtonLink: hero.heroButtonLink,
+    shopButtonText: hero.shopButtonText,
+    shopButtonLink: hero.shopButtonLink,
+    heroImage: hero.heroImage,
+    heroImageMobile: hero.heroImageMobile,
+    heroChip1: hero.heroChip1,
+    heroChip2: hero.heroChip2,
+    heroChip3: hero.heroChip3,
+    heroRingText: hero.heroRingText,
+    heroScrollText: hero.heroScrollText,
+
+    // Collection + Product Card
+    collectionLabel: collection.collectionLabel,
+    collectionTitle: collection.collectionTitle,
+    collectionHighlight: collection.collectionHighlight,
+    collectionStyles: collection.collectionStyles,
+    productCardStyles: collection.productCardStyles,
+
+    // Product Detail page styles
+    productDetailStyles: productDetail,
+    detailLabels: productDetail.detailLabels || {},
+
+    // Features / Nâng cấp bản thân
+    featuresLabel: features.featuresLabel,
+    featuresTitle: features.featuresTitle,
+    features: features.features,
+    featuresStyles: features.featuresStyles,
+
+    // Reviews / Cảm nhận
+    testimonialsLabel: reviews.testimonialsLabel,
+    testimonialsTitle: reviews.testimonialsTitle,
+    testimonialsHighlight: reviews.testimonialsHighlight,
+    testimonialsTitleEnd: reviews.testimonialsTitleEnd,
+    reviews: reviews.reviews,
+    testimonialsStyles: reviews.testimonialsStyles,
+
+    // Newsletter / Nhận tin
+    newsletterTitle: newsletter.newsletterTitle,
+    newsletterHighlight: newsletter.newsletterHighlight,
+    newsletterText: newsletter.newsletterText,
+    newsletterPlaceholder: newsletter.newsletterPlaceholder,
+    newsletterButton: newsletter.newsletterButton,
+    newsletterStyles: newsletter.newsletterStyles,
+
+    // Footer
+    footerLogo: footer.footerLogo,
+    footerDescription: footer.footerDescription,
+    footerInfoTitle: footer.footerInfoTitle,
+    footerAboutText: footer.footerAboutText,
+    footerShopText: footer.footerShopText,
+    footerTermsText: footer.footerTermsText,
+    footerPrivacyText: footer.footerPrivacyText,
+    footerContactTitle: footer.footerContactTitle,
+    footerPhone: footer.footerPhone,
+    footerEmail: footer.footerEmail,
+    footerAddress: footer.footerAddress,
+    footerSocialTitle: footer.footerSocialTitle,
+    footerInstagram: footer.footerInstagram,
+    footerFacebook: footer.footerFacebook,
+    footerTikTok: footer.footerTikTok,
+    footerYouTube: footer.footerYouTube,
+    footerCopyright: footer.footerCopyright,
+    footerCompanyNumber: footer.footerCompanyNumber,
+    footerStyles: footer.footerStyles,
+    marqueeWords: ticker.marqueeWords,
+    marqueeStyles: {
+      ...ticker.marqueeStyles,
+      background: ticker.marqueeStyles?.band?.color || "",
+    },
+  };
+}
 
 export default function VisualBuilder() {
   const [previewDevice, setPreviewDevice] = useState("desktop");
@@ -877,6 +986,9 @@ export default function VisualBuilder() {
   const [selected, setSelected] = useState("title");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const dirtySections = useRef(new Set());
+  const baseline = useRef(null);
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
@@ -909,6 +1021,8 @@ export default function VisualBuilder() {
       .catch((err) => {
         console.error(err);
         if (alive) {
+          setLoadError(true);
+          setMessage({ type: "error", text: "Không tải được cấu hình. Chưa thể lưu; hãy tải lại trang để tránh ghi đè dữ liệu." });
           setAbout(DEFAULT_ABOUT);
           setHero(DEFAULT_HERO);
           setCollection(DEFAULT_COLLECTION);
@@ -985,6 +1099,7 @@ export default function VisualBuilder() {
   ]);
 
   const updateSelected = (patch) => {
+    dirtySections.current.add(activeSection);
     if (activeSection === "philosophy") {
       setPhilosophy((current) => ({ ...current, ...patch }));
       return;
@@ -1220,6 +1335,7 @@ export default function VisualBuilder() {
   };
 
   const updateSelectedStyle = (patch) => {
+    dirtySections.current.add(activeSection);
     if (activeSection === "philosophy") {
       const styleKey = patch._styleKey || (selected === "philLabel" ? "label" : "text");
       const nextPatch = { ...patch };
@@ -1410,124 +1526,33 @@ export default function VisualBuilder() {
     });
   };
 
+  const payload = useMemo(() => buildHomePayload({ about, hero, collection, productDetail, features, reviews, newsletter, footer, ticker, navbar, philosophy }), [about, hero, collection, productDetail, features, reviews, newsletter, footer, ticker, navbar, philosophy]);
+  useEffect(() => {
+    if (!loading && !loadError && baseline.current === null) baseline.current = payload;
+  }, [loading, loadError, payload]);
+
   const save = async () => {
+    if (loading || loadError || saving) return;
+    if (!dirtySections.current.size) return setMessage({ type: "success", text: "Chưa có thay đổi để lưu." });
+    const pendingSections = dirtySections.current;
+    dirtySections.current = new Set();
     setSaving(true);
     setMessage(null);
 
     try {
-      const payload = {
-        // About / Story
-        storyLabel: about.label.text,
-        storyTitle: about.title.text,
-        storyHighlight: about.highlight.text,
-        storyText: about.text.text,
-        storyImage: about.image.src,
-        storyImages: Array.isArray(about.image.extras) ? about.image.extras : ["", "", ""],
-        storyStats: Array.isArray(about.stats) ? about.stats : DEFAULT_ABOUT.stats,
 
-        aboutBuilder: about,
 
-        aboutStyles: {
-          label: about.label.style,
-          title: about.title.style,
-          highlight: about.highlight.style,
-          text: about.text.style,
-          statValue: about.statValue,
-          statLabel: about.statLabel,
-        },
-
-        // Hero
-        navLogo: navbar.navLogo,
-        navLinks: navbar.navLinks,
-        navStyles: navbar.navStyles,
-        philosophyLabel: philosophy.philosophyLabel,
-        philosophyBody: philosophy.philosophyBody,
-        philosophyAccentCount: philosophy.philosophyAccentCount,
-        philosophyStyles: philosophy.philosophyStyles,
-
-        heroEyebrow: hero.heroEyebrow,
-        heroTitle: hero.heroTitle,
-        heroDescription: hero.heroDescription,
-        heroRotator: hero.heroRotator,
-        heroButtonText: hero.heroButtonText,
-        heroButtonLink: hero.heroButtonLink,
-        shopButtonText: hero.shopButtonText,
-        shopButtonLink: hero.shopButtonLink,
-        heroImage: hero.heroImage,
-        heroMobileImage: hero.heroMobileImage,
-        heroChip1: hero.heroChip1,
-        heroChip2: hero.heroChip2,
-        heroChip3: hero.heroChip3,
-        heroRingText: hero.heroRingText,
-        heroScrollText: hero.heroScrollText,
-
-        // Collection + Product Card
-        collectionLabel: collection.collectionLabel,
-        collectionTitle: collection.collectionTitle,
-        collectionHighlight: collection.collectionHighlight,
-        collectionStyles: collection.collectionStyles,
-        productCardStyles: collection.productCardStyles,
-
-        // Product Detail page styles
-        productDetailStyles: productDetail,
-        detailLabels: productDetail.detailLabels || {},
-
-        // Features / Nâng cấp bản thân
-        featuresLabel: features.featuresLabel,
-        featuresTitle: features.featuresTitle,
-        features: features.features,
-        featuresStyles: features.featuresStyles,
-
-        // Reviews / Cảm nhận
-        testimonialsLabel: reviews.testimonialsLabel,
-        testimonialsTitle: reviews.testimonialsTitle,
-        testimonialsHighlight: reviews.testimonialsHighlight,
-        testimonialsTitleEnd: reviews.testimonialsTitleEnd,
-        reviews: reviews.reviews,
-        testimonialsStyles: reviews.testimonialsStyles,
-
-        // Newsletter / Nhận tin
-        newsletterTitle: newsletter.newsletterTitle,
-        newsletterHighlight: newsletter.newsletterHighlight,
-        newsletterText: newsletter.newsletterText,
-        newsletterPlaceholder: newsletter.newsletterPlaceholder,
-        newsletterButton: newsletter.newsletterButton,
-        newsletterStyles: newsletter.newsletterStyles,
-
-        // Footer
-        footerLogo: footer.footerLogo,
-        footerDescription: footer.footerDescription,
-        footerInfoTitle: footer.footerInfoTitle,
-        footerAboutText: footer.footerAboutText,
-        footerShopText: footer.footerShopText,
-        footerTermsText: footer.footerTermsText,
-        footerPrivacyText: footer.footerPrivacyText,
-        footerContactTitle: footer.footerContactTitle,
-        footerPhone: footer.footerPhone,
-        footerEmail: footer.footerEmail,
-        footerAddress: footer.footerAddress,
-        footerSocialTitle: footer.footerSocialTitle,
-        footerInstagram: footer.footerInstagram,
-        footerFacebook: footer.footerFacebook,
-        footerTikTok: footer.footerTikTok,
-        footerYouTube: footer.footerYouTube,
-        footerCopyright: footer.footerCopyright,
-        footerCompanyNumber: footer.footerCompanyNumber,
-        footerStyles: footer.footerStyles,
-        marqueeWords: ticker.marqueeWords,
-        marqueeStyles: {
-          ...ticker.marqueeStyles,
-          background: ticker.marqueeStyles?.band?.color || "",
-        },
-      };
-
-      await saveHomeContent(payload);
+      const patch = changedValues(baseline.current || {}, editedSectionPayload(payload, pendingSections));
+      if (!Object.keys(patch).length) return setMessage({ type: "success", text: "Chưa có thay đổi để lưu." });
+      await saveHomeContent(patch);
+      baseline.current = mergeSavedValues(baseline.current || {}, patch);
 
       setMessage({
         type: "success",
         text: "Đã lưu toàn bộ thay đổi.",
       });
     } catch (err) {
+      pendingSections.forEach((section) => dirtySections.current.add(section));
       console.error(err);
 
       setMessage({
@@ -1577,7 +1602,7 @@ export default function VisualBuilder() {
             type="button"
             className="admin-btn primary"
             onClick={save}
-            disabled={saving}
+            disabled={saving || loadError}
           >
             {saving ? "Đang lưu..." : "💾 Lưu tất cả"}
           </button>
@@ -1631,7 +1656,7 @@ export default function VisualBuilder() {
           </div>
         </aside>
 
-        <main className="builder-canvas">
+        <div className="builder-canvas">
           <div className="builder-canvas-head">
             <span>Sản phẩm mẫu · Xem trước tĩnh · Không thay đổi dữ liệu</span>
 
@@ -1723,7 +1748,7 @@ export default function VisualBuilder() {
               />
             )}
           </PreviewFrame>
-        </main>
+        </div>
 
         <aside className="builder-settings">
           <StylePanel

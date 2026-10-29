@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { changedValues, mergeSavedValues } from "../builder/save-sections";
+import { useEffect, useRef, useState } from "react";
 import { defaultHomeContent } from "../../data/content";
 import { explainError, getHomeContent, saveHomeContent } from "../../lib/api";
 import { defaultExtras, mergeExtras } from "./Defaults";
@@ -8,15 +9,21 @@ export default function useHomeForm(fields) {
   const [form, setForm] = useState({ ...defaultHomeContent, ...defaultExtras });
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const baseline = useRef(null);
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
     let alive = true;
     getHomeContent()
       .then((v) => {
-        if (alive && v) setForm({ ...defaultHomeContent, ...defaultExtras, ...v, ...mergeExtras(v) });
+        if (alive) {
+          const loaded = { ...defaultHomeContent, ...defaultExtras, ...(v || {}), ...mergeExtras(v || {}) };
+          baseline.current = loaded;
+          setForm(loaded);
+        }
       })
-      .catch(() => {})
+      .catch((err) => { if (alive) { setLoadError(true); setMessage({ type: "error", text: `Không tải được cấu hình: ${explainError(err)}. Hãy tải lại trước khi lưu.` }); } })
       .finally(() => alive && setLoading(false));
     return () => {
       alive = false;
@@ -33,7 +40,7 @@ export default function useHomeForm(fields) {
 
   const save = async (e, overrides = {}) => {
     e?.preventDefault();
-    if (loading) return;
+    if (loading || loadError || busy) return;
     setBusy(true);
     setMessage(null);
     try {
@@ -42,14 +49,16 @@ export default function useHomeForm(fields) {
         if (form[k] !== undefined) payload[k] = form[k]; // Firestore không nhận undefined
       });
       Object.assign(payload, overrides);
-      await saveHomeContent(payload);
-      setForm((f) => ({ ...f, ...payload }));
+      const patch = changedValues(baseline.current || {}, payload);
+      if (!Object.keys(patch).length) { setMessage({ type: "success", text: "Chưa có thay đổi để lưu." }); return; }
+      await saveHomeContent(patch);
+      baseline.current = mergeSavedValues(baseline.current || {}, patch);
+      setForm((f) => mergeSavedValues(f, patch));
       setMessage({ type: "success", text: "Đã lưu phần này." });
     } catch (err) {
       setMessage({ type: "error", text: explainError(err) });
-    }
-    setBusy(false);
+    } finally { setBusy(false); }
   };
 
-  return { form, loading, busy, message, change, set, updateItem, addItem, removeItem, save };
+  return { form, loading, loadError, busy, message, change, set, updateItem, addItem, removeItem, save };
 }

@@ -191,11 +191,11 @@ aboutStyles: {
 };
 
 const pick = (data, key) =>
-  data?.[key]?.length
+  Array.isArray(data?.[key])
     ? data[key]
     : defaultExtras[key];
 
-/* Các danh sách rỗng thì quay về mặc định */
+/* Giữ danh sách rỗng do admin chủ động xóa; chỉ dùng mẫu khi chưa có trường. */
 export const mergeExtras = (data = {}) => ({
   features: pick(data, "features"),
   storyStats: pick(data, "storyStats"),

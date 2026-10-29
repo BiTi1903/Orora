@@ -4,6 +4,7 @@ export function SectionShell({
   message,
   busy,
   loading,
+  loadError,
   onSubmit,
   children,
 }) {
@@ -44,7 +45,7 @@ export function SectionShell({
           <button
             type="submit"
             className="admin-btn primary"
-            disabled={busy}
+            disabled={busy || loadError}
             style={{
               flexShrink: 0,
               minWidth: 120,
@@ -62,7 +63,7 @@ export function SectionShell({
           Đang tải dữ liệu...
         </p>
       ) : (
-        children
+        <fieldset disabled={busy || loadError} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>{children}</fieldset>
       )}
 
       {/* THÔNG BÁO */}

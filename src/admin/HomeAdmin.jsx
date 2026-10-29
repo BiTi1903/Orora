@@ -15,6 +15,7 @@ const META = {
   editphilosophy: ["Triết lý", 4.8],
   editsteps: ["Quy trình", 5],
   editreviews: ["Cảm nhận", 6],
+  editnewletter: ["Nhận tin", 7],
   editnewsletter: ["Nhận tin", 7],
   editfooter: ["Footer", 8],
 };

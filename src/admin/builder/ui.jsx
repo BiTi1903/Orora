@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { toSafeHexColor } from "./ui.helpers";
 import {
   FONT_OPTIONS,
@@ -265,6 +266,7 @@ export function SelectField({
   suffix = "",
   onChange,
 }) {
+  const id = useId();
   const list = Array.isArray(options) ? options : [];
   const raw = value ?? "";
   const hasValue = list.some((option) => String(option) === String(raw));
@@ -279,9 +281,10 @@ export function SelectField({
 
   return (
     <div className="builder-field">
-      <label>{label}</label>
+      <label htmlFor={id}>{label}</label>
 
       <select
+        id={id}
         value={selectValue}
         onChange={(e) => onChange(e.target.value)}
       >

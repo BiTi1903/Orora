@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
@@ -25,6 +25,7 @@ function Navbar({
   onSelect,
 }) {
   const location = useLocation();
+  const navRef = useRef(null);
   const [menuPath, setMenuPath] = useState(null);
   const [previousPath, setPreviousPath] = useState(location.pathname);
   if (previousPath !== location.pathname) {
@@ -40,15 +41,29 @@ function Navbar({
     : [];
   const styles = data.navStyles || {};
 
-  // Lock body scroll khi menu mở
+  // A portal preview belongs to its iframe document, not the admin page.
   useEffect(() => {
-    if (menuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    if (!menuOpen) return;
+    const nav = navRef.current;
+    const body = nav?.ownerDocument.body;
+    if (!body) return;
+    const previous = body.style.overflow;
+    body.style.overflow = "hidden";
+    const ownerDocument = nav.ownerDocument;
+    ownerDocument.querySelector(".drawer-close")?.focus();
+    const onEscape = (event) => {
+      if (event.key !== "Escape") return;
+      setMenuPath(null);
+    };
+    ownerDocument.addEventListener("keydown", onEscape);
+    const desktop = ownerDocument.defaultView.matchMedia("(min-width: 769px)");
+    const onDesktop = (event) => { if (event.matches) setMenuPath(null); };
+    desktop.addEventListener("change", onDesktop);
     return () => {
-      document.body.style.overflow = "";
+      body.style.overflow = previous;
+      ownerDocument.removeEventListener("keydown", onEscape);
+      desktop.removeEventListener("change", onDesktop);
+      if (nav.isConnected) nav.querySelector(".menu")?.focus();
     };
   }, [menuOpen]);
 
@@ -67,7 +82,7 @@ function Navbar({
 
   return (
     <>
-      <nav className={`navbar${preview ? " navbar--preview" : ""}`}>
+      <nav ref={navRef} className={`navbar${preview ? " navbar--preview" : ""}`}>
         <Link
           to="/"
           className={`logo ${selectedClass("navLogo")}`}
@@ -100,6 +115,8 @@ function Navbar({
           onClick={toggleMenu}
           aria-label={menuOpen ? "Đóng menu" : "Mở menu"}
           aria-expanded={menuOpen}
+          style={{ visibility: menuOpen ? "hidden" : undefined }}
+          tabIndex={menuOpen ? -1 : 0}
         >
           <span className="menu-icon" />
         </button>
@@ -111,11 +128,12 @@ function Navbar({
         onClick={closeMenu}
       />
 
-      <aside className={`mobile-drawer${menuOpen ? " is-open" : ""}`}>
+      <aside className={`mobile-drawer${menuOpen ? " is-open" : ""}`} inert={!menuOpen}>
         <div className="mobile-drawer-header">
           <Link to="/" className="logo" onClick={closeMenu}>
             {logo}<span></span>
           </Link>
+          <button type="button" className="drawer-close" aria-label="Đóng menu" onClick={closeMenu}>×</button>
         </div>
 
         <nav className="mobile-drawer-links">
