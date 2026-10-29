@@ -19,7 +19,7 @@ function readBody(req, env, maxBytes = 8000) {
   if (!body || Buffer.byteLength(JSON.stringify(body)) > maxBytes) throw Object.assign(new Error("Dữ liệu không hợp lệ."), { status: 400 });
   return body;
 }
-export function createOrderHandler({ getDb, sendMail, env = process.env, now = () => Date.now() }) {
+export function createOrderHandler({ getDb, sendMail, schedule, env = process.env, now = () => Date.now() }) {
   return async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
     if (req.method !== "POST") { res.setHeader("Allow", "POST"); return res.status(405).json({ message: "Chỉ nhận đơn bằng POST." }); }
@@ -68,7 +68,14 @@ export function createOrderHandler({ getDb, sendMail, env = process.env, now = (
         return record;
       });
       let mailStatus = result.confirmationMail?.state || "pending";
-      try { const outcome = await sendOrderConfirmation({ db, orderId: body.requestId, sendMail }); mailStatus = outcome.state || mailStatus; } catch { /* Order remains accepted; admin can inspect the send state. */ }
+      const completeMail = async () => {
+        try { const outcome = await sendOrderConfirmation({ db, orderId: body.requestId, sendMail }); mailStatus = outcome.state || mailStatus; }
+        catch { console.error("Order accepted; confirmation mail processing did not finish"); }
+      };
+      const task = completeMail();
+      if (schedule) {
+        try { schedule(task); } catch { await task; }
+      } else await task;
       return res.status(201).json({ code: result.code, mailStatus, subtotal: result.subtotal, paymentMethod: result.paymentMethod, message: "Đã nhận đơn hàng. ORORA sẽ liên hệ xác nhận sản phẩm, phí giao hàng và cách thanh toán." });
     } catch (error) {
       return res.status(error.status || 503).json({ message: error.status ? error.message : "Chưa xác nhận được đơn. Vui lòng thử gửi lại hoặc liên hệ ORORA." });

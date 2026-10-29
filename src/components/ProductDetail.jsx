@@ -495,11 +495,14 @@ function ProductDetail({
 
           <section className={`purchase-options ${selectedClass("pdPurchaseOptions")}`} aria-label="Chọn kênh mua hàng" data-builder-key={preview ? "pdPurchaseOptions" : undefined} onClick={preview ? select("pdPurchaseOptions") : undefined}>
             <h2>{purchase.heading?.trim() || "Chọn cách mua hàng"}</h2>
-            <button type="button" className="purchase-website" style={{ ...css("purchaseOptions"), background: purchase.websiteBackground }} onClick={preview ? select("pdPurchaseOptions") : () => setOrderProductId(product.id || product.slug)} aria-expanded={!preview && orderProductId === (product.id || product.slug)}>{purchase.websiteLabel?.trim() || "Đặt hàng trên website"}</button>
-            {(preview || tiktokShop || facebookShop) && <div className="purchase-social">
-              {(preview || tiktokShop) && <a className="purchase-tiktok" href={preview ? undefined : tiktokShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.tiktokBackground }}>{purchase.tiktokLabel?.trim() || "Mua trên TikTok"} <span aria-hidden="true">↗</span></a>}
-              {(preview || facebookShop) && <a className="purchase-facebook" href={preview ? undefined : facebookShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.facebookBackground }}>{purchase.facebookLabel?.trim() || "Mua qua Facebook"} <span aria-hidden="true">↗</span></a>}
-            </div>}
+            <button type="button" className="purchase-website" style={{ ...css("purchaseOptions"), background: purchase.websiteBackground }} onClick={preview ? select("pdPurchaseOptions") : () => setOrderProductId(product.id || product.slug)} aria-expanded={!preview && orderProductId === (product.id || product.slug)}>{(purchase.websiteLabel?.trim() && purchase.websiteLabel.trim() !== "Đặt hàng trên website" ? purchase.websiteLabel.trim() : "Đặt hàng ngay")}</button>
+            {(preview || tiktokShop || facebookShop) && <>
+              <div className="purchase-divider"><span>hoặc</span></div>
+              <div className="purchase-social" aria-label="Đặt hàng trên mạng xã hội">
+                {(preview || facebookShop) && <a className="purchase-facebook" href={preview ? undefined : facebookShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.facebookBackground, ...(purchase.facebookBackground ? { color: "#fff" } : {}) }}><span className="purchase-channel-icon" aria-hidden="true">f</span><span>{purchase.facebookLabel?.trim() && purchase.facebookLabel.trim() !== "Mua qua Facebook" ? purchase.facebookLabel.trim() : "Đặt tại Facebook"}</span><svg className="purchase-external" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8" /></svg></a>}
+                {(preview || tiktokShop) && <a className="purchase-tiktok" href={preview ? undefined : tiktokShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.tiktokBackground, ...(purchase.tiktokBackground ? { color: "#fff" } : {}) }}><span className="purchase-channel-icon" aria-hidden="true">♪</span><span>{purchase.tiktokLabel?.trim() && purchase.tiktokLabel.trim() !== "Mua trên TikTok" ? purchase.tiktokLabel.trim() : "Đặt tại TikTok"}</span><svg className="purchase-external" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8" /></svg></a>}
+              </div>
+            </>}
             {!preview && orderProductId === (product.id || product.slug) && <OrderForm key={product.id || product.slug} product={product} home={home} onClose={() => setOrderProductId(null)} />}
           </section>
 

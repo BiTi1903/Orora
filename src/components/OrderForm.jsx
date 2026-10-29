@@ -51,7 +51,7 @@ export default function OrderForm({ product, home, onClose }) {
       <label className="order-consent"><input name="consent" type="checkbox" required /><span>Tôi đồng ý để ORORA liên hệ, gửi email xác nhận và xử lý đơn hàng theo thông tin đã cung cấp.</span></label>
       <label hidden aria-hidden="true">Website<input name="website" autoComplete="off" tabIndex={-1} /></label>
       {!methods.length && <p role="status">Website đang tạm ngưng nhận đơn. Vui lòng liên hệ ORORA hoặc mua qua các kênh bên trên.</p>}
-      <button className="website-order-submit" disabled={busy || !methods.length}>{busy ? "Đang gửi đơn…" : "Gửi đơn hàng"}</button>
+      <button className="website-order-submit" disabled={busy || !methods.length}>{busy ? "Đang lưu đơn…" : "Đặt hàng ngay"}</button>
     </fieldset>
     {result?.error && <p className="order-error" role="alert">{result.error}</p>}
   </form>;

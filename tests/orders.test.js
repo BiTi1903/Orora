@@ -147,3 +147,26 @@ test("Outlook order checks require order authorization and preserve immutable se
   await call("owner"); assert.equal(reads, 1);
   const saved = (await ref.get()).data(); assert.equal(saved.subject, "Original"); assert.equal(saved.text, "Sent body"); assert.equal(saved.state, "accepted");
 });
+
+test("order is durably saved and acknowledged before slow background email; duplicate submissions send once", async () => {
+  const db = memoryDb(); await db.collection("products").doc("serum").set({ name: "Serum", price: "250.000đ", active: true });
+  let release; const gate = new Promise((resolve) => { release = resolve; }); const tasks = []; let calls = 0;
+  const handler = createOrderHandler({ getDb: () => db, env, schedule: (task) => tasks.push(task), sendMail: async () => { calls++; await gate; } });
+  const data = body();
+  const call = async () => { const res = response(); await handler({ method: "POST", headers, body: data }, res); return res; };
+  const first = await call(); assert.equal(first.statusCode, 201); assert.equal(first.body.mailStatus, "pending");
+  const saved = (await db.collection("orders").doc(data.requestId).get()).data(); assert.equal(saved.code, first.body.code); assert.equal(saved.subtotal, 500000);
+  const second = await call(); assert.equal(second.statusCode, 201); assert.equal(second.body.code, first.body.code);
+  release(); await Promise.all(tasks);
+  assert.equal(calls, 1); assert.equal((await db.collection("orders").get()).docs.length, 1);
+  assert.equal((await db.collection("orders").doc(data.requestId).get()).data().confirmationMail.state, "accepted");
+});
+
+test("background confirmation failure preserves the accepted order and records admin failure", async () => {
+  const db = memoryDb(); await db.collection("products").doc("serum").set({ name: "Serum", price: "250.000đ", active: true });
+  const tasks = []; const data = body();
+  const handler = createOrderHandler({ getDb: () => db, env, schedule: (task) => tasks.push(task), sendMail: async () => { throw new Error("mail_smtp_auth_failed"); } });
+  const res = response(); await handler({ method: "POST", headers, body: data }, res); assert.equal(res.statusCode, 201);
+  await Promise.all(tasks);
+  const order = (await db.collection("orders").doc(data.requestId).get()).data(); assert.equal(order.status, "new"); assert.equal(order.paymentStatus, "unpaid"); assert.equal(order.confirmationMail.state, "failed");
+});

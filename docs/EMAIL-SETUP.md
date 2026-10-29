@@ -202,3 +202,7 @@ Cần cấp cho ứng dụng đang dùng `MS_CLIENT_ID` quyền **Microsoft Grap
 Thư mới gửi SMTP có Message-ID riêng và header `X-Orora-Mail-Id`; Graph có header đối chiếu và lưu bản trong Sent Items. SMTP có thể không lưu bản Sent Items: vẫn có thể đối chiếu NDR bằng Message-ID, nhưng thiếu bản Đã gửi không đồng nghĩa gửi thất bại. Thư đăng ký mới giữ mã của lần gửi mới, không dùng trạng thái bounce của lần cũ.
 
 Kiểm thử repository dùng Microsoft giả lập và Firestore bộ nhớ; chưa xác minh Mail.Read hoặc đọc hộp thư thật trong phiên sửa mã này. Muốn xác nhận đã phát tới máy chủ người nhận cần Message Trace của Exchange; không gán trạng thái đã giao hoặc đã đọc chỉ dựa trên Sent Items/việc chưa thấy NDR. Thư Outlook soạn trực tiếp và thư gửi thử chưa có trang lịch sử riêng không được tự nhập vào lịch sử website.
+
+### Xác nhận đơn hàng ở nền
+
+`/api/orders` chỉ trả mã đơn thành công sau khi giao dịch Firestore đã lưu đơn và giá sản phẩm trên máy chủ. Trên Vercel, `waitUntil` tiếp tục xử lý email xác nhận sau phản hồi, trong giới hạn 60 giây của Function. Khách không phải chờ SMTP; giao diện hiển thị email đang xử lý. Lỗi gửi không hủy đơn và được ghi trong lịch sử admin. Đây không phải hàng đợi có worker tự thử lại. Mã yêu cầu đơn và sự kiện `confirmation-auto` ngăn tạo đơn hoặc gửi thư trùng khi khách gửi lại.
