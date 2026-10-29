@@ -9,4 +9,4 @@ export async function orderRequest(body, params = {}) {
   if (!response.ok) throw new Error(data.message || "Chưa xử lý được đơn hàng.");
   return data;
 }
-export const MAIL_STATES = { pending: "Chưa gửi", sending: "Đang xử lý", accepted: "Microsoft đã nhận", failed: "Gửi lỗi", unknown: "Chưa rõ kết quả" };
+export const MAIL_STATES = { pending: "Chưa gửi", sending: "Đang xử lý", accepted: "MS đã nhận", failed: "Gửi lỗi", unknown: "Chưa rõ kết quả" };

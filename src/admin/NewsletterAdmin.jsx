@@ -1,3 +1,4 @@
+import EmailExport from "./EmailExport";
 import OutlookCheck from "./OutlookCheck";
 import CampaignOutlookStatus from "./CampaignOutlookStatus";
 import { hasOrderTokens } from "../lib/template-kinds";
@@ -118,26 +119,6 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
     return items;
   };
 
-  const exportContacts = () => perform(async () => {
-    const items = await loadRemainingContacts();
-    if (!items) return;
-    const rows = filterContacts(items);
-    if (!rows.length) {
-      setNotice({ text: "Không có email phù hợp để xuất." });
-      return;
-    }
-    const { default: writeXlsxFile } = await import("write-excel-file/browser");
-    const data = [
-      ["Email", "Trạng thái", "Thư tự động"].map((value) => ({ value, fontWeight: "bold" })),
-      ...rows.map((item) => [item.email, CONTACT_STATUS[item.status] || item.status,
-        { accepted: "Microsoft đã nhận", pending: "Đang xử lý", failed: "Lỗi", unknown: "Chưa rõ" }[item.mailStatus] || "—"
-      ].map((value) => ({ type: String, value }))),
-    ];
-    await writeXlsxFile(data, {
-      columns: [{ width: 42 }, { width: 24 }, { width: 24 }],
-    }).toFile(`ORORA-email-${new Date().toISOString().slice(0, 10)}.xlsx`);
-    if (alive.current) setNotice({ text: `Đã xuất ${rows.length} email ra Excel.` });
-  });
   const allVisibleSelected = visibleContacts.length > 0 && visibleContacts.every((item) => selectedContacts.includes(item.id));
 
   const manageContacts = (ids, operation) => {
@@ -170,7 +151,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
           return;
         }
         if (result.completed) {
-          setNotice({ text: "Đã xử lý xong thư. “Microsoft đã nhận” chưa có nghĩa thư đã vào hộp thư khách." });
+          setNotice({ text: "Đã xử lý xong thư. “MS đã nhận” chưa có nghĩa thư đã vào hộp thư khách." });
           return;
         }
         await new Promise((resolve) => window.setTimeout(resolve, 5000));
@@ -218,8 +199,9 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
       {!ready ? <p className="admin-muted">Cần kết nối API email để tải dữ liệu. Nếu có lỗi, kiểm tra cấu hình rồi bấm Tải lại.</p> : (
         <>
           <nav className="admin-section-tabs" aria-label="Các mục email marketing">
-            {[["contacts", "Danh sách email"], ["write", "Viết Thư"], ["orderHistory", "Thư đơn hàng đã gửi"], ["templates", "Mẫu Thư"]].map(([key, label]) => <button type="button" key={key} aria-current={view === key ? "page" : undefined} onClick={() => setView(key)}>{label}</button>)}
+            {[["contacts", "Danh sách email"], ["write", "Viết Thư"], ["orderHistory", "Thư đơn hàng đã gửi"], ["templates", "Mẫu Thư"], ["export", "Xuất Excel"]].map(([key, label]) => <button type="button" key={key} aria-current={view === key ? "page" : undefined} onClick={() => setView(key)}>{label}</button>)}
           </nav>
+          {view === "export" && <EmailExport request={request} />}
           {view === "orderHistory" && <OrderMailHistory onReuse={(message, original) => { setWriterDrafts((drafts) => ({ ...drafts, order_auto: message })); setWriterMode("order_auto"); setView("write"); setNotice({ text: original ? "Đã chép mẫu vào nội dung gửi riêng. Kiểm tra và chọn đơn trước khi gửi; mẫu tự động không thay đổi." : "Đã chép nội dung thư cũ vào nội dung gửi riêng. Hãy sửa thông tin khách và mã đơn cũ trước khi gửi." }); }} />}
           <div hidden={view !== "templates"}><MailTemplateLibrary request={request} active={view === "templates"} onUse={applyTemplate} /></div>
           <div className="admin-email-panel" hidden={view !== "write"}>
@@ -249,7 +231,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
             <h2>Lịch sử gửi đến danh sách đăng ký</h2>
             <p className="admin-muted">20 thư gần nhất. Lịch sử thư xác nhận mua hàng nằm trong chi tiết từng đơn.</p>
 
-            <div style={{ overflowX: "auto" }}><table className="admin-table"><thead><tr><th>Tiêu đề</th><th>Mẫu lúc gửi</th><th>Tài khoản thao tác</th><th>Người nhận</th><th>Trạng thái</th><th>Microsoft đã nhận</th><th>Lỗi</th><th>Chưa rõ</th><th>Thao tác</th></tr></thead>
+            <div style={{ overflowX: "auto" }}><table className="admin-table"><thead><tr><th>Tiêu đề</th><th>Mẫu lúc gửi</th><th>Tài khoản thao tác</th><th>Người nhận</th><th>Trạng thái</th><th>MS đã nhận</th><th>Lỗi</th><th>Chưa rõ</th><th>Thao tác</th></tr></thead>
               <tbody>{campaigns.map((item) => <tr key={item.id}>
                 <td className="mail-history-subject" title={item.subject}>{item.subject}</td><td><button type="button" className="admin-template-link" onClick={() => setPreview({ title: campaignTemplates.byMail.get(item.id)?.label || "Mẫu thư đã gửi", message: { subject: item.subject, text: item.text }, kind: "private" })}>{campaignTemplates.byMail.get(item.id)?.label || "Xem mẫu"}</button></td><td>{mailActorLabel(item)}</td><td>{item.recipientIds ? <details className="newsletter-history-recipients"><summary>{item.recipientIds.length} email đã chọn</summary><ul>{item.recipientIds.map((id, index) => <li key={id}>{item.recipientEmails?.[index] || `Email cũ không còn trong danh sách (${id.slice(0, 8)}…)`}</li>)}</ul></details> : "Toàn bộ email hoạt động"}</td><td>{STATUS[item.status] || item.status}</td><td>{item.accepted || 0}</td><td>{item.failed || 0}</td><td>{item.unknown || 0}</td>
                 <td><button type="button" className="admin-btn" onClick={() => setOutlookCampaign(item)}>Trạng thái Outlook</button>{item.status !== "completed" && <button className="admin-btn" disabled={busy} onClick={() => {
@@ -268,7 +250,6 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
                   onFocus={() => { if (cursor && !busy) perform(loadRemainingContacts); }}
                   onChange={(event) => { setEmailSearch(event.target.value); setSelectedContacts([]); }} />
               </div>
-              <button type="button" className="admin-btn" disabled={busy} onClick={exportContacts}>Xuất Excel</button>
             </div>
             <div className="newsletter-bulk-toolbar">
               <ContactActions label="Thao tác cho email đã chọn" disabled={busy || !selectedContacts.length} onApply={(operation) => manageContacts(selectedContacts, operation)} />
@@ -296,7 +277,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
                 }} /></td>
                 <td>{item.email}</td>
                 <td><span className={`newsletter-contact-status ${item.status}`}>{CONTACT_STATUS[item.status] || item.status}</span></td>
-                <td>{{ accepted: "Microsoft đã nhận", pending: "Đang xử lý", failed: "Lỗi", unknown: "Chưa rõ" }[item.mailStatus] || "—"}<OutlookCheck outlook={item.outlook} label={item.email} check={() => request({ action: "checkWelcomeOutlook", id: item.id })} /></td>
+                <td>{{ accepted: "MS đã nhận", pending: "Đang xử lý", failed: "Lỗi", unknown: "Chưa rõ" }[item.mailStatus] || "—"}<OutlookCheck outlook={item.outlook} label={item.email} check={() => request({ action: "checkWelcomeOutlook", id: item.id })} /></td>
                 <td><ContactActions label={`Thao tác cho ${item.email}`} disabled={busy} onApply={(operation) => manageContacts([item.id], operation)} /></td>
               </tr>)}</tbody></table></div>
             {!visibleContacts.length && <p className="admin-muted">Không có email phù hợp.</p>}

@@ -59,6 +59,21 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         const [page, typeList] = await Promise.all([query.get(), db.collection("newsletterTemplateTypes").get()]);
         return reply(200, { types: typeList.docs.map((doc) => ({ id: doc.id, name: doc.data().name })), templates: page.docs.map((doc) => ({ id: doc.id, ...doc.data(), kind: normalizeTemplateKind(doc.data().kind), revision: doc.data().revision || 1, createdAt: millis(doc.data().createdAt), updatedAt: millis(doc.data().updatedAt) })), nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
       }
+      if (req.method === "GET" && req.query?.campaignHistory === "1") {
+        let query = campaigns.orderBy("createdAt", "desc").limit(50);
+        const cursor = req.query?.cursor;
+        if (cursor) {
+          if (!validId(cursor)) return reply(400, { message: "Trang không hợp lệ." });
+          const last = await campaigns.doc(cursor).get();
+          if (!last.exists) return reply(400, { message: "Không tìm thấy mốc lịch sử. Hãy xuất lại." });
+          query = query.startAfter(last);
+        }
+        const page = await query.get();
+        return reply(200, { campaigns: page.docs.map((doc) => {
+          const item = doc.data();
+          return { id: doc.id, subject: item.subject || "", text: item.text || "", templateName: item.templateName || "", templateRevision: item.templateRevision || 0, actor: item.actor || item.createdBy || "", actorName: item.actorName || "", actorEmail: item.actorEmail || "", createdAt: millis(item.createdAt) };
+        }), nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
+      }
       if (req.method === "GET") {
         const cursor = req.query?.cursor;
         if (cursor && !/^[a-f0-9]{64}$/.test(cursor)) return reply(400, { message: "Trang không hợp lệ." });
@@ -217,7 +232,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
           message = renderOrderMessage(validateOrderTemplate(body), order);
         } else if (body.mailType && hasOrderTokens(message)) throw new Error("order_context_required");
         await sendMail(email, message);
-        return reply(200, { message: `Microsoft đã nhận thư gửi tới ${email}. Kiểm tra cả mục thư rác.` });
+        return reply(200, { message: `MS đã nhận thư gửi tới ${email}. Kiểm tra cả mục thư rác.` });
       }
       if (!["createCampaign", "sendBatch"].includes(body.action) || !validId(body.id)) return reply(400, { message: "Thao tác không hợp lệ." });
       if (!env.MS_TENANT_ID || !env.MS_CLIENT_ID || !env.MS_CLIENT_SECRET) return reply(503, { message: "Chưa cấu hình Microsoft 365 trên máy chủ." });

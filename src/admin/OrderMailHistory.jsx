@@ -62,6 +62,6 @@ export default function OrderMailHistory({ onReuse }) {
     </MailPreviewDialog>}
     {!busy && !error && !filtered.length && <p className="admin-muted">Chưa có thư đơn hàng phù hợp.</p>}
     {filtered.length > visibleCount && <button className="admin-btn" onClick={() => setVisibleCount((value) => value + 30)}>Hiển thị thêm thư</button>}
-    <p className="admin-muted">“Microsoft đã nhận” chưa bảo đảm thư đã tới hộp thư khách. Đối chiếu Outlook cần quyền Graph Mail.Read. Không có NDR không đồng nghĩa đã nhận thư. Lịch sử này gồm thư gửi từ website; thư soạn trực tiếp trong Outlook không được đồng bộ.</p>
+    <p className="admin-muted">“MS đã nhận” chưa bảo đảm thư đã tới hộp thư khách. Đối chiếu Outlook cần quyền Graph Mail.Read. Không có NDR không đồng nghĩa đã nhận thư. Lịch sử này gồm thư gửi từ website; thư soạn trực tiếp trong Outlook không được đồng bộ.</p>
   </div>;
 }
