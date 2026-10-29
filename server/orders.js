@@ -121,9 +121,9 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, env = p
       await db.runTransaction(async (tx) => {
         const ref = orders.doc(body.id); const current = await tx.get(ref);
         if (!current.exists) throw Object.assign(new Error("Không tìm thấy đơn hàng."), { status: 404 });
-        tx.set(ref, { ...(body.status !== undefined ? { status: body.status } : { paymentStatus: body.paymentStatus }), updatedAt: new Date(), updatedBy: user.uid }, { merge: true });
+        tx.set(ref, { ...(body.status !== undefined ? { status: body.status, ...(body.status === "completed" ? { paymentStatus: "paid" } : {}) } : { paymentStatus: body.paymentStatus }), updatedAt: new Date(), updatedBy: user.uid }, { merge: true });
       });
-      return res.status(200).json({ message: "Đã cập nhật trạng thái đơn hàng." });
+      return res.status(200).json({ message: body.status === "completed" ? "Đã hoàn tất đơn hàng và ghi nhận đã thanh toán." : "Đã cập nhật trạng thái đơn hàng." });
     } catch (error) { return res.status(error.status || 503).json({ message: error.status ? error.message : "Không tải hoặc cập nhật được đơn hàng." }); }
   };
 }

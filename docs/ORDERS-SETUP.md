@@ -42,6 +42,6 @@ Lịch sử tại `orders/{id}/mailEvents` lưu người nhận, nội dung đã
 
 ## Thanh toán và thống kê theo email
 
-Danh sách đơn hiển thị **Thanh toán khi nhận hàng (COD)** cho đơn COD chưa thu tiền; đơn chuyển khoản chưa được admin đánh dấu nhận tiền hiển thị **Chưa thanh toán**. Cả hai chỉ hiện **Đã thanh toán** khi admin đánh dấu xác nhận tiền thực nhận. Phương thức `paymentMethod` của đơn luôn được giữ riêng, không bị đổi khi cập nhật thanh toán.
+Danh sách đơn hiển thị **Thanh toán khi nhận hàng (COD)** cho đơn COD chưa thu tiền; đơn chuyển khoản chưa được admin đánh dấu nhận tiền hiển thị **Chưa thanh toán**. Cả hai hiện **Đã thanh toán** khi admin tích ô xác nhận nhận tiền hoặc chọn trạng thái **Hoàn tất**. Chuyển khỏi Hoàn tất không tự bỏ ghi nhận thanh toán; admin điều chỉnh bằng ô thanh toán. Đơn đã hoàn tất trước thay đổi này không bị tự sửa hàng loạt: tích ô thanh toán nếu đã nhận tiền. Phương thức `paymentMethod` của đơn luôn được giữ riêng, không bị đổi khi cập nhật thanh toán.
 
 Trong **Đơn hàng → Khách hàng theo email**, hệ thống tải tất cả các trang đơn để tổng hợp số đơn, tổng tạm tính, số tiền đã thanh toán và chưa thu theo email (không phân biệt hoa thường). Có tìm kiếm khách hàng và nút mở các đơn của email đó. Số đơn gồm đơn hủy, nhưng cột tiền loại đơn hủy, chưa tính phí giao hàng và không cộng đơn chờ báo giá. Đơn cũ thiếu email được báo số lượng riêng; không sửa dữ liệu cũ để tự gán người mua. Đây là thống kê đơn hàng, không phải báo cáo doanh thu hay đối soát thanh toán.

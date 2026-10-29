@@ -97,3 +97,18 @@ test("admin order pagination returns the next older page without duplicates", as
   assert.equal(second.body.orders.length, 2); assert.equal(second.body.nextCursor, null);
   assert.equal(new Set([...first.body.orders, ...second.body.orders].map((item) => item.id)).size, 52);
 });
+
+test("completing an order records payment atomically without changing method, amount or buyer", async () => {
+  for (const paymentMethod of ["cod", "bank_transfer"]) {
+    const { db, call } = await setup(); const data = { ...body(), paymentMethod }; await call(data);
+    const authorized = admin(db);
+    assert.equal((await authorized({ id: data.requestId, status: "completed", paymentStatus: "unpaid" })).statusCode, 200);
+    const record = (await db.collection("orders").doc(data.requestId).get()).data();
+    assert.equal(record.status, "completed"); assert.equal(record.paymentStatus, "paid");
+    assert.equal(record.paymentMethod, paymentMethod); assert.equal(record.subtotal, 500000); assert.equal(record.customer.email, data.email);
+    await authorized({ id: data.requestId, status: "shipping" });
+    assert.equal((await db.collection("orders").doc(data.requestId).get()).data().paymentStatus, "paid");
+    await authorized({ id: data.requestId, paymentStatus: "unpaid" });
+    assert.equal((await db.collection("orders").doc(data.requestId).get()).data().paymentStatus, "unpaid");
+  }
+});
