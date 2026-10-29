@@ -460,3 +460,11 @@
   .order-field-row { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .purchase-social a { gap: 6px; padding-inline: 8px; font-size: 12px; }
 }
+
+.order-received-details { margin: 20px 0; padding-top: 16px; border-top: 1px solid var(--line); }
+.order-received-details h3 { margin: 0 0 12px; font-size: 15px; }
+.order-received-details dl { display: grid; gap: 10px; margin: 0; }
+.order-received-details dl > div { display: grid; grid-template-columns: minmax(100px, 1fr) minmax(0, 2fr); gap: 12px; font-size: 13px; line-height: 1.6; }
+.order-received-details dt { color: var(--plum-soft); }
+.order-received-details dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; color: var(--plum); }
+@media (max-width: 400px) { .order-received-details dl > div { grid-template-columns: minmax(0, 1fr); gap: 2px; } }

@@ -12,12 +12,27 @@ export default function OrderForm({ product, home, onClose }) {
   const unitPrice = parseVndPrice(product.price);
   if (result?.code) return <section className="website-order order-received" role="status">
     <h2>Đã nhận đơn hàng</h2><p>Mã đơn: <strong>{result.code}</strong></p>
-    <p>{result.message}</p><p>{result.mailStatus === "accepted" ? "Vui lòng kiểm tra email xác nhận và mục thư rác." : result.mailStatus === "failed" ? "Đơn đã được nhận nhưng chưa gửi được email xác nhận. Bạn có thể liên hệ ORORA với mã đơn bên trên." : "Email xác nhận đang được xử lý."}</p><p>Tạm tính: {result.subtotal === null ? "ORORA sẽ báo giá khi xác nhận" : formatVnd(result.subtotal)}</p><button type="button" onClick={onClose}>Đóng</button>
+    <p>{result.message}</p>
+    <div className="order-received-details"><h3>Thông tin người nhận</h3><dl>
+      {[["Họ và tên", result.recipient.name], ["Số điện thoại", result.recipient.phone], ["Email", result.recipient.email], ["Địa chỉ nhận hàng", result.recipient.address], ["Ghi chú", result.recipient.note]].filter(([, value]) => value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+    </dl></div>
+    <div className="order-received-details"><h3>Thông tin đơn hàng</h3><dl>
+      <div><dt>Sản phẩm</dt><dd>{result.productName}</dd></div>
+      <div><dt>Số lượng</dt><dd>{result.quantity}</dd></div>
+      <div><dt>Thanh toán</dt><dd>{PAYMENT_LABELS[result.paymentMethod] || result.paymentMethod}</dd></div>
+      <div><dt>Tạm tính</dt><dd>{result.subtotal === null ? "ORORA sẽ báo giá khi xác nhận" : formatVnd(result.subtotal)}</dd></div>
+    </dl></div>
+    <p className="order-help">Nếu thông tin chưa đúng, vui lòng liên hệ ORORA và cung cấp mã đơn để được hỗ trợ.</p>
+    <p>{result.mailStatus === "accepted" ? "Vui lòng kiểm tra email xác nhận và mục thư rác." : result.mailStatus === "failed" ? "Đơn đã được nhận nhưng chưa gửi được email xác nhận. Bạn có thể liên hệ ORORA với mã đơn bên trên." : "Email xác nhận đang được xử lý."}</p><button type="button" onClick={onClose}>Đóng</button>
   </section>;
   return <form ref={formRef} className="website-order" aria-label="Đặt hàng trên website" onSubmit={async (event) => {
     event.preventDefault();
     if (busy || !methods.length) return;
     const data = new FormData(event.currentTarget);
+    const recipient = Object.fromEntries(["name", "phone", "email", "address", "note"].map((key) => [key, String(data.get(key) || "").trim()]));
+    recipient.email = recipient.email.toLowerCase();
+    recipient.phone = recipient.phone.replace(/[\s().-]/g, "");
+    const orderedProduct = { productName: product.name, quantity };
     setBusy(true); setResult(null);
     try {
       const response = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
@@ -28,7 +43,7 @@ export default function OrderForm({ product, home, onClose }) {
       const json = await response.json();
       if (!response.ok) throw new Error(json.message || "Chưa gửi được đơn hàng.");
       if (!json.code) throw new Error("Chưa xác nhận được mã đơn. Vui lòng thử gửi lại.");
-      setResult(json);
+      setResult({ ...json, recipient, ...orderedProduct });
     } catch (error) { setResult({ error: error instanceof TypeError || error instanceof SyntaxError ? "Kết nối bị gián đoạn. Hãy thử gửi lại hoặc liên hệ ORORA." : error.message || "Chưa gửi được đơn. Vui lòng thử lại." }); }
     finally { setBusy(false); }
   }}>
