@@ -419,17 +419,19 @@
 .purchase-options > h2 { margin: 0 0 12px; font-size: 14px; font-weight: 500; color: var(--plum-soft); }
 .purchase-website, .purchase-social a, .website-order-submit {
   display: flex; justify-content: center; align-items: center; gap: 8px;
-  width: 100%; min-height: 48px; padding: 13px 18px; border: 1px solid transparent;
-  border-radius: 14px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  width: 100%; min-height: 40px; padding: 9px 14px; border: 1px solid transparent;
+  border-radius: 10px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
 }
 .purchase-website, .website-order-submit { background: var(--rose-deep); color: #fff; }
-.purchase-divider { display: flex; align-items: center; gap: 12px; margin: 12px 0; color: var(--plum-soft); font-size: 12px; }
+.purchase-website { max-width: 360px; }
+.website-order-submit { width: auto; min-width: 180px; max-width: 100%; }
+.purchase-divider { display: flex; align-items: center; max-width: 360px; gap: 10px; margin: 8px 0; color: var(--plum-soft); font-size: 12px; }
 .purchase-divider::before, .purchase-divider::after { content: ""; height: 1px; flex: 1; background: var(--line); }
-.purchase-social { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.purchase-social a { min-width: 0; min-height: 42px; padding: 9px 12px; border-radius: 11px; font-size: 13px; font-weight: 500; text-decoration: none; transition: box-shadow .15s; }
+.purchase-social { display: grid; max-width: 360px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.purchase-social a { min-width: 0; min-height: 36px; padding: 7px 10px; border-radius: 9px; font-size: 12px; font-weight: 500; text-decoration: none; transition: box-shadow .15s; }
 .purchase-social a:hover { box-shadow: 0 2px 8px #00000012; }
 .purchase-social a:focus-visible, .purchase-website:focus-visible { outline: 2px solid var(--rose-deep); outline-offset: 3px; }
-.purchase-channel-icon { flex: 0 0 auto; font-size: 19px; font-weight: 700; line-height: 1; }
+.purchase-channel-icon { flex: 0 0 auto; font-size: 16px; font-weight: 700; line-height: 1; }
 .purchase-external { flex: 0 0 auto; font-size: 12px; opacity: .65; }
 .purchase-social a:only-child { grid-column: 1 / -1; }
 .purchase-social .purchase-tiktok { background: #fafafa; color: #242424; border-color: #dedede; }
