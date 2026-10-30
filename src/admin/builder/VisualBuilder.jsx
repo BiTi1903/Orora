@@ -33,6 +33,8 @@ const DEFAULT_HERO = {
   heroEyebrow: "WELCOME TO",
   heroTitle: "ORORA",
   heroDescription: "Create something beautiful.",
+  heroRotatorPrefix: "Làn da",
+  heroRotatorSuffix: "mỗi ngày",
   heroRotator: ["dịu nhẹ", "rạng rỡ", "tự tin", "tỏa sáng"],
   heroButtonText: "Khám phá",
   heroButtonLink: "#about",
@@ -700,6 +702,8 @@ function createHero(data = {}) {
     heroEyebrow: data.heroEyebrow ?? DEFAULT_HERO.heroEyebrow,
     heroTitle: data.heroTitle ?? DEFAULT_HERO.heroTitle,
     heroDescription: data.heroDescription ?? DEFAULT_HERO.heroDescription,
+    heroRotatorPrefix: data.heroRotatorPrefix ?? DEFAULT_HERO.heroRotatorPrefix,
+    heroRotatorSuffix: data.heroRotatorSuffix ?? DEFAULT_HERO.heroRotatorSuffix,
     heroRotator:
       Array.isArray(data.heroRotator)
         ? data.heroRotator
@@ -884,6 +888,8 @@ function buildHomePayload({ about, hero, collection, productDetail, features, re
     heroTitle: hero.heroTitle,
     heroDescription: hero.heroDescription,
     heroRotator: hero.heroRotator,
+    heroRotatorPrefix: hero.heroRotatorPrefix,
+    heroRotatorSuffix: hero.heroRotatorSuffix,
     heroButtonText: hero.heroButtonText,
     heroButtonLink: hero.heroButtonLink,
     shopButtonText: hero.shopButtonText,

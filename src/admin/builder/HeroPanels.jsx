@@ -78,6 +78,8 @@ export function HeroSettings({ data, hero, onChange }) {
     const text = (hero.heroRotator || []).join("\n");
     return (
       <SettingGroup title="Các từ đổi liên tục">
+        <div className="builder-field"><label htmlFor="hero-rotator-prefix">Chữ trước từ chuyển động</label><input id="hero-rotator-prefix" maxLength={100} value={hero.heroRotatorPrefix ?? "Làn da"} placeholder="Làn da" onChange={(event) => onChange({ heroRotatorPrefix: event.target.value })} /></div>
+        <div className="builder-field"><label htmlFor="hero-rotator-suffix">Chữ sau từ chuyển động</label><input id="hero-rotator-suffix" maxLength={100} value={hero.heroRotatorSuffix ?? "mỗi ngày"} placeholder="mỗi ngày" onChange={(event) => onChange({ heroRotatorSuffix: event.target.value })} /></div>
         <div className="builder-field">
           <label>Mỗi dòng một từ</label>
           <textarea

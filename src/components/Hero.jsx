@@ -207,13 +207,13 @@ function Hero({
           data-builder-key={preview ? "rotator" : undefined}
           onClick={select("rotator")}
         >
-          Làn da{" "}
+          {c.heroRotatorPrefix ?? "Làn da"}{" "}
           <span className="rotator-box">
             <em key={preview ? previewWord : i}>
               {preview ? previewWord : words[i % words.length]}
             </em>
           </span>{" "}
-          mỗi ngày
+          {c.heroRotatorSuffix ?? "mỗi ngày"}
         </p>}
 
         {/* =========================
