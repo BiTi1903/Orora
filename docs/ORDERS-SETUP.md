@@ -51,3 +51,14 @@ Trong **Đơn hàng → Khách hàng theo email**, hệ thống tải tất cả
 Danh sách đơn có tìm mã/ID, tên, email hoặc điện thoại; lọc trạng thái và bộ lọc nâng cao theo khoảng tạm tính, ngày đặt (giờ Việt Nam), tình trạng thu tiền và phương thức thanh toán. Có sắp xếp mới/cũ hoặc số tiền tăng/giảm. Bộ lọc áp dụng cho các đơn đã tải; dùng **Tải toàn bộ đơn để lọc** nếu cần tìm trên tất cả các trang. Đơn chưa có giá không thuộc khoảng tiền đã nhập. **Xóa bộ lọc đơn** khôi phục cách xem mặc định.
 
 Thống kê khách hàng có lọc khoảng tổng giá trị và sắp xếp theo số đơn, tổng giá trị, tiền đã thanh toán hoặc tên. Những bộ lọc này chỉ thay đổi cách hiển thị, không cập nhật đơn hoặc dữ liệu khách.
+
+## Địa chỉ hai cấp và phí giao hàng
+
+- Admin có mục **Phí vận chuyển**. Chọn tỉnh/thành để lưu phí chung, tùy chọn phường/xã để đặt phí riêng. Phí riêng được ưu tiên; để trống phí riêng và lưu sẽ dùng lại phí chung. Số **0** là miễn phí, để trống phí chung là chưa có báo giá. Lưu từng vùng trước, sau đó bật **Tự tính phí ship khi khách đặt hàng** và lưu trạng thái.
+- Cấu hình lưu riêng ở `settings/home.shippingSettings`, không thay đổi link shop, nội dung giao diện hoặc các đơn cũ. Khi bật, địa chỉ chưa có mức phí sẽ chưa nhận đơn; khi tắt vẫn nhận đơn nhưng phí/tổng tiền chờ xác nhận như trước.
+- Form dùng tỉnh/thành → phường/xã, kèm số nhà/tên đường. `/api/addresses` phục vụ dữ liệu `vietnam-divisions-js@3.0.0`, hệ thống mới NQ 202/2025/QH15 (34 tỉnh/thành, 3.321 đơn vị cấp xã). Dữ liệu được đóng gói trên máy chủ, không gửi dữ liệu khách sang dịch vụ địa chỉ ngoài. Đây là snapshot của nguồn thư viện cộng đồng, không phải tra cứu trực tiếp cơ sở dữ liệu nhà nước; cần cập nhật phiên bản khi địa giới/mã thay đổi. Bản cũ 63 tỉnh, quận/huyện không được dùng cho đơn mới.
+- Máy chủ xác thực phường/xã thuộc tỉnh/thành, lấy tên chuẩn, tính lại giá sản phẩm + phí giao hàng và lưu `shippingFee`, `totalAmount` cùng địa chỉ chuẩn trên đơn. Giá ship đổi giữa lúc xem và đặt sẽ bị từ chối để khách kiểm tra lại. Gửi lại cùng yêu cầu giữ giá/địa chỉ của đơn đã nhận, không tạo đơn thứ hai. Dữ liệu địa chỉ và tiền của đơn cũ không được sửa hàng loạt.
+- Thư đơn hàng hỗ trợ thêm `{{shippingFee}}`, `{{totalAmount}}`. Nội dung mẫu đã lưu không tự đổi; có thể thêm biến khi soạn/sửa mẫu trong Email. Thống kê tiền sản phẩm theo email vẫn không cộng phí vận chuyển vào doanh số sản phẩm.
+- QR và webhook đối soát chưa được bật trong bước này. Cần tài khoản dịch vụ nhận/đối soát, liên kết ngân hàng và cấu hình xác thực webhook trước khi ghi nhận tiền tự động. Không suy diễn đặt đơn hoặc quét QR là thanh toán thành công.
+
+Kiểm thử dùng bộ địa chỉ thật của thư viện, Firestore trong bộ nhớ và SMTP giả; không giao dịch tiền thật. Môi trường làm việc không truy cập trực tiếp được các trang API địa chỉ/SePay (proxy trả 403), nên không xác minh trực tiếp bảng phí/ngân hàng được hỗ trợ của SePay tại thời điểm này.

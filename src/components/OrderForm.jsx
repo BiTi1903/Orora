@@ -1,8 +1,13 @@
+import useAddressOptions from "../hooks/useAddressOptions";
+import { shippingFeeFor } from "../lib/shipping";
 import { useEffect, useRef, useState } from "react";
 import { availablePaymentMethods, PAYMENT_LABELS, parseVndPrice, formatVnd } from "../lib/commerce";
 
 export default function OrderForm({ product, home, onClose }) {
   const [quantity, setQuantity] = useState(1);
+  const [provinceCode, setProvinceCode] = useState("");
+  const [wardCode, setWardCode] = useState("");
+  const addresses = useAddressOptions(provinceCode);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
   const requestId = useRef(crypto.randomUUID());
@@ -10,6 +15,8 @@ export default function OrderForm({ product, home, onClose }) {
   useEffect(() => { formRef.current?.scrollIntoView({ block: "start", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); }, []);
   const methods = availablePaymentMethods(home);
   const unitPrice = parseVndPrice(product.price);
+  const shipping = shippingFeeFor(home.shippingSettings, provinceCode, wardCode);
+  const total = unitPrice === null || shipping.fee === null ? null : unitPrice * (Number(quantity) || 0) + shipping.fee;
   if (result?.code) return <section className="website-order order-received" role="status">
     <h2>Đã nhận đơn hàng</h2><p>Mã đơn: <strong>{result.code}</strong></p>
     <p>{result.message}</p>
@@ -20,16 +27,21 @@ export default function OrderForm({ product, home, onClose }) {
       <div><dt>Sản phẩm</dt><dd>{result.productName}</dd></div>
       <div><dt>Số lượng</dt><dd>{result.quantity}</dd></div>
       <div><dt>Thanh toán</dt><dd>{PAYMENT_LABELS[result.paymentMethod] || result.paymentMethod}</dd></div>
-      <div><dt>Tạm tính</dt><dd>{result.subtotal === null ? "ORORA sẽ báo giá khi xác nhận" : formatVnd(result.subtotal)}</dd></div>
+      <div><dt>Tiền sản phẩm</dt><dd>{result.subtotal === null ? "ORORA sẽ báo giá khi xác nhận" : formatVnd(result.subtotal)}</dd></div>
+      <div><dt>Phí giao hàng</dt><dd>{result.shippingFee == null ? "Xác nhận sau" : formatVnd(result.shippingFee)}</dd></div>
+      <div><dt>Tổng tiền</dt><dd>{result.totalAmount == null ? "ORORA sẽ xác nhận tổng tiền" : formatVnd(result.totalAmount)}</dd></div>
     </dl></div>
     <p className="order-help">Nếu thông tin chưa đúng, vui lòng liên hệ ORORA và cung cấp mã đơn để được hỗ trợ.</p>
     <p>{result.mailStatus === "accepted" ? "Vui lòng kiểm tra email xác nhận và mục thư rác." : result.mailStatus === "failed" ? "Đơn đã được nhận nhưng chưa gửi được email xác nhận. Bạn có thể liên hệ ORORA với mã đơn bên trên." : "Email xác nhận đang được xử lý."}</p><button type="button" onClick={onClose}>Đóng</button>
   </section>;
   return <form ref={formRef} className="website-order" aria-label="Đặt hàng trên website" onSubmit={async (event) => {
     event.preventDefault();
-    if (busy || !methods.length) return;
+    if (busy || !methods.length || !provinceCode || !wardCode || (home.shippingSettings?.enabled === true && shipping.fee === null)) return;
     const data = new FormData(event.currentTarget);
     const recipient = Object.fromEntries(["name", "phone", "email", "address", "note"].map((key) => [key, String(data.get(key) || "").trim()]));
+    const province = addresses.provinces.find((item) => item.code === provinceCode);
+    const ward = addresses.wards.find((item) => item.code === wardCode);
+    recipient.address = `${String(data.get("addressDetail") || "").trim()}, ${ward?.name || ""}, ${province?.name || ""}`;
     recipient.email = recipient.email.toLowerCase();
     recipient.phone = recipient.phone.replace(/[\s().-]/g, "");
     const orderedProduct = { productName: product.name, quantity };
@@ -37,7 +49,7 @@ export default function OrderForm({ product, home, onClose }) {
     try {
       const response = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
         requestId: requestId.current, productId: product.id || product.slug, quantity, expectedPriceText: String(product.price ?? ""),
-        name: data.get("name"), phone: data.get("phone"), email: data.get("email"), address: data.get("address"), note: data.get("note"),
+        name: data.get("name"), phone: data.get("phone"), email: data.get("email"), provinceCode, wardCode, addressDetail: data.get("addressDetail"), expectedShippingFee: shipping.fee, note: data.get("note"),
         paymentMethod: data.get("paymentMethod"), consent: data.get("consent") === "on", website: data.get("website"),
       }) });
       const json = await response.json();
@@ -55,18 +67,26 @@ export default function OrderForm({ product, home, onClose }) {
         <label>Số điện thoại<input name="phone" type="tel" required maxLength={25} autoComplete="tel" /></label>
       </div>
       <label>Email nhận xác nhận đơn<input name="email" type="email" required maxLength={254} autoComplete="email" /></label>
-      <label>Địa chỉ nhận hàng<textarea name="address" rows={2} required minLength={10} maxLength={500} autoComplete="street-address" placeholder="Số nhà, đường, phường/xã, tỉnh/thành phố" /></label>
+      <div className="order-field-row">
+        <label>Tỉnh / Thành phố<select aria-label="Tỉnh / Thành phố" name="provinceCode" required value={provinceCode} disabled={addresses.loadingProvinces || !addresses.provinces.length} onChange={(event) => { setProvinceCode(event.target.value); setWardCode(""); }}><option value="">{addresses.loadingProvinces ? "Đang tải tỉnh/thành…" : "Chọn tỉnh/thành"}</option>{addresses.provinces.map((item) => <option key={item.code} value={item.code}>{item.name}</option>)}</select></label>
+        <label>Phường / Xã<select aria-label="Phường / Xã" name="wardCode" required value={wardCode} disabled={!provinceCode || addresses.loadingWards || !addresses.wards.length} onChange={(event) => setWardCode(event.target.value)}><option value="">{addresses.loadingWards ? "Đang tải phường/xã…" : "Chọn phường/xã"}</option>{addresses.wards.map((item) => <option key={item.code} value={item.code}>{item.name}</option>)}</select></label>
+      </div>
+      {addresses.error && <p className="order-error" role="alert">{addresses.error} <button type="button" onClick={addresses.retry}>Tải lại địa chỉ</button></p>}
+      <label>Số nhà, tên đường<textarea name="addressDetail" rows={2} required minLength={5} maxLength={350} autoComplete="street-address" placeholder="Số nhà, tên đường, tòa nhà…" /></label>
       <div className="order-field-row">
         <label>Số lượng<input name="quantity" type="number" min={1} max={20} required value={quantity} onChange={(event) => setQuantity(event.target.value === "" ? "" : Number(event.target.value))} /></label>
         <label>Phương thức thanh toán<select aria-label="Phương thức thanh toán" name="paymentMethod" required defaultValue={methods[0] || ""}>{methods.map((key) => <option key={key} value={key}>{PAYMENT_LABELS[key]}</option>)}</select></label>
       </div>
       <label>Ghi chú (không bắt buộc)<textarea name="note" rows={2} maxLength={1000} /></label>
       <div className="order-summary"><span>Tạm tính</span><strong>{unitPrice === null ? "Shop sẽ liên hệ báo giá" : formatVnd(unitPrice * (Number(quantity) || 0))}</strong></div>
-      <p className="order-help">Phí giao hàng và thông tin thanh toán sẽ được ORORA xác nhận khi liên hệ. Form này không thu tiền trực tuyến.</p>
+      <div className="order-summary"><span>Phí giao hàng</span><strong>{shipping.fee === null ? "Chưa xác định" : formatVnd(shipping.fee)}</strong></div>
+      <div className="order-summary"><span>Tổng tiền</span><strong>{total === null ? "ORORA sẽ xác nhận" : formatVnd(total)}</strong></div>
+      {shipping.reason && <p className="order-help">{shipping.reason}</p>}
+      <p className="order-help">Chưa thu tiền tại bước đặt đơn. ORORA sẽ hướng dẫn thanh toán sau khi tiếp nhận.</p>
       <label className="order-consent"><input name="consent" type="checkbox" required /><span>Tôi đồng ý để ORORA liên hệ, gửi email xác nhận và xử lý đơn hàng theo thông tin đã cung cấp.</span></label>
       <label hidden aria-hidden="true">Website<input name="website" autoComplete="off" tabIndex={-1} /></label>
       {!methods.length && <p role="status">Website đang tạm ngưng nhận đơn. Vui lòng liên hệ ORORA hoặc mua qua các kênh bên trên.</p>}
-      <button className="website-order-submit" disabled={busy || !methods.length}>{busy ? "Đang lưu đơn…" : "Đặt hàng ngay"}</button>
+      <button className="website-order-submit" disabled={busy || !methods.length || !provinceCode || !wardCode || (home.shippingSettings?.enabled === true && shipping.fee === null)}>{busy ? "Đang lưu đơn…" : "Đặt hàng ngay"}</button>
     </fieldset>
     {result?.error && <p className="order-error" role="alert">{result.error}</p>}
   </form>;

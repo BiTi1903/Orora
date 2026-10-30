@@ -8,7 +8,7 @@ export const DEFAULT_ORDER_MESSAGE = {
   subject: "ORORA xác nhận đã nhận đơn {{orderCode}}",
   text: "Chào {{customerName}},\n\nORORA đã nhận đơn hàng {{orderCode}} của bạn.\n\nSản phẩm: {{productName}}\nSố lượng: {{quantity}}\nTạm tính: {{subtotal}}\nPhương thức thanh toán: {{paymentMethod}}\nĐịa chỉ nhận hàng: {{address}}\nSố điện thoại: {{phone}}\n\nORORA sẽ liên hệ để xác nhận đơn, phí giao hàng và thông tin thanh toán. Thư này xác nhận đã nhận yêu cầu đặt hàng, chưa xác nhận thanh toán.\n\nCảm ơn bạn đã chọn ORORA!",
 };
-export const ORDER_TOKENS = ["customerName", "orderCode", "productName", "quantity", "subtotal", "paymentMethod", "address", "phone", "email"];
+export const ORDER_TOKENS = ["customerName", "orderCode", "productName", "quantity", "subtotal", "shippingFee", "totalAmount", "paymentMethod", "address", "phone", "email"];
 export const validOrderEmail = (value) => typeof value === "string" && value.length <= 254 && /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/.test(value);
 export function validateOrderTemplate(value) {
   const message = validateMessage(value);
@@ -16,7 +16,7 @@ export function validateOrderTemplate(value) {
   return message;
 }
 export function renderOrderMessage(template, order) {
-  const values = { customerName: order.customer.name, orderCode: order.code, productName: order.product.name, quantity: order.quantity, subtotal: order.subtotal === null ? "ORORA sẽ báo giá" : formatVnd(order.subtotal), paymentMethod: PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod, address: order.customer.address, phone: order.customer.phone, email: order.customer.email };
+  const values = { customerName: order.customer.name, orderCode: order.code, productName: order.product.name, quantity: order.quantity, subtotal: order.subtotal === null ? "ORORA sẽ báo giá" : formatVnd(order.subtotal), shippingFee: order.shippingFee == null ? "ORORA sẽ xác nhận" : formatVnd(order.shippingFee), totalAmount: order.totalAmount == null ? "ORORA sẽ xác nhận" : formatVnd(order.totalAmount), paymentMethod: PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod, address: order.customer.address, phone: order.customer.phone, email: order.customer.email };
   const fill = (text, subject = false) => text.replace(/\{\{(\w+)\}\}/g, (_, key) => subject ? String(values[key] ?? "").replace(/[\r\n]/g, " ") : String(values[key] ?? ""));
   return validateMessage({ subject: fill(template.subject, true), text: fill(template.text) });
 }

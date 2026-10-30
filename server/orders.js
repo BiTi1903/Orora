@@ -1,3 +1,5 @@
+import { resolveDeliveryAddress } from "./addresses.js";
+import { shippingFeeFor } from "../src/lib/shipping.js";
 import { allocateOrderCode } from "./order-code.js";
 import { reserveOrderInventory, settleOrderInventory } from "./inventory.js";
 import { syncOutlookStatus, OUTLOOK_ERROR_MESSAGES } from "./outlook-status.js";
@@ -28,6 +30,8 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
     try {
       const body = readBody(req, env);
       const customer = Object.fromEntries(["name", "phone", "email", "address", "note"].map((key) => [key, typeof body[key] === "string" ? body[key].trim() : ""]));
+      const delivery = await resolveDeliveryAddress(body);
+      if (delivery) Object.assign(customer, delivery);
       customer.email = customer.email.toLowerCase();
       customer.phone = customer.phone.replace(/[\s().-]/g, "");
       if (!uuid(body.requestId) || typeof body.productId !== "string" || !/^[a-zA-Z0-9_-]{1,150}$/.test(body.productId) || !Number.isInteger(body.quantity) || body.quantity < 1 || body.quantity > 20 || customer.name.length < 2 || customer.name.length > 100 || !/^\+?\d{7,15}$/.test(customer.phone) || !validOrderEmail(customer.email) || customer.address.length < 10 || customer.address.length > 500 || customer.note.length > 1000 || body.consent !== true || !Object.hasOwn(PAYMENT_LABELS, body.paymentMethod) || body.website) {
@@ -62,14 +66,19 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
         const data = product.data();
         const unitPrice = parseVndPrice(data.price);
         if (body.expectedPriceText !== undefined && String(body.expectedPriceText).trim() !== String(data.price ?? "").trim()) throw Object.assign(new Error("Giá sản phẩm vừa thay đổi. Hãy tải lại trang để xem giá mới trước khi đặt."), { status: 409 });
+        const shipping = shippingFeeFor(settings.data()?.shippingSettings, delivery?.provinceCode, delivery?.wardCode);
+        if (settings.data()?.shippingSettings?.enabled === true && shipping.fee === null) throw Object.assign(new Error(shipping.reason), { status: 400 });
+        if (body.expectedShippingFee !== undefined && body.expectedShippingFee !== shipping.fee) throw Object.assign(new Error("Phí giao hàng vừa thay đổi. Hãy tải lại trang để kiểm tra tổng tiền trước khi đặt."), { status: 409 });
+        const subtotal = unitPrice === null ? null : unitPrice * body.quantity;
+        const totalAmount = subtotal === null || shipping.fee === null ? null : subtotal + shipping.fee;
         const allocated = allocateOrderCode(pool.data(), body.paymentMethod, chooseCodeIndex);
         const record = {
           code: allocated.code,
           orderDate,
           customer, quantity: body.quantity, product: { id: product.id, name: String(data.name || ""), image: String(data.image || ""), priceText: String(data.price ?? ""), unitPrice },
-          subtotal: unitPrice === null ? null : unitPrice * body.quantity,
+          subtotal, totalAmount,
           paymentMethod: body.paymentMethod,
-          confirmationMail: { state: "pending", updatedAt: createdAt }, paymentStatus: "unpaid", shippingFee: null, status: "new", channel: "website", createdAt, requestHash: digest,
+          confirmationMail: { state: "pending", updatedAt: createdAt }, paymentStatus: "unpaid", shippingFee: shipping.fee, status: "new", channel: "website", createdAt, requestHash: digest,
         };
         await reserveOrderInventory(tx, db, product.id, body.quantity);
         tx.set(order, record); tx.set(codePool, { ...allocated.pool, updatedAt: createdAt }); tx.set(rate, ipRate); tx.set(globalRate, siteRate);
@@ -84,7 +93,7 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
       if (schedule) {
         try { schedule(task); } catch { await task; }
       } else await task;
-      return res.status(201).json({ code: result.code, mailStatus, subtotal: result.subtotal, paymentMethod: result.paymentMethod, message: "Đã nhận đơn hàng. ORORA sẽ liên hệ xác nhận sản phẩm, phí giao hàng và cách thanh toán." });
+      return res.status(201).json({ code: result.code, mailStatus, subtotal: result.subtotal, shippingFee: result.shippingFee ?? null, totalAmount: result.totalAmount ?? null, paymentMethod: result.paymentMethod, message: result.shippingFee == null ? "Đã nhận đơn hàng. ORORA sẽ liên hệ xác nhận sản phẩm, phí giao hàng và cách thanh toán." : "Đã nhận đơn hàng. ORORA sẽ liên hệ xác nhận và hỗ trợ thanh toán." });
     } catch (error) {
       return res.status(error.status || 503).json({ message: error.status ? error.message : "Chưa xác nhận được đơn. Vui lòng thử gửi lại hoặc liên hệ ORORA." });
     }

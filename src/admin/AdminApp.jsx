@@ -1,3 +1,4 @@
+import ShippingAdmin from "./ShippingAdmin";
 import InventoryAdmin from "./InventoryAdmin";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -17,6 +18,7 @@ const TABS = [
   ["orders", "Đơn hàng"],
   ["newsletter", "Email"],
   ["inventory", "Kiểm Hàng"],
+  ["shipping", "Phí vận chuyển"],
 ];
 
 export default function AdminApp() {
@@ -62,6 +64,7 @@ export default function AdminApp() {
         {tab === "home" && <HomeAdmin />}
         {tab === "products" && <ProductsAdmin />}
         {tab === "orders" && <OrdersAdmin key={user.uid} onOpenEmailMarketing={() => { setEmailSection("orderSend"); setTab("newsletter"); }} />}
+        {tab === "shipping" && <ShippingAdmin key={user.uid} />}
         {tab === "inventory" && <InventoryAdmin key={user.uid} />}
         {tab === "newsletter" && <NewsletterAdmin initialView={emailSection} />}
       </main>
