@@ -172,32 +172,30 @@ test("background confirmation failure preserves the accepted order and records a
   const order = (await db.collection("orders").doc(data.requestId).get()).data(); assert.equal(order.status, "new"); assert.equal(order.paymentStatus, "unpaid"); assert.equal(order.confirmationMail.state, "failed");
 });
 
-test("readable OW order codes use a transactional daily sequence and Vietnam calendar date", async () => {
+test("random order codes include the correct payment suffix and remain stable across concurrent retries", async () => {
   const db = memoryDb(); await db.collection("products").doc("serum").set({ name: "Serum", price: "250.000đ", active: true });
-  let timestamp = Date.parse("2026-10-28T17:00:00Z");
-  const handler = createOrderHandler({ getDb: () => db, env, now: () => timestamp, sendMail: async () => {} });
+  const handler = createOrderHandler({ getDb: () => db, env, chooseCodeIndex: () => 0, sendMail: async () => {} });
   const call = async (data = body()) => { const res = response(); await handler({ method: "POST", headers, body: data }, res); return res; };
   const original = body();
-  const results = await Promise.all([call(original), call(), call(original), call()]);
-  assert.deepEqual(results.map((res) => res.body.code), ["OW12910", "OW22910", "OW12910", "OW32910"]);
+  const results = await Promise.all([call(original), call(), call(original), call({ ...body(), paymentMethod: "bank_transfer" })]);
+  assert.deepEqual(results.map((res) => res.body.code), ["OW_0000C", "OW_9999C", "OW_0000C", "OW_0000B"]);
   assert.ok(results.every((res) => res.statusCode === 201));
-  assert.equal((await db.collection("orderDailyCounters").doc("2026-10-29").get()).data().count, 3);
+  assert.equal((await db.collection("orderCodePools").doc("C").get()).data().remaining, 9998);
+  assert.equal((await db.collection("orderCodePools").doc("B").get()).data().remaining, 9999);
   assert.equal((await call({ ...body(), expectedPriceText: "wrong" })).statusCode, 409);
-  assert.equal((await db.collection("orderDailyCounters").doc("2026-10-29").get()).data().count, 3);
-  timestamp = Date.parse("2026-10-29T16:59:59Z"); assert.equal((await call()).body.code, "OW42910");
-  timestamp = Date.parse("2026-10-29T17:00:00Z"); assert.equal((await call()).body.code, "OW13010");
-  const saved = (await db.collection("orders").doc(original.requestId).get()).data(); assert.equal(saved.orderDate, "2026-10-29"); assert.equal(saved.dailySequence, 1);
-  timestamp = Date.parse("2026-12-31T17:00:00Z"); assert.equal((await call()).body.code, "OW10101");
+  assert.equal((await db.collection("orderCodePools").doc("C").get()).data().remaining, 9998);
 });
 
-test("old order codes survive retries and an invalid counter never produces a duplicate code", async () => {
+test("legacy codes survive retries; exhausted pools do not create orders or reserve inventory", async () => {
   const db = memoryDb(); await db.collection("products").doc("serum").set({ name: "Serum", price: "250.000đ", active: true });
-  const handler = createOrderHandler({ getDb: () => db, env, now: () => Date.parse("2026-10-29T01:00:00Z"), sendMail: async () => {} });
+  const handler = createOrderHandler({ getDb: () => db, env, sendMail: async () => {} });
   const call = async (data) => { const res = response(); await handler({ method: "POST", headers, body: data }, res); return res; };
   const original = body(); await call(original);
-  await db.collection("orders").doc(original.requestId).set({ code: "OR-OLD-CODE" }, { merge: true });
-  assert.equal((await call(original)).body.code, "OR-OLD-CODE");
-  assert.equal((await db.collection("orderDailyCounters").doc("2026-10-29").get()).data().count, 1);
-  await db.collection("orderDailyCounters").doc("2026-10-29").set({ count: "bad" });
-  assert.equal((await call(body())).statusCode, 503); assert.equal((await db.collection("orders").get()).docs.length, 1);
+  await db.collection("orders").doc(original.requestId).set({ code: "OW22910" }, { merge: true });
+  await db.collection("orderCodePools").doc("C").set({ remaining: 0, swaps: {} });
+  assert.equal((await call(original)).body.code, "OW22910");
+  const inventoryBefore = (await db.collection("inventory").doc("serum").get()).data();
+  assert.equal((await call(body())).statusCode, 503);
+  assert.equal((await db.collection("orders").get()).docs.length, 1);
+  assert.deepEqual((await db.collection("inventory").doc("serum").get()).data(), inventoryBefore);
 });

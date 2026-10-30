@@ -209,7 +209,9 @@ Kiểm thử repository dùng Microsoft giả lập và Firestore bộ nhớ; ch
 
 ### Mã đơn dễ đọc
 
-Đơn mới dùng `OW` + số thứ tự + ngày hai chữ số + tháng hai chữ số, ví dụ `OW22910` là đơn thứ 2 ngày 29/10. Bộ đếm `orderDailyCounters/{YYYY-MM-DD}` tính theo `Asia/Ho_Chi_Minh`, được tăng cùng giao dịch lưu đơn để các lượt đặt đồng thời không lấy cùng số. Gửi lại cùng yêu cầu không tăng số; yêu cầu không hợp lệ cũng không chiếm số. Ngày mới bắt đầu từ 1. Mã `OW` không chứa năm; ngày đầy đủ của đơn vẫn có trong admin và trường `orderDate`. ID nội bộ của đơn và mã các đơn cũ không đổi; bộ đếm mới chỉ cấp số cho đơn tạo theo cơ chế này.
+Đơn mới dùng `OW_` + đúng 4 chữ số ngẫu nhiên + hậu tố theo phương thức: `C` cho COD, `B` cho chuyển khoản (ví dụ `OW_4827C`, `OW_6193B`). Số có thể bắt đầu bằng 0. Bộ mã riêng tư `orderCodePools/C` và `orderCodePools/B` chọn ngẫu nhiên không hoàn lại, lưu cùng giao dịch tạo đơn, nên không cấp trùng dù đặt đồng thời. Không dùng số thứ tự hoặc ngày tháng trong mã. Gửi lại cùng yêu cầu giữ mã đã cấp. Mã đơn cũ, ID nội bộ và lịch sử được giữ nguyên; `orderDailyCounters` cũ không còn dùng. Ngày đầy đủ vẫn được lưu trong `orderDate` và ngày đặt.
+
+Mỗi hậu tố có 10.000 mã; không tự đặt lại bộ mã hoặc tái sử dụng mã cũ. Khi hết mã, API từ chối tạo đơn mới cho phương thức đó và báo liên hệ ORORA, không tạo mã trùng. Khi gần hết cần thống nhất mở rộng định dạng. Mã ngắn không dùng làm khóa truy cập đơn; API quản trị vẫn dùng ID nội bộ và xác thực.
 
 ### Kiểm Hàng
 
