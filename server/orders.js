@@ -34,34 +34,23 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
       if (delivery) Object.assign(customer, delivery);
       customer.email = customer.email.toLowerCase();
       customer.phone = customer.phone.replace(/[\s().-]/g, "");
-      if (!uuid(body.requestId) || typeof body.productId !== "string" || !/^[a-zA-Z0-9_-]{1,150}$/.test(body.productId) || !Number.isInteger(body.quantity) || body.quantity < 1 || body.quantity > 20 || customer.name.length < 2 || customer.name.length > 100 || !/^\+?\d{7,15}$/.test(customer.phone) || !validOrderEmail(customer.email) || customer.address.length < 10 || customer.address.length > 500 || customer.note.length > 1000 || body.consent !== true || !Object.hasOwn(PAYMENT_LABELS, body.paymentMethod) || body.website) {
+      if (!uuid(body.requestId) || typeof body.productId !== "string" || !/^[a-zA-Z0-9_-]{1,150}$/.test(body.productId) || !Number.isInteger(body.quantity) || body.quantity < 1 || body.quantity > 20 || customer.name.length < 2 || customer.name.length > 100 || !/^\+?\d{7,15}$/.test(customer.phone) || !validOrderEmail(customer.email) || customer.address.length < 10 || customer.address.length > 500 || customer.note.length > 1000 || body.consent !== true || !Object.hasOwn(PAYMENT_LABELS, body.paymentMethod)) {
         return res.status(400).json({ message: "Kiểm tra họ tên, số điện thoại, email, địa chỉ, số lượng và xác nhận đồng ý." });
       }
       const digest = hash(JSON.stringify({ productId: body.productId, quantity: body.quantity, paymentMethod: body.paymentMethod, customer }));
       const db = await getDb();
       const order = db.collection("orders").doc(body.requestId);
-      const ip = String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").split(",")[0].trim();
-      const rate = db.collection("orderRateLimits").doc(hash(ip));
-      const globalRate = db.collection("orderRateLimits").doc("global");
       const createdAt = new Date(now());
       const parts = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(createdAt).map(({ type, value }) => [type, value]));
       const orderDate = `${parts.year}-${parts.month}-${parts.day}`;
       const codePool = db.collection("orderCodePools").doc(body.paymentMethod === "cod" ? "C" : "B");
       const result = await db.runTransaction(async (tx) => {
-        const [existing, product, settings, perIp, site, pool] = await tx.getAll(order, db.collection("products").doc(body.productId), db.collection("settings").doc("home"), rate, globalRate, codePool);
+        const [existing, product, settings, pool] = await tx.getAll(order, db.collection("products").doc(body.productId), db.collection("settings").doc("home"), codePool);
         if (existing.exists) {
           if (existing.data().requestHash !== digest) throw Object.assign(new Error("Đơn này đã được tiếp nhận. Vui lòng liên hệ ORORA nếu muốn thay đổi thông tin."), { status: 409 });
           return existing.data();
         }
         if (!product.exists || product.data().active === false) throw Object.assign(new Error("Sản phẩm hiện không nhận đặt hàng."), { status: 404 });
-        const allowed = (snapshot, windowMs, limit) => {
-          const data = snapshot.data() || {};
-          const current = now() - millis(data.windowStart) < windowMs ? data : { count: 0, windowStart: createdAt };
-          if (current.count >= limit) throw Object.assign(new Error("Bạn đã gửi nhiều yêu cầu. Vui lòng thử lại sau."), { status: 429 });
-          return { count: (current.count || 0) + 1, windowStart: current.windowStart || createdAt };
-        };
-        const ipRate = allowed(perIp, 10 * 60 * 1000, 5);
-        const siteRate = allowed(site, 60 * 60 * 1000, 300);
         if (!availablePaymentMethods(settings.data() || {}).includes(body.paymentMethod)) throw Object.assign(new Error("Phương thức thanh toán đã thay đổi. Hãy tải lại trang và chọn lại."), { status: 400 });
         const data = product.data();
         const unitPrice = parseVndPrice(data.price);
@@ -81,7 +70,7 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
           confirmationMail: { state: "pending", updatedAt: createdAt }, paymentStatus: "unpaid", shippingFee: shipping.fee, status: "new", channel: "website", createdAt, requestHash: digest,
         };
         await reserveOrderInventory(tx, db, product.id, body.quantity);
-        tx.set(order, record); tx.set(codePool, { ...allocated.pool, updatedAt: createdAt }); tx.set(rate, ipRate); tx.set(globalRate, siteRate);
+        tx.set(order, record); tx.set(codePool, { ...allocated.pool, updatedAt: createdAt });
         return record;
       });
       let mailStatus = result.confirmationMail?.state || "pending";

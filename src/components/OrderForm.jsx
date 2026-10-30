@@ -51,7 +51,7 @@ export default function OrderForm({ product, home, onClose }) {
       const response = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
         requestId: requestId.current, productId: product.id || product.slug, quantity, expectedPriceText: String(product.price ?? ""),
         name: data.get("name"), phone: data.get("phone"), email: data.get("email"), provinceCode, wardCode, addressDetail: data.get("addressDetail"), expectedShippingFee: shipping.fee, note: data.get("note"),
-        paymentMethod: data.get("paymentMethod"), consent: data.get("consent") === "on", website: data.get("website"),
+        paymentMethod: data.get("paymentMethod"), consent: data.get("consent") === "on",
       }) });
       const json = await response.json();
       if (!response.ok) throw new Error(json.message || "Chưa gửi được đơn hàng.");
@@ -85,7 +85,6 @@ export default function OrderForm({ product, home, onClose }) {
       {shipping.reason && <p className="order-help">{shipping.reason}</p>}
       <p className="order-help">Chưa thu tiền tại bước đặt đơn. ORORA sẽ hướng dẫn thanh toán sau khi tiếp nhận.</p>
       <label className="order-consent"><input name="consent" type="checkbox" required /><span>Tôi đồng ý để ORORA liên hệ, gửi email xác nhận và xử lý đơn hàng theo thông tin đã cung cấp.</span></label>
-      <label hidden aria-hidden="true">Website<input name="website" autoComplete="off" tabIndex={-1} /></label>
       {!methods.length && <p role="status">Website đang tạm ngưng nhận đơn. Vui lòng liên hệ ORORA hoặc mua qua các kênh bên trên.</p>}
       <button className="website-order-submit" disabled={busy || !methods.length || !provinceCode || !wardCode || (home.shippingSettings?.enabled === true && shipping.fee === null)}>{busy ? "Đang lưu đơn…" : "Đặt hàng ngay"}</button>
     </fieldset>

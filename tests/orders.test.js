@@ -38,7 +38,7 @@ test("retries and concurrent double submissions create one order; changing the s
 
 test("invalid input, cross-origin requests, inactive products and disabled payment methods are rejected", async () => {
   const { db, call } = await setup();
-  for (const patch of [{ quantity: 0 }, { quantity: 1.5 }, { quantity: 21 }, { consent: false }, { phone: "invalid" }, { paymentMethod: "credit_card" }, { website: "bot" }]) assert.equal((await call({ ...body(), ...patch })).statusCode, 400);
+  for (const patch of [{ quantity: 0 }, { quantity: 1.5 }, { quantity: 21 }, { consent: false }, { phone: "invalid" }, { paymentMethod: "credit_card" }]) assert.equal((await call({ ...body(), ...patch })).statusCode, 400);
   assert.equal((await call(body(), { headers: { ...headers, origin: "https://evil.example" } })).statusCode, 403);
   assert.equal((await db.collection("orders").get()).docs.length, 0);
   await db.collection("settings").doc("home").set({ shopLinks: { paymentMethods: ["bank_transfer"] } });
@@ -48,12 +48,17 @@ test("invalid input, cross-origin requests, inactive products and disabled payme
   assert.equal((await call(body())).statusCode, 404);
 });
 
-test("rate limiting applies to new submissions and permits retrying an already accepted order", async () => {
-  const { call } = await setup(); const original = body();
-  assert.equal((await call(original)).statusCode, 201);
-  for (let i = 0; i < 4; i++) assert.equal((await call(body())).statusCode, 201);
-  assert.equal((await call(body())).statusCode, 429);
-  assert.equal((await call(original)).statusCode, 201);
+test("repeated names, phones, emails and IPs do not block new orders or their emails", async () => {
+  const { db } = await setup(); let sent = 0;
+  await db.collection("orderRateLimits").doc("global").set({ count: 999999, windowStart: new Date() });
+  const handler = createOrderHandler({ getDb: () => db, env, sendMail: async () => { sent++; } });
+  const original = body();
+  const call = async (data) => { const res = response(); await handler({ method: "POST", headers, body: data }, res); return res; };
+  for (let i = 0; i < 8; i++) assert.equal((await call(i === 0 ? original : { ...body(), website: "ignored legacy field" })).statusCode, 201);
+  assert.equal(sent, 8);
+  assert.equal((await call(original)).statusCode, 201); assert.equal(sent, 8);
+  assert.equal((await db.collection("orders").get()).docs.length, 8);
+  assert.equal((await db.collection("orderRateLimits").doc("global").get()).data().count, 999999);
 });
 
 test("orders without a fixed price are explicitly left for a quote", async () => {

@@ -28,7 +28,7 @@ Máy chủ dùng cấu hình hiện có:
 - `NEWSLETTER_SITE_ORIGIN` khớp origin của website (hoặc origin localhost khi chạy local).
 - `ORDER_ADMIN_UIDS` nếu có; nếu không, dùng danh sách `NEWSLETTER_ADMIN_UIDS` đang cấu hình cho API email.
 
-Đơn lưu trong collection `orders`. Dữ liệu người mua chỉ đọc/cập nhật qua `/api/admin-orders` có xác thực Firebase và kiểm tra UID. Các collection `orders` và `orderRateLimits` không có quyền truy cập công khai trong Firestore Rules hiện tại của repository. Không thêm quy tắc cho phép khách đọc các collection này. `/api/orders` chỉ nhận POST và trả mã đơn/tạm tính; không có API công khai để tra cứu thông tin khách.
+Đơn lưu trong collection `orders`. Dữ liệu người mua chỉ đọc/cập nhật qua `/api/admin-orders` có xác thực Firebase và kiểm tra UID. Collection `orders` và dữ liệu bộ đếm cũ `orderRateLimits` không có quyền truy cập công khai trong Firestore Rules hiện tại của repository. Không thêm quy tắc cho phép khách đọc các collection này. `/api/orders` chỉ nhận POST và trả mã đơn/tạm tính; không có API công khai để tra cứu thông tin khách.
 
 Thông tin sản phẩm được chụp tại lúc nhận đơn, nên đổi tên/giá sản phẩm sau này không thay đổi bản ghi của đơn cũ. Các API không gọi điện hoặc thu tiền thay shop.
 
@@ -68,3 +68,7 @@ Kiểm thử dùng bộ địa chỉ thật của thư viện, Firestore trong b
 Ô tỉnh/thành và phường/xã có tìm kiếm (kể cả gõ không dấu), dùng bàn phím hoặc chọn trực tiếp. Admin có bảng **Phí vận chuyển đã lưu** gồm phí chung và phí riêng, tìm khu vực và nút **Chỉnh phí**; bảng không coi bản nháp chưa lưu là phí đang áp dụng. Chi tiết đơn trong admin và thông tin đơn sau khi đặt thành công mở bằng popup giữa màn hình, có nút đóng, Escape và vùng cuộn cho mobile.
 
 Thư đơn hàng gửi theo đúng mẫu đang áp dụng, không tự nối thêm khối thông tin. Đã khôi phục hành vi này theo yêu cầu sau bản thay đổi bổ sung thông tin đơn. Muốn thêm phí/tổng tiền/ghi chú vào nội dung, đặt các biến trong mẫu: `{{shippingFee}}`, `{{totalAmount}}`, `{{note}}`, `{{unitPrice}}`, `{{createdAt}}`, `{{paymentStatus}}`. Không đổi adapter SMTP/Graph, tài khoản gửi hoặc cấu hình xác thực. Mẫu đã lưu và lịch sử thư cũ không bị ghi đè.
+
+### Không giới hạn lượt đặt theo thông tin khách
+
+Form đặt hàng không áp dụng quota IP/toàn website hoặc honeypot; tên, số điện thoại và email trùng vẫn được đặt đơn mới. Bộ đếm `orderRateLimits` cũ được giữ nhưng không đọc/ghi nữa. Vẫn kiểm tra dữ liệu hợp lệ, địa chỉ, tồn có thể bán, giá/phí và phương thức thanh toán. Cùng request ID chỉ tạo một đơn và không gửi thư lặp; thư đang xử lý/chưa rõ kết quả không tự gửi lại. Các cơ chế này không chặn theo tên hay số điện thoại. NDR 5.7.708 là từ Microsoft, độc lập với kiểm tra form.
