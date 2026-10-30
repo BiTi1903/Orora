@@ -23,6 +23,8 @@ const TABS = [
 
 export default function AdminApp() {
   const [user, setUser] = useState(() => auth ? undefined : null);
+  const [orderMailDraft, setOrderMailDraft] = useState(null);
+  const [orderMailVersion, setOrderMailVersion] = useState(0);
   const [emailSection, setEmailSection] = useState("contacts");
   const [tab, setTab] = useState("dashboard");
 
@@ -46,7 +48,7 @@ export default function AdminApp() {
         <div className="admin-brand">ORORA</div>
         <nav className="admin-nav">
           {TABS.map(([key, label]) => (
-            <button key={key} className={tab === key ? "active" : ""} onClick={() => setTab(key)}>
+            <button key={key} className={tab === key ? "active" : ""} onClick={() => { if (key === "orders" && tab !== "orders") { setOrderMailDraft(null); setOrderMailVersion((value) => value + 1); } if (key === "newsletter") setEmailSection("contacts"); setTab(key); }}>
               {label}
             </button>
           ))}
@@ -63,10 +65,10 @@ export default function AdminApp() {
         {tab === "dashboard" && <Dashboard sectionCount={TABS.length} />}
         {tab === "home" && <HomeAdmin />}
         {tab === "products" && <ProductsAdmin />}
-        {tab === "orders" && <OrdersAdmin key={user.uid} onOpenEmailMarketing={() => { setEmailSection("orderSend"); setTab("newsletter"); }} />}
+        {tab === "orders" && <OrdersAdmin key={`${user.uid}:${orderMailVersion}`} initialMailDraft={orderMailDraft} onOpenEmailTemplates={() => { setEmailSection("templates"); setTab("newsletter"); }} />}
         {tab === "shipping" && <ShippingAdmin key={user.uid} />}
         {tab === "inventory" && <InventoryAdmin key={user.uid} />}
-        {tab === "newsletter" && <NewsletterAdmin initialView={emailSection} />}
+        {tab === "newsletter" && <NewsletterAdmin initialView={emailSection} onOpenOrderMail={(draft) => { setOrderMailDraft(draft); setOrderMailVersion((value) => value + 1); setTab("orders"); }} />}
       </main>
     </div>
   );

@@ -112,7 +112,7 @@ Thư lưu danh sách ID người nhận tại lúc tạo để tiếp tục gử
 
 ### Lịch sử thư đơn hàng
 
-**Email marketing → Thư đơn hàng đã gửi** tổng hợp các bản ghi `orders/{id}/mailEvents` hiện có, gồm thư tự động và thư gửi riêng từ admin, kể cả lần gửi lỗi/chưa rõ kết quả. Có tìm theo email, tên khách, mã/ID đơn, tiêu đề; lọc cách gửi và kết quả. Bấm một thư để xem đúng nội dung, người nhận và thời gian đã lưu. Danh sách tải lịch sử qua các trang đơn, không cần tạo lại hoặc di chuyển dữ liệu cũ. Chỉ tài khoản có quyền quản lý đơn được đọc lịch sử. Thư gửi trực tiếp từ Outlook không nằm trong lịch sử website.
+**Đơn hàng → Thư đơn hàng → Thư đơn hàng đã gửi** tổng hợp các bản ghi `orders/{id}/mailEvents` hiện có, gồm thư tự động và thư gửi riêng từ admin, kể cả lần gửi lỗi/chưa rõ kết quả. Có tìm theo email, tên khách, mã/ID đơn, tiêu đề; lọc cách gửi và kết quả. Bấm một thư để xem đúng nội dung, người nhận và thời gian đã lưu. Danh sách tải lịch sử qua các trang đơn, không cần tạo lại hoặc di chuyển dữ liệu cũ. Chỉ tài khoản có quyền quản lý đơn được đọc lịch sử. Thư gửi trực tiếp từ Outlook không nằm trong lịch sử website.
 
 ### Tài khoản thao tác và dùng lại mẫu
 
@@ -126,7 +126,7 @@ Lịch sử thư gửi danh sách đăng ký cũng có cột tài khoản thao t
 
 Phần soạn thư luôn hiện riêng **Email đã chọn**, giữ danh sách này khi đổi từ khóa tìm kiếm và có nút bỏ từng địa chỉ. Hộp xác nhận gửi cũng liệt kê các email cụ thể. Trong lịch sử gửi, bấm số email ở cột Người nhận để xem danh sách: thư mới lưu lại địa chỉ tại lúc tạo, nên vẫn xem được khi liên hệ đã bị xóa sau này. Thư cũ chưa lưu địa chỉ sẽ đối chiếu liên hệ còn tồn tại; nếu không còn thì báo rõ thay vì đoán địa chỉ.
 
-Kho mẫu được quản lý tập trung trong mục **Mẫu Thư** cạnh **Thư đơn hàng đã gửi**. Các khu vực soạn/gửi dùng nút chọn mẫu hoặc tên mẫu có thể bấm để mở cửa sổ xem lớn, không đặt kho mẫu ở cột bên cạnh nữa. Chọn mẫu không đổi người nhận đã chọn.
+Kho mẫu được quản lý tập trung trong **Email → Mẫu Thư**; phần soạn thư đơn hàng dùng chung kho này qua nút chọn mẫu. Các khu vực soạn/gửi dùng nút chọn mẫu hoặc tên mẫu có thể bấm để mở cửa sổ xem lớn, không đặt kho mẫu ở cột bên cạnh nữa. Chọn mẫu không đổi người nhận đã chọn.
 
 ### Kho Mẫu Thư độc lập
 
@@ -176,9 +176,9 @@ Khi mở trang quản trị ở bản mới, API được xác thực sẽ lưu 
 
 ### Viết Thư hợp nhất
 
-Thanh điều hướng hiện gồm **Danh sách email**, **Viết Thư**, **Thư đơn hàng đã gửi**, **Mẫu Thư**. Các màn hình soạn riêng cũ đã được bỏ.
+Trong mục **Email**, thanh điều hướng gồm **Danh sách email**, **Viết Thư**, **Mẫu Thư**, **Xuất Excel**. Phần thư đơn hàng đã chuyển sang **Đơn hàng → Thư đơn hàng**, gồm soạn/gửi và lịch sử gửi.
 
-Trong **Viết Thư**, chọn **Thư Đăng Ký** (tên mới của thư chào mừng), **Thư Đơn Hàng** hoặc **Gửi riêng**. Hai loại tự động nạp nội dung đang cấu hình. Mỗi loại giữ bản đang soạn riêng khi đổi lựa chọn. Chọn mẫu từ kho sẽ chép vào cùng ô tiêu đề/nội dung; sửa nội dung tách khỏi liên kết mẫu gốc.
+Trong **Email → Viết Thư**, chọn **Thư Đăng Ký** (tên mới của thư chào mừng) hoặc **Gửi riêng**. **Thư Đơn Hàng** được soạn tại **Đơn hàng → Thư đơn hàng**. Hai loại tự động nạp nội dung đang cấu hình. Mỗi loại giữ bản đang soạn riêng khi đổi lựa chọn. Chọn mẫu từ kho sẽ chép vào cùng ô tiêu đề/nội dung; sửa nội dung tách khỏi liên kết mẫu gốc.
 
 - **Lưu làm thư tự động** chỉ cập nhật cấu hình cho lần gửi tự động sau đó.
 - **Gửi thử** chỉ gửi bản đang soạn tới email thử được nhập, không ghi trạng thái gửi cho đơn hay gửi thêm tới khách. Thư Đơn Hàng điền biến từ đơn đang chọn; khi chưa chọn đơn dùng dữ liệu minh họa. Việc đọc dữ liệu đơn để gửi thử vẫn cần quyền quản lý đơn.

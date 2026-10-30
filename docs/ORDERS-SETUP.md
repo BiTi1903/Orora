@@ -36,7 +36,7 @@ Thông tin sản phẩm được chụp tại lúc nhận đơn, nên đổi tê
 
 Đơn mới yêu cầu email hợp lệ và tự gửi thư xác nhận đã nhận yêu cầu đặt hàng qua cấu hình Microsoft mailer hiện có trong `docs/EMAIL-SETUP.md`. Không tự đánh dấu đơn đã xác nhận hoặc đã thanh toán. Đơn cũ không bị thay đổi; đơn thiếu email không thể gửi thư từ admin.
 
-Vào **Admin → Email marketing → Thư xác nhận đơn hàng** để sửa mẫu thư, chèn biến thông tin đơn và gửi lại cho email đã lưu trong đơn. Lưu mẫu trước khi gửi. Mẫu được lưu riêng ở `newsletterSettings/orderConfirmation`, không ghi đè mẫu chào mừng người đăng ký nhận tin. Khách đặt hàng không tự được thêm vào danh sách email marketing.
+Vào **Admin → Đơn hàng → Thư đơn hàng → Viết thư đơn hàng** để sửa mẫu thư, chèn biến thông tin đơn và gửi lại cho email đã lưu trong đơn. Lưu mẫu trước khi gửi. Mẫu được lưu riêng ở `newsletterSettings/orderConfirmation`, không ghi đè mẫu chào mừng người đăng ký nhận tin. Khách đặt hàng không tự được thêm vào danh sách email marketing.
 
 Lịch sử tại `orders/{id}/mailEvents` lưu người nhận, nội dung đã gửi, thời gian, gửi tự động/thủ công và kết quả. “Microsoft đã nhận” chỉ là hệ thống gửi đã chấp nhận, chưa bảo đảm phát tới hộp thư khách. Nếu gửi thất bại, đơn vẫn được lưu. Yêu cầu đặt lại do lỗi mạng không gửi trùng thư tự động. Kết quả chưa rõ hoặc đang xử lý sẽ chặn gửi lại để tránh trùng; cần đối chiếu thư đã gửi trên Microsoft. Khi gửi lại thư đã được Microsoft nhận, admin phải xác nhận.
 
@@ -72,3 +72,7 @@ Thư đơn hàng gửi theo đúng mẫu đang áp dụng, không tự nối th�
 ### Không giới hạn lượt đặt theo thông tin khách
 
 Form đặt hàng không áp dụng quota IP/toàn website hoặc honeypot; tên, số điện thoại và email trùng vẫn được đặt đơn mới. Bộ đếm `orderRateLimits` cũ được giữ nhưng không đọc/ghi nữa. Vẫn kiểm tra dữ liệu hợp lệ, địa chỉ, tồn có thể bán, giá/phí và phương thức thanh toán. Cùng request ID chỉ tạo một đơn và không gửi thư lặp; thư đang xử lý/chưa rõ kết quả không tự gửi lại. Các cơ chế này không chặn theo tên hay số điện thoại. NDR 5.7.708 là từ Microsoft, độc lập với kiểm tra form.
+
+### Thư đơn hàng nằm trong mục Đơn hàng
+
+**Đơn hàng → Thư đơn hàng** chứa phần soạn/gửi cho đơn, lưu mẫu xác nhận tự động, gửi thử và lịch sử thư đơn hàng. Nút **Soạn thư cho đơn này** trong popup chi tiết chọn sẵn đúng đơn, kể cả đơn nằm ở trang cũ. Lịch sử vẫn đọc bản ghi hiện có tại `orders/{id}/mailEvents`; không di chuyển hay tạo lại dữ liệu. **Email** chỉ còn thư đăng ký và gửi riêng ngoài đơn. Kho **Email → Mẫu Thư** dùng chung; chọn mẫu đơn hoặc mẫu có biến đơn sẽ mở phần thư đơn hàng. Mục xuất Excel chung giữ nguyên ba lựa chọn. Không thay đổi SMTP/OAuth2 hoặc nội dung gửi.

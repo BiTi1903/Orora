@@ -7,28 +7,13 @@ import MailTemplateLibrary from "./MailTemplateLibrary";
 import MailPreviewDialog from "./MailPreviewDialog";
 import MailTemplatePicker from "./MailTemplatePicker";
 import { mailActorLabel, groupMailTemplates, templateReference } from "../lib/mail-templates";
-import OrderMailHistory from "./OrderMailHistory";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { auth } from "../lib/firebaseAuth";
+import { newsletterRequest as request } from "./newsletter-api";
 
 const EMPTY = { subject: "", text: "" };
 const CONTACT_STATUS = { active: "Hoạt động", paused: "Tạm ngưng", unsubscribed: "Đã hủy đăng ký" };
 const STATUS = { draft: "Chưa gửi", sending: "Đang xử lý", paused: "Tạm dừng", completed: "Hoàn tất" };
 
-async function request(body, cursor) {
-  const token = await auth?.currentUser?.getIdToken();
-  if (!token) throw new Error("Vui lòng đăng nhập lại.");
-  const params = new URLSearchParams(typeof cursor === "string" ? { cursor } : cursor || {}).toString();
-  const response = await fetch(`/api/newsletter${params ? `?${params}` : ""}`, {
-    method: body ? "POST" : "GET",
-    headers: { Authorization: `Bearer ${token}`, ...(body ? { "Content-Type": "application/json" } : {}) },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
-  let data;
-  try { data = await response.json(); } catch { throw new Error("Chưa kết nối được API email. Hãy triển khai trên Vercel theo docs/EMAIL-SETUP.md."); }
-  if (!response.ok) throw new Error(data.message || "Chưa thực hiện được.");
-  return data;
-}
 
 function ContactActions({ label, disabled, onApply }) {
   const [action, setAction] = useState("");
@@ -48,17 +33,16 @@ function ContactActions({ label, disabled, onApply }) {
   );
 }
 
-export default function NewsletterAdmin({ initialView = "contacts" }) {
+export default function NewsletterAdmin({ initialView = "contacts", onOpenOrderMail }) {
   const [outlookCampaign, setOutlookCampaign] = useState(null);
   const [preview, setPreview] = useState(null);
   const [picker, setPicker] = useState(null);
-  const [view, setView] = useState(["compose", "welcome", "orders", "orderSend"].includes(initialView) ? "write" : initialView);
-  const [writerMode, setWriterMode] = useState(["orders", "orderSend"].includes(initialView) ? "order_auto" : "welcome_auto");
+  const [view, setView] = useState(["compose", "welcome"].includes(initialView) ? "write" : ["orders", "orderSend", "orderHistory"].includes(initialView) ? "contacts" : initialView);
+  const [writerMode, setWriterMode] = useState("welcome_auto");
   const [writerDrafts, setWriterDrafts] = useState({});
   const [recipientMode, setRecipientMode] = useState("selected");
   const [recipientIds, setRecipientIds] = useState([]);
   const [recipientSearch, setRecipientSearch] = useState("");
-  const [orderTemplate, setOrderTemplate] = useState(null);
   const [welcome, setWelcome] = useState(EMPTY);
   const [contacts, setContacts] = useState([]);
   const [selectedContacts, setSelectedContacts] = useState([]);
@@ -82,7 +66,6 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
     setCursor(data.nextCursor);
     setCampaigns(data.campaigns);
     setWelcome(data.welcome);
-    setOrderTemplate(data.orderTemplate);
     setReady(true);
   }, []);
 
@@ -161,9 +144,15 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
   };
 
   const campaignTemplates = groupMailTemplates(campaigns);
-  const currentMessage = writerDrafts[writerMode] || (writerMode === "order_auto" ? orderTemplate : writerMode === "welcome_auto" ? welcome : EMPTY) || EMPTY;
+  const currentMessage = writerDrafts[writerMode] || (writerMode === "welcome_auto" ? welcome : EMPTY) || EMPTY;
   const applyTemplate = (item) => {
-    const mode = item.kind === "private" ? (picker ? writerMode : hasOrderTokens(item) ? "order_auto" : "private") : item.kind;
+    if (item.kind === "order_auto" || hasOrderTokens(item)) {
+      const draft = { subject: item.subject, text: item.text, templateKind: item.kind, ...(templateReference(item) ? { templateRef: templateReference(item) } : {}) };
+      if (onOpenOrderMail) onOpenOrderMail(draft);
+      else setNotice({ text: "Mẫu này dùng tại Đơn hàng → Thư đơn hàng." });
+      setPicker(null); setPreview(null); return;
+    }
+    const mode = item.kind === "private" ? (picker ? writerMode : "private") : item.kind;
     setWriterDrafts((drafts) => ({ ...drafts, [mode]: { subject: item.subject, text: item.text, templateKind: item.kind, ...(templateReference(item) ? { templateRef: templateReference(item) } : {}) } }));
     setWriterMode(mode); setView("write"); setPicker(null); setPreview(null);
     setNotice({ text: "Đã chọn mẫu vào Viết Thư. Sửa nội dung, lưu tự động hoặc gửi theo thao tác bạn chọn." });
@@ -199,15 +188,15 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
       {!ready ? <p className="admin-muted">Cần kết nối API email để tải dữ liệu. Nếu có lỗi, kiểm tra cấu hình rồi bấm Tải lại.</p> : (
         <>
           <nav className="admin-section-tabs" aria-label="Các mục email marketing">
-            {[["contacts", "Danh sách email"], ["write", "Viết Thư"], ["orderHistory", "Thư đơn hàng đã gửi"], ["templates", "Mẫu Thư"], ["export", "Xuất Excel"]].map(([key, label]) => <button type="button" key={key} aria-current={view === key ? "page" : undefined} onClick={() => setView(key)}>{label}</button>)}
+            {[["contacts", "Danh sách email"], ["write", "Viết Thư"], ["templates", "Mẫu Thư"], ["export", "Xuất Excel"]].map(([key, label]) => <button type="button" key={key} aria-current={view === key ? "page" : undefined} onClick={() => setView(key)}>{label}</button>)}
           </nav>
           {view === "export" && <EmailExport request={request} />}
-          {view === "orderHistory" && <OrderMailHistory onReuse={(message, original) => { setWriterDrafts((drafts) => ({ ...drafts, order_auto: message })); setWriterMode("order_auto"); setView("write"); setNotice({ text: original ? "Đã chép mẫu vào nội dung gửi riêng. Kiểm tra và chọn đơn trước khi gửi; mẫu tự động không thay đổi." : "Đã chép nội dung thư cũ vào nội dung gửi riêng. Hãy sửa thông tin khách và mã đơn cũ trước khi gửi." }); }} />}
+
           <div hidden={view !== "templates"}><MailTemplateLibrary request={request} active={view === "templates"} onUse={applyTemplate} /></div>
           <div className="admin-email-panel" hidden={view !== "write"}>
-          <MailWriter mode={writerMode} onModeChange={setWriterMode} value={currentMessage} onChange={(message) => setWriterDrafts((drafts) => ({ ...drafts, [writerMode]: message }))} onChooseTemplate={() => setPicker(writerMode)} request={request} disabled={busy} onApply={async (mode, message) => {
-            const result = await request({ action: mode === "order_auto" ? "saveOrderTemplate" : "saveWelcome", ...message });
-            if (mode === "order_auto") setOrderTemplate({ ...message }); else setWelcome({ ...message });
+          <MailWriter allowedModes={["welcome_auto", "private"]} mode={writerMode} onModeChange={setWriterMode} value={currentMessage} onChange={(message) => setWriterDrafts((drafts) => ({ ...drafts, [writerMode]: message }))} onChooseTemplate={() => setPicker(writerMode)} request={request} disabled={busy} onApply={async (_mode, message) => {
+            const result = await request({ action: "saveWelcome", ...message });
+            setWelcome({ ...message });
             return result;
           }} onSendPrivate={sendCampaign} privateSendLabel={recipientMode === "selected" ? `Gửi tới ${eligibleIds.length} email đã chọn` : "Gửi đến toàn bộ email hoạt động"} privateSendDisabled={recipientMode === "selected" && !eligibleIds.length} privateRecipients={
             <fieldset className="newsletter-recipient-picker" disabled={busy}>
@@ -289,7 +278,7 @@ export default function NewsletterAdmin({ initialView = "contacts" }) {
         </>
       )}
       {outlookCampaign && <CampaignOutlookStatus campaign={outlookCampaign} request={request} onClose={() => setOutlookCampaign(null)} />}
-      {picker && <MailTemplatePicker request={request} kind={picker} orderContext={writerMode === "order_auto"} includePrivate={writerMode !== "private"} onUse={applyTemplate} onClose={() => setPicker(null)} onManage={() => { setPicker(null); setView("templates"); }} />}
+      {picker && <MailTemplatePicker request={request} kind={picker} includePrivate={writerMode !== "private"} onUse={applyTemplate} onClose={() => setPicker(null)} onManage={() => { setPicker(null); setView("templates"); }} />}
       {preview && <MailPreviewDialog title={preview.title} message={preview.message} onClose={() => setPreview(null)}><button type="button" className="admin-btn" onClick={() => applyTemplate({ ...preview.message, kind: preview.kind })}>Dùng mẫu này</button></MailPreviewDialog>}
     </section>
   );

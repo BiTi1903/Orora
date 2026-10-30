@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { auth } from "../lib/firebaseAuth";
 import { orderRequest, MAIL_STATES } from "./order-api";
 
-export default function MailWriter({ mode, onModeChange, value, onChange, onChooseTemplate, request, onApply, onSendPrivate, privateRecipients, privateSendLabel, privateSendDisabled, disabled }) {
+export default function MailWriter({ mode, onModeChange, value, onChange, onChooseTemplate, request, onApply, onSendPrivate, privateRecipients, privateSendLabel, privateSendDisabled, disabled, allowedModes = ["welcome_auto", "order_auto", "private"], title = "Viết Thư", initialOrderId = "" }) {
   const [localBusy, setLocalBusy] = useState(false);
   const [notice, setNotice] = useState(null);
   const [testEmail, setTestEmail] = useState(() => auth?.currentUser?.email || "");
   const [orders, setOrders] = useState([]);
   const [cursor, setCursor] = useState(null);
-  const [orderId, setOrderId] = useState("");
+  const [orderId, setOrderId] = useState(initialOrderId);
   const [orderError, setOrderError] = useState("");
   const attempt = useRef(null);
   const working = disabled || localBusy;
@@ -17,9 +17,9 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
   useEffect(() => {
     if (mode !== "order_auto") return;
     let alive = true;
-    orderRequest().then((page) => { if (alive) { setOrders(page.orders); setCursor(page.nextCursor); setOrderError(""); } }).catch((error) => { if (alive) setOrderError(error.message); });
+    orderRequest().then(async (page) => { if (initialOrderId && !page.orders.some((item) => item.id === initialOrderId)) { const detail = await orderRequest(null, { id: initialOrderId }); page.orders = [detail.order, ...page.orders]; } if (alive) { setOrders(page.orders); setCursor(page.nextCursor); setOrderError(""); } }).catch((error) => { if (alive) setOrderError(error.message); });
     return () => { alive = false; };
-  }, [mode]);
+  }, [mode, initialOrderId]);
   const perform = async (work) => {
     if (working) return;
     setLocalBusy(true); setNotice(null);
@@ -28,9 +28,9 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
     finally { setLocalBusy(false); }
   };
   return <div className="admin-card admin-form">
-    <h2>Viết Thư</h2>
+    <h2>{title}</h2>
     <fieldset className="writer-fields" disabled={working}>
-      <div className="admin-field"><label htmlFor="writer-mode">Loại thư muốn viết</label><select id="writer-mode" className="mail-template-select" value={mode} onChange={(event) => { onModeChange(event.target.value); setNotice(null); }}><option value="welcome_auto">Thư Đăng Ký</option><option value="order_auto">Thư Đơn Hàng</option><option value="private">Gửi riêng</option></select></div>
+      {allowedModes.length > 1 && <div className="admin-field"><label htmlFor="writer-mode">Loại thư muốn viết</label><select id="writer-mode" className="mail-template-select" value={mode} onChange={(event) => { onModeChange(event.target.value); setNotice(null); }}>{[["welcome_auto", "Thư Đăng Ký"], ["order_auto", "Thư Đơn Hàng"], ["private", "Gửi riêng"]].filter(([key]) => allowedModes.includes(key)).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>}
       <div className="admin-actions"><button type="button" className="admin-btn" onClick={onChooseTemplate}>Chọn mẫu từ Mẫu Thư</button></div>
       <div className="admin-field"><label htmlFor="writer-subject">Tiêu đề thư</label><input id="writer-subject" required maxLength={200} value={value.subject} onChange={(event) => onChange({ subject: event.target.value, text: value.text })} /></div>
       <div className="admin-field"><label htmlFor="writer-text">Nội dung thư</label><textarea id="writer-text" required rows={12} maxLength={20000} value={value.text} onChange={(event) => onChange({ subject: value.subject, text: event.target.value })} /></div>

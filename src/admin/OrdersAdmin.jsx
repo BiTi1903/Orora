@@ -1,3 +1,4 @@
+import OrderEmails from "./OrderEmails";
 import ModalDialog from "../components/ModalDialog";
 import OutlookCheck from "./OutlookCheck";
 import MailPreviewDialog from "./MailPreviewDialog";
@@ -10,11 +11,12 @@ import { PAYMENT_LABELS, formatVnd } from "../lib/commerce";
 import { orderRequest, MAIL_STATES } from "./order-api";
 const STATUSES = { new: "Mới nhận", confirmed: "Đã xác nhận", shipping: "Đang giao", completed: "Hoàn tất", cancelled: "Đã hủy" };
 const date = (value) => value ? new Date(value).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "—";
-export default function OrdersAdmin({ onOpenEmailMarketing }) {
+export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft }) {
   const [mailPreview, setMailPreview] = useState(null);
   const [filters, setFilters] = useState(EMPTY_ORDER_FILTERS);
   const [customerEmail, setCustomerEmail] = useState("");
-  const [view, setView] = useState("orders");
+  const [view, setView] = useState(initialMailDraft ? "orderMail" : "orders");
+  const [mailOrderId, setMailOrderId] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [orders, setOrders] = useState([]);
@@ -48,7 +50,8 @@ export default function OrdersAdmin({ onOpenEmailMarketing }) {
   const visibleOrders = filterOrderDetails(orders.filter((order) => (statusFilter === "all" || order.status === statusFilter) && (!customerEmail || String(order.customer.email || "").trim().toLowerCase() === customerEmail) && [order.id, order.code, order.customer.name, order.customer.phone, order.customer.email].some((value) => String(value || "").toLocaleLowerCase("vi").includes(query))), filters);
   return <section>
     <div className="admin-top"><div><h1>Đơn hàng</h1><p className="admin-muted">Chọn một đơn để xem thông tin người mua, thanh toán và lịch sử gửi thư.</p></div>{view === "orders" && <button className="admin-btn" disabled={busy} onClick={() => perform(async () => { const data = await orderRequest(); setOrders(data.orders); setCursor(data.nextCursor); setReady(true); })}>Tải lại</button>}</div>
-    <nav className="admin-section-tabs" aria-label="Các mục đơn hàng"><button type="button" aria-current={view === "orders" ? "page" : undefined} onClick={() => setView("orders")}>Danh sách đơn</button><button type="button" aria-current={view === "customers" ? "page" : undefined} onClick={() => setView("customers")}>Khách hàng theo email</button></nav>
+    <nav className="admin-section-tabs" aria-label="Các mục đơn hàng"><button type="button" aria-current={view === "orders" ? "page" : undefined} onClick={() => setView("orders")}>Danh sách đơn</button><button type="button" aria-current={view === "customers" ? "page" : undefined} onClick={() => setView("customers")}>Khách hàng theo email</button><button type="button" aria-current={view === "orderMail" ? "page" : undefined} onClick={() => setView("orderMail")}>Thư đơn hàng</button></nav>
+    {view === "orderMail" && <OrderEmails key={mailOrderId} initialDraft={initialMailDraft} initialOrderId={mailOrderId} onManageTemplates={onOpenEmailTemplates} />}
     {view === "customers" && <OrderCustomers onViewOrders={(email, allOrders) => { setOrders(allOrders); setCursor(null); setSearch(email); setFilters(EMPTY_ORDER_FILTERS); setCustomerEmail(email); setStatusFilter("all"); sequence.current.value++; setDetail(null); setReady(true); setView("orders"); }} />}
     <div hidden={view !== "orders"}>
     {notice && !selected && <p role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
@@ -98,7 +101,7 @@ export default function OrdersAdmin({ onOpenEmailMarketing }) {
       }}>Đã nhận hàng trả — Hoàn kho</button>}
       {selected.inventory?.state === "restocked" && <p className="admin-muted">Đã nhận hàng trả và hoàn kho.</p>}
       <h3>Lịch sử email của đơn</h3>
-      <div className="admin-actions"><button type="button" className="admin-btn" onClick={() => showDetail(selected)}>Tải lại lịch sử</button>{onOpenEmailMarketing && <button className="admin-btn" type="button" onClick={onOpenEmailMarketing}>Mẫu thư và gửi thư trong Email</button>}</div>
+      <div className="admin-actions"><button type="button" className="admin-btn" onClick={() => showDetail(selected)}>Tải lại lịch sử</button><button className="admin-btn" type="button" onClick={() => { setMailOrderId(selected.id); sequence.current.value++; setDetail(null); setView("orderMail"); }}>Soạn thư cho đơn này</button></div>
       {detail.loading ? <p>Đang tải chi tiết…</p> : !detail.mails.length ? <p className="admin-muted">Chưa có lịch sử gửi thư.</p> : detail.mails.map((mail) => <div className="order-mail-event" key={mail.id}><button type="button" className="admin-template-link" onClick={() => setMailPreview(mail)}>{mail.subject} · {MAIL_STATES[mail.state] || mail.state}</button><p>{mailActorLabel(mail)} · {date(mail.createdAt)}</p><OutlookCheck outlook={mail.outlook} label={`${selected.code} · ${mail.recipient}`} check={() => orderRequest({ action: "checkOrderOutlook", id: selected.id, eventId: mail.id })} /></div>)}
       <p className="admin-muted">“MS đã nhận” là chấp nhận yêu cầu gửi, chưa bảo đảm thư vào hộp thư khách. Chỉ đánh dấu thanh toán sau khi kiểm tra tiền thực nhận.</p>
     </article></ModalDialog>}
