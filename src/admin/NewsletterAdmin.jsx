@@ -133,7 +133,7 @@ export default function NewsletterAdmin({ initialView = "contacts", onOpenOrderM
           return;
         }
         if (result.completed) {
-          setNotice({ text: "Đã xử lý xong thư. “MS đã nhận” chưa có nghĩa thư đã vào hộp thư khách." });
+          setNotice({ text: "Đã xử lý xong thư. “Đã nhận” chưa có nghĩa thư đã vào hộp thư khách." });
           return;
         }
         await new Promise((resolve) => window.setTimeout(resolve, 5000));
@@ -218,10 +218,10 @@ export default function NewsletterAdmin({ initialView = "contacts", onOpenOrderM
             <h2>Lịch sử gửi đến danh sách đăng ký</h2>
             <p className="admin-muted">20 thư gần nhất. Lịch sử thư xác nhận mua hàng nằm trong chi tiết từng đơn.</p>
 
-            <div style={{ overflowX: "auto" }}><table className="admin-table"><thead><tr><th>Tiêu đề</th><th>Mẫu lúc gửi</th><th>Tài khoản thao tác</th><th>Người nhận</th><th>Trạng thái</th><th>MS đã nhận</th><th>Lỗi</th><th>Chưa rõ</th><th>Thao tác</th></tr></thead>
+            <div style={{ overflowX: "auto" }}><table className="admin-table"><thead><tr><th>Tiêu đề</th><th>Mẫu lúc gửi</th><th>Tài khoản thao tác</th><th>Người nhận</th><th>Trạng thái</th><th>Đã nhận</th><th>Lỗi</th><th>Chưa rõ</th><th>Thao tác</th></tr></thead>
               <tbody>{campaigns.map((item) => <tr key={item.id}>
                 <td className="mail-history-subject" title={item.subject}>{item.subject}</td><td><button type="button" className="admin-template-link" onClick={() => setPreview({ title: campaignTemplates.byMail.get(item.id)?.label || "Mẫu thư đã gửi", message: { subject: item.subject, text: item.text }, kind: "private" })}>{campaignTemplates.byMail.get(item.id)?.label || "Xem mẫu"}</button></td><td>{mailActorLabel(item)}</td><td>{item.recipientIds ? <details className="newsletter-history-recipients"><summary>{item.recipientIds.length} email đã chọn</summary><ul>{item.recipientIds.map((id, index) => <li key={id}>{item.recipientEmails?.[index] || `Email cũ không còn trong danh sách (${id.slice(0, 8)}…)`}</li>)}</ul></details> : "Toàn bộ email hoạt động"}</td><td>{STATUS[item.status] || item.status}</td><td>{item.accepted || 0}</td><td>{item.failed || 0}</td><td>{item.unknown || 0}</td>
-                <td><button type="button" className="admin-btn" onClick={() => setOutlookCampaign(item)}>Trạng thái Outlook</button>{item.status !== "completed" && <button className="admin-btn" disabled={busy} onClick={() => {
+                <td><button type="button" className="admin-btn" onClick={() => setOutlookCampaign(item)}>Check</button>{item.status !== "completed" && <button className="admin-btn" disabled={busy} onClick={() => {
                   if (window.confirm(`Tiếp tục gửi thư “${item.subject}”?`)) perform(() => run(item.id));
                 }}>Tiếp tục gửi</button>}</td>
               </tr>)}</tbody></table></div>
@@ -257,14 +257,14 @@ export default function NewsletterAdmin({ initialView = "contacts", onOpenOrderM
                 const ids = visibleContacts.map((item) => item.id);
                 setSelectedContacts((selected) => event.target.checked ? [...new Set([...selected, ...ids])] : selected.filter((id) => !ids.includes(id)));
               }} /></th>
-              <th>Email</th><th>Trạng thái</th><th>Thư tự động</th><th>Thao tác</th></tr></thead>
+              <th>Email</th><th>Trạng thái</th><th>Thư Đăng Ký</th><th>Thao tác</th></tr></thead>
               <tbody>{visibleContacts.map((item) => <tr key={item.id}>
                 <td><input type="checkbox" aria-label={`Chọn ${item.email}`} disabled={busy} checked={selectedContacts.includes(item.id)} onChange={(event) => {
                   setSelectedContacts((selected) => event.target.checked ? [...selected, item.id] : selected.filter((id) => id !== item.id));
                 }} /></td>
                 <td>{item.email}</td>
                 <td><span className={`newsletter-contact-status ${item.status}`}>{CONTACT_STATUS[item.status] || item.status}</span></td>
-                <td>{{ accepted: "MS đã nhận", pending: "Đang xử lý", failed: "Lỗi", unknown: "Chưa rõ" }[item.mailStatus] || "—"}<OutlookCheck outlook={item.outlook} label={item.email} check={() => request({ action: "checkWelcomeOutlook", id: item.id })} /></td>
+                <td>{{ accepted: "Đã nhận", pending: "Đang xử lý", failed: "Lỗi", unknown: "Chưa rõ" }[item.mailStatus] || "—"}<OutlookCheck outlook={item.outlook} label={item.email} check={() => request({ action: "checkWelcomeOutlook", id: item.id })} /></td>
                 <td><ContactActions label={`Thao tác cho ${item.email}`} disabled={busy} onApply={(operation) => manageContacts([item.id], operation)} /></td>
               </tr>)}</tbody></table></div>
             {!visibleContacts.length && <p className="admin-muted">Không có email phù hợp.</p>}

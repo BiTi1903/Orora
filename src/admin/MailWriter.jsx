@@ -43,7 +43,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
         {selectedOrder && <p>Người nhận của đơn: <strong>{selectedOrder.customer.email || "Chưa có email"}</strong> · {MAIL_STATES[selectedOrder.confirmationMail?.state] || "Chưa có lịch sử"}</p>}
         <div className="admin-actions"><button type="button" className="admin-btn primary" disabled={!valid || !selectedOrder?.customer.email || ["sending", "unknown"].includes(selectedOrder?.confirmationMail?.state)} onClick={() => {
           const confirmResend = selectedOrder.confirmationMail?.state === "accepted";
-          if (!window.confirm(`Gửi nội dung đang soạn cho ${selectedOrder.customer.email}, đơn ${selectedOrder.code}?${confirmResend ? " MS đã nhận thư trước đó của đơn này; đây là lần gửi thêm." : ""}`)) return;
+          if (!window.confirm(`Gửi nội dung đang soạn cho ${selectedOrder.customer.email}, đơn ${selectedOrder.code}?${confirmResend ? " Đã nhận thư trước đó của đơn này; đây là lần gửi thêm." : ""}`)) return;
           perform(async () => {
             const signature = JSON.stringify({ orderId, value });
             if (attempt.current?.signature !== signature) attempt.current = { signature, id: crypto.randomUUID() };

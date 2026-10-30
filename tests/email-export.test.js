@@ -23,7 +23,7 @@ test("Excel sources fetch all contact, campaign/delivery and order history pages
     await order.collection("mailEvents").doc("confirmation-auto").set({ recipient: "buyer@example.com", subject: "Receipt", text: "Old receipt content", templateName: "Receipt v1", templateRevision: 1, state: "accepted", manual: false, outlook: { state: "bounced", diagnosticCode: "5.1.1" }, createdAt: new Date(i + 1) });
   }
   const sources = { request, orderRequest };
-  const contacts = await buildEmailExport("contacts", sources); assert.equal(contacts.rows.length, 53); assert.ok(contacts.rows.every((row) => row[2] === "MS đã nhận"));
+  const contacts = await buildEmailExport("contacts", sources); assert.equal(contacts.rows.length, 53); assert.ok(contacts.rows.every((row) => row[2] === "Đã nhận"));
   const sent = await buildEmailExport("sent", sources); assert.equal(sent.rows.length, 102); assert.ok(sent.rows.every((row) => row[4] === "Original template" && row[6] === "Linh" && row[9] === "Đã gửi"));
   const orders = await buildEmailExport("orders", sources); assert.equal(orders.rows.length, 21); assert.ok(orders.rows.every((row) => row[12].includes("5.1.1")));
   assert.ok(!JSON.stringify(sent).includes("NEVER-EXPORT"));
