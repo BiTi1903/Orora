@@ -12,6 +12,7 @@ function Hero({
   const c = preview && previewData ? previewData : live;
 
   const words = Array.isArray(c.heroRotator) ? c.heroRotator : [];
+  const cards = Array.isArray(c.heroGlassCards) ? c.heroGlassCards.filter((card) => card && typeof card.text === "string" && card.text.trim()) : [];
 
   const [i, setI] = useState(0);
 
@@ -100,7 +101,7 @@ function Hero({
       {/* =========================
           THẺ KÍNH NỔI
       ========================= */}
-      {(preview || c.heroChip1) && <div
+      {(typeof c.heroChip1 === "string" && c.heroChip1.trim()) && <div
         className={`hero-chip chip-1 ${selectedClass("chip1")}`}
         style={{ "--d": 40 }}
         data-builder-key={preview ? "chip1" : undefined}
@@ -111,7 +112,7 @@ function Hero({
         </span>
       </div>}
 
-      {(preview || c.heroChip2) && <div
+      {(typeof c.heroChip2 === "string" && c.heroChip2.trim()) && <div
         className={`hero-chip chip-2 ${selectedClass("chip2")}`}
         style={{ "--d": -55 }}
         data-builder-key={preview ? "chip2" : undefined}
@@ -122,7 +123,7 @@ function Hero({
         </span>
       </div>}
 
-      {(preview || c.heroChip3) && <div
+      {(typeof c.heroChip3 === "string" && c.heroChip3.trim()) && <div
         className={`hero-chip chip-3 ${selectedClass("chip3")}`}
         style={{ "--d": 30 }}
         data-builder-key={preview ? "chip3" : undefined}
@@ -132,6 +133,8 @@ function Hero({
           <b>✧</b> {c.heroChip3}
         </span>
       </div>}
+
+      {cards.map((card, index) => <div key={card.id || index} className="hero-chip hero-chip-custom" style={{ "--d": 20, left: `clamp(140px, ${Number.isFinite(card.x) ? Math.max(0, Math.min(100, card.x)) : 50}%, calc(100% - 140px))`, top: `clamp(40px, ${Number.isFinite(card.y) ? Math.max(0, Math.min(100, card.y)) : 50}%, calc(100% - 40px))` }} onClick={select("image")}><span className="chip-in">{card.text}</span></div>)}
 
       {/* =========================
           VÒNG CHỮ XOAY
@@ -165,13 +168,13 @@ function Hero({
           NỘI DUNG HERO
       ========================= */}
       <div className="hero-content" onClick={(e) => e.stopPropagation()}>
-        <p
+        {typeof c.heroEyebrow === "string" && c.heroEyebrow.trim() && <p
           className={`small-text ${selectedClass("eyebrow")}`}
           data-builder-key={preview ? "eyebrow" : undefined}
           onClick={select("eyebrow")}
         >
           {c.heroEyebrow}
-        </p>
+        </p>}
 
         <h1
           className={`hero-title ${selectedClass("title")}`}

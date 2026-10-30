@@ -1,6 +1,7 @@
+import HeroGlassSettings from "./HeroGlassSettings";
 import { SettingGroup } from "./ui";
 
-export function HeroSettings({ data, hero, onChange }) {
+function HeroFieldSettings({ data, hero, onChange }) {
   if (!data || data.type === "heroEmpty") {
     return (
       <div className="builder-empty">
@@ -158,4 +159,8 @@ export function HeroSettings({ data, hero, onChange }) {
   }
 
   return null;
+}
+
+export function HeroSettings(props) {
+  return <><HeroFieldSettings {...props} /><HeroGlassSettings hero={props.hero} onChange={props.onChange} /></>;
 }

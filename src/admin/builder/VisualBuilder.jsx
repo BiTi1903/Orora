@@ -33,6 +33,7 @@ const DEFAULT_HERO = {
   heroEyebrow: "WELCOME TO",
   heroTitle: "ORORA",
   heroDescription: "Create something beautiful.",
+  heroGlassCards: [],
   heroRotatorPrefix: "Làn da",
   heroRotatorSuffix: "mỗi ngày",
   heroRotator: ["dịu nhẹ", "rạng rỡ", "tự tin", "tỏa sáng"],
@@ -702,6 +703,7 @@ function createHero(data = {}) {
     heroEyebrow: data.heroEyebrow ?? DEFAULT_HERO.heroEyebrow,
     heroTitle: data.heroTitle ?? DEFAULT_HERO.heroTitle,
     heroDescription: data.heroDescription ?? DEFAULT_HERO.heroDescription,
+    heroGlassCards: Array.isArray(data.heroGlassCards) ? data.heroGlassCards : [],
     heroRotatorPrefix: data.heroRotatorPrefix ?? DEFAULT_HERO.heroRotatorPrefix,
     heroRotatorSuffix: data.heroRotatorSuffix ?? DEFAULT_HERO.heroRotatorSuffix,
     heroRotator:
@@ -899,6 +901,7 @@ function buildHomePayload({ about, hero, collection, productDetail, features, re
     heroChip1: hero.heroChip1,
     heroChip2: hero.heroChip2,
     heroChip3: hero.heroChip3,
+    heroGlassCards: hero.heroGlassCards,
     heroRingText: hero.heroRingText,
     heroScrollText: hero.heroScrollText,
 

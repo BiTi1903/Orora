@@ -480,3 +480,5 @@
 .home-first-screen { display: flex; flex-direction: column; min-height: 100svh; }
 .home-first-screen > .hero { flex: 1; min-height: 0; }
 .home-first-screen > .marquee { flex: 0 0 auto; }
+.hero-chip-custom { transform: translate(-50%, -50%); max-width: 260px; }
+.hero-chip-custom .chip-in { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
