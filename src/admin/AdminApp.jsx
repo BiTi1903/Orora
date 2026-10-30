@@ -1,3 +1,5 @@
+import EmailExport from "./EmailExport";
+import { newsletterRequest } from "./newsletter-api";
 import ShippingAdmin from "./ShippingAdmin";
 import InventoryAdmin from "./InventoryAdmin";
 import { useEffect, useState } from "react";
@@ -19,6 +21,7 @@ const TABS = [
   ["newsletter", "Email"],
   ["inventory", "Kiểm Hàng"],
   ["shipping", "Phí vận chuyển"],
+  ["export", "Xuất Excel"],
 ];
 
 export default function AdminApp() {
@@ -66,6 +69,7 @@ export default function AdminApp() {
         {tab === "home" && <HomeAdmin />}
         {tab === "products" && <ProductsAdmin />}
         {tab === "orders" && <OrdersAdmin key={`${user.uid}:${orderMailVersion}`} initialMailDraft={orderMailDraft} onOpenEmailTemplates={() => { setEmailSection("templates"); setTab("newsletter"); }} />}
+        {tab === "export" && <EmailExport key={user.uid} request={newsletterRequest} />}
         {tab === "shipping" && <ShippingAdmin key={user.uid} />}
         {tab === "inventory" && <InventoryAdmin key={user.uid} />}
         {tab === "newsletter" && <NewsletterAdmin initialView={emailSection} onOpenOrderMail={(draft) => { setOrderMailDraft(draft); setOrderMailVersion((value) => value + 1); setTab("orders"); }} />}

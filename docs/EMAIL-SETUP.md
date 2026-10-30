@@ -176,7 +176,7 @@ Khi mở trang quản trị ở bản mới, API được xác thực sẽ lưu 
 
 ### Viết Thư hợp nhất
 
-Trong mục **Email**, thanh điều hướng gồm **Danh sách email**, **Viết Thư**, **Mẫu Thư**, **Xuất Excel**. Phần thư đơn hàng đã chuyển sang **Đơn hàng → Thư đơn hàng**, gồm soạn/gửi và lịch sử gửi.
+Trong mục **Email**, thanh điều hướng gồm **Danh sách email**, **Viết Thư**, **Mẫu Thư**. Phần thư đơn hàng đã chuyển sang **Đơn hàng → Thư đơn hàng**, gồm soạn/gửi và lịch sử gửi.
 
 Trong **Email → Viết Thư**, chọn **Thư Đăng Ký** (tên mới của thư chào mừng) hoặc **Gửi riêng**. **Thư Đơn Hàng** được soạn tại **Đơn hàng → Thư đơn hàng**. Hai loại tự động nạp nội dung đang cấu hình. Mỗi loại giữ bản đang soạn riêng khi đổi lựa chọn. Chọn mẫu từ kho sẽ chép vào cùng ô tiêu đề/nội dung; sửa nội dung tách khỏi liên kết mẫu gốc.
 
@@ -225,3 +225,7 @@ Mục Email marketing đổi tên thành **Email**. **Kiểm Hàng** nằm ngay 
 - Khi số lượng thay đổi bởi đơn hàng hoặc người khác, bản nhập tồn cũ bị từ chối để tránh ghi đè giao dịch. Bấm **Tải lại tồn kho** và kiểm tra lại trước khi lưu. Lịch sử điều chỉnh/xuất/hoàn được lưu riêng ở `inventoryMovements`.
 
 Việc xác nhận thanh toán hiện do admin thực hiện, chưa có cổng thanh toán tự đối soát. Bộ thử dùng Firestore giả lập trong bộ nhớ, SMTP giả và trình duyệt; không ghi tồn hoặc gửi thư thật trên Production.
+
+### Xuất Excel ở menu chính
+
+**Xuất Excel** là mục riêng ở sidebar admin, bên dưới Phí vận chuyển. Không còn tab xuất trong Email. Ba lựa chọn và quyền truy cập giữ nguyên: email đăng ký, thư đã gửi, thư đơn hàng đã gửi; tải đủ phân trang trước khi tạo file. Việc mở mục Xuất Excel không cần tải hoặc tạo mẫu trong Email trước.

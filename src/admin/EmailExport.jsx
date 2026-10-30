@@ -3,7 +3,7 @@ import { orderRequest } from "./order-api";
 import { buildEmailExport, excelCells } from "./email-export";
 export default function EmailExport({ request }) {
   const [kind, setKind] = useState(""); const [busy, setBusy] = useState(false); const [notice, setNotice] = useState(null);
-  return <section className="admin-card admin-form"><h2>Xuất Excel</h2>
+  return <section><div className="admin-top"><h1>Xuất Excel</h1></div><div className="admin-card admin-form">
     <div className="admin-field"><label htmlFor="email-export-kind">Danh sách cần xuất</label><select id="email-export-kind" value={kind} disabled={busy} onChange={(event) => { setKind(event.target.value); setNotice(null); }}><option value="">Chọn danh sách</option><option value="contacts">Email đã đăng ký</option><option value="sent">Thư đã gửi</option><option value="orders">Thư đơn hàng đã gửi</option></select></div>
     <p className="admin-muted">Xuất toàn bộ danh sách đã chọn, gồm các trang chưa tải trên màn hình. Thư đã gửi ghi từng người nhận và kết quả xử lý; thư đơn hàng gồm cả tự động và gửi riêng. Trạng thái kiểm tra lấy từ kết quả đã lưu, không gọi Outlook lại.</p>
     <div><button type="button" className="admin-btn primary" disabled={!kind || busy} onClick={async () => {
@@ -18,5 +18,5 @@ export default function EmailExport({ request }) {
       finally { setBusy(false); }
     }}>{busy ? "Đang tải và xuất…" : "Tải file Excel"}</button></div>
     {notice && <p role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
-  </section>;
+  </div></section>;
 }

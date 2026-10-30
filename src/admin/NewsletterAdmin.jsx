@@ -1,4 +1,3 @@
-import EmailExport from "./EmailExport";
 import OutlookCheck from "./OutlookCheck";
 import CampaignOutlookStatus from "./CampaignOutlookStatus";
 import { hasOrderTokens } from "../lib/template-kinds";
@@ -37,7 +36,7 @@ export default function NewsletterAdmin({ initialView = "contacts", onOpenOrderM
   const [outlookCampaign, setOutlookCampaign] = useState(null);
   const [preview, setPreview] = useState(null);
   const [picker, setPicker] = useState(null);
-  const [view, setView] = useState(["compose", "welcome"].includes(initialView) ? "write" : ["orders", "orderSend", "orderHistory"].includes(initialView) ? "contacts" : initialView);
+  const [view, setView] = useState(["compose", "welcome"].includes(initialView) ? "write" : ["orders", "orderSend", "orderHistory", "export"].includes(initialView) ? "contacts" : initialView);
   const [writerMode, setWriterMode] = useState("welcome_auto");
   const [writerDrafts, setWriterDrafts] = useState({});
   const [recipientMode, setRecipientMode] = useState("selected");
@@ -188,9 +187,8 @@ export default function NewsletterAdmin({ initialView = "contacts", onOpenOrderM
       {!ready ? <p className="admin-muted">Cần kết nối API email để tải dữ liệu. Nếu có lỗi, kiểm tra cấu hình rồi bấm Tải lại.</p> : (
         <>
           <nav className="admin-section-tabs" aria-label="Các mục email marketing">
-            {[["contacts", "Danh sách email"], ["write", "Viết Thư"], ["templates", "Mẫu Thư"], ["export", "Xuất Excel"]].map(([key, label]) => <button type="button" key={key} aria-current={view === key ? "page" : undefined} onClick={() => setView(key)}>{label}</button>)}
+            {[["contacts", "Danh sách email"], ["write", "Viết Thư"], ["templates", "Mẫu Thư"]].map(([key, label]) => <button type="button" key={key} aria-current={view === key ? "page" : undefined} onClick={() => setView(key)}>{label}</button>)}
           </nav>
-          {view === "export" && <EmailExport request={request} />}
 
           <div hidden={view !== "templates"}><MailTemplateLibrary request={request} active={view === "templates"} onUse={applyTemplate} /></div>
           <div className="admin-email-panel" hidden={view !== "write"}>
