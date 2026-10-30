@@ -6,19 +6,28 @@ import { validateMessage } from "./newsletter-content.js";
 import { PAYMENT_LABELS, formatVnd } from "../src/lib/commerce.js";
 export const DEFAULT_ORDER_MESSAGE = {
   subject: "ORORA xác nhận đã nhận đơn {{orderCode}}",
-  text: "Chào {{customerName}},\n\nORORA đã nhận đơn hàng {{orderCode}} của bạn.\n\nSản phẩm: {{productName}}\nSố lượng: {{quantity}}\nTạm tính: {{subtotal}}\nPhương thức thanh toán: {{paymentMethod}}\nĐịa chỉ nhận hàng: {{address}}\nSố điện thoại: {{phone}}\n\nORORA sẽ liên hệ để xác nhận đơn, phí giao hàng và thông tin thanh toán. Thư này xác nhận đã nhận yêu cầu đặt hàng, chưa xác nhận thanh toán.\n\nCảm ơn bạn đã chọn ORORA!",
+  text: "Chào {{customerName}},\n\nORORA đã tiếp nhận đơn hàng {{orderCode}}.\nNgày đặt: {{createdAt}}\n\nTHÔNG TIN NGƯỜI NHẬN\nHọ và tên: {{customerName}}\nSố điện thoại: {{phone}}\nEmail: {{email}}\nĐịa chỉ nhận hàng: {{address}}\nGhi chú: {{note}}\n\nTHÔNG TIN ĐƠN HÀNG\nSản phẩm: {{productName}}\nĐơn giá: {{unitPrice}}\nSố lượng: {{quantity}}\nTiền sản phẩm: {{subtotal}}\nPhí giao hàng: {{shippingFee}}\nTổng tiền: {{totalAmount}}\nPhương thức thanh toán: {{paymentMethod}}\nTrạng thái thanh toán: {{paymentStatus}}\n\nORORA sẽ liên hệ xác nhận và hỗ trợ xử lý đơn. Nếu thông tin chưa đúng, vui lòng phản hồi kèm mã đơn.\n\nCảm ơn bạn đã chọn ORORA!",
 };
-export const ORDER_TOKENS = ["customerName", "orderCode", "productName", "quantity", "subtotal", "shippingFee", "totalAmount", "paymentMethod", "address", "phone", "email"];
+export const ORDER_TOKENS = ["customerName", "orderCode", "productName", "quantity", "subtotal", "shippingFee", "totalAmount", "paymentMethod", "address", "phone", "email", "note", "unitPrice", "createdAt", "paymentStatus"];
 export const validOrderEmail = (value) => typeof value === "string" && value.length <= 254 && /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/.test(value);
 export function validateOrderTemplate(value) {
   const message = validateMessage(value);
   if ([...`${message.subject}\n${message.text}`.matchAll(/\{\{(\w+)\}\}/g)].some((match) => !ORDER_TOKENS.includes(match[1]))) throw new Error("invalid_order_token");
   return message;
 }
-export function renderOrderMessage(template, order) {
-  const values = { customerName: order.customer.name, orderCode: order.code, productName: order.product.name, quantity: order.quantity, subtotal: order.subtotal === null ? "ORORA sẽ báo giá" : formatVnd(order.subtotal), shippingFee: order.shippingFee == null ? "ORORA sẽ xác nhận" : formatVnd(order.shippingFee), totalAmount: order.totalAmount == null ? "ORORA sẽ xác nhận" : formatVnd(order.totalAmount), paymentMethod: PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod, address: order.customer.address, phone: order.customer.phone, email: order.customer.email };
+export function renderOrderMessage(template, order, { complete = false } = {}) {
+  const orderedAt = order.createdAt?.toDate?.() ?? order.createdAt;
+  const orderedDate = orderedAt ? new Date(orderedAt) : null;
+  const values = { customerName: order.customer.name, orderCode: order.code, productName: order.product.name, quantity: order.quantity, subtotal: order.subtotal == null ? "ORORA sẽ báo giá" : formatVnd(order.subtotal), unitPrice: order.product.unitPrice == null ? order.product.priceText || "ORORA sẽ báo giá" : formatVnd(order.product.unitPrice), shippingFee: order.shippingFee == null ? "ORORA sẽ xác nhận" : formatVnd(order.shippingFee), totalAmount: order.totalAmount == null ? "ORORA sẽ xác nhận" : formatVnd(order.totalAmount), paymentMethod: PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod, paymentStatus: order.paymentStatus === "paid" ? "Đã thanh toán" : "Chưa thanh toán", address: order.customer.address, phone: order.customer.phone, email: order.customer.email, note: order.customer.note || "Không có", createdAt: orderedDate && Number.isFinite(orderedDate.getTime()) ? orderedDate.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "Chưa lưu ngày đặt" };
+  let text = template.text;
+  if (complete) {
+    const present = new Set([...`${template.subject}\n${template.text}`.matchAll(/\{\{(\w+)\}\}/g)].map((match) => match[1]));
+    const fields = [["orderCode", "Mã đơn"], ["createdAt", "Ngày đặt"], ["customerName", "Họ và tên"], ["phone", "Số điện thoại"], ["email", "Email"], ["address", "Địa chỉ nhận hàng"], ["note", "Ghi chú"], ["productName", "Sản phẩm"], ["unitPrice", "Đơn giá"], ["quantity", "Số lượng"], ["subtotal", "Tiền sản phẩm"], ["shippingFee", "Phí giao hàng"], ["totalAmount", "Tổng tiền"], ["paymentMethod", "Phương thức thanh toán"], ["paymentStatus", "Trạng thái thanh toán"]];
+    const missing = fields.filter(([key]) => !present.has(key));
+    if (missing.length) text += `\n\nTHÔNG TIN BỔ SUNG CỦA ĐƠN HÀNG\n${missing.map(([key, label]) => `${label}: {{${key}}}`).join("\n")}`;
+  }
   const fill = (text, subject = false) => text.replace(/\{\{(\w+)\}\}/g, (_, key) => subject ? String(values[key] ?? "").replace(/[\r\n]/g, " ") : String(values[key] ?? ""));
-  return validateMessage({ subject: fill(template.subject, true), text: fill(template.text) });
+  return validateMessage({ subject: fill(template.subject, true), text: fill(text) });
 }
 export async function sendOrderConfirmation({ db, orderId, sendMail, manual = false, requestId, confirmResend = false, actor = "automatic", actorName = "", actorEmail = "", message: customMessage, templateRef }) {
   const orderRef = db.collection("orders").doc(orderId);
@@ -33,7 +42,7 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
     if (["sending", "unknown"].includes(previous)) throw Object.assign(new Error("Kết quả gửi trước chưa rõ hoặc đang xử lý. Kiểm tra thư đã gửi trên Microsoft trước khi gửi lại."), { status: 409 });
     if (manual && previous === "accepted" && !confirmResend) throw Object.assign(new Error("Thư đã được Microsoft nhận. Cần xác nhận gửi lại để tránh gửi trùng."), { status: 409 });
     let message; let sourceTemplate; let templateError = false;
-    try { sourceTemplate = manual && customMessage ? validateOrderTemplate(customMessage) : template.exists ? validateOrderTemplate(template.data()) : DEFAULT_ORDER_MESSAGE; message = renderOrderMessage(sourceTemplate, data); }
+    try { sourceTemplate = manual && customMessage ? validateOrderTemplate(customMessage) : template.exists ? validateOrderTemplate(template.data()) : DEFAULT_ORDER_MESSAGE; message = renderOrderMessage(sourceTemplate, data, { complete: true }); }
     catch { message = { subject: "Không tạo được thư xác nhận đơn", text: "" }; templateError = true; }
     const snapshot = manual && customMessage ? await captureTemplate(tx, db, templateRef, sourceTemplate || {}, ["private", "order_auto"]) : template.exists ? templateIdentity(template.data()) : {};
     const createdAt = new Date();

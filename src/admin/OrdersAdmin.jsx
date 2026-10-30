@@ -1,3 +1,4 @@
+import ModalDialog from "../components/ModalDialog";
 import OutlookCheck from "./OutlookCheck";
 import MailPreviewDialog from "./MailPreviewDialog";
 import { mailActorLabel } from "../lib/mail-templates";
@@ -23,9 +24,7 @@ export default function OrdersAdmin({ onOpenEmailMarketing }) {
   const [notice, setNotice] = useState(null);
   const [detail, setDetail] = useState(null);
   const sequence = useRef({ value: 0 });
-  const panel = useRef(null);
   useEffect(() => { const tracker = sequence.current; let alive = true; orderRequest().then((data) => { if (alive) { setOrders(data.orders); setCursor(data.nextCursor); setReady(true); } }).catch((error) => { if (alive) setNotice({ error: true, text: error.message }); }); return () => { alive = false; tracker.value++; }; }, []);
-  useEffect(() => { if (detail?.order.id) panel.current?.scrollIntoView({ block: "start", behavior: "smooth" }); }, [detail?.order.id]);
   const perform = async (work) => { if (busy) return; setBusy(true); setNotice(null); try { await work(); } catch (error) { setNotice({ error: true, text: error.message }); } finally { setBusy(false); } };
   const showDetail = async (order) => {
     const current = ++sequence.current.value;
@@ -52,7 +51,7 @@ export default function OrdersAdmin({ onOpenEmailMarketing }) {
     <nav className="admin-section-tabs" aria-label="Các mục đơn hàng"><button type="button" aria-current={view === "orders" ? "page" : undefined} onClick={() => setView("orders")}>Danh sách đơn</button><button type="button" aria-current={view === "customers" ? "page" : undefined} onClick={() => setView("customers")}>Khách hàng theo email</button></nav>
     {view === "customers" && <OrderCustomers onViewOrders={(email, allOrders) => { setOrders(allOrders); setCursor(null); setSearch(email); setFilters(EMPTY_ORDER_FILTERS); setCustomerEmail(email); setStatusFilter("all"); sequence.current.value++; setDetail(null); setReady(true); setView("orders"); }} />}
     <div hidden={view !== "orders"}>
-    {notice && <p role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
+    {notice && !selected && <p role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
     {!ready ? <p className="admin-muted">Đang chờ dữ liệu đơn hàng.</p> : <>
       <div className="admin-order-toolbar">
         <div className="admin-field"><label htmlFor="order-search">Tìm đơn hàng</label><input id="order-search" type="search" placeholder="Mã/ID đơn, tên, điện thoại hoặc email" value={search} onChange={(event) => { setSearch(event.target.value); setCustomerEmail(""); }} /></div>
@@ -85,8 +84,8 @@ export default function OrdersAdmin({ onOpenEmailMarketing }) {
       </tbody></table>{!visibleOrders.length && <p className="admin-muted">{orders.length ? "Không có đơn phù hợp với bộ lọc." : "Chưa có đơn hàng."}</p>}</div>
       {cursor && <button className="admin-btn" disabled={busy} onClick={() => perform(async () => { const data = await orderRequest(null, { cursor }); setOrders((items) => [...new Map([...items, ...data.orders].map((item) => [item.id, item])).values()]); setCursor(data.nextCursor); })}>Tải thêm đơn</button>}
     </>}
-    {selected && <article className="admin-card admin-order-detail" ref={panel} aria-label={`Chi tiết đơn ${selected.code}`}>
-      <div className="admin-order-heading"><h2>Đơn {selected.code}</h2><button type="button" className="admin-btn" onClick={() => { sequence.current.value++; setDetail(null); }}>Đóng chi tiết</button></div>
+    {selected && <ModalDialog title={`Đơn ${selected.code}`} className="admin-order-modal" onClose={() => { sequence.current.value++; setDetail(null); }}><article className="admin-order-detail" aria-label={`Chi tiết đơn ${selected.code}`}>
+      {notice && <p role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
       <p className="admin-muted">Đặt lúc {date(selected.createdAt)}</p><p className="admin-muted">ID: {selected.id}</p>
       <div className="admin-form-grid order-detail-grid"><div><h3>Thông tin người mua</h3><p>{selected.customer.name}</p><p><a href={`tel:${selected.customer.phone}`}>{selected.customer.phone}</a></p><p>{selected.customer.email ? <a href={`mailto:${selected.customer.email}`}>{selected.customer.email}</a> : "Đơn cũ chưa có email"}</p><p className="order-preserve-text">{selected.customer.address}</p><p className="order-preserve-text">Ghi chú: {selected.customer.note || "—"}</p></div>
       <div><h3>Sản phẩm và thanh toán</h3><p>{selected.product.name} × {selected.quantity}</p><p>Đơn giá: {selected.product.priceText || "Cần báo giá"}</p><p>Tạm tính: {selected.subtotal === null ? "Cần báo giá" : formatVnd(selected.subtotal)}</p><p>Phí giao hàng: {selected.shippingFee == null ? "Xác nhận sau" : formatVnd(selected.shippingFee)}</p><p>Tổng tiền: {selected.totalAmount == null ? "Chưa chốt tổng tiền" : formatVnd(selected.totalAmount)}</p><p>Phương thức: {PAYMENT_LABELS[selected.paymentMethod] || selected.paymentMethod}</p><p>Thanh toán: {orderPaymentLabel(selected)}</p><label className="admin-check"><input type="checkbox" checked={selected.paymentStatus === "paid"} disabled={busy || detail.loading} onChange={(event) => update(selected, { paymentStatus: event.target.checked ? "paid" : "unpaid" })} />Đã thanh toán</label></div></div>
@@ -102,7 +101,7 @@ export default function OrdersAdmin({ onOpenEmailMarketing }) {
       <div className="admin-actions"><button type="button" className="admin-btn" onClick={() => showDetail(selected)}>Tải lại lịch sử</button>{onOpenEmailMarketing && <button className="admin-btn" type="button" onClick={onOpenEmailMarketing}>Mẫu thư và gửi thư trong Email</button>}</div>
       {detail.loading ? <p>Đang tải chi tiết…</p> : !detail.mails.length ? <p className="admin-muted">Chưa có lịch sử gửi thư.</p> : detail.mails.map((mail) => <div className="order-mail-event" key={mail.id}><button type="button" className="admin-template-link" onClick={() => setMailPreview(mail)}>{mail.subject} · {MAIL_STATES[mail.state] || mail.state}</button><p>{mailActorLabel(mail)} · {date(mail.createdAt)}</p><OutlookCheck outlook={mail.outlook} label={`${selected.code} · ${mail.recipient}`} check={() => orderRequest({ action: "checkOrderOutlook", id: selected.id, eventId: mail.id })} /></div>)}
       <p className="admin-muted">“MS đã nhận” là chấp nhận yêu cầu gửi, chưa bảo đảm thư vào hộp thư khách. Chỉ đánh dấu thanh toán sau khi kiểm tra tiền thực nhận.</p>
-    </article>}
+    </article></ModalDialog>}
     </div>
     {mailPreview && <MailPreviewDialog title="Thư của đơn hàng" message={mailPreview} onClose={() => setMailPreview(null)} metadata={<><p>Gửi tới: {mailPreview.recipient}</p><p>Tài khoản thao tác: {mailActorLabel(mailPreview)}</p>{mailPreview.errorCode && <p className="admin-error">Mã lỗi: {mailPreview.errorCode}{mailPreview.errorMessage ? ` · ${mailPreview.errorMessage}` : ""}</p>}</>} />}
   </section>;

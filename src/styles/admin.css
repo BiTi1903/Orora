@@ -380,3 +380,17 @@
 .inventory-search { margin: 18px 0; }
 .inventory-search label { display: block; margin-bottom: 7px; font-size: 13px; }
 .inventory-search input { width: 100%; max-width: 420px; min-height: 42px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--plum); font: inherit; }
+.shipping-saved-fees { margin-top: 20px; }
+.shipping-fee-table { overflow-x: auto; max-height: 460px; }
+.shipping-fee-table .admin-table td { white-space: normal; min-width: 120px; }
+.admin-order-modal .admin-order-detail { margin: 0; }
+.shipping-settings .admin-field > input { width: 100%; min-height: 44px; padding: 10px 13px; border: 1px solid var(--line); border-radius: 12px; color: var(--plum); background: #fff; font: inherit; }
+.shipping-settings .admin-field > input:focus { outline: none; border-color: var(--rose-deep); box-shadow: 0 0 0 3px #b8446d12; }
+@media (max-width: 600px) {
+  .shipping-fee-table .admin-table, .shipping-fee-table tbody { display: block; }
+  .shipping-fee-table thead { display: none; }
+  .shipping-fee-table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .shipping-fee-table .admin-table td { display: block; min-width: 0; padding: 6px 4px; border: 0; overflow-wrap: anywhere; }
+  .shipping-fee-table td:first-child, .shipping-fee-table td:last-child { grid-column: 1 / -1; }
+  .shipping-fee-table td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 4px; font-size: 11px; color: var(--plum-soft); }
+}

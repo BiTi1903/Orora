@@ -1,3 +1,5 @@
+import AddressSelect from "./AddressSelect";
+import ModalDialog from "./ModalDialog";
 import useAddressOptions from "../hooks/useAddressOptions";
 import { shippingFeeFor } from "../lib/shipping";
 import { useEffect, useRef, useState } from "react";
@@ -17,8 +19,7 @@ export default function OrderForm({ product, home, onClose }) {
   const unitPrice = parseVndPrice(product.price);
   const shipping = shippingFeeFor(home.shippingSettings, provinceCode, wardCode);
   const total = unitPrice === null || shipping.fee === null ? null : unitPrice * (Number(quantity) || 0) + shipping.fee;
-  if (result?.code) return <section className="website-order order-received" role="status">
-    <h2>Đã nhận đơn hàng</h2><p>Mã đơn: <strong>{result.code}</strong></p>
+  if (result?.code) return <ModalDialog title="Đã nhận đơn hàng" onClose={onClose} className="order-success-modal"><section className="order-received" aria-label="Thông tin đơn đã nhận"><p>Mã đơn: <strong>{result.code}</strong></p>
     <p>{result.message}</p>
     <div className="order-received-details"><h3>Thông tin người nhận</h3><dl>
       {[["Họ và tên", result.recipient.name], ["Số điện thoại", result.recipient.phone], ["Email", result.recipient.email], ["Địa chỉ nhận hàng", result.recipient.address], ["Ghi chú", result.recipient.note]].filter(([, value]) => value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
@@ -33,7 +34,7 @@ export default function OrderForm({ product, home, onClose }) {
     </dl></div>
     <p className="order-help">Nếu thông tin chưa đúng, vui lòng liên hệ ORORA và cung cấp mã đơn để được hỗ trợ.</p>
     <p>{result.mailStatus === "accepted" ? "Vui lòng kiểm tra email xác nhận và mục thư rác." : result.mailStatus === "failed" ? "Đơn đã được nhận nhưng chưa gửi được email xác nhận. Bạn có thể liên hệ ORORA với mã đơn bên trên." : "Email xác nhận đang được xử lý."}</p><button type="button" onClick={onClose}>Đóng</button>
-  </section>;
+  </section></ModalDialog>;
   return <form ref={formRef} className="website-order" aria-label="Đặt hàng trên website" onSubmit={async (event) => {
     event.preventDefault();
     if (busy || !methods.length || !provinceCode || !wardCode || (home.shippingSettings?.enabled === true && shipping.fee === null)) return;
@@ -67,9 +68,9 @@ export default function OrderForm({ product, home, onClose }) {
         <label>Số điện thoại<input name="phone" type="tel" required maxLength={25} autoComplete="tel" /></label>
       </div>
       <label>Email nhận xác nhận đơn<input name="email" type="email" required maxLength={254} autoComplete="email" /></label>
-      <div className="order-field-row">
-        <label>Tỉnh / Thành phố<select aria-label="Tỉnh / Thành phố" name="provinceCode" required value={provinceCode} disabled={addresses.loadingProvinces || !addresses.provinces.length} onChange={(event) => { setProvinceCode(event.target.value); setWardCode(""); }}><option value="">{addresses.loadingProvinces ? "Đang tải tỉnh/thành…" : "Chọn tỉnh/thành"}</option>{addresses.provinces.map((item) => <option key={item.code} value={item.code}>{item.name}</option>)}</select></label>
-        <label>Phường / Xã<select aria-label="Phường / Xã" name="wardCode" required value={wardCode} disabled={!provinceCode || addresses.loadingWards || !addresses.wards.length} onChange={(event) => setWardCode(event.target.value)}><option value="">{addresses.loadingWards ? "Đang tải phường/xã…" : "Chọn phường/xã"}</option>{addresses.wards.map((item) => <option key={item.code} value={item.code}>{item.name}</option>)}</select></label>
+      <div className="order-field-row order-address-row">
+        <AddressSelect label="Tỉnh / Thành phố" name="provinceCode" required value={provinceCode} options={addresses.provinces} disabled={!addresses.provinces.length} loading={addresses.loadingProvinces} placeholder="Chọn tỉnh/thành" onChange={(code) => { setProvinceCode(code); setWardCode(""); }} />
+        <AddressSelect label="Phường / Xã" name="wardCode" required value={wardCode} options={addresses.wards} disabled={!provinceCode || !addresses.wards.length} loading={addresses.loadingWards} placeholder="Chọn phường/xã" onChange={setWardCode} />
       </div>
       {addresses.error && <p className="order-error" role="alert">{addresses.error} <button type="button" onClick={addresses.retry}>Tải lại địa chỉ</button></p>}
       <label>Số nhà, tên đường<textarea name="addressDetail" rows={2} required minLength={5} maxLength={350} autoComplete="street-address" placeholder="Số nhà, tên đường, tòa nhà…" /></label>

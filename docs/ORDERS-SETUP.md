@@ -62,3 +62,9 @@ Thống kê khách hàng có lọc khoảng tổng giá trị và sắp xếp th
 - QR và webhook đối soát chưa được bật trong bước này. Cần tài khoản dịch vụ nhận/đối soát, liên kết ngân hàng và cấu hình xác thực webhook trước khi ghi nhận tiền tự động. Không suy diễn đặt đơn hoặc quét QR là thanh toán thành công.
 
 Kiểm thử dùng bộ địa chỉ thật của thư viện, Firestore trong bộ nhớ và SMTP giả; không giao dịch tiền thật. Môi trường làm việc không truy cập trực tiếp được các trang API địa chỉ/SePay (proxy trả 403), nên không xác minh trực tiếp bảng phí/ngân hàng được hỗ trợ của SePay tại thời điểm này.
+
+### Tra cứu phí, xem đơn và thư xác nhận đầy đủ
+
+Ô tỉnh/thành và phường/xã có tìm kiếm (kể cả gõ không dấu), dùng bàn phím hoặc chọn trực tiếp. Admin có bảng **Phí vận chuyển đã lưu** gồm phí chung và phí riêng, tìm khu vực và nút **Chỉnh phí**; bảng không coi bản nháp chưa lưu là phí đang áp dụng. Chi tiết đơn trong admin và thông tin đơn sau khi đặt thành công mở bằng popup giữa màn hình, có nút đóng, Escape và vùng cuộn cho mobile.
+
+Thư đơn hàng (gửi tự động, gửi cho đơn cụ thể và gửi thử mẫu đơn) bổ sung các trường đơn còn thiếu trong nội dung mẫu: người nhận/email/địa chỉ/ghi chú, mã/ngày đặt, sản phẩm/đơn giá/số lượng, tiền hàng/ship/tổng tiền và trạng thái thanh toán. Mẫu có sẵn đủ biến không bị thêm khối lặp. Mẫu gốc không bị ghi đè; lịch sử lưu riêng mẫu lúc gửi và nội dung thực gửi. Những thư đã gửi trước đó không được sửa, và thư gửi riêng ngoài ngữ cảnh đơn hàng không có khối này. Biến mới gồm `{{note}}`, `{{unitPrice}}`, `{{createdAt}}`, `{{paymentStatus}}`. Trạng thái dựa trên dữ liệu đơn đã lưu, không suy diễn gửi email thành thanh toán.

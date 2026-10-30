@@ -60,3 +60,29 @@ img { max-width: 100%; }
 }
 .page-heading { padding: 140px 7% 32px; margin: 0; color: var(--plum); font-family: var(--font-display); font-size: clamp(36px, 6vw, 72px); }
 .page-heading + .collection, .page-heading + .about { padding-top: 48px; }
+
+/* Shared searchable address picker. */
+.address-select { position: relative; display: grid; align-content: start; gap: 7px; min-width: 0; margin-bottom: 14px; }
+.address-select > label { margin: 0 !important; font-size: 13px; line-height: 1.5; }
+.address-select-control { position: relative; min-width: 0; }
+.address-select-control input, .website-order .address-select-control input { width: 100%; min-width: 0; min-height: 46px; padding: 11px 38px 11px 13px; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--plum); font: inherit; font-size: 14px; text-overflow: ellipsis; transition: border-color .15s, box-shadow .15s; }
+.address-select-control input:focus { outline: none; border-color: var(--rose-deep); box-shadow: 0 0 0 3px #b8446d12; }
+.address-select-control input:disabled { background: #faf5f7; color: #9c8a92; cursor: not-allowed; }
+.address-select-control > svg { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--rose-deep); pointer-events: none; }
+.address-select-options { position: absolute; top: 100%; left: 0; right: 0; z-index: 30; max-height: min(260px, 40vh); overflow-y: auto; overscroll-behavior: contain; padding: 6px; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 12px 32px #74354e1a; }
+.address-select-options > button { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 11px 10px; border: 0; border-radius: 9px; text-align: left; font: inherit; font-size: 13px; line-height: 1.4; background: transparent; color: var(--plum); cursor: pointer; }
+.address-select-options > button small { font-size: 11px; color: var(--plum-soft); }
+.address-select-options > button:hover, .address-select-options > button.is-active { background: #fff1f6; }
+.address-select-options > button[aria-selected="true"] { color: var(--rose-deep); font-weight: 600; }
+.address-select-options > p { padding: 12px; font-size: 13px; color: var(--plum-soft); }
+/* Native top-layer dialog shared by customer receipts and admin order details. */
+.orora-modal { position: fixed; inset: 0; margin: auto; width: min(760px, calc(100% - 32px)); max-height: calc(100dvh - 32px); padding: 0; overflow-y: auto; border: 1px solid var(--line); border-radius: 24px; background: #fffafb; color: var(--plum); box-shadow: 0 24px 80px #35112430; }
+.orora-modal::backdrop { background: #29132166; backdrop-filter: blur(4px); }
+.orora-modal-heading { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 24px; border-bottom: 1px solid var(--line); background: #fffafb; }
+.orora-modal-heading h2 { margin: 0; font-size: 24px; line-height: 1.3; }
+.orora-modal-heading > button { flex: 0 0 36px; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 50%; background: #fff; color: var(--rose-deep); font-size: 24px; cursor: pointer; }
+.orora-modal-content { padding: 22px 24px; }
+.orora-modal :focus-visible { outline: 2px solid var(--rose-deep); outline-offset: 3px; }
+@media (max-width: 600px) { .orora-modal { width: calc(100% - 24px); border-radius: 20px; } .orora-modal-heading { padding: 16px; } .orora-modal-heading h2 { font-size: 21px; } .orora-modal-content { padding: 18px 16px; } .address-select-control input, .website-order .address-select-control input { font-size: 16px; } }
+.address-select-options > button > span:first-child { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.address-select-options > button > small { max-width: 42%; text-align: right; }

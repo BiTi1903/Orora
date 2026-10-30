@@ -442,7 +442,7 @@ test("order test mail renders the current draft but sends only to the entered te
   await db.collection("orders").doc("test-order").set(order);
   const draft = { action: "sendTest", mailType: "order", orderId: "test-order", testEmail: "test@example.com", subject: "Đơn {{orderCode}}", text: "Chào {{customerName}}: {{productName}}" };
   assert.equal((await call(draft)).statusCode, 200);
-  assert.equal(sent.length, 1); assert.equal(sent[0][0], "test@example.com"); assert.equal(sent[0][1].subject, "Đơn OR-REAL"); assert.equal(sent[0][1].text, "Chào Buyer: Serum");
+  assert.equal(sent.length, 1); assert.equal(sent[0][0], "test@example.com"); assert.equal(sent[0][1].subject, "Đơn OR-REAL"); assert.ok(sent[0][1].text.startsWith("Chào Buyer: Serum")); assert.match(sent[0][1].text, /Tổng tiền:/);
   assert.deepEqual((await db.collection("orders").doc("test-order").get()).data(), order);
   assert.equal((await db.collection("orders").doc("test-order").collection("mailEvents").get()).docs.length, 0);
   assert.equal((await call({ ...draft, orderId: undefined })).statusCode, 200);

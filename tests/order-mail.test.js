@@ -59,7 +59,7 @@ test("template validation rejects unknown variables and rendering cannot inject 
   const order = record(); order.customer.name = "Khách\r\nBcc: attacker";
   const message = renderOrderMessage({ subject: "Chào {{customerName}}", text: "{{orderCode}}" }, order);
   assert.ok(!/[\r\n]/.test(message.subject)); assert.equal(message.text, "OR-TEST");
-  assert.ok(DEFAULT_ORDER_MESSAGE.text.includes("chưa xác nhận thanh toán"));
+  assert.ok(DEFAULT_ORDER_MESSAGE.text.includes("{{paymentStatus}}"));
 });
 
 test("receipt template is managed through Email marketing and history remains private", async () => {
@@ -102,7 +102,7 @@ test("sent order snapshots keep template name and content across rename, edits a
   saved = (await db.collection("newsletterTemplates").doc(original.id).get()).data();
   assert.equal(saved.revision, 2); assert.equal(saved.sentCount, 1); assert.deepEqual(saved.usedRevisions, [1]);
   const event = (await db.collection("orders").doc(orderId).collection("mailEvents").get()).docs[0].data();
-  assert.equal(event.templateName, original.name); assert.equal(event.templateRevision, 1); assert.equal(event.templateText, original.text); assert.equal(event.text, "Chào Khách thử");
+  assert.equal(event.templateName, original.name); assert.equal(event.templateRevision, 1); assert.equal(event.templateText, original.text); assert.ok(event.text.startsWith("Chào Khách thử")); assert.match(event.text, /Tổng tiền:/);
   await assert.rejects(sendOrderConfirmation({ db, orderId, manual: true, requestId: randomUUID(), message: original, templateRef, confirmResend: true, sendMail: async (...args) => sent.push(args) }), /template_changed/);
   assert.equal(sent.length, 1);
   await call({ action: "deleteLibraryTemplate", id: original.id });
@@ -118,9 +118,26 @@ test("automatic template applies a snapshot and keeps it when the library change
   assert.equal((await call({ action: "saveOrderTemplate", ...template, templateRef: { id: template.id, revision: 1 } })).statusCode, 200);
   await call({ action: "saveLibraryTemplate", ...template, name: "Đổi tên v2", text: "Nội dung khác" });
   const sent = []; await sendOrderConfirmation({ db, orderId, sendMail: async (...args) => sent.push(args) });
-  assert.equal(sent[0][1].text, "Nội dung gốc");
+  assert.ok(sent[0][1].text.startsWith("Nội dung gốc")); assert.match(sent[0][1].text, /Email: buyer@example.com/);
   const event = (await db.collection("orders").doc(orderId).collection("mailEvents").get()).docs[0].data();
-  assert.equal(event.templateName, "Tự động v1"); assert.equal(event.templateRevision, 1);
+  assert.equal(event.templateText, "Nội dung gốc"); assert.equal(event.templateName, "Tự động v1"); assert.equal(event.templateRevision, 1);
   const current = (await db.collection("newsletterTemplates").doc(template.id).get()).data();
   assert.equal(current.revision, 2); assert.deepEqual(current.usedRevisions, [1]);
+});
+
+test("complete order emails include recipient, price, shipping, total and payment status without editing saved templates", async () => {
+  const { db, orderId } = await setup();
+  await db.collection("orders").doc(orderId).set({ shippingFee: 15000, totalAmount: 515000, customer: { ...record().customer, note: "Giao buổi sáng" }, product: { name: "Serum", unitPrice: 250000 } }, { merge: true });
+  const template = { subject: "Đơn {{orderCode}}", text: "Chào {{customerName}}, cảm ơn bạn.\nEmail: {{email}}" };
+  await db.collection("newsletterSettings").doc("orderConfirmation").set(template);
+  let actual;
+  await sendOrderConfirmation({ db, orderId, sendMail: async (_, message) => { actual = message; } });
+  assert.match(actual.text, /Chào Khách thử, cảm ơn bạn/); assert.match(actual.text, /Địa chỉ nhận hàng: Địa chỉ thử nghiệm/);
+  assert.match(actual.text, /Phí giao hàng: 15\.000/); assert.match(actual.text, /Tổng tiền: 515\.000/); assert.match(actual.text, /Ghi chú: Giao buổi sáng/); assert.match(actual.text, /Trạng thái thanh toán: Chưa thanh toán/);
+  assert.equal((actual.text.match(/Email: buyer@example.com/g) || []).length, 1);
+  assert.deepEqual((await db.collection("newsletterSettings").doc("orderConfirmation").get()).data(), template);
+  const event = (await db.collection("orders").doc(orderId).collection("mailEvents").doc("confirmation-auto").get()).data();
+  assert.equal(event.templateText, template.text); assert.equal(event.text, actual.text);
+  const standard = renderOrderMessage(DEFAULT_ORDER_MESSAGE, { ...record(), paymentStatus: "paid", shippingFee: 15000, totalAmount: 515000 }, { complete: true });
+  assert.ok(!standard.text.includes("THÔNG TIN BỔ SUNG")); assert.match(standard.text, /Trạng thái thanh toán: Đã thanh toán/); assert.ok(!/\{\{\w+\}\}/.test(standard.text));
 });
