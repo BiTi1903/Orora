@@ -1,3 +1,4 @@
+import { mailTransport } from "./mail-transport.js";
 import { describeMailError } from "./mail-error.js";
 import { safeMailTracking } from "./mail-tracking.js";
 import { syncOutlookStatus, OUTLOOK_ERROR_MESSAGES } from "./outlook-status.js";
@@ -320,7 +321,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
             sent += 1;
           }
           cursor = doc.id;
-          if (paused || sent >= (env.MS_MAIL_TRANSPORT?.trim().toLowerCase() === "smtp" ? 1 : 2)) break;
+          if (paused || sent >= (mailTransport(env) === "smtp" ? 1 : 2)) break;
         }
         const completed = !paused && page.docs.length < 20 && (!page.docs.length || cursor === page.docs.at(-1).id);
         await db.runTransaction(async (tx) => {

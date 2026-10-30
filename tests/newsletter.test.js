@@ -11,6 +11,7 @@ const env = {
   NEWSLETTER_SITE_ORIGIN: "https://orora.example",
   NEWSLETTER_ADMIN_UIDS: "owner-uid",
   NEWSLETTER_UNSUBSCRIBE_SECRET: "test-only-signing-secret-at-least-32-characters",
+  MS_MAIL_TRANSPORT: "graph",
   MS_TENANT_ID: "test-tenant", MS_CLIENT_ID: "test-client", MS_CLIENT_SECRET: "test-secret",
 };
 const headers = { origin: env.NEWSLETTER_SITE_ORIGIN, authorization: "Bearer test-token", "content-type": "application/json" };

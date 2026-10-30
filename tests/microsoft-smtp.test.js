@@ -91,7 +91,7 @@ test("SMTP token failure never opens a mail connection and does not fall back to
 
 test("SMTP campaigns send one recipient per invocation to fit the serverless timeout", async () => {
   const db = memoryDb();
-  const config = { ...env, NEWSLETTER_ADMIN_UIDS: "owner", NEWSLETTER_SITE_ORIGIN: "https://orora.example", NEWSLETTER_UNSUBSCRIBE_SECRET: "test-only-secret-at-least-32-characters" };
+  const config = { ...env, MS_MAIL_TRANSPORT: undefined, NEWSLETTER_ADMIN_UIDS: "owner", NEWSLETTER_SITE_ORIGIN: "https://orora.example", NEWSLETTER_UNSUBSCRIBE_SECRET: "test-only-secret-at-least-32-characters" };
   for (const email of ["one@example.com", "two@example.com"]) await db.collection("newsletterSubscribers").doc(subscriberId(email)).set({ email, status: "active", consentAt: new Date(1000) });
   let sends = 0;
   const handler = createNewsletterAdminHandler({ getDb: async () => db, verifyToken: async () => ({ uid: "owner" }), sendMail: async () => { sends++; }, env: config });
@@ -131,4 +131,14 @@ test("SMTP auth diagnostic retains server codes without leaking raw responses or
   assert.match(res.body.message, /535 5\.7\.139/);
   assert.equal(res.body.smtp.reason, "smtp_auth_disabled");
   assert.doesNotMatch(JSON.stringify(res.body), /PRIVATE-CONTENT|smtp-test-token|test-secret/);
+});
+
+
+test("missing or empty transport keeps SMTP OAuth2; Graph requires explicit selection", async () => {
+  for (const value of [undefined, "", "   ", "smtp", " SMTP ", "graph"]) {
+    const scopes = [];
+    const mail = createMicrosoftMailer({ ...env, MS_MAIL_TRANSPORT: value }, async (_, init) => { scopes.push(init.body.get("scope")); return { ok: false }; });
+    await assert.rejects(mail("buyer@example.com", message), { message: "mail_auth_failed" });
+    assert.deepEqual(scopes, [value === "graph" ? "https://graph.microsoft.com/.default" : "https://outlook.office365.com/.default"]);
+  }
 });

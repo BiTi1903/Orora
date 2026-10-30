@@ -2,7 +2,7 @@
 
 Đây là phương thức thay thế Microsoft Graph, dùng `smtp.office365.com:587` + STARTTLS + OAuth2 client credentials. Không dùng mật khẩu mailbox hoặc app password. Microsoft vẫn có thể chặn chuyển phát bên ngoài với `5.7.708`; đổi giao thức không bảo đảm gỡ hạn chế tenant/IP.
 
-Mã hỗ trợ hai lựa chọn `MS_MAIL_TRANSPORT=graph` (mặc định) hoặc `smtp`. Không có cơ chế tự chuyển cách gửi sau lỗi, để tránh gửi trùng. Tất cả thư thử, thư chào mừng và chiến dịch dùng cùng lựa chọn này.
+Mã hỗ trợ hai lựa chọn `MS_MAIL_TRANSPORT=smtp` (mặc định, kể cả bỏ trống) hoặc `graph`. Không có cơ chế tự chuyển cách gửi sau lỗi, để tránh gửi trùng. Tất cả thư thử, thư chào mừng và chiến dịch dùng cùng lựa chọn này.
 
 ## 1. Thêm quyền ứng dụng SMTP
 

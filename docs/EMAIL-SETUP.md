@@ -1,6 +1,6 @@
 # Thiết lập email ORORA với Microsoft 365
 
-Có thể thử phương thức SMTP OAuth2 thay cho Graph theo [SMTP-SETUP.md](SMTP-SETUP.md). Graph vẫn là mặc định cho đến khi cấu hình `MS_MAIL_TRANSPORT=smtp`.
+Mặc định dùng SMTP OAuth2 theo [SMTP-SETUP.md](SMTP-SETUP.md), kể cả khi `MS_MAIL_TRANSPORT` để trống. Đặt `MS_MAIL_TRANSPORT=smtp` trong Production để thể hiện rõ cấu hình; chỉ dùng Graph khi chủ động đặt `MS_MAIL_TRANSPORT=graph`. Không tự chuyển phương thức sau lỗi.
 
 ## Các tính năng đã bổ sung
 
