@@ -1,7 +1,8 @@
 const messages = {
   mail_auth_failed: "Microsoft từ chối xác thực ứng dụng.",
   mail_smtp_auth_failed: "SMTP OAuth2 bị từ chối. Kiểm tra SMTP AUTH và quyền SMTP.SendAsApp của ứng dụng.",
-  mail_smtp_connection_failed: "Không kết nối được smtp.office365.com:587.",
+  mail_smtp_connection_failed: "Kết nối SMTP lỗi trước khi gửi nội dung. Bạn có thể chủ động gửi lại.",
+  mail_smtp_outcome_unknown: "SMTP bị gián đoạn hoặc quá thời gian; chưa rõ Microsoft đã nhận thư hay chưa. Kiểm tra Outlook trước khi gửi lại.",
   mail_send_failed: "Microsoft từ chối nhận thư gửi.",
   mail_configuration_missing: "Thiếu cấu hình Microsoft 365 trên máy chủ.",
   mail_transport_invalid: "MS_MAIL_TRANSPORT phải là smtp hoặc graph.",

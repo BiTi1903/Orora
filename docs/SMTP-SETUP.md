@@ -89,3 +89,11 @@ Nếu cần quay về Graph, đặt `MS_MAIL_TRANSPORT=graph` rồi redeploy. Kh
 - [Bật/tắt authenticated SMTP theo tổ chức hoặc mailbox](https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/authenticated-client-smtp-submission)
 
 Bản nguồn MicrosoftDocs đã được đối chiếu cho `SMTP.SendAsApp`, scope, `New-ServicePrincipal`, `Add-MailboxPermission` và ghi chú quyền SendAs. Thiết lập Exchange và gửi thật cần quản trị viên thực hiện trên tenant.
+
+## Timeout và kết quả chưa rõ
+
+SMTP vẫn dùng OAuth2, `smtp.office365.com:587`, STARTTLS và xác minh chứng chỉ TLS. Thời gian chờ kết nối là 15 giây, greeting 10 giây và socket không hoạt động 15 giây. Một lần gửi SMTP có giới hạn tổng 35 giây, ngoài thời gian lấy token (tối đa 10 giây), nhằm chừa thời gian lưu kết quả trong Function 60 giây. Đây không thay thế hàng đợi bền vững và không bảo đảm Function không bao giờ bị ngắt.
+
+Không dùng riêng `error.command === "CONN"` để kết luận chưa gửi: Nodemailer cũng gắn nhãn này cho timeout/mất socket sau DATA. Chỉ lỗi có giai đoạn kết nối/greeting/TLS rõ ràng, lỗi DNS/từ chối kết nối hoặc command trước DATA mới được coi là lỗi trước gửi. Các trường hợp khác là `mail_smtp_outcome_unknown`; admin cần đối chiếu Outlook/NDR/Message trace trước khi chủ động gửi lại. Không tự gửi lại hoặc đổi transport sau lỗi. Trạng thái `sending` bị kẹt không được tự xóa hoặc coi là thất bại, vì chưa chứng minh thư chưa được Microsoft nhận.
+
+NDR `5.7.708` chứng minh thư bị Microsoft từ chối chuyển phát; không tự kết luận chỉ từ mã này rằng IP Vercel là nguyên nhân. Đổi timeout không gỡ hạn chế Microsoft. SMTP hiện xử lý một người nhận mỗi batch, không phải hai. Bộ kiểm thử mô phỏng lỗi trước/sau DATA, lỗi `CONN` không rõ giai đoạn và tổng deadline; không phát thư thật hoặc thay đổi quyền Exchange.

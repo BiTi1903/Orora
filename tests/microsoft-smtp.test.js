@@ -1,3 +1,4 @@
+import { describeMailError } from "../server/mail-error.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createMicrosoftSmtpMailer } from "../server/microsoft-smtp.js";
@@ -61,7 +62,7 @@ test("SMTP authentication rejection invalidates cached token without automatical
 test("SMTP separates explicit rejection, connection failure and ambiguous DATA timeout", async () => {
   for (const [error, expected] of [
     [Object.assign(new Error("550 blocked"), { responseCode: 550, command: "DATA" }), "mail_send_failed"],
-    [Object.assign(new Error("connection timeout"), { code: "ETIMEDOUT", command: "CONN" }), "mail_smtp_connection_failed"],
+    [Object.assign(new Error("connection timeout"), { code: "ETIMEDOUT", command: "CONN", timeoutType: "CONNECT_TIMEOUT" }), "mail_smtp_connection_failed"],
     [Object.assign(new Error("timeout after DATA"), { code: "ETIMEDOUT", command: "DATA" }), "mail_smtp_outcome_unknown"],
   ]) {
     let attempts = 0;
@@ -141,4 +142,50 @@ test("missing or empty transport keeps SMTP OAuth2; Graph requires explicit sele
     await assert.rejects(mail("buyer@example.com", message), { message: "mail_auth_failed" });
     assert.deepEqual(scopes, [value === "graph" ? "https://graph.microsoft.com/.default" : "https://outlook.office365.com/.default"]);
   }
+});
+
+
+test("SMTP identifies provable pre-DATA failures and keeps ambiguous CONN errors unknown", async () => {
+  for (const detail of [
+    { code: "ETIMEDOUT", command: "CONN", timeoutType: "GREETING_TIMEOUT" },
+    { code: "ETIMEDOUT", command: "CONN", timeoutType: "UPGRADE_TIMEOUT" },
+    { code: "ESOCKET", originalCode: "ECONNREFUSED", command: "CONN" },
+    { code: "ETIMEDOUT", command: "AUTH XOAUTH2" },
+    { code: "ESOCKET", command: "RCPT TO" },
+    { code: "ESOCKET", command: "MAIL FROM" },
+    { code: "EDNS", command: "CONN" },
+  ]) {
+    let calls = 0;
+    const mail = createMicrosoftSmtpMailer(env, tokenResponse, () => ({ sendMail: async () => { calls++; throw Object.assign(new Error("PRIVATE"), detail); } }));
+    await assert.rejects(mail("buyer@example.com", message), { message: "mail_smtp_connection_failed" });
+    assert.equal(calls, 1);
+  }
+  for (const detail of [
+    { code: "ETIMEDOUT", command: "CONN", timeoutType: "SOCKET_TIMEOUT" },
+    { code: "ECONNECTION", command: "CONN" },
+    { code: "ESOCKET", originalCode: "ECONNRESET", command: "CONN" },
+    { code: "ETIMEDOUT", command: "DATA" },
+    { code: "ESOCKET" },
+  ]) {
+    const mail = createMicrosoftSmtpMailer(env, tokenResponse, () => ({ sendMail: async () => { throw Object.assign(new Error("PRIVATE"), detail); } }));
+    await assert.rejects(mail("buyer@example.com", message), { message: "mail_smtp_outcome_unknown" });
+  }
+});
+
+test("SMTP total deadline stops a hanging submission without automatic resend", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  let calls = 0; let closed = 0;
+  const mail = createMicrosoftSmtpMailer(env, tokenResponse, () => ({ sendMail: () => { calls++; return new Promise(() => {}); }, close: () => { closed++; } }));
+  const result = assert.rejects(mail("buyer@example.com", message), { message: "mail_smtp_outcome_unknown" });
+  await new Promise(setImmediate);
+  t.mock.timers.tick(35000);
+  await result;
+  assert.equal(calls, 1); assert.equal(closed, 1);
+});
+
+
+test("ambiguous SMTP outcome has a specific admin code and no raw error disclosure", () => {
+  const detail = describeMailError(new Error("mail_smtp_outcome_unknown"));
+  assert.equal(detail.errorCode, "mail_smtp_outcome_unknown");
+  assert.match(detail.errorMessage, /Kiểm tra Outlook/);
 });

@@ -20,6 +20,15 @@ function authDetails(error) {
 }
 
 
+function beforeSubmission(error) {
+  // Nodemailer also labels post-DATA socket errors CONN. Only classify a
+  // failure as pre-submission when its phase or command actually proves it.
+  if (["CONNECT_TIMEOUT", "GREETING_TIMEOUT", "UPGRADE_TIMEOUT"].includes(error.timeoutType)) return true;
+  if (["EDNS", "ENOTFOUND", "EAI_AGAIN", "ECONNREFUSED"].includes(error.code) || ["ENOTFOUND", "EAI_AGAIN", "ECONNREFUSED"].includes(error.originalCode)) return true;
+  return /^(?:EHLO|HELO|STARTTLS|AUTH(?: .*)?|MAIL FROM|RCPT TO)$/.test(error.command || "");
+}
+
+
 export function createMicrosoftSmtpMailer(env = process.env, request = fetch, createTransport = nodemailer.createTransport) {
   let cachedToken;
   let expiresAt = 0;
@@ -59,17 +68,22 @@ export function createMicrosoftSmtpMailer(env = process.env, request = fetch, cr
       host: "smtp.office365.com", port: 587, secure: false, requireTLS: true,
       tls: { minVersion: "TLSv1.2", servername: "smtp.office365.com", rejectUnauthorized: true },
       auth: { type: "OAuth2", user: sender, accessToken: cachedToken },
-      connectionTimeout: 5000, greetingTimeout: 5000, socketTimeout: 10000,
+      connectionTimeout: 15000, greetingTimeout: 10000, socketTimeout: 15000,
       disableFileAccess: true, disableUrlAccess: true,
     });
     const tracking = { ...newMailTracking(sender), transport: "smtp" };
+    let deadline;
     try {
-      const result = await transport.sendMail({
+      // Cap total SMTP work as well as per-socket inactivity, leaving time for
+      // token lookup and the final database write inside the 60-second Function.
+      const result = await Promise.race([transport.sendMail({
         from: { name: "ORORA", address: sender },
         to: [{ address: email }],
         envelope: { from: sender, to: [email] },
         subject: message.subject, text: message.text, messageId: tracking.internetMessageId, headers: { "X-Orora-Mail-Id": tracking.trackingId },
-      });
+      }), new Promise((_, reject) => {
+        deadline = setTimeout(() => reject(failure("mail_smtp_outcome_unknown")), 35000);
+      })]);
       const accepted = (result.accepted || []).some((recipient) => String(recipient.address || recipient).toLowerCase() === email.toLowerCase());
       if (!accepted) throw failure("mail_send_failed");
       // SMTP acceptance confirms queue submission, not final delivery.
@@ -86,10 +100,11 @@ export function createMicrosoftSmtpMailer(env = process.env, request = fetch, cr
         const { responseCode, enhancedCode } = authDetails(error);
         throw tracked(Object.assign(failure("mail_send_failed", Number(error.responseCode)), { smtp: { responseCode, enhancedCode } }));
       }
-      if (error.command === "CONN") throw tracked(failure("mail_smtp_connection_failed"));
+      if (beforeSubmission(error)) throw tracked(failure("mail_smtp_connection_failed"));
       // A dropped connection during DATA can occur after acceptance. Do not auto-resend.
       throw tracked(failure("mail_smtp_outcome_unknown"));
     } finally {
+      clearTimeout(deadline);
       transport.close?.();
     }
   };
