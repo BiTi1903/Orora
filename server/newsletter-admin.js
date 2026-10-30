@@ -229,7 +229,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
             if (!saved.exists) return reply(404, { message: "Không tìm thấy đơn gửi thử." });
             order = saved.data();
           } else order = { code: "OR-GUI-THU", customer: { name: "Khách thử nghiệm", email, phone: "0900000000", address: "Địa chỉ minh họa" }, product: { name: "Sản phẩm minh họa" }, quantity: 1, subtotal: 0, paymentMethod: "cod" };
-          message = renderOrderMessage(validateOrderTemplate(body), order, { complete: true });
+          message = renderOrderMessage(validateOrderTemplate(body), order);
         } else if (body.mailType && hasOrderTokens(message)) throw new Error("order_context_required");
         await sendMail(email, message);
         return reply(200, { message: `MS đã nhận thư gửi tới ${email}. Kiểm tra cả mục thư rác.` });
