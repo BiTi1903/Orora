@@ -792,3 +792,10 @@
 }
 .product-side-column .related-product-more > span { flex-shrink: 0; }
 .product-side-column .related-product-more:hover { box-shadow: 0 2px 8px rgba(58,21,38,.08); }
+
+/* Checkout stays centered instead of expanding the purchase card. */
+.order-form-modal { width: min(680px, calc(100% - 32px)); }
+.order-form-modal .website-order { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.order-form-modal .order-product-name { margin-top: 0; }
+.order-form-modal .website-order-submit { width: 100%; min-height: 44px; }
+.order-form-modal .orora-modal-heading > button:disabled { opacity: .5; cursor: default; }

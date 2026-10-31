@@ -2,7 +2,7 @@ import AddressSelect from "./AddressSelect";
 import ModalDialog from "./ModalDialog";
 import useAddressOptions from "../hooks/useAddressOptions";
 import { shippingFeeFor } from "../lib/shipping";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { availablePaymentMethods, PAYMENT_LABELS, parseVndPrice, formatVnd } from "../lib/commerce";
 
 export default function OrderForm({ product, home, onClose }) {
@@ -13,13 +13,11 @@ export default function OrderForm({ product, home, onClose }) {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
   const requestId = useRef(crypto.randomUUID());
-  const formRef = useRef(null);
-  useEffect(() => { formRef.current?.scrollIntoView({ block: "start", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); }, []);
   const methods = availablePaymentMethods(home);
   const unitPrice = parseVndPrice(product.price);
   const shipping = shippingFeeFor(home.shippingSettings, provinceCode, wardCode);
   const total = unitPrice === null || shipping.fee === null ? null : unitPrice * (Number(quantity) || 0) + shipping.fee;
-  if (result?.code) return <ModalDialog title="Đã nhận đơn hàng" onClose={onClose} className="order-success-modal"><section className="order-received" aria-label="Thông tin đơn đã nhận"><p>Mã đơn: <strong>{result.code}</strong></p>
+  if (result?.code) return <ModalDialog key="success" title="Đã nhận đơn hàng" onClose={onClose} className="order-success-modal"><section className="order-received" aria-label="Thông tin đơn đã nhận"><p>Mã đơn: <strong>{result.code}</strong></p>
     <p>{result.message}</p>
     <div className="order-received-details"><h3>Thông tin người nhận</h3><dl>
       {[["Họ và tên", result.recipient.name], ["Số điện thoại", result.recipient.phone], ["Email", result.recipient.email], ["Địa chỉ nhận hàng", result.recipient.address], ["Ghi chú", result.recipient.note]].filter(([, value]) => value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
@@ -35,7 +33,7 @@ export default function OrderForm({ product, home, onClose }) {
     <p className="order-help">Nếu thông tin chưa đúng, vui lòng liên hệ ORORA và cung cấp mã đơn để được hỗ trợ.</p>
     <p>{result.mailStatus === "accepted" ? "Vui lòng kiểm tra email xác nhận và mục thư rác." : result.mailStatus === "failed" ? "Đơn đã được nhận nhưng chưa gửi được email xác nhận. Bạn có thể liên hệ ORORA với mã đơn bên trên." : "Email xác nhận đang được xử lý."}</p><button type="button" onClick={onClose}>Đóng</button>
   </section></ModalDialog>;
-  return <form ref={formRef} className="website-order" aria-label="Đặt hàng trên website" onSubmit={async (event) => {
+  return <ModalDialog key="form" title="Đặt hàng trên website" onClose={onClose} closeDisabled={busy} className="order-form-modal"><form className="website-order" aria-label="Đặt hàng trên website" onSubmit={async (event) => {
     event.preventDefault();
     if (busy || !methods.length || !provinceCode || !wardCode || (home.shippingSettings?.enabled === true && shipping.fee === null)) return;
     const data = new FormData(event.currentTarget);
@@ -60,7 +58,6 @@ export default function OrderForm({ product, home, onClose }) {
     } catch (error) { setResult({ error: error instanceof TypeError || error instanceof SyntaxError ? "Kết nối bị gián đoạn. Hãy thử gửi lại hoặc liên hệ ORORA." : error.message || "Chưa gửi được đơn. Vui lòng thử lại." }); }
     finally { setBusy(false); }
   }}>
-    <div className="order-form-heading"><h2>Đặt hàng trên website</h2><button type="button" onClick={onClose} disabled={busy} aria-label="Đóng form đặt hàng">×</button></div>
     <p className="order-product-name">{product.name}</p>
     <fieldset disabled={busy}>
       <div className="order-field-row">
@@ -89,5 +86,5 @@ export default function OrderForm({ product, home, onClose }) {
       <button className="website-order-submit" disabled={busy || !methods.length || !provinceCode || !wardCode || (home.shippingSettings?.enabled === true && shipping.fee === null)}>{busy ? "Đang lưu đơn…" : "Đặt hàng ngay"}</button>
     </fieldset>
     {result?.error && <p className="order-error" role="alert">{result.error}</p>}
-  </form>;
+  </form></ModalDialog>;
 }

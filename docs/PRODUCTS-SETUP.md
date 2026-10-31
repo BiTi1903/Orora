@@ -53,3 +53,7 @@ Desktop dùng cột nội dung 80% và cột phụ 20%. Cột phụ xếp liên 
 Sản phẩm mới chỉ có một mục Mô tả. Tên mục là tùy chọn; có thể lưu nội dung không có tên. Mục bổ sung chỉ xuất hiện trong admin khi bấm Thêm mục nội dung; mục trống không được đưa vào dữ liệu lưu. Mở sản phẩm cũ giữ nguyên tên và nội dung đã lưu. Mục thông số không có tên sẽ dùng toàn chiều rộng dòng.
 
 Trong Trang chủ → Chi tiết SP, có thể chỉnh kiểu chữ thanh chuyển mục, tiêu đề phần nội dung, tên mục, Chọn cách mua hàng, tiêu đề/nội dung cam kết, nút Facebook, tiêu đề/tên/nội dung đánh giá và chữ ở Khám phá thêm. Các thành phần này cũng chọn trực tiếp được trong Visual Builder. Kiểu chữ lưu ở productDetailStyles; không sửa nội dung từng sản phẩm. Thanh chuyển mục không có mũi tên. Nút Facebook/TikTok giữ nhãn trên một dòng; màn hình rất hẹp xếp nút dọc.
+
+## Popup đặt hàng
+
+Bấm Đặt hàng ngay mở form trong dialog ở giữa màn hình, có tiêu đề/nút đóng cố định và cuộn bên trong khi nội dung dài. Khi chưa gửi, có thể đóng bằng nút ×, Esc hoặc bấm ngoài popup. Trong lúc đang gửi, tạm khóa các cách đóng để tránh ngắt thao tác. Lưu thành công chuyển sang dialog xác nhận có thông tin người nhận; không mở hai dialog chồng nhau. Dữ liệu đơn, API, thanh toán, tính ship và xử lý email giữ nguyên.
