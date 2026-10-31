@@ -1,3 +1,4 @@
+import useOrderNotifications from "./useOrderNotifications";
 import EmailExport from "./EmailExport";
 import { newsletterRequest } from "./newsletter-api";
 import ShippingAdmin from "./ShippingAdmin";
@@ -37,6 +38,8 @@ export default function AdminApp() {
 }
 
 function AdminWorkspace({ user }) {
+  const notifications = useOrderNotifications();
+  const [pendingRequest, setPendingRequest] = useState(null);
   const [visited, setVisited] = useState([]);
   const navigate = (key) => { setVisited((items) => items.includes(key) ? items : [...items, key]); setTab(key); };
   const [orderMailDraft, setOrderMailDraft] = useState(null);
@@ -50,8 +53,8 @@ function AdminWorkspace({ user }) {
         <div className="admin-brand">ORORA</div>
         <nav className="admin-nav">
           {TABS.map(([key, label]) => (
-            <button key={key} className={tab === key ? "active" : ""} onClick={() => navigate(key)}>
-              {label}
+            <button key={key} aria-label={label} aria-describedby={key === "orders" && (notifications.snapshot?.pendingCount > 0 || notifications.error) ? "admin-pending-order-count" : undefined} className={tab === key ? "active" : ""} onClick={() => navigate(key)}>
+              {label}{key === "orders" && notifications.error && !notifications.snapshot?.pendingCount && <span id="admin-pending-order-count" className="admin-order-count" title={`Chưa cập nhật số đơn: ${notifications.error}`} aria-label="Chưa cập nhật được số đơn chờ">!</span>}{key === "orders" && notifications.snapshot?.pendingCount > 0 && <span id="admin-pending-order-count" className="admin-order-count" aria-label={`${notifications.snapshot.pendingCount} đơn chờ xác nhận`} title={notifications.error ? `Số đã ghi nhận; chưa cập nhật lại: ${notifications.error}` : "Đơn chờ xác nhận · tự cập nhật mỗi phút"}>{notifications.snapshot.pendingCount}</span>}
             </button>
           ))}
         </nav>
@@ -64,10 +67,12 @@ function AdminWorkspace({ user }) {
       </aside>
 
       <main className="admin-main">
+        {notifications.incoming && <div className="admin-order-notification" role="status"><div><strong>Có đơn hàng mới · {notifications.incoming.code}</strong><p>{notifications.snapshot?.pendingCount ?? ""} đơn đang chờ xác nhận.</p></div><button type="button" className="admin-btn" onClick={() => { setPendingRequest({ id: notifications.incoming.id }); navigate("orders"); notifications.dismiss(); }}>Xem đơn chờ</button><button type="button" className="notification-dismiss" aria-label="Đóng thông báo đơn mới" onClick={notifications.dismiss}>×</button></div>}
+
         {tab === "dashboard" && <Dashboard sectionCount={TABS.length} />}
         {tab === "home" && <HomeAdmin />}
         {tab === "products" && <ProductsAdmin />}
-        {visited.includes("orders") && <div hidden={tab !== "orders"}><OrdersAdmin key={`${user.uid}:${orderMailVersion}`} initialMailDraft={orderMailDraft} onOpenEmailTemplates={() => { setEmailSection({ view: "templates" }); navigate("newsletter"); }} /></div>}
+        {visited.includes("orders") && <div hidden={tab !== "orders"}><OrdersAdmin refreshKey={notifications.revision} pendingRequest={pendingRequest} onOrderChanged={notifications.refresh} key={`${user.uid}:${orderMailVersion}`} initialMailDraft={orderMailDraft} onOpenEmailTemplates={() => { setEmailSection({ view: "templates" }); navigate("newsletter"); }} /></div>}
         {tab === "export" && <EmailExport key={user.uid} request={newsletterRequest} />}
         {visited.includes("shipping") && <div hidden={tab !== "shipping"}><ShippingAdmin key={user.uid} /></div>}
         {visited.includes("inventory") && <div hidden={tab !== "inventory"}><InventoryAdmin key={user.uid} /></div>}

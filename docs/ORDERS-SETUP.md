@@ -73,6 +73,21 @@ Thư đơn hàng gửi theo đúng mẫu đang áp dụng, không tự nối th�
 
 Form đặt hàng không áp dụng quota IP/toàn website hoặc honeypot; tên, số điện thoại và email trùng vẫn được đặt đơn mới. Bộ đếm `orderRateLimits` cũ được giữ nhưng không đọc/ghi nữa. Vẫn kiểm tra dữ liệu hợp lệ, địa chỉ, tồn có thể bán, giá/phí và phương thức thanh toán. Cùng request ID chỉ tạo một đơn và không gửi thư lặp; thư đang xử lý/chưa rõ kết quả không tự gửi lại. Các cơ chế này không chặn theo tên hay số điện thoại. NDR 5.7.708 là từ Microsoft, độc lập với kiểm tra form.
 
-### Thư đơn hàng nằm trong mục Đơn hàng
+### Email và nhật ký trong chi tiết đơn
 
-**Đơn hàng → Thư đơn hàng** chứa phần soạn/gửi cho đơn, lưu mẫu xác nhận tự động, gửi thử và lịch sử thư đơn hàng. Nút **Soạn thư cho đơn này** trong popup chi tiết chọn sẵn đúng đơn, kể cả đơn nằm ở trang cũ. Lịch sử vẫn đọc bản ghi hiện có tại `orders/{id}/mailEvents`; không di chuyển hay tạo lại dữ liệu. **Email** chỉ còn thư đăng ký và gửi riêng ngoài đơn. Kho **Email → Mẫu Thư** dùng chung; chọn mẫu đơn hoặc mẫu có biến đơn sẽ mở phần thư đơn hàng. Mục xuất Excel chung giữ nguyên ba lựa chọn. Không thay đổi SMTP/OAuth2 hoặc nội dung gửi.
+**Đơn hàng** gồm Danh sách đơn, Khách hàng, Lịch sử email và Thư tự động. Mở chi tiết để xử lý, ghi nhận thanh toán, gửi email cho đúng khách hoặc xem **Nhật ký xử lý**. Kho **Email → Mẫu Thư** dùng chung. Không thay đổi SMTP/OAuth2 hoặc nội dung gửi. Lịch sử email vẫn đọc `orders/{id}/mailEvents`.
+
+### Thông báo đơn chờ xác nhận
+
+- Menu **Đơn hàng** hiển thị tổng số đơn có `status = new`, kể cả đơn ngoài trang đang tải. API riêng `GET /api/admin-orders?summary=1` dùng phép đếm Firestore và trả mã đơn mới nhất; không trả tên, địa chỉ, email hay nội dung đơn. Vẫn yêu cầu token và UID quản lý đơn như API hiện có, `Cache-Control: no-store`.
+- Khi admin đang hiển thị, kiểm tra mỗi 60 giây; quay về tab/cửa sổ kiểm tra lại với khoảng cách tối thiểu 15 giây để tránh gọi lặp. Không chạy định kỳ khi tab ẩn hoặc đã đăng xuất. Có timeout, không để các lần đọc chồng nhau. Thông báo chỉ trong trang admin, không phải push notification của trình duyệt.
+- Lần đầu chỉ hiển thị số chờ. Đơn mới tiếp theo hiện thông báo kèm nút **Xem đơn chờ**, chuyển về danh sách với bộ lọc Mới nhận. Danh sách đã mở cập nhật nền khi phát hiện đơn mới, giữ bộ lọc và dữ liệu đã tải; không ghi đè thao tác đang xử lý. Sau khi đổi trạng thái, số chờ được kiểm tra lại.
+- Khi đọc lỗi, không coi là 0 đơn. Giữ số đọc lần trước và ghi chú lỗi ở tooltip; lỗi quyền sẽ dừng kiểm tra và ẩn số cũ. Đổi tài khoản/đăng xuất hủy tác vụ và xóa trạng thái giao diện. Không lưu dữ liệu khách vào localStorage.
+
+### Nhật ký xử lý
+
+Các thay đổi trạng thái, thanh toán, xuất kho và xác nhận hoàn hàng được ghi vào `orders/{id}/activityEvents/{uuid}` **trong cùng transaction** cập nhật đơn/kho. Chỉ ghi khi giá trị thay đổi; thao tác lỗi hoặc gửi lại cùng trạng thái không tạo sự kiện thừa. Hoàn kho lặp không cộng kho hay ghi nhật ký lần hai.
+
+Mỗi bản ghi giữ `action`, `changes` (trước/sau), `actor`/`actorName`/`actorEmail` từ token được xác thực và `createdAt` phía máy chủ; xuất/hoàn kho có số lượng. Không lấy người thao tác từ body client và không đổi tên lịch sử theo hồ sơ tài khoản sau này. Firestore rules hiện có không cho client đọc/ghi collection đơn; API không có thao tác sửa/xóa nhật ký.
+
+Chi tiết đơn tải 30 sự kiện mới nhất; **Tải thêm nhật ký** phân trang trong đúng đơn. Giờ hiển thị Việt Nam. Nhật ký cũ chưa có không được tạo giả hoặc suy đoán từ `updatedBy`; mọi dữ liệu đơn/thư/kho cũ được giữ nguyên. Email đã có lịch sử riêng, không ghi trùng vào nhật ký xử lý. Kiểm thử dùng Firestore trong bộ nhớ và xác thực giả; không thao tác đơn hoặc gửi email sản xuất.

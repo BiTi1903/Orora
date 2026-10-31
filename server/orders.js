@@ -1,3 +1,4 @@
+import { recordOrderActivity } from "./order-activity.js";
 import { resolveDeliveryAddress } from "./addresses.js";
 import { shippingFeeFor } from "../src/lib/shipping.js";
 import { allocateOrderCode } from "./order-code.js";
@@ -88,7 +89,7 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
     }
   };
 }
-export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupUser, checkOutlook, env = process.env }) {
+export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupUser, checkOutlook, env = process.env, clock = () => Date.now() }) {
   return async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
     if (!["GET", "POST"].includes(req.method)) { res.setHeader("Allow", "GET, POST"); return res.status(405).json({ message: "Phương thức không được hỗ trợ." }); }
@@ -104,13 +105,31 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
     try {
       const db = await getDb();
       const orders = db.collection("orders");
+      if (req.method === "GET" && req.query?.summary === "1") {
+        const [count, latest] = await Promise.all([
+          orders.where("status", "==", "new").count().get(),
+          orders.orderBy("createdAt", "desc").limit(1).get(),
+        ]);
+        const doc = latest.docs[0];
+        return res.status(200).json({ pendingCount: count.data().count, latestOrder: doc ? { id: doc.id, code: doc.data().code || "", status: doc.data().status, createdAt: millis(doc.data().createdAt) } : null, checkedAt: clock() });
+      }
       if (req.method === "GET" && req.query?.id) {
-        if (!uuid(req.query.id)) return res.status(400).json({ message: "Đơn hàng không hợp lệ." });
+        if (!uuid(req.query.id) || (req.query.activityCursor && !uuid(req.query.activityCursor))) return res.status(400).json({ message: "Đơn hàng hoặc trang nhật ký không hợp lệ." });
         const ref = orders.doc(req.query.id);
-        const [order, history] = await Promise.all([ref.get(), ref.collection("mailEvents").orderBy("createdAt", "desc").limit(50).get()]);
+        let activityQuery = ref.collection("activityEvents").orderBy("createdAt", "desc").limit(30);
+        if (req.query.activityCursor) {
+          const last = await ref.collection("activityEvents").doc(req.query.activityCursor).get();
+          if (!last.exists) return res.status(400).json({ message: "Không tìm thấy mốc nhật ký. Hãy tải lại chi tiết đơn." });
+          activityQuery = activityQuery.startAfter(last);
+        }
+        const [order, activityPage, history] = await Promise.all([
+          ref.get(), activityQuery.get(), req.query.activityCursor ? Promise.resolve(null) : ref.collection("mailEvents").orderBy("createdAt", "desc").limit(50).get(),
+        ]);
         if (!order.exists) return res.status(404).json({ message: "Không tìm thấy đơn hàng." });
+        const activity = { activities: activityPage.docs.map((doc) => ({ id: doc.id, ...doc.data(), createdAt: millis(doc.data().createdAt) })), nextActivityCursor: activityPage.docs.length === 30 ? activityPage.docs.at(-1).id : null };
+        if (req.query.activityCursor) return res.status(200).json(activity);
         const data = { ...order.data() }; delete data.requestHash;
-        return res.status(200).json({ order: { id: order.id, ...data, createdAt: millis(data.createdAt), updatedAt: millis(data.updatedAt) }, mails: await resolveMailActors(history.docs.map((doc) => ({ id: doc.id, ...doc.data(), createdAt: millis(doc.data().createdAt), updatedAt: millis(doc.data().updatedAt) })), lookupUser) });
+        return res.status(200).json({ order: { id: order.id, ...data, createdAt: millis(data.createdAt), updatedAt: millis(data.updatedAt) }, mails: await resolveMailActors(history.docs.map((doc) => ({ id: doc.id, ...doc.data(), createdAt: millis(doc.data().createdAt), updatedAt: millis(doc.data().updatedAt) })), lookupUser), ...activity });
       }
       if (req.method === "GET") {
         const historyOnly = req.query?.mailHistory === "1";
@@ -149,31 +168,35 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
       }
       if (body.action === "restockOrder") {
         if (!uuid(body.id)) throw Object.assign(new Error("Đơn không hợp lệ."), { status: 400 });
-        await db.runTransaction(async (tx) => {
+        const activity = await db.runTransaction(async (tx) => {
           const ref = orders.doc(body.id); const saved = await tx.get(ref); const order = saved.data();
           if (!saved.exists || order.status !== "cancelled") throw Object.assign(new Error("Chỉ hoàn kho cho đơn đã hủy và đã nhận lại hàng."), { status: 409 });
           if (order.inventory?.state === "restocked") return;
           if (order.inventory?.state !== "deducted") throw Object.assign(new Error("Đơn này chưa có lần trừ kho để hoàn lại."), { status: 409 });
           const stockRef = db.collection("inventory").doc(order.inventory.productId); const stock = (await tx.get(stockRef)).data();
           if (!stock || !Number.isSafeInteger(stock.quantity) || stock.quantity < 0 || stock.quantity + order.inventory.quantity > 1_000_000_000) throw Object.assign(new Error("Kiểm tra số tồn kho hiện tại trước khi hoàn hàng."), { status: 409 });
-          const now = new Date();
+          const now = new Date(clock());
           tx.set(stockRef, { quantity: stock.quantity + order.inventory.quantity, version: (stock.version || 0) + 1, updatedAt: now, updatedBy: user.uid }, { merge: true });
           tx.set(db.collection("inventoryMovements").doc(`return-${body.id}`), { type: "order_return", productId: order.inventory.productId, orderId: body.id, change: order.inventory.quantity, before: stock.quantity, after: stock.quantity + order.inventory.quantity, createdAt: now, actor: user.uid });
-          tx.set(ref, { inventory: { ...order.inventory, state: "restocked", restockedAt: now }, updatedAt: now, updatedBy: user.uid }, { merge: true });
+          const nextInventory = { ...order.inventory, state: "restocked", restockedAt: now };
+          tx.set(ref, { inventory: nextInventory, updatedAt: now, updatedBy: user.uid }, { merge: true });
+          return recordOrderActivity(tx, ref, { before: order, after: { ...order, inventory: nextInventory }, user, createdAt: now, action: "stock_returned", quantity: order.inventory.quantity });
         });
-        return res.status(200).json({ message: "Đã ghi nhận nhận lại hàng và hoàn kho." });
+        return res.status(200).json({ activity: activity || null, message: "Đã ghi nhận nhận lại hàng và hoàn kho." });
       }
       if (!uuid(body.id) || (body.status !== undefined ? !["new", "confirmed", "shipping", "completed", "cancelled"].includes(body.status) : !["unpaid", "paid"].includes(body.paymentStatus))) return res.status(400).json({ message: "Đơn hàng hoặc trạng thái không hợp lệ." });
-      const inventory = await db.runTransaction(async (tx) => {
+      const result = await db.runTransaction(async (tx) => {
         const ref = orders.doc(body.id); const current = await tx.get(ref);
         if (!current.exists) throw Object.assign(new Error("Không tìm thấy đơn hàng."), { status: 404 });
         if (current.data().status === "cancelled" && body.status && body.status !== "cancelled") throw Object.assign(new Error("Đơn đã hủy không mở lại. Tạo đơn mới để số lượng và lịch sử kho được ghi nhận đúng."), { status: 409 });
         const nextPaymentStatus = body.status === "completed" ? "paid" : body.status !== undefined ? current.data().paymentStatus : body.paymentStatus;
         const stockPatch = await settleOrderInventory(tx, db, current.data(), nextPaymentStatus, body.id, user.uid, body.status ?? current.data().status);
-        tx.set(ref, { ...stockPatch, ...(body.status !== undefined ? { status: body.status, ...(body.status === "completed" ? { paymentStatus: "paid" } : {}) } : { paymentStatus: body.paymentStatus }), updatedAt: new Date(), updatedBy: user.uid }, { merge: true });
-        return stockPatch.inventory || current.data().inventory || null;
+        const patch = { ...stockPatch, ...(body.status !== undefined ? { status: body.status, ...(body.status === "completed" ? { paymentStatus: "paid" } : {}) } : { paymentStatus: body.paymentStatus }), updatedAt: new Date(clock()), updatedBy: user.uid };
+        const activity = recordOrderActivity(tx, ref, { before: current.data(), after: { ...current.data(), ...patch }, user, createdAt: patch.updatedAt, quantity: stockPatch.inventory?.state === "deducted" ? stockPatch.inventory.quantity : undefined });
+        tx.set(ref, patch, { merge: true });
+        return { inventory: stockPatch.inventory || current.data().inventory || null, activity };
       });
-      return res.status(200).json({ inventory, message: body.status === "completed" ? "Đã hoàn tất đơn hàng và ghi nhận đã thanh toán." : "Đã cập nhật trạng thái đơn hàng." });
+      return res.status(200).json({ ...result, message: body.status === "completed" ? "Đã hoàn tất đơn hàng và ghi nhận đã thanh toán." : "Đã cập nhật trạng thái đơn hàng." });
     } catch (error) { if (OUTLOOK_ERROR_MESSAGES[error.message]) return res.status(503).json({ code: error.message, message: OUTLOOK_ERROR_MESSAGES[error.message] }); return res.status(error.status || 503).json({ message: error.message === "template_changed" ? "Mẫu đã được sửa hoặc xóa. Chọn lại mẫu hiện tại hoặc soạn nội dung riêng." : error.status ? error.message : "Không tải hoặc cập nhật được đơn hàng." }); }
   };
 }
