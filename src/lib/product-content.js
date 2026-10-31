@@ -79,3 +79,12 @@ export function publishedProductReviews(product = {}) {
   // Manual/demo entries never contribute to a real customer rating or verified-purchase claim.
   return (Array.isArray(product.productReviews) ? product.productReviews : []).filter((review) => review && review.published === true && typeof review.name === "string" && review.name.trim() && typeof review.text === "string" && review.text.trim()).map((review) => ({ ...review, rating: Math.min(5, Math.max(1, Number.parseInt(review.rating, 10) || 5)) }));
 }
+
+export function compactRelatedProducts(products, current, limit = 4) {
+  const currentIds = new Set([current.id, current.slug].filter(Boolean)); const seen = new Set();
+  return products.filter((item) => {
+    const key = item.id || item.slug;
+    if (!key || !item.name || item.active === false || currentIds.has(item.id) || currentIds.has(item.slug) || seen.has(key)) return false;
+    seen.add(key); return true;
+  }).map((item, index) => ({ item, index })).sort((a, b) => Number(Boolean(current.categoryId && b.item.categoryId === current.categoryId)) - Number(Boolean(current.categoryId && a.item.categoryId === current.categoryId)) || a.index - b.index).slice(0, limit).map(({ item }) => item);
+}

@@ -14,7 +14,7 @@ import { getProduct } from "../lib/api";
 import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
 import { contactLinks } from "../lib/contact";
-import Collection from "./Collection";
+import RelatedProductsSidebar from "./RelatedProductsSidebar";
 import { cdnSrc, THUMB, MAIN } from "../lib/cloudinary";
 
 /* Giữ xuống dòng khi admin nhấn Enter — chèn <br /> thật, không phụ thuộc CSS */
@@ -153,48 +153,6 @@ function ProductDetail({
 
 
   const css = (key) => toCss(ps[key], { responsive: true });
-
-  // Kiểu riêng cho mục "Sản phẩm khác" (admin chỉnh ở Visual Builder → Chi tiết SP)
-    const relTitleStyle = ps.relTitle || {};
-  // Dữ liệu cũ (tiêu đề tách 2 dòng) vẫn hiển thị đúng cho tới khi admin lưu lại
-  const legacyHl = relTitleStyle.accentCount == null ? ps.relHighlight : null;
-  const relTitleText = legacyHl
-    ? `${relTitleStyle.text || ""}\n${legacyHl.text || ""}`
-    : relTitleStyle.text ?? "";
-  const relAccentCount =
-    relTitleStyle.accentCount ??
-    (legacyHl
-      ? Array.from(legacyHl.text || "").length
-      : relTitleStyle.text == null
-      ? 8
-      : 0);
-  const relAccentColor = relTitleStyle.accentColor || legacyHl?.color;
-
-  const relatedHeadStyles = {
-    label: ps.relLabel,
-    title: ps.relTitle,
-    header: ps.relHeader,
-    section: ps.relSection,
-  };
-  const relatedCardStyles = {
-    number: ps.relNumber,
-    name: ps.relName,
-    description: ps.relDescription,
-    price: ps.relPrice,
-    button: ps.relButton,
-    imageLayout: ps.relImage,
-  };
-  const relatedKeyMap = {
-    colLabel: "relLabel",
-    colTitle: "relTitle",
-    colHeader: "relHeader",
-    colSection: "relSection",    cardNumber: "relNumber",
-    cardName: "relName",
-    cardDescription: "relDescription",
-    cardPrice: "relPrice",
-    cardButton: "relButton",
-    cardImage: "relImage",
-  };
 
   // order[0] = đang hiện khung lớn; còn lại = hàng đợi dưới (xoay 2 ảnh, ảnh vừa rời khung lớn nằm cuối)
   const mainImage = (product.image || "").trim();
@@ -529,36 +487,11 @@ function ProductDetail({
 
       <div className="product-detail-lower">
         <ProductInformation sections={sections} css={css} preview={preview} select={select} selectedClass={selectedClass} />
-        <div className="product-detail-reserved" aria-hidden="true" />
+        <RelatedProductsSidebar product={product} preview={preview} previewProducts={previewProducts} styles={ps} selectedElement={selectedElement} onSelect={onSelect} />
       </div>
       <ProductReviews product={product} />
 
-      {/* Sản phẩm khác — dùng lại Collection, bỏ sản phẩm đang xem */}
-      <Collection
-        preview={preview}
-        selectedElement={selectedElement}
-        onSelect={onSelect}
-        excludeId={product.id || product.slug || id}
-        forceLabel={ps.relLabel?.text || ""}
-        forceTitle={relTitleText}
-        singleTitle
-        titleAccent={{ count: relAccentCount, color: relAccentColor }}
-        headStylesOverride={relatedHeadStyles}
-        cardStylesOverride={relatedCardStyles}
-        keyMap={relatedKeyMap}
-        className="product-detail-related"
-        sampleProducts={
-          preview
-            ? previewProducts
-                .filter(
-                  (p) =>
-                    p.id !== (product.id || product.slug) &&
-                    p.slug !== (product.id || product.slug)
-                )
-                .slice(0, 3)
-            : null
-        }
-      />
+
     </article>
   );
 }

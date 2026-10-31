@@ -55,3 +55,10 @@ test("manually entered demo reviews are not published by default and only comple
   const product = { productReviews: [{id:"draft",name:"Demo",text:"Example",rating:5,published:false},{id:"complete",name:"Demo",text:"Example",rating:8,published:true},{id:"empty",name:"",text:"Example",published:true}] };
   const before = structuredClone(product); const rendered = publishedProductReviews(product); assert.equal(rendered.length,1); assert.equal(rendered[0].id,"complete"); assert.equal(rendered[0].rating,5); assert.deepEqual(product,before);
 });
+
+test("compact related rail excludes the current product, hidden/duplicate entries and prioritizes its category", async () => {
+  const { compactRelatedProducts } = await import("../src/lib/product-content.js");
+  const current = { id: "current", slug: "current-slug", categoryId: "skin" };
+  const items = [{ id:"current",name:"Current" },{ id:"alias",slug:"current-slug",name:"Same product" },{id:"hidden",name:"Hidden",active:false},{id:"other",name:"Other",categoryId:"body"},{id:"same",name:"Same category",categoryId:"skin"},{id:"same",name:"Duplicate"},{id:"third",name:"Third"},{id:"fourth",name:"Fourth"},{id:"fifth",name:"Fifth"}];
+  const before=structuredClone(items);assert.deepEqual(compactRelatedProducts(items,current).map(p=>p.id),["same","other","third","fourth"]);assert.deepEqual(items,before);assert.deepEqual(compactRelatedProducts(items.slice(0,3),current),[]);
+});
