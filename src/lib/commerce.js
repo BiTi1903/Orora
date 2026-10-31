@@ -19,3 +19,10 @@ export function availablePaymentMethods(home = {}) {
   const saved = home.shopLinks?.paymentMethods;
   return Array.isArray(saved) ? [...new Set(saved.filter((key) => Object.hasOwn(PAYMENT_LABELS, key)))] : Object.keys(PAYMENT_LABELS);
 }
+
+export function facebookFollowUrl(value) {
+  const url = socialShopUrl(value, "facebook");
+  if (!url) return null;
+  const host = new URL(url).hostname;
+  return host === "m.me" || host.endsWith(".m.me") ? null : url;
+}

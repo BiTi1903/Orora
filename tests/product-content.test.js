@@ -62,3 +62,10 @@ test("compact related rail excludes the current product, hidden/duplicate entrie
   const items = [{ id:"current",name:"Current" },{ id:"alias",slug:"current-slug",name:"Same product" },{id:"hidden",name:"Hidden",active:false},{id:"other",name:"Other",categoryId:"body"},{id:"same",name:"Same category",categoryId:"skin"},{id:"same",name:"Duplicate"},{id:"third",name:"Third"},{id:"fourth",name:"Fourth"},{id:"fifth",name:"Fifth"}];
   const before=structuredClone(items);assert.deepEqual(compactRelatedProducts(items,current).map(p=>p.id),["same","other","third","fourth"]);assert.deepEqual(items,before);assert.deepEqual(compactRelatedProducts(items.slice(0,3),current),[]);
 });
+
+test("Facebook follow links require HTTPS Facebook destinations and exclude Messenger and lookalike hosts", async () => {
+  const { facebookFollowUrl } = await import("../src/lib/commerce.js");
+  assert.equal(facebookFollowUrl("https://www.facebook.com/orora"), "https://www.facebook.com/orora");
+  assert.equal(facebookFollowUrl("https://fb.me/orora"), "https://fb.me/orora");
+  for (const value of ["javascript:alert(1)", "http://facebook.com/orora", "https://facebook.com.evil.example/orora", "https://m.me/orora", "https://user:password@facebook.com/orora"]) assert.equal(facebookFollowUrl(value), null);
+});

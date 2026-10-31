@@ -1,3 +1,4 @@
+import FacebookFollowCard from "./FacebookFollowCard";
 import useProductPanelSize from "../hooks/useProductPanelSize";
 import ProductInformation from "./ProductInformation";
 import ProductAssurances from "./ProductAssurances";
@@ -135,7 +136,6 @@ function ProductDetail({
   }
 
   const purchase = ps.purchaseOptions || {};
-  const hasPolicies = Array.isArray(home.productPolicies) && home.productPolicies.some((item) => item.enabled !== false && typeof item.title === "string" && item.title.trim() && typeof item.content === "string" && item.content.trim());
   const tiktokShop = socialShopUrl(home.shopLinks?.tiktokUrl, "tiktok");
   const facebookShop = socialShopUrl(home.shopLinks?.facebookUrl, "facebook");
   const contactSettings = ps.contactActions || {};
@@ -314,7 +314,9 @@ function ProductDetail({
         )}
       </div>
 
-      <section className={`product-detail-content product-detail-content--with-sections${hasPolicies ? " product-detail-content--with-policies" : ""}`}>
+      <div className="product-detail-shell">
+      <div className="product-main-column">
+      <section className="product-detail-content product-detail-content--with-sections">
         <div className="product-detail-gallery" style={galleryStyle}>
           <div
             className={`product-detail-image ${selectedClass("pdImage")}${
@@ -482,14 +484,19 @@ function ProductDetail({
           )}
 
         </div></div>
-        <ProductAssurances policies={home.productPolicies} />
       </section>
 
       <div className="product-detail-lower">
         <ProductInformation sections={sections} css={css} preview={preview} select={select} selectedClass={selectedClass} />
-        <RelatedProductsSidebar product={product} preview={preview} previewProducts={previewProducts} styles={ps} selectedElement={selectedElement} onSelect={onSelect} />
       </div>
-      <ProductReviews product={product} />
+      </div>
+      <div className="product-side-column">
+        <ProductAssurances policies={home.productPolicies} />
+        <FacebookFollowCard settings={home.productFacebook} fallbackUrl={home.shopLinks?.facebookUrl} />
+        <RelatedProductsSidebar product={product} preview={preview} previewProducts={previewProducts} styles={ps} selectedElement={selectedElement} onSelect={onSelect} />
+        <ProductReviews product={product} />
+      </div>
+      </div>
 
 
     </article>
