@@ -1,3 +1,4 @@
+import useProductPanelSize from "../hooks/useProductPanelSize";
 import ProductInformation from "./ProductInformation";
 import ProductAssurances from "./ProductAssurances";
 import ProductReviews from "./ProductReviews";
@@ -51,6 +52,8 @@ function ProductDetail({
   const product = preview
     ? previewProduct || null
     : loadedProduct?.id === id ? loadedProduct.product : undefined;
+
+  useProductPanelSize(pageRef, product);
 
   /* ---------- lấy sản phẩm từ Firestore ---------- */
   useEffect(() => {
@@ -455,7 +458,7 @@ function ProductDetail({
           )}
         </div>
 
-        <div className="product-detail-info">
+        <div className="product-detail-info"><div className="product-purchase-content">
           <p
             className={`product-detail-number ${selectedClass("pdNumber")}`}
             data-builder-key={preview ? "pdNumber" : undefined}
@@ -520,7 +523,7 @@ function ProductDetail({
             </div>
           )}
 
-        </div>
+        </div></div>
         <ProductAssurances policies={home.productPolicies} />
       </section>
 

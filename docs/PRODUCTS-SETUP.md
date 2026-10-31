@@ -37,3 +37,5 @@ Trong **Sửa sản phẩm → Đánh giá minh họa**, thêm tên hiển thị
 Website luôn ghi rõ đây là **Minh họa**, không phải phản hồi đã xác minh từ người mua. Không có nhãn “đã mua hàng”, không tạo điểm trung bình/số khách đánh giá hoặc dữ liệu SEO aggregateRating từ các mục minh họa. Không sinh sẵn tên, nội dung khen hoặc điểm sao của khách hàng. Khi chưa có mục xuất bản, hiển thị trạng thái chưa có đánh giá. Hệ thống tiếp nhận đánh giá thật từ người mua chưa được triển khai trong phần này.
 
 Phần Mô tả/Thông số/Hướng dẫn sử dụng và thanh chuyển nhanh chiếm khoảng 75% khung nội dung trên desktop, chừa cột 25% bên phải cho bổ sung sau. Không hiển thị số 01–03 ở thanh chuyển và tiêu đề. Tablet/mobile dùng toàn chiều rộng, xếp cam kết dưới phần mua để tránh cột quá hẹp. Đánh giá bên dưới vẫn giữ chiều rộng cũ.
+
+Khối mua hàng trên desktop rộng dùng tỷ lệ ảnh/thông tin/cam kết 40/40/20 (không tính khe giữa cột). Ảnh chính và khung thông tin cùng chiều rộng và tự cân chiều cao theo nội dung; ảnh phụ không tính vào chiều cao khung chính. Kích thước cột ưu tiên hơn giới hạn chiều rộng gallery cũ, không đổi dữ liệu ảnh hoặc chữ. Mobile vẫn xếp dọc và dùng chiều cao tự nhiên.
