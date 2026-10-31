@@ -672,13 +672,13 @@
   font-size: 12px !important;
   line-height: 1.4;
 }
-.product-detail-shell .product-consultation-toggle {
+.product-detail-shell .purchase-website {
   background: var(--rose-pale, #fff0f5);
   color: var(--rose-deep);
   border-color: var(--line);
   box-shadow: none;
 }
-.product-detail-shell .product-consultation-toggle:hover { background: #fbe4ee; }
+.product-detail-shell .purchase-website:hover { background: #fbe4ee; }
 @media (max-width: 400px) {
   .product-detail-shell .product-detail-thumbs { grid-template-columns: repeat(var(--thumb-count, 2), minmax(0, 80px)); }
   .product-detail-shell .product-detail-thumb { width: 80px; height: 80px !important; }
