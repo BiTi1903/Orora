@@ -20,7 +20,7 @@ Kiểm thử bao gồm sản phẩm cũ nhiều mục/ảnh, lưu-mở lại kh�
 
 ## Bố cục trang chi tiết
 
-Phần trên có gallery trái, tên/giá/mô tả ngắn/nút mua và cam kết bên phải. Nội dung dài nằm dưới, chia ba phần **Mô tả**, **Thông số**, **Hướng dẫn sử dụng**. Ba ô chuyển nhanh cuộn đến phần tương ứng, có khoảng tránh navbar và giữ sử dụng bàn phím. Cả ba phần dùng chung kiểu chữ/màu của Visual Builder; thông số vẫn có tên bên trái, nội dung bên phải. Mobile giữ thứ tự ảnh → mua hàng → ba phần → đánh giá.
+Trên desktop rộng, phần trên có ba cột: gallery trái, tên/giá/mô tả ngắn/nút mua ở giữa và cam kết ở cột phải riêng. Nội dung dài nằm dưới, chia ba phần **Mô tả**, **Thông số**, **Hướng dẫn sử dụng**. Ba ô chuyển nhanh cuộn đến phần tương ứng, có khoảng tránh navbar và giữ sử dụng bàn phím. Cả ba phần dùng chung kiểu chữ/màu của Visual Builder; thông số vẫn có tên bên trái, nội dung bên phải. Mobile giữ thứ tự ảnh → mua hàng → ba phần → đánh giá.
 
 Mỗi mục trong form có **Phần hiển thị**, lưu ở `detailSections[].group` (`description`, `specifications`, `usage`). Dữ liệu chưa có nhóm được phân loại khi đọc: câu chuyện/công dụng/mô tả vào Mô tả, các trường thành phần/dung tích/màu/xuất xứ vào Thông số, tên hướng dẫn/cách sử dụng vào Hướng dẫn sử dụng. Chọn nhóm thủ công sẽ ưu tiên hơn suy luận từ tên. Nội dung và các trường cũ không bị xóa hoặc ghi lại hàng loạt. Phần chưa có nội dung hiện trạng thái đang cập nhật, không tự tạo hướng dẫn sử dụng sản phẩm.
 
@@ -35,3 +35,5 @@ Tại **Admin → Sản phẩm**, ngoài trình sửa từng sản phẩm, có *
 Trong **Sửa sản phẩm → Đánh giá minh họa**, thêm tên hiển thị, số sao, nội dung và bật hiển thị từng mục. Bản mới mặc định chưa xuất bản; khi lưu, đánh giá muốn xuất bản phải có tên và nội dung. Dữ liệu lưu riêng ở `productReviews` trên sản phẩm.
 
 Website luôn ghi rõ đây là **Minh họa**, không phải phản hồi đã xác minh từ người mua. Không có nhãn “đã mua hàng”, không tạo điểm trung bình/số khách đánh giá hoặc dữ liệu SEO aggregateRating từ các mục minh họa. Không sinh sẵn tên, nội dung khen hoặc điểm sao của khách hàng. Khi chưa có mục xuất bản, hiển thị trạng thái chưa có đánh giá. Hệ thống tiếp nhận đánh giá thật từ người mua chưa được triển khai trong phần này.
+
+Phần Mô tả/Thông số/Hướng dẫn sử dụng và thanh chuyển nhanh chiếm khoảng 75% khung nội dung trên desktop, chừa cột 25% bên phải cho bổ sung sau. Không hiển thị số 01–03 ở thanh chuyển và tiêu đề. Tablet/mobile dùng toàn chiều rộng, xếp cam kết dưới phần mua để tránh cột quá hẹp. Đánh giá bên dưới vẫn giữ chiều rộng cũ.

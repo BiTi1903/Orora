@@ -132,6 +132,7 @@ function ProductDetail({
   }
 
   const purchase = ps.purchaseOptions || {};
+  const hasPolicies = Array.isArray(home.productPolicies) && home.productPolicies.some((item) => item.enabled !== false && typeof item.title === "string" && item.title.trim() && typeof item.content === "string" && item.content.trim());
   const tiktokShop = socialShopUrl(home.shopLinks?.tiktokUrl, "tiktok");
   const facebookShop = socialShopUrl(home.shopLinks?.facebookUrl, "facebook");
   const contactSettings = ps.contactActions || {};
@@ -352,7 +353,7 @@ function ProductDetail({
         )}
       </div>
 
-      <section className="product-detail-content product-detail-content--with-sections">
+      <section className={`product-detail-content product-detail-content--with-sections${hasPolicies ? " product-detail-content--with-policies" : ""}`}>
         <div className="product-detail-gallery" style={galleryStyle}>
           <div
             className={`product-detail-image ${selectedClass("pdImage")}${
@@ -519,11 +520,14 @@ function ProductDetail({
             </div>
           )}
 
-          <ProductAssurances policies={home.productPolicies} />
         </div>
+        <ProductAssurances policies={home.productPolicies} />
       </section>
 
-      <ProductInformation sections={sections} css={css} preview={preview} select={select} selectedClass={selectedClass} />
+      <div className="product-detail-lower">
+        <ProductInformation sections={sections} css={css} preview={preview} select={select} selectedClass={selectedClass} />
+        <div className="product-detail-reserved" aria-hidden="true" />
+      </div>
       <ProductReviews product={product} />
 
       {/* Sản phẩm khác — dùng lại Collection, bỏ sản phẩm đang xem */}
