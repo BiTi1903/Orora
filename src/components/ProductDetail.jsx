@@ -1,4 +1,6 @@
-import ProductContent from "./ProductContent";
+import ProductInformation from "./ProductInformation";
+import ProductAssurances from "./ProductAssurances";
+import ProductReviews from "./ProductReviews";
 import { productImages, productSections, secondaryProductImages } from "../lib/product-content";
 import ConsultationDialog from "./ConsultationDialog";
 import OrderForm from "./OrderForm";
@@ -144,9 +146,7 @@ function ProductDetail({
     color: detailLabels.color || ps.colorLabel?.text,
     origin: detailLabels.origin || ps.originLabel?.text,
   }).filter((section) => section.content?.trim());
-  const introSection = sections[0] && (!sections[0].legacyKey || sections[0].legacyKey === "story") ? sections[0] : null;
-  const detailRows = introSection ? sections.slice(1) : sections;
-  const hasDetailSections = sections.length > 0;
+
 
   const css = (key) => toCss(ps[key], { responsive: true });
 
@@ -352,7 +352,7 @@ function ProductDetail({
         )}
       </div>
 
-      <section className={`product-detail-content${hasDetailSections ? " product-detail-content--with-sections" : ""}`}>
+      <section className="product-detail-content product-detail-content--with-sections">
         <div className="product-detail-gallery" style={galleryStyle}>
           <div
             className={`product-detail-image ${selectedClass("pdImage")}${
@@ -519,25 +519,12 @@ function ProductDetail({
             </div>
           )}
 
+          <ProductAssurances policies={home.productPolicies} />
         </div>
       </section>
 
-      {hasDetailSections && <div className="product-detail-sections" aria-label="Thông tin chi tiết sản phẩm">
-        {introSection && <section className="product-section">
-          <h2 className={selectedClass("pdAboutTitle")} data-builder-key={preview ? "pdAboutTitle" : undefined} onClick={select("pdAboutTitle")} style={css("aboutTitle")}>{introSection.title}</h2>
-          <div className={`product-section-content ${selectedClass("pdBody")}`} data-builder-key={preview ? "pdBody" : undefined} onClick={select("pdBody")} style={css("body")}><ProductContent text={introSection.content} /></div>
-        </section>}
-        {detailRows.length > 0 && <section className="product-section">
-          <h2 className={selectedClass("pdDetailsTitle")} data-builder-key={preview ? "pdDetailsTitle" : undefined} onClick={select("pdDetailsTitle")} style={css("detailsTitle")}>{ps.detailsTitle?.text || "Chi tiết"}</h2>
-          {detailRows.map((section, index) => {
-            const labelKey = section.legacyKey ? `pdLabel:${section.legacyKey}` : "pdRowLabel";
-            return <div className="product-detail-row" key={section.id || index}>
-              <span className={selectedClass(labelKey)} data-builder-key={preview ? labelKey : undefined} onClick={select(labelKey)} style={css("rowLabel")}>{section.title}</span>
-              <div className={`product-detail-value ${selectedClass("pdRowValue")}`} data-builder-key={preview ? "pdRowValue" : undefined} onClick={select("pdRowValue")} style={css("rowValue")}><ProductContent text={section.content} /></div>
-            </div>;
-          })}
-        </section>}
-      </div>}
+      <ProductInformation sections={sections} css={css} preview={preview} select={select} selectedClass={selectedClass} />
+      <ProductReviews product={product} />
 
       {/* Sản phẩm khác — dùng lại Collection, bỏ sản phẩm đang xem */}
       <Collection

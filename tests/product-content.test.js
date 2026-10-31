@@ -38,3 +38,20 @@ test("storefront content parses paragraphs, dash/bullet/number lists, CRLF and l
   assert.deepEqual(blocks[3].lines, [{text:"Hai",number:2},{text:"Bốn",number:4}]);
   assert.equal(blocks[4].lines[0].text, "<img src=x onerror=alert(1)>");
 });
+
+test("three information groups preserve legacy and custom content and honor manual grouping", async () => {
+  const { groupedProductSections, productSectionGroup } = await import("../src/lib/product-content.js");
+  const old = { story: "Old story\nSecond line", material: "A, B", size: "40ml", origin: "Japan" };
+  const before = structuredClone(old); const groups = groupedProductSections(productSections(old));
+  assert.equal(groups.description[0].content, old.story); assert.equal(groups.specifications.length, 3); assert.equal(groups.usage.length, 0); assert.deepEqual(old, before);
+  assert.equal(productSectionGroup({ title: "HƯỚNG DẪN SỬ DỤNG", content: "Instructions" }), "usage");
+  assert.equal(productSectionGroup({ title: "Công dụng" }, 3), "description");
+  assert.equal(productSectionGroup({ title: "Hướng dẫn", group: "specifications" }), "specifications");
+  const item = { id: "custom", title: "Custom title", content: "Exact\r\n  text", group: "usage" }; assert.deepEqual(groupedProductSections([item]).usage, [item]);
+  assert.deepEqual(groupedProductSections([{title:"Empty",content:" "}]), {description:[],specifications:[],usage:[]});
+});
+test("manually entered demo reviews are not published by default and only complete enabled entries render", async () => {
+  const { publishedProductReviews } = await import("../src/lib/product-content.js");
+  const product = { productReviews: [{id:"draft",name:"Demo",text:"Example",rating:5,published:false},{id:"complete",name:"Demo",text:"Example",rating:8,published:true},{id:"empty",name:"",text:"Example",published:true}] };
+  const before = structuredClone(product); const rendered = publishedProductReviews(product); assert.equal(rendered.length,1); assert.equal(rendered[0].id,"complete"); assert.equal(rendered[0].rating,5); assert.deepEqual(product,before);
+});

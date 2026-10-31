@@ -20,7 +20,18 @@ Kiểm thử bao gồm sản phẩm cũ nhiều mục/ảnh, lưu-mở lại kh�
 
 ## Bố cục trang chi tiết
 
-Phần trên giữ hai cột trên desktop: gallery bên trái, tên/giá/mô tả ngắn/nút mua bên phải. Các mục nội dung dài nằm ở khối riêng bên dưới, cùng chiều rộng và căn lề với phần trên; không kéo dài riêng cột phải. Mobile xếp ảnh → thông tin mua → nội dung chi tiết. Áp dụng cả các trường cũ lẫn `detailSections`, giữ tùy chỉnh chữ trong Visual Builder và không ghi lại dữ liệu sản phẩm.
+Phần trên có gallery trái, tên/giá/mô tả ngắn/nút mua và cam kết bên phải. Nội dung dài nằm dưới, chia ba phần **Mô tả**, **Thông số**, **Hướng dẫn sử dụng**. Ba ô chuyển nhanh cuộn đến phần tương ứng, có khoảng tránh navbar và giữ sử dụng bàn phím. Cả ba phần dùng chung kiểu chữ/màu của Visual Builder; thông số vẫn có tên bên trái, nội dung bên phải. Mobile giữ thứ tự ảnh → mua hàng → ba phần → đánh giá.
 
+Mỗi mục trong form có **Phần hiển thị**, lưu ở `detailSections[].group` (`description`, `specifications`, `usage`). Dữ liệu chưa có nhóm được phân loại khi đọc: câu chuyện/công dụng/mô tả vào Mô tả, các trường thành phần/dung tích/màu/xuất xứ vào Thông số, tên hướng dẫn/cách sử dụng vào Hướng dẫn sử dụng. Chọn nhóm thủ công sẽ ưu tiên hơn suy luận từ tên. Nội dung và các trường cũ không bị xóa hoặc ghi lại hàng loạt. Phần chưa có nội dung hiện trạng thái đang cập nhật, không tự tạo hướng dẫn sử dụng sản phẩm.
 
-Cả dữ liệu cũ và `detailSections` dùng chung kiểu trình bày: mục mô tả đầu tiên ở trên, các mục còn lại nằm trong **Chi tiết**, tên mục bên trái và nội dung bên phải. Font/màu dùng chung `aboutTitle`, `body`, `detailsTitle`, `rowLabel`, `rowValue` của Visual Builder. Tên mục cũ tiếp tục đọc cấu hình nhãn đã lưu; tên mục mới giữ theo từng sản phẩm. Không chuyển đổi hoặc ghi lại sản phẩm chỉ để đồng bộ hiển thị.
+## Cam kết và chính sách cạnh nút mua
+
+Tại **Admin → Sản phẩm**, ngoài trình sửa từng sản phẩm, có **Cam kết cạnh phần mua hàng**. Tự nhập tên, nội dung, bật/tắt và thêm/bỏ mục. Lưu riêng ở `settings/home.productPolicies`, dùng chung các sản phẩm; không ghi đè kênh mua hay phí ship. Mục trống/tắt không hiển thị. Không tự điền mức miễn phí ship, đền bù hoặc điều kiện đổi trả chưa được cửa hàng cung cấp.
+
+Đây là nội dung hiển thị, không phải quy tắc tính phí hoặc hoàn tiền. Cần cấu hình giá ship/chính sách thực tế nhất quán với nội dung đã đăng.
+
+## Đánh giá tự thêm
+
+Trong **Sửa sản phẩm → Đánh giá minh họa**, thêm tên hiển thị, số sao, nội dung và bật hiển thị từng mục. Bản mới mặc định chưa xuất bản; khi lưu, đánh giá muốn xuất bản phải có tên và nội dung. Dữ liệu lưu riêng ở `productReviews` trên sản phẩm.
+
+Website luôn ghi rõ đây là **Minh họa**, không phải phản hồi đã xác minh từ người mua. Không có nhãn “đã mua hàng”, không tạo điểm trung bình/số khách đánh giá hoặc dữ liệu SEO aggregateRating từ các mục minh họa. Không sinh sẵn tên, nội dung khen hoặc điểm sao của khách hàng. Khi chưa có mục xuất bản, hiển thị trạng thái chưa có đánh giá. Hệ thống tiếp nhận đánh giá thật từ người mua chưa được triển khai trong phần này.

@@ -60,3 +60,22 @@ export function parseProductContent(text = "") {
   }
   return blocks;
 }
+
+export const PRODUCT_CONTENT_GROUPS = { description: "Mô tả", specifications: "Thông số", usage: "Hướng dẫn sử dụng" };
+export function productSectionGroup(section, index = 0) {
+  if (Object.hasOwn(PRODUCT_CONTENT_GROUPS, section.group || "")) return section.group;
+  const title = String(section.title || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").toLowerCase();
+  if (/huong dan|cach (su )?dung|su dung|hdsd/.test(title)) return "usage";
+  if (section.legacyKey === "story" || /mo ta|cau chuyen|cong dung|gioi thieu/.test(title)) return "description";
+  if (section.legacyKey) return "specifications";
+  return index === 0 ? "description" : "specifications";
+}
+export function groupedProductSections(sections) {
+  const groups = { description: [], specifications: [], usage: [] };
+  sections.forEach((section, index) => { if (typeof section.content === "string" && section.content.trim()) groups[productSectionGroup(section, index)].push(section); });
+  return groups;
+}
+export function publishedProductReviews(product = {}) {
+  // Manual/demo entries never contribute to a real customer rating or verified-purchase claim.
+  return (Array.isArray(product.productReviews) ? product.productReviews : []).filter((review) => review && review.published === true && typeof review.name === "string" && review.name.trim() && typeof review.text === "string" && review.text.trim()).map((review) => ({ ...review, rating: Math.min(5, Math.max(1, Number.parseInt(review.rating, 10) || 5)) }));
+}

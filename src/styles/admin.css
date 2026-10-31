@@ -461,3 +461,4 @@
 @media (max-width: 600px) { .product-editor-block { padding: 14px; } .product-content-section, .product-secondary-image { padding: 12px; } .product-content-toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .product-editor-block .admin-image-side { min-width: 0; flex-basis: 220px; }
 .product-content-toolbar .admin-btn { min-width: 0; white-space: normal; line-height: 1.4; }
+.product-content-section select, .product-editor-block select { width: 100%; min-width: 0; padding: 11px 14px; border: 1px solid var(--a-line); border-radius: 12px; background: #fffafc; color: var(--a-plum); font: inherit; font-size: 14px; }
