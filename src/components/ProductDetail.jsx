@@ -1,4 +1,5 @@
 import FacebookFollowCard from "./FacebookFollowCard";
+import useProductSidebarReveal from "../hooks/useProductSidebarReveal";
 import useProductPanelSize from "../hooks/useProductPanelSize";
 import ProductInformation from "./ProductInformation";
 import ProductAssurances from "./ProductAssurances";
@@ -55,6 +56,7 @@ function ProductDetail({
     : loadedProduct?.id === id ? loadedProduct.product : undefined;
 
   useProductPanelSize(pageRef, product);
+  useProductSidebarReveal(pageRef, product, preview);
 
   /* ---------- lấy sản phẩm từ Firestore ---------- */
   useEffect(() => {
