@@ -661,8 +661,11 @@
 }
 .product-detail-shell .product-detail-thumb-nav { width: 32px; height: 32px; font-size: 20px; }
 .product-detail-shell .purchase-website {
+  width: 100%;
+  max-width: 280px;
   min-height: 44px;
-  padding: 11px 16px !important;
+  border-radius: 12px;
+  padding: 9px 14px !important;
   font-size: 13px !important;
   line-height: 1.4;
 }
@@ -683,3 +686,11 @@
   .product-detail-shell .product-detail-thumbs { grid-template-columns: repeat(var(--thumb-count, 2), minmax(0, 80px)); }
   .product-detail-shell .product-detail-thumb { width: 80px; height: 80px !important; }
 }
+
+/* Keep both actions together below the purchase heading. */
+#root > main .product-detail-shell .purchase-options > .product-consultation,
+.product-detail-shell .purchase-options > .product-consultation {
+  width: 100%; max-width: 280px; margin: 0 0 8px;
+}
+.product-detail-shell .purchase-divider,
+.product-detail-shell .purchase-social { max-width: 280px; }

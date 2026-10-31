@@ -85,7 +85,7 @@ function ProductDetail({
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const ctx = gsap.context(() => {
-      const selectors = [".product-back", ".product-detail-image", ".product-detail-thumbs-wrap", ".product-detail-number", ".product-detail-info h1", ".product-detail-price", ".product-detail-description", ".purchase-options", ".product-contact-actions", ".product-section", ".product-detail-related"];
+      const selectors = [".product-back", ".product-detail-image", ".product-detail-thumbs-wrap", ".product-detail-number", ".product-detail-info h1", ".product-detail-price", ".product-detail-description", ".purchase-options", ".product-section", ".product-detail-related"];
       const nodes = selectors.flatMap((selector) => Array.from(pageRef.current.querySelectorAll(selector)));
       gsap.from(nodes, {
         y: 18, autoAlpha: 0, duration: 0.5, stagger: 0.1,
@@ -457,6 +457,10 @@ function ProductDetail({
             {renderLines(product.description)}
           </p>
 
+
+
+          <section className={`purchase-options ${selectedClass("pdPurchaseOptions")}`} aria-label="Chọn kênh mua hàng" data-builder-key={preview ? "pdPurchaseOptions" : undefined} onClick={preview ? select("pdPurchaseOptions") : undefined}>
+            <h2>{purchase.heading?.trim() || "Chọn cách mua hàng"}</h2>
           {(preview || showZalo || showCall || (!contact.zalo && contact.email && contactSettings.showZalo !== false)) && (
             <div className={`product-contact-actions product-consultation ${selectedClass("pdContactActions")}`} aria-label="Tư vấn sản phẩm" data-builder-key={preview ? "pdContactActions" : undefined} onClick={preview ? select("pdContactActions") : undefined}>
               <button type="button" className="purchase-website product-consultation-toggle" style={css("contactActions")} aria-haspopup="dialog" onClick={preview ? select("pdContactActions") : () => setConsultationOpen(true)}>
@@ -471,9 +475,6 @@ function ProductDetail({
               </ConsultationDialog>}
             </div>
           )}
-
-          <section className={`purchase-options ${selectedClass("pdPurchaseOptions")}`} aria-label="Chọn kênh mua hàng" data-builder-key={preview ? "pdPurchaseOptions" : undefined} onClick={preview ? select("pdPurchaseOptions") : undefined}>
-            <h2>{purchase.heading?.trim() || "Chọn cách mua hàng"}</h2>
             <button type="button" className="purchase-website" style={{ ...css("purchaseOptions"), background: purchase.websiteBackground }} onClick={preview ? select("pdPurchaseOptions") : () => setOrderProductId(product.id || product.slug)} aria-expanded={!preview && orderProductId === (product.id || product.slug)}><svg className="purchase-bag" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg><span>{(purchase.websiteLabel?.trim() && purchase.websiteLabel.trim() !== "Đặt hàng trên website" ? purchase.websiteLabel.trim() : "Đặt hàng ngay")}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
             {(preview || tiktokShop || facebookShop) && <>
               <div className="purchase-divider"><span>hoặc</span></div>
@@ -484,8 +485,6 @@ function ProductDetail({
             </>}
             {!preview && orderProductId === (product.id || product.slug) && <OrderForm key={product.id || product.slug} product={product} home={home} onClose={() => setOrderProductId(null)} />}
           </section>
-
-
 
         </div></div>
       </section>
