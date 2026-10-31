@@ -714,3 +714,50 @@
 @media (max-width: 768px) {
   .product-detail-lower > .product-information { padding: 16px; }
 }
+
+/* A wider, connected layout with one consistent card treatment. */
+.product-detail {
+  --detail-card-surface: rgba(255, 255, 255, .88);
+  --detail-card-border: rgba(184, 68, 109, .16);
+  --detail-card-shadow: 0 4px 18px rgba(58, 21, 38, .035);
+}
+.product-detail-shell { width: 94%; max-width: 1680px; gap: 20px; margin-top: 12px; padding-bottom: 40px; }
+.product-detail-top { width: 94%; max-width: 1680px; margin-inline: auto; padding-left: 0; padding-right: 0; }
+.product-detail-shell .product-main-column { gap: 20px; }
+.product-main-column > .product-detail-content { gap: 20px; }
+.product-side-column { gap: 14px; }
+.product-detail-content > .product-detail-info,
+.product-detail-lower > .product-information,
+.product-side-column > .product-assurances,
+.product-side-column > .facebook-follow-card,
+.product-side-column > .related-product-sidebar,
+.product-side-column > .product-reviews {
+  border: 1px solid var(--detail-card-border);
+  border-radius: 16px;
+  background: var(--detail-card-surface);
+  box-shadow: var(--detail-card-shadow);
+}
+.product-detail-shell .product-detail-image {
+  border-color: var(--detail-card-border);
+  border-width: 1px;
+  border-radius: 16px;
+  box-shadow: var(--detail-card-shadow);
+}
+.product-information > .product-information-nav { padding: 8px; gap: 6px; background: #fff4f8; border: 1px solid var(--detail-card-border); }
+.product-information-nav a { border-color: transparent; background: transparent; }
+.product-information .product-section { margin-top: 28px; border-top-color: var(--detail-card-border); }
+.product-information .product-section::before { display: none; }
+.product-side-column .product-assurance { padding-block: 14px; }
+@media (max-width: 900px) {
+  .product-detail-shell, .product-detail-top { width: calc(100% - 32px); }
+  .product-detail-shell { gap: 16px; margin-top: 8px; padding-bottom: 24px; }
+  #root > main .product-main-column > .product-detail-content { width: 100%; gap: 16px; }
+  #root > main .product-detail-shell .product-detail-gallery { max-width: none !important; }
+}
+@media (max-width: 768px) {
+  .product-information > .product-information-nav { padding: 4px; gap: 4px; }
+  .product-information-nav a { padding-inline: 4px; }
+}
+.product-information > .product-information-nav a[aria-current="location"] {
+  background: var(--rose-deep); border-color: var(--rose-deep); color: #fff;
+}
