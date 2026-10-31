@@ -144,6 +144,9 @@ function ProductDetail({
     ["origin", detailLabels.origin || ps.originLabel?.text || "Origin", product.origin],
   ].filter(([, , value]) => value || preview);
 
+  const savedSections = Array.isArray(product.detailSections) ? productSections(product) : null;
+  const hasDetailSections = savedSections ? savedSections.some((section) => section.content?.trim()) : Boolean(product.story || rows.length || preview);
+
   const css = (key) => toCss(ps[key], { responsive: true });
 
   // Kiểu riêng cho mục "Sản phẩm khác" (admin chỉnh ở Visual Builder → Chi tiết SP)
@@ -348,7 +351,7 @@ function ProductDetail({
         )}
       </div>
 
-      <section className="product-detail-content">
+      <section className={`product-detail-content${hasDetailSections ? " product-detail-content--with-sections" : ""}`}>
         <div className="product-detail-gallery" style={galleryStyle}>
           <div
             className={`product-detail-image ${selectedClass("pdImage")}${
@@ -515,7 +518,11 @@ function ProductDetail({
             </div>
           )}
 
-          {Array.isArray(product.detailSections) ? productSections(product).filter((section) => section.content?.trim()).map((section, index) => (
+        </div>
+      </section>
+
+      {hasDetailSections && <div className="product-detail-sections" aria-label="Thông tin chi tiết sản phẩm">
+          {savedSections ? savedSections.filter((section) => section.content?.trim()).map((section, index) => (
             <section className="product-section" key={section.id || index}>
               {section.title && <h2 className={selectedClass("pdAboutTitle")} data-builder-key={preview ? "pdAboutTitle" : undefined} onClick={select("pdAboutTitle")} style={css("aboutTitle")}>{section.title}</h2>}
               <div className={`product-section-content ${selectedClass("pdBody")}`} data-builder-key={preview ? "pdBody" : undefined} onClick={select("pdBody")} style={css("body")}><ProductContent text={section.content} /></div>
@@ -576,8 +583,7 @@ function ProductDetail({
             </div>
           )}
           </>}
-        </div>
-      </section>
+      </div>}
 
       {/* Sản phẩm khác — dùng lại Collection, bỏ sản phẩm đang xem */}
       <Collection

@@ -17,3 +17,7 @@ Sản phẩm chưa có mảng mới vẫn hiển thị `story`, `material`, `siz
 Ảnh phụ mới lưu ở `additionalImages` theo thứ tự. Khi chưa có mảng này, gallery và form đọc `image2` đến `image6`; các trường cũ vẫn được giữ. Mảng mới có thể có ô trống; gallery bỏ qua ô trống và dùng ảnh chính từ `image`. Collection/thẻ sản phẩm tiếp tục dùng ảnh chính như trước.
 
 Kiểm thử bao gồm sản phẩm cũ nhiều mục/ảnh, lưu-mở lại không đổi trường cũ, thêm nhiều hơn năm ảnh phụ, danh sách/xuống dòng, ảnh đang tải/hủy và giao diện 320/390/1440 px. API sản phẩm và tải ảnh trong kiểm tra trình duyệt được giả lập; không sửa dữ liệu Firestore hoặc tải tệp sản xuất trong các kiểm thử này.
+
+## Bố cục trang chi tiết
+
+Phần trên giữ hai cột trên desktop: gallery bên trái, tên/giá/mô tả ngắn/nút mua bên phải. Các mục nội dung dài nằm ở khối riêng bên dưới, cùng chiều rộng và căn lề với phần trên; không kéo dài riêng cột phải. Mobile xếp ảnh → thông tin mua → nội dung chi tiết. Áp dụng cả các trường cũ lẫn `detailSections`, giữ tùy chỉnh chữ trong Visual Builder và không ghi lại dữ liệu sản phẩm.
