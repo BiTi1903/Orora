@@ -21,3 +21,6 @@ Kiểm thử bao gồm sản phẩm cũ nhiều mục/ảnh, lưu-mở lại kh�
 ## Bố cục trang chi tiết
 
 Phần trên giữ hai cột trên desktop: gallery bên trái, tên/giá/mô tả ngắn/nút mua bên phải. Các mục nội dung dài nằm ở khối riêng bên dưới, cùng chiều rộng và căn lề với phần trên; không kéo dài riêng cột phải. Mobile xếp ảnh → thông tin mua → nội dung chi tiết. Áp dụng cả các trường cũ lẫn `detailSections`, giữ tùy chỉnh chữ trong Visual Builder và không ghi lại dữ liệu sản phẩm.
+
+
+Cả dữ liệu cũ và `detailSections` dùng chung kiểu trình bày: mục mô tả đầu tiên ở trên, các mục còn lại nằm trong **Chi tiết**, tên mục bên trái và nội dung bên phải. Font/màu dùng chung `aboutTitle`, `body`, `detailsTitle`, `rowLabel`, `rowValue` của Visual Builder. Tên mục cũ tiếp tục đọc cấu hình nhãn đã lưu; tên mục mới giữ theo từng sản phẩm. Không chuyển đổi hoặc ghi lại sản phẩm chỉ để đồng bộ hiển thị.

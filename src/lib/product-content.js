@@ -5,9 +5,9 @@ export const LEGACY_PRODUCT_SECTIONS = [
 
 // An explicitly saved array is authoritative, including an empty array.
 // Reading/editing old records never overwrites their original fields.
-export function productSections(product = {}) {
+export function productSections(product = {}, legacyTitles = {}) {
   if (Array.isArray(product.detailSections)) return product.detailSections;
-  return LEGACY_PRODUCT_SECTIONS.filter(([key]) => typeof product[key] === "string" && product[key].trim()).map(([key, title]) => ({ id: `legacy-${key}`, title, content: product[key], legacyKey: key }));
+  return LEGACY_PRODUCT_SECTIONS.filter(([key]) => typeof product[key] === "string" && product[key].trim()).map(([key, title]) => ({ id: `legacy-${key}`, title: legacyTitles[key] || title, content: product[key], legacyKey: key }));
 }
 export function secondaryProductImages(product = {}) {
   return Array.isArray(product.additionalImages) ? product.additionalImages : [product.image2, product.image3, product.image4, product.image5, product.image6].map((src) => typeof src === "string" ? src : "");

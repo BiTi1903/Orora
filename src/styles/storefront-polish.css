@@ -56,7 +56,7 @@
   #root > main .product-detail-price { font-size: 26px; margin-bottom: 16px; }
   #root > main .product-detail-description { font-size: 15px; line-height: 1.75; }
   #root > main .product-section { margin-top: 28px; }
-  #root > main .product-section > p, #root > main .product-detail-row p { font-size: 14px; line-height: 1.75; }
+  #root > main .product-section > p, #root > main .product-detail-row p, #root > main .product-detail-value { font-size: 14px; line-height: 1.75; }
   #root > main .product-detail-row { grid-template-columns: minmax(70px, 28%) minmax(0, 1fr); }
   #root > main .product-contact-actions { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 10px; }
   #root > main .product-contact-actions a { padding: 12px 10px; font-size: 13px; }

@@ -137,15 +137,16 @@ function ProductDetail({
   const showZalo = contactSettings.showZalo !== false && !!contact.zalo;
   const showCall = contactSettings.showCall !== false && !!contact.phone;
   const detailLabels = ps.detailLabels || {};
-  const rows = [
-    ["material", detailLabels.material || ps.materialLabel?.text || "Material", product.material],
-    ["size", detailLabels.size || ps.sizeLabel?.text || "Size", product.size],
-    ["color", detailLabels.color || ps.colorLabel?.text || "Color", product.color],
-    ["origin", detailLabels.origin || ps.originLabel?.text || "Origin", product.origin],
-  ].filter(([, , value]) => value || preview);
-
-  const savedSections = Array.isArray(product.detailSections) ? productSections(product) : null;
-  const hasDetailSections = savedSections ? savedSections.some((section) => section.content?.trim()) : Boolean(product.story || rows.length || preview);
+  const sections = productSections(product, {
+    story: ps.aboutTitle?.text,
+    material: detailLabels.material || ps.materialLabel?.text,
+    size: detailLabels.size || ps.sizeLabel?.text,
+    color: detailLabels.color || ps.colorLabel?.text,
+    origin: detailLabels.origin || ps.originLabel?.text,
+  }).filter((section) => section.content?.trim());
+  const introSection = sections[0] && (!sections[0].legacyKey || sections[0].legacyKey === "story") ? sections[0] : null;
+  const detailRows = introSection ? sections.slice(1) : sections;
+  const hasDetailSections = sections.length > 0;
 
   const css = (key) => toCss(ps[key], { responsive: true });
 
@@ -522,67 +523,20 @@ function ProductDetail({
       </section>
 
       {hasDetailSections && <div className="product-detail-sections" aria-label="Thông tin chi tiết sản phẩm">
-          {savedSections ? savedSections.filter((section) => section.content?.trim()).map((section, index) => (
-            <section className="product-section" key={section.id || index}>
-              {section.title && <h2 className={selectedClass("pdAboutTitle")} data-builder-key={preview ? "pdAboutTitle" : undefined} onClick={select("pdAboutTitle")} style={css("aboutTitle")}>{section.title}</h2>}
-              <div className={`product-section-content ${selectedClass("pdBody")}`} data-builder-key={preview ? "pdBody" : undefined} onClick={select("pdBody")} style={css("body")}><ProductContent text={section.content} /></div>
-            </section>
-          )) : <>
-          {(product.story || preview) && (
-            <div className="product-section">
-              <h2
-                className={selectedClass("pdAboutTitle")}
-                data-builder-key={preview ? "pdAboutTitle" : undefined}
-                onClick={select("pdAboutTitle")}
-                style={css("aboutTitle")}
-              >
-                {ps.aboutTitle?.text || "About the product"}
-              </h2>
-              <p
-                className={selectedClass("pdBody")}
-                data-builder-key={preview ? "pdBody" : undefined}
-                onClick={select("pdBody")}
-                style={css("body")}
-              >
-                {renderLines(product.story)}
-              </p>
-            </div>
-          )}
-
-          {(rows.length > 0 || preview) && (
-            <div className="product-section">
-              <h2
-                className={selectedClass("pdDetailsTitle")}
-                data-builder-key={preview ? "pdDetailsTitle" : undefined}
-                onClick={select("pdDetailsTitle")}
-                style={css("detailsTitle")}
-              >
-                {ps.detailsTitle?.text || "Details"}
-              </h2>
-
-              {rows.map(([key, label, value]) => (
-                <div className="product-detail-row" key={key}>
-                  <span
-                    className={selectedClass(`pdLabel:${key}`)}
-                    data-builder-key={preview ? `pdLabel:${key}` : undefined}
-                    onClick={select(`pdLabel:${key}`)}
-                    style={{ ...css("rowLabel"), cursor: preview ? "pointer" : undefined }}
-                  >
-                    {label}
-                  </span>
-                  <p
-                    className={selectedClass("pdRowValue")}
-                    data-builder-key={preview ? "pdRowValue" : undefined}
-                    onClick={select("pdRowValue")}
-                    style={{ ...css("rowValue"), cursor: preview ? "pointer" : undefined }}
-                  >
-                    {renderLines(value)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-          </>}
+        {introSection && <section className="product-section">
+          <h2 className={selectedClass("pdAboutTitle")} data-builder-key={preview ? "pdAboutTitle" : undefined} onClick={select("pdAboutTitle")} style={css("aboutTitle")}>{introSection.title}</h2>
+          <div className={`product-section-content ${selectedClass("pdBody")}`} data-builder-key={preview ? "pdBody" : undefined} onClick={select("pdBody")} style={css("body")}><ProductContent text={introSection.content} /></div>
+        </section>}
+        {detailRows.length > 0 && <section className="product-section">
+          <h2 className={selectedClass("pdDetailsTitle")} data-builder-key={preview ? "pdDetailsTitle" : undefined} onClick={select("pdDetailsTitle")} style={css("detailsTitle")}>{ps.detailsTitle?.text || "Chi tiết"}</h2>
+          {detailRows.map((section, index) => {
+            const labelKey = section.legacyKey ? `pdLabel:${section.legacyKey}` : "pdRowLabel";
+            return <div className="product-detail-row" key={section.id || index}>
+              <span className={selectedClass(labelKey)} data-builder-key={preview ? labelKey : undefined} onClick={select(labelKey)} style={css("rowLabel")}>{section.title}</span>
+              <div className={`product-detail-value ${selectedClass("pdRowValue")}`} data-builder-key={preview ? "pdRowValue" : undefined} onClick={select("pdRowValue")} style={css("rowValue")}><ProductContent text={section.content} /></div>
+            </div>;
+          })}
+        </section>}
       </div>}
 
       {/* Sản phẩm khác — dùng lại Collection, bỏ sản phẩm đang xem */}

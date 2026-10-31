@@ -6,6 +6,8 @@ test("legacy product content is read losslessly, without modifying saved fields;
   const old = { description: "Mô tả\nngắn", story: "  Câu chuyện\r\nDòng 2\n", material: "Thành phần: A • B", size: "40ml", color: "Hồng", origin: "Nhật Bản", image: "main.jpg", image2: "one.jpg", image3: "", image4: "four.jpg", image5: "five.jpg", image6: "six.jpg" };
   const snapshot = structuredClone(old); const sections = productSections(old);
   assert.equal(sections.length, 5); assert.equal(sections[0].content, old.story); assert.equal(sections[1].content, old.material); assert.deepEqual(old, snapshot);
+  assert.equal(productSections(old, { material: "Thành phần" })[1].title, "Thành phần");
+  assert.equal(old.material, snapshot.material);
   const saved = { ...old, detailSections: structuredClone(sections), additionalImages: secondaryProductImages(old) };
   assert.deepEqual(productSections(saved).map(s => s.content), [old.story, old.material, old.size, old.color, old.origin]);
   assert.deepEqual(productImages(saved), productImages(old)); assert.equal(saved.description, old.description);
