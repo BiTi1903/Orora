@@ -7,6 +7,7 @@ import { validShippingFee } from "../lib/shipping";
 import { formatVnd } from "../lib/commerce";
 export default function ShippingAdmin() {
   const [settings, setSettings] = useState({ enabled: false, provinces: {} }); const [enabled, setEnabled] = useState(false); const [provinceCode, setProvinceCode] = useState(""); const [wardCode, setWardCode] = useState(""); const [drafts, setDrafts] = useState({}); const [loading, setLoading] = useState(true); const [failed, setFailed] = useState(false); const [busy, setBusy] = useState(false); const [notice, setNotice] = useState(null);
+  const [version, setVersion] = useState(0);
   const addresses = useAddressOptions(provinceCode);
   const [wardNames, setWardNames] = useState({}); const [feeSearch, setFeeSearch] = useState("");
   const savedProvinceCodes = Object.keys(settings.provinces || {}).sort().join(",");
@@ -24,9 +25,17 @@ export default function ShippingAdmin() {
   }).filter((item) => `${item.provinceName} ${item.wardName} ${item.provinceCode} ${item.wardCode}`.toLocaleLowerCase("vi").includes(feeSearch.trim().toLocaleLowerCase("vi")));
   useEffect(() => {
     let alive = true;
-    getHomeContent().then((home) => { if (alive) { const saved = home?.shippingSettings || { enabled: false, provinces: {} }; setSettings(saved); setEnabled(saved.enabled === true); } }).catch(() => { if (alive) { setFailed(true); setNotice({ error: true, text: "Không tải được cấu hình phí ship. Chưa thể lưu; hãy tải lại trang." }); } }).finally(() => { if (alive) setLoading(false); });
+    async function load() {
+      setLoading(true); setNotice(null);
+      try {
+        const home = await getHomeContent();
+        if (alive) { const saved = home?.shippingSettings || { enabled: false, provinces: {} }; setSettings(saved); setEnabled(saved.enabled === true); setFailed(false); }
+      } catch { if (alive) { setFailed(true); setNotice({ error: true, text: "Không tải được cấu hình phí ship. Chưa thể lưu; hãy bấm Tải lại." }); } }
+      finally { if (alive) setLoading(false); }
+    }
+    load();
     return () => { alive = false; };
-  }, []);
+  }, [version]);
   const current = settings.provinces?.[provinceCode] || {};
   const draft = drafts[provinceCode] || {};
   const fee = draft.fee ?? (current.fee == null ? "" : String(current.fee));
@@ -39,7 +48,7 @@ export default function ShippingAdmin() {
     catch { setNotice({ error: true, text: "Chưa lưu được phí ship. Vui lòng thử lại." }); return false; }
     finally { setBusy(false); }
   };
-  return <section className="shipping-settings"><div className="admin-top"><div><h1>Phí vận chuyển</h1><p className="admin-muted">Địa chỉ hai cấp: tỉnh/thành phố và phường/xã theo dữ liệu mới.</p></div></div>
+  return <section className="shipping-settings"><div className="admin-top"><div><h1>Phí vận chuyển</h1><p className="admin-muted">Địa chỉ hai cấp: tỉnh/thành phố và phường/xã theo dữ liệu mới.</p></div><button type="button" className="admin-btn" disabled={loading || busy} onClick={() => setVersion((value) => value + 1)}>Tải lại</button></div>
     <div className="admin-card admin-form"><h2>Tính ship theo địa chỉ</h2><label className="admin-check"><input type="checkbox" checked={enabled} disabled={loading || failed || busy} onChange={(event) => setEnabled(event.target.checked)} />Tự tính phí ship khi khách đặt hàng</label><p className="admin-muted">Nhập phí trước khi bật. Địa chỉ chưa có mức phí sẽ chưa nhận đơn khi đang bật tính ship; số 0 là miễn phí.</p><div><button className="admin-btn" disabled={loading || failed || busy} onClick={async () => {
       if (enabled && !Object.values(settings.provinces || {}).some((item) => validShippingFee(item.fee) || Object.values(item.wardFees || {}).some(validShippingFee))) return setNotice({ error: true, text: "Lưu ít nhất một mức phí trước khi bật tính ship." });
       if (await save({ enabled }, "Đã lưu trạng thái tính phí ship.")) setSettings((value) => ({ ...value, enabled }));

@@ -10,7 +10,7 @@ export default function OrderEmails({ initialDraft, initialOrderId = "", onManag
     let alive = true;
     async function load() {
       try {
-        await request({ action: "ensureDefaultTemplates" }); const data = await request();
+        const [data] = await Promise.all([request(), request({ action: "ensureDefaultTemplates" })]);
         if (alive) { setDraft((current) => current || data.orderTemplate); setError(""); }
       } catch (cause) { if (alive) setError(cause.message); }
       finally { if (alive) setLoading(false); }

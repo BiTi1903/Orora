@@ -16,10 +16,18 @@ export default function InventoryAdmin() {
     async function load() {
       setLoading(true); setNotice(null);
       try {
-        const all = new Map(); const seen = new Set(); let cursor;
-        do { const page = await inventoryRequest(null, cursor); page.items.forEach((item) => all.set(item.id, item)); cursor = page.nextCursor; if (cursor && seen.has(cursor)) throw new Error("Không tải đủ sản phẩm. Hãy tải lại."); if (cursor) seen.add(cursor); } while (cursor);
-        const pending = Object.create(null); const pendingSeen = new Set(); let next;
-        do { const page = await inventoryRequest(null, next, true); for (const [id, quantity] of Object.entries(page.pending)) pending[id] = (pending[id] || 0) + quantity; next = page.nextCursor; if (next && pendingSeen.has(next)) throw new Error("Không tải đủ hàng đang chờ. Hãy tải lại."); if (next) pendingSeen.add(next); } while (next);
+        const [all, pending] = await Promise.all([
+          (async () => {
+            const all = new Map(); const seen = new Set(); let cursor;
+            do { const page = await inventoryRequest(null, cursor); page.items.forEach((item) => all.set(item.id, item)); cursor = page.nextCursor; if (cursor && seen.has(cursor)) throw new Error("Không tải đủ sản phẩm. Hãy tải lại."); if (cursor) seen.add(cursor); } while (cursor);
+            return all;
+          })(),
+          (async () => {
+            const pending = Object.create(null); const seen = new Set(); let cursor;
+            do { const page = await inventoryRequest(null, cursor, true); for (const [id, quantity] of Object.entries(page.pending)) pending[id] = (pending[id] || 0) + quantity; cursor = page.nextCursor; if (cursor && seen.has(cursor)) throw new Error("Không tải đủ hàng đang chờ. Hãy tải lại."); if (cursor) seen.add(cursor); } while (cursor);
+            return pending;
+          })(),
+        ]);
         if (alive) { setItems([...all.values()]); setPendingQuantities(pending); setDrafts({}); }
       } catch (error) { if (alive) setNotice({ error: true, text: error.message }); }
       finally { if (alive) setLoading(false); }

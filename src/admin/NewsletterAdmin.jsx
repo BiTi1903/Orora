@@ -32,11 +32,16 @@ function ContactActions({ label, disabled, onApply }) {
   );
 }
 
-export default function NewsletterAdmin({ initialView = "contacts", onOpenOrderMail }) {
+export default function NewsletterAdmin({ initialView = "contacts", viewRequest, onOpenOrderMail }) {
   const [outlookCampaign, setOutlookCampaign] = useState(null);
   const [preview, setPreview] = useState(null);
   const [picker, setPicker] = useState(null);
   const [view, setView] = useState(["compose", "welcome"].includes(initialView) ? "write" : ["orders", "orderSend", "orderHistory", "export"].includes(initialView) ? "contacts" : initialView);
+  const [lastViewRequest, setLastViewRequest] = useState(viewRequest);
+  if (viewRequest !== lastViewRequest) {
+    setLastViewRequest(viewRequest);
+    setView(viewRequest?.view || "contacts");
+  }
   const [writerMode, setWriterMode] = useState("welcome_auto");
   const [writerDrafts, setWriterDrafts] = useState({});
   const [recipientMode, setRecipientMode] = useState("selected");
@@ -57,8 +62,7 @@ export default function NewsletterAdmin({ initialView = "contacts", onOpenOrderM
   const alive = useRef(true);
 
   const load = useCallback(async () => {
-    await request({ action: "ensureDefaultTemplates" });
-    const data = await request();
+    const [data] = await Promise.all([request(), request({ action: "ensureDefaultTemplates" })]);
     if (!alive.current) return;
     setContacts(data.contacts);
     setSelectedContacts([]);

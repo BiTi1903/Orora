@@ -26,24 +26,23 @@ const TABS = [
 
 export default function AdminApp() {
   const [user, setUser] = useState(() => auth ? undefined : null);
-  const [orderMailDraft, setOrderMailDraft] = useState(null);
-  const [orderMailVersion, setOrderMailVersion] = useState(0);
-  const [emailSection, setEmailSection] = useState("contacts");
-  const [tab, setTab] = useState("dashboard");
-
   useEffect(() => {
     if (!auth) return;
     return onAuthStateChanged(auth, setUser);
   }, []);
 
-  if (user === undefined)
-    return (
-      <div className="admin-login">
-        <p className="admin-muted">Đang tải...</p>
-      </div>
-    );
-
+  if (user === undefined) return <div className="admin-login"><p className="admin-muted">Đang tải...</p></div>;
   if (!user) return <AdminLogin />;
+  return <AdminWorkspace key={user.uid} user={user} />;
+}
+
+function AdminWorkspace({ user }) {
+  const [visited, setVisited] = useState([]);
+  const navigate = (key) => { setVisited((items) => items.includes(key) ? items : [...items, key]); setTab(key); };
+  const [orderMailDraft, setOrderMailDraft] = useState(null);
+  const [orderMailVersion, setOrderMailVersion] = useState(0);
+  const [emailSection, setEmailSection] = useState({ view: "contacts" });
+  const [tab, setTab] = useState("dashboard");
 
   return (
     <div className="admin-shell">
@@ -51,7 +50,7 @@ export default function AdminApp() {
         <div className="admin-brand">ORORA</div>
         <nav className="admin-nav">
           {TABS.map(([key, label]) => (
-            <button key={key} className={tab === key ? "active" : ""} onClick={() => { if (key === "orders" && tab !== "orders") { setOrderMailDraft(null); setOrderMailVersion((value) => value + 1); } if (key === "newsletter") setEmailSection("contacts"); setTab(key); }}>
+            <button key={key} className={tab === key ? "active" : ""} onClick={() => navigate(key)}>
               {label}
             </button>
           ))}
@@ -68,11 +67,11 @@ export default function AdminApp() {
         {tab === "dashboard" && <Dashboard sectionCount={TABS.length} />}
         {tab === "home" && <HomeAdmin />}
         {tab === "products" && <ProductsAdmin />}
-        {tab === "orders" && <OrdersAdmin key={`${user.uid}:${orderMailVersion}`} initialMailDraft={orderMailDraft} onOpenEmailTemplates={() => { setEmailSection("templates"); setTab("newsletter"); }} />}
+        {visited.includes("orders") && <div hidden={tab !== "orders"}><OrdersAdmin key={`${user.uid}:${orderMailVersion}`} initialMailDraft={orderMailDraft} onOpenEmailTemplates={() => { setEmailSection({ view: "templates" }); navigate("newsletter"); }} /></div>}
         {tab === "export" && <EmailExport key={user.uid} request={newsletterRequest} />}
-        {tab === "shipping" && <ShippingAdmin key={user.uid} />}
-        {tab === "inventory" && <InventoryAdmin key={user.uid} />}
-        {tab === "newsletter" && <NewsletterAdmin initialView={emailSection} onOpenOrderMail={(draft) => { setOrderMailDraft(draft); setOrderMailVersion((value) => value + 1); setTab("orders"); }} />}
+        {visited.includes("shipping") && <div hidden={tab !== "shipping"}><ShippingAdmin key={user.uid} /></div>}
+        {visited.includes("inventory") && <div hidden={tab !== "inventory"}><InventoryAdmin key={user.uid} /></div>}
+        {visited.includes("newsletter") && <div hidden={tab !== "newsletter"}><NewsletterAdmin initialView={emailSection.view} viewRequest={emailSection} onOpenOrderMail={(draft) => { setOrderMailDraft(draft); setOrderMailVersion((value) => value + 1); navigate("orders"); }} /></div>}
       </main>
     </div>
   );
