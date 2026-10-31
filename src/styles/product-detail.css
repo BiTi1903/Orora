@@ -783,15 +783,14 @@
   .product-detail-shell .purchase-social { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* A visible footer action, including when old button typography uses white text. */
+/* Plain text footer link with a comfortable touch target. */
 .product-side-column .related-product-more {
   width: 100%; box-sizing: border-box; min-height: 44px;
-  padding: 11px 12px; margin-top: 12px;
-  border: 1px solid var(--detail-card-border); border-radius: 10px;
-  font-weight: 600; text-decoration: none;
+  padding: 12px 0 0; margin-top: 6px;
+  border: 0; border-radius: 0; background: transparent; box-shadow: none;
+  justify-content: flex-start; font-weight: 500; text-decoration: none;
 }
-.product-side-column .related-product-more > span { flex-shrink: 0; }
-.product-side-column .related-product-more:hover { box-shadow: 0 2px 8px rgba(58,21,38,.08); }
+.product-side-column .related-product-more:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* Checkout stays centered instead of expanding the purchase card. */
 .order-form-modal { width: min(680px, calc(100% - 32px)); }
