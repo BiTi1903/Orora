@@ -57,3 +57,7 @@ Trong Trang chủ → Chi tiết SP, có thể chỉnh kiểu chữ thanh chuy�
 ## Popup đặt hàng
 
 Bấm Đặt hàng ngay mở form trong dialog ở giữa màn hình, có tiêu đề/nút đóng cố định và cuộn bên trong khi nội dung dài. Khi chưa gửi, có thể đóng bằng nút ×, Esc hoặc bấm ngoài popup. Trong lúc đang gửi, tạm khóa các cách đóng để tránh ngắt thao tác. Lưu thành công chuyển sang dialog xác nhận có thông tin người nhận; không mở hai dialog chồng nhau. Dữ liệu đơn, API, thanh toán, tính ship và xử lý email giữ nguyên.
+
+## Hiệu ứng trang chi tiết
+
+Trang chi tiết dùng một hàng đợi hiệu ứng chung cho ảnh, khung mua, thanh chuyển mục, từng phần nội dung và các card bên phải. Các khối trong vùng nhìn thấy hiện theo vị trí từ trên xuống, cùng hàng từ trái sang phải; phần dưới chỉ chạy khi cuộn tới. Không chạy đồng thời hiệu ứng ở cả cha và con. Card tải muộn vẫn được theo dõi. Mỗi khối chạy một lần cho mỗi sản phẩm; điều hướng dọn hiệu ứng cũ. Preview không chạy hiệu ứng. Tùy chọn giảm chuyển động của thiết bị bỏ hiệu ứng và luôn hiện nội dung. Thanh chuyển mục desktop chỉ rộng theo các nhãn, mobile vẫn chia ba cột.

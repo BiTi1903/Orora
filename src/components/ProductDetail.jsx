@@ -1,5 +1,5 @@
 import FacebookFollowCard from "./FacebookFollowCard";
-import useProductSidebarReveal from "../hooks/useProductSidebarReveal";
+import useProductReveal from "../hooks/useProductReveal";
 import useProductPanelSize from "../hooks/useProductPanelSize";
 import ProductInformation from "./ProductInformation";
 import ProductAssurances from "./ProductAssurances";
@@ -9,9 +9,8 @@ import ConsultationDialog from "./ConsultationDialog";
 import OrderForm from "./OrderForm";
 import { socialShopUrl } from "../lib/commerce";
 import { mobileImageVars } from "../lib/image-layout";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import gsap from "gsap";
 import { getProduct } from "../lib/api";
 import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
@@ -56,7 +55,7 @@ function ProductDetail({
     : loadedProduct?.id === id ? loadedProduct.product : undefined;
 
   useProductPanelSize(pageRef, product);
-  useProductSidebarReveal(pageRef, product, preview);
+  useProductReveal(pageRef, product, preview);
 
   /* ---------- lấy sản phẩm từ Firestore ---------- */
   useEffect(() => {
@@ -78,23 +77,6 @@ function ProductDetail({
       alive = false;
     };
   }, [id, preview]);
-
-  /* ---------- hiệu ứng GSAP ---------- */
-  useLayoutEffect(() => {
-    if (preview || !product) return;
-
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const ctx = gsap.context(() => {
-      const selectors = [".product-back", ".product-detail-image", ".product-detail-thumbs-wrap", ".product-detail-number", ".product-detail-info h1", ".product-detail-price", ".product-detail-description", ".purchase-options", ".product-section", ".product-detail-related"];
-      const nodes = selectors.flatMap((selector) => Array.from(pageRef.current.querySelectorAll(selector)));
-      gsap.from(nodes, {
-        y: 18, autoAlpha: 0, duration: 0.5, stagger: 0.1,
-        ease: "power2.out", clearProps: "transform,opacity,visibility",
-      });
-    }, pageRef);
-
-    return () => ctx.revert();
-  }, [product, preview]);
 
   const select = (key) => (e) => {
     if (!preview || !onSelect) return;
