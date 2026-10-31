@@ -782,3 +782,13 @@
 @media (max-width: 360px) {
   .product-detail-shell .purchase-social { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* A visible footer action, including when old button typography uses white text. */
+.product-side-column .related-product-more {
+  width: 100%; box-sizing: border-box; min-height: 44px;
+  padding: 11px 12px; margin-top: 12px;
+  border: 1px solid var(--detail-card-border); border-radius: 10px;
+  font-weight: 600; text-decoration: none;
+}
+.product-side-column .related-product-more > span { flex-shrink: 0; }
+.product-side-column .related-product-more:hover { box-shadow: 0 2px 8px rgba(58,21,38,.08); }
