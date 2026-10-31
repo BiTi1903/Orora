@@ -694,3 +694,23 @@
 }
 .product-detail-shell .purchase-divider,
 .product-detail-shell .purchase-social { max-width: 280px; }
+
+/* One information card holds the jump links and all three content sections. */
+.product-detail-lower > .product-information {
+  box-sizing: border-box;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .8);
+}
+.product-information > .product-information-nav {
+  width: 100%;
+  box-sizing: border-box;
+  background: #fffafb;
+  border-radius: 10px;
+}
+.product-information > .product-information-section { overflow-wrap: anywhere; }
+.product-information > .product-information-section:last-child { padding-bottom: 0; }
+@media (max-width: 768px) {
+  .product-detail-lower > .product-information { padding: 16px; }
+}
