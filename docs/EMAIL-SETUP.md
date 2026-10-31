@@ -112,7 +112,7 @@ Thư lưu danh sách ID người nhận tại lúc tạo để tiếp tục gử
 
 ### Lịch sử thư đơn hàng
 
-**Đơn hàng → Thư đơn hàng → Thư đơn hàng đã gửi** tổng hợp các bản ghi `orders/{id}/mailEvents` hiện có, gồm thư tự động và thư gửi riêng từ admin, kể cả lần gửi lỗi/chưa rõ kết quả. Có tìm theo email, tên khách, mã/ID đơn, tiêu đề; lọc cách gửi và kết quả. Bấm một thư để xem đúng nội dung, người nhận và thời gian đã lưu. Danh sách tải lịch sử qua các trang đơn, không cần tạo lại hoặc di chuyển dữ liệu cũ. Chỉ tài khoản có quyền quản lý đơn được đọc lịch sử. Thư gửi trực tiếp từ Outlook không nằm trong lịch sử website.
+**Đơn hàng → Lịch sử email** tổng hợp các bản ghi `orders/{id}/mailEvents` hiện có, gồm thư tự động và thư gửi riêng từ admin, kể cả lần gửi lỗi/chưa rõ kết quả. Có tìm theo email, tên khách, mã/ID đơn, tiêu đề; lọc cách gửi và kết quả. Bấm một thư để xem đúng nội dung, người nhận và thời gian đã lưu. Danh sách tải lịch sử qua các trang đơn, không cần tạo lại hoặc di chuyển dữ liệu cũ. Chỉ tài khoản có quyền quản lý đơn được đọc lịch sử. Thư gửi trực tiếp từ Outlook không nằm trong lịch sử website.
 
 ### Tài khoản thao tác và dùng lại mẫu
 
@@ -174,22 +174,26 @@ Khi mở trang quản trị ở bản mới, API được xác thực sẽ lưu 
 
 **Thư chào mừng** và **Thư đơn hàng** có lại ô tiêu đề, nội dung cùng nút **Chọn mẫu có sẵn** và **Áp dụng**. Có thể viết trực tiếp, hoặc chọn mẫu rồi sửa. Nội dung chỉnh trực tiếp được tách khỏi liên kết mẫu đã chọn, để lịch sử không gắn nhầm tên mẫu gốc. Bản mẫu trong kho và thư đã gửi không bị sửa theo.
 
-### Viết Thư hợp nhất
+### Bố cục quản lý đơn và gửi thư
 
-Trong mục **Email**, thanh điều hướng gồm **Danh sách email**, **Viết Thư**, **Mẫu Thư**. Phần thư đơn hàng đã chuyển sang **Đơn hàng → Thư đơn hàng**, gồm soạn/gửi và lịch sử gửi.
+**Đơn hàng** có bốn mục cùng cấp, không còn các tab thư lồng nhau:
 
-Trong **Email → Viết Thư**, chọn **Thư Đăng Ký** (tên mới của thư chào mừng) hoặc **Gửi riêng**. **Thư Đơn Hàng** được soạn tại **Đơn hàng → Thư đơn hàng**. Hai loại tự động nạp nội dung đang cấu hình. Mỗi loại giữ bản đang soạn riêng khi đổi lựa chọn. Chọn mẫu từ kho sẽ chép vào cùng ô tiêu đề/nội dung; sửa nội dung tách khỏi liên kết mẫu gốc.
+- **Danh sách đơn**: lọc nhanh theo trạng thái; tìm mã, tên, điện thoại hoặc email; bộ lọc nâng cao cho ngày, tiền và thanh toán. Hiển thị 10 đơn/trang trong dữ liệu đã tải; tải thêm đơn cũ khi cần. Số lượng ở bộ lọc chỉ tính các đơn đã tải, không phải tổng toàn hệ thống.
+- **Khách hàng**: tổng hợp đơn và số tiền theo email, giữ quy tắc tính tiền cũ.
+- **Lịch sử email**: thư tự động và thư gửi riêng cho đơn. Bấm **Xem thư** để xem bản lưu, Check hoặc chép nội dung sang thư mới. Các lần gửi lỗi/chưa rõ vẫn được giữ.
+- **Thư tự động**: sửa hoặc chọn mẫu xác nhận mặc định cho các đơn mới. Có gửi thử thu gọn; không có nút gửi cho một đơn ở mục này.
 
-- **Lưu làm thư tự động** chỉ cập nhật cấu hình cho lần gửi tự động sau đó.
-- **Gửi thử** chỉ gửi bản đang soạn tới email thử được nhập, không ghi trạng thái gửi cho đơn hay gửi thêm tới khách. Thư Đơn Hàng điền biến từ đơn đang chọn; khi chưa chọn đơn dùng dữ liệu minh họa. Việc đọc dữ liệu đơn để gửi thử vẫn cần quyền quản lý đơn.
-- **Gửi cho đơn đã chọn** gửi nội dung đang soạn tới email thật lưu trong đơn và ghi lịch sử; không đổi cấu hình tự động. Mẫu gửi riêng hoặc mẫu xác nhận đều có thể dùng trong ngữ cảnh có đơn.
-- **Gửi riêng** giữ lựa chọn người nhận/tìm kiếm/gửi theo đợt như trước.
+Mở **Xem chi tiết** để xử lý đơn, ghi nhận thanh toán hoặc xem **Email của đơn**. Danh sách chỉ hiển thị trạng thái, không sửa bằng checkbox trên dòng. Nút **Gửi email cho khách** mở cửa sổ soạn và khóa đúng đơn/người nhận; gửi ở đây không thay đổi mẫu tự động. Dùng lại thư từ lịch sử sẽ yêu cầu chọn đơn trước khi gửi. Thao tác Hoàn tất, trừ/hoàn kho, xác nhận gửi thêm và bảo vệ lần gửi chưa rõ kết quả giữ nguyên.
 
-**Mẫu Thư** có form tạo/sửa và chọn loại ở trái. Có thể **Thêm loại mẫu** riêng (nhóm dùng cho gửi riêng), được lưu trong `newsletterTemplateTypes`. Ở phải, mặc định chưa liệt kê mẫu; chọn loại trong **Chọn loại để xem mẫu** mới hiện danh sách và ô tìm kiếm. Mẫu thuộc loại riêng được dùng ở Viết Thư như mẫu gửi riêng. Không thêm trigger tự động cho loại tùy chỉnh.
+**Email** gồm **Người đăng ký**, **Gửi thư**, **Đã gửi**, **Thư Đăng Ký**, **Mẫu Thư**. Phần gửi người đăng ký, lịch sử và cấu hình thư đăng ký tự động ở các màn riêng. Bản đang soạn giữ riêng theo loại. Chọn mẫu chép vào ô tiêu đề/nội dung; sửa nội dung tách liên kết mẫu gốc. **Gửi thử tới email của bạn** được thu gọn, chỉ gửi tới email thử được nhập; không gửi tới danh sách khách hoặc ghi trạng thái gửi thật cho đơn.
+
+**Mẫu Thư** là kho chung: tạo/sửa, chọn loại hoặc thêm loại riêng dùng cho gửi riêng. Chọn loại ở cột phải mới hiện các mẫu. Chọn mẫu xác nhận tự động đưa sang **Đơn hàng → Thư tự động**, vẫn cần bấm lưu để áp dụng. Mẫu có biến đơn dùng để gửi riêng được mở trong cửa sổ chọn đơn. Lịch sử giữ bản nội dung lúc gửi, không thay đổi theo lần sửa mẫu.
+
+Không chuyển hoặc xóa dữ liệu Firestore khi đổi bố cục. SMTP, API gửi, mẫu đã lưu và các mã trạng thái máy chủ giữ nguyên.
 
 ### Kiểm tra trạng thái Outlook trong admin
 
-Nút **Kiểm tra Outlook** có ở lịch sử từng thư đơn, danh sách email đăng ký và **Trạng thái Outlook** theo người nhận của một lần gửi danh sách. Thao tác này chỉ đọc Microsoft và ghi lại kết quả đối chiếu; không gửi lại thư, không đổi nội dung, người gửi hoặc kết quả tiếp nhận ban đầu. Kết quả được lưu, có thời gian kiểm tra và cache 60 giây cho cùng một mã thư.
+Nút **Check** có trong chi tiết email của đơn, cửa sổ **Xem thư** ở Lịch sử email, danh sách email đăng ký và theo người nhận của một lần gửi danh sách. Thao tác này chỉ đọc Microsoft và ghi lại kết quả đối chiếu; không gửi lại thư, không đổi nội dung, người gửi hoặc kết quả tiếp nhận ban đầu. Kết quả được lưu, có thời gian kiểm tra và cache 60 giây cho cùng một mã thư.
 
 Cần cấp cho ứng dụng đang dùng `MS_CLIENT_ID` quyền **Microsoft Graph → Application permissions → Mail.Read**, rồi **Grant admin consent**. SMTP.SendAsApp hoặc Mail.Send không cấp quyền đọc. Giới hạn quyền ứng dụng vào hộp thư `MS_SENDER_EMAIL` (mặc định sales@ororavn.com) qua chính sách truy cập ứng dụng/RBAC Exchange phù hợp. Không đổi `MS_MAIL_TRANSPORT`, không bật/tắt SMTP AUTH để cấu hình tính năng đọc. Thiếu quyền sẽ báo rõ trong admin và giữ kết quả cũ; sau khi cấp quyền có thể kiểm tra lại.
 
