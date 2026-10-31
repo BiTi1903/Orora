@@ -1,3 +1,5 @@
+import ProductContent from "./ProductContent";
+import { productImages, productSections, secondaryProductImages } from "../lib/product-content";
 import ConsultationDialog from "./ConsultationDialog";
 import OrderForm from "./OrderForm";
 import { socialShopUrl } from "../lib/commerce";
@@ -97,9 +99,7 @@ function ProductDetail({
     preview && selectedElement === key ? "builder-selected" : "";
 
   // Hàng đợi vòng: order[0] = khung lớn; order[1..] = dưới (ảnh vừa rời khung lớn → cuối hàng)
-  const images = [product?.image, product?.image2, product?.image3,
-    product?.image4, product?.image5, product?.image6]
-    .map((src) => (src || "").trim()).filter(Boolean);
+  const images = productImages(product || {});
   const galleryKey = JSON.stringify([product?.id, product?.slug, ...images]);
   const [previousGalleryKey, setPreviousGalleryKey] = useState(galleryKey);
   const [order, setOrder] = useState(images);
@@ -190,15 +190,7 @@ function ProductDetail({
 
   // order[0] = đang hiện khung lớn; còn lại = hàng đợi dưới (xoay 2 ảnh, ảnh vừa rời khung lớn nằm cuối)
   const mainImage = (product.image || "").trim();
-  const secondaryImages = [
-    product.image2,
-    product.image3,
-    product.image4,
-    product.image5,
-    product.image6,
-  ]
-    .map((src) => (src || "").trim())
-    .filter(Boolean);
+  const secondaryImages = secondaryProductImages(product).filter((src) => typeof src === "string" && src.trim()).map((src) => src.trim());
 
   const displaySrc = order[0] || mainImage;
   const thumbPool = order.length > 1 ? order.slice(1) : secondaryImages;
@@ -523,6 +515,12 @@ function ProductDetail({
             </div>
           )}
 
+          {Array.isArray(product.detailSections) ? productSections(product).filter((section) => section.content?.trim()).map((section, index) => (
+            <section className="product-section" key={section.id || index}>
+              {section.title && <h2 className={selectedClass("pdAboutTitle")} data-builder-key={preview ? "pdAboutTitle" : undefined} onClick={select("pdAboutTitle")} style={css("aboutTitle")}>{section.title}</h2>}
+              <div className={`product-section-content ${selectedClass("pdBody")}`} data-builder-key={preview ? "pdBody" : undefined} onClick={select("pdBody")} style={css("body")}><ProductContent text={section.content} /></div>
+            </section>
+          )) : <>
           {(product.story || preview) && (
             <div className="product-section">
               <h2
@@ -577,6 +575,7 @@ function ProductDetail({
               ))}
             </div>
           )}
+          </>}
         </div>
       </section>
 

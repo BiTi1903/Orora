@@ -1,3 +1,5 @@
+import ProductContentEditor from "./ProductContentEditor";
+import { productSections, secondaryProductImages } from "../lib/product-content";
 import ShopLinksSettings from "./ShopLinksSettings";
 import { useEffect, useState } from "react";
 import { explainError, getProducts, removeProduct, saveProduct, saveCategory, setProductCategory } from "../lib/api";
@@ -11,14 +13,12 @@ const empty = {
   active: true, categoryId: "",
 };
 
-const LONG = [
-  ["description", "Mô tả ngắn"],
-  ["story", "Câu chuyện sản phẩm"],
-  ["material", "Chất liệu / thành phần"],
-  ["size", "Kích thước / dung tích"],
-  ["color", "Màu sắc"],
-  ["origin", "Xuất xứ"],
-];
+const newSection = () => ({ id: crypto.randomUUID(), title: "", content: "" });
+const imageSlots = (product = {}) => {
+  const slots = secondaryProductImages(product).map((src) => ({ id: crypto.randomUUID(), src }));
+  while (slots.length > 1 && !slots.at(-1).src.trim()) slots.pop();
+  return slots.length ? slots : [{ id: crypto.randomUUID(), src: "" }];
+};
 
 const toSlug = (s) =>
   s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/gi, "d")
@@ -33,6 +33,12 @@ export default function ProductsAdmin() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(empty);
+  const [sections, setSections] = useState([]);
+  const [media, setMedia] = useState([]);
+  const [uploads, setUploads] = useState({});
+  const uploading = Object.values(uploads).some(Boolean);
+  const uploadState = (id, value) => setUploads((current) => ({ ...current, [id]: value }));
+  const patchSection = (id, patch) => setSections((current) => current.map((item) => item.id === id ? { ...item, ...patch } : item));
   const [editing, setEditing] = useState(false);
   const [isNew, setIsNew] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -61,6 +67,7 @@ export default function ProductsAdmin() {
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const startNew = () => {
+    setSections([newSection()]); setMedia(imageSlots()); setUploads({});
     setForm({ ...empty, number: String(items.length + 1).padStart(2, "0") });
     setIsNew(true);
     setEditing(true);
@@ -68,6 +75,9 @@ export default function ProductsAdmin() {
   };
 
   const edit = (p) => {
+    const savedSections = productSections(p).map((item) => ({ ...item, id: item.id || crypto.randomUUID() }));
+    setSections(savedSections.length ? savedSections : [newSection()]);
+    setMedia(imageSlots(p)); setUploads({});
     setForm({ ...empty, ...p });
     setIsNew(false);
     setEditing(true);
@@ -77,6 +87,8 @@ export default function ProductsAdmin() {
 
   const save = async (e) => {
     e.preventDefault();
+    if (busy || uploading) return;
+    if (sections.some((section) => section.content.trim() && !section.title.trim())) return say("error", "Nhập tên cho các mục đã có nội dung.");
     const slug = isNew ? toSlug(form.slug || form.name) : form.id;
     if (!form.name.trim() || !slug) return say("error", "Cần nhập tên sản phẩm.");
     if (isNew && items.some((p) => p.id === slug)) return say("error", "Slug này đã tồn tại, hãy đổi slug khác.");
@@ -91,11 +103,8 @@ export default function ProductsAdmin() {
         number: form.number.trim() || String(items.length + 1).padStart(2, "0"),
         price: form.price.trim(),
         image: form.image.trim(),
-        image2: (form.image2 || "").trim(),
-        image3: (form.image3 || "").trim(),
-        image4: (form.image4 || "").trim(),
-        image5: (form.image5 || "").trim(),
-        image6: (form.image6 || "").trim(),
+        detailSections: sections.filter((section) => section.title.trim() || section.content.trim()),
+        additionalImages: media.map((item) => item.src),
       });
       say("success", "Đã lưu sản phẩm.");
       setEditing(false);
@@ -136,12 +145,12 @@ export default function ProductsAdmin() {
           <h1>Sản phẩm</h1>
           <p className="admin-muted">Thêm, sửa và xóa sản phẩm trên website.</p>
         </div>
-        <button className="admin-btn primary" onClick={startNew}>+ Thêm sản phẩm</button>
+        {!editing && <button className="admin-btn primary" onClick={startNew} disabled={busy || uploading}>+ Thêm sản phẩm</button>}
       </div>
 
       {message && <div className={`admin-${message.type}`} style={{ marginBottom: 16 }}>{message.text}</div>}
 
-      <ShopLinksSettings />
+      <div hidden={editing}><ShopLinksSettings />
       {categoriesError && <div className="admin-error">Không tải được danh mục: {explainError(categoriesError)}</div>}
       <form className="admin-card admin-form" style={{ marginBottom: 20 }} onSubmit={async (event) => {
         event.preventDefault();
@@ -167,27 +176,28 @@ export default function ProductsAdmin() {
         </div>
       </form>
 
+      </div>
       {editing && (
         <form className="admin-card admin-form" onSubmit={save} style={{ marginBottom: 20 }}>
           <h2>{isNew ? "Thêm sản phẩm" : "Chỉnh sửa sản phẩm"}</h2>
 
           <div className="admin-form-grid">
             <div className="admin-field">
-              <label>Tên sản phẩm</label>
-              <input name="name" value={form.name} onChange={change} required />
+              <label htmlFor="product-name">Tên sản phẩm</label>
+              <input id="product-name" disabled={busy} name="name" value={form.name} onChange={change} required />
             </div>
             <div className="admin-field">
-              <label>Số thứ tự</label>
-              <input name="number" value={form.number} onChange={change} placeholder="01" />
+              <label htmlFor="product-number">Số thứ tự</label>
+              <input id="product-number" disabled={busy} name="number" value={form.number} onChange={change} placeholder="01" />
             </div>
             <div className="admin-field">
-              <label>Giá</label>
-              <input name="price" value={form.price} onChange={change} placeholder="1.290.000đ" />
+              <label htmlFor="product-price">Giá</label>
+              <input id="product-price" disabled={busy} name="price" value={form.price} onChange={change} placeholder="1.290.000đ" />
             </div>
             {isNew && (
               <div className="admin-field">
-                <label>Slug (đường dẫn)</label>
-                <input name="slug" value={form.slug} onChange={change} placeholder={toSlug(form.name) || "tự tạo từ tên"} />
+                <label htmlFor="product-slug">Slug (đường dẫn)</label>
+                <input id="product-slug" disabled={busy} name="slug" value={form.slug} onChange={change} placeholder={toSlug(form.name) || "tự tạo từ tên"} />
               </div>
             )}
           </div>
@@ -200,67 +210,31 @@ export default function ProductsAdmin() {
               {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
             </select>
           </div>
-          <ImageField
-            label="Ảnh chính"
-            value={form.image}
-            onChange={(v) => setForm((f) => ({ ...f, image: v }))}
-            width={1200}
-          />
-          <p className="admin-muted" style={{ margin: "4px 0 14px", fontSize: 13 }}>
-            Tối đa 5 ảnh phụ. Trang chi tiết hiện 2 ảnh phụ phía dưới; nếu nhiều hơn thì dùng mũi tên ‹ › để xoay.
-            Bấm ảnh phụ để đưa lên khung lớn. Thẻ sản phẩm / collection vẫn xoay tất cả ảnh.
-          </p>
-          <ImageField
-            label="Ảnh phụ 1"
-            value={form.image2}
-            onChange={(v) => setForm((f) => ({ ...f, image2: v }))}
-            width={1200}
-          />
-          <ImageField
-            label="Ảnh phụ 2"
-            value={form.image3}
-            onChange={(v) => setForm((f) => ({ ...f, image3: v }))}
-            width={1200}
-          />
-          <ImageField
-            label="Ảnh phụ 3"
-            value={form.image4}
-            onChange={(v) => setForm((f) => ({ ...f, image4: v }))}
-            width={1200}
-          />
-          <ImageField
-            label="Ảnh phụ 4"
-            value={form.image5}
-            onChange={(v) => setForm((f) => ({ ...f, image5: v }))}
-            width={1200}
-          />
-          <ImageField
-            label="Ảnh phụ 5"
-            value={form.image6}
-            onChange={(v) => setForm((f) => ({ ...f, image6: v }))}
-            width={1200}
-          />
-
-          {LONG.map(([k, label]) => (
-            <div className="admin-field" key={k}>
-              <label>{label}</label>
-              <textarea name={k} rows="3" value={form[k] || ""} onChange={change} />
-            </div>
-          ))}
+          <section className="product-editor-block" aria-label="Ảnh sản phẩm"><div className="product-editor-heading"><div><h3>Ảnh sản phẩm</h3><p className="admin-muted">Một ảnh chính và các ảnh phụ theo thứ tự bạn thêm.</p></div></div>
+            <ImageField label="Ảnh chính" value={form.image} disabled={busy} onBusyChange={(value) => uploadState("main", value)} onChange={(value) => setForm((current) => ({ ...current, image: value }))} width={1200} />
+            <div className="product-secondary-images">{media.map((item, index) => <div className="product-secondary-image" key={item.id}><ImageField label={`Ảnh phụ ${index + 1}`} value={item.src} disabled={busy} onBusyChange={(value) => uploadState(item.id, value)} onChange={(src) => setMedia((current) => current.map((entry) => entry.id === item.id ? { ...entry, src } : entry))} width={1200} />{media.length > 1 && <button type="button" className="admin-btn danger" disabled={busy || uploading} aria-label={`Xóa mục ảnh phụ ${index + 1}`} onClick={() => setMedia((current) => current.filter((entry) => entry.id !== item.id))}>Xóa mục ảnh</button>}</div>)}</div>
+            <button type="button" className="admin-btn" disabled={busy || uploading} onClick={() => setMedia((current) => [...current, { id: crypto.randomUUID(), src: "" }])}>+ Thêm ảnh phụ</button>
+          </section>
+          <div className="admin-field"><label htmlFor="product-description">Mô tả ngắn</label><textarea id="product-description" name="description" rows={3} value={form.description || ""} onChange={change} disabled={busy} /></div>
+          <section className="product-editor-block" aria-label="Nội dung chi tiết sản phẩm"><div className="product-editor-heading"><div><h3>Nội dung chi tiết</h3><p className="admin-muted">Đặt tên và viết nội dung cho từng mục. Thêm mục mới khi cần.</p></div></div>
+            {sections.map((item, index) => <div className="product-content-section" key={item.id}><div className="product-editor-heading"><strong>Mục {index + 1}</strong>{sections.length > 1 && <button type="button" className="admin-btn danger" disabled={busy} aria-label={`Xóa mục nội dung ${index + 1}`} onClick={() => { if ((item.title.trim() || item.content.trim()) && !window.confirm("Bỏ mục này khỏi nội dung sản phẩm? Chỉ áp dụng khi bạn lưu sản phẩm.")) return; setSections((current) => current.filter((entry) => entry.id !== item.id)); }}>Xóa mục</button>}</div><div className="admin-field"><label htmlFor={`section-title-${item.id}`}>Tên mục {index + 1}</label><input id={`section-title-${item.id}`} value={item.title} disabled={busy} placeholder="Ví dụ: Công dụng, Thành phần, Cách sử dụng…" onChange={(event) => patchSection(item.id, { title: event.target.value })} /></div><ProductContentEditor label={`Nội dung mục ${index + 1}`} value={item.content} disabled={busy} onChange={(content) => patchSection(item.id, { content })} /></div>)}
+            <button type="button" className="admin-btn" disabled={busy} onClick={() => setSections((current) => [...current, newSection()])}>+ Thêm mục nội dung</button>
+          </section>
 
           <label className="admin-check">
-            <input type="checkbox" checked={form.active !== false} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
+            <input type="checkbox" disabled={busy} checked={form.active !== false} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
             Hiển thị trên website
           </label>
 
+          {uploading && <p className="admin-muted" role="status">Đang tải ảnh. Chờ ảnh tải xong rồi lưu sản phẩm.</p>}
           <div className="admin-actions">
-            <button className="admin-btn primary" disabled={busy || !!categorySaving}>{busy ? "Đang lưu..." : "Lưu"}</button>
-            <button type="button" className="admin-btn" onClick={() => setEditing(false)}>Hủy</button>
+            <button className="admin-btn primary" disabled={busy || uploading || !!categorySaving}>{busy ? "Đang lưu..." : "Lưu"}</button>
+            <button type="button" className="admin-btn" disabled={busy || uploading} onClick={() => setEditing(false)}>Hủy</button>
           </div>
         </form>
       )}
 
-      <div className="admin-card">
+      <div className="admin-card" hidden={editing}>
         {!loading && items.length === 0 ? (
           <div className="admin-empty">
             <p>Chưa có sản phẩm nào trên Firestore.</p>
@@ -288,8 +262,8 @@ export default function ProductsAdmin() {
                           {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
                         </select>
                         {categorySaving === p.id && <span role="status" className="admin-muted">Đang lưu…</span>}
-                        <button className="admin-btn" disabled={busy || !!categorySaving} onClick={() => edit(p)}>Sửa</button>
-                        <button className="admin-btn danger" disabled={busy || !!categorySaving} onClick={() => del(p)}>Xóa</button>
+                        <button className="admin-btn" disabled={busy || uploading || !!categorySaving} onClick={() => edit(p)}>Sửa</button>
+                        <button className="admin-btn danger" disabled={busy || uploading || !!categorySaving} onClick={() => del(p)}>Xóa</button>
                       </div>
                     </td>
                   </tr>

@@ -468,3 +468,9 @@
 .order-received-details dt { color: var(--plum-soft); }
 .order-received-details dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; color: var(--plum); }
 @media (max-width: 400px) { .order-received-details dl > div { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+.product-section-content { max-width: 100%; color: var(--plum-soft); font-size: 15px; line-height: 1.9; overflow-wrap: anywhere; }
+.product-content ul, .product-content ol { margin: 0.7em 0; padding-left: 1.6em; }
+.product-content li { margin: 0.3em 0; }
+.product-content-dashes > li::marker { content: "−  "; }
+.product-content-lines { min-height: 1em; }
+@media (max-width: 600px) { .product-section-content { font-size: 14px; line-height: 1.75; } }
