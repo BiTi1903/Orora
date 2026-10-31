@@ -102,6 +102,15 @@ const COLLECTION_FIELD_MAP = {
 
 
 const PRODUCT_DETAIL_FIELD_MAP = {
+  pdNavigation: { styleKey: "navigation", label: "Nút Mô tả / Thông số / Hướng dẫn sử dụng", sample: "Nút Mô tả / Thông số / Hướng dẫn sử dụng" },
+  pdSubheading: { styleKey: "subheading", label: "Tên mục trong nội dung", sample: "Tên mục trong nội dung" },
+  pdPurchaseHeading: { styleKey: "purchaseHeading", label: "Chữ Chọn cách mua hàng", sample: "Chữ Chọn cách mua hàng" },
+  pdAssuranceTitle: { styleKey: "assuranceTitle", label: "Cam kết — Tiêu đề", sample: "Cam kết — Tiêu đề" },
+  pdAssuranceBody: { styleKey: "assuranceBody", label: "Cam kết — Nội dung", sample: "Cam kết — Nội dung" },
+  pdFacebookLabel: { styleKey: "facebookLabel", label: "Nút Facebook theo dõi", sample: "Nút Facebook theo dõi" },
+  pdReviewTitle: { styleKey: "reviewTitle", label: "Đánh giá — Tiêu đề", sample: "Đánh giá — Tiêu đề" },
+  pdReviewName: { styleKey: "reviewName", label: "Đánh giá — Tên hiển thị", sample: "Đánh giá — Tên hiển thị" },
+  pdReviewBody: { styleKey: "reviewBody", label: "Đánh giá — Nội dung", sample: "Đánh giá — Nội dung" },
   pdPurchaseOptions: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Nút mua hàng web / TikTok / Facebook" },
   pdContactActions: { type: "pdContactActions", styleKey: "contactActions", label: "Nút tư vấn Zalo / gọi" },
   pdImage: {

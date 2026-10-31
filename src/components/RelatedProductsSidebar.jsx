@@ -25,6 +25,6 @@ export default function RelatedProductsSidebar({ product, preview = false, previ
       <span className={`related-product-image ${selection("relImage")}`} data-builder-key={preview ? "relImage" : undefined} onClick={preview ? pick("relImage") : undefined}>{item.image ? <img src={cdnSrc(item.image, THUMB)} alt="" loading="lazy" width="64" height="64" /> : <span aria-hidden="true">◇</span>}</span>
       <span className="related-product-copy"><strong className={selection("relName")} data-builder-key={preview ? "relName" : undefined} style={compactStyle(styles.relName, 15)}>{item.name}</strong><span className={`related-product-price ${selection("relPrice")}`} data-builder-key={preview ? "relPrice" : undefined} style={compactStyle(styles.relPrice, 14)} onClick={preview ? pick("relPrice") : undefined}>{item.price || "Liên hệ"}</span></span>
     </Link>)}</div>}
-    <Link to="/#shop" className="related-product-more" onClick={preview ? pick("relButton") : undefined}>Xem tất cả sản phẩm <span aria-hidden="true">→</span></Link>
+    <Link to="/#shop" style={compactStyle(styles.relButton, 16)} data-builder-key={preview ? "relButton" : undefined} className={`related-product-more ${selection("relButton")}`} onClick={preview ? pick("relButton") : undefined}>Xem tất cả sản phẩm <span aria-hidden="true">→</span></Link>
   </aside>;
 }

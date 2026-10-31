@@ -6,6 +6,20 @@ import { SectionShell } from "./Ui";
 import { StyleList } from "./StyleEditor";
 
 const ELEMENTS = [
+  { key: "aboutTitle", title: "Kiểu chữ — Tiêu đề Mô tả / Thông số / Hướng dẫn sử dụng", sample: "Mô tả" },
+  { key: "navigation", title: "Kiểu chữ — Nút Mô tả / Thông số / Hướng dẫn sử dụng", sample: "Nút Mô tả / Thông số / Hướng dẫn sử dụng" },
+  { key: "subheading", title: "Kiểu chữ — Tên mục trong nội dung", sample: "Tên mục trong nội dung" },
+  { key: "purchaseHeading", title: "Kiểu chữ — Chữ Chọn cách mua hàng", sample: "Chữ Chọn cách mua hàng" },
+  { key: "assuranceTitle", title: "Kiểu chữ — Cam kết — Tiêu đề", sample: "Cam kết — Tiêu đề" },
+  { key: "assuranceBody", title: "Kiểu chữ — Cam kết — Nội dung", sample: "Cam kết — Nội dung" },
+  { key: "facebookLabel", title: "Kiểu chữ — Nút Facebook theo dõi", sample: "Nút Facebook theo dõi" },
+  { key: "reviewTitle", title: "Kiểu chữ — Đánh giá — Tiêu đề", sample: "Đánh giá — Tiêu đề" },
+  { key: "reviewName", title: "Kiểu chữ — Đánh giá — Tên hiển thị", sample: "Đánh giá — Tên hiển thị" },
+  { key: "reviewBody", title: "Kiểu chữ — Đánh giá — Nội dung", sample: "Đánh giá — Nội dung" },
+  { key: "relTitle", title: "Khám phá thêm — Tiêu đề", sample: "Khám phá thêm" },
+  { key: "relName", title: "Khám phá thêm — Tên sản phẩm", sample: "Tên sản phẩm" },
+  { key: "relPrice", title: "Khám phá thêm — Giá", sample: "349.000đ" },
+  { key: "relButton", title: "Khám phá thêm — Xem tất cả", sample: "Xem tất cả sản phẩm" },
   {
     key: "number",
     title: "Kiểu chữ — Số thứ tự",

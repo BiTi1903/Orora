@@ -155,6 +155,7 @@ function ProductDetail({
 
 
   const css = (key) => toCss(ps[key], { responsive: true });
+  const textProps = (key, styleKey) => ({ style: css(styleKey), className: selectedClass(key), "data-builder-key": preview ? key : undefined, onClick: preview ? select(key) : undefined });
 
   // order[0] = đang hiện khung lớn; còn lại = hàng đợi dưới (xoay 2 ảnh, ảnh vừa rời khung lớn nằm cuối)
   const mainImage = (product.image || "").trim();
@@ -460,7 +461,7 @@ function ProductDetail({
 
 
           <section className={`purchase-options ${selectedClass("pdPurchaseOptions")}`} aria-label="Chọn kênh mua hàng" data-builder-key={preview ? "pdPurchaseOptions" : undefined} onClick={preview ? select("pdPurchaseOptions") : undefined}>
-            <h2>{purchase.heading?.trim() || "Chọn cách mua hàng"}</h2>
+            <h2 {...textProps("pdPurchaseHeading", "purchaseHeading")}>{purchase.heading?.trim() || "Chọn cách mua hàng"}</h2>
           {(preview || showZalo || showCall || (!contact.zalo && contact.email && contactSettings.showZalo !== false)) && (
             <div className={`product-contact-actions product-consultation ${selectedClass("pdContactActions")}`} aria-label="Tư vấn sản phẩm" data-builder-key={preview ? "pdContactActions" : undefined} onClick={preview ? select("pdContactActions") : undefined}>
               <button type="button" className="purchase-website product-consultation-toggle" style={css("contactActions")} aria-haspopup="dialog" onClick={preview ? select("pdContactActions") : () => setConsultationOpen(true)}>
@@ -490,14 +491,14 @@ function ProductDetail({
       </section>
 
       <div className="product-detail-lower">
-        <ProductInformation sections={sections} css={css} preview={preview} select={select} selectedClass={selectedClass} />
+        <ProductInformation sections={sections} css={css} preview={preview} select={select} selectedClass={selectedClass} textProps={textProps} />
       </div>
       </div>
       <div className="product-side-column">
-        <ProductAssurances policies={home.productPolicies} />
-        <FacebookFollowCard settings={home.productFacebook} fallbackUrl={home.shopLinks?.facebookUrl} />
+        <ProductAssurances policies={home.productPolicies} textProps={textProps} />
+        <FacebookFollowCard settings={home.productFacebook} fallbackUrl={home.shopLinks?.facebookUrl} textProps={textProps} />
         <RelatedProductsSidebar product={product} preview={preview} previewProducts={previewProducts} styles={ps} selectedElement={selectedElement} onSelect={onSelect} />
-        <ProductReviews product={product} />
+        <ProductReviews product={product} textProps={textProps} />
       </div>
       </div>
 

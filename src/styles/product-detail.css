@@ -666,13 +666,13 @@
   min-height: 44px;
   border-radius: 12px;
   padding: 9px 14px !important;
-  font-size: 13px !important;
+  font-size: 13px;
   line-height: 1.4;
 }
 .product-detail-shell .purchase-social a {
   min-height: 44px;
   padding: 10px 12px !important;
-  font-size: 12px !important;
+  font-size: 12px;
   line-height: 1.4;
 }
 .product-detail-shell .purchase-website {
@@ -771,3 +771,14 @@
   .product-side-column .related-product-image { flex-basis: 60px; width: 60px; height: 68px; }
 }
 @media (max-width: 600px) { .product-detail-top { padding-top: 80px; } }
+
+.product-information .product-detail-row--unlabeled { grid-template-columns: minmax(0, 1fr); }
+
+/* Keep channel labels on one line without crowding the icons. */
+.product-detail-shell .purchase-social { max-width: 320px; gap: 8px; }
+.product-detail-shell .purchase-social a { gap: 6px; padding: 10px 6px !important; font-size: 12px; white-space: nowrap; }
+.product-detail-shell .purchase-social .purchase-channel-icon { flex-basis: 14px; width: 14px; height: 14px; }
+.product-information-nav a[aria-current="location"] strong { color: inherit; }
+@media (max-width: 360px) {
+  .product-detail-shell .purchase-social { grid-template-columns: minmax(0, 1fr); }
+}

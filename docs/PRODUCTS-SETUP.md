@@ -47,3 +47,9 @@ Sản phẩm khác hiển thị tối đa bốn sản phẩm còn hoạt động
 Trong **Admin → Sản phẩm → Khối Facebook dưới cam kết**, chọn ảnh ORORA, chữ trên nút và link fanpage. Lưu riêng ở `settings/home.productFacebook`, không thay đổi nội dung sản phẩm hay các cấu hình khác. Để trống link sẽ dùng link Facebook chung trong phần kênh mua hàng. Khối chỉ hiện khi bật, có ảnh và link HTTPS Facebook hợp lệ; không dùng link Messenger. Nút mở fanpage để khách tự chọn theo dõi, không tự theo dõi hay tạo số người theo dõi.
 
 Desktop dùng cột nội dung 80% và cột phụ 20%. Cột phụ xếp liên tục **Cam kết → Facebook → Sản phẩm khác → Đánh giá sản phẩm**. Mobile xếp toàn chiều rộng, sản phẩm khác và đánh giá ở sau nội dung. Đánh giá minh họa vẫn giữ nhãn minh họa.
+
+## Nội dung và kiểu chữ bổ sung
+
+Sản phẩm mới chỉ có một mục Mô tả. Tên mục là tùy chọn; có thể lưu nội dung không có tên. Mục bổ sung chỉ xuất hiện trong admin khi bấm Thêm mục nội dung; mục trống không được đưa vào dữ liệu lưu. Mở sản phẩm cũ giữ nguyên tên và nội dung đã lưu. Mục thông số không có tên sẽ dùng toàn chiều rộng dòng.
+
+Trong Trang chủ → Chi tiết SP, có thể chỉnh kiểu chữ thanh chuyển mục, tiêu đề phần nội dung, tên mục, Chọn cách mua hàng, tiêu đề/nội dung cam kết, nút Facebook, tiêu đề/tên/nội dung đánh giá và chữ ở Khám phá thêm. Các thành phần này cũng chọn trực tiếp được trong Visual Builder. Kiểu chữ lưu ở productDetailStyles; không sửa nội dung từng sản phẩm. Thanh chuyển mục không có mũi tên. Nút Facebook/TikTok giữ nhãn trên một dòng; màn hình rất hẹp xếp nút dọc.
