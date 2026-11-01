@@ -847,7 +847,8 @@
   font-size: 13px; line-height: 1.5; cursor: pointer; overflow-wrap: anywhere;
 }
 .product-volume-choice input { position: absolute; width: 1px !important; min-height: 0 !important; height: 1px; margin: 0; padding: 0 !important; opacity: 0; }
-.product-volume-choice.is-selected { background: #fff0f5; border-color: var(--rose-deep); color: var(--rose-deep); }
+.product-volume-choice.is-selected,
+.website-order label.product-volume-choice.is-selected:not([hidden]) { background: #fff0f5; border-color: var(--rose-deep); color: var(--rose-deep); }
 .product-volume-choice:focus-within { outline: 2px solid var(--rose-deep); outline-offset: 3px; }
 .product-selection-help { margin: 7px 0 0; color: var(--plum-soft); font-size: 12px; }
 .product-quantity-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
