@@ -654,7 +654,7 @@
 .product-detail-shell .product-detail-thumb-nav { width: 32px; height: 32px; font-size: 20px; }
 .product-detail-shell .purchase-website {
   width: 100%;
-  max-width: 280px;
+  max-width: 320px;
   min-height: 44px;
   border-radius: 12px;
   padding: 9px 14px !important;
@@ -682,10 +682,10 @@
 /* Keep both actions together below the purchase heading. */
 #root > main .product-detail-shell .purchase-options > .product-consultation,
 .product-detail-shell .purchase-options > .product-consultation {
-  width: 100%; max-width: 280px; margin: 0 0 8px;
+  width: 100%; max-width: 320px; margin: 0 0 8px;
 }
 .product-detail-shell .purchase-divider,
-.product-detail-shell .purchase-social { max-width: 280px; }
+.product-detail-shell .purchase-social { max-width: 320px; }
 
 /* One information card holds the jump links and all three content sections. */
 .product-detail-lower > .product-information {
