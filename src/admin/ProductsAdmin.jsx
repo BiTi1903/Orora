@@ -1,4 +1,3 @@
-import ProductFacebookSettings from "./ProductFacebookSettings";
 import ProductPoliciesSettings from "./ProductPoliciesSettings";
 import ProductReviewsEditor from "./ProductReviewsEditor";
 import ProductContentEditor from "./ProductContentEditor";
@@ -156,7 +155,7 @@ export default function ProductsAdmin() {
 
       {message && <div className={`admin-${message.type}`} style={{ marginBottom: 16 }}>{message.text}</div>}
 
-      <div hidden={editing}><ShopLinksSettings /><ProductPoliciesSettings /><ProductFacebookSettings />
+      <div hidden={editing}><ShopLinksSettings /><ProductPoliciesSettings /><div className="admin-card" style={{ marginBottom: 20 }}><h2>Triết lý trên trang sản phẩm</h2><p className="admin-muted">Khối dưới cam kết dùng chung nội dung tại Trang chủ → Triết lý. Chỉnh nội dung ở đó; kiểu chữ riêng cho card chỉnh tại Trang chủ → Chi tiết SP.</p></div>
       {categoriesError && <div className="admin-error">Không tải được danh mục: {explainError(categoriesError)}</div>}
       <form className="admin-card admin-form" style={{ marginBottom: 20 }} onSubmit={async (event) => {
         event.preventDefault();

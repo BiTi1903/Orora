@@ -605,14 +605,7 @@
 .product-side-column { grid-column: 2; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 .product-side-column > .product-assurances { margin: 0; padding-inline: 14px; }
 .product-side-column > .related-product-sidebar { position: static; max-height: none; }
-.facebook-follow-card { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; padding: 0; background: #fff; min-width: 0; }
-.facebook-follow-image { position: relative; display: block; overflow: hidden; width: 100%; aspect-ratio: 1.8 / 1; padding: 0; background: #fff; }
-.facebook-follow-image img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
-.facebook-follow-button { position: absolute; z-index: 1; left: 12px; right: 12px; bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 40px; padding: 9px 12px; margin: 0; border-radius: 10px; box-shadow: 0 3px 12px rgba(0,0,0,.16); background: #2760aa; color: #fff; font-size: 13px; font-weight: 600; text-decoration: none; }
-.facebook-follow-button span { overflow-wrap: anywhere; }
-.facebook-follow-button svg { flex-shrink: 0; }
-.facebook-follow-button:hover { background: #1f508f; }
-.facebook-follow-button:focus-visible, .facebook-follow-image:focus-visible { outline: 2px solid #2760aa; outline-offset: 3px; }
+.product-philosophy-card { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; padding: 0; background: #fff; min-width: 0; }
 .product-side-column > .product-reviews { width: 100%; max-width: none; margin: 0; padding: 18px 14px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255,255,255,.75); }
 .product-side-column .product-reviews-heading { gap: 4px; }
 .product-side-column .product-reviews-heading h2 { font-size: 23px; line-height: 1.25; margin: 4px 0 10px; }
@@ -631,10 +624,9 @@
   .product-main-column > .product-detail-lower { order: 3; }
   .product-side-column { display: contents; }
   .product-side-column > .product-assurances { order: 1; width: 100%; box-sizing: border-box; }
-  .product-side-column > .facebook-follow-card { order: 2; width: 100%; box-sizing: border-box; }
+  .product-side-column > .product-philosophy-card { order: 2; width: 100%; box-sizing: border-box; }
   .product-side-column > .related-product-sidebar { order: 4; width: 100%; box-sizing: border-box; }
   .product-side-column > .product-reviews { order: 5; box-sizing: border-box; }
-  .facebook-follow-image { max-height: 150px; }
   .product-side-column .product-reviews-grid { max-height: none; overflow: visible; }
 }
 @media (max-width: 768px) { .product-detail-shell { width: calc(100% - 32px); } }
@@ -729,7 +721,7 @@
 .product-detail-content > .product-detail-info,
 .product-detail-lower > .product-information,
 .product-side-column > .product-assurances,
-.product-side-column > .facebook-follow-card,
+.product-side-column > .product-philosophy-card,
 .product-side-column > .related-product-sidebar,
 .product-side-column > .product-reviews {
   border: 1px solid var(--detail-card-border);
@@ -822,5 +814,21 @@
     min-height: 0 !important; max-height: none !important;
     aspect-ratio: auto !important;
   }
-  .product-detail-shell .product-detail-gallery .product-detail-main-img { object-fit: contain !important; }
+}
+
+/* A compact editorial card, using the saved homepage philosophy. */
+.product-side-column > .product-philosophy-card {
+  position: relative; overflow: hidden; padding: 22px 18px;
+  background: linear-gradient(145deg, #fffafb, #fff0f6);
+}
+.product-philosophy-symbol { display: block; margin-bottom: 12px; color: var(--rose-deep); font-size: 23px; }
+.product-philosophy-card h2 { margin: 0 0 14px; color: var(--rose-deep); font: 500 10px/1.7 var(--font-body); letter-spacing: .08em; white-space: pre-line; overflow-wrap: anywhere; }
+.product-philosophy-card p { margin: 0; color: var(--plum); font: 500 23px/1.55 var(--font-display); white-space: pre-wrap; overflow-wrap: anywhere; }
+.product-philosophy-accent { color: var(--rose-deep); font-style: italic; }
+@media (max-width: 900px) { .product-philosophy-card p { font-size: 24px; } }
+
+/* Desktop: photo 50%, purchase information 30%, sidebar 20% (excluding gutters). */
+@media (min-width: 901px) {
+  .product-main-column > .product-detail-content { grid-template-columns: minmax(0, 5fr) minmax(0, 3fr); }
+  .product-detail-shell .product-detail-info h1 { font-size: clamp(28px, 3vw, 52px); }
 }
