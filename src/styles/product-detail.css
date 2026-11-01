@@ -813,10 +813,14 @@
 @media (max-width: 600px) {
   .product-detail-shell .product-detail-gallery { padding: 8px; }
 }
+/* Desktop height follows the purchase content, including space for thumbnails. */
 @media (min-width: 901px) {
+  .product-detail-shell .product-detail-content > .product-detail-info { min-height: 0; }
+  .product-detail-shell .product-detail-gallery .product-detail-image,
   .product-detail-shell .product-detail-gallery .product-detail-image--fixed-h {
-    height: max(var(--pd-height), var(--purchase-content-height, 0px)) !important;
-    min-height: max(var(--pd-height), var(--purchase-content-height, 0px)) !important;
-    max-height: none !important;
+    height: var(--balanced-image-height, auto) !important;
+    min-height: 0 !important; max-height: none !important;
+    aspect-ratio: auto !important;
   }
+  .product-detail-shell .product-detail-gallery .product-detail-main-img { object-fit: contain !important; }
 }

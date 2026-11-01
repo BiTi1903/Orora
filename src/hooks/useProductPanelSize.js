@@ -1,6 +1,6 @@
 import { useLayoutEffect } from "react";
 
-// Match the purchase card to the complete gallery, including its thumbnails.
+// Size the gallery from natural purchase content, never stretch the purchase card to a photo.
 export default function useProductPanelSize(rootRef, product) {
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -12,16 +12,14 @@ export default function useProductPanelSize(rootRef, product) {
     const content = root.querySelector(".product-purchase-content");
     if (!layout || !gallery || !image || !card || !content) return;
     const media = window.matchMedia("(min-width: 901px)"); let frame;
-    const clear = () => { layout.style.removeProperty("--purchase-content-height"); layout.style.removeProperty("--photo-panel-height"); };
+    const clear = () => { layout.style.removeProperty("--balanced-image-height"); };
     const measure = () => {
       if (!media.matches) { clear(); return; }
       const style = getComputedStyle(card);
       const extra = ["paddingTop", "paddingBottom", "borderTopWidth", "borderBottomWidth"].reduce((sum, key) => sum + (Number.parseFloat(style[key]) || 0), 0);
       const galleryExtras = gallery.offsetHeight - image.offsetHeight;
-      const minimum = `${Math.max(0, Math.ceil(content.offsetHeight + extra - galleryExtras))}px`;
-      if (layout.style.getPropertyValue("--purchase-content-height") !== minimum) layout.style.setProperty("--purchase-content-height", minimum);
-      const height = `${gallery.offsetHeight}px`;
-      if (layout.style.getPropertyValue("--photo-panel-height") !== height) layout.style.setProperty("--photo-panel-height", height);
+      const height = `${Math.max(1, Math.ceil(content.offsetHeight + extra - galleryExtras))}px`;
+      if (layout.style.getPropertyValue("--balanced-image-height") !== height) layout.style.setProperty("--balanced-image-height", height);
     };
     const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(measure); };
     const observer = new ResizeObserver(schedule); observer.observe(gallery); observer.observe(image); observer.observe(content);
