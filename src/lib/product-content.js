@@ -1,3 +1,4 @@
+import { withProductIdentity } from "./product-identity.js";
 export const LEGACY_PRODUCT_SECTIONS = [
   ["story", "Câu chuyện sản phẩm"], ["material", "Chất liệu / thành phần"],
   ["size", "Kích thước / dung tích"], ["color", "Màu sắc"], ["origin", "Xuất xứ"],
@@ -81,10 +82,14 @@ export function publishedProductReviews(product = {}) {
 }
 
 export function compactRelatedProducts(products, current, limit = 4) {
-  const currentIds = new Set([current.id, current.slug].filter(Boolean)); const seen = new Set();
-  return products.filter((item) => {
+  const seen = new Set();
+  const catalog = withProductIdentity(products.filter((item) => {
     const key = item.id || item.slug;
-    if (!key || !item.name || item.active === false || currentIds.has(item.id) || currentIds.has(item.slug) || seen.has(key)) return false;
+    if (!key || !item.name || item.active === false || seen.has(key)) return false;
     seen.add(key); return true;
-  }).map((item, index) => ({ item, index })).sort((a, b) => Number(Boolean(current.categoryId && b.item.categoryId === current.categoryId)) - Number(Boolean(current.categoryId && a.item.categoryId === current.categoryId)) || a.index - b.index).slice(0, limit).map(({ item }) => item);
+  }));
+  const index = catalog.findIndex((item) => item.id === current.id || (item.slug && item.slug === current.slug));
+  const start = index < 0 ? 0 : index + 1;
+  const circular = [...catalog.slice(start), ...catalog.slice(0, start)];
+  return circular.filter((item) => item.id !== current.id && (!item.slug || item.slug !== current.slug)).slice(0, Math.max(0, limit));
 }

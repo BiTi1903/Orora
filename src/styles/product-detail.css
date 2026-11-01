@@ -860,3 +860,5 @@
 .product-quantity-control input::-webkit-inner-spin-button, .product-quantity-control input::-webkit-outer-spin-button { appearance: none; margin: 0; }
 .order-form-modal .product-purchase-selection { margin: 0 0 22px; }
 @media (max-width: 600px) { .product-volume-choice, .website-order label.product-volume-choice:not([hidden]) { min-height: 44px; } .product-quantity-control { height: 44px; } .product-quantity-control button { width: 40px; } }
+.related-product-image { position: relative; }
+.related-product-number { position: absolute; top: 4px; left: 4px; max-width: calc(100% - 8px); padding: 2px 4px; border-radius: 5px; background: rgba(255,255,255,.94); color: var(--rose-deep); font: 600 9px/1.4 var(--font-body); overflow-wrap: anywhere; }

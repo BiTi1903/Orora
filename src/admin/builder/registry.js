@@ -102,6 +102,8 @@ const COLLECTION_FIELD_MAP = {
 
 
 const PRODUCT_DETAIL_FIELD_MAP = {
+  pdFacebookText: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Chữ nút Facebook" },
+  pdTiktokText: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Chữ nút TikTok" },
   pdSelectionLabel: { styleKey: "selectionLabel", label: "Dung tích / số lượng — Nhãn", sample: "Dung tích" },
   pdSelectionValue: { styleKey: "selectionValue", label: "Dung tích — Lựa chọn", sample: "100 ml" },
   pdNavigation: { styleKey: "navigation", label: "Nút Mô tả / Thông số / Hướng dẫn sử dụng", sample: "Nút Mô tả / Thông số / Hướng dẫn sử dụng" },

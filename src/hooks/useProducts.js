@@ -1,20 +1,5 @@
 import { useEffect, useState } from "react";
-import { getProducts } from "../lib/api";
-
-/* Nhiều component cùng gọi hook này (Collection, trang chi tiết...) →
-   dùng chung 1 lần tải trong 30 giây thay vì mỗi nơi tải lại từ Firestore. */
-const CACHE_MS = 30_000;
-let cache = null; // { at, promise }
-
-function loadProducts() {
-  if (cache && Date.now() - cache.at < CACHE_MS) return cache.promise;
-  const promise = getProducts().catch((err) => {
-    cache = null; // lỗi thì lần sau thử lại
-    throw err;
-  });
-  cache = { at: Date.now(), promise };
-  return promise;
-}
+import { getPublicProducts } from "../lib/api";
 
 export default function useProducts({ enabled = true } = {}) {
   const [products, setProducts] = useState([]);
@@ -24,7 +9,7 @@ export default function useProducts({ enabled = true } = {}) {
     if (!enabled) return;
     let alive = true;
 
-    loadProducts()
+    getPublicProducts()
       .then((list) => {
         if (alive) setProducts(list.filter((p) => p.active !== false));
       })

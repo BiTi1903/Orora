@@ -1,3 +1,4 @@
+import { findProductByRoute, productPath } from "./product-identity.js";
 export const SITE_URL = "https://ororavn.com";
 export const SITE_NAME = "ORORA VN";
 const compact = (value) => String(value || "").replace(/\s+/g, " ").trim();
@@ -17,14 +18,15 @@ export function pageSeo(pathname, home = {}, products = [], productsLoading = fa
   if (path.startsWith("/product/")) {
     let id;
     try { id = decodeURIComponent(path.slice(9)); } catch { id = ""; }
-    product = products.find((item) => item.active !== false && (item.id === id || item.slug === id));
+    product = findProductByRoute(products, id);
+    if (product?.active === false) product = null;
     page = product ? {
       name: product.name, title: `${compact(product.name)} | ORORA VN`,
       description: description(product.description || product.story) || `Tìm hiểu ${compact(product.name)} tại ORORA VN.`,
     } : { name: "Sản phẩm", title: "Sản phẩm | ORORA VN", description: "Thông tin sản phẩm ORORA VN.", noindex: !productsLoading };
   }
   page ||= { name: "Trang không tồn tại", title: "Trang không tồn tại | ORORA VN", description: "", noindex: true };
-  const url = `${SITE_URL}${path}`;
+  const url = `${SITE_URL}${product ? productPath(product) : path}`;
   const graph = [
     { "@type": "WebSite", "@id": `${SITE_URL}/#website`, name: SITE_NAME, alternateName: "ORORA", url: `${SITE_URL}/`, inLanguage: "vi-VN" },
     { "@type": "Organization", "@id": `${SITE_URL}/#organization`, name: SITE_NAME, url: `${SITE_URL}/`,

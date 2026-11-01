@@ -66,7 +66,7 @@ export function createInventoryHandler({ getDb, verifyToken, env = process.env }
         const page = await query.get();
         const items = await Promise.all(page.docs.map(async (product) => {
           const stock = (await db.collection("inventory").doc(product.id).get()).data();
-          return { id: product.id, name: String(product.data().name || ""), quantity: stock?.quantity ?? null, version: stock?.version || 0, updatedAt: stock?.updatedAt?.toMillis?.() ?? (stock?.updatedAt ? new Date(stock.updatedAt).getTime() : null) };
+          return { id: product.id, name: String(product.data().name || ""), ...(product.data().number ? { number: String(product.data().number) } : {}), quantity: stock?.quantity ?? null, version: stock?.version || 0, updatedAt: stock?.updatedAt?.toMillis?.() ?? (stock?.updatedAt ? new Date(stock.updatedAt).getTime() : null) };
         }));
         return res.status(200).json({ items, nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
       }
@@ -85,7 +85,7 @@ export function createInventoryHandler({ getDb, verifyToken, env = process.env }
         const updatedAt = new Date(); const version = body.version + 1;
         tx.set(ref, { quantity: body.quantity, version, updatedAt, updatedBy: user.uid }, { merge: true });
         tx.set(movement, { type: "adjustment", productId: body.id, before: previous.quantity ?? null, after: body.quantity, change: body.quantity - (previous.quantity || 0), actor: user.uid, createdAt: updatedAt });
-        return { id: body.id, name: String(product.data().name || ""), quantity: body.quantity, version, updatedAt: updatedAt.getTime() };
+        return { id: body.id, name: String(product.data().name || ""), ...(product.data().number ? { number: String(product.data().number) } : {}), quantity: body.quantity, version, updatedAt: updatedAt.getTime() };
       });
       return res.status(200).json({ item, message: "Đã cập nhật tồn kho." });
     } catch (error) { return res.status(error.status || 503).json({ message: error.status ? error.message : "Chưa tải hoặc cập nhật được Kiểm Hàng. Vui lòng thử lại." }); }

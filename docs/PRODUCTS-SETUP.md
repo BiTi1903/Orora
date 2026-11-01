@@ -1,6 +1,6 @@
 # Nội dung và ảnh sản phẩm
 
-Trong **Admin → Sản phẩm → Thêm/Sửa**, phần nội dung chi tiết gồm các mục có tên và nội dung. Sản phẩm mới bắt đầu với một mục trống; bấm **+ Thêm mục nội dung** để thêm. Mô tả ngắn vẫn là trường riêng cho thẻ sản phẩm. Giá, danh mục, ID và trạng thái hiển thị không thay đổi cách lưu.
+Trong **Admin → Sản phẩm → Thêm/Sửa**, phần nội dung chi tiết gồm các mục có tên và nội dung. Sản phẩm mới bắt đầu với một mục trống; bấm **+ Thêm mục nội dung** để thêm. Mô tả ngắn vẫn là trường riêng cho thẻ sản phẩm. Giá, danh mục, nội dung và trạng thái đã lưu được giữ nguyên; mã số và đường dẫn dùng quy tắc bên dưới.
 
 - Enter xuống dòng. Thanh công cụ định dạng dòng đang đứng hoặc các dòng được chọn: gạch ngang, dấu chấm, đánh số, bỏ danh sách.
 - Enter trong danh sách tiếp tục dấu/đánh số; Enter trên dòng danh sách trống kết thúc danh sách. Shift+Enter chỉ xuống dòng thông thường.
@@ -26,7 +26,7 @@ Mỗi mục trong form có **Phần hiển thị**, lưu ở `detailSections[].g
 
 ## Cam kết và chính sách cạnh nút mua
 
-Tại **Admin → Sản phẩm**, ngoài trình sửa từng sản phẩm, có **Cam kết cạnh phần mua hàng**. Tự nhập tên, nội dung, bật/tắt và thêm/bỏ mục. Lưu riêng ở `settings/home.productPolicies`, dùng chung các sản phẩm; không ghi đè kênh mua hay phí ship. Mục trống/tắt không hiển thị. Không tự điền mức miễn phí ship, đền bù hoặc điều kiện đổi trả chưa được cửa hàng cung cấp.
+Tại **Admin → Sản phẩm → Thiết lập dùng chung → Cam kết và chính sách**, có **Cam kết cạnh phần mua hàng**. Tự nhập tên, nội dung, bật/tắt và thêm/bỏ mục. Lưu riêng ở `settings/home.productPolicies`, dùng chung các sản phẩm; không ghi đè kênh mua hay phí ship. Mục trống/tắt không hiển thị. Không tự điền mức miễn phí ship, đền bù hoặc điều kiện đổi trả chưa được cửa hàng cung cấp.
 
 Đây là nội dung hiển thị, không phải quy tắc tính phí hoặc hoàn tiền. Cần cấu hình giá ship/chính sách thực tế nhất quán với nội dung đã đăng.
 
@@ -40,7 +40,7 @@ Phần Mô tả/Thông số/Hướng dẫn sử dụng và thanh chuyển nhanh 
 
 Khối mua hàng trên desktop rộng dùng tỷ lệ ảnh/thông tin/cột phải 40/40/20 (không tính khe giữa cột). Ảnh chính và hai ảnh phụ hiển thị trong cùng một card. Card ảnh và card thông tin cùng chiều rộng và chiều cao. Trên desktop, chiều cao nội dung thông tin tự nhiên là chuẩn; ảnh chính thu vào phần chiều cao còn lại sau khi trừ hàng ảnh phụ và khoảng đệm. Không kéo dài card thông tin theo ảnh. Ảnh chính và ảnh phụ phủ kín khung bằng cover; thiết lập ảnh đã lưu không bị ghi đè. Mobile giữ kích thước ảnh tự nhiên/theo thiết lập mobile. Ảnh phụ vẫn đổi được ảnh chính; nếu nhiều hơn hai ảnh thì dùng mũi tên chuyển. Hiệu ứng chạy cho toàn bộ card ảnh một lần, không chạy lặp trên ảnh chính và ảnh phụ. Kích thước cột ưu tiên hơn giới hạn chiều rộng gallery cũ, không đổi dữ liệu ảnh hoặc chữ. Mobile vẫn xếp dọc và dùng chiều cao tự nhiên.
 
-Sản phẩm khác hiển thị tối đa bốn sản phẩm còn hoạt động, loại sản phẩm đang xem và trùng ID, ưu tiên cùng danh mục. Thẻ nhỏ gồm ảnh/tên/giá và liên kết chi tiết; có Xem tất cả sản phẩm. Cột có thể theo cuộn và cuộn danh sách khi thiếu chiều cao. Trên mobile, danh sách nằm dưới ba phần nội dung. Không còn Collection sản phẩm khác lớn ở cuối trang; dữ liệu danh mục/sản phẩm không thay đổi, vẫn dùng cache catalog hiện có. Màu/font tên và giá giữ cấu hình riêng; cỡ chữ và khoảng cách được giới hạn để vừa cột hẹp.
+Sản phẩm khác hiển thị tối đa bốn sản phẩm còn hoạt động, loại sản phẩm đang xem, sản phẩm ẩn và trùng ID; lấy các sản phẩm kế tiếp theo STT rồi vòng lại từ đầu. Ví dụ đang xem số 5 trong danh sách 1–8 thì hiển thị 6, 7, 8, 1. Mỗi ảnh có mã STT đúng của sản phẩm, không đánh số lại theo vị trí thẻ. Thẻ nhỏ gồm ảnh/tên/giá và liên kết chi tiết; có Xem tất cả sản phẩm. Cột có thể theo cuộn và cuộn danh sách khi thiếu chiều cao. Trên mobile, danh sách nằm dưới ba phần nội dung. Không còn Collection sản phẩm khác lớn ở cuối trang; dữ liệu danh mục/sản phẩm không thay đổi, vẫn dùng cache catalog hiện có. Màu/font tên và giá giữ cấu hình riêng; cỡ chữ và khoảng cách được giới hạn để vừa cột hẹp.
 
 ## Triết lý và cột bên phải
 
@@ -64,10 +64,28 @@ Trang chi tiết dùng một hàng đợi hiệu ứng chung cho ảnh, khung mu
 
 ## Dung tích và số lượng
 
-Trong **Admin → Sản phẩm → Sửa/Thêm sản phẩm → Dung tích / lựa chọn ml**, bấm Thêm dung tích rồi tự nhập nhãn (ví dụ 40 ml, 100 ml). Mỗi lựa chọn có ID ổn định và giá riêng tùy chọn; bỏ trống giá riêng để dùng giá chung. Tối đa 30 lựa chọn, không chấp nhận trùng tên hoặc giá không hợp lệ. Sản phẩm cũ không tự phát sinh dung tích từ trường size; nội dung cũ được giữ nguyên.
+Trong **Admin → Sản phẩm → Sửa/Thêm sản phẩm → Giá & dung tích**, bấm Thêm dung tích rồi tự nhập nhãn (ví dụ 40 ml, 100 ml). Mỗi lựa chọn có ID ổn định và giá riêng tùy chọn; bỏ trống giá riêng để dùng giá chung. Tối đa 30 lựa chọn, không chấp nhận trùng tên hoặc giá không hợp lệ. Sản phẩm cũ không tự phát sinh dung tích từ trường size; nội dung cũ được giữ nguyên.
 
 Trang chi tiết và popup đặt hàng dùng chung điều khiển dung tích/số lượng. Một dung tích tự được chọn, nhiều dung tích yêu cầu khách chọn; không có dung tích vẫn đặt sản phẩm như trước. Số lượng mặc định 1, từ 1–20 theo giới hạn đơn hiện có. Lựa chọn và số lượng đồng bộ hai chiều với popup; đổi sản phẩm sẽ trở về mặc định. Giá hiển thị và tổng tiền thay đổi theo dung tích/số lượng.
 
 Máy chủ kiểm tra lại dung tích và tính tiền từ sản phẩm trong Firestore, không tin giá/nhãn do trình duyệt gửi. ID/nhãn dung tích, giá và số lượng được chụp lại trong đơn; chỉnh/xóa dung tích sau đó không thay đổi đơn cũ. Gửi lại cùng requestId không tạo đơn trùng hoặc đổi lựa chọn đã nhận. Đơn hàng trong admin và email hiển thị dung tích. Biến thư {{productName}} bao gồm dung tích; có thêm {{variantLabel}} nếu muốn đặt riêng. Không đổi mẫu thư đang lưu.
 
 Kho vẫn quản lý tổng số lượng theo ID sản phẩm, không tách tồn theo từng dung tích. Giữ số lượng chờ xác nhận và trừ kho theo quy trình hiện có.
+
+## Trang quản lý sản phẩm và nút lưu
+
+Mở Sản phẩm sẽ thấy danh sách, ô tìm theo tên/mã và lọc đang hiện/ẩn. Kênh mua, cam kết, danh mục nằm trong Thiết lập dùng chung, chỉ tải khi mở lần đầu. Không còn nhiều form thiết lập nằm trước danh sách. Danh mục vẫn đổi nhanh cạnh nút Sửa/Xóa, không lặp thành một cột thông tin riêng.
+
+Form sửa có năm nhóm: Thông tin, Giá & dung tích, Hình ảnh, Nội dung, Đánh giá. Chuyển nhóm giữ nguyên bản nháp; thanh Lưu/Hủy luôn hiện khi cuộn. Lỗi bắt buộc sẽ mở đúng nhóm cần sửa. Không lưu được khi đang tải ảnh. Hủy không ghi thay đổi.
+
+## Mã sản phẩm và đường dẫn
+
+Mã hiển thị theo STT (01, 02…), cùng mã dùng ở trang sản phẩm, danh sách và Kiểm Hàng. Sản phẩm mới được tạo bằng khóa số tự tăng trong transaction, dựa vào số lớn nhất hiện có và settings/productSequence; không ghi đè sản phẩm khác khi nhiều admin thêm cùng lúc. Mã số không đổi trong form sửa.
+
+Khóa Firestore của sản phẩm cũ được giữ để bảo toàn tham chiếu đơn hàng, kho và lịch sử; không đổi ID hàng loạt hoặc ghi lại nội dung đã lưu. Đường dẫn công khai sinh từ tên, ví dụ White Gel - Bodyplex → /product/white-gel-bodyplex. Tên trùng hoặc xung đột link cũ có hậu tố STT để phân biệt. Đường dẫn từ Collection/Khám phá thêm, canonical SEO và sitemap dùng cùng quy tắc.
+
+Link cũ theo ID/slug, mã số và các alias đã lưu vẫn mở được rồi chuyển sang đường dẫn theo tên. Khi lưu đổi tên, giữ cả slug cũ và đường dẫn theo tên trước đó trong slugAliases. Dùng chung cache danh sách công khai 30 giây cho Collection, SEO và trang chi tiết để tránh tải lặp; lưu/xóa sản phẩm sẽ xóa cache ở phiên admin hiện tại.
+
+## Chỉnh chữ Fb / TikTok
+
+Trang chủ → Chi tiết SP → Nút chọn kênh mua hàng cho sửa nhãn của mỗi kênh. Có thêm Chữ riêng nút Facebook và Chữ riêng nút TikTok để chỉnh font, size desktop/mobile, màu, độ đậm… độc lập. Visual Builder cũng chọn trực tiếp được chữ từng nút. Kiểu riêng ghi trong productDetailStyles.purchaseOptions.facebookStyle/tiktokStyle; các kiểu chung, nhãn và thiết lập khác giữ nguyên.

@@ -29,13 +29,13 @@ export function facebookFollowUrl(value) {
 
 // Display compact defaults for the old standard labels without rewriting saved settings.
 export function purchaseChannelLabels(settings = {}) {
-  const label = (value, fallback, previous = []) => {
+  const label = (value, fallback, previous = [], custom = false) => {
     const text = typeof value === "string" ? value.trim() : "";
-    return !text || previous.includes(text) ? fallback : text;
+    return !text || (!custom && previous.includes(text)) ? fallback : text;
   };
   return {
     dividerLabel: label(settings.dividerLabel, "hoặc đặt hàng tại"),
-    facebookLabel: label(settings.facebookLabel, "Fb", ["Mua qua Facebook", "Đặt tại Facebook"]),
-    tiktokLabel: label(settings.tiktokLabel, "Tiktok", ["Mua trên TikTok", "Đặt tại TikTok"]),
+    facebookLabel: label(settings.facebookLabel, "Fb", ["Mua qua Facebook", "Đặt tại Facebook"], settings.customFacebookLabel === true || settings.customChannelLabels === true),
+    tiktokLabel: label(settings.tiktokLabel, "Tiktok", ["Mua trên TikTok", "Đặt tại TikTok"], settings.customTiktokLabel === true || settings.customChannelLabels === true),
   };
 }

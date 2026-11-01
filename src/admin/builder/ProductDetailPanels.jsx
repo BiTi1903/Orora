@@ -19,7 +19,7 @@ export function ProductDetailSettings({
       </div>
     );
   }
-  if (selected === "pdPurchaseOptions") return <PurchaseOptionsSettings value={productDetail.purchaseOptions || {}} onChange={onStyleChange} />;
+  if (["pdPurchaseOptions", "pdFacebookText", "pdTiktokText"].includes(selected)) return <PurchaseOptionsSettings value={productDetail.purchaseOptions || {}} onChange={onStyleChange} />;
   if (selected === "pdContactActions") return <ProductContactSettings value={productDetail.contactActions || {}} onChange={onStyleChange} />;
 
   /* Tiêu đề "Sản phẩm khác": 1 ô, Enter xuống dòng, đổi màu N chữ cuối */

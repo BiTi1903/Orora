@@ -6,7 +6,7 @@ import { memoryDb, response } from "./firestore-memory.js";
 
 test("product SEO uses its own canonical, description and breadcrumb without fabricated reviews", () => {
   const seo = pageSeo("/product/serum", {}, [{ id: "serum", name: "Serum ORORA", description: "Dưỡng da\n mỗi ngày", price: "250.000đ", image: "https://images.example/serum.jpg" }]);
-  assert.equal(seo.url, "https://ororavn.com/product/serum");
+  assert.equal(seo.url, "https://ororavn.com/product/serum-orora");
   assert.equal(seo.title, "Serum ORORA | ORORA VN");
   assert.equal(seo.description, "Dưỡng da mỗi ngày");
   const product = seo.structuredData["@graph"].find((entry) => entry["@type"] === "Product");

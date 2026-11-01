@@ -1,3 +1,4 @@
+import { productNumber, productSlug } from "../lib/product-identity";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ProductCard from "./ProductCard";
@@ -190,11 +191,11 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
               image4={product.image4}
               image5={product.image5}
               image6={product.image6}
-              number={product.number}
+              number={productNumber(product, products)}
               name={product.name}
               description={product.description}
               price={product.price}
-              slug={product.slug || product.id}
+              slug={productSlug(product, products)}
               styles={cardStyles}
               preview={preview}
               selectedElement={selectedElement}
@@ -412,11 +413,11 @@ function Collection({
                 image4={product.image4}
                 image5={product.image5}
                 image6={product.image6}
-                number={product.number}
+                number={productNumber(product, products)}
                 name={product.name}
                 description={product.description}
                 price={product.price}
-                slug={product.slug || product.id}
+                slug={productSlug(product, products)}
                 styles={cardStyles}
                 preview={preview}
                 selectedElement={selectedElement}

@@ -56,11 +56,16 @@ test("manually entered demo reviews are not published by default and only comple
   const before = structuredClone(product); const rendered = publishedProductReviews(product); assert.equal(rendered.length,1); assert.equal(rendered[0].id,"complete"); assert.equal(rendered[0].rating,5); assert.deepEqual(product,before);
 });
 
-test("compact related rail excludes the current product, hidden/duplicate entries and prioritizes its category", async () => {
+test("related rail follows product sequence, wraps and skips current, hidden and duplicate entries", async () => {
   const { compactRelatedProducts } = await import("../src/lib/product-content.js");
-  const current = { id: "current", slug: "current-slug", categoryId: "skin" };
-  const items = [{ id:"current",name:"Current" },{ id:"alias",slug:"current-slug",name:"Same product" },{id:"hidden",name:"Hidden",active:false},{id:"other",name:"Other",categoryId:"body"},{id:"same",name:"Same category",categoryId:"skin"},{id:"same",name:"Duplicate"},{id:"third",name:"Third"},{id:"fourth",name:"Fourth"},{id:"fifth",name:"Fifth"}];
-  const before=structuredClone(items);assert.deepEqual(compactRelatedProducts(items,current).map(p=>p.id),["same","other","third","fourth"]);assert.deepEqual(items,before);assert.deepEqual(compactRelatedProducts(items.slice(0,3),current),[]);
+  const items = Array.from({ length: 8 }, (_, index) => ({ id: `p${index + 1}`, number: String(index + 1), name: `Sản phẩm ${index + 1}`, categoryId: index % 2 ? "other" : "skin" }));
+  const before = structuredClone(items);
+  assert.deepEqual(compactRelatedProducts(items, items[4]).map(p=>p.id), ["p6","p7","p8","p1"]);
+  assert.deepEqual(compactRelatedProducts(items, items[7]).map(p=>p.id), ["p1","p2","p3","p4"]);
+  assert.deepEqual(compactRelatedProducts([items[0]],items[0]), []);
+  const mixed = [...items].reverse(); mixed.push({ ...items[5] },{ id:"hidden",number:"6",name:"Ẩn",active:false });
+  assert.deepEqual(compactRelatedProducts(mixed,items[4]).map(p=>p.id), ["p6","p7","p8","p1"]);
+  assert.deepEqual(items,before);
 });
 
 test("Facebook follow links require HTTPS Facebook destinations and exclude Messenger and lookalike hosts", async () => {
@@ -77,4 +82,10 @@ test("compact purchase labels retain custom copy and do not rewrite saved settin
   assert.deepEqual(purchaseChannelLabels(saved), { dividerLabel: "hoặc đặt hàng tại", facebookLabel: "Fb", tiktokLabel: "Tiktok" });
   assert.deepEqual(saved, before);
   assert.deepEqual(purchaseChannelLabels({ dividerLabel: "hoặc", facebookLabel: "Fanpage", tiktokLabel: "Shop" }), { dividerLabel: "hoặc", facebookLabel: "Fanpage", tiktokLabel: "Shop" });
+});
+
+
+test("custom social button labels can reuse old text without changing the other platform default", async () => {
+  const { purchaseChannelLabels } = await import("../src/lib/commerce.js");
+  assert.deepEqual(purchaseChannelLabels({ facebookLabel: "Đặt tại Facebook", customFacebookLabel: true, tiktokLabel: "Đặt tại TikTok" }), { dividerLabel: "hoặc đặt hàng tại", facebookLabel: "Đặt tại Facebook", tiktokLabel: "Tiktok" });
 });

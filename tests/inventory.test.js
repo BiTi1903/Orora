@@ -72,3 +72,14 @@ test("legacy paid orders are never retroactively deducted and pending counts pag
   do { const res = await call("inventory", null, { pending: "1", ...(cursor ? { cursor } : {}) }); assert.equal(res.statusCode, 200); assert.ok(!JSON.stringify(res.body).includes("PRIVATE")); total += res.body.pending.serum || 0; cursor = res.body.nextCursor; pages++; } while (cursor);
   assert.equal(total, 210); assert.equal(pages, 2);
 });
+
+test("inventory exposes the product sequence while retaining legacy stock keys on updates", async () => {
+  const { db, call } = await setup(10);
+  await db.collection("products").doc("serum").set({ number: "05" }, { merge: true });
+  const page = await call("inventory");
+  assert.equal(page.body.items[0].number, "05"); assert.equal(page.body.items[0].id, "serum");
+  const saved = await call("inventory", { id: "serum", quantity: 12, version: 1 });
+  assert.equal(saved.statusCode, 200); assert.equal(saved.body.item.number, "05");
+  assert.equal((await stock(db)).quantity, 12);
+  assert.equal((await db.collection("inventory").doc("05").get()).exists, false);
+});

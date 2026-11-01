@@ -1,3 +1,4 @@
+import { matchesProductRoute, productNumber, productPath } from "../lib/product-identity";
 import ProductPurchaseSelection from "./ProductPurchaseSelection";
 import { productVolumeOptions, selectedVolumeOption, volumePriceText } from "../lib/product-options";
 import ProductPhilosophyCard from "./ProductPhilosophyCard";
@@ -12,7 +13,7 @@ import OrderForm from "./OrderForm";
 import { purchaseChannelLabels, socialShopUrl } from "../lib/commerce";
 import { mobileImageVars } from "../lib/image-layout";
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { getProduct } from "../lib/api";
 import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
@@ -35,6 +36,7 @@ function ProductDetail({
   onSelect,
 }) {
   const { id } = useParams();
+  const navigate = useNavigate();
   const pageRef = useRef(null);
   const [orderProductId, setOrderProductId] = useState(null);
   const [purchaseSelection, setPurchaseSelection] = useState(null);
@@ -55,7 +57,11 @@ function ProductDetail({
   const [loadedProduct, setLoadedProduct] = useState(null);
   const product = preview
     ? previewProduct || null
-    : loadedProduct?.id === id ? loadedProduct.product : undefined;
+    : loadedProduct && (loadedProduct.id === id || (loadedProduct.product && matchesProductRoute(loadedProduct.product, id))) ? loadedProduct.product : undefined;
+
+  useEffect(() => {
+    if (!preview && product?.canonicalSlug && id !== product.canonicalSlug) navigate(productPath(product), { replace: true });
+  }, [id, product, preview, navigate]);
 
   useProductPanelSize(pageRef, product);
   useProductReveal(pageRef, product, preview);
@@ -421,7 +427,7 @@ function ProductDetail({
             onClick={select("pdNumber")}
             style={css("number")}
           >
-            {product.number}
+            {productNumber(product)}
           </p>
 
           <h1
@@ -474,8 +480,8 @@ function ProductDetail({
             {(preview || tiktokShop || facebookShop) && <>
               <div className="purchase-divider"><span>{channelLabels.dividerLabel}</span></div>
               <div className="purchase-social" aria-label="Đặt hàng trên mạng xã hội">
-                {(preview || facebookShop) && <a className="purchase-facebook" href={preview ? undefined : facebookShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.facebookBackground, ...(purchase.facebookBackground ? { color: "#fff" } : {}) }}><svg className="purchase-channel-icon" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 22v-9h3l.5-3.5h-3.5V7.3c0-1 .3-1.8 1.8-1.8h1.9V2.4c-.3 0-1.5-.1-2.8-.1-2.8 0-4.7 1.7-4.7 4.8v2.4H7V13h2.7v9h3.8Z"/></svg><span>{channelLabels.facebookLabel}</span><svg className="purchase-external" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8" /></svg></a>}
-                {(preview || tiktokShop) && <a className="purchase-tiktok" href={preview ? undefined : tiktokShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.tiktokBackground, ...(purchase.tiktokBackground ? { color: "#fff" } : {}) }}><svg className="purchase-channel-icon" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 2h-3v13.4a3 3 0 1 1-2.5-3V9.3a6.1 6.1 0 1 0 5.5 6.1V8.3a8 8 0 0 0 5 1.7V7a5 5 0 0 1-5-5Z"/></svg><span>{channelLabels.tiktokLabel}</span><svg className="purchase-external" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8" /></svg></a>}
+                {(preview || facebookShop) && <a className="purchase-facebook" href={preview ? undefined : facebookShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.facebookBackground, ...(purchase.facebookBackground ? { color: "#fff" } : {}), ...toCss(purchase.facebookStyle) }}><svg className="purchase-channel-icon" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 22v-9h3l.5-3.5h-3.5V7.3c0-1 .3-1.8 1.8-1.8h1.9V2.4c-.3 0-1.5-.1-2.8-.1-2.8 0-4.7 1.7-4.7 4.8v2.4H7V13h2.7v9h3.8Z"/></svg><span className={selectedClass("pdFacebookText")} data-builder-key={preview ? "pdFacebookText" : undefined} onClick={preview ? select("pdFacebookText") : undefined}>{channelLabels.facebookLabel}</span><svg className="purchase-external" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8" /></svg></a>}
+                {(preview || tiktokShop) && <a className="purchase-tiktok" href={preview ? undefined : tiktokShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.tiktokBackground, ...(purchase.tiktokBackground ? { color: "#fff" } : {}), ...toCss(purchase.tiktokStyle) }}><svg className="purchase-channel-icon" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 2h-3v13.4a3 3 0 1 1-2.5-3V9.3a6.1 6.1 0 1 0 5.5 6.1V8.3a8 8 0 0 0 5 1.7V7a5 5 0 0 1-5-5Z"/></svg><span className={selectedClass("pdTiktokText")} data-builder-key={preview ? "pdTiktokText" : undefined} onClick={preview ? select("pdTiktokText") : undefined}>{channelLabels.tiktokLabel}</span><svg className="purchase-external" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8" /></svg></a>}
               </div>
             </>}
             {!preview && orderProductId === (product.id || product.slug) && <OrderForm key={product.id || product.slug} product={product} home={home} initialVariantId={variantId} initialQuantity={choice.quantity} onSelectionChange={changeSelection} onClose={() => setOrderProductId(null)} />}

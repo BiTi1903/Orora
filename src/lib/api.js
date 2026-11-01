@@ -1,3 +1,4 @@
+import { findProductByRoute, nextProductSequence, productSlug, withProductIdentity } from "./product-identity.js";
 import {
   collection,
   deleteDoc,
@@ -21,7 +22,7 @@ export async function getProducts() {
   const snap = await getDocs(collection(db, "products"));
 
   return snap.docs
-    .map((d) => ({ id: d.id, ...d.data() }))
+    .map((d) => ({ ...d.data(), id: d.id }))
     .sort((a, b) =>
       String(a.number || "").localeCompare(
         String(b.number || ""),
@@ -31,30 +32,49 @@ export async function getProducts() {
     );
 }
 
-export async function getProduct(slug) {
-  if (!db || !slug) return null;
-
-  const snap = await getDoc(doc(db, "products", slug));
-
-  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+let productCatalogCache = null;
+export function getPublicProducts() {
+  if (productCatalogCache && Date.now() - productCatalogCache.at < 30_000) return productCatalogCache.promise;
+  const entry = { at: Date.now() };
+  entry.promise = getProducts().then(withProductIdentity).catch((error) => { if (productCatalogCache === entry) productCatalogCache = null; throw error; });
+  productCatalogCache = entry;
+  return entry.promise;
+}
+export async function getProduct(identifier) {
+  if (!db || !identifier) return null;
+  const products = await getPublicProducts();
+  // Use the cached object so a legacy-to-canonical redirect does not replay page animations.
+  const match = findProductByRoute(products, identifier);
+  return match ? products.find((product) => product.id === match.id) : null;
 }
 
 // tên khác của getProduct, để các file gọi bằng tên nào cũng chạy
 export const getProductBySlug = getProduct;
 
-export async function saveProduct(product) {
+export async function saveProduct(product, { create = false } = {}) {
   needDb();
-
-  const id = product.id || product.slug;
-
-  if (!id) throw new Error("Sản phẩm cần có slug.");
-
-  await setDoc(
-    doc(db, "products", id),
-    { ...product, id },
-    { merge: true }
-  );
-
+  if (create) {
+    const catalog = await getProducts();
+    const counter = doc(db, "settings", "productSequence");
+    const id = await runTransaction(db, async (transaction) => {
+      const snapshot = await transaction.get(counter);
+      const number = nextProductSequence(catalog, snapshot.data()?.lastNumber);
+      const id = String(number);
+      const target = doc(db, "products", id);
+      if ((await transaction.get(target)).exists()) throw new Error("Mã sản phẩm vừa được dùng. Tải lại danh sách rồi thử lại.");
+      const record = { ...product, id, number: id.padStart(2, "0") };
+      record.slug = productSlug(record, catalog);
+      transaction.set(target, record);
+      transaction.set(counter, { lastNumber: number }, { merge: true });
+      return id;
+    });
+    productCatalogCache = null;
+    return id;
+  }
+  const id = product.id;
+  if (!id) throw new Error("Sản phẩm cần có mã dữ liệu.");
+  await setDoc(doc(db, "products", id), { ...product, id }, { merge: true });
+  productCatalogCache = null;
   return id;
 }
 
@@ -62,6 +82,7 @@ export async function removeProduct(id) {
   needDb();
 
   await deleteDoc(doc(db, "products", id));
+  productCatalogCache = null;
 }
 
 export async function getHomeContent() {
@@ -110,4 +131,5 @@ export async function setProductCategory(id, categoryId) {
   needDb();
   if (!id || typeof categoryId !== "string") throw new Error("Danh mục không hợp lệ.");
   await updateDoc(doc(db, "products", id), { categoryId });
+  productCatalogCache = null;
 }
