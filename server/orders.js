@@ -1,3 +1,4 @@
+import { MAX_ORDER_QUANTITY, productVolumeOptions, selectedVolumeOption, validateVolumeOptions, volumePriceText } from "../src/lib/product-options.js";
 import { recordOrderActivity } from "./order-activity.js";
 import { resolveDeliveryAddress } from "./addresses.js";
 import { shippingFeeFor } from "../src/lib/shipping.js";
@@ -35,10 +36,11 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
       if (delivery) Object.assign(customer, delivery);
       customer.email = customer.email.toLowerCase();
       customer.phone = customer.phone.replace(/[\s().-]/g, "");
-      if (!uuid(body.requestId) || typeof body.productId !== "string" || !/^[a-zA-Z0-9_-]{1,150}$/.test(body.productId) || !Number.isInteger(body.quantity) || body.quantity < 1 || body.quantity > 20 || customer.name.length < 2 || customer.name.length > 100 || !/^\+?\d{7,15}$/.test(customer.phone) || !validOrderEmail(customer.email) || customer.address.length < 10 || customer.address.length > 500 || customer.note.length > 1000 || body.consent !== true || !Object.hasOwn(PAYMENT_LABELS, body.paymentMethod)) {
+      if (!uuid(body.requestId) || typeof body.productId !== "string" || !/^[a-zA-Z0-9_-]{1,150}$/.test(body.productId) || !Number.isInteger(body.quantity) || body.quantity < 1 || body.quantity > MAX_ORDER_QUANTITY || customer.name.length < 2 || customer.name.length > 100 || !/^\+?\d{7,15}$/.test(customer.phone) || !validOrderEmail(customer.email) || customer.address.length < 10 || customer.address.length > 500 || customer.note.length > 1000 || body.consent !== true || !Object.hasOwn(PAYMENT_LABELS, body.paymentMethod)) {
         return res.status(400).json({ message: "Kiểm tra họ tên, số điện thoại, email, địa chỉ, số lượng và xác nhận đồng ý." });
       }
-      const digest = hash(JSON.stringify({ productId: body.productId, quantity: body.quantity, paymentMethod: body.paymentMethod, customer }));
+      if (body.variantId !== undefined && (typeof body.variantId !== "string" || (body.variantId && !/^[a-zA-Z0-9_-]{1,100}$/.test(body.variantId)))) return res.status(400).json({ message: "Chọn dung tích hợp lệ." });
+      const digest = hash(JSON.stringify({ ...(body.variantId ? { variantId: body.variantId } : {}), productId: body.productId, quantity: body.quantity, paymentMethod: body.paymentMethod, customer }));
       const db = await getDb();
       const order = db.collection("orders").doc(body.requestId);
       const createdAt = new Date(now());
@@ -54,8 +56,14 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
         if (!product.exists || product.data().active === false) throw Object.assign(new Error("Sản phẩm hiện không nhận đặt hàng."), { status: 404 });
         if (!availablePaymentMethods(settings.data() || {}).includes(body.paymentMethod)) throw Object.assign(new Error("Phương thức thanh toán đã thay đổi. Hãy tải lại trang và chọn lại."), { status: 400 });
         const data = product.data();
-        const unitPrice = parseVndPrice(data.price);
-        if (body.expectedPriceText !== undefined && String(body.expectedPriceText).trim() !== String(data.price ?? "").trim()) throw Object.assign(new Error("Giá sản phẩm vừa thay đổi. Hãy tải lại trang để xem giá mới trước khi đặt."), { status: 409 });
+        if (data.volumeOptions !== undefined && validateVolumeOptions(data.volumeOptions)) throw Object.assign(new Error("Dung tích sản phẩm chưa được cấu hình hợp lệ. Vui lòng liên hệ ORORA."), { status: 409 });
+        const options = productVolumeOptions(data);
+        const variant = selectedVolumeOption(options, body.variantId);
+        if ((body.variantId && variant?.id !== body.variantId) || (options.length && !variant)) throw Object.assign(new Error("Chọn dung tích hợp lệ trước khi đặt hàng."), { status: 400 });
+        if (body.expectedVariantLabel !== undefined && body.expectedVariantLabel !== (variant?.label || "")) throw Object.assign(new Error("Dung tích vừa thay đổi. Hãy tải lại trang và chọn lại."), { status: 409 });
+        const priceText = volumePriceText(data, variant);
+        const unitPrice = parseVndPrice(priceText);
+        if (body.expectedPriceText !== undefined && String(body.expectedPriceText).trim() !== priceText.trim()) throw Object.assign(new Error("Giá sản phẩm vừa thay đổi. Hãy tải lại trang để xem giá mới trước khi đặt."), { status: 409 });
         const shipping = shippingFeeFor(settings.data()?.shippingSettings, delivery?.provinceCode, delivery?.wardCode);
         if (settings.data()?.shippingSettings?.enabled === true && shipping.fee === null) throw Object.assign(new Error(shipping.reason), { status: 400 });
         if (body.expectedShippingFee !== undefined && body.expectedShippingFee !== shipping.fee) throw Object.assign(new Error("Phí giao hàng vừa thay đổi. Hãy tải lại trang để kiểm tra tổng tiền trước khi đặt."), { status: 409 });
@@ -65,7 +73,7 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
         const record = {
           code: allocated.code,
           orderDate,
-          customer, quantity: body.quantity, product: { id: product.id, name: String(data.name || ""), image: String(data.image || ""), priceText: String(data.price ?? ""), unitPrice },
+          customer, quantity: body.quantity, product: { id: product.id, name: String(data.name || ""), image: String(data.image || ""), priceText, unitPrice, ...(variant ? { variantId: variant.id, variantLabel: variant.label } : {}) },
           subtotal, totalAmount,
           paymentMethod: body.paymentMethod,
           confirmationMail: { state: "pending", updatedAt: createdAt }, paymentStatus: "unpaid", shippingFee: shipping.fee, status: "new", channel: "website", createdAt, requestHash: digest,
@@ -83,7 +91,7 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
       if (schedule) {
         try { schedule(task); } catch { await task; }
       } else await task;
-      return res.status(201).json({ code: result.code, mailStatus, subtotal: result.subtotal, shippingFee: result.shippingFee ?? null, totalAmount: result.totalAmount ?? null, paymentMethod: result.paymentMethod, message: result.shippingFee == null ? "Đã nhận đơn hàng. ORORA sẽ liên hệ xác nhận sản phẩm, phí giao hàng và cách thanh toán." : "Đã nhận đơn hàng. ORORA sẽ liên hệ xác nhận và hỗ trợ thanh toán." });
+      return res.status(201).json({ code: result.code, productName: result.product.name, quantity: result.quantity, variantLabel: result.product.variantLabel || "", variantId: result.product.variantId || "", mailStatus, subtotal: result.subtotal, shippingFee: result.shippingFee ?? null, totalAmount: result.totalAmount ?? null, paymentMethod: result.paymentMethod, message: result.shippingFee == null ? "Đã nhận đơn hàng. ORORA sẽ liên hệ xác nhận sản phẩm, phí giao hàng và cách thanh toán." : "Đã nhận đơn hàng. ORORA sẽ liên hệ xác nhận và hỗ trợ thanh toán." });
     } catch (error) {
       return res.status(error.status || 503).json({ message: error.status ? error.message : "Chưa xác nhận được đơn. Vui lòng thử gửi lại hoặc liên hệ ORORA." });
     }

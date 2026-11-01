@@ -1,3 +1,5 @@
+import ProductPurchaseSelection from "./ProductPurchaseSelection";
+import { productVolumeOptions, selectedVolumeOption, volumePriceText } from "../lib/product-options";
 import ProductPhilosophyCard from "./ProductPhilosophyCard";
 import useProductReveal from "../hooks/useProductReveal";
 import useProductPanelSize from "../hooks/useProductPanelSize";
@@ -35,6 +37,7 @@ function ProductDetail({
   const { id } = useParams();
   const pageRef = useRef(null);
   const [orderProductId, setOrderProductId] = useState(null);
+  const [purchaseSelection, setPurchaseSelection] = useState(null);
   const [consultationOpen, setConsultationOpen] = useState(false);
 
   const home = useHomeContent();
@@ -119,6 +122,13 @@ function ProductDetail({
     );
   }
 
+  const options = productVolumeOptions(product);
+  const selectionKey = JSON.stringify([product.id || product.slug || id, options]);
+  const choice = purchaseSelection?.key === selectionKey ? purchaseSelection : { variantId: "", quantity: 1 };
+  const variant = selectedVolumeOption(options, choice.variantId);
+  const variantId = variant?.id || "";
+  const changeSelection = (patch) => setPurchaseSelection({ key: selectionKey, variantId, quantity: choice.quantity, ...patch });
+  const displayedPrice = volumePriceText(product, variant);
   const purchase = ps.purchaseOptions || {};
   const channelLabels = purchaseChannelLabels(purchase);
   const tiktokShop = socialShopUrl(home.shopLinks?.tiktokUrl, "tiktok");
@@ -429,7 +439,7 @@ function ProductDetail({
             onClick={select("pdPrice")}
             style={css("price")}
           >
-            {product.price}
+            {displayedPrice}
           </p>
 
           <p
@@ -443,6 +453,7 @@ function ProductDetail({
 
 
 
+          <ProductPurchaseSelection options={options} variantId={variantId} quantity={choice.quantity} onVariantChange={(variantId) => changeSelection({ variantId })} onQuantityChange={(quantity) => changeSelection({ quantity })} textProps={textProps} />
           <section className={`purchase-options ${selectedClass("pdPurchaseOptions")}`} aria-label="Chọn kênh mua hàng" data-builder-key={preview ? "pdPurchaseOptions" : undefined} onClick={preview ? select("pdPurchaseOptions") : undefined}>
             <h2 {...textProps("pdPurchaseHeading", "purchaseHeading")}>{purchase.heading?.trim() || "Chọn cách mua hàng"}</h2>
           {(preview || showZalo || showCall || (!contact.zalo && contact.email && contactSettings.showZalo !== false)) && (
@@ -459,7 +470,7 @@ function ProductDetail({
               </ConsultationDialog>}
             </div>
           )}
-            <button type="button" className="purchase-website" style={{ ...css("purchaseOptions"), background: purchase.websiteBackground }} onClick={preview ? select("pdPurchaseOptions") : () => setOrderProductId(product.id || product.slug)} aria-expanded={!preview && orderProductId === (product.id || product.slug)}><svg className="purchase-bag" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg><span>{(purchase.websiteLabel?.trim() && purchase.websiteLabel.trim() !== "Đặt hàng trên website" ? purchase.websiteLabel.trim() : "Đặt hàng ngay")}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
+            <button type="button" className="purchase-website" style={{ ...css("purchaseOptions"), background: purchase.websiteBackground }} onClick={preview ? select("pdPurchaseOptions") : () => setOrderProductId(product.id || product.slug)} aria-haspopup="dialog" aria-expanded={!preview && orderProductId === (product.id || product.slug)}><svg className="purchase-bag" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg><span>{(purchase.websiteLabel?.trim() && purchase.websiteLabel.trim() !== "Đặt hàng trên website" ? purchase.websiteLabel.trim() : "Đặt hàng ngay")}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
             {(preview || tiktokShop || facebookShop) && <>
               <div className="purchase-divider"><span>{channelLabels.dividerLabel}</span></div>
               <div className="purchase-social" aria-label="Đặt hàng trên mạng xã hội">
@@ -467,7 +478,7 @@ function ProductDetail({
                 {(preview || tiktokShop) && <a className="purchase-tiktok" href={preview ? undefined : tiktokShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.tiktokBackground, ...(purchase.tiktokBackground ? { color: "#fff" } : {}) }}><svg className="purchase-channel-icon" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 2h-3v13.4a3 3 0 1 1-2.5-3V9.3a6.1 6.1 0 1 0 5.5 6.1V8.3a8 8 0 0 0 5 1.7V7a5 5 0 0 1-5-5Z"/></svg><span>{channelLabels.tiktokLabel}</span><svg className="purchase-external" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8" /></svg></a>}
               </div>
             </>}
-            {!preview && orderProductId === (product.id || product.slug) && <OrderForm key={product.id || product.slug} product={product} home={home} onClose={() => setOrderProductId(null)} />}
+            {!preview && orderProductId === (product.id || product.slug) && <OrderForm key={product.id || product.slug} product={product} home={home} initialVariantId={variantId} initialQuantity={choice.quantity} onSelectionChange={changeSelection} onClose={() => setOrderProductId(null)} />}
           </section>
 
         </div></div>

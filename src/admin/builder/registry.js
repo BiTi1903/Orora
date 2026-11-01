@@ -102,6 +102,8 @@ const COLLECTION_FIELD_MAP = {
 
 
 const PRODUCT_DETAIL_FIELD_MAP = {
+  pdSelectionLabel: { styleKey: "selectionLabel", label: "Dung tích / số lượng — Nhãn", sample: "Dung tích" },
+  pdSelectionValue: { styleKey: "selectionValue", label: "Dung tích — Lựa chọn", sample: "100 ml" },
   pdNavigation: { styleKey: "navigation", label: "Nút Mô tả / Thông số / Hướng dẫn sử dụng", sample: "Nút Mô tả / Thông số / Hướng dẫn sử dụng" },
   pdSubheading: { styleKey: "subheading", label: "Tên mục trong nội dung", sample: "Tên mục trong nội dung" },
   pdPurchaseHeading: { styleKey: "purchaseHeading", label: "Chữ Chọn cách mua hàng", sample: "Chữ Chọn cách mua hàng" },

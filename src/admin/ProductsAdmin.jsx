@@ -1,3 +1,5 @@
+import ProductVolumeEditor from "./ProductVolumeEditor";
+import { validateVolumeOptions } from "../lib/product-options";
 import ProductPoliciesSettings from "./ProductPoliciesSettings";
 import ProductReviewsEditor from "./ProductReviewsEditor";
 import ProductContentEditor from "./ProductContentEditor";
@@ -36,6 +38,7 @@ export default function ProductsAdmin() {
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(empty);
   const [sections, setSections] = useState([]);
+  const [volumeOptions, setVolumeOptions] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [media, setMedia] = useState([]);
   const [uploads, setUploads] = useState({});
@@ -70,7 +73,7 @@ export default function ProductsAdmin() {
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const startNew = () => {
-    setReviews([]); setSections([newSection()]); setMedia(imageSlots()); setUploads({});
+    setVolumeOptions([]); setReviews([]); setSections([newSection()]); setMedia(imageSlots()); setUploads({});
     setForm({ ...empty, number: String(items.length + 1).padStart(2, "0") });
     setIsNew(true);
     setEditing(true);
@@ -78,6 +81,7 @@ export default function ProductsAdmin() {
   };
 
   const edit = (p) => {
+    setVolumeOptions(Array.isArray(p.volumeOptions) ? p.volumeOptions.map((option) => ({ ...option, id: option.id || crypto.randomUUID(), label: String(option.label ?? ""), price: String(option.price ?? "") })) : []);
     const savedSections = productSections(p).map((item, index) => ({ ...item, id: item.id || crypto.randomUUID(), group: productSectionGroup(item, index) }));
     setSections(savedSections.length ? savedSections : [newSection()]);
     setReviews(Array.isArray(p.productReviews) ? p.productReviews.map((item) => ({ ...item, id: item.id || crypto.randomUUID() })) : []);
@@ -92,6 +96,8 @@ export default function ProductsAdmin() {
   const save = async (e) => {
     e.preventDefault();
     if (busy || uploading) return;
+    const volumeError = validateVolumeOptions(volumeOptions);
+    if (volumeError) return say("error", volumeError);
     if (reviews.some((review) => review.published && (!review.name.trim() || !review.text.trim()))) return say("error", "Điền tên và nội dung cho đánh giá muốn hiển thị.");
     const slug = isNew ? toSlug(form.slug || form.name) : form.id;
     if (!form.name.trim() || !slug) return say("error", "Cần nhập tên sản phẩm.");
@@ -109,6 +115,7 @@ export default function ProductsAdmin() {
         image: form.image.trim(),
         detailSections: sections.filter((section) => section.title.trim() || section.content.trim()),
         productReviews: reviews,
+        volumeOptions: volumeOptions.map((option) => ({ ...option, label: option.label.trim(), price: option.price?.trim() || "" })),
         additionalImages: media.map((item) => item.src),
       });
       say("success", "Đã lưu sản phẩm.");
@@ -207,6 +214,7 @@ export default function ProductsAdmin() {
             )}
           </div>
 
+          <ProductVolumeEditor options={volumeOptions} onChange={setVolumeOptions} disabled={busy} />
           <div className="admin-field">
             <label htmlFor="product-category">Danh mục</label>
             <select id="product-category" name="categoryId" value={form.categoryId} onChange={change} disabled={busy || !!categoriesError}>

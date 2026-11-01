@@ -204,3 +204,47 @@ test("legacy codes survive retries; exhausted pools do not create orders or rese
   assert.equal((await db.collection("orders").get()).docs.length, 1);
   assert.deepEqual((await db.collection("inventory").doc("serum").get()).data(), inventoryBefore);
 });
+
+test("volume price and label are trusted snapshots; choosing another volume on a retry never creates a second order", async () => {
+  const { db, call } = await setup();
+  const volumeOptions = [{ id: "small", label: "100 ml", price: "" }, { id: "big", label: "200 ml", price: "400.000đ" }];
+  await db.collection("products").doc("serum").set({ volumeOptions }, { merge: true });
+  const request = { ...body(), variantId: "big", variantLabel: "Fake label", price: 1, unitPrice: 1, expectedPriceText: "400.000đ", expectedVariantLabel: "200 ml" };
+  const response = await call(request); assert.equal(response.statusCode, 201);
+  const first = (await db.collection("orders").doc(request.requestId).get()).data();
+  assert.equal(first.product.variantId, "big"); assert.equal(first.product.variantLabel, "200 ml");
+  assert.equal(first.product.unitPrice, 400000); assert.equal(first.product.priceText, "400.000đ"); assert.equal(first.subtotal, 800000);
+  assert.equal(response.body.variantLabel, "200 ml"); assert.equal(response.body.quantity, 2);
+  await db.collection("products").doc("serum").set({ volumeOptions: [{ id: "small", label: "100 ml", price: "" }, { id: "big", label: "250 ml", price: "500.000đ" }] }, { merge: true });
+  const retry = await call(request); assert.equal(retry.statusCode, 201); assert.equal(retry.body.subtotal, 800000); assert.equal(retry.body.variantLabel, "200 ml");
+  assert.equal((await call({ ...request, variantId: "small" })).statusCode, 409);
+  assert.equal((await db.collection("orders").get()).docs.length, 1);
+  assert.equal((await db.collection("inventory").doc("serum").get()).data().quantity, 100);
+});
+
+test("single volumes auto-select and inherit base price, but missing/removed choices and stale prices never reserve stock", async () => {
+  const { db, call } = await setup();
+  const stock = () => db.collection("inventory").doc("serum").get().then(s => s.data());
+  await db.collection("products").doc("serum").set({ volumeOptions: [{ id: "only", label: "40 ml", price: "" }] }, { merge: true });
+  const single = { ...body(), quantity: 1 };
+  assert.equal((await call(single)).statusCode, 201);
+  const saved = (await db.collection("orders").doc(single.requestId).get()).data();
+  assert.equal(saved.product.variantLabel, "40 ml"); assert.equal(saved.subtotal, 250000);
+  const before = await stock();
+  await db.collection("products").doc("serum").set({ volumeOptions: [{ id: "one", label: "40 ml", price: "" }, { id: "two", label: "100 ml", price: "450.000đ" }] }, { merge: true });
+  for (const patch of [{}, { variantId: "removed" }, { variantId: {} }, { variantId: "../../products" }]) assert.equal((await call({ ...body(), ...patch })).statusCode, 400);
+  assert.equal((await call({ ...body(), variantId: "two", expectedPriceText: "250.000đ" })).statusCode, 409);
+  assert.equal((await call({ ...body(), variantId: "two", expectedVariantLabel: "200 ml" })).statusCode, 409);
+  assert.deepEqual(await stock(), before);
+  assert.equal((await db.collection("orders").get()).docs.length, 1);
+});
+
+test("products without volume options reject injected choices; invalid configured options cannot silently use the base price", async () => {
+  const { db, call } = await setup();
+  assert.equal((await call({ ...body(), variantId: "fake" })).statusCode, 400);
+  for (const options of [[{ id: "one", label: "100 ml", price: "bad price" }], [{ id: "same", label: "100 ml" }, { id: "same", label: "200 ml" }], null]) {
+    await db.collection("products").doc("serum").set({ volumeOptions: options }, { merge: true });
+    assert.equal((await call({ ...body(), variantId: "one" })).statusCode, 409);
+  }
+  assert.equal((await db.collection("orders").get()).docs.length, 0);
+});

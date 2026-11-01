@@ -6,6 +6,8 @@ import { SectionShell } from "./Ui";
 import { StyleList } from "./StyleEditor";
 
 const ELEMENTS = [
+  { key: "selectionLabel", title: "Kiểu chữ — Nhãn Dung tích / Số lượng", sample: "Dung tích" },
+  { key: "selectionValue", title: "Kiểu chữ — Lựa chọn dung tích", sample: "100 ml" },
   { key: "aboutTitle", title: "Kiểu chữ — Tiêu đề Mô tả / Thông số / Hướng dẫn sử dụng", sample: "Mô tả" },
   { key: "navigation", title: "Kiểu chữ — Nút Mô tả / Thông số / Hướng dẫn sử dụng", sample: "Nút Mô tả / Thông số / Hướng dẫn sử dụng" },
   { key: "subheading", title: "Kiểu chữ — Tên mục trong nội dung", sample: "Tên mục trong nội dung" },

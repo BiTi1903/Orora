@@ -138,3 +138,12 @@ test("order email sends the exact saved body without appending details or exceed
   const explicit = renderOrderMessage({ subject: "Đơn {{orderCode}}", text: "Phí {{shippingFee}}, tổng {{totalAmount}}, ghi chú {{note}}, thanh toán {{paymentStatus}}" }, { ...record(), shippingFee: 15000, totalAmount: 515000 });
   assert.match(explicit.text, /15\.000/); assert.match(explicit.text, /515\.000/); assert.match(explicit.text, /Chưa thanh toán/);
 });
+
+test("order messages keep volume snapshots even when using existing productName-only templates", async () => {
+  const { renderOrderMessage } = await import("../server/order-mail.js");
+  const order = record(); order.product.variantLabel = "200 ml";
+  const message = renderOrderMessage({ subject: "Đơn {{orderCode}}", text: "{{productName}} × {{quantity}} · Dung tích: {{variantLabel}}" }, order);
+  assert.equal(message.text, "Serum — 200 ml × 2 · Dung tích: 200 ml");
+  const old = renderOrderMessage({ subject: "Đơn {{orderCode}}", text: "{{productName}} × {{quantity}}" }, record());
+  assert.equal(old.text, "Serum × 2");
+});
