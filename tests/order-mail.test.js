@@ -147,3 +147,10 @@ test("order messages keep volume snapshots even when using existing productName-
   const old = renderOrderMessage({ subject: "Đơn {{orderCode}}", text: "{{productName}} × {{quantity}}" }, record());
   assert.equal(old.text, "Serum × 2");
 });
+
+test("new order messages format plain numeric product prices and totals with the đ unit", async () => {
+  const { renderOrderMessage } = await import("../server/order-mail.js");
+  const order = { ...record(), product: { name: "Serum", unitPrice: 400000 }, subtotal: 1200000, shippingFee: 25000, totalAmount: 1225000 };
+  const message = renderOrderMessage({ subject: "Đơn {{orderCode}}", text: "{{unitPrice}} / {{subtotal}} / {{shippingFee}} / {{totalAmount}}" }, order);
+  assert.equal(message.text, "400.000 đ / 1.200.000 đ / 25.000 đ / 1.225.000 đ");
+});

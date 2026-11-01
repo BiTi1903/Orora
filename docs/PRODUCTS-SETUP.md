@@ -64,15 +64,27 @@ Bấm Đặt hàng ngay mở form trong dialog ở giữa màn hình, có tiêu 
 
 Trang chi tiết dùng một hàng đợi hiệu ứng chung cho ảnh, khung mua, thanh chuyển mục, từng phần nội dung và các card bên phải. Các khối trong vùng nhìn thấy hiện theo vị trí từ trên xuống, cùng hàng từ trái sang phải; phần dưới chỉ chạy khi cuộn tới. Không chạy đồng thời hiệu ứng ở cả cha và con. Card tải muộn vẫn được theo dõi. Mỗi khối chạy một lần cho mỗi sản phẩm; điều hướng dọn hiệu ứng cũ. Preview không chạy hiệu ứng. Tùy chọn giảm chuyển động của thiết bị bỏ hiệu ứng và luôn hiện nội dung. Thanh chuyển mục desktop chỉ rộng theo các nhãn, mobile vẫn chia ba cột.
 
+Card ảnh và card mua hàng chỉ hiện dần, không dịch chuyển dọc. Tương tác bằng chuột/bàn phím kết thúc hiệu ứng còn lại ngay, không chạy lại hiệu ứng ở card đã hiện. Chuyển link cũ sang link tên của cùng sản phẩm không cuộn lại đầu trang hoặc đặt lại lựa chọn; chỉ đổi sang sản phẩm khác mới cuộn lên đầu.
+
 ## Dung tích và số lượng
 
 Trong **Admin → Sản phẩm → Sửa/Thêm sản phẩm → Giá & dung tích**, bấm Thêm dung tích rồi tự nhập nhãn (ví dụ 40 ml, 100 ml). Mỗi lựa chọn có ID ổn định và giá riêng tùy chọn; bỏ trống giá riêng để dùng giá chung. Tối đa 30 lựa chọn, không chấp nhận trùng tên hoặc giá không hợp lệ. Sản phẩm cũ không tự phát sinh dung tích từ trường size; nội dung cũ được giữ nguyên.
 
 Trang chi tiết và popup đặt hàng dùng chung điều khiển dung tích/số lượng. Một dung tích tự được chọn, nhiều dung tích yêu cầu khách chọn; không có dung tích vẫn đặt sản phẩm như trước. Số lượng mặc định 1, từ 1–20 theo giới hạn đơn hiện có. Lựa chọn và số lượng đồng bộ hai chiều với popup; đổi sản phẩm sẽ trở về mặc định. Giá hiển thị và tổng tiền thay đổi theo dung tích/số lượng.
 
+Popup đọc trực tiếp dung tích/số lượng đang chọn trên trang, không giữ một bản lựa chọn riêng có thể bị lệch. Dòng hướng dẫn chọn dung tích giữ chỗ sau lần chọn đầu tiên để card mua hàng và card ảnh không bị co lại hoặc nhảy khi thao tác.
+
 Máy chủ kiểm tra lại dung tích và tính tiền từ sản phẩm trong Firestore, không tin giá/nhãn do trình duyệt gửi. ID/nhãn dung tích, giá và số lượng được chụp lại trong đơn; chỉnh/xóa dung tích sau đó không thay đổi đơn cũ. Gửi lại cùng requestId không tạo đơn trùng hoặc đổi lựa chọn đã nhận. Đơn hàng trong admin và email hiển thị dung tích. Biến thư {{productName}} bao gồm dung tích; có thêm {{variantLabel}} nếu muốn đặt riêng. Không đổi mẫu thư đang lưu.
 
 Kho vẫn quản lý tổng số lượng theo ID sản phẩm, không tách tồn theo từng dung tích. Giữ số lượng chờ xác nhận và trừ kho theo quy trình hiện có.
+
+## Nhập và hiển thị giá
+
+Giá chung và giá từng dung tích trong admin chỉ nhập số, ví dụ `250000`; ô nhập có đơn vị **đ** riêng và bàn phím số trên điện thoại. Có thể dán giá cũ dạng `250.000đ` để chuyển thành số. Giá phải là số nguyên từ 0 đến 1.000.000.000 đ; để trống giá dung tích để dùng giá chung, để trống giá chung nếu cần báo giá.
+
+Website, danh sách sản phẩm, đơn hàng và email mới thống nhất hiển thị `250.000 đ`. Giá cũ có dấu phân cách/đơn vị vẫn đọc được; mở form rồi sửa thông tin khác không tự ghi lại giá cũ. Chỉ chỉnh ô giá mới lưu chuỗi số vừa nhập. Không chuyển đổi hàng loạt sản phẩm, đơn hàng hoặc nội dung email đã lưu.
+
+Máy chủ so sánh số tiền khi kiểm tra giá trước đặt đơn: `250.000đ` và `250000` là cùng giá, không báo thay đổi chỉ vì cách ghi. Thay đổi số tiền thực tế vẫn yêu cầu tải lại và xác nhận giá mới; đơn giá/tổng tiền luôn tính từ dữ liệu phía máy chủ.
 
 ## Trang quản lý sản phẩm và nút lưu
 

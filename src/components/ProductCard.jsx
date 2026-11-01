@@ -1,3 +1,4 @@
+import { formatProductPrice } from "../lib/commerce";
 import { mobileImageVars } from "../lib/image-layout";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
@@ -227,7 +228,7 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
             onClick={select(k("cardPrice"))}
             style={toCss(styles.price, { responsive: true })}
           >
-            {price}
+            {formatProductPrice(price)}
           </span>
 
           <ButtonWrap

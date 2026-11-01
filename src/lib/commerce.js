@@ -13,7 +13,23 @@ export function parseVndPrice(value) {
   const price = Number(text.replace(/\D/g, ""));
   return Number.isSafeInteger(price) && price >= 0 && price <= 1_000_000_000 ? price : null;
 }
-export const formatVnd = (value) => new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value);
+const vndNumbers = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 });
+export const formatVnd = (value) => `${vndNumbers.format(value)} đ`;
+export function formatProductPrice(value) {
+  const amount = parseVndPrice(value);
+  return amount === null ? String(value ?? "").trim() : formatVnd(amount);
+}
+// Display legacy formatted prices as digits in admin without rewriting the saved value.
+export function priceInputValue(value) {
+  const text = String(value ?? "").trim();
+  if (/^\d*$/.test(text)) return text;
+  const amount = parseVndPrice(text);
+  return amount === null ? "" : String(amount);
+}
+export function sameVndPrice(left, right) {
+  const a = parseVndPrice(left), b = parseVndPrice(right);
+  return a !== null && b !== null ? a === b : String(left ?? "").trim() === String(right ?? "").trim();
+}
 export const PAYMENT_LABELS = { cod: "Thanh toán khi nhận hàng (COD)", bank_transfer: "Chuyển khoản sau khi xác nhận" };
 export function availablePaymentMethods(home = {}) {
   const saved = home.shopLinks?.paymentMethods;

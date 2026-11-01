@@ -41,16 +41,17 @@ export default function useProductReveal(pageRef, product, preview) {
     const observe = () => root.querySelectorAll(targets).forEach((node) => {
       if (seen.has(node)) return;
       seen.add(node);
-      context.add(() => gsap.set(node, { y: 14, opacity: 0 }));
+      context.add(() => gsap.set(node, { y: node.matches(".product-detail-info, .product-detail-gallery") ? 0 : 14, opacity: 0 }));
       observer.observe(node);
     });
     observe();
     const focusIn = (event) => {
       if (motion.matches) return;
       const node = event.target.closest?.(targets);
-      if (!node || !root.contains(node)) return;
+      if (!node || !root.contains(node) || (!node.style.opacity && !node.style.transform)) return;
       observer.unobserve(node); pending.delete(node);
-      context.add(() => gsap.to(node, { y: 0, opacity: 1, duration: .15, overwrite: true, clearProps: "transform,opacity" }));
+      gsap.killTweensOf(node);
+      context.add(() => gsap.set(node, { y: 0, opacity: 1, clearProps: "transform,opacity" }));
     };
     root.addEventListener("focusin", focusIn);
     // Home settings and related products can arrive after the main product.

@@ -10,9 +10,9 @@ import ProductReviews from "./ProductReviews";
 import { productImages, productSections, secondaryProductImages } from "../lib/product-content";
 import ConsultationDialog from "./ConsultationDialog";
 import OrderForm from "./OrderForm";
-import { purchaseChannelLabels, socialShopUrl } from "../lib/commerce";
+import { formatProductPrice, parseVndPrice, purchaseChannelLabels, socialShopUrl } from "../lib/commerce";
 import { mobileImageVars } from "../lib/image-layout";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getProduct } from "../lib/api";
 import useHomeContent from "../hooks/useHomeContent";
@@ -63,6 +63,9 @@ function ProductDetail({
     if (!preview && product?.canonicalSlug && id !== product.canonicalSlug) navigate(productPath(product), { replace: true });
   }, [id, product, preview, navigate]);
 
+  const productIdentity = product?.id || product?.slug;
+  useLayoutEffect(() => { if (!preview && productIdentity) window.scrollTo({ top: 0, behavior: "instant" }); }, [productIdentity, preview]);
+
   useProductPanelSize(pageRef, product);
   useProductReveal(pageRef, product, preview);
 
@@ -71,7 +74,6 @@ function ProductDetail({
     if (preview) return;
 
     let alive = true;
-    window.scrollTo({ top: 0 });
 
     getProduct(id)
       .then((p) => {
@@ -133,7 +135,7 @@ function ProductDetail({
   const choice = purchaseSelection?.key === selectionKey ? purchaseSelection : { variantId: "", quantity: 1 };
   const variant = selectedVolumeOption(options, choice.variantId);
   const variantId = variant?.id || "";
-  const changeSelection = (patch) => setPurchaseSelection({ key: selectionKey, variantId, quantity: choice.quantity, ...patch });
+  const changeSelection = (patch) => setPurchaseSelection((previous) => ({ key: selectionKey, variantId, quantity: 1, ...(previous?.key === selectionKey ? previous : {}), ...patch }));
   const displayedPrice = volumePriceText(product, variant);
   const purchase = ps.purchaseOptions || {};
   const channelLabels = purchaseChannelLabels(purchase);
@@ -440,12 +442,12 @@ function ProductDetail({
           </h1>
 
           <p
-            className={`product-detail-price ${selectedClass("pdPrice")}`}
+            className={`product-detail-price${parseVndPrice(displayedPrice) !== null ? " is-numeric" : ""} ${selectedClass("pdPrice")}`}
             data-builder-key={preview ? "pdPrice" : undefined}
             onClick={select("pdPrice")}
             style={css("price")}
           >
-            {displayedPrice}
+            {formatProductPrice(displayedPrice)}
           </p>
 
           <p
@@ -484,7 +486,7 @@ function ProductDetail({
                 {(preview || tiktokShop) && <a className="purchase-tiktok" href={preview ? undefined : tiktokShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.tiktokBackground, ...(purchase.tiktokBackground ? { color: "#fff" } : {}), ...toCss(purchase.tiktokStyle) }}><svg className="purchase-channel-icon" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 2h-3v13.4a3 3 0 1 1-2.5-3V9.3a6.1 6.1 0 1 0 5.5 6.1V8.3a8 8 0 0 0 5 1.7V7a5 5 0 0 1-5-5Z"/></svg><span className={selectedClass("pdTiktokText")} data-builder-key={preview ? "pdTiktokText" : undefined} onClick={preview ? select("pdTiktokText") : undefined}>{channelLabels.tiktokLabel}</span><svg className="purchase-external" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8" /></svg></a>}
               </div>
             </>}
-            {!preview && orderProductId === (product.id || product.slug) && <OrderForm key={product.id || product.slug} product={product} home={home} initialVariantId={variantId} initialQuantity={choice.quantity} onSelectionChange={changeSelection} onClose={() => setOrderProductId(null)} />}
+            {!preview && orderProductId === (product.id || product.slug) && <OrderForm key={product.id || product.slug} product={product} home={home} selection={{ variantId, quantity: choice.quantity }} onSelectionChange={changeSelection} onClose={() => setOrderProductId(null)} />}
           </section>
 
         </div></div>

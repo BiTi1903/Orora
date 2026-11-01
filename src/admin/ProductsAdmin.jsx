@@ -1,3 +1,5 @@
+import PriceInput from "./PriceInput";
+import { formatProductPrice, parseVndPrice } from "../lib/commerce";
 import ProductSloganSettings from "./ProductSloganSettings";
 import { nextProductSequence, productNumber, productPath, productSlug } from "../lib/product-identity";
 import ProductVolumeEditor from "./ProductVolumeEditor";
@@ -103,6 +105,8 @@ export default function ProductsAdmin() {
   const save = async (e) => {
     e.preventDefault();
     if (busy || uploading) return;
+    const original = items.find((product) => product.id === form.id);
+    if (form.price.trim() && parseVndPrice(form.price) === null && form.price !== String(original?.price ?? "")) { changePanel("pricing"); return say("error", "Giá phải là số nguyên từ 0 đến 1.000.000.000 đ, hoặc để trống nếu cần báo giá."); }
     const volumeError = validateVolumeOptions(volumeOptions);
     if (volumeError) { changePanel("pricing"); return say("error", volumeError); }
     if (reviews.some((review) => review.published && (!String(review.name || "").trim() || !String(review.text || "").trim()))) { changePanel("reviews"); return say("error", "Điền tên và nội dung cho đánh giá muốn hiển thị."); }
@@ -226,7 +230,7 @@ export default function ProductsAdmin() {
             Hiển thị trên website
           </label>
       </div>
-      <div hidden={editorPanel !== "pricing"} className="product-editor-panel"><h3>Giá bán và dung tích</h3><div className="admin-field"><label htmlFor="product-price">Giá</label><input id="product-price" disabled={busy} name="price" value={form.price} onChange={change} placeholder="250.000đ" /><small className="admin-muted">Giá chung áp dụng khi dung tích không có giá riêng.</small></div><ProductVolumeEditor options={volumeOptions} onChange={setVolumeOptions} disabled={busy} /></div>
+      <div hidden={editorPanel !== "pricing"} className="product-editor-panel"><h3>Giá bán và dung tích</h3><div className="admin-field"><label htmlFor="product-price">Giá</label><PriceInput id="product-price" disabled={busy} name="price" value={form.price} onChange={(price) => setForm((current) => ({ ...current, price }))} placeholder="250000" /><small className="admin-muted">Chỉ nhập số, ví dụ 250000. Đơn vị đ tự hiển thị; để trống nếu cần báo giá. Giá chung áp dụng khi dung tích không có giá riêng.</small></div><ProductVolumeEditor options={volumeOptions} onChange={setVolumeOptions} disabled={busy} /></div>
       <div hidden={editorPanel !== "images"} className="product-editor-panel">
           <section className="product-editor-block" aria-label="Ảnh sản phẩm"><div className="product-editor-heading"><div><h3>Ảnh sản phẩm</h3><p className="admin-muted">Một ảnh chính và các ảnh phụ theo thứ tự bạn thêm.</p></div></div>
             <ImageField label="Ảnh chính" value={form.image} disabled={busy} onBusyChange={(value) => uploadState("main", value)} onChange={(value) => setForm((current) => ({ ...current, image: value }))} width={1200} />
@@ -261,7 +265,7 @@ export default function ProductsAdmin() {
                     <td>#{productNumber(p, items)}</td>
                     <td>{p.image && <img className="admin-thumb" src={p.image} alt="" />}</td>
                     <td><strong>{p.name}</strong><a className="product-list-link" href={productPath(p, items)} target="_blank" rel="noopener noreferrer">Xem trên website</a></td>
-                    <td>{p.price}</td>
+                    <td>{formatProductPrice(p.price) || "Cần báo giá"}</td>
                     <td><span className={`admin-badge ${p.active === false ? "off" : ""}`}>{p.active === false ? "Ẩn" : "Hiện"}</span></td>
                     <td>
                       <div className="admin-actions product-row-actions">

@@ -7,14 +7,19 @@ import { shippingFeeFor } from "../lib/shipping";
 import { useRef, useState } from "react";
 import { availablePaymentMethods, PAYMENT_LABELS, parseVndPrice, formatVnd } from "../lib/commerce";
 
-export default function OrderForm({ product, home, onClose, initialVariantId = "", initialQuantity = 1, onSelectionChange }) {
+export default function OrderForm({ product, home, onClose, selection, initialVariantId = "", initialQuantity = 1, onSelectionChange }) {
   const options = productVolumeOptions(product);
-  const [selectedId, setSelectedId] = useState(initialVariantId);
-  const variant = selectedVolumeOption(options, selectedId);
+  const [localSelection, setLocalSelection] = useState(() => ({ variantId: initialVariantId, quantity: Number.isInteger(initialQuantity) && initialQuantity >= 1 && initialQuantity <= MAX_ORDER_QUANTITY ? initialQuantity : 1 }));
+  const currentSelection = selection || localSelection;
+  const variant = selectedVolumeOption(options, currentSelection.variantId);
   const variantId = variant?.id || "";
-  const [quantity, setQuantity] = useState(() => Number.isInteger(initialQuantity) && initialQuantity >= 1 && initialQuantity <= MAX_ORDER_QUANTITY ? initialQuantity : 1);
-  const changeVariant = (variantId) => { setSelectedId(variantId); onSelectionChange?.({ variantId, quantity }); };
-  const changeQuantity = (quantity) => { setQuantity(quantity); onSelectionChange?.({ variantId, quantity }); };
+  const quantity = currentSelection.quantity;
+  const updateSelection = (patch) => {
+    if (!selection) setLocalSelection((previous) => ({ ...previous, ...patch }));
+    onSelectionChange?.(patch);
+  };
+  const changeVariant = (variantId) => updateSelection({ variantId });
+  const changeQuantity = (quantity) => updateSelection({ quantity });
   const priceText = volumePriceText(product, variant);
   const [provinceCode, setProvinceCode] = useState("");
   const [wardCode, setWardCode] = useState("");

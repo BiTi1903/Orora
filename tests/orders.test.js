@@ -248,3 +248,19 @@ test("products without volume options reject injected choices; invalid configure
   }
   assert.equal((await db.collection("orders").get()).docs.length, 0);
 });
+
+test("format-only price changes do not reject orders, while real amount changes still require confirmation", async () => {
+  const { db, call } = await setup();
+  await db.collection("products").doc("serum").set({ price: "250000" }, { merge: true });
+  const oldDisplay = body();
+  assert.equal((await call({ ...oldDisplay, expectedPriceText: "250.000đ" })).statusCode, 201);
+  assert.equal((await db.collection("orders").doc(oldDisplay.requestId).get()).data().subtotal, 500000);
+  await db.collection("products").doc("serum").set({ volumeOptions: [{ id: "one", label: "100 ml", price: "400000" }] }, { merge: true });
+  const variant = body();
+  assert.equal((await call({ ...variant, variantId: "one", expectedPriceText: "400.000 đ" })).statusCode, 201);
+  const saved = (await db.collection("orders").doc(variant.requestId).get()).data();
+  assert.equal(saved.product.priceText, "400000"); assert.equal(saved.subtotal, 800000);
+  await db.collection("products").doc("serum").set({ volumeOptions: [{ id: "one", label: "100 ml", price: "450000" }] }, { merge: true });
+  assert.equal((await call({ ...body(), variantId: "one", expectedPriceText: "400000" })).statusCode, 409);
+  assert.equal((await db.collection("orders").get()).docs.length, 2);
+});

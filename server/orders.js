@@ -9,7 +9,7 @@ import { templateIdentity } from "./template-snapshot.js";
 import { mailActor, resolveMailActors } from "./mail-actor.js";
 import { sendOrderConfirmation, validOrderEmail } from "./order-mail.js";
 import { createHash } from "node:crypto";
-import { parseVndPrice, availablePaymentMethods, PAYMENT_LABELS } from "../src/lib/commerce.js";
+import { parseVndPrice, sameVndPrice, availablePaymentMethods, PAYMENT_LABELS } from "../src/lib/commerce.js";
 import { firebaseAuthFailure } from "./firebase-auth-error.js";
 
 const uuid = (value) => typeof value === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value);
@@ -63,7 +63,7 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
         if (body.expectedVariantLabel !== undefined && body.expectedVariantLabel !== (variant?.label || "")) throw Object.assign(new Error("Dung tích vừa thay đổi. Hãy tải lại trang và chọn lại."), { status: 409 });
         const priceText = volumePriceText(data, variant);
         const unitPrice = parseVndPrice(priceText);
-        if (body.expectedPriceText !== undefined && String(body.expectedPriceText).trim() !== priceText.trim()) throw Object.assign(new Error("Giá sản phẩm vừa thay đổi. Hãy tải lại trang để xem giá mới trước khi đặt."), { status: 409 });
+        if (body.expectedPriceText !== undefined && !sameVndPrice(body.expectedPriceText, priceText)) throw Object.assign(new Error("Giá sản phẩm vừa thay đổi. Hãy tải lại trang để xem giá mới trước khi đặt."), { status: 409 });
         const shipping = shippingFeeFor(settings.data()?.shippingSettings, delivery?.provinceCode, delivery?.wardCode);
         if (settings.data()?.shippingSettings?.enabled === true && shipping.fee === null) throw Object.assign(new Error(shipping.reason), { status: 400 });
         if (body.expectedShippingFee !== undefined && body.expectedShippingFee !== shipping.fee) throw Object.assign(new Error("Phí giao hàng vừa thay đổi. Hãy tải lại trang để kiểm tra tổng tiền trước khi đặt."), { status: 409 });
