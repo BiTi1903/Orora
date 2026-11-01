@@ -798,3 +798,25 @@
 .order-form-modal .order-product-name { margin-top: 0; }
 .order-form-modal .website-order-submit { width: 100%; min-height: 44px; }
 .order-form-modal .orora-modal-heading > button:disabled { opacity: .5; cursor: default; }
+
+/* Main and secondary images belong to one card, aligned with the purchase card. */
+.product-detail-shell .product-detail-gallery {
+  position: relative; top: auto;
+  padding: 12px;
+  border: 1px solid var(--detail-card-border); border-radius: 16px;
+  background: var(--detail-card-surface); box-shadow: var(--detail-card-shadow);
+}
+.product-detail-shell .product-detail-gallery .product-detail-image {
+  flex-shrink: 0; border-width: 0; border-radius: 10px; box-shadow: none;
+}
+.product-detail-shell .product-detail-gallery .product-detail-thumbs-wrap { flex-shrink: 0; }
+@media (max-width: 600px) {
+  .product-detail-shell .product-detail-gallery { padding: 8px; }
+}
+@media (min-width: 901px) {
+  .product-detail-shell .product-detail-gallery .product-detail-image--fixed-h {
+    height: max(var(--pd-height), var(--purchase-content-height, 0px)) !important;
+    min-height: max(var(--pd-height), var(--purchase-content-height, 0px)) !important;
+    max-height: none !important;
+  }
+}

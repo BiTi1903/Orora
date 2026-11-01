@@ -2,7 +2,7 @@ import { useLayoutEffect } from "react";
 import gsap from "gsap";
 
 const targets = [
-  ".product-back", ".product-detail-image", ".product-detail-thumbs-wrap",
+  ".product-back", ".product-detail-gallery",
   ".product-detail-info", ".product-information-nav", ".product-information-section",
   ".product-side-column > *",
 ].join(",");
