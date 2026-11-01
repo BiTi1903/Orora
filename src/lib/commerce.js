@@ -26,3 +26,16 @@ export function facebookFollowUrl(value) {
   const host = new URL(url).hostname;
   return host === "m.me" || host.endsWith(".m.me") ? null : url;
 }
+
+// Display compact defaults for the old standard labels without rewriting saved settings.
+export function purchaseChannelLabels(settings = {}) {
+  const label = (value, fallback, previous = []) => {
+    const text = typeof value === "string" ? value.trim() : "";
+    return !text || previous.includes(text) ? fallback : text;
+  };
+  return {
+    dividerLabel: label(settings.dividerLabel, "hoặc đặt hàng tại"),
+    facebookLabel: label(settings.facebookLabel, "Fb", ["Mua qua Facebook", "Đặt tại Facebook"]),
+    tiktokLabel: label(settings.tiktokLabel, "Tiktok", ["Mua trên TikTok", "Đặt tại TikTok"]),
+  };
+}

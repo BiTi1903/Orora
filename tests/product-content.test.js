@@ -69,3 +69,12 @@ test("Facebook follow links require HTTPS Facebook destinations and exclude Mess
   assert.equal(facebookFollowUrl("https://fb.me/orora"), "https://fb.me/orora");
   for (const value of ["javascript:alert(1)", "http://facebook.com/orora", "https://facebook.com.evil.example/orora", "https://m.me/orora", "https://user:password@facebook.com/orora"]) assert.equal(facebookFollowUrl(value), null);
 });
+
+test("compact purchase labels retain custom copy and do not rewrite saved settings", async () => {
+  const { purchaseChannelLabels } = await import("../src/lib/commerce.js");
+  const saved = { facebookLabel: "Đặt tại Facebook", tiktokLabel: "Mua trên TikTok", websiteLabel: "Đặt hàng ngay" };
+  const before = structuredClone(saved);
+  assert.deepEqual(purchaseChannelLabels(saved), { dividerLabel: "hoặc đặt hàng tại", facebookLabel: "Fb", tiktokLabel: "Tiktok" });
+  assert.deepEqual(saved, before);
+  assert.deepEqual(purchaseChannelLabels({ dividerLabel: "hoặc", facebookLabel: "Fanpage", tiktokLabel: "Shop" }), { dividerLabel: "hoặc", facebookLabel: "Fanpage", tiktokLabel: "Shop" });
+});
