@@ -1,7 +1,7 @@
 import { matchesProductRoute, productNumber, productPath } from "../lib/product-identity";
 import ProductPurchaseSelection from "./ProductPurchaseSelection";
 import { productVolumeOptions, selectedVolumeOption, volumePriceText } from "../lib/product-options";
-import ProductPhilosophyCard from "./ProductPhilosophyCard";
+import ProductSloganCard from "./ProductSloganCard";
 import useProductReveal from "../hooks/useProductReveal";
 import useProductPanelSize from "../hooks/useProductPanelSize";
 import ProductInformation from "./ProductInformation";
@@ -496,7 +496,7 @@ function ProductDetail({
       </div>
       <div className="product-side-column">
         <ProductAssurances policies={home.productPolicies} textProps={textProps} />
-        <ProductPhilosophyCard home={home} textProps={textProps} />
+        <ProductSloganCard home={home} textProps={textProps} />
         <RelatedProductsSidebar product={product} preview={preview} previewProducts={previewProducts} styles={ps} selectedElement={selectedElement} onSelect={onSelect} />
         <ProductReviews product={product} textProps={textProps} />
       </div>

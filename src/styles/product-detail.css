@@ -605,7 +605,7 @@
 .product-side-column { grid-column: 2; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 .product-side-column > .product-assurances { margin: 0; padding-inline: 14px; }
 .product-side-column > .related-product-sidebar { position: static; max-height: none; }
-.product-philosophy-card { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; padding: 0; background: #fff; min-width: 0; }
+.product-slogan-card { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; padding: 0; background: #fff; min-width: 0; }
 .product-side-column > .product-reviews { width: 100%; max-width: none; margin: 0; padding: 18px 14px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255,255,255,.75); }
 .product-side-column .product-reviews-heading { gap: 4px; }
 .product-side-column .product-reviews-heading h2 { font-size: 23px; line-height: 1.25; margin: 4px 0 10px; }
@@ -624,7 +624,7 @@
   .product-main-column > .product-detail-lower { order: 3; }
   .product-side-column { display: contents; }
   .product-side-column > .product-assurances { order: 1; width: 100%; box-sizing: border-box; }
-  .product-side-column > .product-philosophy-card { order: 2; width: 100%; box-sizing: border-box; }
+  .product-side-column > .product-slogan-card { order: 2; width: 100%; box-sizing: border-box; }
   .product-side-column > .related-product-sidebar { order: 4; width: 100%; box-sizing: border-box; }
   .product-side-column > .product-reviews { order: 5; box-sizing: border-box; }
   .product-side-column .product-reviews-grid { max-height: none; overflow: visible; }
@@ -721,7 +721,7 @@
 .product-detail-content > .product-detail-info,
 .product-detail-lower > .product-information,
 .product-side-column > .product-assurances,
-.product-side-column > .product-philosophy-card,
+.product-side-column > .product-slogan-card,
 .product-side-column > .related-product-sidebar,
 .product-side-column > .product-reviews {
   border: 1px solid var(--detail-card-border);
@@ -816,16 +816,15 @@
   }
 }
 
-/* A compact editorial card, using the saved homepage philosophy. */
-.product-side-column > .product-philosophy-card {
+/* A compact Slogan card with its own admin-managed content. */
+.product-side-column > .product-slogan-card {
   position: relative; overflow: hidden; padding: 22px 18px;
   background: linear-gradient(145deg, #fffafb, #fff0f6);
 }
-.product-philosophy-symbol { display: block; margin-bottom: 12px; color: var(--rose-deep); font-size: 23px; }
-.product-philosophy-card h2 { margin: 0 0 14px; color: var(--rose-deep); font: 500 10px/1.7 var(--font-body); letter-spacing: .08em; white-space: pre-line; overflow-wrap: anywhere; }
-.product-philosophy-card p { margin: 0; color: var(--plum); font: 500 23px/1.55 var(--font-display); white-space: pre-wrap; overflow-wrap: anywhere; }
-.product-philosophy-accent { color: var(--rose-deep); font-style: italic; }
-@media (max-width: 900px) { .product-philosophy-card p { font-size: 24px; } }
+.product-slogan-symbol { display: block; margin-bottom: 12px; color: var(--rose-deep); font-size: 23px; }
+.product-slogan-card h2 { margin: 0 0 14px; color: var(--rose-deep); font: 500 10px/1.7 var(--font-body); letter-spacing: .08em; white-space: pre-line; overflow-wrap: anywhere; }
+.product-slogan-card p { margin: 0; color: var(--plum); font: 500 23px/1.55 var(--font-display); white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 900px) { .product-slogan-card p { font-size: 24px; } }
 
 /* Desktop: photo 40%, purchase information 40%, sidebar 20% (excluding gutters). */
 @media (min-width: 901px) {

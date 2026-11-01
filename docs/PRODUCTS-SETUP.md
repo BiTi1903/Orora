@@ -20,7 +20,7 @@ Kiểm thử bao gồm sản phẩm cũ nhiều mục/ảnh, lưu-mở lại kh�
 
 ## Bố cục trang chi tiết
 
-Trên desktop rộng, phần trên có ba cột: gallery trái, tên/giá/mô tả ngắn/nút mua ở giữa và cam kết ở cột phải riêng. Nội dung dài nằm dưới, chia ba phần **Mô tả**, **Thông số**, **Hướng dẫn sử dụng**. Ba ô chuyển nhanh cuộn đến phần tương ứng, có khoảng tránh navbar và giữ sử dụng bàn phím. Cả ba phần dùng chung kiểu chữ/màu của Visual Builder; thông số vẫn có tên bên trái, nội dung bên phải. Mobile hiển thị ảnh/mua hàng, cam kết, Triết lý, ba phần nội dung, sản phẩm khác rồi đánh giá.
+Trên desktop rộng, phần trên có ba cột: gallery trái, tên/giá/mô tả ngắn/nút mua ở giữa và cam kết ở cột phải riêng. Nội dung dài nằm dưới, chia ba phần **Mô tả**, **Thông số**, **Hướng dẫn sử dụng**. Ba ô chuyển nhanh cuộn đến phần tương ứng, có khoảng tránh navbar và giữ sử dụng bàn phím. Cả ba phần dùng chung kiểu chữ/màu của Visual Builder; thông số vẫn có tên bên trái, nội dung bên phải. Mobile hiển thị ảnh/mua hàng, cam kết, Slogan, ba phần nội dung, sản phẩm khác rồi đánh giá.
 
 Mỗi mục trong form có **Phần hiển thị**, lưu ở `detailSections[].group` (`description`, `specifications`, `usage`). Dữ liệu chưa có nhóm được phân loại khi đọc: câu chuyện/công dụng/mô tả vào Mô tả, các trường thành phần/dung tích/màu/xuất xứ vào Thông số, tên hướng dẫn/cách sử dụng vào Hướng dẫn sử dụng. Chọn nhóm thủ công sẽ ưu tiên hơn suy luận từ tên. Nội dung và các trường cũ không bị xóa hoặc ghi lại hàng loạt. Phần chưa có nội dung hiện trạng thái đang cập nhật, không tự tạo hướng dẫn sử dụng sản phẩm.
 
@@ -42,17 +42,19 @@ Khối mua hàng trên desktop rộng dùng tỷ lệ ảnh/thông tin/cột ph�
 
 Sản phẩm khác hiển thị tối đa bốn sản phẩm còn hoạt động, loại sản phẩm đang xem, sản phẩm ẩn và trùng ID; lấy các sản phẩm kế tiếp theo STT rồi vòng lại từ đầu. Ví dụ đang xem số 5 trong danh sách 1–8 thì hiển thị 6, 7, 8, 1. Mỗi ảnh có mã STT đúng của sản phẩm, không đánh số lại theo vị trí thẻ. Thẻ nhỏ gồm ảnh/tên/giá và liên kết chi tiết; có Xem tất cả sản phẩm. Cột có thể theo cuộn và cuộn danh sách khi thiếu chiều cao. Trên mobile, danh sách nằm dưới ba phần nội dung. Không còn Collection sản phẩm khác lớn ở cuối trang; dữ liệu danh mục/sản phẩm không thay đổi, vẫn dùng cache catalog hiện có. Màu/font tên và giá giữ cấu hình riêng; cỡ chữ và khoảng cách được giới hạn để vừa cột hẹp.
 
-## Triết lý và cột bên phải
+## Slogan và cột bên phải
 
-Card dưới cam kết hiển thị Triết lý ORORA, thay khối Facebook. Nội dung dùng chung với Trang chủ → Triết lý (`philosophyLabel`, `philosophyBody`, hoặc trường cũ `philosophyText`) và giữ xuống dòng/nhấn màu các chữ cuối. Cỡ chữ từ trang chủ được giới hạn để vừa cột hẹp; có thể chỉnh kiểu chữ riêng tại Trang chủ → Chi tiết SP hoặc chọn trực tiếp trong Visual Builder. Khi chưa có nội dung, đang tải hoặc tắt Triết lý trong Sections thì không hiển thị card. Không tạo sẵn nội dung triết lý. Dữ liệu `productFacebook` cũ được giữ nguyên trong cơ sở dữ liệu, nhưng không dùng cho card mới. Link Facebook ở nút mua hàng vẫn giữ nguyên.
+Card dưới cam kết hiển thị **Slogan** riêng do admin nhập tại **Sản phẩm → Thiết lập dùng chung → Slogan trên chi tiết sản phẩm**. Có tiêu đề, nội dung và bật/tắt; lưu riêng ở settings/home.productSlogan. Không dùng lại, sao chép hoặc thay đổi philosophyLabel/philosophyBody/philosophyText của trang chủ. Chưa có nội dung, đang tải hoặc tắt Slogan thì không hiển thị card; không tạo nội dung mẫu. Enter giữ xuống dòng và nội dung được hiển thị dưới dạng chữ an toàn.
 
-Desktop dùng cột nội dung 80% và cột phụ 20%. Cột phụ xếp liên tục **Cam kết → Triết lý → Sản phẩm khác → Đánh giá sản phẩm**. Mobile xếp toàn chiều rộng, sản phẩm khác và đánh giá ở sau nội dung. Đánh giá minh họa vẫn giữ nhãn minh họa.
+Kiểu chữ của card chỉnh tại Trang chủ → Chi tiết SP hoặc chọn trực tiếp trong Visual Builder, lưu ở productDetailStyles.sloganTitle/sloganBody. Khối Slogan không phụ thuộc công tắc Triết lý trang chủ. Lưu Slogan chỉ ghi productSlogan, giữ các thiết lập và dữ liệu khác. Dữ liệu Facebook/kiểu chữ card Triết lý cũ vẫn được giữ trong cơ sở dữ liệu nhưng không dùng làm nội dung Slogan.
+
+Desktop dùng cột nội dung 80% và cột phụ 20%. Cột phụ xếp liên tục **Cam kết → Slogan → Sản phẩm khác → Đánh giá sản phẩm**. Mobile xếp toàn chiều rộng, sản phẩm khác và đánh giá ở sau nội dung. Đánh giá minh họa vẫn giữ nhãn minh họa.
 
 ## Nội dung và kiểu chữ bổ sung
 
 Sản phẩm mới chỉ có một mục Mô tả. Tên mục là tùy chọn; có thể lưu nội dung không có tên. Mục bổ sung chỉ xuất hiện trong admin khi bấm Thêm mục nội dung; mục trống không được đưa vào dữ liệu lưu. Mở sản phẩm cũ giữ nguyên tên và nội dung đã lưu. Mục thông số không có tên sẽ dùng toàn chiều rộng dòng.
 
-Trong Trang chủ → Chi tiết SP, có thể chỉnh kiểu chữ thanh chuyển mục, tiêu đề phần nội dung, tên mục, Chọn cách mua hàng, tiêu đề/nội dung cam kết, card Triết lý, tiêu đề/tên/nội dung đánh giá và chữ ở Khám phá thêm. Các thành phần này cũng chọn trực tiếp được trong Visual Builder. Kiểu chữ lưu ở productDetailStyles; không sửa nội dung từng sản phẩm. Thanh chuyển mục không có mũi tên. Nút Facebook/TikTok giữ nhãn trên một dòng; màn hình rất hẹp xếp nút dọc.
+Trong Trang chủ → Chi tiết SP, có thể chỉnh kiểu chữ thanh chuyển mục, tiêu đề phần nội dung, tên mục, Chọn cách mua hàng, tiêu đề/nội dung cam kết, card Slogan, tiêu đề/tên/nội dung đánh giá và chữ ở Khám phá thêm. Các thành phần này cũng chọn trực tiếp được trong Visual Builder. Kiểu chữ lưu ở productDetailStyles; không sửa nội dung từng sản phẩm. Thanh chuyển mục không có mũi tên. Nút Facebook/TikTok giữ nhãn trên một dòng; màn hình rất hẹp xếp nút dọc.
 
 ## Popup đặt hàng
 

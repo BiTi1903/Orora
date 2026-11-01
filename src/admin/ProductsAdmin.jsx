@@ -1,3 +1,4 @@
+import ProductSloganSettings from "./ProductSloganSettings";
 import { nextProductSequence, productNumber, productPath, productSlug } from "../lib/product-identity";
 import ProductVolumeEditor from "./ProductVolumeEditor";
 import { validateVolumeOptions } from "../lib/product-options";
@@ -196,7 +197,7 @@ export default function ProductsAdmin() {
         </div>
       </form>
       </details>
-      <div className="admin-card"><h2>Triết lý trên trang sản phẩm</h2><p className="admin-muted">Chỉnh nội dung tại Trang chủ → Triết lý; kiểu chữ riêng cho card tại Trang chủ → Chi tiết SP.</p></div>
+      <details><summary>Slogan trên chi tiết sản phẩm</summary><ProductSloganSettings /></details>
     </div>}
     {editing && <form ref={editorRef} className="admin-card admin-form product-editor-form" noValidate onSubmit={save}>
       <div className="product-editor-toolbar">
