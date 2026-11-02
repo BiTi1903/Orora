@@ -1,6 +1,7 @@
 import PurchaseOptionsSettings from "./PurchaseOptionsSettings";
 import ProductContactSettings from "./ProductContactSettings";
 import MobileImageSettings from "./MobileImageSettings";
+import { SloganAppearanceEditor, SloganTypographyEditor } from "../ProductSloganDesign";
 import { SettingGroup, SelectField, StyleTypographyBlock } from "./ui";
 import { CollectionSettings } from "./CollectionPanels";
 import { SPACE_OPTIONS, FONT_OPTIONS, SIZE_OPTIONS, toFullFontFamily, toBareFontFamily } from "./options";
@@ -21,6 +22,8 @@ export function ProductDetailSettings({
   }
   if (["pdPurchaseOptions", "pdFacebookText", "pdTiktokText"].includes(selected)) return <PurchaseOptionsSettings value={productDetail.purchaseOptions || {}} onChange={onStyleChange} />;
   if (selected === "pdContactActions") return <ProductContactSettings value={productDetail.contactActions || {}} onChange={onStyleChange} />;
+  if (selected === "pdSloganCard") return <><SloganAppearanceEditor value={productDetail.sloganCard} onChange={onStyleChange} /><SloganAppearanceEditor section="symbols" value={productDetail.sloganCard} onChange={onStyleChange} /></>;
+  if (["pdSloganTitle", "pdSloganBody"].includes(selected)) return <SloganTypographyEditor title={selected === "pdSloganTitle" ? "Slogan — Chữ tiêu đề" : "Slogan — Chữ nội dung"} body={selected === "pdSloganBody"} value={productDetail[selected === "pdSloganTitle" ? "sloganTitle" : "sloganBody"]} onChange={onStyleChange} />;
 
   /* Tiêu đề "Sản phẩm khác": 1 ô, Enter xuống dòng, đổi màu N chữ cuối */
   if (selected === "relTitle") {

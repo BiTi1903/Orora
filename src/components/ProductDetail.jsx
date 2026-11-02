@@ -498,7 +498,7 @@ function ProductDetail({
       </div>
       <div className="product-side-column">
         <ProductAssurances policies={home.productPolicies} textProps={textProps} />
-        <ProductSloganCard home={home} textProps={textProps} />
+        <ProductSloganCard home={home} styles={ps} textProps={textProps} cardProps={{ className: selectedClass("pdSloganCard"), "data-builder-key": preview ? "pdSloganCard" : undefined, onClick: preview ? select("pdSloganCard") : undefined }} />
         <RelatedProductsSidebar product={product} preview={preview} previewProducts={previewProducts} styles={ps} selectedElement={selectedElement} onSelect={onSelect} />
         <ProductReviews product={product} textProps={textProps} />
       </div>

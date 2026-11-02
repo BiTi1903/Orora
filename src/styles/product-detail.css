@@ -817,14 +817,37 @@
 }
 
 /* A compact Slogan card with its own admin-managed content. */
-.product-side-column > .product-slogan-card {
+.product-slogan-card, .product-side-column > .product-slogan-card {
   position: relative; overflow: hidden; padding: 22px 18px;
   background: linear-gradient(145deg, #fffafb, #fff0f6);
 }
-.product-slogan-symbol { display: block; margin-bottom: 12px; color: var(--rose-deep); font-size: 23px; }
-.product-slogan-card h2 { margin: 0 0 14px; color: var(--rose-deep); font: 500 10px/1.7 var(--font-body); letter-spacing: .08em; white-space: pre-line; overflow-wrap: anywhere; }
+.product-slogan-content { position: relative; z-index: 1; display: grid; gap: var(--slogan-gap, 12px); min-width: 0; }
+.product-slogan-heading { display: flex; align-items: center; justify-content: var(--slogan-justify, flex-start); gap: 10px; min-width: 0; }
+.product-slogan-symbol { display: inline-flex; width: max-content; max-width: 100%; justify-self: var(--slogan-justify, flex-start); flex-shrink: 0; color: var(--rose-deep); transform: rotate(var(--slogan-symbol-rotation, 0deg)); }
+.slogan-symbol-glyph { display: flex; align-items: center; justify-content: center; width: var(--slogan-symbol-size, 23px); height: var(--slogan-symbol-size, 23px); max-width: 100%; }
+.slogan-symbol-glyph:has(.slogan-custom-symbol) { width: auto; height: auto; min-width: var(--slogan-symbol-size, 23px); min-height: var(--slogan-symbol-size, 23px); }
+.slogan-symbol-glyph svg, .product-slogan-decorations svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.slogan-custom-symbol { font: inherit; font-size: var(--slogan-symbol-size, 23px); line-height: 1.2; overflow-wrap: anywhere; }
+.product-slogan-card h2 { min-width: 0; margin: 0; color: var(--rose-deep); font: 500 10px/1.7 var(--font-body); letter-spacing: .08em; white-space: pre-line; overflow-wrap: anywhere; }
 .product-slogan-card p { margin: 0; color: var(--plum); font: 500 23px/1.55 var(--font-display); white-space: pre-wrap; overflow-wrap: anywhere; }
+.product-slogan-divider { display: block; width: 100%; border-top-width: 1px; }
+.product-slogan-decorations { position: absolute; inset: 0; pointer-events: none; }
+.product-slogan-decorations > span { position: absolute; width: var(--slogan-decoration-size, 64px); height: var(--slogan-decoration-size, 64px); }
+.product-slogan-decorations > span:nth-child(1) { top: -12px; right: -12px; transform: rotate(18deg); }
+.product-slogan-decorations > span:nth-child(2) { bottom: -14px; left: -14px; transform: rotate(-18deg); }
+.product-slogan-decorations > span:nth-child(3) { top: 35%; left: 4%; transform: scale(.45) rotate(15deg); }
+.product-slogan-decorations > span:nth-child(4) { bottom: 10%; right: 8%; transform: scale(.35) rotate(-20deg); }
+.product-slogan-symbol[data-effect="float"] .slogan-symbol-glyph { animation: slogan-float 4s ease-in-out infinite; }
+.product-slogan-symbol[data-effect="pulse"] .slogan-symbol-glyph { animation: slogan-pulse 3s ease-in-out infinite; }
+.product-slogan-symbol[data-effect="twinkle"] .slogan-symbol-glyph { animation: slogan-twinkle 3s ease-in-out infinite; }
+@keyframes slogan-float { 50% { transform: translateY(-5px); } }
+@keyframes slogan-pulse { 50% { transform: scale(1.12); } }
+@keyframes slogan-twinkle { 50% { opacity: .4; transform: scale(.85) rotate(8deg); } }
 @media (max-width: 900px) { .product-slogan-card p { font-size: 24px; } }
+@media (max-width: 600px) {
+  .product-slogan-card[style*="--slogan-mobile-padding"] { padding: var(--slogan-mobile-padding) !important; }
+  .product-slogan-symbol[style*="--slogan-symbol-mobile-size"] { --slogan-symbol-size: var(--slogan-symbol-mobile-size) !important; }
+}
 
 /* Desktop: photo 40%, purchase information 40%, sidebar 20% (excluding gutters). */
 @media (min-width: 901px) {

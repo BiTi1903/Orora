@@ -4,6 +4,7 @@ import MobileImageSettings from "../builder/MobileImageSettings";
 import useHomeForm from "./Usehomeform";
 import { SectionShell } from "./Ui";
 import { StyleList } from "./StyleEditor";
+import { SloganAppearanceEditor, SloganTypographyEditor } from "../ProductSloganDesign";
 
 const ELEMENTS = [
   { key: "selectionLabel", title: "Kiểu chữ — Nhãn Dung tích / Số lượng", sample: "Dung tích" },
@@ -14,8 +15,6 @@ const ELEMENTS = [
   { key: "purchaseHeading", title: "Kiểu chữ — Chữ Chọn cách mua hàng", sample: "Chữ Chọn cách mua hàng" },
   { key: "assuranceTitle", title: "Kiểu chữ — Cam kết — Tiêu đề", sample: "Cam kết — Tiêu đề" },
   { key: "assuranceBody", title: "Kiểu chữ — Cam kết — Nội dung", sample: "Cam kết — Nội dung" },
-  { key: "sloganTitle", title: "Kiểu chữ — Card Slogan — Tiêu đề", sample: "Slogan" },
-  { key: "sloganBody", title: "Kiểu chữ — Card Slogan — Nội dung", sample: "Slogan do admin nhập" },
   { key: "reviewTitle", title: "Kiểu chữ — Đánh giá — Tiêu đề", sample: "Đánh giá — Tiêu đề" },
   { key: "reviewName", title: "Kiểu chữ — Đánh giá — Tên hiển thị", sample: "Đánh giá — Tên hiển thị" },
   { key: "reviewBody", title: "Kiểu chữ — Đánh giá — Nội dung", sample: "Đánh giá — Nội dung" },
@@ -135,6 +134,12 @@ export default function EditProductDetail() {
       <PurchaseOptionsSettings value={h.form.productDetailStyles?.purchaseOptions || {}} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, purchaseOptions: { ...h.form.productDetailStyles?.purchaseOptions, ...patch } })} />
       <ProductContactSettings value={h.form.productDetailStyles?.contactActions || {}} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, contactActions: { ...h.form.productDetailStyles?.contactActions, ...patch } })} />
       <MobileImageSettings layout={h.form.productDetailStyles?.imageLayout || {}} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, imageLayout: { ...h.form.productDetailStyles?.imageLayout, ...patch } })} />
+      <details className="slogan-home-settings"><summary>Slogan — Kiểu chữ, khung thẻ và biểu tượng</summary>
+        <SloganTypographyEditor title="Slogan — Chữ tiêu đề" value={h.form.productDetailStyles?.sloganTitle} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, sloganTitle: { ...h.form.productDetailStyles?.sloganTitle, ...patch } })} />
+        <SloganTypographyEditor title="Slogan — Chữ nội dung" body value={h.form.productDetailStyles?.sloganBody} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, sloganBody: { ...h.form.productDetailStyles?.sloganBody, ...patch } })} />
+        <SloganAppearanceEditor value={h.form.productDetailStyles?.sloganCard} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, sloganCard: { ...h.form.productDetailStyles?.sloganCard, ...patch } })} />
+        <SloganAppearanceEditor section="symbols" value={h.form.productDetailStyles?.sloganCard} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, sloganCard: { ...h.form.productDetailStyles?.sloganCard, ...patch } })} />
+      </details>
       <StyleList
         elements={ELEMENTS}
         value={h.form.productDetailStyles}
