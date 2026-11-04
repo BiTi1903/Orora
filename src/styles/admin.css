@@ -503,6 +503,13 @@
 .admin-money-input { position: relative; min-width: 0; }
 .admin-money-input input { width: 100%; padding-right: 40px; }
 .admin-money-input > span { position: absolute; top: 50%; right: 14px; transform: translateY(-50%); color: var(--a-deep); font-size: 14px; pointer-events: none; }
+.chat-settings-admin { display: grid; gap: 20px; min-width: 0; }
+.chat-settings-admin > .admin-top { margin-bottom: 0; }
+.chat-connection-card { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+.chat-connection-card > div { flex: 1 1 300px; min-width: 0; }
+.chat-connection-card p { margin-top: 7px; overflow-wrap: anywhere; }
+.chat-settings-toolbar { position: sticky; top: 0; z-index: 4; padding-block: 12px; border-bottom: 1px solid var(--a-line); background: #fff; }
+.chat-settings-admin select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--a-line); border-radius: 12px; color: var(--a-plum); background: #fff; font: inherit; font-size: 14px; }
 
 /* Slogan controls share the same settings in Products, Home and Visual Builder. */
 .slogan-settings-form { min-width: 0; }

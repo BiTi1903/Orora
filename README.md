@@ -1,5 +1,7 @@
 Gửi qua SMTP OAuth2 Microsoft 365: [docs/SMTP-SETUP.md](docs/SMTP-SETUP.md).
 
+Thiết lập Chat AI OpenAI, lựa chọn gợi ý và kiến thức cửa hàng: [docs/CHAT-AI-SETUP.md](docs/CHAT-AI-SETUP.md).
+
 Hướng dẫn thiết lập đăng ký nhận tin, thư tự động và gửi chiến dịch Microsoft 365: [docs/EMAIL-SETUP.md](docs/EMAIL-SETUP.md).
 
 # React + Vite

@@ -16,6 +16,7 @@ test("Vercel API entrypoints start without CommonJS-to-ESM require support", () 
       ["./api/addresses.js", 405, {method: "POST", headers: {}}],
       ["./api/inventory.js", 405, {method: "DELETE", headers: {}}],
       ["./api/admin-orders.js", 405, {method: "DELETE", headers: {}}],
+      ["./api/chat.js", 405, {method: "DELETE", headers: {}}],
     ]) {
       const {default: handler} = await import(path);
       const res = {
@@ -39,5 +40,5 @@ test("Vercel API entrypoints start without CommonJS-to-ESM require support", () 
     timeout: 15000,
   });
   assert.equal(child.status, 0, child.stderr || child.error?.message);
-  assert.deepEqual(JSON.parse(child.stdout).map((item) => item.status), [401, 405, 400, 405, 405, 405, 405, 405]);
+  assert.deepEqual(JSON.parse(child.stdout).map((item) => item.status), [401, 405, 400, 405, 405, 405, 405, 405, 405]);
 });

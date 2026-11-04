@@ -361,7 +361,6 @@ function App() {
                  {visible("reviews") && <Testimonials />}
    {visible("newsletter") && <Newsletter />}
               {visible("footer") && <Footer />}
-<ChatButton />
 <BackToTop />
 <CursorSparkle />
 <Petals />
@@ -395,6 +394,7 @@ function App() {
 
 
       </Routes>
+      {!location.pathname.startsWith("/admin") && <ChatButton />}
 
     </>
   );

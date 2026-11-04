@@ -2,6 +2,7 @@ import useOrderNotifications from "./useOrderNotifications";
 import EmailExport from "./EmailExport";
 import { newsletterRequest } from "./newsletter-api";
 import ShippingAdmin from "./ShippingAdmin";
+import ChatSettings from "./ChatSettings";
 import InventoryAdmin from "./InventoryAdmin";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -18,6 +19,7 @@ const TABS = [
   ["dashboard", "Tổng quan"],
   ["home", "Trang chủ"],
   ["products", "Sản phẩm"],
+  ["chat", "Chat AI"],
   ["orders", "Đơn hàng"],
   ["newsletter", "Email"],
   ["inventory", "Kiểm Hàng"],
@@ -72,6 +74,7 @@ function AdminWorkspace({ user }) {
         {tab === "dashboard" && <Dashboard sectionCount={TABS.length} />}
         {tab === "home" && <HomeAdmin />}
         {tab === "products" && <ProductsAdmin />}
+        {tab === "chat" && <ChatSettings />}
         {visited.includes("orders") && <div hidden={tab !== "orders"}><OrdersAdmin refreshKey={notifications.revision} pendingRequest={pendingRequest} onOrderChanged={notifications.refresh} key={`${user.uid}:${orderMailVersion}`} initialMailDraft={orderMailDraft} onOpenEmailTemplates={() => { setEmailSection({ view: "templates" }); navigate("newsletter"); }} /></div>}
         {tab === "export" && <EmailExport key={user.uid} request={newsletterRequest} />}
         {visited.includes("shipping") && <div hidden={tab !== "shipping"}><ShippingAdmin key={user.uid} /></div>}

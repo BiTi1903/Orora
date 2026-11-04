@@ -1,12 +1,21 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { clampFloatingPosition } from "../lib/floating-position";
 import "../styles/chat-button.css";
 import useHomeContent from "../hooks/useHomeContent";
 import { contactLinks } from "../lib/contact";
+import { chatSettings } from "../lib/chat";
+import { useLocation } from "react-router-dom";
+import useChatConversation from "../hooks/useChatConversation";
+import ChatPanel from "./ChatPanel";
 
 function ChatButton() {
   const home = useHomeContent();
-  const { zalo } = contactLinks(home);
+  const { zalo } = contactLinks(home, "", home.productDetailStyles?.contactActions || {});
+  const location = useLocation();
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
+  const conversation = useChatConversation(open, location.pathname);
+  const settings = chatSettings({ ...conversation.metadata?.settings, ...home.chatSettings });
   const button = useRef(null);
   const drag = useRef(null);
   const suppressClick = useRef(false);
@@ -32,9 +41,10 @@ function ChatButton() {
     setDragging(false);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
-  if (!zalo) return null;
+  const close = useCallback(() => { setOpen(false); requestAnimationFrame(() => button.current?.focus({ preventScroll: true })); }, []);
+  if (home.loading || !settings.enabled) return null;
   return (
-    <a
+    <><button type="button"
       ref={button}
       className={`chat-button${position ? " is-positioned" : ""}${dragging ? " is-dragging" : ""}`}
       style={position ? { left: position.x, top: position.y, right: "auto", bottom: "auto" } : undefined}
@@ -61,18 +71,18 @@ function ChatButton() {
       onLostPointerCapture={finishDrag}
       onClick={(event) => {
         if (event.detail !== 0 && suppressClick.current) {
-          event.preventDefault(); event.stopPropagation(); suppressClick.current = false;
+          event.preventDefault(); event.stopPropagation(); suppressClick.current = false; return;
         }
+        setOpen((current) => !current);
       }}
-      href={zalo}
-      target="_blank"
-      rel="noreferrer"
-      aria-label="Chat với chúng tôi"
-      title="Bấm để chat, kéo để di chuyển"
+      aria-label={open ? "Đóng chat với ORORA" : "Chat với ORORA"}
+      aria-expanded={open}
+      aria-controls={open ? panelId : undefined}
+      title="Trò chuyện với ORORA, kéo để di chuyển"
     >
-      <span className="chat-icon">💬</span>
-      <span className="chat-text">Chat với chúng tôi</span>
-    </a>
+      <span className="chat-icon" aria-hidden="true">{open ? "×" : "✦"}</span>
+      <span className="chat-text">Trò chuyện cùng ORORA</span>
+    </button>{open && <ChatPanel id={panelId} settings={settings} conversation={conversation} onClose={close} contactLinks={zalo ? [{ href: zalo }] : conversation.metadata?.links?.filter((link) => ["phone", "facebook", "contact"].includes(link.id)) || []} />}</>
   );
 }
 
