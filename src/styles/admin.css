@@ -559,3 +559,9 @@
   .slogan-design-grid { grid-template-columns: minmax(0, 1fr); }
   .slogan-symbol-picker { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+.chat-settings-panel { display:grid; gap:18px; min-width:0; }
+.chat-settings-panel[hidden] { display:none !important; }
+.chat-typography-editor { display:grid; gap:16px; min-width:0; }
+.chat-settings-admin > details > summary { cursor:pointer; color:var(--a-deep); font-weight:600; }
+.chat-settings-admin > details[open] > summary { margin-bottom:16px; }
+.chat-settings-toolbar { flex-wrap:wrap; }
