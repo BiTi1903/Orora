@@ -113,8 +113,8 @@ export function createChatHandler({ getDb, fetchImpl = fetch, env = process.env,
       const knowledge = buildChatKnowledge(req.method === "POST" ? await catalog(db) : [], home, path);
       const configured = Boolean(env.OPENAI_API_KEY?.trim());
       if (req.method === "GET") {
-        const { enabled, title, greeting, placeholder, starters } = knowledge.settings;
-        return res.status(200).json({ settings: { enabled, title, greeting, placeholder, starters }, mode: configured ? "ai" : "guided", aiConfigured: configured, links: knowledge.links });
+        const { enabled, title, greeting, placeholder, starters, fontFamily } = knowledge.settings;
+        return res.status(200).json({ settings: { enabled, title, greeting, placeholder, starters, fontFamily }, mode: configured ? "ai" : "guided", aiConfigured: configured, links: knowledge.links });
       }
       if (!knowledge.settings.enabled) throw fail("ORORA đang tạm tắt tư vấn tự động. Vui lòng liên hệ cửa hàng.", 409);
       const useAI = await reserveRequest(db, req, env, configured, clock());

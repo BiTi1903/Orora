@@ -39,7 +39,7 @@ export default function ChatPanel({ id, settings, conversation, onClose, contact
   }, []);
   useLayoutEffect(() => { if (log.current) log.current.scrollTop = log.current.scrollHeight; }, [messages, sending, error]);
   const submit = (text, quick = false) => { if (send(text)) { setInput(""); if (quick) log.current?.focus({ preventScroll: true }); } };
-  return <section ref={root} id={id} className="orora-chat-panel" role="dialog" aria-labelledby={titleId}>
+  return <section ref={root} id={id} className="orora-chat-panel" role="dialog" aria-labelledby={titleId} style={settings.fontFamily ? { "--chat-font": settings.fontFamily } : undefined}>
     <header className="orora-chat-heading"><span className="orora-chat-avatar" aria-hidden="true">✦</span><div><h2 ref={heading} id={titleId} tabIndex={-1}>{settings.title}</h2><p><span className="orora-chat-status-dot" />{mode === "ai" ? "Trợ lý AI tư vấn sản phẩm" : "Hỗ trợ mua sắm cùng ORORA"}</p></div><button type="button" className="orora-chat-icon-button" onClick={() => { reset(); setInput(""); }} aria-label="Bắt đầu cuộc trò chuyện mới" title="Cuộc trò chuyện mới" disabled={!messages.length && !input}>↺</button><button type="button" className="orora-chat-icon-button" onClick={onClose} aria-label="Đóng chat">×</button></header>
     <div ref={log} className="orora-chat-log" role="log" tabIndex={-1} aria-label="Cuộc trò chuyện với ORORA" aria-live="polite" aria-relevant="additions">
       <div className="orora-chat-welcome"><span className="orora-chat-welcome-icon" aria-hidden="true">✧</span><h3>ORORA lắng nghe bạn</h3><p>{settings.greeting}</p></div>

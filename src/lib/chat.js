@@ -1,3 +1,5 @@
+import { FONT_OPTIONS } from "./typography.js";
+
 export const CHAT_MESSAGE_LIMIT = 1200;
 export const CHAT_HISTORY_LIMIT = 16;
 export const DEFAULT_CHAT_STARTERS = [
@@ -12,6 +14,7 @@ export function chatSettings(value = {}) {
   const text = (key, fallback, limit) => typeof s[key] === "string" && s[key].trim() ? s[key].trim().slice(0, limit) : fallback;
   return {
     enabled: s.enabled !== false,
+    fontFamily: FONT_OPTIONS.some((font) => font.value === s.fontFamily) ? s.fontFamily : "",
     title: text("title", "Trợ lý ORORA", 60),
     greeting: text("greeting", "Chào bạn! Mình có thể giúp bạn tìm sản phẩm, xem cách sử dụng hoặc hướng dẫn đặt hàng. Bạn đang cần hỗ trợ gì?", 600),
     placeholder: text("placeholder", "Nhập câu hỏi của bạn…", 100),

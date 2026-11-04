@@ -145,3 +145,6 @@
   .orora-chat-composer textarea { font-size: 16px; }
   .orora-chat-footer { padding: 10px 12px max(10px, env(safe-area-inset-bottom, 0px)); }
 }
+
+.orora-chat-panel[style*="--chat-font"],
+.orora-chat-panel[style*="--chat-font"] :is(h2, h3, p, button, textarea, small, strong, b, a, span) { font-family: var(--chat-font); }
