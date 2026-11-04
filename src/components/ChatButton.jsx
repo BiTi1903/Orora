@@ -1,3 +1,4 @@
+import ChatHint from "./ChatHint";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { clampFloatingPosition } from "../lib/floating-position";
 import "../styles/chat-button.css";
@@ -13,6 +14,7 @@ function ChatButton() {
   const { zalo } = contactLinks(home, "", home.productDetailStyles?.contactActions || {});
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  const [hintDismissed, setHintDismissed] = useState(false);
   const panelId = useId();
   const conversation = useChatConversation(open, location.pathname);
   const settings = chatSettings({ ...conversation.metadata?.settings, ...home.chatSettings });
@@ -73,6 +75,7 @@ function ChatButton() {
         if (event.detail !== 0 && suppressClick.current) {
           event.preventDefault(); event.stopPropagation(); suppressClick.current = false; return;
         }
+        setHintDismissed(true);
         setOpen((current) => !current);
       }}
       aria-label={open ? "Đóng chat với ORORA" : "Chat với ORORA"}
@@ -82,7 +85,7 @@ function ChatButton() {
     >
       <span className="chat-icon" aria-hidden="true">{open ? "×" : "✦"}</span>
       <span className="chat-text">Trò chuyện cùng ORORA</span>
-    </button>{open && <ChatPanel id={panelId} settings={settings} conversation={conversation} onClose={close} contactLinks={zalo ? [{ href: zalo }] : conversation.metadata?.links?.filter((link) => ["phone", "facebook", "contact"].includes(link.id)) || []} />}</>
+    </button><ChatHint open={open} dismissed={hintDismissed} settings={settings} anchor={button} onOpen={() => { setHintDismissed(true); setOpen(true); }} />{open && <ChatPanel id={panelId} settings={settings} conversation={conversation} onClose={close} contactLinks={zalo ? [{ href: zalo }] : conversation.metadata?.links?.filter((link) => ["phone", "facebook", "contact"].includes(link.id)) || []} />}</>
   );
 }
 

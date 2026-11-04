@@ -1,3 +1,4 @@
+import { chatAppearanceVars, CHAT_LABELS } from "../lib/chat-appearance";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { CHAT_MESSAGE_LIMIT, safeChatHref } from "../lib/chat";
@@ -23,6 +24,7 @@ export default function ChatPanel({ id, settings, conversation, onClose, contact
   const [input, setInput] = useState("");
   const root = useRef(null), heading = useRef(null), log = useRef(null);
   const titleId = useId();
+  const label = (key) => typeof settings.labels?.[key] === "string" && settings.labels[key].trim() ? settings.labels[key].trim().slice(0, 120) : CHAT_LABELS[key];
   const last = messages.at(-1);
   const mode = [...messages].reverse().find((m) => m.role === "assistant")?.mode || metadata?.mode;
   useEffect(() => {
@@ -39,21 +41,21 @@ export default function ChatPanel({ id, settings, conversation, onClose, contact
   }, []);
   useLayoutEffect(() => { if (log.current) log.current.scrollTop = log.current.scrollHeight; }, [messages, sending, error]);
   const submit = (text, quick = false) => { if (send(text)) { setInput(""); if (quick) log.current?.focus({ preventScroll: true }); } };
-  return <section ref={root} id={id} className="orora-chat-panel" role="dialog" aria-labelledby={titleId} style={settings.fontFamily ? { "--chat-font": settings.fontFamily } : undefined}>
-    <header className="orora-chat-heading"><span className="orora-chat-avatar" aria-hidden="true">✦</span><div><h2 ref={heading} id={titleId} tabIndex={-1}>{settings.title}</h2><p><span className="orora-chat-status-dot" />{mode === "ai" ? "Trợ lý AI tư vấn sản phẩm" : "Hỗ trợ mua sắm cùng ORORA"}</p></div><button type="button" className="orora-chat-icon-button" onClick={() => { reset(); setInput(""); }} aria-label="Bắt đầu cuộc trò chuyện mới" title="Cuộc trò chuyện mới" disabled={!messages.length && !input}>↺</button><button type="button" className="orora-chat-icon-button" onClick={onClose} aria-label="Đóng chat">×</button></header>
+  return <section ref={root} id={id} className="orora-chat-panel" role="dialog" aria-labelledby={titleId} style={chatAppearanceVars(settings)}>
+    <header className="orora-chat-heading"><span className="orora-chat-avatar" aria-hidden="true">✦</span><div><h2 ref={heading} id={titleId} tabIndex={-1}>{settings.title}</h2><p><span className="orora-chat-status-dot" />{mode === "ai" ? label("statusAi") : label("statusGuided")}</p></div><button type="button" className="orora-chat-icon-button" onClick={() => { reset(); setInput(""); }} aria-label="Bắt đầu cuộc trò chuyện mới" title="Cuộc trò chuyện mới" disabled={!messages.length && !input}>↺</button><button type="button" className="orora-chat-icon-button" onClick={onClose} aria-label="Đóng chat">×</button></header>
     <div ref={log} className="orora-chat-log" role="log" tabIndex={-1} aria-label="Cuộc trò chuyện với ORORA" aria-live="polite" aria-relevant="additions">
-      <div className="orora-chat-welcome"><span className="orora-chat-welcome-icon" aria-hidden="true">✧</span><h3>ORORA lắng nghe bạn</h3><p>{settings.greeting}</p></div>
+      <div className="orora-chat-welcome"><span className="orora-chat-welcome-icon" aria-hidden="true">✧</span><h3>{label("welcomeTitle")}</h3><p>{settings.greeting}</p></div>
       {!messages.length && <div className="orora-chat-starters" aria-label="Chọn nhu cầu tư vấn">{settings.starters.map((item, index) => <button type="button" key={item.id} onClick={() => submit(item.prompt, true)} disabled={sending}><ChoiceSymbol index={index} /><span>{item.label}</span><ChatArrow /></button>)}</div>}
-      {messages.map((message) => <article key={message.id} className={`orora-chat-message is-${message.role}`} aria-label={message.role === "user" ? "Bạn" : "ORORA"}>
-        <span className="orora-chat-message-author">{message.role === "user" ? "Bạn" : "ORORA"}{message.mode === "ai" && <small>AI</small>}</span><p>{message.content}</p>
+      {messages.map((message) => <article key={message.id} className={`orora-chat-message is-${message.role}`} aria-label={message.role === "user" ? label("user") : label("assistant")}>
+        <span className="orora-chat-message-author">{message.role === "user" ? label("user") : label("assistant")}{message.mode === "ai" && <small>AI</small>}</span><p>{message.content}</p>
         {message.products?.length > 0 && <div className="orora-chat-products">{message.products.map((product) => <ChatLink key={product.id} href={product.url} className="orora-chat-product" onNavigate={onClose}>{product.image && (/^https?:\/\//.test(product.image) || /^\/(?!\/)/.test(product.image)) ? <img src={cdnSrc(product.image, THUMB)} alt="" width="52" height="64" loading="lazy" /> : <span className="orora-chat-product-placeholder" aria-hidden="true">◇</span>}<span><small>#{product.number}</small><strong>{product.name}</strong><b>{product.price}</b></span><ChatArrow /></ChatLink>)}</div>}
         {message.links?.length > 0 && <div className="orora-chat-links">{message.links.map((link) => <ChatLink key={link.id} href={link.href} onNavigate={onClose}><span>{link.label}</span><ChatArrow /></ChatLink>)}</div>}
         {message.notice && <small className="orora-chat-notice">{message.notice}</small>}
       </article>)}
-      {sending && <div className="orora-chat-typing" role="status"><span /><span /><span /><small>ORORA đang trả lời…</small></div>}
-      {error && <div className="orora-chat-error" role="alert"><p>{error.message}</p><button type="button" onClick={retry} disabled={sending}>Thử gửi lại</button></div>}
+      {sending && <div className="orora-chat-typing" role="status"><span /><span /><span /><small>{label("typing")}</small></div>}
+      {error && <div className="orora-chat-error" role="alert"><p>{error.message}</p><button type="button" onClick={retry} disabled={sending}>{label("retry")}</button></div>}
       {!sending && last?.role === "assistant" && last.suggestions?.length > 0 && <div className="orora-chat-followups" aria-label="Câu hỏi gợi ý">{last.suggestions.map((suggestion) => <button type="button" key={suggestion} onClick={() => submit(suggestion, true)}><span>{suggestion}</span><ChatArrow /></button>)}</div>}
     </div>
-    <footer className="orora-chat-footer"><form className="orora-chat-composer" onSubmit={(event) => { event.preventDefault(); submit(input); }}><textarea aria-label="Tin nhắn của bạn" rows={2} maxLength={CHAT_MESSAGE_LIMIT} placeholder={settings.placeholder} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); submit(input); } }} /><button type="submit" aria-label="Gửi tin nhắn" disabled={sending || !input.trim()}><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M12 20V4m-6 6 6-6 6 6" /></svg></button></form><div className="orora-chat-footer-note"><small>{mode === "ai" ? "Trợ lý AI · Thông tin từ ORORA" : "Trả lời theo thông tin cửa hàng"}</small>{contactLinks[0] && <ChatLink href={contactLinks[0].href} onNavigate={onClose}>Gặp ORORA <ChatArrow /></ChatLink>}</div></footer>
+    <footer className="orora-chat-footer"><form className="orora-chat-composer" onSubmit={(event) => { event.preventDefault(); submit(input); }}><textarea aria-label="Tin nhắn của bạn" rows={2} maxLength={CHAT_MESSAGE_LIMIT} placeholder={settings.placeholder} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); submit(input); } }} /><button type="submit" aria-label="Gửi tin nhắn" disabled={sending || !input.trim()}><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M12 20V4m-6 6 6-6 6 6" /></svg></button></form><div className="orora-chat-footer-note"><small>{mode === "ai" ? label("footerAi") : label("footerGuided")}</small>{contactLinks[0] && <ChatLink href={contactLinks[0].href} onNavigate={onClose}>{label("handoff")} <ChatArrow /></ChatLink>}</div></footer>
   </section>;
 }

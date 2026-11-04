@@ -47,3 +47,9 @@ Website không ghi hội thoại vào Firestore/localStorage; tin nhắn chỉ n
 Chạy `npm test`, `npm run lint`, `npm run build`. Các kiểm thử API dùng Firestore trong bộ nhớ và phản hồi OpenAI giả; không gọi model trả phí, ghi dữ liệu sản xuất hoặc tạo đơn thật. Kiểm tra trình duyệt gồm mở chat, gợi ý, gửi/nhận, hội thoại nhiều lượt, đường dẫn, retry, reset, đóng/mở, kéo nút, màn hình hẹp và lưu admin.
 
 `vite` chỉ phục vụ frontend. Để chạy API tại máy phát triển, cần môi trường Vercel Functions hoặc nối `/api/chat` với server chạy handler; không coi phản hồi HTML của Vite là câu trả lời AI.
+
+## Chữ trong khung chat và lời nhắc
+
+Admin → Chat AI → Chỉnh từng chữ trong khung chat: chọn riêng tên trợ lý, trạng thái, lời chào, tin nhắn trợ lý/khách, gợi ý, ô nhập, placeholder, dòng cuối, liên hệ, tên/giá sản phẩm, đường dẫn, tên người gửi và thông báo. Có font, cỡ máy tính/mobile, màu, độ đậm, căn lề, giãn dòng/chữ và trang trí chữ; lưu ở chatSettings.textStyles. Các dòng giao diện cố định chỉnh ở chatSettings.labels; không thay tên/giá sản phẩm hoặc nội dung AI bằng các nhãn này. Kiểu riêng ưu tiên hơn font chung, bỏ trống để dùng mặc định.
+
+Lời nhắc cạnh nút chat mặc định hiện sau 5 giây, tự ẩn sau 10 giây. Có nút đóng và bấm nội dung để mở chat. Sau khi khách mở chat hoặc đóng lời nhắc thì không hiện lại trong lần mở trang đó. Admin chỉnh nội dung, bật/tắt và thời gian chờ 1–60 giây. Mở lời nhắc không gọi OpenAI; chỉ gửi câu hỏi mới phát sinh yêu cầu AI.

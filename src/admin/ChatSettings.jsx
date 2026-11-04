@@ -1,3 +1,4 @@
+import ChatTypography from "./ChatTypography";
 import { useEffect, useRef, useState } from "react";
 import { chatSettings, DEFAULT_CHAT_STARTERS } from "../lib/chat";
 import { getHomeContent, saveHomeContent, explainError } from "../lib/api";
@@ -39,6 +40,9 @@ export default function ChatSettings() {
       <div className="product-editor-toolbar-top chat-settings-toolbar"><h2>Nội dung khung chat</h2><button type="submit" className="admin-btn primary" disabled={loading || failed || busy}>{busy ? "Đang lưu…" : "Lưu Chat AI"}</button></div>
       {notice && <p role={notice.error ? "alert" : "status"} className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
       <fieldset className="writer-fields" disabled={loading || failed || busy}>
+        <ChatTypography value={form} onChange={patch} />
+        <label className="admin-check"><input type="checkbox" checked={form.hintEnabled !== false} onChange={(event) => patch("hintEnabled", event.target.checked)} />Hiện lời nhắc cạnh nút chat</label>
+        <div className="admin-form-grid"><div className="admin-field"><label htmlFor="chat-hint-text">Nội dung lời nhắc</label><input id="chat-hint-text" maxLength={160} value={form.hintText || ""} onChange={(event) => patch("hintText", event.target.value)} /></div><div className="admin-field"><label htmlFor="chat-hint-delay">Hiện sau bao nhiêu giây</label><input id="chat-hint-delay" type="number" min={1} max={60} value={form.hintDelay ?? 5} onChange={(event) => patch("hintDelay", Number(event.target.value))} /></div></div>
         <div className="admin-field"><label htmlFor="chat-font">Font chữ trợ lý AI</label><select id="chat-font" value={form.fontFamily || ""} onChange={(event) => patch("fontFamily", event.target.value)}>{FONT_OPTIONS.map((font) => <option key={font.value} value={font.value}>{font.label}</option>)}</select><small className="admin-muted">Áp dụng cho tiêu đề, lời chào, tin nhắn, gợi ý và ô nhập trong khung chat.</small></div>
         <div style={{ padding: 16, border: "1px solid #edcfdd", borderRadius: 14, background: "#fff8fb", fontFamily: form.fontFamily || "var(--font-body)", overflowWrap: "anywhere" }} aria-label="Xem trước font chữ trợ lý"><strong>{form.title}</strong><p style={{ marginTop: 8 }}>{form.greeting}</p><small>ORORA có thể giúp bạn tìm sản phẩm phù hợp.</small></div>
         <label className="admin-check"><input type="checkbox" checked={form.enabled} onChange={(event) => patch("enabled", event.target.checked)} />Hiển thị chat trên website và chi tiết sản phẩm</label>

@@ -14,6 +14,11 @@ export function chatSettings(value = {}) {
   const text = (key, fallback, limit) => typeof s[key] === "string" && s[key].trim() ? s[key].trim().slice(0, limit) : fallback;
   return {
     enabled: s.enabled !== false,
+    hintEnabled: s.hintEnabled !== false,
+    hintDelay: Number.isFinite(Number(s.hintDelay)) ? Math.min(60, Math.max(1, Number(s.hintDelay))) : 5,
+    hintText: text("hintText", "Bạn cần tư vấn? Nhắn ORORA nhé!", 160),
+    textStyles: s.textStyles && typeof s.textStyles === "object" ? s.textStyles : {},
+    labels: s.labels && typeof s.labels === "object" ? s.labels : {},
     fontFamily: FONT_OPTIONS.some((font) => font.value === s.fontFamily) ? s.fontFamily : "",
     title: text("title", "Trợ lý ORORA", 60),
     greeting: text("greeting", "Chào bạn! Mình có thể giúp bạn tìm sản phẩm, xem cách sử dụng hoặc hướng dẫn đặt hàng. Bạn đang cần hỗ trợ gì?", 600),
