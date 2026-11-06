@@ -46,7 +46,7 @@ export default function ProductSloganSettings() {
     {notice && <p role={notice.error ? "alert" : "status"} className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
     <fieldset className="writer-fields" disabled={loading || failed || busy}>
       <div className="slogan-settings-layout"><div className="slogan-settings-controls">
-        <nav className="slogan-settings-tabs" aria-label="Các phần chỉnh Slogan">{[["content", "Nội dung"], ["text", "Kiểu chữ"], ["card", "Khung thẻ"], ["symbols", "Biểu tượng"]].map(([key, label]) => <button key={key} type="button" aria-pressed={panel === key} onClick={() => setPanel(key)}>{label}</button>)}</nav>
+        <nav className="slogan-settings-tabs" aria-label="Các phần chỉnh Slogan">{[["content", "Nội dung"], ["text", "Kiểu chữ"], ["card", "Khung thẻ"], ["symbols", "Trang trí"]].map(([key, label]) => <button key={key} type="button" aria-pressed={panel === key} onClick={() => setPanel(key)}>{label}</button>)}</nav>
         <div hidden={panel !== "content"} data-slogan-panel="content" className="slogan-content-fields">
           <label className="admin-check"><input type="checkbox" checked={form.enabled !== false} onChange={(event) => setForm((current) => ({ ...current, enabled: event.target.checked }))} />Hiển thị Slogan trên chi tiết sản phẩm</label>
           <label className="admin-check"><input type="checkbox" checked={styles.sloganCard?.showTitle !== false} onChange={(event) => updateStyle("sloganCard", { showTitle: event.target.checked })} />Hiển thị tiêu đề</label>

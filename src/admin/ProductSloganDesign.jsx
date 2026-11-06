@@ -1,7 +1,7 @@
-import { useId } from "react";
+import { useId, useState } from "react";
 import { FONT_OPTIONS, WEIGHT_OPTIONS } from "../lib/typography";
-import { SLOGAN_SYMBOLS } from "../lib/product-slogan";
-import SloganSymbol from "../components/SloganSymbol";
+import { sloganAppearance } from "../lib/product-slogan";
+import { SloganLayoutPicker, SloganSymbolPicker } from "./SloganVisualPicker";
 
 function NumberField({ label, value, onChange, fallback, min = 0, max = 80, step = 1 }) {
   const id = useId();
@@ -41,30 +41,54 @@ export function SloganTypographyEditor({ value = {}, onChange, title = "Kiểu c
 export function SloganAppearanceEditor({ value = {}, onChange, section = "card" }) {
   const s = value || {};
   const id = useId();
+  const [part, setPart] = useState("decorations");
+  const appearance = sloganAppearance(s);
   const set = (key) => (next) => onChange({ [key]: next });
-  if (section === "symbols") return <div className="slogan-design-editor">
-    <h3>Biểu tượng (không bắt buộc)</h3><p className="admin-muted">Mặc định chỉ hiển thị chữ. Chọn một mẫu nếu muốn trang trí thêm; chọn Không biểu tượng để bỏ.</p><div className="slogan-symbol-picker" role="group" aria-label="Chọn biểu tượng Slogan">{SLOGAN_SYMBOLS.map(([key, label]) => <button key={key} type="button" aria-pressed={(s.symbol || "none") === key} onClick={() => onChange({ symbol: key })}><span aria-hidden="true">{key === "none" ? "—" : <SloganSymbol name={key} custom={s.customSymbol} />}</span><small>{label}</small></button>)}</div>
-    {s.symbol === "custom" && <div className="admin-field"><label htmlFor={`${id}-custom`}>Ký tự hoặc emoji riêng</label><input id={`${id}-custom`} value={s.customSymbol || ""} maxLength={24} placeholder="Ví dụ: ✧, ♡, 🌸" onChange={(event) => onChange({ customSymbol: Array.from(event.target.value).slice(0, 12).join("") })} /><small className="admin-muted">Tối đa 12 ký tự; emoji hiển thị theo thiết bị.</small></div>}
-    <div className="slogan-design-grid">
-      <ChoiceField label="Vị trí biểu tượng" value={s.symbolPosition || "top"} onChange={set("symbolPosition")} options={[["top", "Trên tiêu đề"], ["heading", "Bên cạnh tiêu đề"], ["bottom", "Dưới nội dung"], ["custom", "Vị trí tùy chỉnh"]]} />
-      {s.symbolPosition === "custom" && <><NumberField label="Vị trí ngang biểu tượng (%)" value={s.symbolX} fallback={50} max={100} onChange={set("symbolX")} /><NumberField label="Vị trí dọc biểu tượng (%)" value={s.symbolY} fallback={15} max={100} onChange={set("symbolY")} /><small className="admin-muted">Ngang: 0 = trái, 100 = phải. Dọc: 0 = trên, 100 = dưới. Vị trí tính theo khung thẻ, xem trước khi chỉnh để căn với nội dung.</small></>}
-      <ChoiceField label="Nét biểu tượng" value={s.symbolFill || "solid"} onChange={set("symbolFill")} options={[["solid", "Tô kín"], ["outline", "Nét viền"]]} />
-      <NumberField label="Kích thước biểu tượng (px)" value={s.symbolSize} fallback={23} min={8} max={120} onChange={set("symbolSize")} />
-      <NumberField label="Biểu tượng trên điện thoại (px)" value={s.symbolMobileSize} fallback="Theo máy tính" max={96} onChange={set("symbolMobileSize")} />
-      <ColorField label="Màu biểu tượng" value={s.symbolColor} onChange={set("symbolColor")} />
-      <NumberField label="Góc xoay biểu tượng (độ)" value={s.symbolRotation} fallback={0} min={-180} max={180} onChange={set("symbolRotation")} />
-      <ChoiceField label="Nền biểu tượng" value={s.symbolBadge || "none"} onChange={set("symbolBadge")} options={[["none", "Không nền"], ["circle", "Hình tròn"], ["rounded", "Vuông bo góc"], ["square", "Hình vuông"]]} />
-      <ColorField label="Màu nền biểu tượng" value={s.symbolBackground} fallback="#fce3ed" onChange={set("symbolBackground")} />
-      <ChoiceField label="Hiệu ứng biểu tượng" value={s.symbolEffect || "none"} onChange={set("symbolEffect")} options={[["none", "Đứng yên"], ["float", "Nhẹ nhàng lên xuống"], ["pulse", "Nhịp tim"], ["twinkle", "Lấp lánh"]]} />
+  if (section === "symbols") return <div className="slogan-decoration-editor" onInvalidCapture={(event) => {
+    const target = event.target;
+    const targetPart = target.closest("[data-decoration-part]")?.dataset.decorationPart;
+    if (targetPart) setPart(targetPart);
+    for (let parent = target.parentElement; parent; parent = parent.parentElement) {
+      if (parent.tagName === "DETAILS") parent.open = true;
+    }
+    requestAnimationFrame(() => target.focus());
+  }}>
+    <nav className="slogan-decoration-tabs" aria-label="Phần trang trí Slogan">
+      <button type="button" aria-pressed={part === "decorations"} onClick={() => setPart("decorations")}><span>Họa tiết nền</span><small>Trang trí trong khung</small></button>
+      <button type="button" aria-pressed={part === "symbol"} onClick={() => setPart("symbol")}><span>Biểu tượng chính</span><small>Thêm một điểm nhấn</small></button>
+    </nav>
+    <div hidden={part !== "decorations"} className="slogan-decoration-pane" data-decoration-part="decorations">
+      <div className="slogan-picker-heading"><h3>Bố trí họa tiết</h3><p>Chọn cách đặt họa tiết trong khung. Vẫn dùng được khi không có biểu tượng chính.</p></div>
+      <SloganLayoutPicker decoration value={appearance} onChange={set("decorations")} />
+      <div className="slogan-picker-heading"><h3>Chọn hình họa tiết</h3><p>Bấm vào ô mẫu để áp dụng và xem thay đổi.</p></div>
+      <SloganSymbolPicker decoration value={appearance} onChange={(symbol) => onChange({ decorationSymbol: symbol, ...(appearance.decorations === "none" ? { decorations: "corners" } : {}) })} />
+      {appearance.decorationSymbol === "custom" && <div className="admin-field"><label htmlFor={`${id}-decoration-custom`}>Ký tự họa tiết riêng</label><input id={`${id}-decoration-custom`} value={s.decorationCustomSymbol ?? appearance.decorationCustomSymbol} maxLength={24} placeholder="Ví dụ: ♡, ✧, 🌸" onChange={(event) => onChange({ decorationCustomSymbol: Array.from(event.target.value).slice(0, 12).join("") })} /></div>}
+      <details className="slogan-adjustments"><summary>Màu sắc, kích thước và độ đậm</summary><div className="slogan-design-editor"><div className="slogan-design-grid">
+        <ColorField label="Màu họa tiết" value={s.decorationColor} onChange={set("decorationColor")} />
+        <ChoiceField label="Nét họa tiết" value={s.decorationFill || s.symbolFill || "solid"} onChange={set("decorationFill")} options={[["solid", "Tô kín"], ["outline", "Nét viền"]]} />
+        <NumberField label="Kích thước họa tiết (px)" value={s.decorationSize} fallback={64} min={16} max={140} onChange={set("decorationSize")} />
+        <NumberField label="Độ đậm họa tiết (%)" value={s.decorationOpacity} fallback={12} max={35} onChange={set("decorationOpacity")} />
+      </div></div></details>
     </div>
-    <h3>Họa tiết trang trí</h3><p className="admin-muted">Chọn mẫu họa tiết riêng, vẫn hiển thị khi không có biểu tượng chính.</p><div className="slogan-design-grid">
-      <ChoiceField label="Mẫu họa tiết" value={s.decorationSymbol || (s.symbol && s.symbol !== "none" ? s.symbol : "sparkle")} onChange={set("decorationSymbol")} options={SLOGAN_SYMBOLS.filter(([key]) => key !== "none")} />
-      <ChoiceField label="Nét họa tiết" value={s.decorationFill || s.symbolFill || "solid"} onChange={set("decorationFill")} options={[["solid", "Tô kín"], ["outline", "Nét viền"]]} />
-      {(s.decorationSymbol || s.symbol) === "custom" && <div className="admin-field"><label htmlFor={`${id}-decoration-custom`}>Ký tự họa tiết riêng</label><input id={`${id}-decoration-custom`} value={s.decorationCustomSymbol || ""} maxLength={24} placeholder="Ví dụ: ♡, ✧, 🌸" onChange={(event) => onChange({decorationCustomSymbol:Array.from(event.target.value).slice(0,12).join("")})} /></div>}
-      <ChoiceField label="Bố trí họa tiết" value={s.decorations || "none"} onChange={set("decorations")} options={[["none", "Không họa tiết"], ["corners", "Hai góc thẻ"], ["scattered", "Rải nhẹ trên nền"]]} />
-      <ColorField label="Màu họa tiết" value={s.decorationColor} onChange={set("decorationColor")} />
-      <NumberField label="Kích thước họa tiết (px)" value={s.decorationSize} fallback={64} min={16} max={140} onChange={set("decorationSize")} />
-      <NumberField label="Độ đậm họa tiết (%)" value={s.decorationOpacity} fallback={12} max={35} onChange={set("decorationOpacity")} />
+    <div hidden={part !== "symbol"} className="slogan-decoration-pane" data-decoration-part="symbol">
+      <div className="slogan-picker-heading"><h3>Chọn biểu tượng</h3><p>Không bắt buộc. Chọn ô Không biểu tượng để chỉ giữ phần chữ và họa tiết nền.</p></div>
+      <SloganSymbolPicker value={appearance} onChange={set("symbol")} />
+      {appearance.symbol === "custom" && <div className="admin-field"><label htmlFor={`${id}-custom`}>Ký tự hoặc emoji riêng</label><input id={`${id}-custom`} value={s.customSymbol || ""} maxLength={24} placeholder="Ví dụ: ✧, ♡, 🌸" onChange={(event) => onChange({ customSymbol: Array.from(event.target.value).slice(0, 12).join("") })} /><small className="admin-muted">Tối đa 12 ký tự; emoji hiển thị theo thiết bị.</small></div>}
+      {appearance.symbol !== "none" && <>
+        <div className="slogan-picker-heading"><h3>Vị trí trên thẻ</h3></div>
+        <SloganLayoutPicker value={appearance} x={s.symbolX ?? 50} y={s.symbolY ?? 15} onChange={set("symbolPosition")} />
+        {s.symbolPosition === "custom" && <div className="slogan-design-editor"><div className="slogan-design-grid"><NumberField label="Vị trí ngang biểu tượng (%)" value={s.symbolX} fallback={50} max={100} step={0.1} onChange={set("symbolX")} /><NumberField label="Vị trí dọc biểu tượng (%)" value={s.symbolY} fallback={15} max={100} step={0.1} onChange={set("symbolY")} /></div><small className="admin-muted">Ngang: 0 = trái, 100 = phải. Dọc: 0 = trên, 100 = dưới.</small></div>}
+        <details className="slogan-adjustments"><summary>Kích thước, màu sắc và hiệu ứng</summary><div className="slogan-design-editor"><div className="slogan-design-grid">
+          <NumberField label="Kích thước biểu tượng (px)" value={s.symbolSize} fallback={23} min={8} max={120} onChange={set("symbolSize")} />
+          <NumberField label="Biểu tượng trên điện thoại (px)" value={s.symbolMobileSize} fallback="Theo máy tính" max={96} onChange={set("symbolMobileSize")} />
+          <ColorField label="Màu biểu tượng" value={s.symbolColor} onChange={set("symbolColor")} />
+          <ChoiceField label="Nét biểu tượng" value={s.symbolFill || "solid"} onChange={set("symbolFill")} options={[["solid", "Tô kín"], ["outline", "Nét viền"]]} />
+          <NumberField label="Góc xoay biểu tượng (độ)" value={s.symbolRotation} fallback={0} min={-180} max={180} onChange={set("symbolRotation")} />
+          <ChoiceField label="Nền biểu tượng" value={s.symbolBadge || "none"} onChange={set("symbolBadge")} options={[["none", "Không nền"], ["circle", "Hình tròn"], ["rounded", "Vuông bo góc"], ["square", "Hình vuông"]]} />
+          <ColorField label="Màu nền biểu tượng" value={s.symbolBackground} fallback="#fce3ed" onChange={set("symbolBackground")} />
+          <ChoiceField label="Hiệu ứng biểu tượng" value={s.symbolEffect || "none"} onChange={set("symbolEffect")} options={[["none", "Đứng yên"], ["float", "Nhẹ nhàng lên xuống"], ["pulse", "Nhịp tim"], ["twinkle", "Lấp lánh"]]} />
+        </div></div></details>
+      </>}
     </div>
   </div>;
   return <div className="slogan-design-editor"><h3>Khung và nền thẻ</h3><div className="slogan-design-grid">
