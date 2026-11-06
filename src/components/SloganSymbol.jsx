@@ -17,6 +17,6 @@ const paths = {
 
 export default function SloganSymbol({ name = "sparkle", solid = true, custom = "" }) {
   if (name === "none") return null;
-  if (name === "custom") return <span className="slogan-custom-symbol">{custom || "✦"}</span>;
+  if (name === "custom") return <span className="slogan-custom-symbol">{custom}</span>;
   return <svg viewBox="0 0 24 24" fill={solid ? "currentColor" : "none"} fillRule="evenodd" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">{(paths[name] || paths.sparkle).map((d, index) => <path key={d} d={d} fill={index > 0 ? "none" : undefined} stroke={index > 0 && solid && name !== "sun" ? "#fff" : undefined} />)}</svg>;
 }

@@ -16,7 +16,7 @@ const shadows = { none: "none", soft: "0 4px 18px #3a152609", medium: "0 10px 30
 export function sloganAppearance(value = {}) {
   const s = value || {};
   const align = choice(s.textAlign, ["left", "center", "right"], "left");
-  const symbol = choice(s.symbol, SLOGAN_SYMBOLS.map(([id]) => id), "sparkle");
+  const symbol = choice(s.symbol, SLOGAN_SYMBOLS.map(([id]) => id), "none");
   const symbolColor = color(s.symbolColor, "var(--rose-deep)");
   const style = { textAlign: align, "--slogan-justify": { left: "flex-start", center: "center", right: "flex-end" }[align] };
   if (s.backgroundType === "solid") style.background = color(s.backgroundColor, "#fffafb");

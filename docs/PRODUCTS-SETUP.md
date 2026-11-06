@@ -107,3 +107,5 @@ Link cũ theo ID/slug, mã số và các alias đã lưu vẫn mở được r�
 ## Chỉnh chữ Fb / TikTok
 
 Trang chủ → Chi tiết SP → Nút chọn kênh mua hàng cho sửa nhãn của mỗi kênh. Có thêm Chữ riêng nút Facebook và Chữ riêng nút TikTok để chỉnh font, size desktop/mobile, màu, độ đậm… độc lập. Visual Builder cũng chọn trực tiếp được chữ từng nút. Kiểu riêng ghi trong productDetailStyles.purchaseOptions.facebookStyle/tiktokStyle; các kiểu chung, nhãn và thiết lập khác giữ nguyên.
+
+Khối Slogan/triết lý trong chi tiết sản phẩm ưu tiên nội dung: mặc định không có biểu tượng. Tiêu đề không bắt buộc; bỏ trống sẽ ẩn dòng tiêu đề, không tự chèn chữ Slogan. Chữ mặc định dùng tiêu đề 19px, nội dung 14px (mobile 15px) để phù hợp cột phụ. Kiểu đã chỉnh riêng vẫn được giữ. Biểu tượng chỉ xuất hiện khi admin chủ động chọn; chọn Không biểu tượng để bỏ. Không thay nội dung đã lưu hoặc tự viết thông điệp thay cửa hàng.

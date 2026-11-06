@@ -23,16 +23,16 @@ export function SloganTypographyEditor({ value = {}, onChange, title = "Kiểu c
   const set = (key) => (next) => onChange({ [key]: next });
   return <fieldset className="slogan-design-editor"><legend>{title}</legend><div className="slogan-design-grid">
     <ChoiceField label="Phông chữ" value={s.fontFamily || ""} onChange={set("fontFamily")} options={FONT_OPTIONS.map(({ value, label }) => [value, label])} />
-    <NumberField label="Cỡ chữ máy tính (px)" value={s.fontSize} fallback={body ? 23 : 10} max={160} onChange={set("fontSize")} />
-    <NumberField label="Cỡ chữ điện thoại (px)" value={s.mobileFontSize} fallback={body ? 24 : 10} max={96} onChange={set("mobileFontSize")} />
+    <NumberField label="Cỡ chữ máy tính (px)" value={s.fontSize} fallback={body ? 14 : 19} max={160} onChange={set("fontSize")} />
+    <NumberField label="Cỡ chữ điện thoại (px)" value={s.mobileFontSize} fallback={body ? 15 : 19} max={96} onChange={set("mobileFontSize")} />
     <ChoiceField label="Độ đậm" value={s.fontWeight ?? ""} onChange={(next) => set("fontWeight")(next === "" ? "" : Number(next))} options={WEIGHT_OPTIONS.map(({ value, label }) => [value, label])} />
     <ColorField label="Màu chữ" value={s.color} fallback={body ? "#3a1526" : "#b8446d"} onChange={set("color")} />
     <ChoiceField label="Căn chữ" value={s.textAlign || ""} onChange={set("textAlign")} options={[["", "Theo khung thẻ"], ["left", "Trái"], ["center", "Giữa"], ["right", "Phải"], ["justify", "Căn đều"]]} />
     <ChoiceField label="Kiểu chữ" value={s.fontStyle || (s.italic ? "italic" : "")} onChange={set("fontStyle")} options={[["", "Mặc định"], ["normal", "Bình thường"], ["italic", "In nghiêng"]]} />
     <ChoiceField label="Hoa / thường" value={s.textTransform || ""} onChange={set("textTransform")} options={[["", "Mặc định"], ["none", "Giữ nguyên"], ["uppercase", "IN HOA"], ["lowercase", "chữ thường"], ["capitalize", "Viết Hoa Đầu"]]} />
     <ChoiceField label="Trang trí chữ" value={s.textDecoration || "none"} onChange={set("textDecoration")} options={[["none", "Không"], ["underline", "Gạch chân"], ["line-through", "Gạch ngang"], ["underline line-through", "Gạch chân và gạch ngang"]]} />
-    <NumberField label="Giãn chữ (px)" value={s.letterSpacing} fallback={body ? 0 : 0.8} min={-3} max={12} step={0.1} onChange={set("letterSpacing")} />
-    <NumberField label="Giãn dòng" value={s.lineHeight} fallback={body ? 1.55 : 1.7} min={0.8} max={3} step={0.05} onChange={set("lineHeight")} />
+    <NumberField label="Giãn chữ (px)" value={s.letterSpacing} fallback={0} min={-3} max={12} step={0.1} onChange={set("letterSpacing")} />
+    <NumberField label="Giãn dòng" value={s.lineHeight} fallback={body ? 1.8 : 1.4} min={0.8} max={3} step={0.05} onChange={set("lineHeight")} />
     <NumberField label="Khoảng trống trên chữ (px)" value={s.marginTop} fallback={0} max={64} onChange={set("marginTop")} />
     <NumberField label="Khoảng trống dưới chữ (px)" value={s.marginBottom} fallback={0} max={64} onChange={set("marginBottom")} />
   </div><small className="admin-muted">Để trống kích thước/khoảng cách để dùng mặc định. Cỡ chữ 0 = tự động. Màu có thể chọn hoặc nhập mã màu.</small></fieldset>;
@@ -43,7 +43,7 @@ export function SloganAppearanceEditor({ value = {}, onChange, section = "card" 
   const id = useId();
   const set = (key) => (next) => onChange({ [key]: next });
   if (section === "symbols") return <div className="slogan-design-editor">
-    <h3>Biểu tượng chính</h3><div className="slogan-symbol-picker" role="group" aria-label="Chọn biểu tượng Slogan">{SLOGAN_SYMBOLS.map(([key, label]) => <button key={key} type="button" aria-pressed={(s.symbol || "sparkle") === key} onClick={() => onChange({ symbol: key })}><span aria-hidden="true">{key === "none" ? "—" : <SloganSymbol name={key} custom={s.customSymbol} />}</span><small>{label}</small></button>)}</div>
+    <h3>Biểu tượng (không bắt buộc)</h3><p className="admin-muted">Mặc định chỉ hiển thị chữ. Chọn một mẫu nếu muốn trang trí thêm; chọn Không biểu tượng để bỏ.</p><div className="slogan-symbol-picker" role="group" aria-label="Chọn biểu tượng Slogan">{SLOGAN_SYMBOLS.map(([key, label]) => <button key={key} type="button" aria-pressed={(s.symbol || "none") === key} onClick={() => onChange({ symbol: key })}><span aria-hidden="true">{key === "none" ? "—" : <SloganSymbol name={key} custom={s.customSymbol} />}</span><small>{label}</small></button>)}</div>
     {s.symbol === "custom" && <div className="admin-field"><label htmlFor={`${id}-custom`}>Ký tự hoặc emoji riêng</label><input id={`${id}-custom`} value={s.customSymbol || ""} maxLength={24} placeholder="Ví dụ: ✧, ♡, 🌸" onChange={(event) => onChange({ customSymbol: Array.from(event.target.value).slice(0, 12).join("") })} /><small className="admin-muted">Tối đa 12 ký tự; emoji hiển thị theo thiết bị.</small></div>}
     <div className="slogan-design-grid">
       <ChoiceField label="Vị trí biểu tượng" value={s.symbolPosition || "top"} onChange={set("symbolPosition")} options={[["top", "Trên tiêu đề"], ["heading", "Bên cạnh tiêu đề"], ["bottom", "Dưới nội dung"]]} />
