@@ -41,11 +41,19 @@ export function sloganAppearance(value = {}) {
     symbolStyle.padding = "10px";
     symbolStyle.borderRadius = { circle: "50%", rounded: "14px", square: "0" }[s.symbolBadge];
   }
+  const symbolPosition = choice(s.symbolPosition, ["top", "heading", "bottom", "custom"], "top");
+  if (symbolPosition === "custom") {
+    const x = number(s.symbolX, 50, 0, 100), y = number(s.symbolY, 15, 0, 100);
+    Object.assign(symbolStyle, { position: "absolute", left: `${x}%`, top: `${y}%`, transform: `translate(-${x}%, -${y}%) rotate(${number(s.symbolRotation, 0, -180, 180)}deg)`, zIndex: 2, pointerEvents: "none" });
+  }
+  const decorationSymbol = choice(s.decorationSymbol, SLOGAN_SYMBOLS.filter(([id]) => id !== "none").map(([id]) => id), symbol !== "none" ? symbol : "sparkle");
   return {
-    style, symbolStyle, symbol,
+    style, symbolStyle, symbol, decorationSymbol,
+    decorationCustomSymbol: typeof s.decorationCustomSymbol === "string" ? Array.from(s.decorationCustomSymbol).slice(0,12).join("") : typeof s.customSymbol === "string" ? s.customSymbol : "",
+    decorationSolid: s.decorationFill ? s.decorationFill !== "outline" : s.symbolFill !== "outline",
     customSymbol: typeof s.customSymbol === "string" ? Array.from(s.customSymbol).slice(0, 12).join("") : "",
     solid: s.symbolFill !== "outline",
-    symbolPosition: choice(s.symbolPosition, ["top", "heading", "bottom"], "top"),
+    symbolPosition,
     symbolEffect: choice(s.symbolEffect, ["none", "float", "pulse", "twinkle"], "none"),
     showTitle: s.showTitle !== false,
     decorations: choice(s.decorations, ["none", "corners", "scattered"], "none"),

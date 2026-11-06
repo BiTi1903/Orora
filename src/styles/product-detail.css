@@ -888,3 +888,4 @@
 /* Choosing a volume must not change the card height or move the checkout actions. */
 .product-selection-help.is-reserved { visibility: hidden; }
 .product-detail-price.is-numeric { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.product-slogan-decorations .slogan-custom-symbol { font-size: var(--slogan-decoration-size, 64px); }
