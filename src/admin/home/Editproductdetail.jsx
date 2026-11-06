@@ -138,7 +138,6 @@ export default function EditProductDetail() {
         <SloganTypographyEditor title="Slogan — Chữ tiêu đề" value={h.form.productDetailStyles?.sloganTitle} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, sloganTitle: { ...h.form.productDetailStyles?.sloganTitle, ...patch } })} />
         <SloganTypographyEditor title="Slogan — Chữ nội dung" body value={h.form.productDetailStyles?.sloganBody} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, sloganBody: { ...h.form.productDetailStyles?.sloganBody, ...patch } })} />
         <SloganAppearanceEditor value={h.form.productDetailStyles?.sloganCard} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, sloganCard: { ...h.form.productDetailStyles?.sloganCard, ...patch } })} />
-        <SloganAppearanceEditor section="symbols" value={h.form.productDetailStyles?.sloganCard} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, sloganCard: { ...h.form.productDetailStyles?.sloganCard, ...patch } })} />
       </details>
       <StyleList
         elements={ELEMENTS}

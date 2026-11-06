@@ -42,11 +42,11 @@ export default function ProductSloganSettings() {
     catch (error) { setNotice({ error: true, text: explainError(error) }); }
     finally { setBusy(false); }
   }}>
-    <div className="slogan-settings-toolbar"><div><h2>Slogan trên chi tiết sản phẩm</h2><p className="admin-muted">Tự nhập tiêu đề và thông điệp. Biểu tượng là tùy chọn, có thể để không hiển thị.</p></div><button type="submit" className="admin-btn primary" disabled={loading || failed || busy}>{busy ? "Đang lưu…" : "Lưu Slogan"}</button></div>
+    <div className="slogan-settings-toolbar"><div><h2>Slogan trên chi tiết sản phẩm</h2><p className="admin-muted">Nhập nội dung, tùy chỉnh kiểu chữ và khung Slogan. Tiêu đề có thể bật hoặc tắt.</p></div><button type="submit" className="admin-btn primary" disabled={loading || failed || busy}>{busy ? "Đang lưu…" : "Lưu Slogan"}</button></div>
     {notice && <p role={notice.error ? "alert" : "status"} className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
     <fieldset className="writer-fields" disabled={loading || failed || busy}>
       <div className="slogan-settings-layout"><div className="slogan-settings-controls">
-        <nav className="slogan-settings-tabs" aria-label="Các phần chỉnh Slogan">{[["content", "Nội dung"], ["text", "Kiểu chữ"], ["card", "Khung thẻ"], ["symbols", "Trang trí"]].map(([key, label]) => <button key={key} type="button" aria-pressed={panel === key} onClick={() => setPanel(key)}>{label}</button>)}</nav>
+        <nav className="slogan-settings-tabs" aria-label="Các phần chỉnh Slogan">{[["content", "Nội dung"], ["text", "Kiểu chữ"], ["card", "Khung thẻ"]].map(([key, label]) => <button key={key} type="button" aria-pressed={panel === key} onClick={() => setPanel(key)}>{label}</button>)}</nav>
         <div hidden={panel !== "content"} data-slogan-panel="content" className="slogan-content-fields">
           <label className="admin-check"><input type="checkbox" checked={form.enabled !== false} onChange={(event) => setForm((current) => ({ ...current, enabled: event.target.checked }))} />Hiển thị Slogan trên chi tiết sản phẩm</label>
           <label className="admin-check"><input type="checkbox" checked={styles.sloganCard?.showTitle !== false} onChange={(event) => updateStyle("sloganCard", { showTitle: event.target.checked })} />Hiển thị tiêu đề</label>
@@ -56,7 +56,6 @@ export default function ProductSloganSettings() {
         </div>
         <div hidden={panel !== "text"} data-slogan-panel="text"><SloganTypographyEditor title="Chữ tiêu đề" value={styles.sloganTitle} onChange={(patch) => updateStyle("sloganTitle", patch)} /><SloganTypographyEditor title="Chữ nội dung" body value={styles.sloganBody} onChange={(patch) => updateStyle("sloganBody", patch)} /></div>
         <div hidden={panel !== "card"} data-slogan-panel="card"><SloganAppearanceEditor value={styles.sloganCard} onChange={(patch) => updateStyle("sloganCard", patch)} /></div>
-        <div hidden={panel !== "symbols"} data-slogan-panel="symbols"><SloganAppearanceEditor section="symbols" value={styles.sloganCard} onChange={(patch) => updateStyle("sloganCard", patch)} /></div>
       </div><div className="slogan-settings-preview"><span className="slogan-preview-label">Xem trước{form.enabled === false ? " · đang tắt trên website" : ""}</span>{form.text.trim() ? <ProductSloganCard home={{ productSlogan: { ...form, enabled: true } }} styles={styles} /> : <p className="admin-muted slogan-preview-empty">Nhập nội dung để xem trước Slogan.</p>}<small className="admin-muted">Thay đổi chỉ áp dụng sau khi bấm Lưu Slogan.</small></div></div>
     </fieldset>
   </form>;
