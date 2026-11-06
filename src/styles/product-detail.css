@@ -902,3 +902,7 @@
 .product-care-guide > p, .product-care-item > p { margin-top: var(--slogan-gap,12px); }
 .product-care-guide .product-slogan-divider { margin-block: var(--slogan-gap,12px); }
 @media(max-width:600px) { .product-care-guide[style*="--slogan-mobile-padding"], .product-care-item[style*="--slogan-mobile-padding"] { padding:var(--slogan-mobile-padding) !important; } }
+
+/* Guides follow the 80% content column, leaving reviews in the sidebar. */
+.product-main-column > .product-care-guide { width: 100%; max-width: none; margin: 0; }
+@media(max-width:900px) { .product-main-column > .product-care-guide { order: 3; width: 100%; margin: 0; } }

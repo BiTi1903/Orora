@@ -1,3 +1,4 @@
+import { careGuideForProduct } from "../lib/product-care-guide";
 import ProductCareGuide from "./ProductCareGuide";
 import { matchesProductRoute, productNumber, productPath } from "../lib/product-identity";
 import ProductPurchaseSelection from "./ProductPurchaseSelection";
@@ -496,6 +497,7 @@ function ProductDetail({
       <div className="product-detail-lower">
         <ProductInformation sections={sections} css={css} preview={preview} select={select} selectedClass={selectedClass} textProps={textProps} />
       </div>
+      {!home.loading && <ProductCareGuide value={careGuideForProduct(home.productCareGuide, product)} />}
       </div>
       <div className="product-side-column">
         <ProductAssurances policies={home.productPolicies} textProps={textProps} />
@@ -506,7 +508,6 @@ function ProductDetail({
       </div>
 
 
-      {!home.loading && <ProductCareGuide value={home.productCareGuide} />}
     </article>
   );
 }

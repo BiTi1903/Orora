@@ -3,3 +3,12 @@ export const DEFAULT_CARE_GUIDE = { enabled: true, title: 'Chọn cách chăm s�
   { id: 'bright', title: 'Dưỡng da đều đặn', text: 'Sử dụng theo hướng dẫn của từng sản phẩm. Bắt đầu với lượng nhỏ và theo dõi phản ứng của da.' },
   { id: 'travel', title: 'Chăm sóc khi di chuyển', text: 'Duy trì thói quen chăm sóc khi đi làm hoặc du lịch. Chuẩn bị sản phẩm cần thiết và bảo quản đúng hướng dẫn.' }
 ] };
+
+// Product IDs are stable database IDs; numbering and slugs may change.
+export function careGuideForProduct(settings, product) {
+  if (Array.isArray(settings?.groups)) {
+    if (!product?.id) return { enabled: false };
+    return settings.groups.find(group => Array.isArray(group.productIds) && group.productIds.includes(String(product.id)))?.guide ?? { enabled: false };
+  }
+  return settings ?? DEFAULT_CARE_GUIDE;
+}
