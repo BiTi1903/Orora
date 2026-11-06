@@ -1,3 +1,4 @@
+import ProductCareGuide from "./ProductCareGuide";
 import { matchesProductRoute, productNumber, productPath } from "../lib/product-identity";
 import ProductPurchaseSelection from "./ProductPurchaseSelection";
 import { productVolumeOptions, selectedVolumeOption, volumePriceText } from "../lib/product-options";
@@ -505,6 +506,7 @@ function ProductDetail({
       </div>
 
 
+      {!home.loading && <ProductCareGuide value={home.productCareGuide} />}
     </article>
   );
 }

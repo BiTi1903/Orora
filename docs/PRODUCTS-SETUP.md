@@ -111,3 +111,9 @@ Trang chủ → Chi tiết SP → Nút chọn kênh mua hàng cho sửa nhãn c�
 
 
 Slogan trong chi tiết sản phẩm chỉ hiển thị chữ, không có biểu tượng hoặc họa tiết, kể cả khi dữ liệu cũ có lưu các lựa chọn này. Admin chỉ có Nội dung, Kiểu chữ và Khung thẻ; tiêu đề không bắt buộc và có thể bật/tắt. Nội dung và kiểu chữ đã lưu được giữ nguyên. Các thiết lập biểu tượng cũ không còn được sử dụng hoặc hiển thị trong giao diện chỉnh sửa.
+
+## Cách chăm sóc trên footer
+
+Sản phẩm → Thiết lập dùng chung → Cách chăm sóc phù hợp — trên footer. Nội dung mẫu gồm chăm sóc hằng ngày, dưỡng da đều đặn và chăm sóc khi di chuyển, hiển thị khi chưa có cấu hình riêng. Admin có thể bật/tắt, sửa tiêu đề và giới thiệu, thêm/xóa/sắp xếp mục, sửa nội dung và nhãn/đường dẫn của từng mục. Xóa hết mục không khôi phục mẫu; tắt sẽ ẩn toàn khối. Liên kết chỉ chấp nhận http/https, đường dẫn nội bộ bắt đầu bằng / hoặc #.
+
+Nhóm Kiểu chữ chỉnh riêng tiêu đề khối, giới thiệu, tiêu đề mục, nội dung mục và liên kết: font, cỡ máy tính/mobile, màu, độ đậm, căn lề và giãn cách. Nhóm Khung và nền chỉnh cả khối và thẻ con: nền, viền, bo góc, bóng, khoảng đệm, đệm mobile, đường phân cách và ẩn/hiện tiêu đề. Xem trước cập nhật khi chỉnh, nút lưu theo cuộn. Lưu riêng settings/home.productCareGuide, không thay nội dung từng sản phẩm hoặc thiết lập khác.
