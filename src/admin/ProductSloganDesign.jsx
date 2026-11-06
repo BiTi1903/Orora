@@ -40,7 +40,7 @@ export function SloganAppearanceEditor({ value = {}, onChange }) {
   const s = value || {};
   const set = (key) => (next) => onChange({ [key]: next });
   return <div className="slogan-design-editor"><h3>Khung và nền thẻ</h3><div className="slogan-design-grid">
-    <ChoiceField label="Căn nội dung thẻ" value={s.textAlign || "left"} onChange={set("textAlign")} options={[["left", "Trái"], ["center", "Giữa"], ["right", "Phải"]]} />
+    <ChoiceField label="Căn nội dung thẻ" value={s.textAlign || "center"} onChange={set("textAlign")} options={[["left", "Trái"], ["center", "Giữa"], ["right", "Phải"]]} />
     <ChoiceField label="Kiểu nền" value={s.backgroundType || "default"} onChange={set("backgroundType")} options={[["default", "Mặc định của website"], ["solid", "Một màu"], ["gradient", "Chuyển màu"], ["transparent", "Trong suốt"]]} />
     {["solid", "gradient"].includes(s.backgroundType) && <ColorField label="Màu nền thẻ" value={s.backgroundColor} fallback="#fffafb" onChange={set("backgroundColor")} />}
     {s.backgroundType === "gradient" && <><ColorField label="Màu chuyển tới" value={s.gradientColor} fallback="#fff0f6" onChange={set("gradientColor")} /><NumberField label="Hướng chuyển màu (độ)" value={s.gradientAngle} fallback={145} max={360} onChange={set("gradientAngle")} /></>}
