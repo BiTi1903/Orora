@@ -821,8 +821,8 @@
   position: relative; overflow: hidden; padding: 22px 18px;
   background: linear-gradient(145deg, #fffafb, #fff0f6);
 }
-.product-slogan-content { position: relative; z-index: 1; display: grid; gap: var(--slogan-gap, 12px); min-width: 0; }
-.product-slogan-heading { display: flex; align-items: center; justify-content: var(--slogan-justify, flex-start); gap: 10px; min-width: 0; }
+.product-slogan-content { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--slogan-gap, 12px); min-width: 0; width: 100%; }
+.product-slogan-heading { display: block; min-width: 0; width: 100%; }
 .product-slogan-symbol { display: inline-flex; width: max-content; max-width: 100%; justify-self: var(--slogan-justify, flex-start); flex-shrink: 0; color: var(--rose-deep); transform: rotate(var(--slogan-symbol-rotation, 0deg)); }
 .slogan-symbol-glyph { display: flex; align-items: center; justify-content: center; width: var(--slogan-symbol-size, 23px); height: var(--slogan-symbol-size, 23px); max-width: 100%; }
 .slogan-symbol-glyph:has(.slogan-custom-symbol) { width: auto; height: auto; min-width: var(--slogan-symbol-size, 23px); min-height: var(--slogan-symbol-size, 23px); }
