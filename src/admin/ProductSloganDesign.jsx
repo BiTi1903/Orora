@@ -36,7 +36,7 @@ export function SloganTypographyEditor({ value = {}, onChange, title = "Kiểu c
   </div><small className="admin-muted">Để trống kích thước/khoảng cách để dùng mặc định. Cỡ chữ 0 = tự động. Màu có thể chọn hoặc nhập mã màu.</small></fieldset>;
 }
 
-export function SloganAppearanceEditor({ value = {}, onChange }) {
+export function SloganAppearanceEditor({ value = {}, onChange, allowTitleToggle = true }) {
   const s = value || {};
   const set = (key) => (next) => onChange({ [key]: next });
   return <div className="slogan-design-editor"><h3>Khung và nền thẻ</h3><div className="slogan-design-grid">
@@ -55,5 +55,5 @@ export function SloganAppearanceEditor({ value = {}, onChange }) {
   </div><h3>Khoảng đệm trong thẻ</h3><div className="slogan-design-grid">
     {[["paddingTop", "Đệm trên (px)", 22], ["paddingRight", "Đệm phải (px)", 18], ["paddingBottom", "Đệm dưới (px)", 22], ["paddingLeft", "Đệm trái (px)", 18]].map(([key, label, fallback]) => <NumberField key={key} label={label} value={s[key]} fallback={fallback} onChange={set(key)} />)}
     <NumberField label="Đệm trên điện thoại (px)" value={s.mobilePadding} fallback="Theo máy tính" max={40} onChange={set("mobilePadding")} />
-  </div><label className="admin-check"><input type="checkbox" checked={s.showTitle !== false} onChange={(event) => onChange({ showTitle: event.target.checked })} />Hiển thị tiêu đề</label></div>;
+  </div>{allowTitleToggle && <label className="admin-check"><input type="checkbox" checked={s.showTitle !== false} onChange={(event) => onChange({ showTitle: event.target.checked })} />Hiển thị tiêu đề</label>}</div>;
 }

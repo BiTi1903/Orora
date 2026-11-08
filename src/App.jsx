@@ -1,3 +1,4 @@
+import ProductNeeds from "./components/ProductDiscovery";
 import useHomeContent from "./hooks/useHomeContent";
 import { lazy, Suspense, useLayoutEffect, useRef } from "react";
    import { Marquee, Features, Testimonials, Newsletter } from "./components/Extras";
@@ -353,7 +354,7 @@ function App() {
 
               {visible("about") && <About />}
 
-              {visible("collection") && <Collection />}
+              {visible("collection") && <><ProductNeeds /><Collection /></>}
               {visible("philosophy") && <ScrollText />}
 
               {visible("features") && <Features />}

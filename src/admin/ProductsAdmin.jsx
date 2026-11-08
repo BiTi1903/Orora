@@ -1,3 +1,4 @@
+import ProductDiscoverySettings from "./ProductDiscoverySettings";
 import ProductCareSettings from "./ProductCareSettings";
 import PriceInput from "./PriceInput";
 import { formatProductPrice, parseVndPrice } from "../lib/commerce";
@@ -204,6 +205,8 @@ export default function ProductsAdmin() {
       </details>
       <details><summary>Slogan trên chi tiết sản phẩm</summary><ProductSloganSettings /></details>
       <details><summary>Cách chăm sóc phù hợp — trên footer</summary><ProductCareSettings /></details>
+      <details><summary>Chọn sản phẩm theo nhu cầu</summary><ProductDiscoverySettings /></details>
+      <details><summary>Câu hỏi thường gặp theo sản phẩm</summary><ProductDiscoverySettings faq /></details>
     </div>}
     {editing && <form ref={editorRef} className="admin-card admin-form product-editor-form" noValidate onSubmit={save}>
       <div className="product-editor-toolbar">

@@ -121,3 +121,13 @@ Mỗi bộ có nội dung, liên kết, kiểu chữ và thiết kế riêng. Ad
 Nhóm Kiểu chữ chỉnh riêng tiêu đề khối, giới thiệu, tiêu đề mục, nội dung mục và liên kết: font, cỡ máy tính/mobile, màu, độ đậm, căn lề và giãn cách. Nhóm Khung và nền chỉnh cả khối và thẻ con: nền, viền, bo góc, bóng, khoảng đệm, đệm mobile, đường phân cách và ẩn/hiện tiêu đề. Có xem trước và nút lưu theo cuộn.
 
 Khối nằm dưới nội dung trong cột trái 80%, chừa cột đánh giá bên phải; điện thoại xếp toàn chiều rộng trước sản phẩm gợi ý và đánh giá. Lưu settings/home.productCareGuide.groups; liên kết sản phẩm bằng ID cơ sở dữ liệu, không theo slug hay STT nên đổi tên/STT không mất áp dụng. Cấu hình chung cũ giữ nguyên trên website đến khi lưu cấu hình bộ; admin chuyển nội dung và kiểu đã chỉnh thành bộ hiện có áp dụng cho danh sách sản phẩm đang tồn tại. Tải nội dung hoặc danh sách sản phẩm lỗi thì khóa lưu để tránh mất cấu hình. Không tự ghi dữ liệu khi mở admin.
+
+## Chọn sản phẩm theo nhu cầu và FAQ
+
+Trong Sản phẩm → Thiết lập dùng chung có hai mục riêng: Chọn sản phẩm theo nhu cầu, Câu hỏi thường gặp theo sản phẩm. Cả hai có nội dung, kiểu chữ và khung/nền; có bật/tắt, thêm/xóa/sắp xếp mục, xem trước và nút lưu theo cuộn. Lưu độc lập settings/home.productNeeds và productFaq, giữ thiết lập khác. Tải dữ liệu hoặc danh sách sản phẩm lỗi sẽ khóa lưu. Các nhãn nhu cầu hiển thị mặc định; gợi ý sản phẩm chỉ có khi admin chọn và lưu. FAQ mẫu chưa gán sản phẩm sẽ không hiển thị công khai.
+
+Chọn theo nhu cầu xuất hiện trước bộ sưu tập trên trang chủ. Mẫu gồm Làm sạch, Dưỡng sáng, Khử mùi, Chưa biết chọn gì. Admin chọn rõ ID sản phẩm gợi ý cho từng nhu cầu; không tự gán công dụng theo tên. Khách bấm nhu cầu sẽ thấy sản phẩm còn hiển thị và đường dẫn chuẩn tới chi tiết; nhu cầu chưa gán sản phẩm có thông báo do admin chỉnh và liên kết đến bộ sưu tập #shop. Không tự mở chat hoặc gửi tin nhắn. Chọn lại nhu cầu thay kết quả, không tải lại trang.
+
+FAQ xuất hiện dưới nội dung trong cột trái trang chi tiết. Mỗi câu hỏi có nội dung trả lời và danh sách sản phẩm áp dụng riêng, có thể dùng chung cho nhiều sản phẩm. Chỉ hiện câu đầy đủ, đang bật và đúng ID sản phẩm; câu mẫu chưa gán không hiện công khai. Sản phẩm chưa có câu hỏi sẽ ẩn toàn khối. Dùng details/summary để mở/đóng bằng chuột và bàn phím, văn bản hiển thị an toàn và giữ xuống dòng.
+
+Kiểu chữ chỉnh riêng tiêu đề khối, giới thiệu, tên nhu cầu/câu hỏi, lời gợi ý/trả lời và chữ liên kết. Thiết kế chỉnh nền, viền, bo góc, bóng, căn lề, khoảng đệm desktop/mobile, khoảng cách, đường phân cách. Không có biểu tượng trang trí. Câu hỏi luôn giữ tên để khách mở câu trả lời.
