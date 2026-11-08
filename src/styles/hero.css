@@ -313,8 +313,9 @@
 .hero-chip {
   position: absolute;
   z-index: 3;
-  translate: calc(var(--px) * var(--d) * 1px) calc(var(--py) * var(--d) * 1px);
-  transition: translate 0.35s ease-out;
+  translate: calc(var(--px) * var(--d) * 2.4px) calc(var(--py) * var(--d) * 2.4px);
+  rotate: calc(var(--px) * var(--d) * 0.09deg);
+  transition: translate 0.18s ease-out, rotate 0.22s ease-out;
 }
 
 .chip-in {
@@ -482,3 +483,7 @@
 .home-first-screen > .marquee { flex: 0 0 auto; }
 .hero-chip-custom { transform: translate(-50%, -50%); max-width: 260px; }
 .hero-chip-custom .chip-in { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+
+@media (prefers-reduced-motion: reduce), (hover: none) {
+  .hero-chip { translate:none; rotate:none; }
+}

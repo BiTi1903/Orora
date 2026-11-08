@@ -30,18 +30,20 @@ function Hero({
   const handleMove = (e) => {
     if (preview) return;
     if (!window.matchMedia("(hover: hover)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const el = e.currentTarget;
     const r = el.getBoundingClientRect();
+    if (!r.width || !r.height) return;
 
     el.style.setProperty(
       "--px",
-      ((e.clientX - r.left) / r.width - 0.5).toFixed(3)
+      Math.max(-0.5, Math.min(0.5, (e.clientX - r.left) / r.width - 0.5)).toFixed(3)
     );
 
     el.style.setProperty(
       "--py",
-      ((e.clientY - r.top) / r.height - 0.5).toFixed(3)
+      Math.max(-0.5, Math.min(0.5, (e.clientY - r.top) / r.height - 0.5)).toFixed(3)
     );
   };
 
