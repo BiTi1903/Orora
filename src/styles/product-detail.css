@@ -956,3 +956,9 @@
 .order-tracking-steps .is-reached { border-top-color:var(--rose-deep); color:var(--rose-deep); }
 .order-tracking-steps [aria-current] { font-weight:600; }
 @media(max-width:600px) { .order-tracking-page { padding-top:96px; } .order-tracking-panel,.order-tracking-result { padding:24px 18px; } .order-tracking-panel h1 { font-size:34px; } .order-tracking-steps { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; } }
+.order-tracking-more { display:block; margin:24px auto 0; min-height:44px; padding:12px 24px; border:1px solid var(--line); border-radius:12px; background:var(--rose-deep); color:#fff; font:inherit; cursor:pointer; }
+.order-tracking-more:disabled { opacity:.6; cursor:wait; }
+
+.order-tracking-modes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.order-tracking-modes button { background:#fff; border:1px solid var(--line); color:var(--plum); padding:12px; }
+.order-tracking-modes button[aria-pressed="true"] { background:var(--rose-deep); color:#fff; border-color:var(--rose-deep); }

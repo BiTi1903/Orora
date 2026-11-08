@@ -1,7 +1,7 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { normalizeTrackingPhone, ORDER_STATUSES } from '../src/lib/order-tracking.js';
 const failure = (status, message) => Object.assign(new Error(message), { status, publicError:true });
-const missing = 'Không tìm thấy đơn hàng với thông tin này. Vui lòng kiểm tra mã đơn và số điện thoại đã đặt hàng.';
+const missing = 'Không tìm thấy đơn hàng với thông tin này. Vui lòng kiểm tra mã đơn hoặc số điện thoại đã đặt hàng.';
 const timestamp = value => {
   const n = value?.toMillis?.() ?? (value == null ? NaN : new Date(value).getTime());
   return Number.isFinite(n) ? n : null;
@@ -35,19 +35,37 @@ export function createOrderTrackingHandler({ getDb, env = process.env, now = () 
       let body;
       try { body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body; } catch { throw failure(400,'Thông tin tra cứu không hợp lệ.'); }
       if (!body || Buffer.byteLength(JSON.stringify(body)) > 2000) throw failure(400,'Thông tin tra cứu không hợp lệ.');
+      if ((body.code != null && typeof body.code !== 'string') || (body.phone != null && typeof body.phone !== 'string')) throw failure(400,'Thông tin tra cứu không hợp lệ.');
       const code = typeof body.code === 'string' ? body.code.trim().toUpperCase() : '';
       const phone = normalizeTrackingPhone(body.phone);
-      if (!/^[A-Z0-9_-]{4,40}$/.test(code) || !phone) throw failure(400,'Vui lòng nhập mã đơn và số điện thoại hợp lệ.');
+      const suppliedPhone = typeof body.phone === 'string' && body.phone.trim();
+      const validCode = value => typeof value === 'string' && /^[A-Z0-9_-]{4,40}$/.test(value);
+      if ((!code && !phone) || (code && !validCode(code)) || (suppliedPhone && !phone) || (body.cursor && (code || !validCode(body.cursor)))) throw failure(400,'Vui lòng nhập ít nhất mã đơn hoặc số điện thoại hợp lệ.');
       const db = getDb();
-      await reserveLookup(db,req,phone,now(),env);
-      const snapshot = await db.collection('orders').where('code','==',code).limit(5).get();
-      const order = snapshot.docs.map(doc => doc.data()).find(order => {
+      await reserveLookup(db,req,phone || `code:${code}`,now(),env);
+      const matchesPhone = order => {
         const stored = normalizeTrackingPhone(order.customer?.phone);
         return stored && stored.length === phone.length && timingSafeEqual(Buffer.from(stored),Buffer.from(phone));
-      });
-      if (!order) return res.status(404).json({message:missing});
+      };
+      let documents;
+      if (code) {
+        const snapshot = await db.collection('orders').where('code','==',code).limit(5).get();
+        documents = snapshot.docs.filter(doc => !phone || matchesPhone(doc.data())).slice(0,1);
+      } else {
+        const variants = [phone, `+${phone}`];
+        if (phone.startsWith('0') && [10,11].includes(phone.length)) variants.push(`84${phone.slice(1)}`,`+84${phone.slice(1)}`);
+        let query = db.collection('orders').where('customer.phone','in',[...new Set(variants)]).limit(21);
+        if (body.cursor) {
+          const prior = await db.collection('orders').where('code','==',body.cursor).limit(5).get();
+          const cursor = prior.docs.find(doc => matchesPhone(doc.data()));
+          if (!cursor) throw failure(400,'Mốc tra cứu không hợp lệ. Vui lòng tra cứu lại.');
+          query = query.startAfter(cursor);
+        }
+        documents = (await query.get()).docs;
+      }
+      if (!documents.length && !body.cursor) return res.status(404).json({message:missing});
       const amount = value => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
-      return res.status(200).json({ order: {
+      const project = order => ({
         code:order.code,status:Object.hasOwn(ORDER_STATUSES,order.status) ? order.status : 'unknown',
         createdAt:timestamp(order.createdAt),updatedAt:timestamp(order.updatedAt || order.createdAt),
         productName:String(order.product?.name || '').slice(0,300),variantLabel:String(order.product?.variantLabel || '').slice(0,150),
@@ -55,7 +73,9 @@ export function createOrderTrackingHandler({ getDb, env = process.env, now = () 
         subtotal:amount(order.subtotal),shippingFee:amount(order.shippingFee),totalAmount:amount(order.totalAmount),
         paymentMethod:['cod','bank_transfer'].includes(order.paymentMethod) ? order.paymentMethod : 'unknown',
         paymentStatus:['paid','refunded'].includes(order.paymentStatus) ? order.paymentStatus : 'unpaid',
-      }});
+      });
+      const orders = documents.slice(0,20).map(doc => project(doc.data()));
+      return res.status(200).json({ orders, ...(code && orders[0] ? { order:orders[0] } : {}), nextCursor:!code && documents.length > 20 ? documents[19].data().code : null });
     } catch (error) {
       const status = error.publicError === true ? error.status : 503;
       if (status === 429) res.setHeader('Retry-After',String(error.retryAfter || 600));
