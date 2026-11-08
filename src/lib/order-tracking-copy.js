@@ -1,4 +1,5 @@
 export const ORDER_TRACKING_FIELDS = [
+  ['backLabel','Nút trở về','Trở về trang chủ'],
   ['eyebrow','Dòng chữ nhỏ','ORORA · ĐƠN HÀNG CỦA BẠN'],
   ['title','Tiêu đề trang','Tra cứu đơn hàng'],
   ['intro','Lời giới thiệu','Nhập mã đơn hoặc số điện thoại đã đặt hàng. Chỉ nhập số điện thoại để xem các đơn của số đó.'],

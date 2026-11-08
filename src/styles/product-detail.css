@@ -982,3 +982,5 @@
 @media(max-width:600px) { .order-tracking-summary { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; } .order-tracking-summary-product { grid-row:2; grid-column:1/-1; } .order-tracking-summary-state { text-align:right; } .order-tracking-summary > button { grid-column:1/-1; } }
 .order-tracking-summary-product > span { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
 @media(max-width:600px) { .order-tracking-summary-product { grid-column:1; } .order-tracking-summary > button { grid-column:2; grid-row:2; align-self:center; } }
+.order-tracking-back { display:inline-flex; align-items:center; gap:8px; min-height:44px; margin-bottom:16px; padding:10px 18px; border:1px solid var(--line); border-radius:999px; background:#fffafb; color:var(--rose-deep); text-decoration:none; }
+.order-tracking-back:focus-visible { outline:2px solid var(--rose-deep); outline-offset:3px; }
