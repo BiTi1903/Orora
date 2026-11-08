@@ -1,3 +1,4 @@
+import OrderTracking from "./components/OrderTracking";
 import { sectionIsEnabled } from "./lib/page-sections";
 import ProductNeeds from "./components/ProductDiscovery";
 import useHomeContent from "./hooks/useHomeContent";
@@ -372,6 +373,7 @@ function App() {
         />
 
 
+        <Route path="/tra-cuu-don-hang" element={<main>{visible("navbar") && <Navbar />}<OrderTracking />{visible("footer") && <Footer />}</main>} />
         <Route path="/san-pham" element={<Navigate to="/#shop" replace />} />
         <Route path="/ve-orora" element={<Navigate to="/#about" replace />} />
         <Route path="/lien-he" element={<Navigate to="/#contact" replace />} />

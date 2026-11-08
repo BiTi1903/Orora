@@ -297,6 +297,7 @@ const FOOTER_FIELD_MAP = {
     styleKey: "link",
   },
   ftShop: { key: "footerShopText", label: "Shop", styleKey: "link" },
+  ftTracking: { key: "footerTrackingText", label: "Tra cứu đơn hàng", styleKey: "link" },
   ftTerms: {
     key: "footerTermsText",
     label: "Terms & Conditions",

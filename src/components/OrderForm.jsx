@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import ProductPurchaseSelection from "./ProductPurchaseSelection";
 import { MAX_ORDER_QUANTITY, productVolumeOptions, selectedVolumeOption, volumePriceText } from "../lib/product-options";
 import AddressSelect from "./AddressSelect";
@@ -45,6 +46,7 @@ export default function OrderForm({ product, home, onClose, selection, initialVa
       <div><dt>Phí giao hàng</dt><dd>{result.shippingFee == null ? "Xác nhận sau" : formatVnd(result.shippingFee)}</dd></div>
       <div><dt>Tổng tiền</dt><dd>{result.totalAmount == null ? "ORORA sẽ xác nhận tổng tiền" : formatVnd(result.totalAmount)}</dd></div>
     </dl></div>
+    <p><Link to="/tra-cuu-don-hang" state={{ code: result.code }} onClick={onClose}>Tra cứu trạng thái đơn hàng</Link></p>
     <p className="order-help">Nếu thông tin chưa đúng, vui lòng liên hệ ORORA và cung cấp mã đơn để được hỗ trợ.</p>
     <p>{result.mailStatus === "accepted" ? "Vui lòng kiểm tra email xác nhận và mục thư rác." : result.mailStatus === "failed" ? "Đơn đã được nhận nhưng chưa gửi được email xác nhận. Bạn có thể liên hệ ORORA với mã đơn bên trên." : "Email xác nhận đang được xử lý."}</p><button type="button" onClick={onClose}>Đóng</button>
   </section></ModalDialog>;

@@ -1,3 +1,4 @@
+import { ORDER_STATUSES as STATUSES } from "../lib/order-tracking";
 import { orderProductName } from "../lib/product-options";
 import OrderActivity from "./OrderActivity";
 import OrderMailHistory from "./OrderMailHistory";
@@ -12,7 +13,6 @@ import { orderPaymentLabel } from "../lib/order-summary";
 import { useEffect, useRef, useState } from "react";
 import { PAYMENT_LABELS, formatProductPrice, formatVnd } from "../lib/commerce";
 import { orderRequest, MAIL_STATES } from "./order-api";
-const STATUSES = { new: "Mới nhận", confirmed: "Đã xác nhận", shipping: "Đang giao", completed: "Hoàn tất", cancelled: "Đã hủy" };
 const date = (value) => value ? new Date(value).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "—";
 export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, refreshKey = 0, pendingRequest, onOrderChanged }) {
   const [mailPreview, setMailPreview] = useState(null);
@@ -144,6 +144,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
       <div hidden={detailTab !== "summary"}>
       <div className="admin-form-grid order-detail-grid"><div><h3>Thông tin người mua</h3><p>{selected.customer.name}</p><p><a href={`tel:${selected.customer.phone}`}>{selected.customer.phone}</a></p><p>{selected.customer.email ? <a href={`mailto:${selected.customer.email}`}>{selected.customer.email}</a> : "Đơn cũ chưa có email"}</p><p className="order-preserve-text">{selected.customer.address}</p><p className="order-preserve-text">Ghi chú: {selected.customer.note || "—"}</p></div>
       <div><h3>Sản phẩm và thanh toán</h3><p>{orderProductName(selected.product)} × {selected.quantity}</p><p>Đơn giá: {formatProductPrice(selected.product.priceText) || "Cần báo giá"}</p><p>Tạm tính: {selected.subtotal === null ? "Cần báo giá" : formatVnd(selected.subtotal)}</p><p>Phí giao hàng: {selected.shippingFee == null ? "Xác nhận sau" : formatVnd(selected.shippingFee)}</p><p>Tổng tiền: {selected.totalAmount == null ? "Chưa chốt tổng tiền" : formatVnd(selected.totalAmount)}</p><p>Phương thức: {PAYMENT_LABELS[selected.paymentMethod] || selected.paymentMethod}</p><p>Thanh toán: {orderPaymentLabel(selected)}</p><label className="admin-check"><input type="checkbox" checked={selected.paymentStatus === "paid"} disabled={busy || detail.loading} onChange={(event) => update(selected, { paymentStatus: event.target.checked ? "paid" : "unpaid" })} />Đã thanh toán</label></div></div>
+      <p className="admin-muted">Khách có thể xem trạng thái này tại trang Tra cứu đơn hàng bằng mã đơn và số điện thoại đã đặt.</p>
       <fieldset className="order-status-options" disabled={busy || detail.loading || selected.status === "cancelled"}><legend>Trạng thái xử lý đơn</legend>{Object.entries(STATUSES).map(([key, label]) => <label key={key}><input type="radio" name={`status-${selected.id}`} checked={selected.status === key} onChange={() => update(selected, { status: key })} />{label}</label>)}</fieldset>
       <p className="admin-muted">Chọn Hoàn tất sẽ ghi nhận đã thanh toán. Đổi sang trạng thái khác không tự xóa ghi nhận tiền; dùng ô Đã thanh toán để điều chỉnh.</p>
       <details className="admin-filter-panel"><summary>Quy tắc tồn kho & mã lưu trữ</summary><p className="admin-muted">ID: {selected.id}</p><p className="admin-muted">Đơn chờ giữ số lượng, chưa trừ tồn thực tế. Xác nhận thanh toán, bắt đầu giao hoặc Hoàn tất sẽ trừ kho một lần. Hủy đơn chưa xuất giải phóng hàng chờ; đơn đã xuất chỉ hoàn kho khi xác nhận nhận lại hàng.</p></details>
