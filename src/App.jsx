@@ -1,3 +1,4 @@
+import { sectionIsEnabled } from "./lib/page-sections";
 import ProductNeeds from "./components/ProductDiscovery";
 import useHomeContent from "./hooks/useHomeContent";
 import { lazy, Suspense, useLayoutEffect, useRef } from "react";
@@ -37,7 +38,7 @@ function App() {
   const location = useLocation();
   const home = useHomeContent();
   const visibility = JSON.stringify(home.sectionVisibility || {});
-  const visible = (key) => !home.loading && home.sectionVisibility?.[key] !== false;
+  const visible = (key) => !home.loading && sectionIsEnabled(home, key);
 
 
   useLayoutEffect(() => {
@@ -354,7 +355,8 @@ function App() {
 
               {visible("about") && <About />}
 
-              {visible("collection") && <><ProductNeeds /><Collection /></>}
+              {visible("productneeds") && <ProductNeeds />}
+              {visible("collection") && <Collection />}
               {visible("philosophy") && <ScrollText />}
 
               {visible("features") && <Features />}

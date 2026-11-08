@@ -1,3 +1,7 @@
+import { PAGE_SECTIONS as SECTION_LIST, sectionIsEnabled } from "../../lib/page-sections";
+import { DEFAULT_PRODUCT_NEEDS, DEFAULT_PRODUCT_FAQ } from "../../lib/product-discovery";
+import { ProductNeedsView, ProductFaq } from "../../components/ProductDiscovery";
+import useProducts from "../../hooks/useProducts";
 import { editedSectionPayload, changedValues, mergeSavedValues } from "./save-sections";
 import PreviewFrame from "./PreviewFrame";
 import { PREVIEW_PRODUCTS } from "./preview-products";
@@ -524,69 +528,7 @@ function createNav(data = {}) {
   };
 }
 
-const SECTION_LIST = [
-  {
-    key: "navbar",
-    label: "Navbar",
-    icon: "≡",
-  },
-  {
-    key: "hero",
-    label: "Hero",
-    icon: "✦",
-  },
-  {
-    key: "ticker",
-    label: "Dải chữ chạy",
-    icon: "↔",
-  },
-  {
-    key: "about",
-    label: "Câu chuyện",
-    icon: "♡",
-  },
-  {
-    key: "philosophy",
-    label: "Triết lý",
-    icon: "✦",
-  },
-  {
-    key: "collection",
-    label: "Sản phẩm",
-    icon: "◇",
-  },
-  {
-    key: "productdetail",
-    label: "Chi tiết SP",
-    icon: "▣",
-  },
-  {
-    key: "features",
-    label: "Nâng cấp BT",
-    icon: "✧",
-  },
-  // {
-  //   key: "steps",
-  //   label: "Quy trình",
-  //   icon: "03",
-  //   disabled: true,
-  // },
-  {
-    key: "reviews",
-    label: "Cảm nhận",
-    icon: "❝",
-  },
-  {
-    key: "newsletter",
-    label: "Nhận tin",
-    icon: "✉",
-  },
-  {
-    key: "footer",
-    label: "Footer",
-    icon: "⌄",
-  },
-];
+
 
 function mergeStyle(base, custom) {
   return {
@@ -992,6 +934,15 @@ export default function VisualBuilder() {
     },
   });
   const [sectionVisibility, setSectionVisibility] = useState({});
+  const [discovery, setDiscovery] = useState({ productNeeds: DEFAULT_PRODUCT_NEEDS, productFaq: DEFAULT_PRODUCT_FAQ });
+  const { products: discoveryProducts, loading: discoveryLoading } = useProducts();
+  const isEnabled = key => sectionIsEnabled({ ...discovery, sectionVisibility }, key);
+  const toggleSection = key => {
+    const field = SECTION_LIST.find(section => section.key === key)?.settingsKey;
+    dirtySections.current.add(field ? key : 'visibility');
+    if (field) setDiscovery(current => ({ ...current, [field]: { ...current[field], enabled: current[field]?.enabled === false } }));
+    else setSectionVisibility(current => ({ ...current, [key]: current[key] === false }));
+  };
   const [activeSection, setActiveSection] = useState("about");
   const [selected, setSelected] = useState("title");
   const [loading, setLoading] = useState(true);
@@ -1009,6 +960,7 @@ export default function VisualBuilder() {
         if (!alive) return;
 
         setSectionVisibility(data?.sectionVisibility || {});
+        setDiscovery({ productNeeds: { ...DEFAULT_PRODUCT_NEEDS, ...data?.productNeeds }, productFaq: { ...DEFAULT_PRODUCT_FAQ, ...data?.productFaq } });
         setAbout(createAbout(data || {}));
         setHero(createHero(data || {}));
         setCollection(createCollection(data || {}));
@@ -1537,7 +1489,7 @@ export default function VisualBuilder() {
     });
   };
 
-  const payload = useMemo(() => ({ ...buildHomePayload({ about, hero, collection, productDetail, features, reviews, newsletter, footer, ticker, navbar, philosophy }), sectionVisibility }), [about, hero, collection, productDetail, features, reviews, newsletter, footer, ticker, navbar, philosophy, sectionVisibility]);
+  const payload = useMemo(() => ({ ...buildHomePayload({ about, hero, collection, productDetail, features, reviews, newsletter, footer, ticker, navbar, philosophy }), sectionVisibility, ...discovery }), [about, hero, collection, productDetail, features, reviews, newsletter, footer, ticker, navbar, philosophy, sectionVisibility, discovery]);
   useEffect(() => {
     if (!loading && !loadError && baseline.current === null) baseline.current = payload;
   }, [loading, loadError, payload]);
@@ -1654,7 +1606,7 @@ export default function VisualBuilder() {
                   <small>
                     {section.disabled
                       ? "Sắp có"
-                      : sectionVisibility[section.key] === false
+                      : !isEnabled(section.key)
                       ? "Đang ẩn trên website"
                       : activeSection === section.key
                       ? "Đang chỉnh sửa"
@@ -1666,10 +1618,7 @@ export default function VisualBuilder() {
                   <span className="builder-dot" />
                 )}
               </button>
-              <button type="button" role="switch" className="builder-section-visibility" aria-label={`Hiển thị ${section.label} trên website`} aria-checked={sectionVisibility[section.key] !== false} disabled={loading || loadError || saving || section.disabled} onClick={() => {
-                dirtySections.current.add("visibility");
-                setSectionVisibility((current) => ({ ...current, [section.key]: current[section.key] === false }));
-              }}><span aria-hidden="true" /></button>
+              <button type="button" role="switch" className="builder-section-visibility" aria-label={`Hiển thị ${section.label} trên website`} aria-checked={isEnabled(section.key)} disabled={loading || loadError || saving || section.disabled} onClick={() => toggleSection(section.key)}><span aria-hidden="true" /></button>
               </div>
             ))}
           </div>
@@ -1678,21 +1627,22 @@ export default function VisualBuilder() {
 
         <div className="builder-canvas">
           <div className="builder-canvas-head">
-            <span>{sectionVisibility[activeSection] === false ? "Mục này đang tắt trên website · Vẫn có thể chỉnh sửa tại đây" : "Sản phẩm mẫu · Xem trước tĩnh · Không thay đổi dữ liệu"}</span>
+            <span>{!isEnabled(activeSection) ? "Mục này đang tắt trên website · Vẫn có thể chỉnh sửa tại đây" : "Sản phẩm mẫu · Xem trước tĩnh · Không thay đổi dữ liệu"}</span>
 
 
             <div className="builder-device" role="group" aria-label="Điều khiển xem trước">
-              <button type="button" role="switch" aria-label="Hiển thị mục đang xem trước trên website" aria-checked={sectionVisibility[activeSection] !== false} disabled={loading || loadError || saving} onClick={() => {
-                dirtySections.current.add("visibility");
-                setSectionVisibility(current => ({ ...current, [activeSection]: current[activeSection] === false }));
-              }}>{sectionVisibility[activeSection] === false ? "Đang tắt · Bật" : "Đang bật · Tắt"}</button>
+              <button type="button" role="switch" aria-label="Hiển thị mục đang xem trước trên website" aria-checked={isEnabled(activeSection)} disabled={loading || loadError || saving} onClick={() => toggleSection(activeSection)}>{!isEnabled(activeSection) ? "Đang tắt · Bật" : "Đang bật · Tắt"}</button>
               <button type="button" aria-pressed={previewDevice === "desktop"} onClick={() => setPreviewDevice("desktop")}>Desktop</button>
               <button type="button" aria-pressed={previewDevice === "mobile"} onClick={() => setPreviewDevice("mobile")}>Mobile</button>
             </div>
           </div>
 
           <PreviewFrame device={previewDevice}>
-            {activeSection === "ticker" ? (
+            {activeSection === "productneeds" ? (
+              <ProductNeedsView preview value={{ ...discovery.productNeeds, enabled: true }} products={discoveryProducts} loading={discoveryLoading} />
+            ) : activeSection === "productfaq" ? (
+              <ProductFaq preview value={{ ...discovery.productFaq, enabled: true }} />
+            ) : activeSection === "ticker" ? (
               <TickerPreview
                 ticker={ticker}
                 selected={selected}
@@ -1776,7 +1726,7 @@ export default function VisualBuilder() {
         </div>
 
         <aside className="builder-settings">
-          <StylePanel
+          {SECTION_LIST.find(section => section.key === activeSection)?.settingsKey ? <div className="admin-card"><h3>{SECTION_LIST.find(section => section.key === activeSection)?.label}</h3><p>Bật/tắt mục tại danh sách bên trái hoặc ngay trên Preview. Bấm Lưu tất cả để áp dụng; nội dung và giao diện vẫn được giữ.</p><p>Chỉnh nội dung, sản phẩm áp dụng và kiểu chữ tại Sản phẩm → Thiết lập dùng chung.</p><p>{isEnabled(activeSection) ? 'Đang bật trên website' : 'Đang tắt trên website · vẫn xem trước để kiểm tra'}</p></div> : <StylePanel
             section={activeSection}
             selected={selected}
             data={selectedData}
@@ -1794,7 +1744,7 @@ export default function VisualBuilder() {
             philosophy={philosophy}
             onChange={updateSelected}
             onStyleChange={updateSelectedStyle}
-          />
+          />}
         </aside>
       </div>
     </div>

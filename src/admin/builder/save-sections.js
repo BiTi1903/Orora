@@ -1,4 +1,6 @@
 const FIELDS = {
+  productneeds: ["productNeeds"],
+  productfaq: ["productFaq"],
   visibility: ["sectionVisibility"],
   navbar: ["navLogo", "navLinks", "navStyles"],
   hero: ["heroEyebrow", "heroTitle", "heroDescription", "heroRotator", "heroRotatorPrefix", "heroRotatorSuffix", "heroButtonText", "heroButtonLink", "shopButtonText", "shopButtonLink", "heroImage", "heroImageMobile", "heroChip1", "heroChip2", "heroChip3", "heroGlassCards", "heroRingText", "heroScrollText"],
