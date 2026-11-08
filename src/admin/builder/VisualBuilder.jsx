@@ -1,3 +1,4 @@
+import { withTrackingNavLink } from "../../lib/navbar-links";
 import { PAGE_SECTIONS as SECTION_LIST, sectionIsEnabled } from "../../lib/page-sections";
 import { DEFAULT_PRODUCT_NEEDS, DEFAULT_PRODUCT_FAQ } from "../../lib/product-discovery";
 import { ProductNeedsView, ProductFaq } from "../../components/ProductDiscovery";
@@ -512,16 +513,16 @@ const DEFAULT_NAV = {
 function createNav(data = {}) {
   return {
     navLogo: data.navLogo ?? DEFAULT_NAV.navLogo,
-    navLinks: Array.isArray(data.navLinks)
+    navLinks: withTrackingNavLink(Array.isArray(data.navLinks)
       ? data.navLinks.map((item, index) => ({
           ...item,
           label: item.label || "",
           href:
             item.href && item.href !== "/"
               ? item.href
-              : DEFAULT_NAV.navLinks[index]?.href || "/",
+              : item.kind === "order-tracking" ? "/tra-cuu-don-hang" : DEFAULT_NAV.navLinks[index]?.href || "/",
         }))
-      : DEFAULT_NAV.navLinks.map((item) => ({ ...item })),
+      : DEFAULT_NAV.navLinks.map((item) => ({ ...item }))),
     navStyles: {
       logo: { ...DEFAULT_NAV.navStyles.logo, ...(data.navStyles?.logo || {}) },
       link: { ...DEFAULT_NAV.navStyles.link, ...(data.navStyles?.link || {}) },

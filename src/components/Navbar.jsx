@@ -1,3 +1,4 @@
+import { withTrackingNavLink } from "../lib/navbar-links";
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import useHomeContent from "../hooks/useHomeContent";
@@ -15,7 +16,7 @@ const DEFAULT_LINKS = [
    "#about" → "/#about" để bấm từ trang chi tiết sản phẩm vẫn về đúng mục ở trang chủ. */
 function resolveHref(item, index) {
   const raw = (item?.href || "").trim();
-  if (!raw || raw === "/") return DEFAULT_LINKS[index]?.href || "/";
+  if (!raw || raw === "/") return item?.kind === "order-tracking" ? "/tra-cuu-don-hang" : DEFAULT_LINKS[index]?.href || "/";
   const path = raw.startsWith("#") ? `/${raw}` : raw;
   return ({ "/ve-orora": "/#about", "/san-pham": "/#shop", "/lien-he": "/#contact" })[path] || path;
 }
@@ -48,9 +49,7 @@ function Navbar({
   const { categories } = useCategories();
   const data = preview && previewData ? previewData : home || {};
   const logo = data.navLogo || "";
-  const links = Array.isArray(data.navLinks) && data.navLinks.length
-    ? data.navLinks
-    : [];
+  const links = withTrackingNavLink(Array.isArray(data.navLinks) ? data.navLinks : []);
   const styles = data.navStyles || {};
   const facebook = socialShopUrl(home.shopLinks?.facebookUrl || home.footerFacebook, "facebook");
   const tiktok = socialShopUrl(home.shopLinks?.tiktokUrl || home.footerTikTok, "tiktok");
