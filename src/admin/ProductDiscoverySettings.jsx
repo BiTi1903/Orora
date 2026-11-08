@@ -37,6 +37,9 @@ export default function ProductDiscoverySettings({ faq = false }) {
       </div>
       <div hidden={tab !== 'text'} data-discovery-tab="text">{[['heading','Tiêu đề khối'],['body','Lời giới thiệu'],['itemHeading',faq ? 'Chữ câu hỏi' : 'Tên nhu cầu và sản phẩm'],['itemBody',faq ? 'Chữ trả lời' : 'Lời gợi ý và giá'],...(!faq ? [['linkStyle','Liên kết xem tất cả']] : [])].map(([key,title]) => <SloganTypographyEditor key={key} title={title} body={key !== 'heading'} value={form[key]} onChange={next => patch({ [key]: { ...form[key], ...next } })} />)}</div>
       <div hidden={tab !== 'card'} data-discovery-tab="card"><h3>Khung toàn phần</h3><SloganAppearanceEditor value={form.card} onChange={next => patch({ card:{ ...form.card,...next } })} /><h3>{faq ? 'Khung từng câu hỏi' : 'Khung sản phẩm gợi ý'}</h3><SloganAppearanceEditor allowTitleToggle={!faq} value={form.itemCard} onChange={next => patch({ itemCard:{ ...form.itemCard,...next } })} /></div>
-    </fieldset><h3>Xem trước</h3>{faq ? <ProductFaq value={{ ...form,enabled:true }} preview /> : <ProductNeedsView preview value={{ ...form,enabled:true }} products={products.filter(product => product.active !== false)} />}
+    </fieldset>
+    <div className="admin-preview-toolbar"><h3>Xem trước</h3><button type="button" className="admin-btn" role="switch" aria-label={faq ? 'Hiển thị FAQ trên website' : 'Hiển thị chọn theo nhu cầu trên website'} aria-checked={form.enabled !== false} disabled={!ready || busy} onClick={() => patch({ enabled: form.enabled === false })}>{form.enabled === false ? 'Đang tắt · Bật' : 'Đang bật · Tắt'}</button></div>
+    <p className="admin-muted">Bấm Lưu thiết lập để áp dụng trên website. Nội dung đã nhập vẫn được giữ khi tắt.</p>
+    {form.enabled === false ? <p className="admin-preview-hidden" role="status">Phần này đang tắt. Bật lại để xem trước và hiển thị trên website sau khi lưu.</p> : faq ? <ProductFaq value={form} preview /> : <ProductNeedsView preview value={form} products={products.filter(product => product.active !== false)} />}
   </form>;
 }

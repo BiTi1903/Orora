@@ -1681,7 +1681,11 @@ export default function VisualBuilder() {
             <span>{sectionVisibility[activeSection] === false ? "Mục này đang tắt trên website · Vẫn có thể chỉnh sửa tại đây" : "Sản phẩm mẫu · Xem trước tĩnh · Không thay đổi dữ liệu"}</span>
 
 
-            <div className="builder-device" role="group" aria-label="Thiết bị xem trước">
+            <div className="builder-device" role="group" aria-label="Điều khiển xem trước">
+              <button type="button" role="switch" aria-label="Hiển thị mục đang xem trước trên website" aria-checked={sectionVisibility[activeSection] !== false} disabled={loading || loadError || saving} onClick={() => {
+                dirtySections.current.add("visibility");
+                setSectionVisibility(current => ({ ...current, [activeSection]: current[activeSection] === false }));
+              }}>{sectionVisibility[activeSection] === false ? "Đang tắt · Bật" : "Đang bật · Tắt"}</button>
               <button type="button" aria-pressed={previewDevice === "desktop"} onClick={() => setPreviewDevice("desktop")}>Desktop</button>
               <button type="button" aria-pressed={previewDevice === "mobile"} onClick={() => setPreviewDevice("mobile")}>Mobile</button>
             </div>

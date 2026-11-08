@@ -829,3 +829,6 @@
 .builder-visibility-help { padding: 8px 14px 16px; font-size: 11px; line-height: 1.6; color: #866b77; }
 .hero-card-editor { padding: 10px 0; border-top: 1px solid #ead9e0; }
 .hero-card-editor summary { cursor: pointer; font-size: 12px; color: #b8446d; margin-bottom: 10px; overflow-wrap: anywhere; }
+
+.builder-device { flex-wrap:wrap; min-width:0; max-width:100%; }
+.builder-device button[role="switch"][aria-checked="true"] { background:#b8446d; color:#fff; border-color:#b8446d; }
