@@ -27,6 +27,6 @@ Lượt bấm được nghe ở pha bubble sau bộ chặn kéo carousel; thao t
 
 Trước ngày bắt đầu thu thập, API trả null cho lượt xem/khách/lượt bấm, giao diện hiện “—” và biểu đồ để trống; tiền đơn cũ vẫn tính bình thường từ dữ liệu đơn. Ngày đã bắt đầu thu nhưng không có sự kiện ghi nhận có thể hiện 0. Dashboard kiểm tra đủ ngày, không trùng ngày và kiểu dữ liệu/số tiền hợp lệ trước khi vẽ; dữ liệu thiếu hoặc sai sẽ hiện lỗi thay vì tự coi là 0.
 
-## Dữ liệu mẫu để kiểm tra giao diện
+## Hiển thị biểu đồ
 
-Admin → Tổng quan → Xem dữ liệu mẫu mở bộ minh họa 7 ngày, 24–52 lượt xem/ngày, có khách ước tính, lượt bấm, sản phẩm và số tiền giả định. Có thể đổi 7/30/90 ngày; tổng lượt bấm trong bảng sản phẩm khớp tổng biểu đồ. Banner ĐANG XEM DỮ LIỆU MẪU luôn hiển thị. Dữ liệu sinh riêng trong trình duyệt bởi analytics-demo.js, không lưu Firestore, không tạo đơn và không sửa số liệu thu thập. Khi ở chế độ mẫu không gọi API thống kê; Làm mới bị khóa. Bấm Xem dữ liệu thật để đọc lại API. Tải lại trang sẽ trở về chế độ thật.
+Biểu đồ tự bổ sung điểm minh họa cho 7 ngày 02–08/11/2026 khi ngày đó chưa có dữ liệu truy cập. Không có nút chuyển chế độ. Các điểm hiển thị chỉ được tạo trong trình duyệt bởi analytics-demo.js; không ghi vào Firestore hay tạo đơn. Ngày đã có dữ liệu thật được giữ nguyên, kể cả số 0. KPI, bảng chi tiết từng ngày, xếp hạng sản phẩm, API và các phép tính/xuất báo cáo chỉ dùng dữ liệu thật. Phần tiền giữ nguyên nếu đã có đơn thanh toán trong ngày.
