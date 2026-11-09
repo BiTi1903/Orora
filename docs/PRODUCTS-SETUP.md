@@ -162,3 +162,6 @@ Footer cũng có Zalo trong cột Liên hệ, dùng cùng cấu hình và mở t
 
 ### Khung chọn kênh tư vấn
 Admin → Chat AI → Chọn Zalo / AI cho sửa từng dòng nội dung (để trống được), font/cỡ chữ máy tính và điện thoại/màu/căn chữ/độ đậm, màu nền/viền/bo góc/khoảng đệm của khung và hai lựa chọn. Xem trước dùng cùng thành phần với website, không mở Zalo hay AI. Bấm Lưu Chat AI để lưu `chatSettings.channel`; đường dẫn Zalo vẫn lấy từ cấu hình liên hệ hiện có.
+
+### Định dạng từng đoạn trong nội dung sản phẩm
+Admin → Sản phẩm → Sửa sản phẩm → Nội dung chi tiết: bôi chọn chữ rồi dùng In đậm, In nghiêng, Gạch chân hoặc Gạch ngang chữ; bấm lại để bỏ. Hỗ trợ Ctrl/⌘ + B/I/U, danh sách nhiều dòng và xem trước dưới từng ô. Định dạng lưu cùng chuỗi nội dung bằng dấu `[b]`, `[i]`, `[u]`, `[s]`; website chuyển thành các thẻ chữ an toàn, không chạy HTML người nhập. Các mục cũ chưa định dạng và kiểu chữ chung trong Visual Builder giữ nguyên.

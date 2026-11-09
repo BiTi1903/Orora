@@ -85,3 +85,5 @@
 .product-consultation-options .product-contact-primary { background: var(--rose-deep); color: #fff; border-color: var(--rose-deep); }
 .product-consultation-options a:hover { box-shadow: 0 2px 8px #0000000c; }
 .product-consultation-dialog :focus-visible { outline: 2px solid var(--rose-deep); outline-offset: 3px; }
+.product-content strong { font-weight:700; }
+.product-content em { font-style:italic; }

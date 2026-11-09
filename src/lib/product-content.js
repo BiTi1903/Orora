@@ -93,3 +93,29 @@ export function compactRelatedProducts(products, current, limit = 4) {
   const circular = [...catalog.slice(start), ...catalog.slice(0, start)];
   return circular.filter((item) => item.id !== current.id && (!item.slug || item.slug !== current.slug)).slice(0, Math.max(0, limit));
 }
+
+// Small allowlist of inline marks. Everything else remains plain text, never HTML.
+export function parseProductInline(text='') {
+  const root={children:[]},stack=[root];
+  for(const token of String(text).split(/(\[\/?(?:b|i|u|s)\])/g)){
+    const mark=/^\[(\/?)(b|i|u|s)\]$/.exec(token);
+    if(!mark){if(token)stack.at(-1).children.push(token);continue;}
+    if(!mark[1]){const node={mark:mark[2],children:[]};stack.at(-1).children.push(node);stack.push(node);}
+    else if(stack.length>1&&stack.at(-1).mark===mark[2])stack.pop();
+    else stack.at(-1).children.push(token);
+  }
+  return root.children;
+}
+export function formatProductInline(text,start,end,mark){
+  if(!['b','i','u','s'].includes(mark))return {text,start,end};
+  const open=`[${mark}]`,close=`[/${mark}]`,selected=text.slice(start,end);
+  if(selected.includes('\n')){
+    const lines=selected.split('\n'),parts=lines.map(line=>{const match=listLine.exec(line);return {prefix:match?line.slice(0,line.length-match[3].length):'',content:match?match[3]:line};});
+    const remove=parts.filter(part=>part.content).every(part=>part.content.startsWith(open)&&part.content.endsWith(close));
+    const changed=parts.map(({prefix,content})=>prefix+(!content?'':remove?content.slice(open.length,-close.length):open+content+close)).join('\n');
+    return {text:text.slice(0,start)+changed+text.slice(end),start,end:start+changed.length};
+  }
+  if(text.slice(start-open.length,start)===open&&text.slice(end,end+close.length)===close)return {text:text.slice(0,start-open.length)+selected+text.slice(end+close.length),start:start-open.length,end:end-open.length};
+  if(selected.startsWith(open)&&selected.endsWith(close))return {text:text.slice(0,start)+selected.slice(open.length,-close.length)+text.slice(end),start,end:end-open.length-close.length};
+  return {text:text.slice(0,start)+open+selected+close+text.slice(end),start:start+open.length,end:end+open.length};
+}

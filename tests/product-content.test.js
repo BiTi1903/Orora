@@ -89,3 +89,17 @@ test("custom social button labels can reuse old text without changing the other 
   const { purchaseChannelLabels } = await import("../src/lib/commerce.js");
   assert.deepEqual(purchaseChannelLabels({ facebookLabel: "Đặt tại Facebook", customFacebookLabel: true, tiktokLabel: "Đặt tại TikTok" }), { dividerLabel: "hoặc đặt hàng tại", facebookLabel: "Đặt tại Facebook", tiktokLabel: "Tiktok" });
 });
+
+test('inline formatting selects and toggles words and preserves multiline lists',async()=>{
+  const {formatProductInline,parseProductInline}=await import('../src/lib/product-content.js');
+  const result=formatProductInline('Da dịu nhẹ',3,10,'b');
+  assert.equal(result.text,'Da [b]dịu nhẹ[/b]');
+  assert.equal(formatProductInline(result.text,result.start,result.end,'b').text,'Da dịu nhẹ');
+  const list='- Dịu nhẹ\n- An toàn';
+  const formatted=formatProductInline(list,0,list.length,'i');
+  assert.equal(formatted.text,'- [i]Dịu nhẹ[/i]\n- [i]An toàn[/i]');
+  assert.equal(parseProductContent(formatted.text)[0].type,'dash');
+  assert.equal(formatProductInline(formatted.text,formatted.start,formatted.end,'i').text,list);
+  assert.deepEqual(parseProductInline('[b]Da [i]dịu[/i][/b]'),[{mark:'b',children:['Da ',{mark:'i',children:['dịu']}]}]);
+  assert.deepEqual(parseProductInline('<script>alert(1)</script>'),['<script>alert(1)</script>']);
+});
