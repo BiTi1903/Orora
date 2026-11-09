@@ -659,3 +659,10 @@
  .product-shared-panel .slogan-settings-toolbar h2 { font-size:18px; }
  .product-shared-panel .slogan-settings-toolbar p { font-size:12px; }
 }
+.analytics-guide-controls { margin-top:10px; color:#806872; font-size:12px; }
+.analytics-guide-controls summary { cursor:pointer; }
+.analytics-guide-controls label { display:inline-flex; align-items:center; gap:6px; margin:10px 12px 0 0; }
+.analytics-guide-controls input[type="color"] { width:32px; height:28px; padding:2px; border:1px solid #edcfdd; border-radius:5px; }
+.analytics-guide-controls select { padding:4px; border:1px solid #edcfdd; border-radius:5px; }
+.analytics-crosshair line { stroke-width:1.5; }
+.analytics-chart .analytics-crosshair-label { fill:#fff; font-size:11px; }

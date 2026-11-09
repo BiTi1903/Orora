@@ -30,3 +30,6 @@ Trước ngày bắt đầu thu thập, API trả null cho lượt xem/khách/l�
 ## Hiển thị biểu đồ
 
 Biểu đồ tự bổ sung điểm minh họa cho 7 ngày 02–08/11/2026 khi ngày đó chưa có dữ liệu truy cập. Không có nút chuyển chế độ. Các điểm hiển thị chỉ được tạo trong trình duyệt bởi analytics-demo.js; không ghi vào Firestore hay tạo đơn. Ngày đã có dữ liệu thật được giữ nguyên, kể cả số 0. KPI, bảng chi tiết từng ngày, xếp hạng sản phẩm, API và các phép tính/xuất báo cáo chỉ dùng dữ liệu thật. Phần tiền giữ nguyên nếu đã có đơn thanh toán trong ngày.
+
+## Đường theo dõi X–Y
+Rê chuột trong vùng biểu đồ sẽ chọn mốc ngày gần nhất và chuỗi giá trị gần nhất, hiện đường dọc/ngang cùng tooltip. Chạm mốc hoặc dùng bàn phím cũng hiển thị được; ra khỏi vùng biểu đồ hoặc Escape để ẩn. Mục Kiểu đường X–Y cho bật/tắt, chọn màu/nét đứt/chấm/liền; thiết lập lưu trong trình duyệt riêng cho biểu đồ truy cập và thanh toán, không thay đổi dữ liệu báo cáo.
