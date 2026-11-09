@@ -23,6 +23,16 @@ const empty = {
   active: true, categoryId: "",
 };
 
+const SHARED_SETTINGS = [
+  ['links','Kênh mua hàng','Link Facebook, TikTok và phương thức thanh toán.'],
+  ['policies','Cam kết & chính sách','Nội dung cam kết hiển thị cạnh phần mua hàng.'],
+  ['categories','Danh mục','Thêm hoặc đổi tên nhóm sản phẩm.'],
+  ['slogan','Slogan','Nội dung, kiểu chữ và khung Slogan.'],
+  ['care','Cách chăm sóc','Các cách chăm sóc và sản phẩm áp dụng.'],
+  ['needs','Nhu cầu','Gợi ý sản phẩm theo từng nhu cầu.'],
+  ['faq','Câu hỏi thường gặp','Câu hỏi, câu trả lời và sản phẩm áp dụng.'],
+];
+
 const newSection = (group = "description") => ({ id: crypto.randomUUID(), title: group === "description" ? "Mô tả" : "", content: "", group });
 const imageSlots = (product = {}) => {
   const slots = secondaryProductImages(product).map((src) => ({ id: crypto.randomUUID(), src }));
@@ -49,6 +59,7 @@ export default function ProductsAdmin() {
   const patchSection = (id, patch) => setSections((current) => current.map((item) => item.id === id ? { ...item, ...patch } : item));
   const [view, setView] = useState("products");
   const [settingsOpened, setSettingsOpened] = useState(false);
+  const [sharedPanel,setSharedPanel]=useState("links");
   const [editorPanel, setEditorPanel] = useState("basics");
   const editorRef = useRef(null);
   const changePanel = (key) => { setEditorPanel(key); requestAnimationFrame(() => editorRef.current?.scrollIntoView({ block: "start", behavior: "auto" })); };
@@ -171,13 +182,16 @@ export default function ProductsAdmin() {
   const visibleItems = items.filter((product) => (status === "all" || (product.active !== false) === (status === "active")) && (!query || [product.name, productNumber(product, items), String(Number(productNumber(product, items)))].some((value) => String(value || "").toLocaleLowerCase("vi-VN").includes(query))));
   const panels = [["basics", "Thông tin"], ["pricing", "Giá & dung tích"], ["images", "Hình ảnh"], ["content", "Nội dung"], ["reviews", "Đánh giá"]];
   return <section className="products-admin">
-    <div className="admin-top"><div><h1>Sản phẩm</h1><p className="admin-muted">Quản lý sản phẩm, giá và nội dung hiển thị.</p></div>{!editing && <button className="admin-btn primary" onClick={startNew} disabled={loading || busy || uploading}>+ Thêm sản phẩm</button>}</div>
+    <div className="admin-top"><div><h1>Sản phẩm</h1><p className="admin-muted">Quản lý sản phẩm, giá và nội dung hiển thị.</p></div>{!editing && view === "products" && <button className="admin-btn primary" onClick={startNew} disabled={loading || busy || uploading}>+ Thêm sản phẩm</button>}</div>
     {!editing && <nav className="product-admin-views" aria-label="Quản lý sản phẩm"><button type="button" aria-pressed={view === "products"} onClick={() => setView("products")}>Danh sách sản phẩm</button><button type="button" aria-pressed={view === "settings"} onClick={() => { setSettingsOpened(true); setView("settings"); }}>Thiết lập dùng chung</button></nav>}
     {message && !editing && <div role="status" className={`admin-${message.type}`} style={{ marginBottom: 16 }}>{message.text}</div>}
     {settingsOpened && <div hidden={editing || view !== "settings"} className="product-common-settings">
-      <details><summary>Kênh mua hàng và liên hệ</summary><ShopLinksSettings /></details>
-      <details><summary>Cam kết và chính sách</summary><ProductPoliciesSettings /></details>
-      <details><summary>Danh mục sản phẩm</summary>
+      <div className="product-shared-header"><div><h2>Thiết lập dùng chung</h2><p className="admin-muted">Chọn nhóm bên dưới để chỉnh. Mỗi nhóm có nút lưu riêng; nội dung đang nhập được giữ khi chuyển nhóm hoặc về danh sách.</p></div><button type="button" className="admin-btn" onClick={()=>setView("products")}>← Danh sách sản phẩm</button></div>
+      <div className="product-shared-layout"><nav className="product-shared-nav" aria-label="Nhóm thiết lập dùng chung">{SHARED_SETTINGS.map(([id,title,description])=><button type="button" key={id} aria-pressed={sharedPanel===id} onClick={()=>setSharedPanel(id)}><strong>{title}</strong><small>{description}</small></button>)}</nav><div className="product-shared-panels">
+
+      <section hidden={sharedPanel!=="links"} aria-label="Kênh mua hàng và liên hệ" className="product-shared-panel"><ShopLinksSettings /></section>
+      <section hidden={sharedPanel!=="policies"} aria-label="Cam kết và chính sách" className="product-shared-panel"><ProductPoliciesSettings /></section>
+      <section hidden={sharedPanel!=="categories"} aria-label="Danh mục sản phẩm" className="product-shared-panel">
       {categoriesError && <div className="admin-error">Không tải được danh mục: {explainError(categoriesError)}</div>}
       <form className="admin-card admin-form" style={{ marginBottom: 20 }} onSubmit={async (event) => {
         event.preventDefault();
@@ -202,11 +216,12 @@ export default function ProductsAdmin() {
           {categories.map((category) => <button type="button" className="admin-btn" key={category.id} disabled={categoryBusy} onClick={() => { setCategoryId(category.id); setCategoryName(category.name); }}>{category.name} · Sửa tên</button>)}
         </div>
       </form>
-      </details>
-      <details><summary>Slogan trên chi tiết sản phẩm</summary><ProductSloganSettings /></details>
-      <details><summary>Cách chăm sóc phù hợp — trên footer</summary><ProductCareSettings /></details>
-      <details><summary>Chọn sản phẩm theo nhu cầu</summary><ProductDiscoverySettings /></details>
-      <details><summary>Câu hỏi thường gặp theo sản phẩm</summary><ProductDiscoverySettings faq /></details>
+      </section>
+      <section hidden={sharedPanel!=="slogan"} aria-label="Slogan trên chi tiết sản phẩm" className="product-shared-panel"><ProductSloganSettings /></section>
+      <section hidden={sharedPanel!=="care"} aria-label="Cách chăm sóc phù hợp — trên footer" className="product-shared-panel"><ProductCareSettings /></section>
+      <section hidden={sharedPanel!=="needs"} aria-label="Chọn sản phẩm theo nhu cầu" className="product-shared-panel"><ProductDiscoverySettings /></section>
+      <section hidden={sharedPanel!=="faq"} aria-label="Câu hỏi thường gặp theo sản phẩm" className="product-shared-panel"><ProductDiscoverySettings faq /></section>
+      </div></div>
     </div>}
     {editing && <form ref={editorRef} className="admin-card admin-form product-editor-form" noValidate onSubmit={save}>
       <div className="product-editor-toolbar">

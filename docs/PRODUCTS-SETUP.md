@@ -165,3 +165,6 @@ Admin → Chat AI → Chọn Zalo / AI cho sửa từng dòng nội dung (để 
 
 ### Định dạng từng đoạn trong nội dung sản phẩm
 Admin → Sản phẩm → Sửa sản phẩm → Nội dung chi tiết: bôi chọn chữ rồi dùng In đậm, In nghiêng, Gạch chân hoặc Gạch ngang chữ; bấm lại để bỏ. Hỗ trợ Ctrl/⌘ + B/I/U, danh sách nhiều dòng và xem trước dưới từng ô. Định dạng lưu cùng chuỗi nội dung bằng dấu `[b]`, `[i]`, `[u]`, `[s]`; website chuyển thành các thẻ chữ an toàn, không chạy HTML người nhập. Các mục cũ chưa định dạng và kiểu chữ chung trong Visual Builder giữ nguyên.
+
+### Bố cục quản lý sản phẩm
+Danh sách và Thiết lập dùng chung là hai màn hình riêng. Thiết lập chia 7 nhóm, chỉ hiện nhóm đang chọn; máy tính có menu bên trái, điện thoại có thanh chọn cuộn ngang. Các nhóm vẫn được giữ mounted để không mất nội dung đang nhập khi đổi nhóm hoặc về danh sách (rời trang/tải lại vẫn cần lưu trước). Mỗi nhóm lưu riêng; kênh mua hàng, cam kết, Slogan, chăm sóc và gợi ý có nút lưu ở đầu giữ theo cuộn. CSS ẩn trong `.products-admin` phải ưu tiên `[hidden]` để bố cục grid/flex không làm lộ các màn hình khác.

@@ -29,7 +29,7 @@ export default function ShopLinksSettings() {
     } catch (error) { setNotice({ error: true, text: explainError(error) }); }
     finally { setBusy(false); }
   }}>
-    <h2>Kênh mua hàng dùng chung</h2>
+    <div className="slogan-settings-toolbar"><h2>Kênh mua hàng dùng chung</h2><button type="submit" className="admin-btn primary" disabled={loading || failed || busy}>{busy ? "Đang lưu…" : "Lưu kênh mua hàng"}</button></div>
     <p className="admin-muted">Link dùng cho mọi sản phẩm. Để trống thì ẩn nút tương ứng; không thay đổi các link mạng xã hội ở chân trang.</p>
     <fieldset disabled={loading || failed || busy} style={{ border: 0, padding: 0, minWidth: 0 }}>
       <div className="admin-field"><label htmlFor="shop-tiktok">TikTok Shop</label><input id="shop-tiktok" type="url" maxLength={2048} value={form.tiktokUrl} placeholder="https://www.tiktok.com/@..." onChange={(event) => setForm({ ...form, tiktokUrl: event.target.value })} /></div>
@@ -37,7 +37,6 @@ export default function ShopLinksSettings() {
       <div className="admin-field"><span>Phương thức thanh toán cho đơn web</span>
         {Object.entries(PAYMENT_LABELS).map(([key, label]) => <label key={key} className="admin-check"><input type="checkbox" checked={form.paymentMethods.includes(key)} onChange={(event) => setForm({ ...form, paymentMethods: event.target.checked ? [...form.paymentMethods, key] : form.paymentMethods.filter((value) => value !== key) })} />{label}</label>)}
       </div>
-      <button className="admin-btn" disabled={loading || failed || busy}>{busy ? "Đang lưu…" : "Lưu kênh mua hàng"}</button>
     </fieldset>
     {notice && <p role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
   </form>;
