@@ -91,3 +91,8 @@ Các thay đổi trạng thái, thanh toán, xuất kho và xác nhận hoàn h�
 Mỗi bản ghi giữ `action`, `changes` (trước/sau), `actor`/`actorName`/`actorEmail` từ token được xác thực và `createdAt` phía máy chủ; xuất/hoàn kho có số lượng. Không lấy người thao tác từ body client và không đổi tên lịch sử theo hồ sơ tài khoản sau này. Firestore rules hiện có không cho client đọc/ghi collection đơn; API không có thao tác sửa/xóa nhật ký.
 
 Chi tiết đơn tải 30 sự kiện mới nhất; **Tải thêm nhật ký** phân trang trong đúng đơn. Giờ hiển thị Việt Nam. Nhật ký cũ chưa có không được tạo giả hoặc suy đoán từ `updatedBy`; mọi dữ liệu đơn/thư/kho cũ được giữ nguyên. Email đã có lịch sử riêng, không ghi trùng vào nhật ký xử lý. Kiểm thử dùng Firestore trong bộ nhớ và xác thực giả; không thao tác đơn hoặc gửi email sản xuất.
+
+### Giao diện tra cứu
+Trang `/tra-cuu-don-hang` có khung nhập rõ hai cách tra cứu, số điện thoại ở trên, mã đơn ở dưới; chỉ cần một cách. Máy tính có hướng dẫn ba bước bên cạnh, điện thoại xếp xuống dưới; khi đã có kết quả trên điện thoại thì ẩn hướng dẫn để đưa đơn hàng ngay sau form. Kết quả vẫn lọc theo tình trạng, tối đa 5 đơn/trang, xem chi tiết bằng popup. API và dữ liệu trả cho khách giữ nguyên, không bổ sung thông tin riêng tư.
+
+Admin → Đơn hàng → Chữ trang tra cứu chia Nội dung trang / Nội dung kết quả / Kiểu chữ & khung / Xem trước. `orderTrackingText` giữ các trường cũ và bổ sung hướng dẫn cùng nhãn kết quả; `orderTrackingText.styles` chứa kiểu chữ từng nhóm, cỡ máy tính/điện thoại, màu, căn chữ, màu nền/viền/nút và bo góc. Các biến `{count}`, `{page}`, `{pages}` được tự điền số liệu. Xem trước dùng cùng khung tra cứu với trang thật, không gửi API, không lồng form và không tra đơn thật. Lưu tra cứu để áp dụng.
