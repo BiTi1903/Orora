@@ -1,6 +1,6 @@
 # Thống kê website và thanh toán
 
-Admin → Tổng quan có hai biểu đồ cạnh nhau trên desktop, xếp dọc trên điện thoại, chọn 7/30/90 ngày và Làm mới. Biểu đồ khách/lượt xem theo ngày, biểu đồ giá trị đơn đã thanh toán, bảng tối đa 20 sản phẩm xếp theo lượt bấm và số liệu từng ngày có thể mở thêm. Tooltip trên biểu đồ ghi ngày/giá trị; bảng dữ liệu hỗ trợ đọc đầy đủ.
+Admin → Tổng quan có hai biểu đồ cạnh nhau trên desktop, xếp dọc trên điện thoại, mặc định 7 ngày gần nhất vừa khung, có thanh thu/phóng 1–90 ngày, chọn nhanh 7/30/90 ngày và Làm mới. Tải lại trang luôn trở về 7 ngày; nút Về 1 tuần đặt lại khoảng xem. Kéo thanh được gom yêu cầu trong 200 ms để tránh tải API liên tục. Biểu đồ khách/lượt xem theo ngày, biểu đồ giá trị đơn đã thanh toán, bảng tối đa 20 sản phẩm xếp theo lượt bấm và số liệu từng ngày có thể mở thêm. Tooltip trên biểu đồ ghi ngày/giá trị; bảng dữ liệu hỗ trợ đọc đầy đủ.
 
 ## Ý nghĩa số liệu
 
@@ -17,7 +17,7 @@ SiteAnalytics nằm một lần trong App. Chỉ chạy trên trang công khai, 
 
 POST /api/analytics kiểm tra origin NEWSLETTER_SITE_ORIGIN, JSON tối đa 2KB, UUID, loại sự kiện và whitelist đường dẫn. Bỏ sự kiện nhận diện bot/DNT/GPC. Ghi bằng giao dịch vào siteAnalyticsDaily, siteAnalyticsProducts; sổ chống trùng siteAnalyticsEvents, khách/ngày siteAnalyticsVisitors và giới hạn siteAnalyticsLimits chỉ lưu khóa băm theo ngày, không IP/UUID thô. Mỗi IP tối đa 150 yêu cầu/10 phút và 2.000/ngày. Có thể đặt ANALYTICS_RATE_SALT; mặc định dùng CHAT_RATE_LIMIT_SALT hoặc giá trị riêng của tính năng. Trường expiresAt ở các sổ phụ cho phép bật TTL Firestore để dọn sau khoảng 3 ngày; bảng tổng hợp giữ lại để báo cáo.
 
-GET /api/analytics?days=7|30|90 yêu cầu Firebase ID token đã kiểm tra thu hồi và UID thuộc ORDER_ADMIN_UIDS hoặc NEWSLETTER_ADMIN_UIDS như quản lý đơn hàng. Dùng Firebase Admin hiện có, không mở quyền đọc/ghi thống kê cho khách trong Firestore rules. Trả dữ liệu tổng hợp, không trả chi tiết người mua hay UUID trình duyệt. Phản hồi no-store.
+GET /api/analytics?days=<số nguyên 1–90> (mặc định 7) yêu cầu Firebase ID token đã kiểm tra thu hồi và UID thuộc ORDER_ADMIN_UIDS hoặc NEWSLETTER_ADMIN_UIDS như quản lý đơn hàng. Dùng Firebase Admin hiện có, không mở quyền đọc/ghi thống kê cho khách trong Firestore rules. Trả dữ liệu tổng hợp, không trả chi tiết người mua hay UUID trình duyệt. Phản hồi no-store.
 
 Báo cáo đọc đủ các trang đơn trong khoảng (500 đơn/lượt), chỉ lấy các trường cần tính tiền; không cắt ở trang đầu. Nếu vượt 10.000 đơn hoặc bản ghi sản phẩm/ngày, yêu cầu chọn khoảng ngắn hơn thay vì trả tổng tiền thiếu. Vercel cho API tối đa 60 giây. Không cần dịch vụ analytics bên ngoài hoặc khóa AI.
 

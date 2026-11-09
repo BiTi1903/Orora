@@ -59,3 +59,10 @@ test('reports validate measured and unknown counters and reject incomplete finan
   const invalid=structuredClone(report);invalid.series[0].paidAmount='100000';assert.equal(validAnalyticsReport(invalid,7),false);
   invalid.series[0].paidAmount=0;invalid.series[0].pageViews=-1;assert.equal(validAnalyticsReport(invalid,7),false);
 });
+
+test('analytics accepts slider ranges from one through ninety days and rejects invalid ranges',async()=>{
+ const {call}=setup();
+ for(const days of [1,7,14,45,90]){const res=await call(null,{query:{days:String(days)}});assert.equal(res.statusCode,200);assert.equal(res.body.series.length,days);}
+ for(const days of [0,-1,91,1.5,'invalid']){const res=await call(null,{query:{days:String(days)}});assert.equal(res.statusCode,400);}
+ const res=await call(null,{query:{}});assert.equal(res.body.series.length,7);
+});

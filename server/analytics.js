@@ -76,7 +76,7 @@ export function createAnalyticsHandler({getDb,verifyToken,env=process.env,now=()
       const token=/^Bearer (.+)$/.exec(req.headers.authorization||'')?.[1];
       let user;try{user=token?await verifyToken(token):null;}catch(error){const denied=firebaseAuthFailure(error);throw fail(denied.status,denied.message);}
       if(!user)throw fail(401,'Vui lòng đăng nhập lại.');if(!admins.includes(user.uid))throw fail(403,'Tài khoản chưa được cấp quyền xem thống kê.');
-      const days=Number(req.query?.days||30);if(![7,30,90].includes(days))throw fail(400,'Chọn khoảng 7, 30 hoặc 90 ngày.');
+      const days=Number(req.query?.days||7);if(!Number.isInteger(days)||days<1||days>90)throw fail(400,'Chọn khoảng từ 1 đến 90 ngày.');
       return res.status(200).json(await report(getDb(),now(),days));
     }catch(error){return res.status(error.publicError?error.status:503).json({message:error.publicError?error.message:'Chưa tải được thống kê. Vui lòng thử lại sau.'});}
   };
