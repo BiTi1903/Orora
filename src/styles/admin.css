@@ -625,3 +625,4 @@
 .product-content-preview { border:1px solid #edcfdd; padding:16px; border-radius:12px; background:#fffafc; overflow-wrap:anywhere; white-space:pre-wrap; }
 .product-content-preview > strong { display:block; margin-bottom:10px; font-size:12px; color:#806872; }
 .product-content-preview .product-content { font-style:normal; font-weight:400; }
+.product-content-toolbar .product-format-icon { display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; padding:0; font-family:Arial,sans-serif; font-size:18px; }
