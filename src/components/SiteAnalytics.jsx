@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { analyticsPath } from '../lib/analytics';
 let memoryVisitor,previousPage;
@@ -14,12 +14,18 @@ function send(type,path){
 }
 export default function SiteAnalytics(){
   const location=useLocation();
+  const currentPath=useRef(location.pathname);
   useEffect(()=>{
-    if(location.pathname.startsWith('/admin'))return;
+    currentPath.current=location.pathname;
+    if(location.pathname.startsWith('/admin')){previousPage=undefined;return;}
     const pageKey=`${location.key}:${location.pathname}`;
     const timer=setTimeout(()=>{if(previousPage!==pageKey){previousPage=pageKey;send('page_view',location.pathname);}},150);
-    const click=event=>{const link=event.target?.closest?.('a[href]');if(!link)return;try{const url=new URL(link.href,window.location.origin);if(url.origin===window.location.origin&&url.pathname.startsWith('/product/'))send('product_click',url.pathname);}catch{/* Ignore invalid links. */}};
-    document.addEventListener('click',click,true);return()=>{clearTimeout(timer);document.removeEventListener('click',click,true);};
+    return()=>clearTimeout(timer);
   },[location.pathname,location.key]);
+  useEffect(()=>{
+    // Bubble after React's carousel capture handler: cancelled drags never reach here.
+    const click=event=>{if(currentPath.current.startsWith('/admin')||event.button!==0)return;const link=event.target?.closest?.('a[href]');if(!link)return;try{const url=new URL(link.href,window.location.origin);if(url.origin===window.location.origin&&url.pathname.startsWith('/product/'))send('product_click',url.pathname);}catch{/* Ignore invalid links. */}};
+    document.addEventListener('click',click);return()=>document.removeEventListener('click',click);
+  },[]);
   return null;
 }

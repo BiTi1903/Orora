@@ -40,7 +40,11 @@ async function report(db,time,days){
   const orders=[];let cursor=null;
   do{let query=db.collection('orders').select('createdAt','paymentStatus','status','totalAmount').where('createdAt','>=',new Date(window.start)).where('createdAt','<',new Date(window.end)).orderBy('createdAt','asc').limit(500);if(cursor)query=query.startAfter(cursor);const batch=await query.get();orders.push(...batch.docs.map(doc=>doc.data()));if(orders.length>10000)throw fail(422,'Có nhiều đơn hàng, vui lòng chọn khoảng thời gian ngắn hơn.');cursor=batch.docs.length===500?batch.docs.at(-1):null;}while(cursor);
   const paid=paidOrderSummary(orders,window.days),visits=new Map(daily.docs.map(doc=>[doc.data().day,doc.data()]));
-  const series=window.days.map(day=>({day,pageViews:visits.get(day)?.pageViews||0,visitors:visits.get(day)?.visitors||0,productClicks:visits.get(day)?.productClicks||0,...paid.get(day)}));
+  const recordedSince=first.docs[0]?.data().day||null;
+  const series=window.days.map(day=>{
+    const measured=Boolean(recordedSince&&day>=recordedSince);
+    return {day,pageViews:measured?(visits.get(day)?.pageViews||0):null,visitors:measured?(visits.get(day)?.visitors||0):null,productClicks:measured?(visits.get(day)?.productClicks||0):null,...paid.get(day)};
+  });
   const products=withProductIdentity(catalog.docs.map(doc=>({...doc.data(),id:doc.id})));
   const routes=new Map();
   const bind=(route,product)=>{if(typeof route==='string'&&route&&!routes.has(route))routes.set(route,product);};
@@ -50,7 +54,7 @@ async function report(db,time,days){
   for(const product of products){bind(product.publicId,product);bind(String(product.publicId||'').padStart(2,'0'),product);}
   const ranking=new Map();
   for(const doc of metrics.docs){const metric=doc.data();let route;try{route=decodeURIComponent(metric.path.slice(9));}catch{continue;}const product=routes.get(route);const key=product?.id||metric.path;if(!ranking.has(key))ranking.set(key,{id:product?.id||null,name:product?.name||route,path:metric.path,clicks:0,views:0});const entry=ranking.get(key);entry.clicks+=metric.clicks||0;entry.views+=metric.views||0;}
-  return {series,products:[...ranking.values()].sort((a,b)=>b.clicks-a.clicks||b.views-a.views).slice(0,20),recordedSince:first.docs[0]?.data().day||null,updatedAt:time};
+  return {series,products:[...ranking.values()].sort((a,b)=>b.clicks-a.clicks||b.views-a.views).slice(0,20),recordedSince,updatedAt:time};
 }
 export function createAnalyticsHandler({getDb,verifyToken,env=process.env,now=()=>Date.now()}){
   return async(req,res)=>{

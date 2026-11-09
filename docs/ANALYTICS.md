@@ -9,7 +9,7 @@ Admin → Tổng quan có hai biểu đồ cạnh nhau trên desktop, xếp dọ
 - Lượt bấm sản phẩm: bấm liên kết nội bộ dẫn tới /product/…; mở trực tiếp từ ngoài website chỉ có lượt xem sản phẩm, không có lượt bấm nội bộ. Tên/alias được gộp theo sản phẩm trong danh mục hiện tại. Sản phẩm đã xóa có thể hiện theo slug cũ.
 - Tiền: tổng totalAmount của các đơn paymentStatus=paid và không cancelled, nhóm theo NGÀY ĐẶT ĐƠN, trạng thái hiện tại. Bao gồm phí giao hàng đã chốt. Đây là giá trị đơn đã thanh toán, không phải dòng tiền nhận đúng ngày, lợi nhuận hay sao kê. Đơn chưa có totalAmount không cộng tiền và có số lượng báo riêng. Đổi paid/unpaid/hủy cập nhật báo cáo khi Làm mới; không tự thay đổi dữ liệu đơn.
 
-Không dựng số truy cập cho quá khứ. Ngày trước khi triển khai không có dữ liệu truy cập; đơn hàng đã có vẫn có thể tổng hợp theo khoảng chọn. Ngày hôm nay còn đang diễn ra. Chặn thống kê, DNT, Global Privacy Control và lỗi mạng có thể làm thiếu lượt; không coi là công cụ đếm người tuyệt đối.
+Không dựng số truy cập cho quá khứ. Ngày trước lần ghi nhận đầu tiên hiển thị “—” và không vẽ đường truy cập về số 0; đơn hàng đã có vẫn có thể tổng hợp theo khoảng chọn. Ngày hôm nay còn đang diễn ra. Chặn thống kê, DNT, Global Privacy Control và lỗi mạng có thể làm thiếu lượt; không coi là công cụ đếm người tuyệt đối.
 
 ## Dữ liệu và bảo vệ
 
@@ -20,3 +20,9 @@ POST /api/analytics kiểm tra origin NEWSLETTER_SITE_ORIGIN, JSON tối đa 2KB
 GET /api/analytics?days=7|30|90 yêu cầu Firebase ID token đã kiểm tra thu hồi và UID thuộc ORDER_ADMIN_UIDS hoặc NEWSLETTER_ADMIN_UIDS như quản lý đơn hàng. Dùng Firebase Admin hiện có, không mở quyền đọc/ghi thống kê cho khách trong Firestore rules. Trả dữ liệu tổng hợp, không trả chi tiết người mua hay UUID trình duyệt. Phản hồi no-store.
 
 Báo cáo đọc đủ các trang đơn trong khoảng (500 đơn/lượt), chỉ lấy các trường cần tính tiền; không cắt ở trang đầu. Nếu vượt 10.000 đơn hoặc bản ghi sản phẩm/ngày, yêu cầu chọn khoảng ngắn hơn thay vì trả tổng tiền thiếu. Vercel cho API tối đa 60 giây. Không cần dịch vụ analytics bên ngoài hoặc khóa AI.
+
+## Rà soát độ chính xác
+
+Lượt bấm được nghe ở pha bubble sau bộ chặn kéo carousel; thao tác kéo bị hủy không cộng lượt bấm. Listener giữ ổn định khi chuyển trang để vẫn nhận điều hướng React Router; quay lại trang công khai từ admin được ghi nhận là một lượt xem mới. Các sửa cách ghi chỉ áp dụng cho lượt mới, không tự suy đoán/trừ số lượt đã ghi trong quá khứ.
+
+Trước ngày bắt đầu thu thập, API trả null cho lượt xem/khách/lượt bấm, giao diện hiện “—” và biểu đồ để trống; tiền đơn cũ vẫn tính bình thường từ dữ liệu đơn. Ngày đã bắt đầu thu nhưng không có sự kiện ghi nhận có thể hiện 0. Dashboard kiểm tra đủ ngày, không trùng ngày và kiểu dữ liệu/số tiền hợp lệ trước khi vẽ; dữ liệu thiếu hoặc sai sẽ hiện lỗi thay vì tự coi là 0.

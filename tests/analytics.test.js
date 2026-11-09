@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { createAnalyticsHandler } from '../server/analytics.js';
-import { analyticsDay,analyticsWindow,paidOrderSummary,analyticsPath } from '../src/lib/analytics.js';
+import { analyticsDay,analyticsWindow,paidOrderSummary,analyticsPath,validAnalyticsReport } from '../src/lib/analytics.js';
 import { memoryDb,response } from './firestore-memory.js';
 const time=Date.parse('2026-11-09T03:00:00Z'),env={NEWSLETTER_SITE_ORIGIN:'https://orora.example',ORDER_ADMIN_UIDS:'owner'};
 const headers={origin:env.NEWSLETTER_SITE_ORIGIN,'content-type':'application/json','x-forwarded-for':'192.0.2.1','user-agent':'Mozilla/5.0'};
@@ -41,4 +41,21 @@ test('Vietnam day boundaries and zero-valued paid totals are accurate',()=>{
 });
 test('anonymous analytics requests are rate limited on the server',async()=>{
   const {call}=setup();for(let i=0;i<150;i++)assert.equal((await call(event())).statusCode,200);assert.equal((await call(event())).statusCode,429);
+});
+
+test('unmeasured days remain unknown instead of being reported as zero traffic',async()=>{
+  const {call}=setup();let res=await call();assert.equal(res.statusCode,200);assert.equal(res.body.recordedSince,null);assert.ok(res.body.series.every(day=>day.pageViews===null&&day.visitors===null&&day.productClicks===null));
+  await call(event());res=await call();assert.equal(res.body.recordedSince,'2026-11-09');assert.ok(res.body.series.slice(0,-1).every(day=>day.pageViews===null));assert.equal(res.body.series.at(-1).pageViews,1);
+});
+test('old product aliases aggregate into one product instead of separate rankings',async()=>{
+  const {db,call}=setup();await db.collection('products').doc('gel').set({name:'White Gel',number:1,slugAliases:['first-story']});
+  await call(event(undefined,'/product/first-story','product_click'));await call(event(undefined,'/product/white-gel','product_click'));
+  const res=await call();assert.equal(res.body.products.length,1);assert.equal(res.body.products[0].clicks,2);assert.equal(res.body.products[0].id,'gel');
+});
+
+test('reports validate measured and unknown counters and reject incomplete financial data',async()=>{
+  const {call}=setup();const report=(await call()).body;assert.equal(validAnalyticsReport(report,7),true);assert.equal(validAnalyticsReport({...report,series:report.series.slice(1)},7),false);
+  assert.equal(validAnalyticsReport({...report,series:[null,...report.series.slice(1)]},7),false);assert.equal(validAnalyticsReport({...report,products:[null]},7),false);
+  const invalid=structuredClone(report);invalid.series[0].paidAmount='100000';assert.equal(validAnalyticsReport(invalid,7),false);
+  invalid.series[0].paidAmount=0;invalid.series[0].pageViews=-1;assert.equal(validAnalyticsReport(invalid,7),false);
 });

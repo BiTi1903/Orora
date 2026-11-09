@@ -604,3 +604,5 @@
 .analytics-toolbar h2 { overflow-wrap:anywhere; white-space:normal; }
 .analytics-dashboard > .admin-card { margin-top:16px; }
 .analytics-dashboard > p { margin-block:14px; }
+
+.analytics-empty { display:grid; place-items:center; min-height:220px; text-align:center; color:#806872; font-size:14px; }

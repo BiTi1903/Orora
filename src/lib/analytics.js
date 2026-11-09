@@ -25,3 +25,15 @@ export function analyticsPath(value) {
   if(!value.startsWith('/product/'))return null;
   try{const slug=decodeURIComponent(value.slice(9));return /^[a-z0-9_-]{1,180}$/i.test(slug)?`/product/${slug}`:null;}catch{return null;}
 }
+
+export function validAnalyticsReport(value, days) {
+  const count = n => Number.isSafeInteger(n) && n >= 0;
+  return Array.isArray(value?.series) && value.series.length === days
+    && value.series.every(day => day && typeof day.day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day.day)
+      && ['pageViews','visitors','productClicks'].every(key => day[key] === null || count(day[key]))
+      && ['paidAmount','paidOrders','unpricedPaid'].every(key => count(day[key])))
+    && new Set(value.series.map(day=>day.day)).size === days
+    && Array.isArray(value.products) && value.products.every(product => product && typeof product.name === 'string' && typeof product.path === 'string' && count(product.clicks) && count(product.views))
+    && (value.recordedSince === null || typeof value.recordedSince === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value.recordedSince))
+    && Number.isFinite(value.updatedAt);
+}
