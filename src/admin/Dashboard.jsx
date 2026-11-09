@@ -1,3 +1,4 @@
+import AnalyticsDashboard from "./AnalyticsDashboard";
 import { useEffect, useState } from "react";
 import { explainError, getProducts } from "../lib/api";
 
@@ -18,5 +19,6 @@ export default function Dashboard({ sectionCount }) {
       <div className="admin-card admin-stat"><span className="admin-muted">Mục quản trị</span><strong>{sectionCount ?? "—"}</strong></div>
       <div className="admin-card admin-stat"><span className="admin-muted">Tải dữ liệu</span><strong style={{ fontSize: 18 }}>{error ? "Có lỗi" : count === null ? "Đang tải…" : "Hoàn tất"}</strong></div>
     </div>
+    <AnalyticsDashboard />
   </section>;
 }

@@ -1,3 +1,4 @@
+import SiteAnalytics from "./components/SiteAnalytics";
 import OrderTracking from "./components/OrderTracking";
 import { sectionIsEnabled } from "./lib/page-sections";
 import ProductNeeds from "./components/ProductDiscovery";
@@ -326,6 +327,7 @@ function App() {
   return (
     <>
 
+      <SiteAnalytics />
       <Seo />
       <ScrollToTop />
 

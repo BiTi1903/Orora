@@ -84,6 +84,9 @@
     },
     "api/inventory.js": {
       "maxDuration": 60
+    },
+    "api/analytics.js": {
+      "maxDuration": 60
     }
   }
 }

@@ -12,7 +12,8 @@ export function memoryDb() {
     collection: (name) => query(`${path}/${name}`),
   });
   const query = (path, settings = {}) => ({
-    where: (field, operator, value) => { if (!["==", "in"].includes(operator)) throw Error("Unsupported query"); return query(path, { ...settings, where: [...(settings.where || []), { field, value, operator }] }); },
+    where: (field, operator, value) => { if (!["==", "in", ">=", "<=", ">", "<"].includes(operator)) throw Error("Unsupported query"); return query(path, { ...settings, where: [...(settings.where || []), { field, value, operator }] }); },
+    select: () => query(path, settings),
     doc: (id) => ref(`${path}/${id}`),
     orderBy: (field, direction) => query(path, { ...settings, field, direction }),
     limit: (limit) => query(path, { ...settings, limit }),
@@ -20,7 +21,15 @@ export function memoryDb() {
     count: () => ({ get: async () => { const page = await query(path, settings).get(); return { data: () => ({ count: page.docs.length }) }; } }),
     get: async () => {
       let docs = [...records.keys()].filter((key) => key.startsWith(`${path}/`) && key.slice(path.length + 1).indexOf("/") === -1).map((key) => snap(ref(key)));
-      for (const condition of settings.where || []) docs = docs.filter((doc) => condition.operator === "in" ? condition.value.includes(condition.field.split(".").reduce((value, key) => value?.[key], doc.data())) : condition.field.split(".").reduce((value, key) => value?.[key], doc.data()) === condition.value);
+      for (const condition of settings.where || []) docs = docs.filter((doc) => {
+        const value = condition.field.split(".").reduce((item,key)=>item?.[key],doc.data());
+        if(condition.operator === 'in')return condition.value.includes(value);
+        if(condition.operator === '>=')return value >= condition.value;
+        if(condition.operator === '<=')return value <= condition.value;
+        if(condition.operator === '>')return value > condition.value;
+        if(condition.operator === '<')return value < condition.value;
+        return value === condition.value;
+      });
       docs.sort((a, b) => settings.field === "createdAt" ? ((a.data().createdAt - b.data().createdAt) || a.id.localeCompare(b.id)) * (settings.direction === "desc" ? -1 : 1) : a.id.localeCompare(b.id));
       if (settings.cursor?.data) {
         const index = docs.findIndex((doc) => doc.id === settings.cursor.id);
