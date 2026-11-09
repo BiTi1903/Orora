@@ -606,3 +606,11 @@
 .analytics-dashboard > p { margin-block:14px; }
 
 .analytics-empty { display:grid; place-items:center; min-height:220px; text-align:center; color:#806872; font-size:14px; }
+.analytics-plot { position:relative; }
+.analytics-point-target { cursor:pointer; }
+.analytics-point-target:focus { outline:none; stroke:#3a1526; stroke-width:2; }
+.analytics-tooltip { position:absolute; top:0; z-index:2; transform:translateX(-50%); width:220px; max-width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #ecdce3; border-radius:10px; background:#fff; box-shadow:0 4px 18px #3a152620; color:#3a1526; pointer-events:none; font-size:12px; }
+.analytics-tooltip strong { display:block; margin-bottom:6px; }
+.analytics-tooltip span { display:flex; align-items:center; gap:5px; margin-top:4px; }
+.analytics-tooltip i { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.analytics-tooltip b { margin-left:auto; white-space:nowrap; }
