@@ -1,3 +1,4 @@
+import useVisiblePlayback from "../hooks/useVisiblePlayback";
 import { productNumber, productSlug } from "../lib/product-identity";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -23,7 +24,7 @@ function usePerView() {
   return perView;
 }
 
-function ProductCarousel({ products, cardStyles, preview, selectedElement, onSelect, keyMap = null, groupLayout = false }) {
+function ProductCarousel({ products, cardStyles, preview, selectedElement, onSelect, keyMap = null, groupLayout = false, carouselSettings = {} }) {
   const perView = usePerView();
   const viewRef = useRef(null);
   const dragRef = useRef(null);
@@ -32,10 +33,14 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
   const [index, setIndex] = useState(0);
   const [animating, setAnimating] = useState(true);
   const [paused, setPaused] = useState(false);
+  const [focusPaused,setFocusPaused]=useState(false);
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const count = products.length;
   const looping = count > perView;
+  const canPlay=useVisiblePlayback(viewRef,!preview&&looping&&carouselSettings.autoPlay!==false);
+  const seconds=Number(carouselSettings.intervalSeconds);
+  const interval=Number.isFinite(seconds)&&seconds>=1&&seconds<=30?seconds*1000:3000;
   const pad = Math.max(perView, 1);
   const clones = [];
   if (looping) {
@@ -90,10 +95,10 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
   }, [layoutKey]);
 
   useEffect(() => {
-    if (!looping || paused || dragging) return undefined;
-    const id = window.setInterval(goNext, 3000);
+    if (!canPlay || paused || focusPaused || dragging) return undefined;
+    const id = window.setInterval(goNext, interval);
     return () => window.clearInterval(id);
-  }, [looping, paused, dragging, count, perView, goNext]);
+  }, [canPlay, paused, focusPaused, dragging, count, perView, goNext, interval]);
 
   useEffect(() => {
     if (!looping || index < count) return undefined;
@@ -159,6 +164,8 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
     <div
       className={`gallery-viewport${dragging ? " is-dragging" : ""}`}
       ref={viewRef}
+      onFocusCapture={()=>setFocusPaused(true)}
+      onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget))setFocusPaused(false);}}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => { if (!dragRef.current) setPaused(false); }}
       onDragStart={(e) => e.preventDefault()}
@@ -437,6 +444,7 @@ function Collection({
           key={categoryId}
           products={products}
           cardStyles={cardStyles}
+          carouselSettings={home.collectionStyles?.carousel || {}}
           preview={preview}
           selectedElement={selectedElement}
           onSelect={onSelect}

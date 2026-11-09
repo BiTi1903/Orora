@@ -168,3 +168,6 @@ Admin → Sản phẩm → Sửa sản phẩm → Nội dung chi tiết: bôi ch
 
 ### Bố cục quản lý sản phẩm
 Danh sách và Thiết lập dùng chung là hai màn hình riêng. Thiết lập chia 7 nhóm, chỉ hiện nhóm đang chọn; máy tính có menu bên trái, điện thoại có thanh chọn cuộn ngang. Các nhóm vẫn được giữ mounted để không mất nội dung đang nhập khi đổi nhóm hoặc về danh sách (rời trang/tải lại vẫn cần lưu trước). Mỗi nhóm lưu riêng; kênh mua hàng, cam kết, Slogan, chăm sóc và gợi ý có nút lưu ở đầu giữ theo cuộn. CSS ẩn trong `.products-admin` phải ưu tiên `[hidden]` để bố cục grid/flex không làm lộ các màn hình khác.
+
+### Tự động chuyển sản phẩm khi cuộn tới
+Admin → Trang chủ → Khám phá (Collection), hoặc Visual Builder → Collection, có mục Chuyển sản phẩm tự động. Có thể bật/tắt và chỉnh thời gian giữa hai lần chuyển từ 1–30 giây (mặc định 3). Cấu hình lưu tại `collectionStyles.carousel.autoPlay` và `intervalSeconds`, giữ nguyên các kiểu chữ và khung thẻ khác. Việc đếm chỉ bắt đầu khi khu vực sản phẩm đã xuất hiện trên màn hình; preview tạm dừng để dễ chỉnh.

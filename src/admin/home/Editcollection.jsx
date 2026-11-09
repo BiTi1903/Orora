@@ -1,3 +1,4 @@
+import CollectionCarouselSettings from "../CollectionCarouselSettings";
 import useHomeForm from "./Usehomeform";
 import { Field, SectionShell } from "./Ui";
 import { StyleList } from "./StyleEditor";
@@ -62,6 +63,8 @@ export default function EditCollection() {
         {...h}
       />
       <Field label="Tiêu đề dòng 2" name="collectionHighlight" {...h} />
+
+      <CollectionCarouselSettings value={h.form.collectionStyles?.carousel} onChange={patch => h.set("collectionStyles", { ...h.form.collectionStyles, carousel: { ...h.form.collectionStyles?.carousel, ...patch } })} />
 
       <StyleList
         elements={ELEMENTS}

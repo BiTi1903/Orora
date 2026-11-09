@@ -1,3 +1,4 @@
+import CollectionCarouselSettings from "../CollectionCarouselSettings";
 import { NavbarSettings } from "./NavbarPanels";
 import { PhilosophySettings } from "./PhilosophyPanels";
 import { TickerSettings } from "./TickerPanels";
@@ -93,6 +94,8 @@ export function StylePanel({
       )}
 
       {section === "collection" && (
+        <>
+        <CollectionCarouselSettings value={collection.collectionStyles?.carousel} onChange={patch => onChange({ _styleGroup: "collectionStyles", _styleKey: "carousel", style: patch })} />
         <CollectionSettings
           selected={selected}
           data={data}
@@ -100,6 +103,7 @@ export function StylePanel({
           onChange={onChange}
           onStyleChange={onStyleChange}
         />
+        </>
       )}
 
       {section === "productdetail" && (
