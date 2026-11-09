@@ -26,3 +26,7 @@ Báo cáo đọc đủ các trang đơn trong khoảng (500 đơn/lượt), ch�
 Lượt bấm được nghe ở pha bubble sau bộ chặn kéo carousel; thao tác kéo bị hủy không cộng lượt bấm. Listener giữ ổn định khi chuyển trang để vẫn nhận điều hướng React Router; quay lại trang công khai từ admin được ghi nhận là một lượt xem mới. Các sửa cách ghi chỉ áp dụng cho lượt mới, không tự suy đoán/trừ số lượt đã ghi trong quá khứ.
 
 Trước ngày bắt đầu thu thập, API trả null cho lượt xem/khách/lượt bấm, giao diện hiện “—” và biểu đồ để trống; tiền đơn cũ vẫn tính bình thường từ dữ liệu đơn. Ngày đã bắt đầu thu nhưng không có sự kiện ghi nhận có thể hiện 0. Dashboard kiểm tra đủ ngày, không trùng ngày và kiểu dữ liệu/số tiền hợp lệ trước khi vẽ; dữ liệu thiếu hoặc sai sẽ hiện lỗi thay vì tự coi là 0.
+
+## Dữ liệu mẫu để kiểm tra giao diện
+
+Admin → Tổng quan → Xem dữ liệu mẫu mở bộ minh họa 7 ngày, 24–52 lượt xem/ngày, có khách ước tính, lượt bấm, sản phẩm và số tiền giả định. Có thể đổi 7/30/90 ngày; tổng lượt bấm trong bảng sản phẩm khớp tổng biểu đồ. Banner ĐANG XEM DỮ LIỆU MẪU luôn hiển thị. Dữ liệu sinh riêng trong trình duyệt bởi analytics-demo.js, không lưu Firestore, không tạo đơn và không sửa số liệu thu thập. Khi ở chế độ mẫu không gọi API thống kê; Làm mới bị khóa. Bấm Xem dữ liệu thật để đọc lại API. Tải lại trang sẽ trở về chế độ thật.

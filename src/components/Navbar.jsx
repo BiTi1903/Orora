@@ -1,3 +1,4 @@
+import { contactLinks } from "../lib/contact";
 import { withTrackingNavLink } from "../lib/navbar-links";
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -51,6 +52,7 @@ function Navbar({
   const logo = data.navLogo || "";
   const links = withTrackingNavLink(Array.isArray(data.navLinks) ? data.navLinks : []);
   const styles = data.navStyles || {};
+  const { zalo } = contactLinks(home, "", home.productDetailStyles?.contactActions || {});
   const facebook = socialShopUrl(home.shopLinks?.facebookUrl || home.footerFacebook, "facebook");
   const tiktok = socialShopUrl(home.shopLinks?.tiktokUrl || home.footerTikTok, "tiktok");
   const submenu = (item, index) => {
@@ -59,7 +61,7 @@ function Navbar({
       { label: "Tất cả sản phẩm", href: "/#shop" },
       ...categories.filter((category) => category.id && category.name).map((category) => ({ label: category.name, href: `/?category=${encodeURIComponent(category.id)}#shop` })),
     ];
-    if (href === "/#contact") return [facebook && { label: "Facebook", href: facebook, external: true }, tiktok && { label: "TikTok", href: tiktok, external: true }].filter(Boolean);
+    if (href === "/#contact") return [zalo && { label: "Zalo", href: zalo, external: true }, facebook && { label: "Facebook", href: facebook, external: true }, tiktok && { label: "TikTok", href: tiktok, external: true }].filter(Boolean);
     return [];
   };
 

@@ -387,3 +387,20 @@
 .orora-chat-hint { position:fixed; right:24px; bottom:96px; z-index:1099; display:flex; align-items:flex-start; width:250px; max-width:calc(100vw - 24px); padding:10px 8px 10px 13px; border:1px solid #edd0de; border-radius:14px 14px 4px 14px; background:#fff; box-shadow:0 8px 28px #b8446d20; }
 .orora-chat-hint-message { flex:1; min-width:0; border:0; padding:0; background:none; color:var(--plum); font:400 12px/1.5 var(--font-body); text-align:left; overflow-wrap:anywhere; cursor:pointer; }
 .orora-chat-hint-close { flex-shrink:0; width:24px; height:24px; border:0; background:none; color:var(--rose-deep); font-size:18px; cursor:pointer; }
+
+.orora-chat-channel-chooser { position:fixed; right:24px; bottom:96px; z-index:1101; width:min(340px,calc(100vw - 32px)); max-height:calc(100dvh - 120px); overflow:auto; box-sizing:border-box; padding:20px; border:1px solid #efd7e1; border-radius:20px; background:#fffafc; box-shadow:0 16px 50px #58203826; color:var(--plum); font:400 14px/1.5 var(--font-body); text-align:left; }
+.orora-chat-channel-chooser header { display:flex; align-items:flex-start; gap:12px; justify-content:space-between; margin-bottom:16px; }
+.orora-chat-channel-chooser h2 { margin:0 0 5px; font:600 19px/1.35 var(--font-body); }
+.orora-chat-channel-chooser header p { margin:0; font-size:12px; color:#806671; }
+.orora-chat-channel-chooser header > button { flex:0 0 30px; width:30px; height:30px; border:0; border-radius:50%; background:#fff0f5; color:var(--rose-deep); font:400 22px/1 var(--font-body); cursor:pointer; }
+.orora-chat-channel-options { display:grid; gap:10px; }
+.orora-chat-channel-options > :is(a,button) { display:grid; gap:4px; width:100%; box-sizing:border-box; padding:14px 16px; border:1px solid #efd7e1; border-radius:14px; background:#fff; color:var(--plum); font:inherit; text-align:left; text-decoration:none; cursor:pointer; }
+.orora-chat-channel-options strong { font-size:15px; color:var(--rose-deep); }
+.orora-chat-channel-options span,.orora-chat-channel-unavailable { font-size:12px; color:#806671; }
+.orora-chat-channel-options > :is(a,button):hover { border-color:var(--rose-deep); background:#fff4f8; }
+.orora-chat-channel-chooser :focus-visible { outline:2px solid var(--rose-deep); outline-offset:3px; }
+@media(max-width:768px) { .orora-chat-channel-chooser { right:16px; bottom:calc(176px + env(safe-area-inset-bottom,0px)); max-height:calc(100dvh - 192px); padding:18px; } }
+
+.orora-chat-hint { width:max-content; max-width:min(220px,calc(100vw - 24px)); padding:8px 6px 8px 10px; gap:4px; border-radius:12px 12px 4px 12px; box-sizing:border-box; }
+.orora-chat-hint-message { max-width:176px; line-height:1.45; }
+.orora-chat-hint-close { width:22px; height:22px; font-size:16px; }

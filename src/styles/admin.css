@@ -606,3 +606,7 @@
 .analytics-dashboard > p { margin-block:14px; }
 
 .analytics-empty { display:grid; place-items:center; min-height:220px; text-align:center; color:#806872; font-size:14px; }
+
+.analytics-demo-notice { padding:16px 20px; margin-bottom:18px; border:1px solid #dcb878; border-radius:14px; background:#fff8e9; color:#74511d; font-size:14px; }
+.analytics-demo-notice strong { display:block; margin-bottom:6px; font-size:13px; letter-spacing:.04em; }
+.analytics-demo-notice p { margin:0; line-height:1.6; }

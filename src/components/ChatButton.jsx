@@ -1,3 +1,4 @@
+import ChatChannelChooser from "./ChatChannelChooser";
 import ChatHint from "./ChatHint";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { clampFloatingPosition } from "../lib/floating-position";
@@ -14,9 +15,10 @@ function ChatButton() {
   const { zalo } = contactLinks(home, "", home.productDetailStyles?.contactActions || {});
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  const [channel,setChannel] = useState("choose");
   const [hintDismissed, setHintDismissed] = useState(false);
   const panelId = useId();
-  const conversation = useChatConversation(open, location.pathname);
+  const conversation = useChatConversation(open && channel === "ai", location.pathname);
   const settings = chatSettings({ ...conversation.metadata?.settings, ...home.chatSettings });
   const button = useRef(null);
   const drag = useRef(null);
@@ -76,6 +78,7 @@ function ChatButton() {
           event.preventDefault(); event.stopPropagation(); suppressClick.current = false; return;
         }
         setHintDismissed(true);
+        if (!open) setChannel("choose");
         setOpen((current) => !current);
       }}
       aria-label={open ? "Đóng chat với ORORA" : "Chat với ORORA"}
@@ -85,7 +88,7 @@ function ChatButton() {
     >
       <span className="chat-icon" aria-hidden="true">{open ? "×" : "✦"}</span>
       <span className="chat-text">Trò chuyện cùng ORORA</span>
-    </button><ChatHint open={open} dismissed={hintDismissed} settings={settings} anchor={button} onOpen={() => { setHintDismissed(true); setOpen(true); }} />{open && <ChatPanel id={panelId} settings={settings} conversation={conversation} onClose={close} contactLinks={zalo ? [{ href: zalo }] : conversation.metadata?.links?.filter((link) => ["phone", "facebook", "contact"].includes(link.id)) || []} />}</>
+    </button><ChatHint open={open} dismissed={hintDismissed} settings={settings} anchor={button} onOpen={() => { setHintDismissed(true); setChannel("choose");setOpen(true); }} />{open && (channel === "choose" ? <ChatChannelChooser id={panelId} zalo={zalo} onAI={() => setChannel("ai")} onClose={close} /> : <ChatPanel id={panelId} settings={settings} conversation={conversation} onClose={close} contactLinks={zalo ? [{ href: zalo }] : conversation.metadata?.links?.filter((link) => ["phone", "facebook", "contact"].includes(link.id)) || []} />)}</>
   );
 }
 

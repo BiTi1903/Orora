@@ -1,8 +1,9 @@
+import { contactLinks } from "../lib/contact";
 import { useEffect, useState } from "react";
 import { getHomeContent } from "../lib/api";
 import { toCss } from "../lib/typography";
 
-function LinkOrSpan({ href, children, className, sel, preview, selectedClass, select, style }) {
+function LinkOrSpan({ href, children, className, sel, preview, selectedClass, select, style, external = false }) {
   if (preview) {
     return (
       <span
@@ -16,7 +17,7 @@ function LinkOrSpan({ href, children, className, sel, preview, selectedClass, se
     );
   }
   return (
-    <a href={href} className={className} style={style}>
+    <a href={href} className={className} style={style} target={external ? "_blank" : undefined} rel={external ? "noopener noreferrer" : undefined}>
       {children}
     </a>
   );
@@ -43,6 +44,7 @@ function Footer({
   }, [preview]);
 
   const data = preview && previewData ? previewData : home || {};
+  const { zalo } = contactLinks(data, "", data.productDetailStyles?.contactActions || {});
   const fs = data.footerStyles || {};
   const css = (key) => toCss(fs[key], { responsive: true });
 
@@ -148,6 +150,7 @@ function Footer({
             {contactTitle}
           </h3>
 
+          {zalo && (data.footerZaloText ?? "Zalo") && <LinkOrSpan preview={preview} selectedClass={selectedClass} select={select} style={css("link")} href={zalo} sel="ftZalo" external>{data.footerZaloText ?? "Zalo"}</LinkOrSpan>}
           {preview ? (
             <>
               <span

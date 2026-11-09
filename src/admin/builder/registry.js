@@ -275,6 +275,7 @@ const REVIEWS_TEXT_MAP = {
 
 
 const FOOTER_FIELD_MAP = {
+  ftZalo: { key: "footerZaloText", label: "Chữ liên hệ Zalo", styleKey: "link" },
   ftLogo: {
     key: "footerLogo",
     label: "Tên thương hiệu",

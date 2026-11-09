@@ -11,7 +11,7 @@ const FIELDS = {
   features: ["featuresLabel", "featuresTitle", "features", "featuresStyles"],
   reviews: ["testimonialsLabel", "testimonialsTitle", "testimonialsHighlight", "testimonialsTitleEnd", "reviews", "testimonialsStyles"],
   newsletter: ["newsletterTitle", "newsletterHighlight", "newsletterText", "newsletterPlaceholder", "newsletterButton", "newsletterStyles"],
-  footer: ["footerLogo", "footerDescription", "footerInfoTitle", "footerAboutText", "footerShopText", "footerTrackingText", "footerTermsText", "footerPrivacyText", "footerContactTitle", "footerPhone", "footerEmail", "footerAddress", "footerSocialTitle", "footerInstagram", "footerFacebook", "footerTikTok", "footerYouTube", "footerCopyright", "footerCompanyNumber", "footerStyles"],
+  footer: ["footerLogo", "footerDescription", "footerInfoTitle", "footerAboutText", "footerShopText", "footerTrackingText", "footerTermsText", "footerPrivacyText", "footerContactTitle", "footerZaloText", "footerPhone", "footerEmail", "footerAddress", "footerSocialTitle", "footerInstagram", "footerFacebook", "footerTikTok", "footerYouTube", "footerCopyright", "footerCompanyNumber", "footerStyles"],
   ticker: ["marqueeWords", "marqueeStyles"],
 };
 
