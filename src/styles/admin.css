@@ -614,3 +614,9 @@
 .analytics-tooltip span { display:flex; align-items:center; gap:5px; margin-top:4px; }
 .analytics-tooltip i { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 .analytics-tooltip b { margin-left:auto; white-space:nowrap; }
+.analytics-zoom { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:14px; font-size:12px; color:#806872; }
+.analytics-zoom label { font-weight:600; }
+.analytics-zoom input { flex:1; min-width:80px; width:110px; accent-color:#b8446d; cursor:ew-resize; }
+.analytics-zoom .admin-btn { padding:6px 10px; font-size:12px; }
+.analytics-chart-scroll { overflow-x:auto; max-width:100%; padding-top:8px; overscroll-behavior-x:contain; }
+.analytics-chart-scroll .analytics-chart { height:230px; margin-top:0; }
