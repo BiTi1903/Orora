@@ -620,3 +620,5 @@
 .analytics-zoom .admin-btn { padding:6px 10px; font-size:12px; }
 .analytics-chart-scroll { overflow-x:auto; max-width:100%; padding-top:8px; overscroll-behavior-x:contain; }
 .analytics-chart-scroll .analytics-chart { height:230px; margin-top:0; }
+.chat-channel-settings { display:grid; gap:16px; }
+.chat-channel-preview { padding:20px; border:1px dashed #edcfdd; border-radius:14px; background:#fff4f8; }

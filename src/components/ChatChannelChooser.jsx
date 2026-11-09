@@ -1,9 +1,11 @@
+import { channelText,channelTextStyle,channelBoxStyle } from "../lib/chat-channel";
 import { useEffect,useId,useRef } from 'react';
-export default function ChatChannelChooser({ id,zalo,onAI,onClose }) {
+export default function ChatChannelChooser({ id,zalo,onAI,onClose,settings={},preview=false }) {
   const titleId=useId(),first=useRef(null);
-  useEffect(()=>{first.current?.focus({preventScroll:true});const escape=event=>{if(event.key==='Escape'&&!document.querySelector('dialog:modal')){event.preventDefault();onClose();}};document.addEventListener('keydown',escape);return()=>document.removeEventListener('keydown',escape);},[onClose]);
-  return <section id={id} className="orora-chat-channel-chooser" role="dialog" aria-labelledby={titleId}><header><div><h2 id={titleId}>Tư vấn cùng ORORA</h2><p>Bạn muốn trò chuyện qua kênh nào?</p></div><button type="button" aria-label="Đóng lựa chọn tư vấn" onClick={onClose}>×</button></header><div className="orora-chat-channel-options">
-    {zalo?<a ref={first} href={zalo} target="_blank" rel="noopener noreferrer" onClick={onClose}><strong>Zalo</strong><span>Liên hệ trực tiếp với ORORA</span></a>:<p className="orora-chat-channel-unavailable">Zalo chưa được cấu hình. Bạn có thể chọn trợ lý bên dưới.</p>}
-    <button ref={!zalo?first:undefined} type="button" onClick={onAI}><strong>Trợ lý AI</strong><span>Hỏi sản phẩm, cách dùng và đặt hàng</span></button>
+  useEffect(()=>{if(preview)return;first.current?.focus({preventScroll:true});const escape=event=>{if(event.key==='Escape'&&!document.querySelector('dialog:modal')){event.preventDefault();onClose();}};document.addEventListener('keydown',escape);return()=>document.removeEventListener('keydown',escape);},[onClose,preview]);
+  const config=settings.channel||{},text=key=>channelText(config,key),css=key=>({fontFamily:settings.fontFamily||undefined,...channelTextStyle(config,key)});
+  return <section id={id} className={`orora-chat-channel-chooser${preview?" is-preview":""}`} style={{fontFamily:settings.fontFamily||undefined,...channelBoxStyle(config.appearance)}} role="dialog" aria-labelledby={titleId}><header><div><h2 id={titleId} style={css("title")}>{text("title")}</h2><p style={css("subtitle")}>{text("subtitle")}</p></div><button type="button" aria-label="Đóng lựa chọn tư vấn" onClick={onClose}>×</button></header><div className="orora-chat-channel-options">
+    {zalo?<a style={channelBoxStyle(config.optionAppearance)} ref={first} href={zalo} target="_blank" rel="noopener noreferrer" onClick={onClose}><strong style={css("zaloTitle")}>{text("zaloTitle")}</strong><span style={css("zaloDescription")}>{text("zaloDescription")}</span></a>:<p className="orora-chat-channel-unavailable" style={css("unavailable")}>{text("unavailable")}</p>}
+    <button style={channelBoxStyle(config.optionAppearance)} ref={!zalo?first:undefined} type="button" onClick={onAI}><strong style={css("aiTitle")}>{text("aiTitle")}</strong><span style={css("aiDescription")}>{text("aiDescription")}</span></button>
   </div></section>;
 }

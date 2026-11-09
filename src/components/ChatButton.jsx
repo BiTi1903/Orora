@@ -88,7 +88,7 @@ function ChatButton() {
     >
       <span className="chat-icon" aria-hidden="true">{open ? "×" : "✦"}</span>
       <span className="chat-text">Trò chuyện cùng ORORA</span>
-    </button><ChatHint open={open} dismissed={hintDismissed} settings={settings} anchor={button} onOpen={() => { setHintDismissed(true); setChannel("choose");setOpen(true); }} />{open && (channel === "choose" ? <ChatChannelChooser id={panelId} zalo={zalo} onAI={() => setChannel("ai")} onClose={close} /> : <ChatPanel id={panelId} settings={settings} conversation={conversation} onClose={close} contactLinks={zalo ? [{ href: zalo }] : conversation.metadata?.links?.filter((link) => ["phone", "facebook", "contact"].includes(link.id)) || []} />)}</>
+    </button><ChatHint open={open} dismissed={hintDismissed} settings={settings} anchor={button} onOpen={() => { setHintDismissed(true); setChannel("choose");setOpen(true); }} />{open && (channel === "choose" ? <ChatChannelChooser settings={settings} id={panelId} zalo={zalo} onAI={() => setChannel("ai")} onClose={close} /> : <ChatPanel id={panelId} settings={settings} conversation={conversation} onClose={close} contactLinks={zalo ? [{ href: zalo }] : conversation.metadata?.links?.filter((link) => ["phone", "facebook", "contact"].includes(link.id)) || []} />)}</>
   );
 }
 

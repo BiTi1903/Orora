@@ -14,6 +14,7 @@ export function chatSettings(value = {}) {
   const text = (key, fallback, limit) => typeof s[key] === "string" && s[key].trim() ? s[key].trim().slice(0, limit) : fallback;
   return {
     enabled: s.enabled !== false,
+    channel: s.channel && typeof s.channel === "object" ? s.channel : {},
     hintEnabled: s.hintEnabled !== false,
     hintDelay: Number.isFinite(Number(s.hintDelay)) ? Math.min(60, Math.max(1, Number(s.hintDelay))) : 5,
     hintText: text("hintText", "Bạn cần tư vấn? Nhắn ORORA nhé!", 160),

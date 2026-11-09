@@ -1,3 +1,4 @@
+import ChatChannelSettings from "./ChatChannelSettings";
 import ChatTypography from "./ChatTypography";
 import { useEffect, useRef, useState } from "react";
 import { chatSettings, DEFAULT_CHAT_STARTERS } from "../lib/chat";
@@ -41,7 +42,8 @@ export default function ChatSettings() {
       <div className="product-editor-toolbar-top chat-settings-toolbar"><h2>Nội dung khung chat</h2><button type="submit" className="admin-btn primary" disabled={loading || failed || busy}>{busy ? "Đang lưu…" : "Lưu Chat AI"}</button></div>
       {notice && <p role={notice.error ? "alert" : "status"} className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
       <fieldset className="writer-fields" disabled={loading || failed || busy}>
-        <nav className="admin-section-tabs" aria-label="Các phần thiết lập Chat AI">{[["general","Hiển thị"],["typography","Kiểu chữ"],["starters","Câu hỏi gợi ý"],["knowledge","Kiến thức AI"]].map(([key,label]) => <button type="button" key={key} aria-current={panel===key?"page":undefined} onClick={() => setPanel(key)}>{label}</button>)}</nav>
+        <nav className="admin-section-tabs" aria-label="Các phần thiết lập Chat AI">{[["general","Hiển thị"],["channels","Chọn Zalo / AI"],["typography","Kiểu chữ"],["starters","Câu hỏi gợi ý"],["knowledge","Kiến thức AI"]].map(([key,label]) => <button type="button" key={key} aria-current={panel===key?"page":undefined} onClick={() => setPanel(key)}>{label}</button>)}</nav>
+        <div hidden={panel!=="channels"} data-chat-panel="channels" className="chat-settings-panel"><ChatChannelSettings value={form} onChange={patch}/></div>
         <div hidden={panel!=="typography"} data-chat-panel="typography" className="chat-settings-panel">
         <ChatTypography value={form} onChange={patch} />
         </div>

@@ -404,3 +404,6 @@
 .orora-chat-hint { width:max-content; max-width:min(220px,calc(100vw - 24px)); padding:8px 6px 8px 10px; gap:4px; border-radius:12px 12px 4px 12px; box-sizing:border-box; }
 .orora-chat-hint-message { max-width:176px; line-height:1.45; }
 .orora-chat-hint-close { width:22px; height:22px; font-size:16px; }
+.orora-chat-channel-chooser.is-preview { position:relative; inset:auto; width:min(100%,340px); max-height:none; margin:0 auto; z-index:auto; }
+.orora-chat-channel-chooser :is(h2,header p,.orora-chat-channel-options strong,.orora-chat-channel-options span,.orora-chat-channel-unavailable) { overflow-wrap:anywhere; white-space:pre-wrap; }
+@media(max-width:768px) { .orora-chat-channel-chooser [style*="--mobile-font-size"] { font-size:var(--mobile-font-size) !important; } }

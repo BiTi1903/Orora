@@ -159,3 +159,6 @@ Mục Liên hệ trên navbar có Zalo bên cạnh Facebook/TikTok trên cả de
 Bong bóng gợi ý giữ thời gian hiện do admin cấu hình (mặc định 5 giây). Khung ôm chữ, rộng tối đa 220px; vị trí có bottom/right auto để không bị kéo giãn khi đặt top/left cạnh nút trên điện thoại. Không thay đổi popup Tư vấn cùng ORORA trong chi tiết sản phẩm. Kiểu chữ lời nhắc đã lưu vẫn được giữ.
 
 Footer cũng có Zalo trong cột Liên hệ, dùng cùng cấu hình và mở tab mới. Chỉnh chữ tại Visual Builder → Footer → Chữ liên hệ Zalo; để trống để ẩn liên kết.
+
+### Khung chọn kênh tư vấn
+Admin → Chat AI → Chọn Zalo / AI cho sửa từng dòng nội dung (để trống được), font/cỡ chữ máy tính và điện thoại/màu/căn chữ/độ đậm, màu nền/viền/bo góc/khoảng đệm của khung và hai lựa chọn. Xem trước dùng cùng thành phần với website, không mở Zalo hay AI. Bấm Lưu Chat AI để lưu `chatSettings.channel`; đường dẫn Zalo vẫn lấy từ cấu hình liên hệ hiện có.
