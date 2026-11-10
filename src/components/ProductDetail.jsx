@@ -58,6 +58,7 @@ function ProductDetail({
 
   // undefined = đang tải, null = không tìm thấy
   const [loadedProduct, setLoadedProduct] = useState(null);
+  const [loadVersion,setLoadVersion]=useState(0);
   const product = preview
     ? previewProduct || null
     : loadedProduct && (loadedProduct.id === id || (loadedProduct.product && matchesProductRoute(loadedProduct.product, id))) ? loadedProduct.product : undefined;
@@ -84,13 +85,13 @@ function ProductDetail({
         setLoadedProduct({ id, product: p && p.active !== false ? p : null });
       })
       .catch(() => {
-        if (alive) setLoadedProduct({ id, product: null });
+        if (alive) setLoadedProduct({ id, product: null, error:true });
       });
 
     return () => {
       alive = false;
     };
-  }, [id, preview]);
+  }, [id, preview, loadVersion]);
 
   const select = (key) => (e) => {
     if (!preview || !onSelect) return;
@@ -121,6 +122,12 @@ function ProductDetail({
         <div className="detail-loading" role="status" aria-live="polite"><div className="loading-placeholder" /><p>Đang tải sản phẩm…</p></div>
       </div>
     );
+  }
+
+  /* A failed read is retryable; it does not prove the product was removed. */
+  if(!preview&&loadedProduct?.id===id&&loadedProduct.error){
+    const copy=ps.loadError||{},style=key=>({...toCss(copy[key]),textDecoration:copy[key]?.textDecoration});
+    return <section className="product-not-found product-load-error" role="alert"><h1 style={style('titleStyle')}>{copy.title?.trim()||'Chưa tải được sản phẩm'}</h1><p style={style('bodyStyle')}>{copy.text?.trim()||'Kết nối đang gián đoạn. Vui lòng thử tải lại thông tin sản phẩm.'}</p><button type="button" style={style('buttonStyle')} onClick={()=>{setLoadedProduct(null);setLoadVersion(version=>version+1);}}>{copy.retryLabel?.trim()||'Thử tải lại'}</button></section>;
   }
 
   /* ---------- không tìm thấy ---------- */

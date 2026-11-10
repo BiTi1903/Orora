@@ -1,3 +1,4 @@
+import { useId } from "react";
 export function SectionShell({
   title,
   hint,
@@ -9,7 +10,7 @@ export function SectionShell({
   children,
 }) {
   return (
-    <form aria-busy={busy} className="admin-card admin-form" onSubmit={onSubmit}>
+    <form aria-busy={busy || loading} className="admin-card admin-form" onSubmit={onSubmit}>
       {/* HEADER + NÚT LƯU */}
       <div
         style={{
@@ -60,7 +61,7 @@ export function SectionShell({
 
       {/* NỘI DUNG */}
       {loading ? (
-        <p className="admin-muted">
+        <p role="status" className="admin-muted">
           Đang tải dữ liệu...
         </p>
       ) : (
@@ -69,7 +70,7 @@ export function SectionShell({
 
       {/* THÔNG BÁO */}
       {message && (
-        <div className={`admin-${message.type}`}>
+        <div role={message.type === "error" ? "alert" : "status"} className={`admin-${message.type}`}>
           {message.text}
         </div>
       )}
@@ -78,13 +79,14 @@ export function SectionShell({
 }
 
 export function Field({ label, name, form, change, rows }) {
+  const id=useId();
   return (
     <div className="admin-field">
-      <label>{label}</label>
+      <label htmlFor={id}>{label}</label>
       {rows ? (
-        <textarea rows={rows} name={name} value={form[name] || ""} onChange={change} />
+        <textarea id={id} rows={rows} name={name} value={form[name] || ""} onChange={change} />
       ) : (
-        <input name={name} value={form[name] || ""} onChange={change} />
+        <input id={id} name={name} value={form[name] || ""} onChange={change} />
       )}
     </div>
   );
@@ -93,6 +95,7 @@ export function Field({ label, name, form, change, rows }) {
 /* danh sách các thẻ con (Lý do chọn, Số liệu, Quy trình, Cảm nhận) */
 export function ItemCards({ title, listKey, h, fields, blank }) {
   const items = h.form[listKey] || [];
+  const fieldId=useId();
   return (
     <div className="admin-list-block">
       {items.map((item, i) => (
@@ -106,15 +109,17 @@ export function ItemCards({ title, listKey, h, fields, blank }) {
 
           {fields.map((f) => (
             <div className="admin-field" key={f.key}>
-              <label>{f.label}</label>
+              <label htmlFor={`${fieldId}-${i}-${f.key}`}>{f.label}</label>
               {f.rows ? (
                 <textarea
+                  id={`${fieldId}-${i}-${f.key}`}
                   rows={f.rows}
                   value={item[f.key] || ""}
                   onChange={(e) => h.updateItem(listKey, i, f.key, e.target.value)}
                 />
               ) : (
                 <input
+                  id={`${fieldId}-${i}-${f.key}`}
                   type={f.number ? "number" : "text"}
                   value={item[f.key] ?? ""}
                   onChange={(e) =>

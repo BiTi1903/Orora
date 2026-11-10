@@ -1,3 +1,4 @@
+import ProductLoadErrorSettings from "./ProductLoadErrorSettings";
 import CollectionCarouselSettings from "../CollectionCarouselSettings";
 import { NavbarSettings } from "./NavbarPanels";
 import { PhilosophySettings } from "./PhilosophyPanels";
@@ -107,6 +108,8 @@ export function StylePanel({
       )}
 
       {section === "productdetail" && (
+        <>
+        <ProductLoadErrorSettings value={productDetail.loadError||{}} onChange={patch=>onChange({loadError:{...productDetail.loadError,...patch}})}/>
         <ProductDetailSettings
           selected={selected}
           data={data}
@@ -115,6 +118,7 @@ export function StylePanel({
           onChange={onChange}
           onStyleChange={onStyleChange}
         />
+        </>
       )}
 
       {section === "features" && (

@@ -1158,6 +1158,10 @@ export default function VisualBuilder() {
     }
 
     if (activeSection === "productdetail") {
+      if (patch.loadError) {
+        setProductDetail(current=>({...current,loadError:{...current.loadError,...patch.loadError}}));
+        return;
+      }
       if (patch.__labelKey && patch.text != null) {
         const key = `${patch.__labelKey}Label`;
         setProductDetail((current) => ({

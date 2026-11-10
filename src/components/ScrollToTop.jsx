@@ -1,50 +1,26 @@
-import { useLayoutEffect, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import { useLayoutEffect,useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 
-/* Đổi trang → lên đầu trang.
-   Link có #hash (vd: /#about, /#shop, /#contact) → cuộn tới đúng mục đó,
-   kể cả khi đang ở trang khác (trang chi tiết sản phẩm) hoặc đã ở trang chủ. */
-function ScrollToTop() {
-  const { pathname, hash, search } = useLocation();
-  const lastPath = useRef(null);
-
-  useLayoutEffect(() => {
-    const pathChanged = lastPath.current !== pathname;
-    lastPath.current = pathname;
-
-    const id = decodeURIComponent((hash || "").replace(/^#/, ""));
-
-    if (!id) {
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-      return undefined;
-    }
-
-    // Sang trang khác: nhảy thẳng tới mục; cùng trang: cuộn mượt
-    const behavior = pathChanged ? "instant" : "smooth";
-    const timers = [];
-    const goTo = (b) => {
-      const el = document.getElementById(id);
-      if (!el) return false;
-      el.scrollIntoView({ behavior: b, block: "start" });
-      return true;
-    };
-
-    if (!goTo(behavior)) {
-      // Mục chưa kịp hiện (đang tải): thử lại vài lần
-      [100, 300, 700].forEach((ms) =>
-        timers.push(window.setTimeout(() => goTo("instant"), ms))
-      );
-    } else if (pathChanged) {
-      // Ảnh/nội dung tải xong làm lệch vị trí → căn lại một lần
-      timers.push(window.setTimeout(() => goTo("instant"), 600));
-    }
-
-    return () => timers.forEach((t) => window.clearTimeout(t));
-  }, [pathname, hash, search]);
-
-  return null;
+export default function ScrollToTop(){
+ const {pathname,hash,search}=useLocation(),lastPath=useRef(null);
+ useLayoutEffect(()=>{
+  const pathChanged=lastPath.current!==pathname;lastPath.current=pathname;
+  let id=(hash||'').slice(1);
+  try{id=decodeURIComponent(id);}catch{/* An invalid fragment must not crash the page. */}
+  if(!id){if(pathChanged)window.scrollTo(0,0);return;}
+  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const behavior=pathChanged||reduced?'instant':'smooth';
+  const go=()=>{const target=document.getElementById(id);if(!target)return false;target.scrollIntoView({behavior,block:'start'});return true;};
+  if(go())return;
+  // Firebase can resolve after several seconds; observe the target appearing
+  // rather than retry only during the first 700ms. Stop if the user takes over.
+  const observer=new MutationObserver(()=>{if(go())stop();});
+  const interrupt=event=>{if(event.type!=='keydown'||['ArrowDown','ArrowUp','PageDown','PageUp','Home','End',' '].includes(event.key))stop();};
+  const stop=()=>{observer.disconnect();clearTimeout(timer);window.removeEventListener('wheel',interrupt);window.removeEventListener('touchstart',interrupt);window.removeEventListener('keydown',interrupt);};
+  const timer=setTimeout(stop,10000);
+  observer.observe(document.body,{childList:true,subtree:true});
+  window.addEventListener('wheel',interrupt,{passive:true});window.addEventListener('touchstart',interrupt,{passive:true});window.addEventListener('keydown',interrupt);
+  return stop;
+ },[pathname,hash,search]);
+ return null;
 }
-
-export default ScrollToTop;

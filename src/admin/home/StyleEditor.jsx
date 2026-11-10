@@ -1,19 +1,4 @@
-const FONT_OPTIONS = [
-  { label: "Mulish", value: '"Mulish", sans-serif' },
-  { label: "Noto Sans", value: '"Noto Sans", sans-serif' },
-  { label: "Noto Serif", value: '"Noto Serif", serif' },
-  { label: "Playfair Display", value: '"Playfair Display", serif' },
-  { label: "Cormorant Garamond", value: '"Cormorant Garamond", serif' },
-  { label: "Montserrat", value: '"Montserrat", sans-serif' },
-  { label: "Poppins", value: '"Poppins", sans-serif' },
-  { label: "Inter", value: '"Inter", sans-serif' },
-  { label: "DM Sans", value: '"DM Sans", sans-serif' },
-  { label: "Lora", value: '"Lora", serif' },
-  { label: "Roboto", value: '"Roboto", sans-serif' },
-  { label: "Arial", value: "Arial, sans-serif" },
-  { label: "Georgia", value: "Georgia, serif" },
-  { label: "Times New Roman", value: '"Times New Roman", serif' },
-];
+import { FONT_OPTIONS, toBareFontFamily } from "../../lib/typography";
 
 const SIZE_OPTIONS = [
   12, 13, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72, 80, 96, 100, 120, 130,
@@ -100,7 +85,7 @@ function StyleFields({ style, fields, onChange }) {
           value={style.fontFamily || ""}
           onChange={(v) => update("fontFamily", v)}
         >
-          <option value="">Mặc định</option>
+          {style.fontFamily && !FONT_OPTIONS.some(font => font.value === style.fontFamily) && <option value={style.fontFamily}>Đang dùng: {toBareFontFamily(style.fontFamily)}</option>}
           {FONT_OPTIONS.map((font) => (
             <option key={font.value} value={font.value}>
               {font.label}

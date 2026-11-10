@@ -22,7 +22,7 @@ function ChatLink({ href, children, className, onNavigate }) {
 export default function ChatPanel({ id, settings, conversation, onClose, contactLinks = [] }) {
   const { messages, sending, error, send, retry, reset, metadata } = conversation;
   const [input, setInput] = useState("");
-  const root = useRef(null), heading = useRef(null), log = useRef(null);
+  const root = useRef(null), heading = useRef(null), log = useRef(null), followLatest = useRef(true);
   const titleId = useId();
   const label = (key) => typeof settings.labels?.[key] === "string" && settings.labels[key].trim() ? settings.labels[key].trim().slice(0, 120) : CHAT_LABELS[key];
   const last = messages.at(-1);
@@ -39,11 +39,11 @@ export default function ChatPanel({ id, settings, conversation, onClose, contact
     measure(); viewport?.addEventListener("resize", measure); viewport?.addEventListener("scroll", measure); window.addEventListener("resize", measure);
     return () => { viewport?.removeEventListener("resize", measure); viewport?.removeEventListener("scroll", measure); window.removeEventListener("resize", measure); };
   }, []);
-  useLayoutEffect(() => { if (log.current) log.current.scrollTop = log.current.scrollHeight; }, [messages, sending, error]);
-  const submit = (text, quick = false) => { if (send(text)) { setInput(""); if (quick) log.current?.focus({ preventScroll: true }); } };
+  useLayoutEffect(() => { if (log.current && followLatest.current) log.current.scrollTop = log.current.scrollHeight; }, [messages, sending, error]);
+  const submit = (text, quick = false) => { if (send(text)) { followLatest.current = true; setInput(""); if (quick) log.current?.focus({ preventScroll: true }); } };
   return <section ref={root} id={id} className="orora-chat-panel" role="dialog" aria-labelledby={titleId} style={chatAppearanceVars(settings)}>
-    <header className="orora-chat-heading"><span className="orora-chat-avatar" aria-hidden="true">✦</span><div><h2 ref={heading} id={titleId} tabIndex={-1}>{settings.title}</h2><p><span className="orora-chat-status-dot" />{mode === "ai" ? label("statusAi") : label("statusGuided")}</p></div><button type="button" className="orora-chat-icon-button" onClick={() => { reset(); setInput(""); }} aria-label="Bắt đầu cuộc trò chuyện mới" title="Cuộc trò chuyện mới" disabled={!messages.length && !input}>↺</button><button type="button" className="orora-chat-icon-button" onClick={onClose} aria-label="Đóng chat">×</button></header>
-    <div ref={log} className="orora-chat-log" role="log" tabIndex={-1} aria-label="Cuộc trò chuyện với ORORA" aria-live="polite" aria-relevant="additions">
+    <header className="orora-chat-heading"><span className="orora-chat-avatar" aria-hidden="true">✦</span><div><h2 ref={heading} id={titleId} tabIndex={-1}>{settings.title}</h2><p><span className="orora-chat-status-dot" />{mode === "ai" ? label("statusAi") : label("statusGuided")}</p></div><button type="button" className="orora-chat-icon-button" onClick={() => { followLatest.current = true; reset(); setInput(""); }} aria-label="Bắt đầu cuộc trò chuyện mới" title="Cuộc trò chuyện mới" disabled={!messages.length && !input}>↺</button><button type="button" className="orora-chat-icon-button" onClick={onClose} aria-label="Đóng chat">×</button></header>
+    <div ref={log} onScroll={event=>{const viewport=event.currentTarget;followLatest.current=viewport.scrollHeight-viewport.scrollTop-viewport.clientHeight<56;}} className="orora-chat-log" role="log" tabIndex={-1} aria-label="Cuộc trò chuyện với ORORA" aria-live="polite" aria-relevant="additions">
       <div className="orora-chat-welcome"><span className="orora-chat-welcome-icon" aria-hidden="true">✧</span><h3>{label("welcomeTitle")}</h3><p>{settings.greeting}</p></div>
       {!messages.length && <div className="orora-chat-starters" aria-label="Chọn nhu cầu tư vấn">{settings.starters.map((item, index) => <button type="button" key={item.id} onClick={() => submit(item.prompt, true)} disabled={sending}><ChoiceSymbol index={index} /><span>{item.label}</span><ChatArrow /></button>)}</div>}
       {messages.map((message) => <article key={message.id} className={`orora-chat-message is-${message.role}`} aria-label={message.role === "user" ? label("user") : label("assistant")}>
@@ -53,7 +53,7 @@ export default function ChatPanel({ id, settings, conversation, onClose, contact
         {message.notice && <small className="orora-chat-notice">{message.notice}</small>}
       </article>)}
       {sending && <div className="orora-chat-typing" role="status"><span /><span /><span /><small>{label("typing")}</small></div>}
-      {error && <div className="orora-chat-error" role="alert"><p>{error.message}</p><button type="button" onClick={retry} disabled={sending}>{label("retry")}</button></div>}
+      {error && <div className="orora-chat-error" role="alert"><p>{error.message}</p><button type="button" onClick={()=>{followLatest.current=true;retry();}} disabled={sending}>{label("retry")}</button></div>}
       {!sending && last?.role === "assistant" && last.suggestions?.length > 0 && <div className="orora-chat-followups" aria-label="Câu hỏi gợi ý">{last.suggestions.map((suggestion) => <button type="button" key={suggestion} onClick={() => submit(suggestion, true)}><span>{suggestion}</span><ChatArrow /></button>)}</div>}
     </div>
     <footer className="orora-chat-footer"><form className="orora-chat-composer" onSubmit={(event) => { event.preventDefault(); submit(input); }}><textarea aria-label="Tin nhắn của bạn" rows={2} maxLength={CHAT_MESSAGE_LIMIT} placeholder={settings.placeholder} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); submit(input); } }} /><button type="submit" aria-label="Gửi tin nhắn" disabled={sending || !input.trim()}><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M12 20V4m-6 6 6-6 6 6" /></svg></button></form><div className="orora-chat-footer-note"><small>{mode === "ai" ? label("footerAi") : label("footerGuided")}</small>{contactLinks[0] && <ChatLink href={contactLinks[0].href} onNavigate={onClose}>{label("handoff")} <ChatArrow /></ChatLink>}</div></footer>

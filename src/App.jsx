@@ -51,6 +51,8 @@ function App() {
     }
 
 
+    const motion=gsap.matchMedia();
+    motion.add("(prefers-reduced-motion: no-preference)",()=>{
     const ctx = gsap.context(() => {
 
 
@@ -133,22 +135,6 @@ function App() {
           trigger: ".hero",
           start: "top top",
           end: "bottom top",
-          scrub: 1,
-        },
-      });
-
-
-      /* =========================
-         ABOUT IMAGE
-      ========================= */
-
-      gsap.from(".about-image", {
-        scale: 1.3,
-
-        scrollTrigger: {
-          trigger: ".about",
-          start: "top bottom",
-          end: "center center",
           scrub: 1,
         },
       });
@@ -316,9 +302,9 @@ function App() {
     }, pageRef);
 
 
-    return () => {
-      ctx.revert();
-    };
+    return () => ctx.revert();
+    });
+    return () => motion.revert();
 
 
   }, [location.pathname, home.loading, visibility]);

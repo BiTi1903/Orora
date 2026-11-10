@@ -1,3 +1,4 @@
+import ProductLoadErrorSettings from "../builder/ProductLoadErrorSettings";
 import PurchaseOptionsSettings from "../builder/PurchaseOptionsSettings";
 import ProductContactSettings from "../builder/ProductContactSettings";
 import MobileImageSettings from "../builder/MobileImageSettings";
@@ -131,6 +132,7 @@ export default function EditProductDetail() {
         />
       </div>
 
+      <ProductLoadErrorSettings value={h.form.productDetailStyles?.loadError||{}} onChange={patch=>h.set("productDetailStyles",{...h.form.productDetailStyles,loadError:{...h.form.productDetailStyles?.loadError,...patch}})}/>
       <PurchaseOptionsSettings value={h.form.productDetailStyles?.purchaseOptions || {}} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, purchaseOptions: { ...h.form.productDetailStyles?.purchaseOptions, ...patch } })} />
       <ProductContactSettings value={h.form.productDetailStyles?.contactActions || {}} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, contactActions: { ...h.form.productDetailStyles?.contactActions, ...patch } })} />
       <MobileImageSettings layout={h.form.productDetailStyles?.imageLayout || {}} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, imageLayout: { ...h.form.productDetailStyles?.imageLayout, ...patch } })} />

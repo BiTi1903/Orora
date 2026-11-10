@@ -65,8 +65,9 @@ export default function OrderForm({ product, home, onClose, selection, initialVa
     recipient.phone = recipient.phone.replace(/[\s().-]/g, "");
     const orderedProduct = { productName: product.name, variantLabel: variant?.label || "", quantity };
     submitting.current=true;setBusy(true); setResult(null);
+    const controller=new AbortController(),timeout=window.setTimeout(()=>controller.abort(),20_000);
     try {
-      const response = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
+      const response = await fetch("/api/orders", { signal:controller.signal, method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
         requestId: requestId.current, productId: product.id || product.slug, quantity, variantId, expectedVariantLabel: variant?.label || "", expectedPriceText: priceText,
         name: data.get("name"), phone: data.get("phone"), email: data.get("email"), provinceCode, wardCode, addressDetail: data.get("addressDetail"), expectedShippingFee: shipping.fee, note: data.get("note"),
         paymentMethod: data.get("paymentMethod"), consent: data.get("consent") === "on",
@@ -75,8 +76,8 @@ export default function OrderForm({ product, home, onClose, selection, initialVa
       if (!response.ok) throw new Error(json.message || "Chưa gửi được đơn hàng.");
       if (!json.code) throw new Error("Chưa xác nhận được mã đơn. Vui lòng thử gửi lại.");
       setResult({ ...orderedProduct, ...json, recipient });
-    } catch (error) { setResult({ error: error instanceof TypeError || error instanceof SyntaxError ? "Kết nối bị gián đoạn. Hãy thử gửi lại hoặc liên hệ ORORA." : error.message || "Chưa gửi được đơn. Vui lòng thử lại." }); }
-    finally { submitting.current=false;setBusy(false); }
+    } catch (error) { setResult({ error: error.name === "AbortError" ? appearance.orderTimeoutLabel?.trim() || "Chưa nhận được phản hồi. Bạn có thể thử gửi lại với cùng thông tin hoặc tra cứu đơn hàng để kiểm tra." : error instanceof TypeError || error instanceof SyntaxError ? "Kết nối bị gián đoạn. Hãy thử gửi lại hoặc liên hệ ORORA." : error.message || "Chưa gửi được đơn. Vui lòng thử lại." }); }
+    finally { window.clearTimeout(timeout);submitting.current=false;setBusy(false); }
   }}>
     <p className="order-product-name">{product.name}</p>
     <fieldset disabled={busy}>

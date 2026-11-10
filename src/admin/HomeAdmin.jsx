@@ -39,10 +39,10 @@ const SECTIONS = Object.entries(modules)
 export default function HomeAdmin() {
   const [mode, setMode] = useState("builder");
   const [tab, setTab] = useState(SECTIONS[0]?.key);
+  const [formOpened,setFormOpened]=useState(false);
+  const [visitedForms,setVisitedForms]=useState(SECTIONS[0]?[SECTIONS[0].key]:[]);
+  const chooseForm=key=>{setVisitedForms(current=>current.includes(key)?current:[...current,key]);setTab(key);};
 
-  const Active = SECTIONS.find(
-    (s) => s.key === tab
-  )?.Component;
 
   return (
     <section className="home-admin">
@@ -57,7 +57,7 @@ export default function HomeAdmin() {
         <div className="home-admin-mode">
           <button
             type="button"
-            className={mode === "builder" ? "active" : ""}
+            aria-pressed={mode === "builder"} className={mode === "builder" ? "active" : ""}
             onClick={() => setMode("builder")}
           >
             ✦ Visual Builder
@@ -65,28 +65,22 @@ export default function HomeAdmin() {
 
           <button
             type="button"
-            className={mode === "form" ? "active" : ""}
-            onClick={() => setMode("form")}
+            aria-pressed={mode === "form"} className={mode === "form" ? "active" : ""}
+            onClick={() => {setFormOpened(true);setMode("form");}}
           >
             ☷ Form cũ
           </button>
         </div>
       </div>
 
-      {mode === "builder" ? (
-        <VisualBuilder />
-      ) : (
-        <LegacyForms
-          tab={tab}
-          setTab={setTab}
-          Active={Active}
-        />
-      )}
+      <div className="home-builder-panel" hidden={mode !== "builder"}><VisualBuilder /></div>
+      {formOpened && <div hidden={mode !== "form"}><LegacyForms tab={tab} setTab={chooseForm} visitedForms={visitedForms}/></div>}
+
     </section>
   );
 }
 
-function LegacyForms({ tab, setTab, Active }) {
+function LegacyForms({ tab, setTab, visitedForms }) {
   return (
     <>
       {SECTIONS.length === 0 && (
@@ -109,6 +103,7 @@ function LegacyForms({ tab, setTab, Active }) {
             className={`admin-tab ${
               tab === s.key ? "active" : ""
             }`}
+            aria-pressed={tab === s.key}
             onClick={() => setTab(s.key)}
           >
             {s.label}
@@ -116,7 +111,7 @@ function LegacyForms({ tab, setTab, Active }) {
         ))}
       </div>
 
-      {Active && <Active key={tab} />}
+      {SECTIONS.filter(section=>visitedForms.includes(section.key)).map(({key,Component})=><div hidden={tab!==key} key={key}><Component /></div>)}
     </>
   );
 }

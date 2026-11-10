@@ -55,7 +55,7 @@ function AdminWorkspace({ user }) {
         <div className="admin-brand">ORORA</div>
         <nav className="admin-nav">
           {TABS.map(([key, label]) => (
-            <button key={key} aria-label={label} aria-describedby={key === "orders" && (notifications.snapshot?.pendingCount > 0 || notifications.error) ? "admin-pending-order-count" : undefined} className={tab === key ? "active" : ""} onClick={() => navigate(key)}>
+            <button key={key} aria-label={label} aria-describedby={key === "orders" && (notifications.snapshot?.pendingCount > 0 || notifications.error) ? "admin-pending-order-count" : undefined} aria-current={tab === key ? "page" : undefined} className={tab === key ? "active" : ""} onClick={() => navigate(key)}>
               {label}{key === "orders" && notifications.error && !notifications.snapshot?.pendingCount && <span id="admin-pending-order-count" className="admin-order-count" title={`Chưa cập nhật số đơn: ${notifications.error}`} aria-label="Chưa cập nhật được số đơn chờ">!</span>}{key === "orders" && notifications.snapshot?.pendingCount > 0 && <span id="admin-pending-order-count" className="admin-order-count" aria-label={`${notifications.snapshot.pendingCount} đơn chờ xác nhận`} title={notifications.error ? `Số đã ghi nhận; chưa cập nhật lại: ${notifications.error}` : "Đơn chờ xác nhận · tự cập nhật mỗi phút"}>{notifications.snapshot.pendingCount}</span>}
             </button>
           ))}
@@ -63,7 +63,7 @@ function AdminWorkspace({ user }) {
         <div className="admin-side-bottom">
           <span className="admin-muted">{user.email}</span>
           <span className="admin-muted" style={{ fontSize: 11 }}>UID: {user.uid}</span>
-          <a href="/" className="admin-btn">Xem website</a>
+          <a href="/" target="_blank" rel="noopener noreferrer" className="admin-btn">Xem website</a>
           <button className="admin-btn" onClick={() => signOut(auth)}>Đăng xuất</button>
         </div>
       </aside>
@@ -72,14 +72,14 @@ function AdminWorkspace({ user }) {
         {notifications.incoming && <div className="admin-order-notification" role="status"><div><strong>Có đơn hàng mới · {notifications.incoming.code}</strong><p>{notifications.snapshot?.pendingCount ?? ""} đơn đang chờ xác nhận.</p></div><button type="button" className="admin-btn" onClick={() => { setPendingRequest({ id: notifications.incoming.id }); navigate("orders"); notifications.dismiss(); }}>Xem đơn chờ</button><button type="button" className="notification-dismiss" aria-label="Đóng thông báo đơn mới" onClick={notifications.dismiss}>×</button></div>}
 
         {tab === "dashboard" && <Dashboard sectionCount={TABS.length} />}
-        {tab === "home" && <HomeAdmin />}
-        {tab === "products" && <ProductsAdmin />}
-        {tab === "chat" && <ChatSettings />}
-        {visited.includes("orders") && <div hidden={tab !== "orders"}><OrdersAdmin refreshKey={notifications.revision} pendingRequest={pendingRequest} onOrderChanged={notifications.refresh} key={`${user.uid}:${orderMailVersion}`} initialMailDraft={orderMailDraft} onOpenEmailTemplates={() => { setEmailSection({ view: "templates" }); navigate("newsletter"); }} /></div>}
+        {visited.includes("home") && <div className="admin-workspace-panel" hidden={tab !== "home"}><HomeAdmin /></div>}
+        {visited.includes("products") && <div className="admin-workspace-panel" hidden={tab !== "products"}><ProductsAdmin /></div>}
+        {visited.includes("chat") && <div className="admin-workspace-panel" hidden={tab !== "chat"}><ChatSettings /></div>}
+        {visited.includes("orders") && <div className="admin-workspace-panel" hidden={tab !== "orders"}><OrdersAdmin refreshKey={notifications.revision} pendingRequest={pendingRequest} onOrderChanged={notifications.refresh} key={`${user.uid}:${orderMailVersion}`} initialMailDraft={orderMailDraft} onOpenEmailTemplates={() => { setEmailSection({ view: "templates" }); navigate("newsletter"); }} /></div>}
         {tab === "export" && <EmailExport key={user.uid} request={newsletterRequest} />}
-        {visited.includes("shipping") && <div hidden={tab !== "shipping"}><ShippingAdmin key={user.uid} /></div>}
-        {visited.includes("inventory") && <div hidden={tab !== "inventory"}><InventoryAdmin key={user.uid} /></div>}
-        {visited.includes("newsletter") && <div hidden={tab !== "newsletter"}><NewsletterAdmin initialView={emailSection.view} viewRequest={emailSection} onOpenOrderMail={(draft) => { setOrderMailDraft(draft); setOrderMailVersion((value) => value + 1); navigate("orders"); }} /></div>}
+        {visited.includes("shipping") && <div className="admin-workspace-panel" hidden={tab !== "shipping"}><ShippingAdmin key={user.uid} /></div>}
+        {visited.includes("inventory") && <div className="admin-workspace-panel" hidden={tab !== "inventory"}><InventoryAdmin key={user.uid} /></div>}
+        {visited.includes("newsletter") && <div className="admin-workspace-panel" hidden={tab !== "newsletter"}><NewsletterAdmin initialView={emailSection.view} viewRequest={emailSection} onOpenOrderMail={(draft) => { setOrderMailDraft(draft); setOrderMailVersion((value) => value + 1); navigate("orders"); }} /></div>}
       </main>
     </div>
   );

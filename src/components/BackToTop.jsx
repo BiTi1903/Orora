@@ -23,7 +23,9 @@ function BackToTop() {
     <button
       type="button"
       className={`back-to-top ${visible ? "show" : ""}`}
-      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      tabIndex={visible?0:-1}
+      aria-hidden={!visible}
+      onClick={() => window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth" })}
       aria-label="Lên đầu trang"
     >
       <svg viewBox="0 0 48 48" aria-hidden="true">

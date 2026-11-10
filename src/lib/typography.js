@@ -18,7 +18,24 @@ export const FONT_OPTIONS = [
   { label: "Roboto", value: '"Roboto", sans-serif' },
   { label: "Georgia", value: "Georgia, serif" },
   { label: "Arial", value: "Arial, sans-serif" },
+  { label: "Times New Roman", value: '"Times New Roman", serif' },
 ];
+
+// All editors share one catalog; builder stores the same CSS families as forms.
+export function toBareFontFamily(value) {
+  if (!value) return "";
+  const text = String(value).trim();
+  const quoted = /^(["'])(.*?)\1/.exec(text);
+  return quoted ? quoted[2] : text.split(",")[0].trim();
+}
+export const FONT_NAMES = FONT_OPTIONS.filter(font => font.value).map(font => toBareFontFamily(font.value));
+export function toFullFontFamily(value) {
+  if (!value) return value;
+  const text = String(value).trim();
+  // Saved stacks/custom variables are already CSS and must not be rewritten.
+  if (text.includes(",") || /^var\(/.test(text)) return value;
+  return FONT_OPTIONS.find(font => font.label === text)?.value || `"${text}", sans-serif`;
+}
 
 export const WEIGHT_OPTIONS = [
   { label: "Mặc định", value: "" },

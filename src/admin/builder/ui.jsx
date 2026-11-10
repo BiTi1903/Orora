@@ -294,7 +294,7 @@ export function SelectField({
         {extra}
         {list.map((option) => (
           <option key={String(option)} value={option}>
-            {option}
+            {option === "" ? "Mặc định" : option}
             {suffix}
           </option>
         ))}

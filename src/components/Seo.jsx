@@ -7,12 +7,12 @@ import { pageSeo } from "../lib/seo";
 export default function Seo() {
   const { pathname } = useLocation();
   const home = useHomeContent();
-  const { products, loading } = useProducts();
+  const { products, loading } = useProducts({enabled:pathname.startsWith("/product/")});
   const seo = pageSeo(pathname, home, products, loading);
   const serialized = JSON.stringify(seo);
   useEffect(() => {
     const current = JSON.parse(serialized);
-    document.title = "ORORA";
+    document.title = current.title;
     document.documentElement.lang = "vi";
     const meta = (attribute, name, content) => {
       let element = document.head.querySelector(`meta[${attribute}="${name}"]`);

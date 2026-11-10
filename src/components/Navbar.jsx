@@ -39,6 +39,7 @@ function Navbar({
 }) {
   const location = useLocation();
   const navRef = useRef(null);
+  const drawerRef = useRef(null);
   const [menuPath, setMenuPath] = useState(null);
   const [previousPath, setPreviousPath] = useState(location.pathname);
   if (previousPath !== location.pathname) {
@@ -77,8 +78,14 @@ function Navbar({
     const ownerDocument = nav.ownerDocument;
     ownerDocument.querySelector(".drawer-close")?.focus();
     const onEscape = (event) => {
-      if (event.key !== "Escape") return;
-      setMenuPath(null);
+      if (ownerDocument.querySelector('dialog:modal')) return;
+      if (event.key === "Escape") { event.preventDefault();setMenuPath(null);return; }
+      const drawer=drawerRef.current;
+      if(event.key!=="Tab"||!drawer?.contains(ownerDocument.activeElement))return;
+      const nodes=Array.from(drawer.querySelectorAll('a[href],button:not(:disabled),summary,[tabindex="0"]')).filter(node=>node.getClientRects().length);
+      const first=nodes[0],last=nodes.at(-1);
+      if(event.shiftKey&&ownerDocument.activeElement===first){event.preventDefault();last?.focus();}
+      else if(!event.shiftKey&&ownerDocument.activeElement===last){event.preventDefault();first?.focus();}
     };
     ownerDocument.addEventListener("keydown", onEscape);
     const desktop = ownerDocument.defaultView.matchMedia("(min-width: 769px)");
@@ -146,7 +153,7 @@ function Navbar({
         onClick={closeMenu}
       />
 
-      <aside className={`mobile-drawer${menuOpen ? " is-open" : ""}`} inert={!menuOpen}>
+      <aside ref={drawerRef} className={`mobile-drawer${menuOpen ? " is-open" : ""}`} inert={!menuOpen}>
         <div className="mobile-drawer-header">
           <Link to="/" className="logo" onClick={closeMenu}>
             {logo}<span></span>

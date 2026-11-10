@@ -49,7 +49,7 @@
 .admin-main { padding: 40px 5%; min-width: 0; }
 
 /* Khi mở Visual Builder: giảm padding để preview rộng hơn, sát kích thước thật */
-.admin-main:has(.visual-builder) {
+.admin-main:has(> .admin-workspace-panel:not([hidden]) .home-builder-panel:not([hidden]) .visual-builder) {
   padding: 20px 18px 18px;
 }
 
@@ -680,3 +680,6 @@
 .tracking-settings-preview .order-tracking-panel > [aria-label="Tra cứu đơn hàng"] { display:grid; gap:20px; margin-top:22px; }
 .tracking-settings-preview .order-tracking-submit { width:100%; }
 .tracking-settings-preview .order-tracking-heading h1 { font-family:var(--font-display); }
+
+/* Preserved editors keep drafts without leaking hidden layouts into the current panel. */
+.admin-workspace-panel[hidden], .home-admin [hidden] { display:none !important; }

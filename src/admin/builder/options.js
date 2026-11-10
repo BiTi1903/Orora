@@ -1,20 +1,6 @@
+import { FONT_NAMES, toFullFontFamily, toBareFontFamily } from "../../lib/typography.js";
 
-const FONT_OPTIONS = [
-  "Mulish",
-  "Noto Sans",
-  "Noto Serif",
-  "Playfair Display",
-  "Cormorant Garamond",
-  "Montserrat",
-  "Poppins",
-  "Inter",
-  "DM Sans",
-  "Lora",
-  "Roboto",
-  "Arial",
-  "Georgia",
-  "Times New Roman",
-];
+const FONT_OPTIONS = ["", ...FONT_NAMES];
 
 const SIZE_OPTIONS = [
   12, 14, 16, 18, 20, 24, 28, 32, 36, 40,
@@ -74,30 +60,6 @@ const SPACE_OPTIONS = [
   140,
 ];
 
-
-const SERIF_FONTS = new Set([
-  "Cormorant Garamond",
-  "Playfair Display",
-  "Lora",
-  "Noto Serif",
-  "Georgia",
-  "Times New Roman",
-]);
-
-function toFullFontFamily(name) {
-  if (!name) return name;
-  if (String(name).includes(",")) return name;
-  const stack = SERIF_FONTS.has(name) ? "serif" : "sans-serif";
-  return `"${name}", ${stack}`;
-}
-
-/** '"Cormorant Garamond", serif' → "Cormorant Garamond" (for select) */
-function toBareFontFamily(value) {
-  if (!value) return "";
-  const m = String(value).match(/"([^"]+)"/);
-  if (m) return m[1];
-  return String(value).split(",")[0].trim().replace(/"/g, "");
-}
 
 export {
   FONT_OPTIONS,

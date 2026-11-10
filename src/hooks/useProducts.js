@@ -3,7 +3,7 @@ import { getPublicProducts } from "../lib/api";
 
 export default function useProducts({ enabled = true } = {}) {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(enabled);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     if (!enabled) return;
@@ -17,7 +17,7 @@ export default function useProducts({ enabled = true } = {}) {
         if (alive) setProducts([]);
       })
       .finally(() => {
-        if (alive) setLoading(false);
+        if (alive) setLoaded(true);
       });
 
     return () => {
@@ -25,5 +25,5 @@ export default function useProducts({ enabled = true } = {}) {
     };
   }, [enabled]);
 
-  return { products, loading };
+  return { products, loading: enabled && !loaded };
 }
