@@ -3,14 +3,13 @@ import {ScrollTrigger} from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 export function startHomeAnimations(root){
  const motion=gsap.matchMedia();
- motion.add('(prefers-reduced-motion: no-preference)',()=>{
+ motion.add('(prefers-reduced-motion: no-preference) and (min-width: 769px) and (pointer: fine)',()=>{
   const context=gsap.context(()=>{
    const below=selector=>Array.from(root.querySelectorAll(selector)).filter(node=>node.getBoundingClientRect().top>=window.innerHeight);
    // Never hide content that is already visible when this deferred module loads.
    if(root.querySelector('.hero')&&window.matchMedia('(hover:hover) and (pointer:fine)').matches){
     gsap.to('.hero',{backgroundPosition:'50% 70%',scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:1}});
    }
-   below('.about-content').forEach(node=>gsap.from(node,{y:120,opacity:0,scrollTrigger:{trigger:node.closest('.about'),start:'top 80%',end:'center 45%',scrub:1}}));
    below('.collection').forEach(section=>{
     const label=section.querySelector('.collection-label'),titles=section.querySelectorAll('.collection-title-line');
     const timeline=gsap.timeline({scrollTrigger:{trigger:section,start:'top 75%',end:'top 30%',scrub:1}});

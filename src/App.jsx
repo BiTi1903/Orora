@@ -46,7 +46,7 @@ function App() {
 
 
   useEffect(()=>{
-    if(location.pathname!=="/"||home.loading)return;
+    if(location.pathname!=="/"||home.loading||!window.matchMedia("(min-width: 769px) and (pointer: fine) and (prefers-reduced-motion: no-preference)").matches)return;
     let cancelled=false,stop;
     const start=()=>import("./lib/home-animations").then(({startHomeAnimations})=>{if(!cancelled&&pageRef.current)stop=startHomeAnimations(pageRef.current);}).catch(()=>{});
     const idle=window.requestIdleCallback?window.requestIdleCallback(start,{timeout:1500}):setTimeout(start,100);

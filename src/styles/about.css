@@ -176,3 +176,9 @@
 .about-image-wrapper.builder-preview-image {
   height: auto;
 }
+/* Mobile keeps a single CSS entrance per block; no nested scroll scrubbing. */
+@media(max-width:768px) {
+ .about::before { filter:none; background:radial-gradient(circle,rgba(247,184,208,.3),transparent 70%); }
+ .about .reveal { transform:translateY(18px); transition-duration:.5s; }
+ .about .reveal.in { transform:none; }
+}

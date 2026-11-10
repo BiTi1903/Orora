@@ -935,7 +935,7 @@
 .order-tracking-panel, .order-tracking-result { padding:32px; border:1px solid var(--line); border-radius:22px; background:#fffafb; box-shadow:0 8px 30px #b8446d0a; }
 .order-tracking-panel h1 { font:500 42px/1.2 var(--font-display); margin:12px 0; }
 .order-tracking-panel p, .order-tracking-result p { font-size:14px; line-height:1.8; }
-.order-tracking-panel form { display:grid; gap:18px; margin:24px 0; }
+.order-tracking-panel .order-tracking-search-form { display:grid; gap:18px; margin:24px 0; }
 .order-tracking-panel label { display:grid; gap:8px; font-size:14px; }
 .order-tracking-panel input { width:100%; min-width:0; padding:13px 14px; min-height:48px; border:1px solid var(--line); border-radius:12px; background:#fff; color:var(--plum); font:inherit; font-size:16px; box-sizing:border-box; }
 .order-tracking-panel button { min-height:48px; padding:14px; border:0; border-radius:12px; background:var(--rose-deep); color:#fff; font:inherit; cursor:pointer; }
@@ -994,7 +994,7 @@
 .order-tracking-search-layout { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr); align-items:start; gap:28px; }
 .order-tracking-search-layout .order-tracking-panel { padding:30px; border-color:var(--tracking-border); border-radius:var(--tracking-radius); background:var(--tracking-card); box-shadow:0 12px 45px #74294407; min-width:0; }
 .order-tracking-panel > h2 { font:600 22px/1.35 var(--font-body); margin:0; }
-.order-tracking-panel form { margin:22px 0 0; gap:20px; }
+.order-tracking-panel .order-tracking-search-form { margin:22px 0 0; gap:20px; }
 .order-tracking-panel .order-tracking-modes { gap:10px; }
 .order-tracking-panel .order-tracking-modes button { display:flex; align-items:center; gap:12px; border:1px solid var(--tracking-border); background:#fff; color:var(--plum); text-align:left; padding:15px; border-radius:14px; min-height:78px; }
 .order-tracking-panel .order-tracking-modes button[aria-pressed="true"] { border-color:var(--tracking-accent); background:color-mix(in srgb,var(--tracking-accent) 5%,#fff); box-shadow:0 0 0 1px var(--tracking-accent); color:var(--plum); }
@@ -1049,3 +1049,36 @@
 .product-load-error button { min-height:44px; padding:11px 22px; border:1px solid var(--line); border-radius:12px; background:var(--rose-deep); color:#fff; font:inherit; cursor:pointer; }
 .product-load-error button:focus-visible { outline:2px solid var(--rose-deep); outline-offset:3px; }
 @media(max-width:768px) { .product-load-error [style*="--mobile-font-size"] { font-size:var(--mobile-font-size) !important; } }
+
+/* Compact lookup: information first, instructions on demand. */
+.order-tracking-page { padding-top:100px; }
+.order-tracking-heading { margin:4px 0 18px; }
+.order-tracking-heading h1 { font-size:clamp(30px,4vw,42px); margin-bottom:8px; }
+.order-tracking-heading .product-eyebrow { margin-bottom:8px; }
+.order-tracking-search-layout { grid-template-columns:minmax(0,1fr); gap:10px; }
+.order-tracking-search-layout .order-tracking-panel { padding:18px 20px; }
+.order-tracking-panel .order-tracking-search-form { margin:0; gap:12px; }
+.order-tracking-panel .order-tracking-modes { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.order-tracking-panel .order-tracking-modes button { min-height:44px; padding:10px; justify-content:center; text-align:center; }
+.order-tracking-mode-hint { margin:0; font-size:12px; line-height:1.5; color:var(--plum-soft); }
+.order-tracking-guide { padding:0 4px; }
+.order-tracking-guide summary { padding:10px 0; cursor:pointer; color:var(--tracking-accent); font:500 13px/1.5 var(--font-body); }
+.order-tracking-guide ol { gap:14px; margin:8px 0 12px; }
+.order-tracking-guide-support { margin-top:12px; padding-top:12px; }
+.order-tracking-list { margin-top:20px; }
+.order-tracking-list > h2 { margin-bottom:4px; }
+.order-tracking-list > .order-tracking-help { margin-top:0; font-size:13px; }
+.order-tracking-summary { gap:12px; padding:14px; }
+.order-tracking-statuses { gap:6px; margin:12px 0; }
+.order-tracking-statuses button { min-height:40px; padding:8px 12px; }
+.order-tracking-payment { line-height:1.45; }
+@media(min-width:761px) {
+ .order-tracking-panel .order-tracking-search-form { grid-template-columns:minmax(0,1fr) auto; align-items:end; }
+ .order-tracking-modes,.order-tracking-mode-hint { grid-column:1/-1; }
+ .order-tracking-panel .order-tracking-submit { min-width:180px; min-height:54px; }
+}
+@media(max-width:760px) {
+ .order-tracking-page { padding-top:90px; }
+ .order-tracking-page.has-results .order-tracking-guide { display:block; }
+ .order-tracking-summary-state { text-align:right; }
+}

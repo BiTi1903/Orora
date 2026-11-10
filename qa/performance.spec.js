@@ -52,3 +52,10 @@ test('real app paints the cached public hero while realtime data is still pendin
  await expect(page.getByText('Nội dung mới từ CMS',{exact:true})).toBeVisible();
  expect(Math.abs(await page.locator('.home-first-screen').evaluate(node=>node.getBoundingClientRect().height)-firstHeight)).toBeLessThan(2);await fit(page);
 });
+
+ test('story keeps one entrance layer and mobile does not install scrubbed page animations',async({page})=>{
+ await mount(page,`import {startHomeAnimations} from '/src/lib/home-animations.js';document.getElementById('root').innerHTML='<div id="scene"><div style="height:1800px"></div><section class="about"><div class="about-content"><div class="reveal">Story</div></div></section><div class="gallery-item">Product</div></div>';window.stopAnimations=startHomeAnimations(document.getElementById('scene'));`);
+ expect(await page.locator('.about-content').evaluate(node=>node.style.transform)).toBe('');
+ if(page.viewportSize().width<=768)expect(await page.locator('.gallery-item').evaluate(node=>node.style.transform)).toBe('');
+ await page.evaluate(()=>window.stopAnimations());
+ });

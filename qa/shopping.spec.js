@@ -16,7 +16,10 @@ test('phone-only lookup groups compact results and opens accessible detail',asyn
  let request;
  await page.route('**/api/order-tracking',route=>{request=route.request().postDataJSON();return route.fulfill({json:{orders:Array.from({length:7},(_,i)=>({code:`OW_${1000+i}C`,status:i<6?'new':'completed',createdAt:1794193200000,productName:'Sản phẩm kiểm tra',quantity:1,totalAmount:409000,paymentMethod:'cod',paymentStatus:'unpaid'})),nextCursor:null}});});
  await mount(page,`import Tracking from '/src/components/OrderTracking.jsx';${render('R.createElement(Tracking)')}`,{'hooks/useHomeContent.js':'export default function useHome(){return {loading:false}}'});
+ await expect(page.locator('.order-tracking-guide')).not.toHaveAttribute('open','');
  await page.getByLabel('Số điện thoại đặt hàng',{exact:true}).fill('0901234567');await page.getByRole('button',{name:'Tra cứu đơn hàng',exact:true}).click();await expect(page.locator('.order-tracking-summary')).toHaveCount(5);expect(request.phone).toBe('0901234567');expect(request.code).toBe('');
+ await expect(page.locator('.order-tracking-payment').first()).toContainText('Chưa thanh toán');
+ if(page.viewportSize().width===390)await page.screenshot({path:'/tmp/orora-compact-tracking.png',fullPage:true});
  await page.getByRole('button',{name:'Trang sau',exact:true}).click();await expect(page.locator('.order-tracking-summary')).toHaveCount(2);await page.getByRole('button',{name:'Xem chi tiết đơn OW_1005C',exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible();await page.keyboard.press('Escape');await expect(page.getByRole('dialog')).toHaveCount(0);await fit(page);
 });
 test('unsaved warning persists through failed save and clears only after acknowledged success',async({page})=>{
