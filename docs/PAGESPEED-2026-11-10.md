@@ -31,3 +31,10 @@ Bộ kiểm tra bundle nay đi theo manifest và cộng cả static imports đ�
 2. Chạy lại PageSpeed Mobile trên cùng URL. Ghi FCP/LCP/TBT/CLS/SpeedIndex, mở LCP element + breakdown và network waterfall; xem ảnh có priority/preload đúng không.
 3. Đo nhiều lượt và tách cold/warm cache. Không lấy thời gian test cục bộ làm số giây trên4G thật. Đặc biệt theo dõi CLS vì font dùng swap.
 4. Nếu vẫn LCP cao, cần URL báo cáo để xác định download/TTFB/render delay và ảnh thực tế. Nội dung trang sau màn hình đầu tiên vẫn đọc realtime; CSS và ảnh CMS thực tế có thể cần tối ưu tiếp theo từng tài nguyên.
+
+## Mobile visual follow-up
+
+- Public first-screen shell now includes ticker words/styles. Hero, navigation and ticker mount together, reserving the band before the realtime snapshot arrives. Browser regression checks compare first-screen height before/after the snapshot.
+- Primary Google Fonts use `display=optional` to avoid a late font replacement on slow first visits; the browser may retain its fallback for that visit. Navigation logo uses an explicit line height.
+- Removed the hardcoded newsletter star; separated email input and submit button. Newsletter sits above falling petals so controls remain legible. Input/button colors, radius and consent copy/typography are editable in Visual Builder, with consent visible in preview.
+- Chat hint tracks its actual anchor only during its brief display, including scrolling, visual viewport changes and dragging. Regression checks cover multiple button positions at all four viewport widths.

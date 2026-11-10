@@ -42,7 +42,7 @@ function App() {
   const location = useLocation();
   const home = useHomeContent();
   const visibility = JSON.stringify(home.sectionVisibility || {});
-  const visible = (key) => (!home.loading || (home.shellReady && ["navbar","hero"].includes(key))) && sectionIsEnabled(home,key);
+  const visible = (key) => (!home.loading || (home.shellReady && ["navbar","hero","ticker"].includes(key))) && sectionIsEnabled(home,key);
 
 
   useEffect(()=>{

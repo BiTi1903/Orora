@@ -142,7 +142,7 @@ export function Marquee() {
   const bg = ms.background || ms.band?.color;
   const bandStyle = bg ? { background: bg } : undefined;
 
-  if (c.loading || !words.length) return null;
+  if ((c.loading && !c.shellReady) || !words.length) return null;
 
   const row = words.map((w, i) => (
     <span key={`${w}-${i}`} style={textStyle}>
@@ -535,7 +535,7 @@ export function Newsletter({
   const selectedClass = (key) =>
     preview && selectedElement === key ? "builder-selected" : "";
 
-  const css = (key) => toCss(styles[key], { responsive: true });
+  const css = (key) => ({ ...toCss(styles[key], { responsive: true }), ...(styles[key]?.background ? { background: styles[key].background } : {}), ...(styles[key]?.borderColor ? { borderColor: styles[key].borderColor } : {}), ...(styles[key]?.borderRadius != null && styles[key].borderRadius !== "" ? { borderRadius: `${Number(styles[key].borderRadius)}px` } : {}) });
 
   const Content = (
     <>
@@ -600,14 +600,12 @@ export function Newsletter({
             {submission.busy ? "Đang lưu email…" : c.newsletterButton || "Đăng ký"}
           </button>
         </div>
-        {!preview && (
-          <>
-            <label className="newsletter-consent">
-              <input type="checkbox" name="consent" required />
-              <span>Tôi đồng ý nhận email về sản phẩm và ưu đãi từ ORORA. Có thể hủy đăng ký bất cứ lúc nào.</span>
+        {
+            <label className={`newsletter-consent ${selectedClass("nlConsent")}`} data-builder-key={preview ? "nlConsent" : undefined} onClick={select("nlConsent")} style={css("consent")}>
+              <input type="checkbox" name="consent" required={!preview} disabled={preview} />
+              <span>{c.newsletterConsent ?? "Tôi đồng ý nhận email về sản phẩm và ưu đãi từ ORORA. Có thể hủy đăng ký bất cứ lúc nào."}</span>
             </label>
-          </>
-        )}
+        }
       </form>
       {!preview && submission.message && (
         <p role="status" className={`newsletter-result ${submission.ok ? "success" : "error"}`}>{submission.message}</p>

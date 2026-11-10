@@ -438,6 +438,7 @@ const DEFAULT_NEWSLETTER = {
     "Đăng ký email để biết sớm sản phẩm mới và quà tặng dành riêng cho bạn.",
   newsletterPlaceholder: "Email của bạn",
   newsletterButton: "Đăng ký",
+  newsletterConsent: "Tôi đồng ý nhận email về sản phẩm và ưu đãi từ ORORA. Có thể hủy đăng ký bất cứ lúc nào.",
   newsletterStyles: {
     title: {
       fontFamily: '"Cormorant Garamond", serif',
@@ -481,6 +482,7 @@ function createNewsletter(data = {}) {
       data.newsletterPlaceholder ?? DEFAULT_NEWSLETTER.newsletterPlaceholder,
     newsletterButton:
       data.newsletterButton ?? DEFAULT_NEWSLETTER.newsletterButton,
+    newsletterConsent: data.newsletterConsent ?? DEFAULT_NEWSLETTER.newsletterConsent,
     newsletterStyles: mergeNestedStyle(
       DEFAULT_NEWSLETTER.newsletterStyles,
       data.newsletterStyles
@@ -882,6 +884,7 @@ function buildHomePayload({ about, hero, collection, productDetail, features, re
     newsletterText: newsletter.newsletterText,
     newsletterPlaceholder: newsletter.newsletterPlaceholder,
     newsletterButton: newsletter.newsletterButton,
+    newsletterConsent: newsletter.newsletterConsent,
     newsletterStyles: newsletter.newsletterStyles,
 
     // Footer

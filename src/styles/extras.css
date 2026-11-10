@@ -210,13 +210,9 @@
 ===================================================== */
 .newsletter {
   margin: 0 7% 110px; padding: 90px 6%; text-align: center;
-  border-radius: 40px; position: relative; overflow: hidden;
+  border-radius: 40px; position: relative; z-index: 801; overflow: hidden;
   background: linear-gradient(135deg, var(--petal), #fff 50%, var(--rose-soft));
   border: 1px solid var(--line); box-shadow: var(--shadow-soft);
-}
-.newsletter::before {
-  content: "✦"; position: absolute; top: 24px; right: 40px;
-  font-size: 46px; color: var(--rose); opacity: 0.5; animation: bob 4s ease-in-out infinite alternate;
 }
 .newsletter-p { margin: 18px auto 34px; max-width: 460px; font-size: 15px; color: var(--plum-soft); }
 .news-form {
@@ -232,21 +228,17 @@
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
-  padding: 7px;
+  padding: 0;
   min-width: 0;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 50px;
-  box-shadow: 0 12px 34px rgba(184, 68, 109, 0.14);
 }
-.news-form-row:focus-within { outline: 2px solid var(--rose); outline-offset: 3px; }
+.news-form-row input:focus-visible { outline: 2px solid var(--rose); outline-offset: 3px; }
 .news-form-row input[type="email"] {
   width: 100%; min-width: 0; min-height: 48px; padding: 10px 16px;
-  border: 0; outline: 0; background: transparent;
+  border: 1px solid var(--line); border-radius: 14px; background: #fff;
   font: inherit; font-size: 16px; color: var(--plum);
 }
 .news-form-row button {
-  min-height: 48px; padding: 12px 24px; border: 0; border-radius: 40px;
+  min-height: 48px; padding: 12px 24px; border: 0; border-radius: 14px;
   cursor: pointer; white-space: nowrap;
   font-size: 13px; font-weight: 500; letter-spacing: 1px; color: #fff;
   background: linear-gradient(135deg, #ee7fa2, var(--rose-deep));
@@ -297,7 +289,7 @@
   .stats { gap: 28px; }
   .stats strong { font-size: 44px; }
   .newsletter { margin: 0 16px 80px; padding: 60px 22px; border-radius: 28px; }
-  .news-form-row { grid-template-columns: minmax(0, 1fr); border-radius: 24px; padding: 8px; }
+  .news-form-row { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .news-form-row button { width: 100%; }
   .newsletter-consent { padding: 0 4px; }
 }

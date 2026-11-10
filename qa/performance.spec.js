@@ -39,13 +39,16 @@ test('carousel controls are exposed to assistive tools and offscreen slides are 
 });
 
 test('real app paints the cached public hero while realtime data is still pending, then accepts fresh CMS content',async({page})=>{
- const content={heroTitle:'ORORA',heroDescription:'Nội dung đầu trang sớm',heroImage:'/early-hero.svg',navLogo:'ORORA',heroButtonText:'Khám phá',shopButtonText:'Sản phẩm',sectionVisibility:{about:false,collection:false,productneeds:false,philosophy:false,features:false,reviews:false,newsletter:false,footer:false,ticker:false}};
+ const content={heroTitle:'ORORA',heroDescription:'Nội dung đầu trang sớm',heroImage:'/early-hero.svg',navLogo:'ORORA',marqueeWords:['Chăm sóc toàn diện','Lành tính'],heroButtonText:'Khám phá',shopButtonText:'Sản phẩm',sectionVisibility:{about:false,collection:false,productneeds:false,philosophy:false,features:false,reviews:false,newsletter:false,footer:false,ticker:true}};
  await page.route('**/api/storefront-shell',route=>route.fulfill({json:{content,images:{desktop:'/early-hero.svg',mobile:'/early-hero.svg'}}}));
  await page.route('**/api/analytics',route=>route.fulfill({status:204,body:''}));
  await page.route('**/early-hero.svg',route=>route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900"><rect width="100%" height="100%" fill="pink"/></svg>'}));
  await page.route('**/fonts.googleapis.com/**',route=>route.fulfill({contentType:'text/css',body:''}));
  await page.route('**/src/lib/live-home-client.js*',route=>route.fulfill({contentType:'application/javascript',body:'export function listenHome(next){window.__publishHome=next;return()=>{}};export function listenCategories(next){next([]);return()=>{}}'}));
  await page.goto('/');await expect(page.getByRole('heading',{name:'ORORA',exact:true})).toBeVisible();await expect(page.getByText('Nội dung đầu trang sớm',{exact:true})).toBeVisible();
+ await expect(page.locator('.marquee')).toBeVisible();
+ const firstHeight=await page.locator('.home-first-screen').evaluate(node=>node.getBoundingClientRect().height);
  await page.waitForFunction(()=>typeof window.__publishHome==='function');await page.evaluate(value=>window.__publishHome({...value,heroDescription:'Nội dung mới từ CMS'}),content);
- await expect(page.getByText('Nội dung mới từ CMS',{exact:true})).toBeVisible();await fit(page);
+ await expect(page.getByText('Nội dung mới từ CMS',{exact:true})).toBeVisible();
+ expect(Math.abs(await page.locator('.home-first-screen').evaluate(node=>node.getBoundingClientRect().height)-firstHeight)).toBeLessThan(2);await fit(page);
 });

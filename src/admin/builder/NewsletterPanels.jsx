@@ -1,4 +1,4 @@
-import { SettingGroup, StyleTypographyBlock } from "./ui";
+import { SettingGroup, StyleTypographyBlock, ColorField } from "./ui";
 import { NEWSLETTER_FIELD_MAP } from "./registry";
 
 export function NewsletterSettings({
@@ -52,6 +52,11 @@ export function NewsletterSettings({
         )}
       </SettingGroup>
 
+      {["input", "button"].includes(meta.styleKey) && <SettingGroup title="Khung hiển thị">
+        <ColorField label="Màu nền" value={style.background || ""} onChange={background => onStyleChange({background})} />
+        <ColorField label="Màu viền" value={style.borderColor || ""} onChange={borderColor => onStyleChange({borderColor})} />
+        <div className="builder-field"><label>Bo góc (px)</label><input type="number" min="0" max="100" value={style.borderRadius ?? ""} placeholder="Mặc định" onChange={event => onStyleChange({borderRadius:event.target.value === "" ? "" : Number(event.target.value)})}/></div>
+      </SettingGroup>}
       {meta.styleKey && (
         <StyleTypographyBlock
           style={style}

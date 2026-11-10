@@ -10,7 +10,7 @@ const FIELDS = {
   productdetail: ["productDetailStyles", "detailLabels"],
   features: ["featuresLabel", "featuresTitle", "features", "featuresStyles"],
   reviews: ["testimonialsLabel", "testimonialsTitle", "testimonialsHighlight", "testimonialsTitleEnd", "reviews", "testimonialsStyles"],
-  newsletter: ["newsletterTitle", "newsletterHighlight", "newsletterText", "newsletterPlaceholder", "newsletterButton", "newsletterStyles"],
+  newsletter: ["newsletterTitle", "newsletterHighlight", "newsletterText", "newsletterPlaceholder", "newsletterButton", "newsletterConsent", "newsletterStyles"],
   footer: ["footerLogo", "footerDescription", "footerInfoTitle", "footerAboutText", "footerShopText", "footerTrackingText", "footerTermsText", "footerPrivacyText", "footerContactTitle", "footerZaloText", "footerPhone", "footerEmail", "footerAddress", "footerSocialTitle", "footerInstagram", "footerFacebook", "footerTikTok", "footerYouTube", "footerCopyright", "footerCompanyNumber", "footerStyles"],
   ticker: ["marqueeWords", "marqueeStyles"],
 };

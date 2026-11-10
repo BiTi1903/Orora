@@ -360,6 +360,7 @@ const FOOTER_FIELD_MAP = {
 };
 
 const NEWSLETTER_FIELD_MAP = {
+  nlConsent: { key: "newsletterConsent", label: "Nội dung đồng ý nhận tin", styleKey: "consent", multiline: true },
   nlTitle: {
     key: "newsletterTitle",
     label: "Tiêu đề",
@@ -380,7 +381,7 @@ const NEWSLETTER_FIELD_MAP = {
     key: "newsletterPlaceholder",
     label: "Placeholder email",
     styleKey: "input",
-    hint: "Gợi ý trong ô nhập emailll",
+    hint: "Gợi ý trong ô nhập email",
   },
   nlButton: {
     key: "newsletterButton",
