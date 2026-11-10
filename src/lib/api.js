@@ -1,3 +1,4 @@
+import { createReadFlight } from "./read-flight.js";
 import { findProductByRoute, nextProductSequence, productSlug, withProductIdentity } from "./product-identity.js";
 import {
   collection,
@@ -16,20 +17,24 @@ const needDb = () => {
   if (!db) throw new Error("Firebase chưa được cấu hình.");
 };
 
-export async function getProducts() {
-  if (!db) return [];
+const productsRead = createReadFlight();
+const homeRead = createReadFlight();
 
-  const snap = await getDocs(collection(db, "products"));
+export function getProducts() {
+  if (!db) return Promise.resolve([]);
+  return productsRead.run(async () => {
+    const snap = await getDocs(collection(db, "products"));
 
-  return snap.docs
-    .map((d) => ({ ...d.data(), id: d.id }))
-    .sort((a, b) =>
-      String(a.number || "").localeCompare(
-        String(b.number || ""),
-        undefined,
-        { numeric: true }
-      )
-    );
+    return snap.docs
+      .map((d) => ({ ...d.data(), id: d.id }))
+      .sort((a, b) =>
+        String(a.number || "").localeCompare(
+          String(b.number || ""),
+          undefined,
+          { numeric: true }
+        )
+      );
+  });
 }
 
 let productCatalogCache = null;
@@ -68,12 +73,14 @@ export async function saveProduct(product, { create = false } = {}) {
       transaction.set(counter, { lastNumber: number }, { merge: true });
       return id;
     });
+    productsRead.invalidate();
     productCatalogCache = null;
     return id;
   }
   const id = product.id;
   if (!id) throw new Error("Sản phẩm cần có mã dữ liệu.");
   await setDoc(doc(db, "products", id), { ...product, id }, { merge: true });
+  productsRead.invalidate();
   productCatalogCache = null;
   return id;
 }
@@ -82,15 +89,16 @@ export async function removeProduct(id) {
   needDb();
 
   await deleteDoc(doc(db, "products", id));
+  productsRead.invalidate();
   productCatalogCache = null;
 }
 
-export async function getHomeContent() {
-  if (!db) return null;
-
-  const snap = await getDoc(doc(db, "settings", "home"));
-
-  return snap.exists() ? snap.data() : null;
+export function getHomeContent() {
+  if (!db) return Promise.resolve(null);
+  return homeRead.run(async () => {
+    const snap = await getDoc(doc(db, "settings", "home"));
+    return snap.exists() ? snap.data() : null;
+  });
 }
 
 export async function saveHomeContent(content) {
@@ -101,6 +109,7 @@ export async function saveHomeContent(content) {
     content,
     { merge: true }
   );
+  homeRead.invalidate();
 }
 
 export const explainError = (err) =>
@@ -131,5 +140,6 @@ export async function setProductCategory(id, categoryId) {
   needDb();
   if (!id || typeof categoryId !== "string") throw new Error("Danh mục không hợp lệ.");
   await updateDoc(doc(db, "products", id), { categoryId });
+  productsRead.invalidate();
   productCatalogCache = null;
 }

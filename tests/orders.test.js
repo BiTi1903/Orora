@@ -264,3 +264,25 @@ test("format-only price changes do not reject orders, while real amount changes 
   assert.equal((await call({ ...body(), variantId: "one", expectedPriceText: "400000" })).statusCode, 409);
   assert.equal((await db.collection("orders").get()).docs.length, 2);
 });
+
+test("order creation batches stock reads and skips historical-order scans only for uncounted stock", async () => {
+  const { db } = await setup();
+  const transactions = db.runTransaction.bind(db), batches = [];
+  let historyReads = 0;
+  db.runTransaction = work => transactions(tx => work({
+    ...tx,
+    getAll: (...refs) => { batches.push(refs.map(ref => ref.path)); return tx.getAll(...refs); },
+    get: ref => { if (!ref.path) historyReads++; return tx.get(ref); },
+  }));
+  const handler = createOrderHandler({ getDb: () => db, env, schedule: () => {} });
+  const place = async () => { const res = response(); await handler({ method: "POST", headers, body: body() }, res); return res; };
+  await db.collection("inventory").doc("serum").set({ quantity: null, version: 1 });
+  assert.equal((await place()).statusCode, 201);
+  assert.equal(historyReads, 0);
+  assert.ok(batches.some(paths => paths.includes("products/serum") && paths.includes("inventory/serum")));
+  assert.equal((await db.collection("inventory").doc("serum").get()).data().version, 2);
+  await db.collection("inventory").doc("serum").set({ quantity: 3, version: 2 });
+  assert.equal((await place()).statusCode, 409);
+  assert.equal(historyReads, 1, "finite stock still checks prior pending orders before accepting");
+  assert.equal((await db.collection("orders").get()).docs.length, 1);
+});

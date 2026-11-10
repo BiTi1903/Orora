@@ -28,7 +28,7 @@ export default function ChatSettings() {
   const patchStarter = (index, changes) => setForm((current) => ({ ...current, starters: current.starters.map((item, at) => at === index ? { ...item, ...changes } : item) }));
   return <section className="chat-settings-admin"><div className="admin-top"><div><h1>Chat AI</h1><p className="admin-muted">Trợ lý tư vấn dùng thông tin sản phẩm, chính sách và kiến thức cửa hàng.</p></div></div>
     <details className="admin-card"><summary>Kết nối OpenAI và trạng thái cấu hình</summary><div className="chat-connection-card"><div><h2>Kết nối OpenAI</h2><p>{status ? status.aiConfigured ? "Máy chủ đã có cấu hình khóa OpenAI." : "Chưa có khóa OpenAI trên máy chủ." : "Chưa đọc được trạng thái kết nối máy chủ."}</p><p className="admin-muted">Đặt OPENAI_API_KEY trong Environment Variables của Vercel rồi redeploy để bật AI. Khi chưa có khóa hoặc AI tạm lỗi, chat vẫn gợi ý từ thông tin đã đăng.</p></div><button type="button" className="admin-btn" onClick={readStatus}>Kiểm tra trạng thái</button></div></details>
-    <form className="admin-card admin-form" onInvalidCapture={(event) => { const target = event.target; const nextPanel = target.closest("[data-chat-panel]")?.dataset.chatPanel; if(nextPanel) { setPanel(nextPanel); requestAnimationFrame(() => target.focus()); } }} onSubmit={async (event) => {
+    <form aria-busy={busy} className="admin-card admin-form" onInvalidCapture={(event) => { const target = event.target; const nextPanel = target.closest("[data-chat-panel]")?.dataset.chatPanel; if(nextPanel) { setPanel(nextPanel); requestAnimationFrame(() => target.focus()); } }} onSubmit={async (event) => {
       event.preventDefault(); if (loading || failed || busy) return;
       if (form.starters.length > 6 || form.starters.some((item) => !String(item.label || "").trim() || !String(item.prompt || "").trim())) { setPanel("starters"); return setNotice({ error: true, text: "Điền tên và câu hỏi cho từng lựa chọn gợi ý (tối đa 6 lựa chọn)." }); }
       setBusy(true); setNotice(null);
@@ -39,7 +39,7 @@ export default function ChatSettings() {
         setNotice({ text: "Đã lưu thiết lập Chat AI." });
       } catch (error) { setNotice({ error: true, text: explainError(error) }); } finally { setBusy(false); }
     }}>
-      <div className="product-editor-toolbar-top chat-settings-toolbar"><h2>Nội dung khung chat</h2><button type="submit" className="admin-btn primary" disabled={loading || failed || busy}>{busy ? "Đang lưu…" : "Lưu Chat AI"}</button></div>
+      <div className="product-editor-toolbar-top chat-settings-toolbar"><h2>Nội dung khung chat</h2><button type="submit" className="admin-btn primary" aria-busy={busy} disabled={loading || failed || busy}>{busy ? "Đang lưu…" : "Lưu Chat AI"}</button></div>
       {notice && <p role={notice.error ? "alert" : "status"} className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
       <fieldset className="writer-fields" disabled={loading || failed || busy}>
         <nav className="admin-section-tabs" aria-label="Các phần thiết lập Chat AI">{[["general","Hiển thị"],["channels","Chọn Zalo / AI"],["typography","Kiểu chữ"],["starters","Câu hỏi gợi ý"],["knowledge","Kiến thức AI"]].map(([key,label]) => <button type="button" key={key} aria-current={panel===key?"page":undefined} onClick={() => setPanel(key)}>{label}</button>)}</nav>

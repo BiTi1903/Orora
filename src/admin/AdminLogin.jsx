@@ -8,18 +8,19 @@ export default function AdminLogin({ onLoggedIn }) {
   const [email,setEmail]=useState("");
   const [password,setPassword]=useState("");
   const [error,setError]=useState("");
+  const [busy,setBusy]=useState(false);
 
   const submit=async(e)=>{
-    e.preventDefault(); setError("");
+    e.preventDefault(); if(busy)return;setBusy(true);setError("");
     try {
       await signInWithEmailAndPassword(auth,email,password);
       onLoggedIn?.();
     } catch {
       setError("Email hoặc mật khẩu không đúng.");
-    }
+    } finally {setBusy(false);}
   };
 
-  return <div className="admin-login"><form className="admin-login-card admin-form" onSubmit={submit}>
+  return <div className="admin-login"><form aria-busy={busy} className="admin-login-card admin-form" onSubmit={submit}>
     <div>
       <div className="admin-brand">ORORA</div>
       <p className="admin-muted">Đăng nhập trang quản trị</p>
@@ -28,6 +29,6 @@ export default function AdminLogin({ onLoggedIn }) {
     {error && <div className="admin-error">{error}</div>}
     <div className="admin-field"><label>Email</label><input value={email} onChange={e=>setEmail(e.target.value)} type="email" required /></div>
     <div className="admin-field"><label>Mật khẩu</label><input value={password} onChange={e=>setPassword(e.target.value)} type="password" required /></div>
-    <button className="admin-btn primary" disabled={!firebaseConfigured}>Đăng nhập</button>
+    <button className="admin-btn primary" aria-busy={busy} disabled={!firebaseConfigured || busy}>Đăng nhập</button>
   </form></div>;
 }

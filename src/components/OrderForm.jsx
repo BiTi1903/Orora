@@ -1,3 +1,4 @@
+import { toCss } from "../lib/typography";
 import { Link } from "react-router-dom";
 import ProductPurchaseSelection from "./ProductPurchaseSelection";
 import { MAX_ORDER_QUANTITY, productVolumeOptions, selectedVolumeOption, volumePriceText } from "../lib/product-options";
@@ -26,6 +27,8 @@ export default function OrderForm({ product, home, onClose, selection, initialVa
   const [wardCode, setWardCode] = useState("");
   const addresses = useAddressOptions(provinceCode);
   const [busy, setBusy] = useState(false);
+  const submitting=useRef(false);
+  const appearance=home.productDetailStyles?.purchaseOptions||{};
   const [result, setResult] = useState(null);
   const requestId = useRef(crypto.randomUUID());
   const methods = availablePaymentMethods(home);
@@ -50,9 +53,9 @@ export default function OrderForm({ product, home, onClose, selection, initialVa
     <p className="order-help">Nếu thông tin chưa đúng, vui lòng liên hệ ORORA và cung cấp mã đơn để được hỗ trợ.</p>
     <p>{result.mailStatus === "accepted" ? "Vui lòng kiểm tra email xác nhận và mục thư rác." : result.mailStatus === "failed" ? "Đơn đã được nhận nhưng chưa gửi được email xác nhận. Bạn có thể liên hệ ORORA với mã đơn bên trên." : "Email xác nhận đang được xử lý."}</p><button type="button" onClick={onClose}>Đóng</button>
   </section></ModalDialog>;
-  return <ModalDialog key="form" title="Đặt hàng trên website" onClose={onClose} closeDisabled={busy} className="order-form-modal"><form className="website-order" aria-label="Đặt hàng trên website" onSubmit={async (event) => {
+  return <ModalDialog key="form" title="Đặt hàng trên website" onClose={onClose} closeDisabled={busy} className="order-form-modal"><form className="website-order" aria-busy={busy} aria-label="Đặt hàng trên website" onSubmit={async (event) => {
     event.preventDefault();
-    if (busy || (options.length > 0 && !variant) || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_ORDER_QUANTITY || !methods.length || !provinceCode || !wardCode || (home.shippingSettings?.enabled === true && shipping.fee === null)) return;
+    if (submitting.current || busy || (options.length > 0 && !variant) || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_ORDER_QUANTITY || !methods.length || !provinceCode || !wardCode || (home.shippingSettings?.enabled === true && shipping.fee === null)) return;
     const data = new FormData(event.currentTarget);
     const recipient = Object.fromEntries(["name", "phone", "email", "address", "note"].map((key) => [key, String(data.get(key) || "").trim()]));
     const province = addresses.provinces.find((item) => item.code === provinceCode);
@@ -61,7 +64,7 @@ export default function OrderForm({ product, home, onClose, selection, initialVa
     recipient.email = recipient.email.toLowerCase();
     recipient.phone = recipient.phone.replace(/[\s().-]/g, "");
     const orderedProduct = { productName: product.name, variantLabel: variant?.label || "", quantity };
-    setBusy(true); setResult(null);
+    submitting.current=true;setBusy(true); setResult(null);
     try {
       const response = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
         requestId: requestId.current, productId: product.id || product.slug, quantity, variantId, expectedVariantLabel: variant?.label || "", expectedPriceText: priceText,
@@ -73,7 +76,7 @@ export default function OrderForm({ product, home, onClose, selection, initialVa
       if (!json.code) throw new Error("Chưa xác nhận được mã đơn. Vui lòng thử gửi lại.");
       setResult({ ...orderedProduct, ...json, recipient });
     } catch (error) { setResult({ error: error instanceof TypeError || error instanceof SyntaxError ? "Kết nối bị gián đoạn. Hãy thử gửi lại hoặc liên hệ ORORA." : error.message || "Chưa gửi được đơn. Vui lòng thử lại." }); }
-    finally { setBusy(false); }
+    finally { submitting.current=false;setBusy(false); }
   }}>
     <p className="order-product-name">{product.name}</p>
     <fieldset disabled={busy}>
@@ -100,7 +103,7 @@ export default function OrderForm({ product, home, onClose, selection, initialVa
       <p className="order-help">Chưa thu tiền tại bước đặt đơn. ORORA sẽ hướng dẫn thanh toán sau khi tiếp nhận.</p>
       <label className="order-consent"><input name="consent" type="checkbox" required /><span>Tôi đồng ý để ORORA liên hệ, gửi email xác nhận và xử lý đơn hàng theo thông tin đã cung cấp.</span></label>
       {!methods.length && <p role="status">Website đang tạm ngưng nhận đơn. Vui lòng liên hệ ORORA hoặc mua qua các kênh bên trên.</p>}
-      <button className="website-order-submit" disabled={busy || (options.length > 0 && !variant) || !methods.length || !provinceCode || !wardCode || (home.shippingSettings?.enabled === true && shipping.fee === null)}>{busy ? "Đang lưu đơn…" : "Đặt hàng ngay"}</button>
+      <button className="website-order-submit" aria-busy={busy} style={{...toCss(busy?appearance.loadingStyle:appearance.orderSubmitStyle),textDecoration:(busy?appearance.loadingStyle:appearance.orderSubmitStyle)?.textDecoration}} disabled={busy || (options.length > 0 && !variant) || !methods.length || !provinceCode || !wardCode || (home.shippingSettings?.enabled === true && shipping.fee === null)}>{busy ? appearance.orderBusyLabel?.trim()||"Đang gửi đơn hàng…" : appearance.orderSubmitLabel?.trim()||"Đặt hàng ngay"}</button>
     </fieldset>
     {result?.error && <p className="order-error" role="alert">{result.error}</p>}
   </form></ModalDialog>;

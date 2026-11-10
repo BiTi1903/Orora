@@ -7,6 +7,7 @@ import { validShippingFee } from "../lib/shipping";
 import { formatVnd } from "../lib/commerce";
 export default function ShippingAdmin() {
   const [settings, setSettings] = useState({ enabled: false, provinces: {} }); const [enabled, setEnabled] = useState(false); const [provinceCode, setProvinceCode] = useState(""); const [wardCode, setWardCode] = useState(""); const [drafts, setDrafts] = useState({}); const [loading, setLoading] = useState(true); const [failed, setFailed] = useState(false); const [busy, setBusy] = useState(false); const [notice, setNotice] = useState(null);
+  const [savingAction,setSavingAction]=useState("");
   const [version, setVersion] = useState(0);
   const addresses = useAddressOptions(provinceCode);
   const [wardNames, setWardNames] = useState({}); const [feeSearch, setFeeSearch] = useState("");
@@ -41,33 +42,33 @@ export default function ShippingAdmin() {
   const fee = draft.fee ?? (current.fee == null ? "" : String(current.fee));
   const override = draft.wardFees?.[wardCode] ?? (current.wardFees?.[wardCode] == null ? "" : String(current.wardFees[wardCode]));
   const patchDraft = (patch) => setDrafts((all) => ({ ...all, [provinceCode]: { ...all[provinceCode], ...patch } }));
-  const save = async (patch, message) => {
+  const save = async (patch, message, action = "") => {
     if (loading || failed || busy) return false;
-    setBusy(true); setNotice(null);
+    setBusy(true);setSavingAction(action);setNotice(null);
     try { await saveHomeContent({ shippingSettings: patch }); setNotice({ text: message }); return true; }
     catch { setNotice({ error: true, text: "Chưa lưu được phí ship. Vui lòng thử lại." }); return false; }
-    finally { setBusy(false); }
+    finally { setBusy(false);setSavingAction(""); }
   };
   return <section className="shipping-settings"><div className="admin-top"><div><h1>Phí vận chuyển</h1><p className="admin-muted">Địa chỉ hai cấp: tỉnh/thành phố và phường/xã theo dữ liệu mới.</p></div><button type="button" className="admin-btn" disabled={loading || busy} onClick={() => setVersion((value) => value + 1)}>Tải lại</button></div>
-    <div className="admin-card admin-form"><h2>Tính ship theo địa chỉ</h2><label className="admin-check"><input type="checkbox" checked={enabled} disabled={loading || failed || busy} onChange={(event) => setEnabled(event.target.checked)} />Tự tính phí ship khi khách đặt hàng</label><p className="admin-muted">Nhập phí trước khi bật. Địa chỉ chưa có mức phí sẽ chưa nhận đơn khi đang bật tính ship; số 0 là miễn phí.</p><div><button className="admin-btn" disabled={loading || failed || busy} onClick={async () => {
+    <div aria-busy={busy && savingAction === "enabled"} className="admin-card admin-form"><h2>Tính ship theo địa chỉ</h2><label className="admin-check"><input type="checkbox" checked={enabled} disabled={loading || failed || busy} onChange={(event) => setEnabled(event.target.checked)} />Tự tính phí ship khi khách đặt hàng</label><p className="admin-muted">Nhập phí trước khi bật. Địa chỉ chưa có mức phí sẽ chưa nhận đơn khi đang bật tính ship; số 0 là miễn phí.</p><div><button className="admin-btn" aria-busy={busy && savingAction === "enabled"} disabled={loading || failed || busy} onClick={async () => {
       if (enabled && !Object.values(settings.provinces || {}).some((item) => validShippingFee(item.fee) || Object.values(item.wardFees || {}).some(validShippingFee))) return setNotice({ error: true, text: "Lưu ít nhất một mức phí trước khi bật tính ship." });
-      if (await save({ enabled }, "Đã lưu trạng thái tính phí ship.")) setSettings((value) => ({ ...value, enabled }));
+      if (await save({ enabled }, "Đã lưu trạng thái tính phí ship.","enabled")) setSettings((value) => ({ ...value, enabled }));
     }}>Lưu trạng thái tính ship</button></div></div>
     <div className="admin-card admin-form"><h2>Phí theo khu vực</h2>
       <AddressSelect label="Tỉnh / Thành phố" value={provinceCode} options={addresses.provinces.map((item) => ({ ...item, meta: validShippingFee(settings.provinces?.[item.code]?.fee) ? formatVnd(settings.provinces[item.code].fee) : "Chưa có phí chung" }))} disabled={loading || failed || busy} loading={addresses.loadingProvinces} placeholder="Tìm và chọn tỉnh/thành" onChange={(code) => { setProvinceCode(code); setWardCode(""); }} />
       {addresses.error && <p role="alert" className="admin-error">{addresses.error} <button type="button" className="admin-btn" onClick={addresses.retry}>Tải lại địa chỉ</button></p>}
       {provinceCode && <>
-        <form className="admin-form" onSubmit={async (event) => {
+        <form aria-busy={busy && savingAction === "province"} className="admin-form" onSubmit={async (event) => {
           event.preventDefault(); const amount = fee.trim() === "" ? null : Number(fee);
           if (amount !== null && !validShippingFee(amount)) return setNotice({ error: true, text: "Nhập phí là số nguyên không âm, hoặc để trống để ngừng dùng phí chung." });
-          if (await save({ provinces: { [provinceCode]: { fee: amount } } }, "Đã lưu phí chung cho tỉnh/thành.")) { setSettings((value) => ({ ...value, provinces: { ...value.provinces, [provinceCode]: { ...current, fee: amount } } })); setDrafts((all) => ({ ...all, [provinceCode]: { ...all[provinceCode], fee: undefined } })); }
-        }}><div className="admin-field"><label htmlFor="shipping-base-fee">Phí chung toàn tỉnh/thành (đ)</label><input id="shipping-base-fee" type="number" min="0" max="1000000000" step="1" value={fee} disabled={loading || failed || busy} placeholder="Để trống nếu chưa nhận giao" onChange={(event) => patchDraft({ fee: event.target.value })} /></div><div><button className="admin-btn" disabled={loading || failed || busy}>Lưu phí tỉnh/thành</button></div></form>
+          if (await save({ provinces: { [provinceCode]: { fee: amount } } }, "Đã lưu phí chung cho tỉnh/thành.","province")) { setSettings((value) => ({ ...value, provinces: { ...value.provinces, [provinceCode]: { ...current, fee: amount } } })); setDrafts((all) => ({ ...all, [provinceCode]: { ...all[provinceCode], fee: undefined } })); }
+        }}><div className="admin-field"><label htmlFor="shipping-base-fee">Phí chung toàn tỉnh/thành (đ)</label><input id="shipping-base-fee" type="number" min="0" max="1000000000" step="1" value={fee} disabled={loading || failed || busy} placeholder="Để trống nếu chưa nhận giao" onChange={(event) => patchDraft({ fee: event.target.value })} /></div><div><button className="admin-btn" aria-busy={busy && savingAction === "province"} disabled={loading || failed || busy}>Lưu phí tỉnh/thành</button></div></form>
         <AddressSelect label="Phường / Xã có phí riêng (không bắt buộc)" value={wardCode} options={addresses.wards} disabled={busy} loading={addresses.loadingWards} placeholder="Tìm và chọn phường/xã" onChange={setWardCode} />
-        {wardCode && <form className="admin-form" onSubmit={async (event) => {
+        {wardCode && <form aria-busy={busy && savingAction === "ward"} className="admin-form" onSubmit={async (event) => {
           event.preventDefault(); const amount = override.trim() === "" ? null : Number(override);
           if (amount !== null && !validShippingFee(amount)) return setNotice({ error: true, text: "Nhập phí phường/xã là số nguyên không âm." });
-          if (await save({ provinces: { [provinceCode]: { wardFees: { [wardCode]: amount } } } }, amount === null ? "Đã dùng lại phí chung của tỉnh/thành." : "Đã lưu phí riêng cho phường/xã.")) { setSettings((value) => ({ ...value, provinces: { ...value.provinces, [provinceCode]: { ...current, wardFees: { ...current.wardFees, [wardCode]: amount } } } })); setDrafts((all) => ({ ...all, [provinceCode]: { ...all[provinceCode], wardFees: { ...all[provinceCode]?.wardFees, [wardCode]: undefined } } })); }
-        }}><div className="admin-field"><label htmlFor="shipping-ward-fee">Phí riêng phường/xã (đ)</label><input id="shipping-ward-fee" type="number" min="0" max="1000000000" step="1" value={override} disabled={busy} placeholder="Để trống để dùng phí chung" onChange={(event) => patchDraft({ wardFees: { ...draft.wardFees, [wardCode]: event.target.value } })} /></div><div><button className="admin-btn" disabled={busy}>Lưu phí phường/xã</button></div></form>}
+          if (await save({ provinces: { [provinceCode]: { wardFees: { [wardCode]: amount } } } }, amount === null ? "Đã dùng lại phí chung của tỉnh/thành." : "Đã lưu phí riêng cho phường/xã.","ward")) { setSettings((value) => ({ ...value, provinces: { ...value.provinces, [provinceCode]: { ...current, wardFees: { ...current.wardFees, [wardCode]: amount } } } })); setDrafts((all) => ({ ...all, [provinceCode]: { ...all[provinceCode], wardFees: { ...all[provinceCode]?.wardFees, [wardCode]: undefined } } })); }
+        }}><div className="admin-field"><label htmlFor="shipping-ward-fee">Phí riêng phường/xã (đ)</label><input id="shipping-ward-fee" type="number" min="0" max="1000000000" step="1" value={override} disabled={busy} placeholder="Để trống để dùng phí chung" onChange={(event) => patchDraft({ wardFees: { ...draft.wardFees, [wardCode]: event.target.value } })} /></div><div><button className="admin-btn" aria-busy={busy && savingAction === "ward"} disabled={busy}>Lưu phí phường/xã</button></div></form>}
         <p className="admin-muted">Phí chung đang lưu: {current.fee == null ? "Chưa nhập" : formatVnd(current.fee)}. Phí riêng của phường/xã được ưu tiên; để trống và lưu để dùng lại phí chung.</p>
       </>}
     </div>

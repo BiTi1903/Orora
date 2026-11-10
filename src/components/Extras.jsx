@@ -569,6 +569,7 @@ export function Newsletter({
 
       <form
         className="news-form"
+        aria-busy={!preview && submission.busy}
         onSubmit={subscribe}
       >
         <div className="news-form-row">
@@ -590,6 +591,7 @@ export function Newsletter({
           <button
             type="submit"
             disabled={!preview && submission.busy}
+            aria-busy={!preview && submission.busy}
             className={selectedClass("nlButton")}
             data-builder-key={preview ? "nlButton" : undefined}
             onClick={select("nlButton")}

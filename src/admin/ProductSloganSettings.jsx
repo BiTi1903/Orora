@@ -25,7 +25,7 @@ export default function ProductSloganSettings() {
     return () => { alive = false; };
   }, []);
   const updateStyle = (key, patch) => setStyles((current) => ({ ...current, [key]: { ...current[key], ...patch } }));
-  return <form className="admin-card admin-form slogan-settings-form" onInvalidCapture={(event) => {
+  return <form aria-busy={busy} className="admin-card admin-form slogan-settings-form" onInvalidCapture={(event) => {
     const target = event.target;
     const nextPanel = target.closest("[data-slogan-panel]")?.dataset.sloganPanel;
     if (nextPanel) { setPanel(nextPanel); requestAnimationFrame(() => target.focus()); }
@@ -42,7 +42,7 @@ export default function ProductSloganSettings() {
     catch (error) { setNotice({ error: true, text: explainError(error) }); }
     finally { setBusy(false); }
   }}>
-    <div className="slogan-settings-toolbar"><div><h2>Slogan trên chi tiết sản phẩm</h2><p className="admin-muted">Nhập nội dung, tùy chỉnh kiểu chữ và khung Slogan. Tiêu đề có thể bật hoặc tắt.</p></div><button type="submit" className="admin-btn primary" disabled={loading || failed || busy}>{busy ? "Đang lưu…" : "Lưu Slogan"}</button></div>
+    <div className="slogan-settings-toolbar"><div><h2>Slogan trên chi tiết sản phẩm</h2><p className="admin-muted">Nhập nội dung, tùy chỉnh kiểu chữ và khung Slogan. Tiêu đề có thể bật hoặc tắt.</p></div><button type="submit" className="admin-btn primary" aria-busy={busy} disabled={loading || failed || busy}>{busy ? "Đang lưu…" : "Lưu Slogan"}</button></div>
     {notice && <p role={notice.error ? "alert" : "status"} className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
     <fieldset className="writer-fields" disabled={loading || failed || busy}>
       <div className="slogan-settings-layout"><div className="slogan-settings-controls">

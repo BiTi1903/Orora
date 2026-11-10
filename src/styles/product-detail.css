@@ -455,7 +455,7 @@
 .order-error { margin-top: 14px; color: #9b1c32; font-size: 14px; }
 .order-received p { margin: 12px 0; line-height: 1.6; }
 .order-received button { border: 1px solid var(--line); padding: 10px 18px; border-radius: 12px; background: #fff; color: var(--rose-deep); cursor: pointer; }
-.website-order button:disabled { opacity: .6; cursor: wait; }
+.website-order button:disabled { opacity: .6; cursor: default; }
 @media (max-width: 600px) {
   .website-order { padding: 18px 14px; }
   .order-field-row { grid-template-columns: minmax(0, 1fr); gap: 0; }
@@ -939,7 +939,7 @@
 .order-tracking-panel label { display:grid; gap:8px; font-size:14px; }
 .order-tracking-panel input { width:100%; min-width:0; padding:13px 14px; min-height:48px; border:1px solid var(--line); border-radius:12px; background:#fff; color:var(--plum); font:inherit; font-size:16px; box-sizing:border-box; }
 .order-tracking-panel button { min-height:48px; padding:14px; border:0; border-radius:12px; background:var(--rose-deep); color:#fff; font:inherit; cursor:pointer; }
-.order-tracking-panel button:disabled { opacity:.6; cursor:wait; }
+.order-tracking-panel button:disabled { opacity:.6; cursor:default; }
 .order-tracking-panel a { color:var(--rose-deep); }
 .order-tracking-help { color:var(--plum-soft); margin-top:16px; }
 .order-tracking-error { padding:12px 16px; border-radius:12px; background:#fff0f4; color:#a22550; }
@@ -957,7 +957,7 @@
 .order-tracking-steps [aria-current] { font-weight:600; }
 @media(max-width:600px) { .order-tracking-page { padding-top:96px; } .order-tracking-panel,.order-tracking-result { padding:24px 18px; } .order-tracking-panel h1 { font-size:34px; } .order-tracking-steps { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; } }
 .order-tracking-more { display:block; margin:24px auto 0; min-height:44px; padding:12px 24px; border:1px solid var(--line); border-radius:12px; background:var(--rose-deep); color:#fff; font:inherit; cursor:pointer; }
-.order-tracking-more:disabled { opacity:.6; cursor:wait; }
+.order-tracking-more:disabled { opacity:.6; cursor:default; }
 
 .order-tracking-modes { display:grid; grid-template-columns:minmax(0,1fr); gap:8px; }
 .order-tracking-modes button { background:#fff; border:1px solid var(--line); color:var(--plum); padding:12px; }
@@ -1043,3 +1043,4 @@
 .order-tracking-guide-support a svg { width:13px; height:13px; margin-left:5px; vertical-align:middle; }
 .order-tracking-page :is(button,a):focus-visible { outline:2px solid var(--tracking-accent); outline-offset:3px; }
 @media(max-width:760px) { .order-tracking-page.has-results .order-tracking-guide { display:none; } }
+@media(max-width:768px) { .website-order-submit[style*="--mobile-font-size"] { font-size:var(--mobile-font-size) !important; } }

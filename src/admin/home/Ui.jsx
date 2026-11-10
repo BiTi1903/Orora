@@ -9,7 +9,7 @@ export function SectionShell({
   children,
 }) {
   return (
-    <form className="admin-card admin-form" onSubmit={onSubmit}>
+    <form aria-busy={busy} className="admin-card admin-form" onSubmit={onSubmit}>
       {/* HEADER + NÚT LƯU */}
       <div
         style={{
@@ -45,6 +45,7 @@ export function SectionShell({
           <button
             type="submit"
             className="admin-btn primary"
+            aria-busy={busy}
             disabled={busy || loadError}
             style={{
               flexShrink: 0,

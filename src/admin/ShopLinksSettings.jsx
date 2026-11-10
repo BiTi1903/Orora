@@ -15,7 +15,7 @@ export default function ShopLinksSettings() {
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, []);
-  return <form className="admin-card admin-form" style={{ marginBottom: 20 }} onSubmit={async (event) => {
+  return <form aria-busy={busy} className="admin-card admin-form" style={{ marginBottom: 20 }} onSubmit={async (event) => {
     event.preventDefault();
     if (loading || failed || busy) return;
     for (const [key, platform] of [["tiktokUrl", "tiktok"], ["facebookUrl", "facebook"]]) {
@@ -29,7 +29,7 @@ export default function ShopLinksSettings() {
     } catch (error) { setNotice({ error: true, text: explainError(error) }); }
     finally { setBusy(false); }
   }}>
-    <div className="slogan-settings-toolbar"><h2>Kênh mua hàng dùng chung</h2><button type="submit" className="admin-btn primary" disabled={loading || failed || busy}>{busy ? "Đang lưu…" : "Lưu kênh mua hàng"}</button></div>
+    <div className="slogan-settings-toolbar"><h2>Kênh mua hàng dùng chung</h2><button type="submit" className="admin-btn primary" aria-busy={busy} disabled={loading || failed || busy}>{busy ? "Đang lưu…" : "Lưu kênh mua hàng"}</button></div>
     <p className="admin-muted">Link dùng cho mọi sản phẩm. Để trống thì ẩn nút tương ứng; không thay đổi các link mạng xã hội ở chân trang.</p>
     <fieldset disabled={loading || failed || busy} style={{ border: 0, padding: 0, minWidth: 0 }}>
       <div className="admin-field"><label htmlFor="shop-tiktok">TikTok Shop</label><input id="shop-tiktok" type="url" maxLength={2048} value={form.tiktokUrl} placeholder="https://www.tiktok.com/@..." onChange={(event) => setForm({ ...form, tiktokUrl: event.target.value })} /></div>

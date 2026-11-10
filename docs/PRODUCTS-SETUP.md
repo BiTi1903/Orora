@@ -171,3 +171,7 @@ Danh sách và Thiết lập dùng chung là hai màn hình riêng. Thiết lậ
 
 ### Tự động chuyển sản phẩm khi cuộn tới
 Admin → Trang chủ → Khám phá (Collection), hoặc Visual Builder → Collection, có mục Chuyển sản phẩm tự động. Có thể bật/tắt và chỉnh thời gian giữa hai lần chuyển từ 1–30 giây (mặc định 3). Cấu hình lưu tại `collectionStyles.carousel.autoPlay` và `intervalSeconds`, giữ nguyên các kiểu chữ và khung thẻ khác. Việc đếm chỉ bắt đầu khi khu vực sản phẩm đã xuất hiện trên màn hình; preview tạm dừng để dễ chỉnh.
+
+### Trạng thái đang gửi/lưu và thời gian chờ
+Các thao tác gửi đơn, tra cứu, đăng ký và nút lưu trong admin dùng `aria-busy` với ba chấm cùng màu chữ; bỏ `cursor: wait` gây con trỏ Windows xanh. Chỉ nút thực hiện hành động hiện chờ, nút khác bị khóa để tránh lặp. Tôn trọng giảm chuyển động. Chữ/kiểu của nút gửi đơn chỉnh trong Visual Builder → Chi tiết sản phẩm → Nút mua hàng, hoặc bộ chỉnh Trang chi tiết sản phẩm: `productDetailStyles.purchaseOptions.orderSubmitLabel`, `orderBusyLabel`, `orderSubmitStyle`, `loadingStyle`. Các chỉ báo còn lại kế thừa màu/font của nút hiện có.
+`getHomeContent`/`getProducts` dùng chung yêu cầu đọc còn đang chạy, không lưu cache dữ liệu đã đọc qua cơ chế này; ghi thành công làm mất hiệu lực yêu cầu cũ cho lần tải tiếp theo. Chỉ hiển thị gửi/lưu thành công sau xác nhận máy chủ. Không thêm thời gian chờ giả.

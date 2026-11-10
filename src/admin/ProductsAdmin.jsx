@@ -193,7 +193,7 @@ export default function ProductsAdmin() {
       <section hidden={sharedPanel!=="policies"} aria-label="Cam kết và chính sách" className="product-shared-panel"><ProductPoliciesSettings /></section>
       <section hidden={sharedPanel!=="categories"} aria-label="Danh mục sản phẩm" className="product-shared-panel">
       {categoriesError && <div className="admin-error">Không tải được danh mục: {explainError(categoriesError)}</div>}
-      <form className="admin-card admin-form" style={{ marginBottom: 20 }} onSubmit={async (event) => {
+      <form aria-busy={categoryBusy} className="admin-card admin-form" style={{ marginBottom: 20 }} onSubmit={async (event) => {
         event.preventDefault();
         setCategoryBusy(true);
         try {
@@ -209,7 +209,7 @@ export default function ProductsAdmin() {
           <input id="category-name" required maxLength={80} value={categoryName} disabled={categoryBusy} onChange={(event) => setCategoryName(event.target.value)} />
         </div>
         <div className="admin-actions">
-          <button className="admin-btn primary" disabled={categoryBusy}>{categoryBusy ? "Đang lưu…" : categoryId ? "Lưu tên" : "Thêm danh mục"}</button>
+          <button className="admin-btn primary" aria-busy={categoryBusy} disabled={categoryBusy}>{categoryBusy ? "Đang lưu…" : categoryId ? "Lưu tên" : "Thêm danh mục"}</button>
           {categoryId && <button type="button" className="admin-btn" disabled={categoryBusy} onClick={() => { setCategoryId(""); setCategoryName(""); }}>Hủy</button>}
         </div>
         <div className="admin-actions" style={{ marginTop: 12, flexWrap: "wrap" }}>
@@ -223,9 +223,9 @@ export default function ProductsAdmin() {
       <section hidden={sharedPanel!=="faq"} aria-label="Câu hỏi thường gặp theo sản phẩm" className="product-shared-panel"><ProductDiscoverySettings faq /></section>
       </div></div>
     </div>}
-    {editing && <form ref={editorRef} className="admin-card admin-form product-editor-form" noValidate onSubmit={save}>
+    {editing && <form aria-busy={busy} ref={editorRef} className="admin-card admin-form product-editor-form" noValidate onSubmit={save}>
       <div className="product-editor-toolbar">
-        <div className="product-editor-toolbar-top"><div><h2>{isNew ? "Thêm sản phẩm" : "Chỉnh sửa sản phẩm"}</h2><p className="admin-muted">Mã SP #{form.number} · {form.name || "Sản phẩm mới"}</p></div><div className="admin-actions"><button type="submit" className="admin-btn primary" disabled={busy || uploading || !!categorySaving}>{busy ? "Đang lưu..." : "Lưu"}</button><button type="button" className="admin-btn" disabled={busy || uploading} onClick={() => setEditing(false)}>Hủy</button></div></div>
+        <div className="product-editor-toolbar-top"><div><h2>{isNew ? "Thêm sản phẩm" : "Chỉnh sửa sản phẩm"}</h2><p className="admin-muted">Mã SP #{form.number} · {form.name || "Sản phẩm mới"}</p></div><div className="admin-actions"><button type="submit" className="admin-btn primary" aria-busy={busy} disabled={busy || uploading || !!categorySaving}>{busy ? "Đang lưu..." : "Lưu"}</button><button type="button" className="admin-btn" disabled={busy || uploading} onClick={() => setEditing(false)}>Hủy</button></div></div>
         <nav className="product-editor-tabs" aria-label="Các phần chỉnh sửa sản phẩm">{panels.map(([key, title]) => <button key={key} type="button" aria-pressed={editorPanel === key} onClick={() => changePanel(key)}>{title}</button>)}</nav>
         {uploading && <p className="admin-muted" role="status">Đang tải ảnh. Chờ ảnh tải xong rồi lưu.</p>}
         {message && <p role={message.type === "error" ? "alert" : "status"} className={`admin-${message.type}`}>{message.text}</p>}
@@ -289,7 +289,7 @@ export default function ProductsAdmin() {
                     <td><span className={`admin-badge ${p.active === false ? "off" : ""}`}>{p.active === false ? "Ẩn" : "Hiện"}</span></td>
                     <td>
                       <div className="admin-actions product-row-actions">
-                        <select aria-label={`Danh mục của ${p.name}`} value={p.categoryId || ""} disabled={busy || !!categorySaving || !!categoriesError} onChange={(event) => changeProductCategory(p, event.target.value)}>
+                        <select aria-label={`Danh mục của ${p.name}`} aria-busy={categorySaving === p.id} value={p.categoryId || ""} disabled={busy || !!categorySaving || !!categoriesError} onChange={(event) => changeProductCategory(p, event.target.value)}>
                           <option value="">Chưa phân loại</option>
                           {p.categoryId && !categories.some((category) => category.id === p.categoryId) && <option value={p.categoryId}>Danh mục chưa tải</option>}
                           {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}

@@ -48,7 +48,7 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
       const orderDate = `${parts.year}-${parts.month}-${parts.day}`;
       const codePool = db.collection("orderCodePools").doc(body.paymentMethod === "cod" ? "C" : "B");
       const result = await db.runTransaction(async (tx) => {
-        const [existing, product, settings, pool] = await tx.getAll(order, db.collection("products").doc(body.productId), db.collection("settings").doc("home"), codePool);
+        const [existing, product, settings, pool, stock] = await tx.getAll(order, db.collection("products").doc(body.productId), db.collection("settings").doc("home"), codePool, db.collection("inventory").doc(body.productId));
         if (existing.exists) {
           if (existing.data().requestHash !== digest) throw Object.assign(new Error("Đơn này đã được tiếp nhận. Vui lòng liên hệ ORORA nếu muốn thay đổi thông tin."), { status: 409 });
           return existing.data();
@@ -78,7 +78,7 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
           paymentMethod: body.paymentMethod,
           confirmationMail: { state: "pending", updatedAt: createdAt }, paymentStatus: "unpaid", shippingFee: shipping.fee, status: "new", channel: "website", createdAt, requestHash: digest,
         };
-        await reserveOrderInventory(tx, db, product.id, body.quantity);
+        await reserveOrderInventory(tx, db, product.id, body.quantity, stock);
         tx.set(order, record); tx.set(codePool, { ...allocated.pool, updatedAt: createdAt });
         return record;
       });

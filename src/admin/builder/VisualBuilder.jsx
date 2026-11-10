@@ -1570,6 +1570,7 @@ export default function VisualBuilder() {
             type="button"
             className="admin-btn primary"
             onClick={save}
+            aria-busy={saving}
             disabled={saving || loadError}
           >
             {saving ? "Đang lưu..." : "💾 Lưu tất cả"}

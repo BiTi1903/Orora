@@ -86,3 +86,13 @@ img { max-width: 100%; }
 @media (max-width: 600px) { .orora-modal { width: calc(100% - 24px); border-radius: 20px; } .orora-modal-heading { padding: 16px; } .orora-modal-heading h2 { font-size: 21px; } .orora-modal-content { padding: 18px 16px; } .address-select-control input, .website-order .address-select-control input { font-size: 16px; } }
 .address-select-options > button > span:first-child { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .address-select-options > button > small { max-width: 42%; text-align: right; }
+
+/* Feedback stays inside the action button; never use the operating system wait cursor. */
+button[aria-busy="true"] { cursor:default; }
+button[aria-busy="true"]::before {
+  content:""; display:inline-block; flex-shrink:0; width:1.5em; height:.4em; margin-inline-end:.5em; vertical-align:middle;
+  background:radial-gradient(circle closest-side,currentColor 90%,transparent) left center/.4em .4em no-repeat,radial-gradient(circle closest-side,currentColor 90%,transparent) center/.4em .4em no-repeat,radial-gradient(circle closest-side,currentColor 90%,transparent) right center/.4em .4em no-repeat;
+  animation:orora-action-pulse 1s ease-in-out infinite;
+}
+@keyframes orora-action-pulse { 50% { opacity:.35; } }
+@media(prefers-reduced-motion:reduce) { button[aria-busy="true"]::before { animation:none; } }

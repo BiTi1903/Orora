@@ -37,7 +37,7 @@ export default function OrderCustomers({ onViewOrders }) {
   const query = search.trim().toLowerCase();
   const visible = (invalidMoneyRange(min, max) ? [] : customers.filter((item) => (item.email.includes(query) || item.name.toLowerCase().includes(query)) && (min === "" || item.total >= Number(min)) && (max === "" || item.total <= Number(max)))).sort((a, b) => sort === "name" ? a.name.localeCompare(b.name, "vi") : (b[sort === "total" ? "total" : sort === "paid" ? "paid" : "orderCount"] - a[sort === "total" ? "total" : sort === "paid" ? "paid" : "orderCount"] || a.email.localeCompare(b.email)));
   return <div>
-    <div className="admin-top"><div><h2>Khách hàng theo email</h2><p className="admin-muted">Tổng hợp toàn bộ đơn trên website theo email người mua.</p></div><button className="admin-btn" disabled={busy} onClick={() => setVersion((value) => value + 1)}>Cập nhật thống kê</button></div>
+    <div className="admin-top"><div><h2>Khách hàng theo email</h2><p className="admin-muted">Tổng hợp toàn bộ đơn trên website theo email người mua.</p></div><button className="admin-btn" aria-busy={busy} disabled={busy} onClick={() => setVersion((value) => value + 1)}>Cập nhật thống kê</button></div>
     {error && <p className="admin-error" role="alert">{error} Thống kê chưa đầy đủ.</p>}
     {busy ? <p className="admin-muted" role="status">Đang tổng hợp toàn bộ đơn… Đã tải {orders.length} đơn.</p> : !error && <>
       <p className="admin-muted">{customers.length} email · {orders.length} đơn{missingEmail ? ` · ${missingEmail} đơn cũ chưa có email, chưa được gộp vào khách hàng` : ""}.</p>

@@ -7,12 +7,18 @@ const fail = (message, status = 409) => Object.assign(new Error(message), { stat
 export function waitingQuantity(order) {
   return order.paymentStatus !== "paid" && !["cancelled", "shipping", "completed"].includes(order.status) && !["deducted", "restocked", "legacy_paid"].includes(order.inventory?.state) && Number.isInteger(order.quantity) && order.quantity > 0 ? order.quantity : 0;
 }
-export async function reserveOrderInventory(tx, db, productId, quantity) {
+export async function reserveOrderInventory(tx, db, productId, quantity, stockSnapshot) {
   const ref = db.collection("inventory").doc(productId);
-  const [stock, pending] = await Promise.all([tx.get(ref), tx.get(db.collection("orders").where("product.id", "==", productId))]);
+  // Order creation supplies the stock snapshot from its initial batched reads.
+  const stock = stockSnapshot || await tx.get(ref);
   const current = stock.data() || {};
-  const reserved = pending.docs.reduce((sum, doc) => sum + waitingQuantity(doc.data()), 0);
-  if (validQuantity(current.quantity) && current.quantity - reserved < quantity) throw fail("Sản phẩm không đủ số lượng còn có thể đặt. Vui lòng giảm số lượng hoặc liên hệ ORORA.");
+  // Uncounted stock intentionally accepts orders. Scanning historical orders in
+  // that case cannot change the decision and only adds a database round trip.
+  if (validQuantity(current.quantity)) {
+    const pending = await tx.get(db.collection("orders").where("product.id", "==", productId));
+    const reserved = pending.docs.reduce((sum, doc) => sum + waitingQuantity(doc.data()), 0);
+    if (current.quantity - reserved < quantity) throw fail("Sản phẩm không đủ số lượng còn có thể đặt. Vui lòng giảm số lượng hoặc liên hệ ORORA.");
+  }
   // Serialize reservations against stock adjustments and other orders. Physical
   // quantity stays unchanged until payment or shipping is confirmed.
   tx.set(ref, { quantity: current.quantity ?? null, version: (current.version || 0) + 1, updatedAt: new Date() }, { merge: true });

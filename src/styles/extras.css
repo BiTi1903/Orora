@@ -254,7 +254,7 @@
 }
 .news-form-row button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(184, 68, 109, 0.4); }
 .news-form-row button:focus-visible { outline: 2px solid var(--plum); outline-offset: 3px; }
-.news-form-row button:disabled { opacity: 0.65; cursor: wait; }
+.news-form-row button:disabled { opacity: 0.65; cursor: default; }
 .newsletter-consent {
   display: flex; align-items: flex-start; gap: 10px;
   min-height: 44px; padding: 0 8px;

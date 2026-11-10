@@ -181,7 +181,7 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
   };
 
   return (
-    <section>
+    <section aria-busy={busy}>
       <div className="admin-top">
         <div><h1>Email</h1><p className="admin-muted">Lưu người đăng ký, gửi thư tự động và gửi thư từ sales@ororavn.com.</p></div>
         <button className="admin-btn" disabled={busy} onClick={() => perform(load)}>Tải lại</button>
