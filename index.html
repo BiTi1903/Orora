@@ -10,6 +10,7 @@
 
   <!-- Fetch first-screen CMS content before the React/Firebase bundle finishes. -->
   <script>
+    window.__ororaEnteredAt = Date.now();
     if (location.pathname === '/') {
       window.__ororaShellPromise = fetch('/api/storefront-shell').then(function (response) {
         if (!response.ok) return null;

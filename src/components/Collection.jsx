@@ -27,6 +27,13 @@ function usePerView() {
 function ProductCarousel({ products, cardStyles, preview, selectedElement, onSelect, keyMap = null, groupLayout = false, carouselSettings = {} }) {
   const perView = usePerView();
   const viewRef = useRef(null);
+  useEffect(()=>{
+    const view=viewRef.current;if(!view)return;
+    const measure=()=>{const image=view.querySelector('.gallery-image');if(!image)return;let y=image.offsetHeight/2,node=image;while(node&&node!==view){y+=node.offsetTop;node=node.offsetParent;}view.style.setProperty('--gallery-arrow-y',`${y}px`);};
+    const observer=new ResizeObserver(measure);observer.observe(view);
+    const images=view.querySelectorAll('.gallery-image');images.forEach(image=>observer.observe(image));measure();
+    return()=>observer.disconnect();
+  },[products,cardStyles]);
   const dragRef = useRef(null);
   const movedRef = useRef(false);
   const indexRef = useRef(0);

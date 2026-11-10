@@ -35,7 +35,7 @@ test('carousel controls are exposed to assistive tools and offscreen slides are 
  await expect(page.locator('[aria-hidden="true"] button')).toHaveCount(0);
  const positions=await page.locator('.gallery-slide:not([inert]) .buy-button').evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().bottom));
  expect(Math.max(...positions)-Math.min(...positions)).toBeLessThan(2);
- const card=await page.locator('.gallery-slide:not([inert]) .gallery-item').first().boundingBox();
+ const card=await page.locator('.gallery-slide:not([inert]) .gallery-image').first().boundingBox();
  const arrow=await page.getByRole('button',{name:'Sản phẩm sau',exact:true}).boundingBox();
  expect(Math.abs(arrow.y+arrow.height/2-card.y-card.height/2)).toBeLessThan(2);
 

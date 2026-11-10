@@ -407,3 +407,11 @@
 .orora-chat-channel-chooser.is-preview { position:relative; inset:auto; width:min(100%,340px); max-height:none; margin:0 auto; z-index:auto; }
 .orora-chat-channel-chooser :is(h2,header p,.orora-chat-channel-options strong,.orora-chat-channel-options span,.orora-chat-channel-unavailable) { overflow-wrap:anywhere; white-space:pre-wrap; }
 @media(max-width:768px) { .orora-chat-channel-chooser [style*="--mobile-font-size"] { font-size:var(--mobile-font-size) !important; } }
+
+/* Hint and button share one fixed layer, so fast scrolling cannot separate them. */
+.orora-chat-launcher { position:fixed; right:24px; bottom:24px; z-index:1100; width:58px; height:58px; }
+.orora-chat-launcher > .chat-button { position:relative; inset:auto !important; }
+.orora-chat-hint.is-anchored { position:absolute; right:auto; bottom:calc(100% + 18px); top:auto; transform:none; z-index:1; }
+@media(max-width:768px) {
+ .orora-chat-launcher { right:16px; bottom:calc(112px + env(safe-area-inset-bottom,0px)); width:52px; height:52px; }
+}

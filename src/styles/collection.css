@@ -334,4 +334,4 @@
 .gallery-item > .product-details { display:flex; flex-direction:column; flex:1; }
 .collection .gallery-item .product-bottom { margin-top:auto; padding-top:18px; }
 
-.collection .gallery-viewport .gallery-nav { top:calc(50% - 11px); transform:translateY(-50%); }
+.collection .gallery-viewport .gallery-nav { top:var(--gallery-arrow-y, 160px); transform:translateY(-50%); }

@@ -15,6 +15,7 @@ function ChatButton() {
   const { zalo } = contactLinks(home, "", home.productDetailStyles?.contactActions || {});
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  const [hintEpoch,setHintEpoch]=useState(()=>window.__ororaEnteredAt || Date.now());
   const [channel,setChannel] = useState("choose");
   const panelId = useId();
   const conversation = useChatConversation(open && channel === "ai", location.pathname);
@@ -44,13 +45,12 @@ function ChatButton() {
     setDragging(false);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
-  const close = useCallback(() => { setOpen(false); requestAnimationFrame(() => button.current?.focus({ preventScroll: true })); }, []);
+  const close = useCallback(() => { setHintEpoch(Date.now());setOpen(false); requestAnimationFrame(() => button.current?.focus({ preventScroll: true })); }, []);
   if (home.loading || !settings.enabled) return null;
   return (
-    <><button type="button"
+    <><div className="orora-chat-launcher" style={position ? { left: position.x, top: position.y, right: "auto", bottom: "auto" } : undefined}><button type="button"
       ref={button}
       className={`chat-button${position ? " is-positioned" : ""}${dragging ? " is-dragging" : ""}`}
-      style={position ? { left: position.x, top: position.y, right: "auto", bottom: "auto" } : undefined}
       onDragStart={(event) => event.preventDefault()}
       onPointerDown={(event) => {
         if (event.button !== 0 || !event.isPrimary) return;
@@ -76,6 +76,7 @@ function ChatButton() {
         if (event.detail !== 0 && suppressClick.current) {
           event.preventDefault(); event.stopPropagation(); suppressClick.current = false; return;
         }
+        if (open) setHintEpoch(Date.now());
         if (!open) setChannel("choose");
         setOpen((current) => !current);
       }}
@@ -86,7 +87,7 @@ function ChatButton() {
     >
       <span className="chat-icon" aria-hidden="true">{open ? "×" : "✦"}</span>
       <span className="chat-text">Trò chuyện cùng ORORA</span>
-    </button>{!open && <ChatHint open={false} dismissed={false} settings={settings} anchor={button} onOpen={() => { setChannel("choose");setOpen(true); }} />}{open && (channel === "choose" ? <ChatChannelChooser settings={settings} id={panelId} zalo={zalo} onAI={() => setChannel("ai")} onClose={close} /> : <ChatPanel id={panelId} settings={settings} conversation={conversation} onClose={close} contactLinks={zalo ? [{ href: zalo }] : conversation.metadata?.links?.filter((link) => ["phone", "facebook", "contact"].includes(link.id)) || []} />)}</>
+    </button>{!open && <ChatHint open={false} dismissed={false} settings={settings} anchor={button} position={position} startedAt={hintEpoch} onOpen={() => { setChannel("choose");setOpen(true); }} />}</div>{open && (channel === "choose" ? <ChatChannelChooser settings={settings} id={panelId} zalo={zalo} onAI={() => setChannel("ai")} onClose={close} /> : <ChatPanel id={panelId} settings={settings} conversation={conversation} onClose={close} contactLinks={zalo ? [{ href: zalo }] : conversation.metadata?.links?.filter((link) => ["phone", "facebook", "contact"].includes(link.id)) || []} />)}</>
   );
 }
 

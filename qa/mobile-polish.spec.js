@@ -13,10 +13,10 @@ test('newsletter has separate usable fields, no fixed star, and editable consent
  await fit(page);
 });
 test('chat hint follows its button when scrolling and moving without overlapping',async({page})=>{
- await mount(page,`import ChatHint from '/src/components/ChatHint.jsx';import '/src/styles/chat-button.css';function Fixture(){const anchor=R.useRef(null);return R.createElement(R.Fragment,null,R.createElement('div',{style:{height:'2400px'}}),R.createElement('button',{ref:anchor,id:'anchor',style:{position:'fixed',right:16,bottom:112,width:52,height:52}},'Chat'),R.createElement(ChatHint,{open:false,dismissed:false,anchor,settings:{hintDelay:0,hintText:'Bạn cần tư vấn sản phẩm?'}}))};${render('R.createElement(Fixture)')}`);
+ await mount(page,`import ChatHint from '/src/components/ChatHint.jsx';import '/src/styles/chat-button.css';function Fixture(){const anchor=R.useRef(null);return R.createElement(R.Fragment,null,R.createElement('div',{style:{height:'2400px'}}),R.createElement('div',{id:'launcher',className:'orora-chat-launcher'},R.createElement('button',{ref:anchor,id:'anchor',style:{position:'relative',width:52,height:52}},'Chat'),R.createElement(ChatHint,{open:false,dismissed:false,anchor,settings:{hintDelay:0,hintText:'Bạn cần tư vấn sản phẩm?'}})))};${render('R.createElement(Fixture)')}`);
  const hint=page.getByRole('status');await expect(hint).toBeVisible();
  for(const bottom of [112,210,56]){
-  await page.evaluate(value=>{document.getElementById('anchor').style.bottom=value+'px';window.scrollTo(0,value*3)},bottom);
+  await page.evaluate(value=>{document.getElementById('launcher').style.bottom=value+'px';window.scrollTo(0,value*3)},bottom);
   await expect.poll(async()=>{const a=await page.locator('#anchor').boundingBox(),h=await hint.boundingBox();return h.y+h.height<=a.y-12||h.y>=a.y+a.height+12}).toBe(true);
  }
  await fit(page);
@@ -35,4 +35,16 @@ test('chat hint repeats after hiding or dismissal and resumes when chat closes',
  await page.getByRole('button',{name:'Bạn cần tư vấn?',exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible();
  await page.clock.runFor(5000);await expect(hint).toHaveCount(0);
  await page.getByRole('button',{name:'Đóng lựa chọn tư vấn',exact:true}).click();await page.clock.runFor(1000);await expect(hint).toBeVisible();
+});
+
+test('default hint timing is 5 seconds before first display, 3 visible and 10 hidden',async({page})=>{
+ await page.clock.install();
+ await mount(page,`import ChatButton from '/src/components/ChatButton.jsx';${render('R.createElement(ChatButton)')}`,{'hooks/useHomeContent.js':`export default function home(){return {loading:false}}`,'hooks/useChatConversation.js':'export default function conversation(){return {metadata:{}}}'});
+ const hint=page.locator('.orora-chat-hint');
+ await page.clock.runFor(4900);await expect(hint).toHaveCount(0);
+ await page.clock.runFor(100);await expect(hint).toBeVisible();
+ await page.clock.runFor(2900);await expect(hint).toBeVisible();
+ await page.clock.runFor(100);await expect(hint).toHaveCount(0);
+ await page.clock.runFor(9900);await expect(hint).toHaveCount(0);
+ await page.clock.runFor(100);await expect(hint).toBeVisible();
 });
