@@ -1,3 +1,4 @@
+import useDraftGuard from "../hooks/useDraftGuard";
 import ProductDiscoverySettings from "./ProductDiscoverySettings";
 import ProductCareSettings from "./ProductCareSettings";
 import PriceInput from "./PriceInput";
@@ -70,6 +71,7 @@ export default function ProductsAdmin() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(null);
 
+  const draftGuard=useDraftGuard({form,sections,volumeOptions,reviews,media},{enabled:editing,busy:busy||uploading});
   const say = (type, text) => setMessage({ type, text });
 
   const load = async () => {
@@ -225,7 +227,7 @@ export default function ProductsAdmin() {
     </div>}
     {editing && <form aria-busy={busy} ref={editorRef} className="admin-card admin-form product-editor-form" noValidate onSubmit={save}>
       <div className="product-editor-toolbar">
-        <div className="product-editor-toolbar-top"><div><h2>{isNew ? "Thêm sản phẩm" : "Chỉnh sửa sản phẩm"}</h2><p className="admin-muted">Mã SP #{form.number} · {form.name || "Sản phẩm mới"}</p></div><div className="admin-actions"><button type="submit" className="admin-btn primary" aria-busy={busy} disabled={busy || uploading || !!categorySaving}>{busy ? "Đang lưu..." : "Lưu"}</button><button type="button" className="admin-btn" disabled={busy || uploading} onClick={() => setEditing(false)}>Hủy</button></div></div>
+        <div className="product-editor-toolbar-top"><div><h2>{isNew ? "Thêm sản phẩm" : "Chỉnh sửa sản phẩm"}</h2><p className="admin-muted">Mã SP #{form.number} · {form.name || "Sản phẩm mới"}</p></div><div className="admin-actions"><button type="submit" className="admin-btn primary" aria-busy={busy} disabled={busy || uploading || !!categorySaving}>{busy ? "Đang lưu..." : "Lưu"}</button><button type="button" className="admin-btn" disabled={busy || uploading} onClick={() => {if(!draftGuard.hasChanges()||window.confirm("Đóng phần chỉnh sửa? Thay đổi chưa lưu sẽ bị bỏ."))setEditing(false);}}>Hủy</button></div></div>
         <nav className="product-editor-tabs" aria-label="Các phần chỉnh sửa sản phẩm">{panels.map(([key, title]) => <button key={key} type="button" aria-pressed={editorPanel === key} onClick={() => changePanel(key)}>{title}</button>)}</nav>
         {uploading && <p className="admin-muted" role="status">Đang tải ảnh. Chờ ảnh tải xong rồi lưu.</p>}
         {message && <p role={message.type === "error" ? "alert" : "status"} className={`admin-${message.type}`}>{message.text}</p>}

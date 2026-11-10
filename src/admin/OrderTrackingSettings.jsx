@@ -1,3 +1,4 @@
+import useDraftGuard from "../hooks/useDraftGuard";
 import { useEffect,useRef,useState } from 'react';
 import { getHomeContent,saveHomeContent,explainError } from '../lib/api';
 import { ORDER_TRACKING_FIELDS,TRACKING_RESULT_KEYS,TRACKING_STYLE_GROUPS,trackingCopy,trackingStyle,trackingTheme } from '../lib/order-tracking-copy';
@@ -8,11 +9,12 @@ export default function OrderTrackingSettings(){
  const [form,setForm]=useState({}),[ready,setReady]=useState(false),[busy,setBusy]=useState(false),[notice,setNotice]=useState('');
  const [tab,setTab]=useState('page'),[group,setGroup]=useState('title'),[mode,setMode]=useState('phone');
  const baseline=useRef({});
+ const markSaved=useDraftGuard(form,{enabled:ready,busy});
  useEffect(()=>{let alive=true;getHomeContent().then(home=>{if(alive){const saved=home?.orderTrackingText||{};setForm(saved);baseline.current=saved;setReady(true);}}).catch(error=>{if(alive)setNotice(explainError(error));});return()=>{alive=false;};},[]);
  const set=(key,value)=>{setForm(current=>({...current,[key]:value}));setNotice('');};
  const styles=form.styles||{},copy=trackingCopy(form),patchStyle=patch=>set('styles',{...styles,...patch});
  const textKeys=ORDER_TRACKING_FIELDS.filter(([key])=>tab==='results'?TRACKING_RESULT_KEYS.includes(key):!TRACKING_RESULT_KEYS.includes(key));
- return <form aria-busy={busy} className="admin-card admin-form tracking-settings-form" onSubmit={async event=>{event.preventDefault();if(!ready||busy)return;setBusy(true);setNotice('');try{const patch=changedValues(baseline.current,form);if(Object.keys(patch).length)await saveHomeContent({orderTrackingText:patch});baseline.current=form;setNotice('Đã lưu nội dung và giao diện tra cứu.');}catch(error){setNotice(explainError(error));}finally{setBusy(false);}}}>
+ return <form aria-busy={busy} className="admin-card admin-form tracking-settings-form" onSubmit={async event=>{event.preventDefault();if(!ready||busy)return;setBusy(true);setNotice('');try{const patch=changedValues(baseline.current,form);if(Object.keys(patch).length)await saveHomeContent({orderTrackingText:patch});baseline.current=form;markSaved();setNotice('Đã lưu nội dung và giao diện tra cứu.');}catch(error){setNotice(explainError(error));}finally{setBusy(false);}}}>
  <div className="slogan-settings-toolbar"><div><h2>Trang tra cứu đơn hàng</h2><p className="admin-muted">Chỉnh nội dung, từng kiểu chữ và màu khung. Chữ trên navbar chỉnh tại Visual Builder → Navbar.</p></div><button className="admin-btn primary" aria-busy={busy} disabled={!ready||busy}>{busy?'Đang lưu…':'Lưu tra cứu'}</button></div>
  {notice&&<p role="status">{notice}</p>}
  <fieldset className="writer-fields" disabled={!ready||busy}><nav className="admin-section-tabs" aria-label="Thiết lập trang tra cứu">{[['page','Nội dung trang'],['results','Nội dung kết quả'],['styles','Kiểu chữ & khung'],['preview','Xem trước']].map(([key,title])=><button type="button" key={key} aria-current={tab===key?'page':undefined} onClick={()=>setTab(key)}>{title}</button>)}</nav>

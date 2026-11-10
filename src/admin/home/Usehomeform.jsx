@@ -1,3 +1,4 @@
+import useDraftGuard from "../../hooks/useDraftGuard";
 import { changedValues, mergeSavedValues } from "../builder/save-sections";
 import { useEffect, useRef, useState } from "react";
 import { defaultHomeContent } from "../../data/content";
@@ -30,6 +31,7 @@ export default function useHomeForm(fields) {
     };
   }, []);
 
+  const markSaved=useDraftGuard(Object.fromEntries(fields.map(key=>[key,form[key]])),{enabled:!loading&&!loadError,busy});
   const change = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -52,6 +54,7 @@ export default function useHomeForm(fields) {
       const patch = changedValues(baseline.current || {}, payload);
       if (!Object.keys(patch).length) { setMessage({ type: "success", text: "Chưa có thay đổi để lưu." }); return; }
       await saveHomeContent(patch);
+      markSaved({...Object.fromEntries(fields.map(key=>[key,form[key]])),...overrides});
       baseline.current = mergeSavedValues(baseline.current || {}, patch);
       setForm((f) => mergeSavedValues(f, patch));
       setMessage({ type: "success", text: "Đã lưu phần này." });

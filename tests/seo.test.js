@@ -58,3 +58,10 @@ test("sitemap errors are retryable and never return credentials", async () => {
   assert.equal(res.headers["Cache-Control"], "no-store");
   assert.ok(!res.body.includes("secret"));
 });
+
+test('product schema uses validated numeric VND prices and never invents manufacturer identity',()=>{
+ for(const price of [409000,'409000','409.000đ']){
+  const seo=pageSeo('/product/gel',{},[{id:'gel',name:'Gel',price}]);const product=seo.structuredData['@graph'].find(item=>item['@type']==='Product');assert.equal(product.offers.price,'409000');assert.equal(product.brand,undefined);
+ }
+ const seo=pageSeo('/product/gel',{},[{id:'gel',name:'Gel',price:'Liên hệ',brand:'Bodyplex'}]);const product=seo.structuredData['@graph'].find(item=>item['@type']==='Product');assert.equal(product.offers,undefined);assert.equal(product.brand.name,'Bodyplex');
+});

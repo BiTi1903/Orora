@@ -1,3 +1,4 @@
+import useDraftGuard from "../hooks/useDraftGuard";
 import { useEffect, useRef, useState } from 'react';
 import { getHomeContent, saveHomeContent, getProducts, explainError } from '../lib/api';
 import ProductCareGuide from '../components/ProductCareGuide';
@@ -33,7 +34,8 @@ export default function ProductCareSettings() {
   const items = form.items || [];
   const update = (id, p) => patch({ items: items.map((item, i) => i === id ? { ...item, ...p } : item) });
   const move = (index, direction) => { const next = [...items]; [next[index], next[index + direction]] = [next[index + direction], next[index]]; patch({ items: next }); };
-  return <form aria-busy={busy} className="admin-card admin-form" onInvalidCapture={e => { setTab(e.target.closest('[data-care-tab]')?.dataset.careTab || 'content'); requestAnimationFrame(() => e.target.focus()); }} onSubmit={async e => { e.preventDefault(); if (!ready || busy) return; setBusy(true); try { await saveHomeContent({ productCareGuide: { ...original.current, groups } }); setNotice('Đã lưu phần hướng dẫn chăm sóc.'); } catch (error) { setNotice(explainError(error)); } finally { setBusy(false); } }}>
+  const markSaved=useDraftGuard(groups,{enabled:ready,busy});
+  return <form aria-busy={busy} className="admin-card admin-form" onInvalidCapture={e => { setTab(e.target.closest('[data-care-tab]')?.dataset.careTab || 'content'); requestAnimationFrame(() => e.target.focus()); }} onSubmit={async e => { e.preventDefault(); if (!ready || busy) return; setBusy(true); try { await saveHomeContent({ productCareGuide: { ...original.current, groups } }); markSaved();setNotice('Đã lưu phần hướng dẫn chăm sóc.'); } catch (error) { setNotice(explainError(error)); } finally { setBusy(false); } }}>
     <div className="slogan-settings-toolbar"><div><h2>Cách chăm sóc phù hợp</h2><p className="admin-muted">Mỗi bộ hướng dẫn áp dụng cho những sản phẩm bạn chọn. Mỗi sản phẩm dùng một bộ; các thay đổi chỉ áp dụng khi lưu.</p></div><button className="admin-btn primary" aria-busy={busy} disabled={!ready || busy}>{busy ? 'Đang lưu…' : 'Lưu hướng dẫn'}</button></div>
     {notice && <p role="status">{notice}</p>}
     <fieldset className="writer-fields" disabled={!ready || busy}>

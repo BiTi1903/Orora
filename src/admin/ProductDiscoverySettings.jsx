@@ -1,3 +1,4 @@
+import useDraftGuard from "../hooks/useDraftGuard";
 import { useEffect, useState } from 'react';
 import { getHomeContent, getProducts, saveHomeContent, explainError } from '../lib/api';
 import { DEFAULT_PRODUCT_NEEDS, DEFAULT_PRODUCT_FAQ } from '../lib/product-discovery';
@@ -19,7 +20,8 @@ export default function ProductDiscoverySettings({ faq = false }) {
   const items = form.items || [];
   const update = (index, next) => patch({ items: items.map((item, i) => i === index ? { ...item, ...next } : item) });
   const move = (index, offset) => { const next = [...items]; [next[index], next[index + offset]] = [next[index + offset], next[index]]; patch({ items: next }); };
-  return <form aria-busy={busy} className="admin-card admin-form" onInvalidCapture={e => { setTab(e.target.closest('[data-discovery-tab]')?.dataset.discoveryTab || 'content'); requestAnimationFrame(() => e.target.focus()); }} onSubmit={async e => { e.preventDefault(); if (!ready || busy) return; setBusy(true); try { await saveHomeContent({ [storageKey]: form }); setNotice('Đã lưu thiết lập.'); } catch (error) { setNotice(explainError(error)); } finally { setBusy(false); } }}>
+  const markSaved=useDraftGuard(form,{enabled:ready,busy});
+  return <form aria-busy={busy} className="admin-card admin-form" onInvalidCapture={e => { setTab(e.target.closest('[data-discovery-tab]')?.dataset.discoveryTab || 'content'); requestAnimationFrame(() => e.target.focus()); }} onSubmit={async e => { e.preventDefault(); if (!ready || busy) return; setBusy(true); try { await saveHomeContent({ [storageKey]: form }); markSaved();setNotice('Đã lưu thiết lập.'); } catch (error) { setNotice(explainError(error)); } finally { setBusy(false); } }}>
     <div className="slogan-settings-toolbar"><div><h2>{faq ? 'Câu hỏi thường gặp theo sản phẩm' : 'Chọn sản phẩm theo nhu cầu'}</h2><p className="admin-muted">{faq ? 'Mỗi câu hỏi chọn được nhiều sản phẩm áp dụng. Mẫu chưa gán sản phẩm sẽ chưa hiển thị.' : 'Hiển thị trước bộ sưu tập trên trang chủ. Chọn sản phẩm gợi ý cho từng nhu cầu; không tự suy đoán công dụng sản phẩm.'}</p></div><button className="admin-btn primary" aria-busy={busy} disabled={!ready || busy}>{busy ? 'Đang lưu…' : 'Lưu thiết lập'}</button></div>
     {notice && <p role="status">{notice}</p>}
     <fieldset className="writer-fields" disabled={!ready || busy}>

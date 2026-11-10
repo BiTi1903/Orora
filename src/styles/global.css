@@ -97,3 +97,4 @@ button[aria-busy="true"]::before {
 @keyframes orora-action-pulse { 50% { opacity:.35; } }
 @media(prefers-reduced-motion:reduce) { button[aria-busy="true"]::before { animation:none; } }
 @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+.route-loading { width:min(360px,80vw); min-height:60vh; margin:100px auto 0; }

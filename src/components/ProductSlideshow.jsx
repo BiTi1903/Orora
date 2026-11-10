@@ -60,6 +60,8 @@ export default function ProductSlideshow({
         <img
           key={`${src}-${i}`}
           src={src}
+          loading="lazy"
+          decoding="async"
           alt={i === index ? alt : ""}
           className={i === index ? "is-active" : ""}
           aria-hidden={i === index ? undefined : true}

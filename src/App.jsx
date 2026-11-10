@@ -1,5 +1,5 @@
 import SiteAnalytics from "./components/SiteAnalytics";
-import OrderTracking from "./components/OrderTracking";
+
 import { sectionIsEnabled } from "./lib/page-sections";
 import ProductNeeds from "./components/ProductDiscovery";
 import useHomeContent from "./hooks/useHomeContent";
@@ -16,7 +16,7 @@ import {
 } from "react-router-dom";
 import BackToTop from "./components/BackToTop";
 import ChatButton from "./components/ChatButton";
-import ProductDetail from "./components/ProductDetail";
+
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import About from "./components/About";
@@ -28,6 +28,9 @@ import Seo from "./components/Seo";
 import ScrollText from "./components/ScrollText";
 import "./App.css";
 // Trang quản trị chỉ tải khi vào /admin
+const ProductDetail=lazy(()=>import("./components/ProductDetail"));
+const OrderTracking=lazy(()=>import("./components/OrderTracking"));
+function RouteLoading(){return <section className="route-loading" role="status" aria-label="Đang tải trang"><div className="loading-placeholder"/><div className="loading-placeholder loading-line"/></section>;}
 const AdminApp = lazy(() => import("./admin/AdminApp"));
 
 gsap.registerPlugin(ScrollTrigger);
@@ -321,7 +324,7 @@ function App() {
 <Route
           path="/admin"
           element={
-            <Suspense fallback={null}>
+            <Suspense fallback={<RouteLoading/>}>
               <AdminApp />
             </Suspense>
           }
@@ -361,7 +364,7 @@ function App() {
         />
 
 
-        <Route path="/tra-cuu-don-hang" element={<main>{visible("navbar") && <Navbar />}<OrderTracking />{visible("footer") && <Footer />}</main>} />
+        <Route path="/tra-cuu-don-hang" element={<main>{visible("navbar") && <Navbar />}<Suspense fallback={<RouteLoading/>}><OrderTracking /></Suspense>{visible("footer") && <Footer />}</main>} />
         <Route path="/san-pham" element={<Navigate to="/#shop" replace />} />
         <Route path="/ve-orora" element={<Navigate to="/#about" replace />} />
         <Route path="/lien-he" element={<Navigate to="/#contact" replace />} />
@@ -378,7 +381,7 @@ function App() {
 
               {visible("navbar") && <Navbar />}
 
-              {visible("productdetail") ? <ProductDetail /> : !home.loading && <section className="product-not-found"><h1>Trang chi tiết sản phẩm đang tạm ẩn</h1><a href="/">← Về trang chủ</a></section>}
+              {visible("productdetail") ? <Suspense fallback={<RouteLoading/>}><ProductDetail /></Suspense> : !home.loading && <section className="product-not-found"><h1>Trang chi tiết sản phẩm đang tạm ẩn</h1><a href="/">← Về trang chủ</a></section>}
 
               {visible("footer") && <Footer />}
             </main>

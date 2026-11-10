@@ -1,3 +1,4 @@
+import {parseVndPrice} from "./commerce.js";
 import { findProductByRoute, productPath } from "./product-identity.js";
 export const SITE_URL = "https://ororavn.com";
 export const SITE_NAME = "ORORA VN";
@@ -43,12 +44,11 @@ export function pageSeo(pathname, home = {}, products = [], productsLoading = fa
     graph.push({ "@type": "BreadcrumbList", itemListElement: crumbs.map((crumb, index) => ({ "@type": "ListItem", position: index + 1, ...crumb })) });
   }
   if (product) {
-    const priceText = compact(product.price);
-    const price = /^(\d{1,3}(?:[.,]\d{3})+|\d+)\s*(?:₫|đ|vnd)?$/i.test(priceText) ? priceText.replace(/\D/g, "") : null;
+    const price=parseVndPrice(product.price);
     graph.push({ "@type": "Product", name: product.name, description: page.description, url,
       ...(product.image && imageUrl(product.image) ? { image: imageUrl(product.image) } : {}),
-      brand: { "@type": "Brand", name: "ORORA" },
-      ...(price ? { offers: { "@type": "Offer", priceCurrency: "VND", price, url } } : {}),
+      ...(product.brand?{brand:{"@type":"Brand",name:compact(product.brand)}}:{}),
+      ...(price !== null ? { offers: { "@type": "Offer", priceCurrency: "VND", price:String(price), url } } : {}),
     });
   }
   return { ...page, url, image: (product?.image && imageUrl(product.image)) || `${SITE_URL}/og-image.jpg`, structuredData: { "@context": "https://schema.org", "@graph": graph } };

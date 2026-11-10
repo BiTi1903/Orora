@@ -1,3 +1,4 @@
+import {dirtyRegistry} from "../lib/dirty-registry";
 import useOrderNotifications from "./useOrderNotifications";
 import EmailExport from "./EmailExport";
 import { newsletterRequest } from "./newsletter-api";
@@ -64,7 +65,7 @@ function AdminWorkspace({ user }) {
           <span className="admin-muted">{user.email}</span>
           <span className="admin-muted" style={{ fontSize: 11 }}>UID: {user.uid}</span>
           <a href="/" target="_blank" rel="noopener noreferrer" className="admin-btn">Xem website</a>
-          <button className="admin-btn" onClick={() => signOut(auth)}>Đăng xuất</button>
+          <button className="admin-btn" onClick={() => {if(!dirtyRegistry.hasChanges()||window.confirm("Bạn có thay đổi chưa lưu. Đăng xuất và bỏ những thay đổi này?"))signOut(auth);}}>Đăng xuất</button>
         </div>
       </aside>
 

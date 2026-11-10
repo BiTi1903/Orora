@@ -1,3 +1,4 @@
+import {cdnSrc} from "../lib/cloudinary";
 import { useEffect, useState } from "react";
 import { Sparkles } from "./Extras";
 import useHomeContent from "../hooks/useHomeContent";
@@ -68,10 +69,10 @@ function Hero({
   // Chỉ gắn ảnh nền khi đã có URL thật từ admin/Firestore.
   // Khi đang loading (chưa có snapshot) → giữ nền gradient CSS, không load /hero.jpg cũ.
   const ready = preview || c.loading === false;
-  const imageUrl = c.heroImage && ready ? c.heroImage : null;
+  const imageUrl = c.heroImage && ready ? cdnSrc(c.heroImage,{w:1920,q:"auto:good"}) : null;
   // Ảnh riêng cho điện thoại; để trống thì dùng ảnh desktop
   const mobileImage = c.heroImageMobile ?? c.heroMobileImage;
-  const imageMobileUrl = mobileImage && ready ? mobileImage : null;
+  const imageMobileUrl = mobileImage && ready ? cdnSrc(mobileImage,{w:900,q:"auto:good"}) : null;
 
   // Preload đúng ảnh sẽ hiển thị (điện thoại chỉ tải ảnh mobile, không tải ảnh desktop)
   useEffect(() => {
@@ -80,6 +81,7 @@ function Hero({
     const src = (isMobile && imageMobileUrl) || imageUrl;
     if (!src) return;
     const img = new Image();
+    img.fetchPriority="high";
     img.src = src;
   }, [imageUrl, imageMobileUrl, preview]);
 

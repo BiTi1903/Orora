@@ -1,22 +1,23 @@
-Gửi qua SMTP OAuth2 Microsoft 365: [docs/SMTP-SETUP.md](docs/SMTP-SETUP.md).
+# ORORA website
 
-Thiết lập Chat AI OpenAI, lựa chọn gợi ý và kiến thức cửa hàng: [docs/CHAT-AI-SETUP.md](docs/CHAT-AI-SETUP.md).
+React/Vite storefront and admin, Firebase data, Vercel APIs.
 
-Hướng dẫn thiết lập đăng ký nhận tin, thư tự động và gửi chiến dịch Microsoft 365: [docs/EMAIL-SETUP.md](docs/EMAIL-SETUP.md).
+```sh
+npm ci
+npm run dev
+npm run check      # unit/integration + lint + build + entry bundle budget
+npx playwright install chromium  # once on a new test machine
+npm run test:ui    # local mocked UI checks at 320/390/768/1440px
+```
 
-# React + Vite
+Production/runtime variables are configured in Vercel; do not commit credentials. The repository's CI tests use local/mocked data and do not create customer orders or send mail.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Operations
 
-Currently, two official plugins are available:
+- [Readiness, known production blockers, backup/restore and permissions migration](docs/PRODUCTION-READINESS.md)
+- [UI/UX audit](docs/UI-UX-AUDIT.md)
+- [Product/admin setup](docs/PRODUCTS-SETUP.md)
+- [Orders and mail](docs/ORDERS-SETUP.md)
+- [Analytics](docs/ANALYTICS.md)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+**Firestore rules migration:** the stricter rules in this repository require an owner admin role to be provisioned before deployment. Read the readiness guide first. Git/Vercel deployment does not deploy Firebase rules. Backup/restore and admin-grant tools default to dry-run/validation and are not executed against production by CI.

@@ -1,3 +1,4 @@
+import useDraftGuard from "../hooks/useDraftGuard";
 import { useEffect, useState } from "react";
 import { getHomeContent, saveHomeContent, explainError } from "../lib/api";
 import { socialShopUrl, availablePaymentMethods, PAYMENT_LABELS } from "../lib/commerce";
@@ -8,6 +9,7 @@ export default function ShopLinksSettings() {
   const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState(null);
+  const markSaved=useDraftGuard(form,{enabled:!loading&&!failed,busy});
   useEffect(() => {
     let alive = true;
     getHomeContent().then((data) => { if (alive) setForm({ tiktokUrl: data?.shopLinks?.tiktokUrl || "", facebookUrl: data?.shopLinks?.facebookUrl || "", paymentMethods: availablePaymentMethods(data || {}) }); })
@@ -25,7 +27,7 @@ export default function ShopLinksSettings() {
     setBusy(true);
     try {
       await saveHomeContent({ shopLinks: { tiktokUrl: form.tiktokUrl.trim(), facebookUrl: form.facebookUrl.trim(), paymentMethods: form.paymentMethods } });
-      setNotice({ text: "Đã lưu kênh mua hàng dùng chung cho tất cả sản phẩm." });
+      markSaved();setNotice({ text: "Đã lưu kênh mua hàng dùng chung cho tất cả sản phẩm." });
     } catch (error) { setNotice({ error: true, text: explainError(error) }); }
     finally { setBusy(false); }
   }}>

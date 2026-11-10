@@ -1,3 +1,4 @@
+import useDraftGuard from "../hooks/useDraftGuard";
 import ChatChannelSettings from "./ChatChannelSettings";
 import ChatTypography from "./ChatTypography";
 import { useEffect, useRef, useState } from "react";
@@ -24,6 +25,7 @@ export default function ChatSettings() {
     fetch("/api/chat").then((response) => response.ok ? response.json() : null).then((data) => { if (alive) setStatus(data); }).catch(() => {});
     return () => { alive = false; };
   }, []);
+  const markSaved=useDraftGuard(form,{enabled:!loading&&!failed,busy});
   const patch = (key, value) => setForm((current) => ({ ...current, [key]: value }));
   const patchStarter = (index, changes) => setForm((current) => ({ ...current, starters: current.starters.map((item, at) => at === index ? { ...item, ...changes } : item) }));
   return <section className="chat-settings-admin"><div className="admin-top"><div><h1>Chat AI</h1><p className="admin-muted">Trợ lý tư vấn dùng thông tin sản phẩm, chính sách và kiến thức cửa hàng.</p></div></div>
@@ -35,8 +37,8 @@ export default function ChatSettings() {
       try {
         const next = { ...form, title: form.title.trim(), greeting: form.greeting.trim(), placeholder: form.placeholder.trim(), knowledge: form.knowledge.trim(), starters: form.starters.map((s) => ({ ...s, label: s.label.trim(), prompt: s.prompt.trim() })) };
         const changes = changedValues(baseline.current, next);
-        if (Object.keys(changes).length) { await saveHomeContent({ chatSettings: changes }); baseline.current = mergeSavedValues(baseline.current, changes); setForm(next); }
-        setNotice({ text: "Đã lưu thiết lập Chat AI." });
+        if (Object.keys(changes).length) { await saveHomeContent({ chatSettings: changes }); baseline.current = mergeSavedValues(baseline.current, changes); }
+        setForm(next);markSaved(next);setNotice({ text: "Đã lưu thiết lập Chat AI." });
       } catch (error) { setNotice({ error: true, text: explainError(error) }); } finally { setBusy(false); }
     }}>
       <div className="product-editor-toolbar-top chat-settings-toolbar"><h2>Nội dung khung chat</h2><button type="submit" className="admin-btn primary" aria-busy={busy} disabled={loading || failed || busy}>{busy ? "Đang lưu…" : "Lưu Chat AI"}</button></div>

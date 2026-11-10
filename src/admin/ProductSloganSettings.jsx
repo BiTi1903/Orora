@@ -1,3 +1,4 @@
+import useDraftGuard from "../hooks/useDraftGuard";
 import { useEffect, useRef, useState } from "react";
 import { explainError, getHomeContent, saveHomeContent } from "../lib/api";
 import { changedValues, mergeSavedValues } from "./builder/save-sections";
@@ -24,6 +25,7 @@ export default function ProductSloganSettings() {
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, []);
+  const markSaved=useDraftGuard({form,styles},{enabled:!loading&&!failed,busy});
   const updateStyle = (key, patch) => setStyles((current) => ({ ...current, [key]: { ...current[key], ...patch } }));
   return <form aria-busy={busy} className="admin-card admin-form slogan-settings-form" onInvalidCapture={(event) => {
     const target = event.target;
@@ -37,7 +39,7 @@ export default function ProductSloganSettings() {
       const payload = { productSlogan: { ...form, title: form.title.trim(), text: form.text }, productDetailStyles: styles };
       const patch = changedValues(baseline.current, payload);
       if (Object.keys(patch).length) { await saveHomeContent(patch); baseline.current = mergeSavedValues(baseline.current, patch); }
-      setNotice({ text: "Đã lưu Slogan trên trang chi tiết sản phẩm." });
+      markSaved();setNotice({ text: "Đã lưu Slogan trên trang chi tiết sản phẩm." });
     }
     catch (error) { setNotice({ error: true, text: explainError(error) }); }
     finally { setBusy(false); }

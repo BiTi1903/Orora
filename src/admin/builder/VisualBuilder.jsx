@@ -1,3 +1,4 @@
+import useDraftGuard from "../../hooks/useDraftGuard";
 import { withTrackingNavLink } from "../../lib/navbar-links";
 import { PAGE_SECTIONS as SECTION_LIST, sectionIsEnabled } from "../../lib/page-sections";
 import { DEFAULT_PRODUCT_NEEDS, DEFAULT_PRODUCT_FAQ } from "../../lib/product-discovery";
@@ -1499,6 +1500,7 @@ export default function VisualBuilder() {
   };
 
   const payload = useMemo(() => ({ ...buildHomePayload({ about, hero, collection, productDetail, features, reviews, newsletter, footer, ticker, navbar, philosophy }), sectionVisibility, ...discovery }), [about, hero, collection, productDetail, features, reviews, newsletter, footer, ticker, navbar, philosophy, sectionVisibility, discovery]);
+  const markDraftSaved=useDraftGuard(payload,{enabled:!loading&&!loadError,busy:saving});
   useEffect(() => {
     if (!loading && !loadError && baseline.current === null) baseline.current = payload;
   }, [loading, loadError, payload]);
@@ -1518,6 +1520,7 @@ export default function VisualBuilder() {
       if (!Object.keys(patch).length) return setMessage({ type: "success", text: "Chưa có thay đổi để lưu." });
       await saveHomeContent(patch);
       baseline.current = mergeSavedValues(baseline.current || {}, patch);
+      markDraftSaved();
 
       setMessage({
         type: "success",
