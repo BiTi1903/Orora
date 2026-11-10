@@ -290,7 +290,8 @@
 
 .gallery-nav {
   position: absolute;
-  top: 38%;
+  top: calc(50% - 11px);
+  transform: translateY(-50%);
   z-index: 4;
   width: 42px;
   height: 42px;
@@ -325,3 +326,12 @@
 }
 .collection-categories button[aria-pressed="true"] { background: var(--rose-deep); color: #fff; }
 .collection-categories button:focus-visible { outline: 2px solid var(--rose-deep); outline-offset: 2px; }
+
+/* Stretch cards equally; descriptions never displace the action row. */
+.gallery-slide, .gallery > div { display:flex; }
+.gallery-item { display:flex; flex-direction:column; }
+.gallery-item > .gallery-image { flex-shrink:0; }
+.gallery-item > .product-details { display:flex; flex-direction:column; flex:1; }
+.collection .gallery-item .product-bottom { margin-top:auto; padding-top:18px; }
+
+.collection .gallery-viewport .gallery-nav { top:calc(50% - 11px); transform:translateY(-50%); }

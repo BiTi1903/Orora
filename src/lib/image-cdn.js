@@ -16,3 +16,7 @@ export function cdnSrc(src, { w, q }) {
   return `${head}/upload/${transform}/${rest}`;
 }
 export function heroImageSources(home={}){return {desktop:cdnSrc(home.heroImage,{w:1920,q:"auto:good"})||null,mobile:cdnSrc(home.heroImageMobile||home.heroMobileImage||home.heroImage,{w:900,q:"auto:good"})||null};}
+
+export function productMainImage(src, width = 1200) {
+ return cdnSrc(src, {w:width <= 600 ? 800 : width <= 1200 ? 1200 : 1800, q:"auto:good"});
+}

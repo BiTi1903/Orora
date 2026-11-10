@@ -156,6 +156,7 @@ export function CollectionSettings({
         </SettingGroup>
       )}
 
+      {meta.styleKey === "button" && <SettingGroup title="Nội dung nút"><div className="builder-field"><label>Chữ trên nút</label><input value={style.text ?? ""} placeholder="Xem chi tiết" onChange={event=>onStyleChange({text:event.target.value})}/></div></SettingGroup>}
       <StyleTypographyBlock style={style} onStyleChange={onStyleChange} />
 
       <SettingGroup title="Gợi ý">

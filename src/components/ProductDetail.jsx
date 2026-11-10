@@ -22,7 +22,8 @@ import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
 import { contactLinks } from "../lib/contact";
 import RelatedProductsSidebar from "./RelatedProductsSidebar";
-import { cdnSrc, THUMB, MAIN } from "../lib/cloudinary";
+import { cdnSrc, THUMB } from "../lib/image-cdn";
+import { productMainImage } from "../lib/image-cdn";
 
 /* Giữ xuống dòng khi admin nhấn Enter — chèn <br /> thật, không phụ thuộc CSS */
 const renderLines = (text) =>
@@ -346,7 +347,10 @@ function ProductDetail({
             {displaySrc ? (
               <img
                 key={displaySrc}
-                src={cdnSrc(displaySrc, MAIN)}
+                src={productMainImage(displaySrc, window.innerWidth)}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
                 alt={product.name}
                 className="product-detail-main-img"
                 style={{ objectFit: objectFitValue }}

@@ -4,7 +4,8 @@ import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { splitColor, toCss } from "../lib/typography";
 import ProductSlideshow from "./ProductSlideshow";
-import { cdnSrc, CARD } from "../lib/cloudinary";
+import { cdnSrc, CARD } from "../lib/image-cdn";
+import { prepareProductDetail } from "../lib/product-navigation";
 
 function ProductCard({
   image,
@@ -62,15 +63,17 @@ function ProductCard({
   const selectedClass = (key) =>
     preview && selectedElement === key ? "builder-selected" : "";
 
+  const prepare = () => { if (!preview) prepareProductDetail(image); };
+  const intentProps = { onPointerEnter: event => { if (event.pointerType === "mouse") prepare(); }, onFocus: prepare, onClick: prepare };
   const ImageWrap = preview ? "div" : Link;
   const imageProps = preview
     ? {}
-    : { to: `/product/${slug}` };
+    : { to: `/product/${slug}`, ...intentProps };
 
   const ButtonWrap = preview ? "span" : Link;
   const buttonProps = preview
     ? {}
-    : { to: `/product/${slug}` };
+    : { to: `/product/${slug}`, ...intentProps };
 
   const imageLayout = styles.imageLayout || {};
   const n = (v) => {
@@ -235,10 +238,10 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
             {...buttonProps}
             className={`buy-button ${selectedClass(k("cardButton"))}`}
             data-builder-key={preview ? k("cardButton") : undefined}
-            onClick={select(k("cardButton"))}
+            onClick={preview ? select(k("cardButton")) : prepare}
             style={toCss(styles.button, { responsive: true })}
           >
-            Xem chi tiết
+            {styles.button?.text || "Xem chi tiết"}
             <span>↗</span>
           </ButtonWrap>
         </div>

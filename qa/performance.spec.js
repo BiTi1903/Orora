@@ -24,7 +24,7 @@ test('first-screen copy is visible from the early shell and mobile uses the smal
  expect(await page.locator('.hero').evaluate(node=>getComputedStyle(node).backgroundImage)).toContain(page.viewportSize().width<=600?'w_900':'w_1920');await fit(page);
 });
 test('carousel controls are exposed to assistive tools and offscreen slides are inert',async({page})=>{
- const products=Array.from({length:5},(_,i)=>({id:String(i+1),number:String(i+1),name:`SP ${i+1}`,slug:`sp-${i+1}`,price:'100000',image:''}));
+ const products=Array.from({length:5},(_,i)=>({id:String(i+1),number:String(i+1),name:`SP ${i+1}`,slug:`sp-${i+1}`,price:'100000',image:'',description:i===1?'Mô tả dài để kiểm tra các nút được căn cùng một hàng dù nội dung sản phẩm có nhiều dòng hơn sản phẩm khác.':''}));
  await mount(page,`import Collection from '/src/components/Collection.jsx';${render('R.createElement(Collection)')}`,{
   'hooks/useHomeContent.js':'export default function home(){return {loading:false,collectionTitle:"Sản phẩm"}}',
   'hooks/useCategories.js':'export default function cats(){return {categories:[]}}',
@@ -33,6 +33,12 @@ test('carousel controls are exposed to assistive tools and offscreen slides are 
  const perView=page.viewportSize().width<=1000?2:3;
  await expect(page.locator('.gallery-slide:not([inert])')).toHaveCount(perView);
  await expect(page.locator('[aria-hidden="true"] button')).toHaveCount(0);
+ const positions=await page.locator('.gallery-slide:not([inert]) .buy-button').evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().bottom));
+ expect(Math.max(...positions)-Math.min(...positions)).toBeLessThan(2);
+ const card=await page.locator('.gallery-slide:not([inert]) .gallery-item').first().boundingBox();
+ const arrow=await page.getByRole('button',{name:'Sản phẩm sau',exact:true}).boundingBox();
+ expect(Math.abs(arrow.y+arrow.height/2-card.y-card.height/2)).toBeLessThan(2);
+
  const controls=page.getByRole('group',{name:'Chọn sản phẩm',exact:true});await expect(controls.getByRole('button')).toHaveCount(5);
  await controls.getByRole('button',{name:'Xem SP 5',exact:true}).click();await expect(controls.getByRole('button',{name:'Xem SP 5',exact:true})).toHaveAttribute('aria-pressed','true');
  await expect(page.locator('.gallery-slide:not([inert])')).toHaveCount(perView);await fit(page);
@@ -59,3 +65,11 @@ test('real app paints the cached public hero while realtime data is still pendin
  if(page.viewportSize().width<=768)expect(await page.locator('.gallery-item').evaluate(node=>node.style.transform)).toBe('');
  await page.evaluate(()=>window.stopAnimations());
  });
+
+test('detail image is eager, high priority and appropriately sized for the viewport',async({page})=>{
+ await page.route('**/res.cloudinary.com/**',route=>route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000"/>'}));
+ await mount(page,`import Detail from '/src/components/ProductDetail.jsx';${render(`R.createElement(Detail,{preview:true,previewProduct:{id:'1',name:'Kiểm tra ảnh',image:'https://res.cloudinary.com/demo/image/upload/v1/product.jpg',price:'409000'}})`)}`,{'hooks/useHomeContent.js':'export default function home(){return {loading:false}}'});
+ const image=page.locator('.product-detail-main-img');await expect(image).toBeVisible();
+ await expect(image).toHaveAttribute('loading','eager');await expect(image).toHaveAttribute('fetchpriority','high');
+ const width=page.viewportSize().width;await expect(image).toHaveAttribute('src',new RegExp(`w_${width<=600?800:width<=1200?1200:1800}`));
+});

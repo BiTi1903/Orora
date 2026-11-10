@@ -41,6 +41,7 @@ export default function useProductReveal(pageRef, product, preview) {
     const observe = () => root.querySelectorAll(targets).forEach((node) => {
       if (seen.has(node)) return;
       seen.add(node);
+      if (node.matches(".product-detail-gallery, .product-detail-info")) return;
       context.add(() => gsap.set(node, { y: node.matches(".product-detail-info, .product-detail-gallery") ? 0 : 14, opacity: 0 }));
       observer.observe(node);
     });
