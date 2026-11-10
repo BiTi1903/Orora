@@ -24,12 +24,11 @@ export default function ChatHint({ open, dismissed, settings, anchor, onOpen }) 
   place();return()=>cancelAnimationFrame(frame);
  },[visible,open,dismissed,settings.hintEnabled,anchor]);
  useEffect(()=>{
-  if(open){used.current=true;return;}
-  if(used.current||settings.hintEnabled===false)return;
-  let hide;
-  const timer=setTimeout(()=>{used.current=true;setVisible(true);hide=setTimeout(()=>setVisible(false),10000);},settings.hintDelay*1000);
-  return ()=>{clearTimeout(timer);clearTimeout(hide);};
- },[open,settings.hintEnabled,settings.hintDelay]);
+  if(open||settings.hintEnabled===false)return;
+  const delay=visible?(settings.hintDuration??10):(used.current?(settings.hintRepeatDelay??5):settings.hintDelay);
+  const timer=setTimeout(()=>{used.current=true;setVisible(current=>!current);},delay*1000);
+  return ()=>clearTimeout(timer);
+ },[open,visible,settings.hintEnabled,settings.hintDelay,settings.hintDuration,settings.hintRepeatDelay]);
  if(!visible||open||dismissed||settings.hintEnabled===false)return null;
  return <div ref={hint} className="orora-chat-hint" style={{right:"auto",bottom:"auto",transform:"none"}} role="status"><button type="button" className="orora-chat-hint-message" style={{ fontFamily: settings.fontFamily || undefined, ...toCss(settings.textStyles?.hint), textDecoration: settings.textStyles?.hint?.textDecoration }} onClick={onOpen}>{settings.hintText}</button><button type="button" className="orora-chat-hint-close" aria-label="Đóng lời nhắc chat" onClick={()=>setVisible(false)}>×</button></div>;
 }

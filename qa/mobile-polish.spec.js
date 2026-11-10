@@ -21,3 +21,18 @@ test('chat hint follows its button when scrolling and moving without overlapping
  }
  await fit(page);
 });
+test('chat hint repeats after hiding or dismissal and resumes when chat closes',async({page})=>{
+ await page.clock.install();
+ await mount(page,`import ChatButton from '/src/components/ChatButton.jsx';${render('R.createElement(ChatButton)')}`,{
+  'hooks/useHomeContent.js':`export default function home(){return {loading:false,chatSettings:{hintDelay:1,hintDuration:1,hintRepeatDelay:2,hintText:'Bạn cần tư vấn?'}}}`,
+  'hooks/useChatConversation.js':'export default function conversation(){return {metadata:{}}}',
+ });
+ const hint=page.locator('.orora-chat-hint');
+ await expect(hint).toHaveCount(0);await page.clock.runFor(1000);await expect(hint).toBeVisible();
+ await page.clock.runFor(1000);await expect(hint).toHaveCount(0);await page.clock.runFor(2000);await expect(hint).toBeVisible();
+ await page.getByRole('button',{name:'Đóng lời nhắc chat',exact:true}).click();await expect(hint).toHaveCount(0);
+ await page.clock.runFor(2000);await expect(hint).toBeVisible();
+ await page.getByRole('button',{name:'Bạn cần tư vấn?',exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible();
+ await page.clock.runFor(5000);await expect(hint).toHaveCount(0);
+ await page.getByRole('button',{name:'Đóng lựa chọn tư vấn',exact:true}).click();await page.clock.runFor(1000);await expect(hint).toBeVisible();
+});

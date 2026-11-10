@@ -17,6 +17,8 @@ export function chatSettings(value = {}) {
     channel: s.channel && typeof s.channel === "object" ? s.channel : {},
     hintEnabled: s.hintEnabled !== false,
     hintDelay: Number.isFinite(Number(s.hintDelay)) ? Math.min(60, Math.max(1, Number(s.hintDelay))) : 5,
+    hintRepeatDelay: Number.isFinite(Number(s.hintRepeatDelay)) ? Math.min(60, Math.max(1, Number(s.hintRepeatDelay))) : 5,
+    hintDuration: Number.isFinite(Number(s.hintDuration)) ? Math.min(60, Math.max(1, Number(s.hintDuration))) : 10,
     hintText: text("hintText", "Bạn cần tư vấn? Nhắn ORORA nhé!", 160),
     textStyles: s.textStyles && typeof s.textStyles === "object" ? s.textStyles : {},
     labels: s.labels && typeof s.labels === "object" ? s.labels : {},

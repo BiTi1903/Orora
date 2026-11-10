@@ -16,7 +16,6 @@ function ChatButton() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [channel,setChannel] = useState("choose");
-  const [hintDismissed, setHintDismissed] = useState(false);
   const panelId = useId();
   const conversation = useChatConversation(open && channel === "ai", location.pathname);
   const settings = chatSettings({ ...conversation.metadata?.settings, ...home.chatSettings });
@@ -77,7 +76,6 @@ function ChatButton() {
         if (event.detail !== 0 && suppressClick.current) {
           event.preventDefault(); event.stopPropagation(); suppressClick.current = false; return;
         }
-        setHintDismissed(true);
         if (!open) setChannel("choose");
         setOpen((current) => !current);
       }}
@@ -88,7 +86,7 @@ function ChatButton() {
     >
       <span className="chat-icon" aria-hidden="true">{open ? "×" : "✦"}</span>
       <span className="chat-text">Trò chuyện cùng ORORA</span>
-    </button><ChatHint open={open} dismissed={hintDismissed} settings={settings} anchor={button} onOpen={() => { setHintDismissed(true); setChannel("choose");setOpen(true); }} />{open && (channel === "choose" ? <ChatChannelChooser settings={settings} id={panelId} zalo={zalo} onAI={() => setChannel("ai")} onClose={close} /> : <ChatPanel id={panelId} settings={settings} conversation={conversation} onClose={close} contactLinks={zalo ? [{ href: zalo }] : conversation.metadata?.links?.filter((link) => ["phone", "facebook", "contact"].includes(link.id)) || []} />)}</>
+    </button>{!open && <ChatHint open={false} dismissed={false} settings={settings} anchor={button} onOpen={() => { setChannel("choose");setOpen(true); }} />}{open && (channel === "choose" ? <ChatChannelChooser settings={settings} id={panelId} zalo={zalo} onAI={() => setChannel("ai")} onClose={close} /> : <ChatPanel id={panelId} settings={settings} conversation={conversation} onClose={close} contactLinks={zalo ? [{ href: zalo }] : conversation.metadata?.links?.filter((link) => ["phone", "facebook", "contact"].includes(link.id)) || []} />)}</>
   );
 }
 
