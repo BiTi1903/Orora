@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { getPublicProducts } from "../lib/api";
 
 export default function useProducts({ enabled = true } = {}) {
   const [products, setProducts] = useState([]);
@@ -9,7 +8,7 @@ export default function useProducts({ enabled = true } = {}) {
     if (!enabled) return;
     let alive = true;
 
-    getPublicProducts()
+    import("../lib/api").then(({getPublicProducts})=>getPublicProducts())
       .then((list) => {
         if (alive) setProducts(list.filter((p) => p.active !== false));
       })

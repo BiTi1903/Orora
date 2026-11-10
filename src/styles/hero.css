@@ -487,3 +487,11 @@
 @media (prefers-reduced-motion: reduce), (hover: none) {
   .hero-chip { translate:none; rotate:none; }
 }
+
+/* Above-the-fold copy is visible immediately; never wait for entrance effects. */
+.hero .small-text,.hero .description,.hero .hero-rotator,.hero .hero-actions { animation:none; }
+.hero .hero-letter { animation:auroraFlow 6s linear infinite; animation-delay:calc(var(--aurora-i,0) * -.45s); }
+@media(max-width:768px),(prefers-reduced-motion:reduce) {
+ .hero .hero-letter,.hero-title::before { animation:none; }
+ .hero .hero-letter { filter:none; }
+}

@@ -43,7 +43,7 @@ export default function PreviewFrame({ device, children }) {
     };
     syncStyles();
     const observer = new MutationObserver(syncStyles);
-    observer.observe(document.head, { childList: true, subtree: true, characterData: true });
+    observer.observe(document.head, { childList: true, subtree: true, characterData: true, attributes:true, attributeFilter:["rel","href"] });
     const preventNavigation = (event) => { if (event.target.closest("a")) event.preventDefault(); };
     frameDocument.addEventListener("click", preventNavigation);
     return () => { observer.disconnect(); frameDocument.removeEventListener("click", preventNavigation); };

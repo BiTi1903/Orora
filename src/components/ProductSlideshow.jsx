@@ -69,13 +69,14 @@ export default function ProductSlideshow({
       ))}
 
       {showDots && list.length > 1 && (
-        <div className="product-slideshow-dots" aria-hidden="true">
+        <div className="product-slideshow-dots" role="group" aria-label="Chọn ảnh sản phẩm">
           {list.map((_, i) => (
             <button
               key={i}
               type="button"
               className={i === index ? "is-active" : ""}
               aria-label={`Ảnh ${i + 1}`}
+              aria-pressed={i === index}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();

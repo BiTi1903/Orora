@@ -1,5 +1,7 @@
 # Kiểm tra vận hành ORORA — 10/11/2026
 
+Cập nhật tối ưu theo báo cáo PageSpeed và số đo bundle mới: [PAGESPEED-2026-11-10.md](PAGESPEED-2026-11-10.md).
+
 Phạm vi người dùng chọn: 1 (mua hàng), 3 (điện thoại), 4 (tốc độ), 5 (quản trị/dữ liệu), 6 (SEO). Không thêm nội dung chính sách kinh doanh thuộc mục 2.
 
 ## Trạng thái

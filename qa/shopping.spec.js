@@ -2,17 +2,7 @@ import {test,expect} from '@playwright/test';
 const pageErrors=new WeakMap();
 test.beforeEach(({page})=>{const errors=[];pageErrors.set(page,errors);page.on('pageerror',error=>errors.push(error.message));});
 test.afterEach(({page})=>expect(pageErrors.get(page)).toEqual([]));
-async function mount(page,code,modules={}){
- const entry=await(await page.request.get('/src/main.jsx')).text();
- const version=entry.match(/react-router-dom\.js\?v=([a-z0-9]+)/)?.[1];
- if(!version)throw Error('Cannot read Vite dependency version');
- const suffix=`?v=${version}`;
- for(const [path,body] of Object.entries(modules))await page.route(`**/src/${path}*`,route=>route.fulfill({contentType:'application/javascript',body}));
- await page.route('**/qa-ui',route=>route.fulfill({contentType:'text/html',body:`<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><div id="root"></div><script type="module">import R from '/@react-refresh';R.injectIntoGlobalHook(window);window.$RefreshReg$=()=>{};window.$RefreshSig$=()=>t=>t;window.__vite_plugin_react_preamble_installed__=true;</script><script type="module">import R from '/node_modules/.vite/deps/react.js${suffix}';import D from '/node_modules/.vite/deps/react-dom_client.js${suffix}';import {MemoryRouter} from '/node_modules/.vite/deps/react-router-dom.js${suffix}';import '/src/App.css';import '/src/styles/admin.css';${code}</script>`}));
- await page.goto('/qa-ui');
-}
-const render=element=>`D.createRoot(document.getElementById('root')).render(R.createElement(MemoryRouter,null,${element}));`;
-const fit=async page=>expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+import {mount,render,fit} from './fixtures';
 test('checkout waits for durable acknowledgment, prevents duplicate submits and keeps fields after a failed request',async({page})=>{
  let release,calls=0;
  await page.route('**/api/orders',async route=>{calls++;await new Promise(resolve=>release=resolve);await route.fulfill(calls===1?{status:503,json:{message:'Máy chủ thử nghiệm tạm bận'}}:{json:{code:'OW_TESTC',subtotal:409000,shippingFee:null,totalAmount:null,paymentMethod:'cod',message:'Đã nhận đơn thử nghiệm'}});});

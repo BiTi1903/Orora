@@ -8,6 +8,25 @@
     content="width=device-width, initial-scale=1.0"
   />
 
+  <!-- Fetch first-screen CMS content before the React/Firebase bundle finishes. -->
+  <script>
+    if (location.pathname === '/') {
+      window.__ororaShellPromise = fetch('/api/storefront-shell').then(function (response) {
+        if (!response.ok) return null;
+        return response.json();
+      }).then(function (value) {
+        if (!value || !value.content) return null;
+        var image = value.images && (matchMedia('(max-width: 600px)').matches ? value.images.mobile : value.images.desktop);
+        if (!window.__ororaLiveHomeReady && typeof image === 'string' && /^(https?:\/\/|\/(?!\/))/.test(image)) {
+          var link = document.createElement('link');
+          link.rel = 'preload'; link.as = 'image'; link.href = image; link.fetchPriority = 'high';
+          document.head.appendChild(link);
+        }
+        return value.content;
+      }).catch(function () { return null; });
+    }
+  </script>
+
   <!-- SEO cơ bản -->
   <title>ORORA</title>
 
@@ -103,7 +122,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    rel="stylesheet"
+    rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'"
     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap"
   />
 </head>

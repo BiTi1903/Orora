@@ -1,4 +1,4 @@
-import {cdnSrc} from "../lib/cloudinary";
+import {heroImageSources} from "../lib/image-cdn";
 import { useEffect, useState } from "react";
 import { Sparkles } from "./Extras";
 import useHomeContent from "../hooks/useHomeContent";
@@ -68,11 +68,10 @@ function Hero({
 
   // Chỉ gắn ảnh nền khi đã có URL thật từ admin/Firestore.
   // Khi đang loading (chưa có snapshot) → giữ nền gradient CSS, không load /hero.jpg cũ.
-  const ready = preview || c.loading === false;
-  const imageUrl = c.heroImage && ready ? cdnSrc(c.heroImage,{w:1920,q:"auto:good"}) : null;
-  // Ảnh riêng cho điện thoại; để trống thì dùng ảnh desktop
-  const mobileImage = c.heroImageMobile ?? c.heroMobileImage;
-  const imageMobileUrl = mobileImage && ready ? cdnSrc(mobileImage,{w:900,q:"auto:good"}) : null;
+  const ready = preview || c.loading === false || c.shellReady === true;
+  const sources=heroImageSources(c);
+  const imageUrl=ready?sources.desktop:null;
+  const imageMobileUrl=ready?sources.mobile:null;
 
   // Preload đúng ảnh sẽ hiển thị (điện thoại chỉ tải ảnh mobile, không tải ảnh desktop)
   useEffect(() => {
@@ -182,11 +181,12 @@ function Hero({
 
         <h1
           className={`hero-title ${selectedClass("title")}`}
+          aria-label={c.heroTitle || undefined}
           key={c.heroTitle}
           data-builder-key={preview ? "title" : undefined}
           onClick={select("title")}
         >
-          <span className="hero-title-line">
+          <span className="hero-title-line" aria-hidden="true">
             {Array.from(c.heroTitle || "").map((ch, n) => (
               <span
                 key={n}

@@ -3,10 +3,9 @@ import SiteAnalytics from "./components/SiteAnalytics";
 import { sectionIsEnabled } from "./lib/page-sections";
 import ProductNeeds from "./components/ProductDiscovery";
 import useHomeContent from "./hooks/useHomeContent";
-import { lazy, Suspense, useLayoutEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
    import { Marquee, Features, Testimonials, Newsletter } from "./components/Extras";
-     import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+
 import CursorSparkle from "./components/CursorSparkle"; 
 import {
   Routes,
@@ -33,7 +32,7 @@ const OrderTracking=lazy(()=>import("./components/OrderTracking"));
 function RouteLoading(){return <section className="route-loading" role="status" aria-label="Đang tải trang"><div className="loading-placeholder"/><div className="loading-placeholder loading-line"/></section>;}
 const AdminApp = lazy(() => import("./admin/AdminApp"));
 
-gsap.registerPlugin(ScrollTrigger);
+
 
 
 function App() {
@@ -43,274 +42,16 @@ function App() {
   const location = useLocation();
   const home = useHomeContent();
   const visibility = JSON.stringify(home.sectionVisibility || {});
-  const visible = (key) => !home.loading && sectionIsEnabled(home, key);
-
-
-  useLayoutEffect(() => {
-
-    // Chỉ chạy animation ở trang chủ
-    if (location.pathname !== "/" || home.loading) {
-      return;
-    }
-
-
-    const motion=gsap.matchMedia();
-    motion.add("(prefers-reduced-motion: no-preference)",()=>{
-    const ctx = gsap.context(() => {
-
-
-      /* =========================
-         HERO INTRO
-      ========================= */
-
-      const intro = gsap.timeline({
-        defaults: {
-          ease: "power4.out",
-        },
-      });
-
-      intro
-        .from(".navbar", {
-          y: -50,
-          opacity: 0,
-          duration: 1,
-        })
-
-        .from(
-          ".small-text",
-          {
-            y: 50,
-            opacity: 0,
-            duration: 0.8,
-          },
-          "-=0.5"
-        )
-
-        .from(
-          ".hero-title-line",
-          {
-            y: 140,
-            opacity: 0,
-            duration: 1.1,
-            stagger: 0.15,
-          },
-          "-=0.5"
-        )
-
-        .from(
-          ".description",
-          {
-            y: 40,
-            opacity: 0,
-            duration: 0.8,
-          },
-          "-=0.6"
-        )
-
-        .from(
-          ".explore",
-          {
-            y: 40,
-            opacity: 0,
-            duration: 0.8,
-          },
-          "-=0.5"
-        )
-
-        .from(
-          ".scroll",
-          {
-            opacity: 0,
-            duration: 1,
-          },
-          "-=0.3"
-        );
-
-
-      /* =========================
-         HERO PARALLAX
-      ========================= */
-
-      gsap.to(".hero", {
-        backgroundPosition: "50% 70%",
-
-        scrollTrigger: {
-          trigger: ".hero",
-          start: "top top",
-          end: "bottom top",
-          scrub: 1,
-        },
-      });
-
-
-      /* =========================
-         ABOUT TEXT
-      ========================= */
-
-      gsap.from(".about-content", {
-        y: 120,
-        opacity: 0,
-
-        scrollTrigger: {
-          trigger: ".about",
-          start: "top 80%",
-          end: "center 45%",
-          scrub: 1,
-        },
-      });
-
-
-      /* =========================
-         ABOUT LABEL
-      ========================= */
-
-      gsap.from(".about-label", {
-        x: -80,
-        opacity: 0,
-
-        scrollTrigger: {
-          trigger: ".about",
-          start: "top 80%",
-          end: "center 50%",
-          scrub: 1,
-        },
-      });
-
-
-      /* =========================
-         COLLECTION TITLE
-      ========================= */
-
-      const collectionTitle = gsap.timeline({
-        scrollTrigger: {
-          trigger: ".collection",
-          start: "top 75%",
-          end: "top 30%",
-          scrub: 1,
-        },
-      });
-
-      collectionTitle
-
-        .from(".collection-label", {
-          x: -80,
-          opacity: 0,
-        })
-
-        .from(
-          ".collection-title-line",
-          {
-            y: 130,
-            opacity: 0,
-            stagger: 0.15,
-          },
-          "-=0.2"
-        );
-
-
-      /* =========================
-         GALLERY IMAGE
-      ========================= */
-
-      gsap.utils
-        .toArray(".gallery-item")
-        .forEach((item) => {
-
-          gsap.from(item, {
-            y: 150,
-            opacity: 0,
-
-            scrollTrigger: {
-              trigger: item,
-              start: "top 90%",
-              end: "top 55%",
-              scrub: 1,
-            },
-          });
-
-
-          const image = item.querySelector("img");
-
-          if (image) {
-
-            gsap.fromTo(
-              image,
-
-              {
-                scale: 1.25,
-              },
-
-              {
-                scale: 1,
-
-                scrollTrigger: {
-                  trigger: item,
-                  start: "top 90%",
-                  end: "top 40%",
-                  scrub: 1,
-                },
-              }
-            );
-
-          }
-
-
-          const info = item.querySelector(".gallery-info");
-
-          if (info) {
-
-            gsap.from(info, {
-              y: 40,
-              opacity: 0,
-
-              scrollTrigger: {
-                trigger: item,
-                start: "top 70%",
-                end: "top 45%",
-                scrub: 1,
-              },
-            });
-
-          }
-
-        });
-
-
-      /* =========================
-         COLLECTION BOTTOM
-      ========================= */
-
-      gsap.from(".collection-bottom", {
-        y: 60,
-        opacity: 0,
-
-        scrollTrigger: {
-          trigger: ".collection-bottom",
-          start: "top 90%",
-          end: "top 60%",
-          scrub: 1,
-        },
-      });
-
-
-      /* =========================
-         REFRESH SCROLLTRIGGER
-      ========================= */
-
-      requestAnimationFrame(() => {
-        ScrollTrigger.refresh();
-      });
-
-
-    }, pageRef);
-
-
-    return () => ctx.revert();
-    });
-    return () => motion.revert();
-
-
-  }, [location.pathname, home.loading, visibility]);
+  const visible = (key) => (!home.loading || (home.shellReady && ["navbar","hero"].includes(key))) && sectionIsEnabled(home,key);
+
+
+  useEffect(()=>{
+    if(location.pathname!=="/"||home.loading)return;
+    let cancelled=false,stop;
+    const start=()=>import("./lib/home-animations").then(({startHomeAnimations})=>{if(!cancelled&&pageRef.current)stop=startHomeAnimations(pageRef.current);}).catch(()=>{});
+    const idle=window.requestIdleCallback?window.requestIdleCallback(start,{timeout:1500}):setTimeout(start,100);
+    return()=>{cancelled=true;if(window.cancelIdleCallback)window.cancelIdleCallback(idle);else clearTimeout(idle);stop?.();};
+  },[location.pathname,home.loading,visibility]);
 
 
   return (

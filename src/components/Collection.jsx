@@ -189,6 +189,7 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
           <div
             className="gallery-slide"
             style={{ width: slideWidth }}
+            inert={i < index || i >= index + perView}
             key={`${product.id}-${i}`}
           >
             <ProductCard
@@ -221,10 +222,12 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
       )}
 
       {looping && (
-        <div className="gallery-dots" aria-hidden="true">
+        <div className="gallery-dots" role="group" aria-label="Chọn sản phẩm">
           {products.map((product, i) => (
             <button
               key={product.id}
+              aria-label={`Xem ${product.name}`}
+              aria-pressed={i === index % count}
               type="button"
               className={i === index % count ? "is-active" : ""}
               onClick={() => {

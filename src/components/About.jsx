@@ -1,43 +1,6 @@
-import { useEffect, useState } from "react";
+import useHomeContent from "../hooks/useHomeContent";
 import { Reveal } from "./Extras";
-import { getHomeContent } from "../lib/api";
 import ProductSlideshow from "./ProductSlideshow";
-
-const GOOGLE_FONTS = [
-  "Mulish",
-  "Noto Sans",
-  "Noto Serif",
-  "Playfair Display",
-  "Cormorant Garamond",
-  "Montserrat",
-  "Poppins",
-  "Inter",
-  "DM Sans",
-  "Lora",
-  "Roboto",
-];
-
-function loadGoogleFonts() {
-  const id = "orora-builder-google-fonts";
-
-  if (document.getElementById(id)) return;
-
-  const link = document.createElement("link");
-
-  link.id = id;
-  link.rel = "stylesheet";
-  link.href =
-    "https://fonts.googleapis.com/css2?family=" +
-    GOOGLE_FONTS
-      .map(
-        (font) =>
-          `${font.replace(/ /g, "+")}:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800`
-      )
-      .join("&family=") +
-    "&display=swap";
-
-  document.head.appendChild(link);
-}
 
 function createTextStyle(style = {}) {
   const s = style || {};
@@ -387,27 +350,8 @@ function About({
   selectedElement = "",
   onSelect,
 }) {
-  const [home, setHome] = useState(null);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    loadGoogleFonts();
-
-    if (preview) return;
-
-    getHomeContent()
-      .then((data) => {
-        setHome(data || {});
-      })
-      .catch((err) => {
-        console.error(
-          "Không thể tải nội dung Story:",
-          err
-        );
-        setHome({});
-      })
-      .finally(() => setLoaded(true));
-  }, [preview]);
+  const home=useHomeContent();
+  const loaded=!home.loading;
 
   const builder = preview
     ? previewData || {}

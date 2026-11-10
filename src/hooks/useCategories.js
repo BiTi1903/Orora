@@ -1,16 +1,12 @@
 import { useEffect, useState } from "react";
-import { doc, onSnapshot } from "firebase/firestore";
-import { db } from "../lib/firebase";
 
 export default function useCategories() {
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState(null);
-  useEffect(() => {
-    if (!db) return;
-    return onSnapshot(doc(db, "settings", "productCategories"), (snapshot) => {
-      setCategories(Array.isArray(snapshot.data()?.items) ? snapshot.data().items : []);
-      setError(null);
-    }, setError);
-  }, []);
+  useEffect(()=>{
+    let cancelled=false,stop;
+    import('../lib/live-home-client').then(({listenCategories})=>{if(!cancelled)stop=listenCategories(items=>{setCategories(items);setError(null);},setError);}).catch(error=>{if(!cancelled)setError(error);});
+    return()=>{cancelled=true;stop?.();};
+  },[]);
   return { categories, error };
 }

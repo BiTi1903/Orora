@@ -1,6 +1,5 @@
 import { contactLinks } from "../lib/contact";
-import { useEffect, useState } from "react";
-import { getHomeContent } from "../lib/api";
+import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
 
 function LinkOrSpan({ href, children, className, sel, preview, selectedClass, select, style, external = false }) {
@@ -29,19 +28,7 @@ function Footer({
   selectedElement = "",
   onSelect,
 }) {
-  const [home, setHome] = useState(null);
-
-  useEffect(() => {
-    if (preview) return;
-
-    getHomeContent()
-      .then((data) => {
-        if (data) setHome(data);
-      })
-      .catch((err) => {
-        console.error("Không thể tải nội dung Footer:", err);
-      });
-  }, [preview]);
+  const home=useHomeContent();
 
   const data = preview && previewData ? previewData : home || {};
   const { zalo } = contactLinks(data, "", data.productDetailStyles?.contactActions || {});
