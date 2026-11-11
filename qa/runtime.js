@@ -1,4 +1,4 @@
 import R from 'react';
 import D from 'react-dom/client';
 export {R,D};
-export {MemoryRouter} from 'react-router-dom';
+export {MemoryRouter,useLocation} from 'react-router-dom';

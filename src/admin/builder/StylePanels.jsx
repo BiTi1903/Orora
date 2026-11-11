@@ -1,3 +1,4 @@
+import CatalogFilterSettings from "./CatalogFilterSettings";
 import ProductLoadErrorSettings from "./ProductLoadErrorSettings";
 import CollectionCarouselSettings from "../CollectionCarouselSettings";
 import { NavbarSettings } from "./NavbarPanels";
@@ -96,6 +97,7 @@ export function StylePanel({
 
       {section === "collection" && (
         <>
+        <CatalogFilterSettings value={collection.collectionStyles?.filters} onChange={patch=>onChange({_styleGroup:"collectionStyles",_styleKey:"filters",style:patch})}/>
         <ProductLoadErrorSettings value={collection.collectionStyles?.loadError} onChange={patch=>onChange({_styleGroup:"collectionStyles",_styleKey:"loadError",style:patch})}/>
         <CollectionCarouselSettings value={collection.collectionStyles?.carousel} onChange={patch => onChange({ _styleGroup: "collectionStyles", _styleKey: "carousel", style: patch })} />
         <CollectionSettings

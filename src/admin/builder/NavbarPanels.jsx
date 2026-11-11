@@ -1,3 +1,4 @@
+import MobileNavSettings from "./MobileNavSettings";
 import { SettingGroup, SelectField, StyleTypographyBlock } from "./ui";
 import { SPACE_OPTIONS } from "./options";
 
@@ -20,6 +21,7 @@ export function NavbarSettings({ selected, navbar, onChange, onStyleChange }) {
 
   return (
     <>
+      <MobileNavSettings navbar={navbar} onChange={onChange}/>
       <SettingGroup title={isLogo ? "Logo" : `Link ${linkIndex + 1}`}>
         {isLogo ? (
           <div className="builder-field">

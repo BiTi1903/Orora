@@ -1,6 +1,8 @@
+import CatalogFilters from "./CatalogFilters";
+import {catalogFilters,readCatalogFilters,writeCatalogFilters,filterCatalog,catalogVolumes,catalogPriceLabel,catalogFilterSettings,activeCatalogFilters} from "../lib/catalog-filters";
 import CatalogLoadError from "./CatalogLoadError";
 import useVisiblePlayback from "../hooks/useVisiblePlayback";
-import { productNumber, productSlug } from "../lib/product-identity";
+import { productNumber, productSlug, withProductIdentity } from "../lib/product-identity";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ProductCard from "./ProductCard";
@@ -276,28 +278,31 @@ function Collection({
   const { products: liveProducts, loading, error, retry } = useProducts({ enabled: !preview });
   const liveHome = useHomeContent();
   const { categories } = useCategories();
-  const [localCategoryId, setLocalCategoryId] = useState("");
-  const location = useLocation();
-  const navigate = useNavigate();
-  const categoryId = preview || excludeId ? localCategoryId : new URLSearchParams(location.search).get("category") || "";
-  const setCategoryId = (id) => {
-    if (preview || excludeId) { setLocalCategoryId(id); return; }
-    const params = new URLSearchParams(location.search);
-    if (id) params.set("category", id); else params.delete("category");
-    navigate({ pathname: location.pathname, search: params.toString(), hash: "#shop" }, { replace: true, preventScrollReset: true });
+  const [localFilters,setLocalFilters]=useState(()=>catalogFilters());
+  const location=useLocation(),navigate=useNavigate();
+  const homeLoading=!preview&&liveHome.loading!==false;
+  const home=preview&&previewData?previewData:liveHome||{};
+  const filterSettings=catalogFilterSettings(home.collectionStyles?.filters);
+  const filtering=filterSettings.enabled!==false&&!excludeId&&!headStylesOverride;
+  const savedFilters=preview||excludeId?localFilters:readCatalogFilters(location.search);
+  const categoryId=savedFilters.category;
+  const changeFilters=next=>{
+    const normalized=catalogFilters(next);
+    if(preview||excludeId){setLocalFilters(normalized);return;}
+    navigate({pathname:location.pathname,search:writeCatalogFilters(location.search,normalized),hash:'#shop'},{replace:true,preventScrollReset:true});
   };
-  const homeLoading = !preview && liveHome.loading !== false;
-
-  const home = preview && previewData ? previewData : liveHome || {};
-  const rawProducts = preview ? sampleProducts || [] : liveProducts;
-
-  const availableProducts = excludeId
-    ? rawProducts.filter(
-        (p) => p.id !== excludeId && p.slug !== excludeId
-      )
-    : rawProducts;
-
-  const products = categoryId ? availableProducts.filter((product) => product.categoryId === categoryId) : availableProducts;
+  const setCategoryId=id=>changeFilters({...savedFilters,category:id,page:1});
+  const rawProducts=preview?sampleProducts||[]:liveProducts;
+  const availableProducts=excludeId?rawProducts.filter(product=>product.id!==excludeId&&product.slug!==excludeId):rawProducts;
+  const catalog=withProductIdentity(availableProducts);
+  const effectiveFilters=filtering?catalogFilters({...savedFilters,...(filterSettings.showSearch===false?{q:''}:{}),...(filterSettings.showPrice===false?{min:'',max:'',price:'all'}:{}),...(filterSettings.showVolume===false?{volume:''}:{}),...(filterSettings.showSort===false?{sort:'default'}:{})}):catalogFilters({category:categoryId});
+  const products=filterCatalog(catalog,effectiveFilters);
+  const requestedView=savedFilters.view==='auto'?(filterSettings.layout||'auto'):savedFilters.view;
+  const grid=filtering&&(requestedView==='grid'||(requestedView==='auto'&&(activeCatalogFilters(effectiveFilters)>0||availableProducts.length>12)));
+  const pageSize=Math.max(4,Math.min(48,Number.parseInt(filterSettings.pageSize,10)||12));
+  const pageCount=Math.max(1,Math.ceil(products.length/pageSize)),page=Math.min(savedFilters.page,pageCount);
+  const pageProducts=products.slice((page-1)*pageSize,page*pageSize);
+  const displayProducts=products.map(product=>({...product,price:catalogPriceLabel(product,filterSettings)}));
 
   // Không có chữ mặc định: chờ dữ liệu Firebase tải xong rồi mới hiện (tránh nháy dữ liệu cũ)
   const pick = (forced, own, hint) => {
@@ -355,6 +360,7 @@ function Collection({
     ? toCss(headStyles.header, { responsive: true })
     : undefined;
 
+  const card=product=><ProductCard image={product.image} number={productNumber(product,catalog)} name={product.name} description={product.description} price={catalogPriceLabel(product,filterSettings)} slug={productSlug(product,catalog)} styles={cardStyles} preview={preview} selectedElement={selectedElement} onSelect={onSelect} keyMap={keyMap} groupLayout/>;
   return (
     <section
       className={`collection ${preview ? "collection--preview" : ""} ${className} ${selectedClass(k("colSection"))}`.trim()}
@@ -413,7 +419,8 @@ function Collection({
         </h2>
       </div>
 
-      {!preview && !isRelated && categories.length > 0 && (
+      {filtering && <CatalogFilters value={effectiveFilters} activeView={preview||grid?'grid':'carousel'} categories={categories} volumes={catalogVolumes(catalog)} settings={filterSettings} count={products.length} total={catalog.length} onApply={changeFilters} onReset={()=>changeFilters(catalogFilters())}/>}
+      {!filtering && !preview && !isRelated && categories.length > 0 && (
         <nav className="collection-categories" aria-label="Danh mục sản phẩm">
           <button type="button" aria-pressed={!categoryId} onClick={() => setCategoryId("")}>Tất cả</button>
           {categories.map((category) => <button type="button" key={category.id} aria-pressed={categoryId === category.id} onClick={() => setCategoryId(category.id)}>{category.name}</button>)}
@@ -421,41 +428,19 @@ function Collection({
       )}
       {/* PRODUCTS */}
       {preview ? (
-        <div className="gallery">
-          {products.map((product) => (
-            <div key={product.id}>
-              <ProductCard
-                image={product.image}
-                image2={product.image2}
-                image3={product.image3}
-                image4={product.image4}
-                image5={product.image5}
-                image6={product.image6}
-                number={productNumber(product, products)}
-                name={product.name}
-                description={product.description}
-                price={product.price}
-                slug={productSlug(product, products)}
-                styles={cardStyles}
-                preview={preview}
-                selectedElement={selectedElement}
-                onSelect={onSelect}
-                keyMap={keyMap}
-                groupLayout
-              />
-            </div>
-          ))}
-        </div>
+        <div className="gallery">{products.slice(0,pageSize).map(product=><div key={product.id}>{card(product)}</div>)}</div>
       ) : error ? (
         <CatalogLoadError value={headStyles.loadError || home.productDetailStyles?.loadError} onRetry={retry}/>
       ) : loading ? (
         <div className="catalog-loading" role="status" aria-label="Đang tải sản phẩm" aria-busy="true">
           {[0, 1].map((item) => <div key={item}><div className="loading-placeholder" /><div className="loading-placeholder loading-line" /></div>)}
         </div>
+      ) : grid ? (
+        <div className="catalog-product-grid">{pageProducts.map(product=><div key={product.id}>{card(product)}</div>)}</div>
       ) : (
         <ProductCarousel
-          key={categoryId}
-          products={products}
+          key={JSON.stringify(effectiveFilters)}
+          products={displayProducts}
           cardStyles={cardStyles}
           carouselSettings={home.collectionStyles?.carousel || {}}
           preview={preview}
@@ -466,6 +451,7 @@ function Collection({
         />
       )}
 
+      {!preview && !loading && !error && grid && pageCount>1 && <nav className="catalog-pagination" aria-label={filterSettings.pageLabel.replace('{page}',page).replace('{pages}',pageCount)}><button type="button" disabled={page===1} onClick={()=>changeFilters({...savedFilters,page:page-1})}>{filterSettings.previousLabel}</button><span role="status">{filterSettings.pageLabel.replace('{page}',page).replace('{pages}',pageCount)}</span><button type="button" disabled={page===pageCount} onClick={()=>changeFilters({...savedFilters,page:page+1})}>{filterSettings.nextLabel}</button></nav>}
       {!preview && !loading && !error && products.length === 0 && (
         <p
           style={{
@@ -475,7 +461,7 @@ function Collection({
             opacity: 0.6,
           }}
         >
-          {categoryId ? "Danh mục này chưa có sản phẩm." : "Sản phẩm sẽ sớm được cập nhật."}
+          {filtering&&catalog.length?filterSettings.emptyLabel:categoryId?"Danh mục này chưa có sản phẩm.":"Sản phẩm sẽ sớm được cập nhật."}
         </p>
       )}
     </section>

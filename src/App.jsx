@@ -1,3 +1,4 @@
+import MobileShopNav from "./components/MobileShopNav";
 import SiteAnalytics from "./components/SiteAnalytics";
 
 import { sectionIsEnabled } from "./lib/page-sections";
@@ -136,7 +137,7 @@ function App() {
 
 
       </Routes>
-      {!location.pathname.startsWith("/admin") && <ChatButton />}
+      {!location.pathname.startsWith("/admin") && <><ChatButton /><MobileShopNav /></>}
 
     </>
   );
