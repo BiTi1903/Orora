@@ -1,3 +1,4 @@
+import "../styles/product-detail.css";
 import {dirtyRegistry} from "../lib/dirty-registry";
 import useOrderNotifications from "./useOrderNotifications";
 import EmailExport from "./EmailExport";

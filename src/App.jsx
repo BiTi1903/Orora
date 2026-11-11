@@ -47,10 +47,15 @@ function App() {
 
   useEffect(()=>{
     if(location.pathname!=="/"||home.loading||!window.matchMedia("(min-width: 769px) and (pointer: fine) and (prefers-reduced-motion: no-preference)").matches)return;
-    let cancelled=false,stop;
-    const start=()=>import("./lib/home-animations").then(({startHomeAnimations})=>{if(!cancelled&&pageRef.current)stop=startHomeAnimations(pageRef.current);}).catch(()=>{});
-    const idle=window.requestIdleCallback?window.requestIdleCallback(start,{timeout:1500}):setTimeout(start,100);
-    return()=>{cancelled=true;if(window.cancelIdleCallback)window.cancelIdleCallback(idle);else clearTimeout(idle);stop?.();};
+    let cancelled=false,stop,started=false;
+    const start=()=>{
+      if(started)return;started=true;
+      import("./lib/home-animations").then(({startHomeAnimations})=>{if(!cancelled&&pageRef.current)stop=startHomeAnimations(pageRef.current);}).catch(()=>{});
+    };
+    // Below-fold scroll effects need no runtime until the visitor actually scrolls.
+    window.addEventListener('scroll',start,{passive:true,once:true});
+    if(window.scrollY>0)start();
+    return()=>{cancelled=true;window.removeEventListener('scroll',start);stop?.();};
   },[location.pathname,home.loading,visibility]);
 
 

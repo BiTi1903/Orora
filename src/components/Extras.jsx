@@ -1,3 +1,4 @@
+import {cdnSrc} from "../lib/image-cdn";
 import { useEffect, useRef, useState } from "react";
 import "../styles/extras.css";
 import useHomeContent from "../hooks/useHomeContent";
@@ -464,7 +465,8 @@ export function Testimonials({
                 {r.image ? (
                   <img
                     className="review-avatar"
-                    src={r.image}
+                    src={cdnSrc(r.image,{w:96,q:"auto:good"})}
+                    loading="lazy" decoding="async" width="40" height="40"
                     alt={r.name || "Khách hàng"}
                   />
                 ) : (

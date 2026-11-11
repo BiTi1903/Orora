@@ -439,6 +439,7 @@ function About({
             style={{ position: "absolute", inset: 0 }}
           >
             <ProductSlideshow
+              sizes="(max-width: 768px) calc(100vw - 40px), 48vw"
               autoPlay={!preview}
               images={
                 // Chưa load xong → không render ảnh cứng /about.jpg

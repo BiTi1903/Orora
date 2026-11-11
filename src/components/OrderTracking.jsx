@@ -1,3 +1,4 @@
+import "../styles/product-detail.css";
 import ModalDialog from "./ModalDialog";
 import OrderTrackingDetails from "./OrderTrackingDetails";
 import useHomeContent from "../hooks/useHomeContent";

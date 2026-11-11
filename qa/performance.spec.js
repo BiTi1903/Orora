@@ -21,7 +21,7 @@ test('first-screen copy is visible from the early shell and mobile uses the smal
  await expect(page.getByRole('heading',{name:'ORORA',exact:true})).toBeVisible();
  expect(await page.locator('.hero-letter').first().evaluate(node=>getComputedStyle(node).opacity)).toBe('1');
  expect(await page.locator('.description').evaluate(node=>getComputedStyle(node).animationName)).toBe('none');
- expect(await page.locator('.hero-media img').evaluate(node=>node.currentSrc)).toContain(page.viewportSize().width<=600?'w_900':'w_1920');await fit(page);
+ expect(await page.locator('.hero-media img').evaluate(node=>node.currentSrc)).toContain(page.viewportSize().width<=600?'w_480':page.viewportSize().width<=960?'w_960':'w_1440');await fit(page);
 });
 test('carousel controls are exposed to assistive tools and offscreen slides are inert',async({page})=>{
  const products=Array.from({length:5},(_,i)=>({id:String(i+1),number:String(i+1),name:`SP ${i+1}`,slug:`sp-${i+1}`,price:'100000',image:'',description:i===1?'Mô tả dài để kiểm tra các nút được căn cùng một hàng dù nội dung sản phẩm có nhiều dòng hơn sản phẩm khác.':''}));
@@ -72,4 +72,42 @@ test('detail image is eager, high priority and appropriately sized for the viewp
  const image=page.locator('.product-detail-main-img');await expect(image).toBeVisible();
  await expect(image).toHaveAttribute('loading','eager');await expect(image).toHaveAttribute('fetchpriority','high');
  const width=page.viewportSize().width;await expect(image).toHaveAttribute('src',new RegExp(`w_${width<=600?800:width<=1200?1200:1800}`));
+});
+
+test('slideshow waits until it is visible before loading extra images or autoplaying',async({page})=>{
+ await mount(page,`import Slides from '/src/components/ProductSlideshow.jsx';${render(`R.createElement('div',null,R.createElement('div',{style:{height:'2400px'}}),R.createElement('div',{style:{height:320,width:260,position:'relative'}},R.createElement(Slides,{images:['/preview/product.svg?one','/preview/product.svg?two','/preview/product.svg?three'],interval:200})))`)}`);
+ const images=page.locator('.product-slideshow img');await expect(images).toHaveCount(3);
+ await expect(images.nth(1)).not.toHaveAttribute('src',/./);await expect(images.nth(2)).not.toHaveAttribute('src',/./);
+ await page.locator('.product-slideshow').scrollIntoViewIfNeeded();
+ await expect(images.nth(1)).toHaveAttribute('src',/two/);await expect(images.nth(2)).toHaveAttribute('src',/three/);
+ await expect(page.locator('.product-slideshow-dots button[aria-pressed="true"]')).not.toHaveAttribute('aria-label','Ảnh 1');
+});
+
+test('mobile preload and responsive hero share one correctly sized image request',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1.75,baseURL:'http://127.0.0.1:5173'});
+ const page=await context.newPage();
+ const {publicHomeShell}=await import('../src/lib/home-shell.js');
+ const payload=publicHomeShell({heroTitle:'ORORA',heroImage:'https://res.cloudinary.com/demo/image/upload/v1/hero.jpg',sectionVisibility:{about:false,collection:false,productneeds:false,philosophy:false,features:false,reviews:false,newsletter:false,footer:false,ticker:false}});
+ const images=[];
+ await page.route('**/api/storefront-shell',route=>route.fulfill({json:payload}));
+ await page.route('**/api/analytics',route=>route.fulfill({status:204,body:''}));
+ await page.route('**/src/lib/live-home-client.js*',route=>route.fulfill({contentType:'application/javascript',body:'export function listenHome(){return()=>{}};export function listenCategories(next){next([]);return()=>{}}'}));
+ await page.route('**/res.cloudinary.com/**',route=>{images.push(route.request().url());return route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000"/>'});});
+ await page.goto('/');await expect(page.locator('.hero-media')).toHaveClass(/is-ready/);
+ expect(await page.locator('.hero-media img').evaluate(node=>node.currentSrc)).toContain('w_800');
+ expect(images).toHaveLength(1);expect(images[0]).toContain('w_800');
+ await context.close();
+});
+
+test('below-fold scroll runtime is not requested before the visitor scrolls',async({page})=>{
+ let requests=0;
+ await page.route('**/src/lib/home-animations*',route=>{requests++;return route.fulfill({contentType:'application/javascript',body:'export function startHomeAnimations(){window.__effectsStarted=true;return()=>{}}'});});
+ await page.route('**/api/analytics',route=>route.fulfill({status:204,body:''}));
+ await mount(page,`import App from '/src/App.jsx';${render('R.createElement(App)')}`,{
+  'hooks/useHomeContent.js':`export default function home(){return {loading:false,heroTitle:'ORORA',chatSettings:{enabled:false},sectionVisibility:{navbar:false,about:false,collection:false,productneeds:false,philosophy:false,features:false,reviews:false,newsletter:false,footer:false,ticker:false}}}`,
+ });
+ await expect(page.locator('.hero')).toBeVisible();expect(requests).toBe(0);
+ await page.evaluate(()=>{const spacer=document.createElement('div');spacer.style.height='2400px';document.body.append(spacer);window.scrollTo(0,300);});
+ if(page.viewportSize().width>768)await expect.poll(()=>requests).toBe(1);
+ else expect(requests).toBe(0);
 });

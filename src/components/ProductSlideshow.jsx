@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import {responsiveImage} from "../lib/image-cdn";
+import useVisiblePlayback from "../hooks/useVisiblePlayback";
+import { useEffect, useRef, useState } from "react";
 
 function clean(images) {
   return (images || []).map((src) => (src || "").trim()).filter(Boolean);
@@ -17,8 +19,13 @@ export default function ProductSlideshow({
   interval = 3000,
   showDots = true,
   autoPlay = true,
+  sizes = "(max-width: 1000px) 45vw, 28vw",
 }) {
   const list = clean(images);
+  const root=useRef(null);
+  const canPlay=useVisiblePlayback(root,autoPlay && list.length>1);
+  const [started,setStarted]=useState(false);
+  if(canPlay&&!started)setStarted(true);
   const isControlled = controlledIndex != null && typeof onIndexChange === "function";
   const imagesKey = JSON.stringify(list);
   const [previousImagesKey, setPreviousImagesKey] = useState(imagesKey);
@@ -39,27 +46,28 @@ export default function ProductSlideshow({
   };
 
   useEffect(() => {
-    if (!autoPlay || list.length < 2 || paused) return undefined;
+    if (!canPlay || list.length < 2 || paused) return undefined;
     const id = window.setInterval(() => {
       const next = (index + 1) % list.length;
       if (isControlled) onIndexChange(next);
       else setInternalIndex(next);
     }, interval);
     return () => window.clearInterval(id);
-  }, [autoPlay, list.length, paused, imagesKey, index, interval, isControlled, onIndexChange]);
+  }, [canPlay, list.length, paused, imagesKey, index, interval, isControlled, onIndexChange]);
 
   if (!list.length) return null;
 
   return (
     <div
       className="product-slideshow"
+      ref={root}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
       {list.map((src, i) => (
         <img
           key={`${src}-${i}`}
-          src={src}
+          {...(i===index || started ? responsiveImage(src,{sizes}) : {})}
           loading="lazy"
           decoding="async"
           alt={i === index ? alt : ""}

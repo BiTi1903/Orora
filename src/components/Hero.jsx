@@ -95,8 +95,8 @@ function Hero({
       data-builder-key={preview ? "image" : undefined}
     >
       {imageUrl && <picture key={imageKey} className={`hero-media${preview || paintedImage === imageKey ? " is-ready" : ""}`} aria-hidden="true">
-        {imageMobileUrl && <source media="(max-width: 600px)" srcSet={imageMobileUrl}/>}
-        <img src={imageUrl} alt="" loading="eager" fetchPriority="high" decoding="async" onLoad={revealImage}/>
+        {imageMobileUrl && <source media="(max-width: 600px)" srcSet={sources.mobileSrcSet || imageMobileUrl} sizes="100vw"/>}
+        <img src={imageUrl} srcSet={sources.desktopSrcSet || undefined} sizes="100vw" alt="" loading="eager" fetchPriority="high" decoding="async" onLoad={revealImage}/>
       </picture>}
       {!preview && <Sparkles />}
 

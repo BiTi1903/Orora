@@ -1,3 +1,4 @@
+import {responsiveImage,heroImageSources} from '../src/lib/image-cdn.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHomeStore} from '../src/lib/home-store.js';
@@ -22,4 +23,13 @@ test('all home consumers share one live listener and early content never overwri
 test('late shell cannot replace a live snapshot and font loading only requests configured families',async()=>{
  let resolve,next;const store=createHomeStore({listen:callback=>{next=callback;return()=>{};},bootstrap:()=>new Promise(done=>resolve=done)});const stop=store.subscribe(()=>{});next({heroTitle:'Fresh'});resolve({heroTitle:'Old'});await Promise.resolve();assert.equal(store.getSnapshot().heroTitle,'Fresh');stop();
  assert.deepEqual(contentFonts({heroStyles:{title:{fontFamily:'"Jost", sans-serif'}},chatSettings:{fontFamily:'"Lora", serif'},body:{fontFamily:'"Lora", serif'},text:'Poppins'}),['Lora']);
+});
+
+test('responsive delivery preserves original external URLs and matches hero preload candidates',()=>{
+ const src='https://res.cloudinary.com/demo/image/upload/f_auto,q_auto,w_2000/v1/photo.jpg';
+ const image=responsiveImage(src,{widths:[480,800],width:800});
+ assert.match(image.src,/w_800/);assert.match(image.srcSet,/w_480.* 480w, .*w_800.* 800w/);
+ assert.deepEqual(responsiveImage('/photo.jpg'),{src:'/photo.jpg'});
+ const hero=heroImageSources({heroImage:src});assert.match(hero.mobileSrcSet,/w_800/);assert.match(hero.desktopSrcSet,/w_1440/);
+ assert.ok(!hero.mobileSrcSet.includes('w_2000'));
 });

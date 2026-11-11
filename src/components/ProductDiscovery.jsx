@@ -1,3 +1,5 @@
+import "../styles/product-discovery.css";
+import {responsiveImage} from "../lib/image-cdn";
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import useHomeContent from '../hooks/useHomeContent';
@@ -26,7 +28,7 @@ export function ProductNeedsView({ value, products = [], loading = false, previe
     <div className="product-need-options" role="group" aria-label="Nhu cầu chăm sóc">{items.map(item => <button type="button" key={item.id} aria-pressed={selectedId === item.id} onClick={() => setSelectedId(item.id)} style={sloganTextStyle(s.itemHeading)}>{item.title}</button>)}</div>
     {selected && <div className="product-need-results" aria-live="polite" aria-busy={loading}>
       {selected.text && <p style={sloganTextStyle(s.itemBody)}>{selected.text}</p>}
-      {loading ? <p>Đang tải sản phẩm…</p> : results.length ? <div className="product-need-grid">{results.map(product => <Link className="product-need-card" key={product.id} to={productPath(product)} aria-label={product.name} onClick={preview ? event => event.preventDefault() : undefined} style={itemFrame.style}>{product.image && <img src={product.image} alt={product.name || ''} loading="lazy" />}{itemFrame.showTitle && <strong style={sloganTextStyle(s.itemHeading)}>{product.name}</strong>}<Divider appearance={itemFrame} /><span style={sloganTextStyle(s.itemBody)}>{formatProductPrice(product.price)}</span></Link>)}</div> : s.emptyText && <p style={sloganTextStyle(s.itemBody)}>{s.emptyText}</p>}
+      {loading ? <p>Đang tải sản phẩm…</p> : results.length ? <div className="product-need-grid">{results.map(product => <Link className="product-need-card" key={product.id} to={productPath(product)} aria-label={product.name} onClick={preview ? event => event.preventDefault() : undefined} style={itemFrame.style}>{product.image && <img {...responsiveImage(product.image,{sizes:"(max-width: 600px) 90vw, 28vw"})} alt={product.name || ''} loading="lazy" decoding="async" />}{itemFrame.showTitle && <strong style={sloganTextStyle(s.itemHeading)}>{product.name}</strong>}<Divider appearance={itemFrame} /><span style={sloganTextStyle(s.itemBody)}>{formatProductPrice(product.price)}</span></Link>)}</div> : s.emptyText && <p style={sloganTextStyle(s.itemBody)}>{s.emptyText}</p>}
     </div>}
     {showAllLink && <a className="product-discovery-all" href="#shop" onClick={preview ? event => event.preventDefault() : undefined} style={sloganTextStyle(s.linkStyle)}>{s.linkLabel ?? 'Xem tất cả sản phẩm'}</a>}
   </section>;

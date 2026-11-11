@@ -1,3 +1,4 @@
+import "../styles/product-detail.css";
 import { ProductFaq } from "./ProductDiscovery";
 import { careGuideForProduct } from "../lib/product-care-guide";
 import ProductCareGuide from "./ProductCareGuide";

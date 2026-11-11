@@ -21,6 +21,8 @@
         if (!window.__ororaLiveHomeReady && typeof image === 'string' && /^(https?:\/\/|\/(?!\/))/.test(image)) {
           var link = document.createElement('link');
           link.rel = 'preload'; link.as = 'image'; link.href = image; link.fetchPriority = 'high';
+          var candidates = matchMedia('(max-width: 600px)').matches ? value.images.mobileSrcSet : value.images.desktopSrcSet;
+          if (typeof candidates === 'string') { link.imageSrcset = candidates; link.imageSizes = '100vw'; }
           document.head.appendChild(link);
         }
         return value.content;
