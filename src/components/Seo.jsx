@@ -7,8 +7,8 @@ import { pageSeo } from "../lib/seo";
 export default function Seo() {
   const { pathname } = useLocation();
   const home = useHomeContent();
-  const { products, loading } = useProducts({enabled:pathname.startsWith("/product/")});
-  const seo = pageSeo(pathname, home, products, loading);
+  const { products, loading, error } = useProducts({enabled:pathname.startsWith("/product/")});
+  const seo = pageSeo(pathname, home, products, loading || Boolean(error));
   const serialized = JSON.stringify(seo);
   useEffect(() => {
     const current = JSON.parse(serialized);

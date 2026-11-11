@@ -39,6 +39,7 @@ export function getProducts() {
 
 let productCatalogCache = null;
 export function getPublicProducts() {
+  if (!db) return Promise.reject(new Error("Firebase chưa được cấu hình."));
   if (productCatalogCache && Date.now() - productCatalogCache.at < 30_000) return productCatalogCache.promise;
   const entry = { at: Date.now() };
   entry.promise = getProducts().then(withProductIdentity).catch((error) => { if (productCatalogCache === entry) productCatalogCache = null; throw error; });
@@ -46,7 +47,8 @@ export function getPublicProducts() {
   return entry.promise;
 }
 export async function getProduct(identifier) {
-  if (!db || !identifier) return null;
+  if (!identifier) return null;
+  needDb();
   const products = await getPublicProducts();
   // Use the cached object so a legacy-to-canonical redirect does not replay page animations.
   const match = findProductByRoute(products, identifier);

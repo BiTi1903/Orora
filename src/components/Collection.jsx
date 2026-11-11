@@ -1,3 +1,4 @@
+import CatalogLoadError from "./CatalogLoadError";
 import useVisiblePlayback from "../hooks/useVisiblePlayback";
 import { productNumber, productSlug } from "../lib/product-identity";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -272,7 +273,7 @@ function Collection({
   /** class thêm (vd: related products dưới chi tiết) */
   className = "",
 }) {
-  const { products: liveProducts, loading } = useProducts({ enabled: !preview });
+  const { products: liveProducts, loading, error, retry } = useProducts({ enabled: !preview });
   const liveHome = useHomeContent();
   const { categories } = useCategories();
   const [localCategoryId, setLocalCategoryId] = useState("");
@@ -445,6 +446,8 @@ function Collection({
             </div>
           ))}
         </div>
+      ) : error ? (
+        <CatalogLoadError value={headStyles.loadError || home.productDetailStyles?.loadError} onRetry={retry}/>
       ) : loading ? (
         <div className="catalog-loading" role="status" aria-label="Đang tải sản phẩm" aria-busy="true">
           {[0, 1].map((item) => <div key={item}><div className="loading-placeholder" /><div className="loading-placeholder loading-line" /></div>)}
@@ -463,7 +466,7 @@ function Collection({
         />
       )}
 
-      {!preview && !loading && products.length === 0 && (
+      {!preview && !loading && !error && products.length === 0 && (
         <p
           style={{
             textAlign: "center",

@@ -9,7 +9,7 @@ export function createHomeStore({listen,bootstrap=()=>null,onContent=()=>{}}){
    listeners.add(fn);
    if(listeners.size===1){
     stop=listen(content=>{live=true;publish({...content,loading:false});},()=>publish({...current,loading:false,error:true}));
-    Promise.resolve(bootstrap()).then(value=>{if(!live&&current.loading&&value&&typeof value==='object')publish({...value,shellReady:true,loading:true});}).catch(()=>{});
+    Promise.resolve(bootstrap()).then(value=>{if(!live&&value&&typeof value==='object')publish({...current,...value,shellReady:true,loading:current.loading});}).catch(()=>{});
    }
    return()=>{listeners.delete(fn);if(!listeners.size){stop?.();stop=null;}};
   },

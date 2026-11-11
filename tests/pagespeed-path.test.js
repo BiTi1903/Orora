@@ -33,3 +33,11 @@ test('responsive delivery preserves original external URLs and matches hero prel
  const hero=heroImageSources({heroImage:src});assert.match(hero.mobileSrcSet,/w_800/);assert.match(hero.desktopSrcSet,/w_1440/);
  assert.ok(!hero.mobileSrcSet.includes('w_2000'));
 });
+test('public hero bootstrap still arrives after an early realtime error and live recovery wins',async()=>{
+ let fail,next,resolve;
+ const store=createHomeStore({listen:(success,error)=>{next=success;fail=error;return()=>{};},bootstrap:()=>new Promise(done=>resolve=done)});
+ const stop=store.subscribe(()=>{});fail();assert.equal(store.getSnapshot().error,true);assert.equal(store.getSnapshot().loading,false);
+ resolve({heroTitle:'ORORA',heroRotator:['dịu nhẹ']});await Promise.resolve();
+ assert.equal(store.getSnapshot().heroTitle,'ORORA');assert.equal(store.getSnapshot().shellReady,true);assert.equal(store.getSnapshot().error,true);
+ next({heroTitle:'ORORA mới'});assert.equal(store.getSnapshot().heroTitle,'ORORA mới');assert.equal(store.getSnapshot().error,undefined);stop();
+});

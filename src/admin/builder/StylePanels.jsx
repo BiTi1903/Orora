@@ -96,6 +96,7 @@ export function StylePanel({
 
       {section === "collection" && (
         <>
+        <ProductLoadErrorSettings value={collection.collectionStyles?.loadError} onChange={patch=>onChange({_styleGroup:"collectionStyles",_styleKey:"loadError",style:patch})}/>
         <CollectionCarouselSettings value={collection.collectionStyles?.carousel} onChange={patch => onChange({ _styleGroup: "collectionStyles", _styleKey: "carousel", style: patch })} />
         <CollectionSettings
           selected={selected}

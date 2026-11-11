@@ -45,7 +45,7 @@ export default function OrderForm({ product, home, onClose, selection, initialVa
       {result.variantLabel && <div><dt>Dung tích</dt><dd>{result.variantLabel}</dd></div>}
       <div><dt>Số lượng</dt><dd>{result.quantity}</dd></div>
       <div><dt>Thanh toán</dt><dd>{PAYMENT_LABELS[result.paymentMethod] || result.paymentMethod}</dd></div>
-      <div><dt>Tiền sản phẩm</dt><dd>{result.subtotal === null ? "ORORA sẽ báo giá khi xác nhận" : formatVnd(result.subtotal)}</dd></div>
+      <div><dt>Tiền sản phẩm</dt><dd>{result.subtotal == null ? "ORORA sẽ báo giá khi xác nhận" : formatVnd(result.subtotal)}</dd></div>
       <div><dt>Phí giao hàng</dt><dd>{result.shippingFee == null ? "Xác nhận sau" : formatVnd(result.shippingFee)}</dd></div>
       <div><dt>Tổng tiền</dt><dd>{result.totalAmount == null ? "ORORA sẽ xác nhận tổng tiền" : formatVnd(result.totalAmount)}</dd></div>
     </dl></div>

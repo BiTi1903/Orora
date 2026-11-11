@@ -1,0 +1,5 @@
+.catalog-load-error { min-width:0; padding:18px; border:1px solid var(--line); border-radius:16px; background:var(--bg); text-align:left; overflow-wrap:anywhere; }
+.catalog-load-error h3 { margin:0 0 8px; font:500 20px/1.35 var(--font-body); }
+.catalog-load-error p { margin:0 0 14px; color:var(--plum-soft); font:400 14px/1.6 var(--font-body); }
+.catalog-load-error button { min-height:44px; padding:10px 16px; border:1px solid var(--line); border-radius:12px; background:#fff; color:var(--rose-deep); font:inherit; cursor:pointer; }
+.catalog-load-error button:focus-visible { outline:2px solid var(--rose-deep); outline-offset:3px; }
