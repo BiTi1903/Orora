@@ -38,3 +38,9 @@ Bộ kiểm tra bundle nay đi theo manifest và cộng cả static imports đ�
 - Primary Google Fonts use `display=optional` to avoid a late font replacement on slow first visits; the browser may retain its fallback for that visit. Navigation logo uses an explicit line height.
 - Removed the hardcoded newsletter star; separated email input and submit button. Newsletter sits above falling petals so controls remain legible. Input/button colors, radius and consent copy/typography are editable in Visual Builder, with consent visible in preview.
 - Chat hint tracks its actual anchor only during its brief display, including scrolling, visual viewport changes and dragging. Regression checks cover multiple button positions at all four viewport widths.
+
+## Font and hero follow-up — 11 November
+
+Replaced the earlier `display=optional` Google Fonts approach: it could keep a heavier fallback on the cold visit and use the real font after refresh. Primary Cormorant Garamond and Jost variable fonts are now served as versioned assets from the website, including Vietnamese subsets and real italic weights. The hero reserves its text layout while critical faces load, with a bounded, stable fallback on errors. The rotator reserves the longest configured phrase and starts without an entrance animation. Rotator typography is editable and preserved by the hero section save payload.
+
+The hero image is a high-priority responsive picture, decoded before a short opacity reveal over the existing fallback. This removes the abrupt background-image replacement without delaying its network request. These changes do not write CMS/Firestore content. Browser checks cover cold and warm font loads, word changes and failed fonts; production Web Vitals still require a fresh measurement after deployment.

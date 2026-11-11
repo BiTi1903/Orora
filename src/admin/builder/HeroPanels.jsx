@@ -1,5 +1,5 @@
 import HeroGlassSettings from "./HeroGlassSettings";
-import { SettingGroup } from "./ui";
+import { SettingGroup, StyleTypographyBlock } from "./ui";
 
 function HeroFieldSettings({ data, hero, onChange }) {
   if (!data || data.type === "heroEmpty") {
@@ -162,5 +162,10 @@ function HeroFieldSettings({ data, hero, onChange }) {
 }
 
 export function HeroSettings(props) {
-  return <><HeroFieldSettings {...props} /><HeroGlassSettings hero={props.hero} onChange={props.onChange} /></>;
+  const {hero,onChange,data}=props;
+  const style=(key,patch)=>onChange({heroStyles:{...hero.heroStyles,[key]:{...hero.heroStyles?.[key],...patch}}});
+  return <><HeroFieldSettings {...props} />{data?.type === "heroRotator" && <>
+   <StyleTypographyBlock title="Chữ trước / sau" style={hero.heroStyles?.rotator || {}} onStyleChange={patch=>style('rotator',patch)}/>
+   <StyleTypographyBlock title="Từ thay đổi — kiểu chữ và độ đậm" style={hero.heroStyles?.rotatorAccent || {}} onStyleChange={patch=>style('rotatorAccent',patch)}/>
+  </>}<HeroGlassSettings hero={props.hero} onChange={props.onChange} /></>;
 }

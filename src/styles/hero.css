@@ -22,8 +22,8 @@
     rgba(255, 245, 248, 1) 55%,
     #fffafc 100%
   );
-  /* --hero-bg do Hero.jsx gán từ ảnh admin; chưa có thì dùng gradient */
-  background-image: var(--hero-bg, var(--hero-fallback));
+  /* Responsive hero-media owns the real image; this gradient stays underneath. */
+  background-image: var(--hero-fallback);
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
@@ -235,7 +235,7 @@
 
 .rotator-box em {
   display: inline-block;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--rose);
   animation: wordIn 0.7s var(--ease) both;
 }
@@ -456,7 +456,7 @@
 @media (max-width: 600px) {
   .hero {
     /* ảnh mobile (nếu admin có đặt) → không thì ảnh desktop → không thì gradient */
-    background-image: var(--hero-bg-mobile, var(--hero-bg, var(--hero-fallback)));    background-size: cover;
+    background-image: var(--hero-fallback); background-size: cover;
     background-position: center center;
   }
 
@@ -495,3 +495,18 @@
  .hero .hero-letter,.hero-title::before { animation:none; }
  .hero .hero-letter { filter:none; }
 }
+
+/* Reserve the longest phrase so rotating words never resize the hero. */
+.hero-rotator { font-weight:400; line-height:1.35; }
+.rotator-box { display:inline-grid; height:1.35em; }
+.rotator-box > * { grid-area:1 / 1; }
+.rotator-measure { visibility:hidden; pointer-events:none; font-weight:500; font-style:italic; }
+.rotator-box em.is-initial { animation:none; }
+.hero[data-font-state="fallback"] .hero-content { font-family:Georgia,serif; }
+.hero[data-font-state="fallback"] :is(.hero-title,.hero-rotator,.hero-btn,.description,.small-text) { font-family:inherit; }
+
+/* Decode the actual image before a short opacity reveal; never replace the frame. */
+.hero-media { position:absolute; inset:0; z-index:0; pointer-events:none; opacity:0; transition:opacity .22s ease; }
+.hero-media.is-ready { opacity:1; }
+.hero-media img { display:block; width:100%; height:100%; object-fit:cover; object-position:center; }
+@media(prefers-reduced-motion:reduce) { .hero-media { transition:none; } }

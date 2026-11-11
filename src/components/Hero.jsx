@@ -1,3 +1,5 @@
+import useHeroFonts from "../hooks/useHeroFonts";
+import {toCss} from "../lib/typography";
 import {heroImageSources} from "../lib/image-cdn";
 import { useEffect, useState } from "react";
 import { Sparkles } from "./Extras";
@@ -16,9 +18,12 @@ function Hero({
   const cards = Array.isArray(c.heroGlassCards) ? c.heroGlassCards.filter((card) => card && typeof card.text === "string" && card.text.trim()) : [];
 
   const [i, setI] = useState(0);
+  const [paintedImage,setPaintedImage]=useState("");
+  const fontState=useHeroFonts();
+  const hs=c.heroStyles||{};
 
   useEffect(() => {
-    if (preview || words.length < 2) return;
+    if (preview || fontState === "pending" || words.length < 2) return;
 
     const t = setInterval(
       () => setI((v) => (v + 1) % words.length),
@@ -26,7 +31,7 @@ function Hero({
     );
 
     return () => clearInterval(t);
-  }, [words.length, preview]);
+  }, [words.length, preview,fontState]);
 
   const handleMove = (e) => {
     if (preview) return;
@@ -73,31 +78,26 @@ function Hero({
   const imageUrl=ready?sources.desktop:null;
   const imageMobileUrl=ready?sources.mobile:null;
 
-  // Preload đúng ảnh sẽ hiển thị (điện thoại chỉ tải ảnh mobile, không tải ảnh desktop)
-  useEffect(() => {
-    if (preview) return;
-    const isMobile = window.matchMedia("(max-width: 600px)").matches;
-    const src = (isMobile && imageMobileUrl) || imageUrl;
-    if (!src) return;
-    const img = new Image();
-    img.fetchPriority="high";
-    img.src = src;
-  }, [imageUrl, imageMobileUrl, preview]);
-
-  // Ảnh nền đi qua biến CSS để hero.css chọn ảnh theo bề rộng màn hình
-  const heroBgVars = {};
-  if (imageUrl) heroBgVars["--hero-bg"] = `url("${imageUrl}")`;
-  if (imageMobileUrl) heroBgVars["--hero-bg-mobile"] = `url("${imageMobileUrl}")`;
+  const imageKey=`${imageUrl || ''}|${imageMobileUrl || ''}`;
+  const revealImage=event=>{
+    const img=event.currentTarget;
+    const decoded=img.decode ? img.decode() : Promise.resolve();
+    decoded.then(()=>setPaintedImage(imageKey)).catch(()=>{if(img.naturalWidth)setPaintedImage(imageKey);});
+  };
 
   return (
     <section
+      data-font-state={fontState}
       className={`hero ${preview ? "hero--preview" : ""}`}
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
       onClick={preview ? select("image") : undefined}
       data-builder-key={preview ? "image" : undefined}
-            style={Object.keys(heroBgVars).length ? heroBgVars : undefined}
     >
+      {imageUrl && <picture key={imageKey} className={`hero-media${preview || paintedImage === imageKey ? " is-ready" : ""}`} aria-hidden="true">
+        {imageMobileUrl && <source media="(max-width: 600px)" srcSet={imageMobileUrl}/>}
+        <img src={imageUrl} alt="" loading="eager" fetchPriority="high" decoding="async" onLoad={revealImage}/>
+      </picture>}
       {!preview && <Sparkles />}
 
       {ready && <>
@@ -170,7 +170,7 @@ function Hero({
       {/* =========================
           NỘI DUNG HERO
       ========================= */}
-      <div className="hero-content" onClick={(e) => e.stopPropagation()}>
+      <div className="hero-content" style={{visibility:fontState === "pending" ? "hidden" : undefined}} onClick={(e) => e.stopPropagation()}>
         {typeof c.heroEyebrow === "string" && c.heroEyebrow.trim() && <p
           className={`small-text ${selectedClass("eyebrow")}`}
           data-builder-key={preview ? "eyebrow" : undefined}
@@ -213,10 +213,12 @@ function Hero({
           className={`hero-rotator ${selectedClass("rotator")}`}
           data-builder-key={preview ? "rotator" : undefined}
           onClick={select("rotator")}
+          style={toCss(hs.rotator,{responsive:true})}
         >
           {c.heroRotatorPrefix ?? "Làn da"}{" "}
           <span className="rotator-box">
-            <em key={preview ? previewWord : i}>
+            {words.map((word,index)=><span className="rotator-measure" aria-hidden="true" key={index} style={toCss(hs.rotatorAccent,{responsive:true})}>{word}</span>)}
+            <em key={preview ? previewWord : i} className={i===0 ? "is-initial" : undefined} style={toCss(hs.rotatorAccent,{responsive:true})}>
               {preview ? previewWord : words[i % words.length]}
             </em>
           </span>{" "}

@@ -654,6 +654,7 @@ function createHero(data = {}) {
     heroGlassCards: Array.isArray(data.heroGlassCards) ? data.heroGlassCards : [],
     heroRotatorPrefix: data.heroRotatorPrefix ?? DEFAULT_HERO.heroRotatorPrefix,
     heroRotatorSuffix: data.heroRotatorSuffix ?? DEFAULT_HERO.heroRotatorSuffix,
+    heroStyles: data.heroStyles || {},
     heroRotator:
       Array.isArray(data.heroRotator)
         ? data.heroRotator
@@ -840,6 +841,7 @@ function buildHomePayload({ about, hero, collection, productDetail, features, re
     heroRotator: hero.heroRotator,
     heroRotatorPrefix: hero.heroRotatorPrefix,
     heroRotatorSuffix: hero.heroRotatorSuffix,
+    heroStyles: hero.heroStyles || {},
     heroButtonText: hero.heroButtonText,
     heroButtonLink: hero.heroButtonLink,
     shopButtonText: hero.shopButtonText,

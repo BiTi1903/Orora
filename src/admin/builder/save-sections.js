@@ -3,7 +3,7 @@ const FIELDS = {
   productfaq: ["productFaq"],
   visibility: ["sectionVisibility"],
   navbar: ["navLogo", "navLinks", "navStyles"],
-  hero: ["heroEyebrow", "heroTitle", "heroDescription", "heroRotator", "heroRotatorPrefix", "heroRotatorSuffix", "heroButtonText", "heroButtonLink", "shopButtonText", "shopButtonLink", "heroImage", "heroImageMobile", "heroChip1", "heroChip2", "heroChip3", "heroGlassCards", "heroRingText", "heroScrollText"],
+  hero: ["heroEyebrow", "heroTitle", "heroDescription", "heroRotator", "heroRotatorPrefix", "heroRotatorSuffix", "heroStyles", "heroButtonText", "heroButtonLink", "shopButtonText", "shopButtonLink", "heroImage", "heroImageMobile", "heroChip1", "heroChip2", "heroChip3", "heroGlassCards", "heroRingText", "heroScrollText"],
   about: ["storyLabel", "storyTitle", "storyHighlight", "storyText", "storyImage", "storyImages", "storyStats", "aboutBuilder", "aboutStyles"],
   philosophy: ["philosophyLabel", "philosophyBody", "philosophyAccentCount", "philosophyStyles"],
   collection: ["collectionLabel", "collectionTitle", "collectionHighlight", "collectionStyles", "productCardStyles"],

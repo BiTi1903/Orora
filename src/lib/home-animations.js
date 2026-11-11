@@ -7,8 +7,8 @@ export function startHomeAnimations(root){
   const context=gsap.context(()=>{
    const below=selector=>Array.from(root.querySelectorAll(selector)).filter(node=>node.getBoundingClientRect().top>=window.innerHeight);
    // Never hide content that is already visible when this deferred module loads.
-   if(root.querySelector('.hero')&&window.matchMedia('(hover:hover) and (pointer:fine)').matches){
-    gsap.to('.hero',{backgroundPosition:'50% 70%',scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:1}});
+   if(root.querySelector('.hero-media img')&&window.matchMedia('(hover:hover) and (pointer:fine)').matches){
+    gsap.to('.hero-media img',{objectPosition:'50% 70%',scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:1}});
    }
    below('.collection').forEach(section=>{
     const label=section.querySelector('.collection-label'),titles=section.querySelectorAll('.collection-title-line');

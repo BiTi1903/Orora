@@ -21,7 +21,7 @@ test('first-screen copy is visible from the early shell and mobile uses the smal
  await expect(page.getByRole('heading',{name:'ORORA',exact:true})).toBeVisible();
  expect(await page.locator('.hero-letter').first().evaluate(node=>getComputedStyle(node).opacity)).toBe('1');
  expect(await page.locator('.description').evaluate(node=>getComputedStyle(node).animationName)).toBe('none');
- expect(await page.locator('.hero').evaluate(node=>getComputedStyle(node).backgroundImage)).toContain(page.viewportSize().width<=600?'w_900':'w_1920');await fit(page);
+ expect(await page.locator('.hero-media img').evaluate(node=>node.currentSrc)).toContain(page.viewportSize().width<=600?'w_900':'w_1920');await fit(page);
 });
 test('carousel controls are exposed to assistive tools and offscreen slides are inert',async({page})=>{
  const products=Array.from({length:5},(_,i)=>({id:String(i+1),number:String(i+1),name:`SP ${i+1}`,slug:`sp-${i+1}`,price:'100000',image:'',description:i===1?'Mô tả dài để kiểm tra các nút được căn cùng một hàng dù nội dung sản phẩm có nhiều dòng hơn sản phẩm khác.':''}));
