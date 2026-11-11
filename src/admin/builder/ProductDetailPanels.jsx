@@ -1,5 +1,3 @@
-import {productImages} from "../../lib/product-content";
-import ImageViewerSettings from "./ImageViewerSettings";
 import PurchaseOptionsSettings from "./PurchaseOptionsSettings";
 import ProductContactSettings from "./ProductContactSettings";
 import MobileImageSettings from "./MobileImageSettings";
@@ -12,7 +10,6 @@ export function ProductDetailSettings({
   selected,
   data,
   productDetail,
-  detailProduct,
   onChange,
   onStyleChange,
 }) {
@@ -177,7 +174,6 @@ export function ProductDetailSettings({
     );
     return (
       <>
-        <ImageViewerSettings images={productImages(detailProduct || {})} name={detailProduct?.name || "Sản phẩm xem trước"} value={layout.viewer || {}} onChange={patch=>onStyleChange({viewer:{...layout.viewer,...patch}})}/>
         <SettingGroup title="Khối ảnh (chính + phụ)">
           <small className="builder-help">
             Ngang / margin áp dụng cả khối (ảnh chính + ảnh phụ đi cùng).

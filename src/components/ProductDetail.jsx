@@ -16,7 +16,7 @@ import ConsultationDialog from "./ConsultationDialog";
 import OrderForm from "./OrderForm";
 import { formatProductPrice, parseVndPrice, purchaseChannelLabels, socialShopUrl } from "../lib/commerce";
 import { mobileImageVars } from "../lib/image-layout";
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getProduct } from "../lib/api";
 import useHomeContent from "../hooks/useHomeContent";
@@ -25,8 +25,6 @@ import { contactLinks } from "../lib/contact";
 import RelatedProductsSidebar from "./RelatedProductsSidebar";
 import { cdnSrc, THUMB } from "../lib/image-cdn";
 import { productMainImage } from "../lib/image-cdn";
-
-const ProductImageViewer=lazy(()=>import("./ProductImageViewer"));
 
 /* Giữ xuống dòng khi admin nhấn Enter — chèn <br /> thật, không phụ thuộc CSS */
 const renderLines = (text) =>
@@ -46,7 +44,6 @@ function ProductDetail({
   const navigate = useNavigate();
   const pageRef = useRef(null);
   const [orderProductId, setOrderProductId] = useState(null);
-  const [viewer,setViewer]=useState(null);
   const [purchaseSelection, setPurchaseSelection] = useState(null);
   const [consultationOpen, setConsultationOpen] = useState(false);
 
@@ -195,7 +192,6 @@ function ProductDetail({
 
   // Layout từ Visual Builder — ngang/margin/padding cả khối; dọc chỉ khung ảnh chính
   const imageLayout = ps.imageLayout || {};
-  const viewerSettings=imageLayout.viewer || {};
   const thumbsLayout = ps.thumbsLayout || {};
   const n = (v) => {
     const x = Number(v);
@@ -363,7 +359,6 @@ function ProductDetail({
             ) : (
               <div className="product-detail-image-placeholder" aria-hidden="true" />
             )}
-            {displaySrc && viewerSettings.enabled !== false && !preview && <button type="button" className="product-image-open" aria-label={viewerSettings.openLabel || "Phóng to ảnh"} onClick={()=>setViewer({key:galleryKey,src:displaySrc})}>{viewerSettings.showHint !== false && <span style={{...toCss(viewerSettings.controls),color:viewerSettings.controls?.color || viewerSettings.accent,background:viewerSettings.background,borderColor:viewerSettings.borderColor}}>{viewerSettings.openLabel || "Phóng to ảnh"}</span>}</button>}
           </div>
 
           {secondaryImages.length > 0 && (
@@ -526,7 +521,6 @@ function ProductDetail({
       </div>
 
 
-      {viewer?.key === galleryKey && viewerSettings.enabled !== false && <Suspense fallback={null}><ProductImageViewer images={images} name={product.name} initialIndex={Math.max(0,images.indexOf(viewer.src))} settings={viewerSettings} onClose={()=>setViewer(null)}/></Suspense>}
     </article>
   );
 }

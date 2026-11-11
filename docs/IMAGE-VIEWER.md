@@ -1,9 +1,0 @@
-# Product image viewer
-
-Tap/click the main product image to open a fullscreen viewer. It starts with the currently selected photo and does not reorder the product gallery. Swipe at 100% to move between images; pinch or double-tap to zoom, then drag to inspect the enlarged photo. Desktop supports wheel zoom, double-click, arrow keys, +/−, and 0 to reset. Navigation resets zoom. Escape and the close button return focus and restore the original scroll position. The native dialog keeps keyboard focus inside the viewer and shares the existing stacked body-scroll lock.
-
-Settings: Admin → Visual Builder → Chi tiết sản phẩm → select main image → Xem ảnh toàn màn hình. Toggle the feature, hint, and thumbnail strip; edit all text, maximum zoom (2–5×), background/text/button/border colors, radius, and heading/info/control typography including mobile sizes. The preview uses the selected product's actual photos, with a local fallback when there are none. Save the product-detail section to apply changes; configuration lives under `productDetailStyles.imageLayout.viewer` and follows existing safe nested saves. No product text or database data is rewritten by enabling the implementation.
-
-The viewer JS/CSS and high-resolution image are requested only after opening it. Main gallery images retain their existing responsive loading path. Image failures show editable copy with retry; navigation and closing remain available. Panning is clamped to the actual fitted image, including when resizing the viewport.
-
-Validation includes bounded zoom/pan geometry, settings normalization, native modal/focus/scroll restoration under React StrictMode, touch swipe/pinch/pan/double-tap, keyboard navigation, the selected-photo entry path, off switch, and editable admin preview at 320/390/768/1440px. Tests use local sample assets and mock APIs; no real orders, mail, or DB writes are sent.
