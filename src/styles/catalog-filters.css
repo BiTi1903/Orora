@@ -31,3 +31,21 @@
  .catalog-product-grid { gap:14px; }
 }
 @media(prefers-reduced-motion:reduce) { .catalog-product-grid .gallery-item { transition:none; } }
+
+/* A compact toolbar leaves the product photography as the focal point. */
+.catalog-toolbar { box-shadow:0 4px 20px #68243e05; }
+.catalog-view-switch { padding:3px; border:1px solid var(--catalog-border); border-radius:var(--catalog-radius); background:color-mix(in srgb,var(--catalog-accent) 4%,var(--catalog-bg)); gap:2px; }
+.catalog-view-switch button { border-color:transparent; background:transparent; min-height:38px; padding:8px 12px; }
+.catalog-view-switch button[aria-pressed="true"] { box-shadow:0 2px 5px #68243e12; }
+.catalog-filter-form :is(input,select):focus { border-color:var(--catalog-accent); }
+.catalog-pagination button { min-width:64px; }
+@media(max-width:768px) {
+ .catalog-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:12px; }
+ .catalog-filter-mobile { display:contents; }
+ .catalog-filter-mobile > button { min-width:82px; }
+ .catalog-filter-mobile > span { margin-left:auto; color:var(--plum-soft); }
+ .catalog-result-tools { width:100%; margin-top:0; }
+ .catalog-view-switch { margin-left:auto; }
+ .catalog-filter-sheet .catalog-filter-form { gap:16px 12px; }
+ .catalog-filter-sheet .catalog-filter-apply { position:sticky; bottom:0; box-shadow:0 -5px 16px #fff; }
+}

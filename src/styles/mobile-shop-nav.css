@@ -21,3 +21,15 @@
 .mobile-category-list p { font-size:14px; line-height:1.6; color:var(--plum-soft); }
 
 .mobile-shop-nav.is-preview [aria-current="page"] { color:var(--shop-nav-accent); }
+
+/* Keep the shopping navigation quiet, with one clear active destination. */
+.mobile-shop-nav > :is(a,button) { transition:color .18s ease,background-color .18s ease; -webkit-tap-highlight-color:transparent; }
+.mobile-shop-nav [aria-current="page"] svg { stroke-width:2; }
+.mobile-category-list button { align-items:center; min-height:54px; transition:background-color .18s ease,border-color .18s ease; }
+.mobile-category-list button:hover { background:color-mix(in srgb,var(--shop-nav-accent) 6%,var(--shop-nav-bg)); border-color:var(--shop-nav-accent); }
+.mobile-category-list button > span { display:grid; place-items:center; width:28px; height:28px; flex-shrink:0; border-radius:50%; background:color-mix(in srgb,var(--shop-nav-accent) 8%,transparent); }
+@media(max-width:768px) {
+ .mobile-shop-nav:not(.is-preview) { border-radius:20px 20px 0 0; padding-top:7px; box-shadow:0 -4px 20px #68243e09; }
+ .mobile-shop-nav [aria-current="page"] { background:color-mix(in srgb,var(--shop-nav-accent) 8%,transparent); }
+}
+@media(prefers-reduced-motion:reduce) { .mobile-shop-nav > :is(a,button),.mobile-category-list button { transition:none; } }
