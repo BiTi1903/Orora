@@ -26,7 +26,7 @@ test('catalog paginates a larger list and combines accent-free search, category 
   'hooks/useProducts.js':`export default function products(){return {products:${JSON.stringify(products)},loading:false}}`,
  });
  await expect(page.locator('.catalog-product-grid > div')).toHaveCount(12);await page.getByRole('button',{name:'Sau',exact:true}).click();await expect(page.locator('.catalog-product-grid > div')).toHaveCount(5);
- const controls=async()=>{if(page.viewportSize().width<=768){await page.getByRole('button',{name:'Bộ lọc',exact:true}).click();return page.getByRole('dialog',{name:'Bộ lọc',exact:true});}return page.locator('.catalog-filter-desktop');};
+ const controls=async()=>{await page.getByRole('button',{name:'Bộ lọc',exact:true}).click();return page.getByRole('dialog',{name:'Bộ lọc',exact:true});};
  let form=await controls();await form.getByRole('searchbox',{name:'Tìm sản phẩm',exact:true}).fill('duong sang');await form.getByRole('button',{name:'Áp dụng',exact:true}).click();await expect(page.locator('.catalog-product-grid > div')).toHaveCount(1);await expect(page.getByText('Dưỡng sáng',{exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Xóa bộ lọc',exact:true}).click();
  form=await controls();await form.getByRole('combobox',{name:'Danh mục',exact:true}).selectOption('clean');await form.getByLabel('Giá từ (đ)',{exact:true}).fill('300000');await form.getByLabel('Giá đến (đ)',{exact:true}).fill('200000');await form.getByRole('button',{name:'Áp dụng',exact:true}).click();await expect(form.getByRole('alert')).toContainText('Giá đến cần lớn hơn');

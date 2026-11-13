@@ -19,3 +19,13 @@
 .desktop-cart { display:flex; align-items:center; gap:6px; }
 body:has(dialog[open]) .desktop-cart { visibility:hidden; }
 @media(max-width:768px) { body:has(.mobile-shop-nav) .desktop-cart { display:none; } }
+.card-cart-button { display:flex; align-items:center; justify-content:center; width:44px; height:44px; flex:0 0 44px; padding:0; border:1px solid #e9cbd7; border-radius:50%; background:#fffafc; color:var(--rose-deep); box-shadow:none; }
+.card-cart-button svg { display:block; width:22px; height:22px; }
+.product-card-actions { align-items:center; }
+.cart-row { gap:10px; padding:12px 0; }
+.cart-row img { width:48px; height:58px; border-radius:8px; }
+.cart-row strong { font-size:14px; line-height:1.4; }
+.cart-row p { font-size:12px; margin:3px 0; }
+.cart-row input { width:52px; min-height:36px; padding:6px; font-size:16px; }
+.cart-row button { padding:7px 10px; min-height:36px; margin:3px; font-size:12px; }
+.shop-cart .orora-modal-content { padding:8px 16px 16px; }

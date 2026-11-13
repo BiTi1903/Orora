@@ -17,7 +17,7 @@ import OrderForm from "./OrderForm";
 import { formatProductPrice, parseVndPrice, purchaseChannelLabels, socialShopUrl } from "../lib/commerce";
 import { mobileImageVars } from "../lib/image-layout";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { getProduct } from "../lib/api";
 import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
@@ -40,6 +40,7 @@ function ProductDetail({
   selectedElement = "",
   onSelect,
 }) {
+  const cartLocation=useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
   const pageRef = useRef(null);
@@ -143,11 +144,13 @@ function ProductDetail({
   }
 
   const options = productVolumeOptions(product);
-  const selectionKey = JSON.stringify([product.id || product.slug || id, options]);
-  const choice = purchaseSelection?.key === selectionKey ? purchaseSelection : { variantId: "", quantity: 1 };
+  const selectionKey = JSON.stringify([product.id || product.slug || id, options, cartLocation.key]);
+  const incoming=cartLocation.state?.cartSelection;
+  const initialCart=incoming?.productId===product.id?{variantId:options.some(o=>o.id===incoming.variantId)?incoming.variantId:'',quantity:Number.isInteger(incoming.quantity)?Math.max(1,Math.min(20,incoming.quantity)):1}:{variantId:'',quantity:1};
+  const choice = purchaseSelection?.key === selectionKey ? purchaseSelection : initialCart;
   const variant = selectedVolumeOption(options, choice.variantId);
   const variantId = variant?.id || "";
-  const changeSelection = (patch) => setPurchaseSelection((previous) => ({ key: selectionKey, variantId, quantity: 1, ...(previous?.key === selectionKey ? previous : {}), ...patch }));
+  const changeSelection = (patch) => setPurchaseSelection((previous) => ({ key: selectionKey, variantId, quantity: choice.quantity, ...(previous?.key === selectionKey ? previous : {}), ...patch }));
   const displayedPrice = volumePriceText(product, variant);
   const purchase = ps.purchaseOptions || {};
   const channelLabels = purchaseChannelLabels(purchase);

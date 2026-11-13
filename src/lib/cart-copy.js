@@ -1,1 +1,1 @@
-export const CART_COPY={title:'Giỏ hàng',add:'Thêm vào giỏ',empty:'Giỏ hàng đang trống.',remove:'Xóa',order:'Đặt sản phẩm này',total:'Tạm tính',shipping:'Chưa gồm phí giao hàng',choose:'Chọn dung tích',added:'Đã thêm vào giỏ',label:'Giỏ hàng'};
+export const CART_COPY={title:'Giỏ hàng',add:'Thêm vào giỏ',empty:'Giỏ hàng đang trống.',remove:'Xóa',order:'Chi tiết',total:'Tạm tính',shipping:'Chưa gồm phí giao hàng',choose:'Chọn dung tích',added:'Đã thêm vào giỏ',label:'Giỏ hàng'};

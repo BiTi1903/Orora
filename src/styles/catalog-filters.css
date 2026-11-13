@@ -79,3 +79,21 @@
  .catalog-filter-sheet .catalog-filter-form :is(input,select):focus-visible { outline:2px solid var(--catalog-accent); outline-offset:1px; }
  .catalog-filter-sheet .catalog-filter-form .catalog-filter-apply { min-height:46px; border-radius:12px; margin-top:4px; font-size:14px; }
 }
+
+/* One compact trigger on every screen; basic filters live in the dialog. */
+.catalog-toolbar { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:12px; padding:0 0 14px; margin-bottom:16px; border:0; border-bottom:1px solid var(--catalog-border); border-radius:0; background:transparent; box-shadow:none; }
+.catalog-filter-mobile { display:contents; }
+.catalog-filter-mobile > button { min-height:44px; padding:10px 16px; background:var(--catalog-bg); }
+.catalog-filter-mobile > span { text-align:center; color:var(--plum-soft); font-size:13px; }
+.catalog-result-tools { display:contents; }
+.catalog-result-count { display:none; }
+.catalog-view-switch { grid-column:3; grid-row:1; margin:0; }
+.catalog-view-switch button span { display:none; }
+.catalog-view-switch button { width:38px; padding:8px; }
+.catalog-filter-clear { grid-column:1/-1; justify-self:start; border:0!important; background:transparent!important; padding:4px 0!important; }
+.catalog-filter-sheet { width:min(460px,calc(100% - 24px)); border-radius:20px; }
+.catalog-filter-sheet .catalog-filter-form { grid-template-columns:1fr 1fr; gap:14px 12px; }
+.catalog-filter-sheet label:has(input[type="search"]),.catalog-filter-sheet label:has(select[id$="-category"]),.catalog-filter-sheet label:has(select[id$="-sort"]),.catalog-filter-sheet .catalog-filter-apply { grid-column:1/-1; }
+.catalog-filter-sheet .catalog-filter-form :is(input,select) { min-height:44px; border-radius:10px; font-size:16px; }
+.catalog-filter-sheet .catalog-filter-form label { font-size:13px; }
+@media(max-width:768px) { .catalog-filter-sheet { width:100%; border-radius:20px 20px 0 0; } }

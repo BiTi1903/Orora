@@ -295,7 +295,7 @@ function Collection({
   const rawProducts=preview?sampleProducts||[]:liveProducts;
   const availableProducts=excludeId?rawProducts.filter(product=>product.id!==excludeId&&product.slug!==excludeId):rawProducts;
   const catalog=withProductIdentity(availableProducts);
-  const effectiveFilters=filtering?catalogFilters({...savedFilters,...(filterSettings.showSearch===false?{q:''}:{}),...(filterSettings.showPrice===false?{min:'',max:'',price:'all'}:{}),...(filterSettings.showVolume===false?{volume:''}:{}),...(filterSettings.showSort===false?{sort:'default'}:{})}):catalogFilters({category:categoryId});
+  const effectiveFilters=filtering?catalogFilters({...savedFilters,volume:'',price:'all',...(filterSettings.showSearch===false?{q:''}:{}),...(filterSettings.showPrice===false?{min:'',max:'',price:'all'}:{}),...(filterSettings.showVolume===false?{volume:''}:{}),...(filterSettings.showSort===false?{sort:'default'}:{})}):catalogFilters({category:categoryId});
   const products=filterCatalog(catalog,effectiveFilters);
   const requestedView=savedFilters.view==='auto'?(filterSettings.layout||'auto'):savedFilters.view;
   const grid=filtering&&(requestedView==='grid'||(requestedView==='auto'&&(activeCatalogFilters(effectiveFilters)>0||availableProducts.length>12)));

@@ -248,7 +248,7 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
             {styles.button?.text || "Xem chi tiết"}
             <span>↗</span>
           </ButtonWrap>
-          {productId&&cartSettings.enabled!==false&&styles.cartEnabled!==false&&<button type="button" className="card-cart-button" aria-label={cartSettings.copy?.add||styles.cartLabel||'Thêm vào giỏ'} onClick={e=>{if(preview)return;e.stopPropagation();const r=e.currentTarget.getBoundingClientRect();window.dispatchEvent(new CustomEvent('orora-cart-add',{detail:{id:productId,source:{x:r.x,y:r.y}}}));}}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 3h2l3 12h10l3-9H6M9 20h.01M18 20h.01M12 8h6m-3-3v6"/></svg></button>}
+          {productId&&cartSettings.enabled!==false&&styles.cartEnabled!==false&&<button type="button" className="card-cart-button" aria-label={cartSettings.copy?.add||styles.cartLabel||'Thêm vào giỏ'} onClick={e=>{if(preview)return;e.stopPropagation();const r=e.currentTarget.getBoundingClientRect();window.dispatchEvent(new CustomEvent('orora-cart-add',{detail:{id:productId,source:{x:r.x,y:r.y}}}));}}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 3h2l3 12h10l3-9H6"/><circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/></svg></button>}
           </div>
         </div>
       </div>
