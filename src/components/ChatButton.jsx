@@ -22,25 +22,31 @@ function ChatButton() {
   const settings = chatSettings({ ...conversation.metadata?.settings, ...home.chatSettings });
   const button = useRef(null);
   const drag = useRef(null);
+  const dockSide=useRef('right');
   const suppressClick = useRef(false);
   const [position, setPosition] = useState(null);
   const [dragging, setDragging] = useState(false);
   const clamp = (next) => {
-    const rect = button.current.getBoundingClientRect();
+    const rect = {width:button.current.offsetWidth,height:button.current.offsetHeight};
     const view = window.visualViewport;
-    return clampFloatingPosition(next, { width: view?.width || window.innerWidth, height: view?.height || window.innerHeight, offsetLeft: view?.offsetLeft || 0, offsetTop: view?.offsetTop || 0 }, rect);
+    const back=document.querySelector('.back-to-top');const reserved=document.documentElement.classList.contains('has-mobile-shop-nav')?(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-shop-nav-height'))||64):0;
+    const limit=back?window.innerHeight-(parseFloat(getComputedStyle(back).bottom)||0)-back.offsetHeight-12:(view?.height||window.innerHeight)-reserved-84;
+    return clampFloatingPosition(next, { width: view?.width || window.innerWidth, height: Math.max(rect.height+24,Math.min(view?.height||window.innerHeight,limit-(view?.offsetTop||0))), offsetLeft: view?.offsetLeft || 0, offsetTop: view?.offsetTop || 0 }, rect);
   };
   useEffect(() => {
     const onResize = () => {
-      if (button.current) setPosition((current) => current ? clamp(current) : null);
+      if (button.current) setPosition((current) => current ? clamp({...current,x:dockSide.current==='left'?-10000:10000}) : null);
     };
+    const frame=requestAnimationFrame(()=>{if(button.current){const r=button.current.getBoundingClientRect();setPosition(clamp({x:r.left,y:r.top}));}});
     window.addEventListener("resize", onResize);
     window.visualViewport?.addEventListener("resize", onResize);
-    return () => { window.removeEventListener("resize", onResize); window.visualViewport?.removeEventListener("resize", onResize); };
-  }, []);
+    return () => { cancelAnimationFrame(frame);window.removeEventListener("resize", onResize); window.visualViewport?.removeEventListener("resize", onResize); };
+  }, [home.loading,settings.enabled]);
   const finishDrag = (event) => {
     if (!drag.current || event.pointerId !== drag.current.pointerId) return;
     suppressClick.current = drag.current.moved;
+    if(drag.current.moved){const dx=event.clientX-drag.current.startX;dockSide.current=Math.abs(dx)>60?(dx>0?'right':'left'):dockSide.current;setPosition(current=>current?clamp({...current,x:dockSide.current==='left'?-10000:10000}):current);}
+    button.current?.style.removeProperty('--chat-stretch');
     drag.current = null;
     setDragging(false);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
@@ -48,7 +54,7 @@ function ChatButton() {
   const close = useCallback(() => { setHintEpoch(Date.now());setOpen(false); requestAnimationFrame(() => button.current?.focus({ preventScroll: true })); }, []);
   if (home.loading || !settings.enabled) return null;
   return (
-    <><div className="orora-chat-launcher" style={position ? { left: position.x, top: position.y, right: "auto", bottom: "auto" } : undefined}><button type="button"
+    <><div className={`orora-chat-launcher${dragging?' is-dragging':''}`} style={position ? { left: position.x, top: position.y, right: "auto", bottom: "auto" } : undefined}><button type="button"
       ref={button}
       className={`chat-button${position ? " is-positioned" : ""}${dragging ? " is-dragging" : ""}`}
       onDragStart={(event) => event.preventDefault()}
@@ -67,7 +73,8 @@ function ChatButton() {
         if (!current.moved && Math.hypot(dx, dy) < 8) return;
         current.moved = true;
         setDragging(true);
-        setPosition(clamp({ x: current.x + dx, y: current.y + dy }));
+        button.current.style.setProperty('--chat-stretch',String(home.navStyles?.surfaces?.chatStretch===false?1:1+Math.min(Math.abs(dx)/180,.45)));
+        setPosition(clamp({ x: current.x + dx*.6, y: current.y + dy }));
       }}
       onPointerUp={finishDrag}
       onPointerCancel={finishDrag}

@@ -9,6 +9,7 @@ export default function MobileNavSettings({navbar,onChange}){
  const edit=(index,next)=>patch({items:items.map((item,i)=>i===index?{...item,...next}:item)});
  return <SettingGroup title="Thanh điều hướng dưới — mobile">
   <label className="admin-check"><input type="checkbox" checked={value.enabled!==false} onChange={event=>patch({enabled:event.target.checked})}/>Hiện thanh cố định dưới màn hình điện thoại</label>
+  <label className="admin-check"><input type="checkbox" checked={value.spin!==false} onChange={e=>patch({spin:e.target.checked})}/>Xoay icon khi nhấn mục trên thanh dưới</label>
   <div className="builder-field">
    {items.map((item,index)=><fieldset key={index} style={{margin:'12px 0',padding:12,border:'1px solid #efd7e1',borderRadius:12}}><legend>Mục {index+1}</legend>
     <label>Tên hiển thị<input value={item.label||''} maxLength={80} onChange={e=>edit(index,{label:e.target.value})}/></label>
@@ -24,12 +25,13 @@ export default function MobileNavSettings({navbar,onChange}){
   <details><summary>Giỏ hàng — nội dung và kiểu hiển thị</summary>
    <label><input type="checkbox" checked={navbar.navStyles?.cart?.enabled!==false} onChange={e=>onChange({navStyles:{...navbar.navStyles,cart:{...navbar.navStyles?.cart,enabled:e.target.checked}}})}/>Hiện giỏ hàng</label>
    <label><input type="checkbox" checked={navbar.navStyles?.cart?.animation!==false} onChange={e=>onChange({navStyles:{...navbar.navStyles,cart:{...navbar.navStyles?.cart,animation:e.target.checked}}})}/>Hiệu ứng bay và nảy vào giỏ</label>
+   <label><input type="checkbox" checked={navbar.navStyles?.cart?.backgroundScroll!==false} onChange={e=>onChange({navStyles:{...navbar.navStyles,cart:{...navbar.navStyles?.cart,backgroundScroll:e.target.checked}}})}/>Cho phép cuộn nền khi mở giỏ</label>
    {Object.entries(CART_COPY).map(([key,fallback])=><label key={key}>{fallback}<input value={navbar.navStyles?.cart?.copy?.[key]??fallback} onChange={e=>onChange({navStyles:{...navbar.navStyles,cart:{...navbar.navStyles?.cart,copy:{...navbar.navStyles?.cart?.copy,[key]:e.target.value}}}})}/></label>)}
    <StyleTypographyBlock title="Chữ trong giỏ hàng" style={navbar.navStyles?.cart?.text||{}} onStyleChange={patch=>onChange({navStyles:{...navbar.navStyles,cart:{...navbar.navStyles?.cart,text:{...navbar.navStyles?.cart?.text,...patch}}}})}/>
   </details>
   <details><summary>Hiệu ứng kính — nút và khung toàn trang</summary>
    <div style={{padding:20,borderRadius:16,background:'linear-gradient(120deg,#f5b8ce,#e5dff4,#fff4f8)'}}><div style={{padding:16,borderRadius:14,border:'1px solid #ffffffbb',background:`rgb(255 250 252 / ${Math.max(45,Math.min(100,Number(navbar.navStyles?.surfaces?.opacity??78)))}%)`,backdropFilter:`blur(${Number(navbar.navStyles?.surfaces?.blur??18)}px)`,boxShadow:'inset 0 1px 0 white,0 4px 18px #68243e12'}}>Xem trước chất liệu kính</div></div>
-   {[['header','Navbar trên'],['chat','Nút chat'],['top','Nút lên đầu'],['tabs','Thanh thông tin sản phẩm'],['close','Nút đóng popup'],['buttons','Tất cả nút trên trang khách'],['frames','Các khung nội dung trên trang khách']].map(([key,label])=><label className="admin-check" key={key}><input type="checkbox" checked={navbar.navStyles?.surfaces?.[key]!==false} onChange={e=>onChange({navStyles:{...navbar.navStyles,surfaces:{...navbar.navStyles?.surfaces,[key]:e.target.checked}}})}/>{label}</label>)}
+   {[['header','Navbar trên'],['chat','Nút chat'],['top','Nút lên đầu'],['tabs','Thanh thông tin sản phẩm'],['close','Nút đóng popup'],['chatStretch','Kéo giãn nút chat như giọt nước'],['buttons','Tất cả nút trên trang khách'],['frames','Các khung nội dung trên trang khách']].map(([key,label])=><label className="admin-check" key={key}><input type="checkbox" checked={navbar.navStyles?.surfaces?.[key]!==false} onChange={e=>onChange({navStyles:{...navbar.navStyles,surfaces:{...navbar.navStyles?.surfaces,[key]:e.target.checked}}})}/>{label}</label>)}
    {[['opacity','Độ đục (%)',78,45,100],['blur','Độ mờ nền (px)',18,0,30],['frameBlur','Độ mờ khung nội dung (px)',6,0,10]].map(([key,label,fallback,min,max])=><label key={key}>{label}<input type="number" min={min} max={max} value={navbar.navStyles?.surfaces?.[key]??fallback} onChange={e=>onChange({navStyles:{...navbar.navStyles,surfaces:{...navbar.navStyles?.surfaces,[key]:Number(e.target.value)}}})}/></label>)}
   </details>
   <details><summary>Nội dung và giao diện thanh dưới</summary>

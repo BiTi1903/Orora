@@ -76,7 +76,7 @@ function Navbar({
     const previous = body.style.overflow;
     body.style.overflow = "hidden";
     const ownerDocument = nav.ownerDocument;
-    ownerDocument.querySelector(".drawer-close")?.focus();
+    drawerRef.current?.querySelector('a[href],summary')?.focus();
     const onEscape = (event) => {
       if (ownerDocument.querySelector('dialog:modal')) return;
       if (event.key === "Escape") { event.preventDefault();setMenuPath(null);return; }
@@ -158,7 +158,7 @@ function Navbar({
           <Link to="/" className="logo" onClick={closeMenu}>
             {logo}<span></span>
           </Link>
-          <button type="button" className="drawer-close" aria-label="Đóng menu" onClick={closeMenu}>×</button>
+
         </div>
 
         <nav key={menuOpen ? "open" : "closed"} className="mobile-drawer-links">

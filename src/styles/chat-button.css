@@ -415,3 +415,10 @@
 @media(max-width:768px) {
  .orora-chat-launcher { right:16px; bottom:calc(112px + env(safe-area-inset-bottom,0px)); width:52px; height:52px; }
 }
+.orora-chat-launcher { transition:left .5s cubic-bezier(.22,.9,.3,1),top .4s ease; }
+.orora-chat-launcher.is-dragging { transition:none; }
+.orora-chat-launcher > .chat-button { transform:scaleX(var(--chat-stretch,1)) scaleY(calc(1 / var(--chat-stretch,1))); transition:transform .45s cubic-bezier(.2,.85,.25,1.2),border-radius .3s,box-shadow .3s; }
+.orora-chat-launcher.is-dragging > .chat-button { border-radius:45% 55% 55% 45%; box-shadow:0 6px 22px #68243e28,inset 0 1px 0 #ffffffb3; }
+@media(min-width:769px) { .orora-chat-launcher { bottom:172px; } }
+@media(max-width:768px) { .orora-chat-launcher { bottom:calc(148px + env(safe-area-inset-bottom,0px)); } }
+@media(prefers-reduced-motion:reduce) { .orora-chat-launcher,.orora-chat-launcher > .chat-button { transition:none; } .orora-chat-launcher > .chat-button { transform:none; } }

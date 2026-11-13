@@ -1,0 +1,7 @@
+import {test,expect} from '@playwright/test';
+import {mount,render} from './fixtures';
+test('chat stays fixed while scrolling, stretches on drag and settles at either edge',async({page})=>{
+ await mount(page,`import Chat from '/src/components/ChatButton.jsx';import Top from '/src/components/BackToTop.jsx';${render("R.createElement(R.Fragment,null,R.createElement('main',{style:{height:2500}},R.createElement(Top)),R.createElement(Chat))")}`,{'hooks/useHomeContent.js':'export default function home(){return {loading:false,chatSettings:{hintEnabled:false}}}','hooks/useChatConversation.js':'export default function chat(){return {metadata:{}}}'});
+ const chat=page.getByRole('button',{name:'Chat với ORORA',exact:true});await expect(chat).toBeVisible();await expect(chat).toHaveClass(/is-positioned/);const original=await chat.boundingBox();await page.evaluate(()=>scrollTo(0,300));await expect.poll(async()=>Math.abs((await chat.boundingBox()).y-original.y)).toBeLessThan(2);
+ for(const side of ['left','right']){const r=await chat.boundingBox(),direction=side==='left'?-1:1;await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.down();await page.mouse.move(r.x+r.width/2+direction*85,r.y+r.height/2,{steps:8});await expect(chat).toHaveClass(/is-dragging/);expect(await chat.evaluate(el=>Number(el.style.getPropertyValue('--chat-stretch')))).toBeGreaterThan(1);await page.mouse.up();await expect.poll(async()=>{const b=await chat.boundingBox();return Math.abs(side==='left'?b.x-12:page.viewportSize().width-b.x-b.width-12)}).toBeLessThan(2);}
+});
