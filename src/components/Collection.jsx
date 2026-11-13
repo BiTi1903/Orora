@@ -202,7 +202,7 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
             inert={i < index || i >= index + perView}
             key={`${product.id}-${i}`}
           >
-            <ProductCard
+            <ProductCard productId={product.id}
               image={product.image}
               image2={product.image2}
               image3={product.image3}
@@ -360,7 +360,7 @@ function Collection({
     ? toCss(headStyles.header, { responsive: true })
     : undefined;
 
-  const card=product=><ProductCard image={product.image} number={productNumber(product,catalog)} name={product.name} description={product.description} price={catalogPriceLabel(product,filterSettings)} slug={productSlug(product,catalog)} styles={cardStyles} preview={preview} selectedElement={selectedElement} onSelect={onSelect} keyMap={keyMap} groupLayout/>;
+  const card=product=><ProductCard productId={product.id} image={product.image} number={productNumber(product,catalog)} name={product.name} description={product.description} price={catalogPriceLabel(product,filterSettings)} slug={productSlug(product,catalog)} styles={cardStyles} preview={preview} selectedElement={selectedElement} onSelect={onSelect} keyMap={keyMap} groupLayout/>;
   return (
     <section
       className={`collection ${preview ? "collection--preview" : ""} ${className} ${selectedClass(k("colSection"))}`.trim()}

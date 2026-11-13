@@ -1,4 +1,4 @@
-import {useLayoutEffect,useRef} from 'react';
+import {useEffect,useState,useLayoutEffect,useRef} from 'react';
 import {Link,useLocation} from 'react-router-dom';
 import useHomeContent from '../hooks/useHomeContent';
 import {sectionIsEnabled} from '../lib/page-sections';
@@ -12,8 +12,11 @@ function Icon({kind}){
 export default function MobileShopNav({preview=false,previewData}){
  const live=useHomeContent(),home=preview&&previewData?previewData:live;
  const s=mobileNavSettings(home.navStyles?.mobile),location=useLocation();
+ const [cartCount,setCartCount]=useState(()=>{try{const rows=JSON.parse(localStorage.getItem('orora-cart-v1'));return Array.isArray(rows)?rows.reduce((n,r)=>n+(Number.isInteger(r?.quantity)&&r.quantity>0&&r.quantity<=20?r.quantity:0),0):0;}catch{return 0;}});
+ useEffect(()=>{const update=e=>setCartCount(Number(e.detail)||0);window.addEventListener('orora-cart-count',update);return()=>window.removeEventListener('orora-cart-count',update);},[]);
  const nav=useRef(null),gesture=useRef(null),suppressClick=useRef(0);
  const items=mobileNavItems(s);
+ if(home.navStyles?.cart?.enabled!==false)items.push({id:'cart',icon:'products',to:'/#cart',label:home.navStyles?.cart?.copy?.label||'Giỏ hàng'});
  const enabled=s.enabled!==false&&sectionIsEnabled(home,'navbar')&&!location.pathname.startsWith('/admin')&&(!home.loading||home.shellReady)&&items.length>0;
  useLayoutEffect(()=>{
   if(preview)return;
@@ -37,7 +40,7 @@ export default function MobileShopNav({preview=false,previewData}){
   <nav onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={reset} onClickCapture={e=>{if(Date.now()<suppressClick.current){e.preventDefault();e.stopPropagation();}}} ref={nav} className={`mobile-shop-nav${preview?' is-preview':''}`} aria-label={s.title} style={{...mobileNavTheme(s),gridTemplateColumns:`repeat(${items.length},minmax(0,1fr))`}}>
    {items.map(item=>{
     const internal=item.to.startsWith('/'),Tag=internal?Link:'a';
-    return <Tag key={item.id} {...(internal?{to:preview?'#':item.to}:{href:preview?'#':item.to})} onClick={event=>{if(preview){event.preventDefault();return;}if(item.to==='/')window.scrollTo({top:0,left:0,behavior:'instant'});if(internal&&item.to.startsWith('/#')&&location.pathname==='/')document.getElementById(item.to.slice(2))?.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}} aria-current={location.pathname+location.hash===item.to?'page':undefined}><Icon kind={item.icon}/><span style={toCss(s.textStyle)}>{item.label}</span></Tag>;
+    return <Tag key={item.id} data-cart-target={item.id==='cart'?'':undefined} {...(internal?{to:preview?'#':item.to}:{href:preview?'#':item.to})} onClick={event=>{if(preview){event.preventDefault();return;}if(item.id==='cart'){event.preventDefault();window.dispatchEvent(new Event('orora-cart-open'));return;}if(item.to==='/')window.scrollTo({top:0,left:0,behavior:'instant'});if(internal&&item.to.startsWith('/#')&&location.pathname==='/')document.getElementById(item.to.slice(2))?.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}} aria-current={location.pathname+location.hash===item.to?'page':undefined}><Icon kind={item.icon}/>{item.id==='cart'&&cartCount>0&&<sup className="cart-count">{cartCount}</sup>}<span style={toCss(s.textStyle)}>{item.label}</span></Tag>;
    })}
   </nav>
 

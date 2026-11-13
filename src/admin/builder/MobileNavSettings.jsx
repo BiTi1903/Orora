@@ -1,3 +1,4 @@
+import {CART_COPY} from '../../lib/cart-copy';
 import {SettingGroup,StyleTypographyBlock,ColorField} from './ui';
 import {NAV_TARGETS,NAV_ICONS,mobileNavItems,mobileNavSettings} from '../../lib/mobile-shop-nav';
 import MobileShopNav from '../../components/MobileShopNav';
@@ -20,6 +21,12 @@ export default function MobileNavSettings({navbar,onChange}){
    </fieldset>)}
    <button type="button" disabled={items.length>=6} onClick={()=>patch({items:[...items,{label:'Email',target:'email',icon:'email'}]})}>Thêm mục</button>
   </div>
+  <details><summary>Giỏ hàng — nội dung và kiểu hiển thị</summary>
+   <label><input type="checkbox" checked={navbar.navStyles?.cart?.enabled!==false} onChange={e=>onChange({navStyles:{...navbar.navStyles,cart:{...navbar.navStyles?.cart,enabled:e.target.checked}}})}/>Hiện giỏ hàng</label>
+   <label><input type="checkbox" checked={navbar.navStyles?.cart?.animation!==false} onChange={e=>onChange({navStyles:{...navbar.navStyles,cart:{...navbar.navStyles?.cart,animation:e.target.checked}}})}/>Hiệu ứng bay và nảy vào giỏ</label>
+   {Object.entries(CART_COPY).map(([key,fallback])=><label key={key}>{fallback}<input value={navbar.navStyles?.cart?.copy?.[key]??fallback} onChange={e=>onChange({navStyles:{...navbar.navStyles,cart:{...navbar.navStyles?.cart,copy:{...navbar.navStyles?.cart?.copy,[key]:e.target.value}}}})}/></label>)}
+   <StyleTypographyBlock title="Chữ trong giỏ hàng" style={navbar.navStyles?.cart?.text||{}} onStyleChange={patch=>onChange({navStyles:{...navbar.navStyles,cart:{...navbar.navStyles?.cart,text:{...navbar.navStyles?.cart?.text,...patch}}}})}/>
+  </details>
   <details><summary>Kính trên các thành phần mobile</summary>
    <div style={{padding:20,borderRadius:16,background:'linear-gradient(120deg,#f5b8ce,#e5dff4,#fff4f8)'}}><div style={{padding:16,borderRadius:14,border:'1px solid #ffffffbb',background:`rgb(255 250 252 / ${Math.max(45,Math.min(100,Number(navbar.navStyles?.surfaces?.opacity??78)))}%)`,backdropFilter:`blur(${Number(navbar.navStyles?.surfaces?.blur??18)}px)`,boxShadow:'inset 0 1px 0 white,0 4px 18px #68243e12'}}>Xem trước chất liệu kính</div></div>
    {[['header','Navbar trên'],['chat','Nút chat'],['top','Nút lên đầu'],['tabs','Thanh thông tin sản phẩm'],['close','Nút đóng popup']].map(([key,label])=><label className="admin-check" key={key}><input type="checkbox" checked={navbar.navStyles?.surfaces?.[key]!==false} onChange={e=>onChange({navStyles:{...navbar.navStyles,surfaces:{...navbar.navStyles?.surfaces,[key]:e.target.checked}}})}/>{label}</label>)}

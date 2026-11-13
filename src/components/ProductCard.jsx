@@ -1,3 +1,4 @@
+import useHomeContent from '../hooks/useHomeContent';
 import { formatProductPrice } from "../lib/commerce";
 import { mobileImageVars } from "../lib/image-layout";
 import { useRef } from "react";
@@ -8,6 +9,7 @@ import { cdnSrc, CARD } from "../lib/image-cdn";
 import { prepareProductDetail } from "../lib/product-navigation";
 
 function ProductCard({
+  productId,
   image,
   number,
   name,
@@ -23,6 +25,7 @@ function ProductCard({
     /* true = ngang/margin áp dụng cả thẻ (ảnh + tên + mô tả + giá đi cùng) */
   groupLayout = false,
 }) {
+  const cartSettings=useHomeContent().navStyles?.cart||{};
   const frameRef = useRef(null);
   const k = (name) => keyMap?.[name] || name;
 
@@ -234,6 +237,7 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
             {formatProductPrice(price)}
           </span>
 
+          <div className="product-card-actions">
           <ButtonWrap
             {...buttonProps}
             className={`buy-button ${selectedClass(k("cardButton"))}`}
@@ -244,6 +248,8 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
             {styles.button?.text || "Xem chi tiết"}
             <span>↗</span>
           </ButtonWrap>
+          {productId&&cartSettings.enabled!==false&&styles.cartEnabled!==false&&<button type="button" className="card-cart-button" aria-label={cartSettings.copy?.add||styles.cartLabel||'Thêm vào giỏ'} onClick={e=>{if(preview)return;e.stopPropagation();const r=e.currentTarget.getBoundingClientRect();window.dispatchEvent(new CustomEvent('orora-cart-add',{detail:{id:productId,source:{x:r.x,y:r.y}}}));}}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 3h2l3 12h10l3-9H6M9 20h.01M18 20h.01M12 8h6m-3-3v6"/></svg></button>}
+          </div>
         </div>
       </div>
     </div>
