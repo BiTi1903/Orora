@@ -427,3 +427,4 @@
 
 /* Conversation text uses an opaque surface, independent of glass controls. */
 .orora-chat-panel { background:#fffafc; backdrop-filter:none; -webkit-backdrop-filter:none; }
+@media(max-width:768px) { .orora-chat-hint { max-width:min(180px,calc(100vw - 32px)); } .orora-chat-hint-message { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:12px; line-height:1.4; } }
