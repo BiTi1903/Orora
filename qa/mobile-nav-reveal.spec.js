@@ -1,0 +1,9 @@
+import {test,expect} from '@playwright/test';
+import {mount,render} from './fixtures';
+test('mobile nav waits until ticker is passed and no desktop cart flashes on mobile',async({page})=>{
+ await mount(page,`import Nav from '/src/components/MobileShopNav.jsx';import Cart from '/src/components/ShopCart.jsx';${render("R.createElement(R.Fragment,null,R.createElement('main',null,R.createElement('section',{className:'hero',style:{height:600}},'Hero'),R.createElement('div',{className:'marquee',style:{height:50}},'Dải chữ'),R.createElement('div',{style:{height:2800}},'Nội dung')),R.createElement(Cart),R.createElement(Nav))")}`,{'hooks/useHomeContent.js':'export default function home(){return {loading:false}}','hooks/useProducts.js':'export default function products(){return {products:[],loading:false}}'});
+ const nav=page.locator('.mobile-shop-nav');
+ if(page.viewportSize().width>768){await expect(nav).toBeHidden();await expect(page.locator('.desktop-cart')).toBeVisible();return;}
+ await expect(page.locator('.desktop-cart')).toBeHidden();await expect(nav).toBeHidden();expect(await page.evaluate(()=>document.documentElement.classList.contains('has-mobile-shop-nav'))).toBe(false);
+ const boundary=await page.locator('.marquee').evaluate(el=>el.getBoundingClientRect().bottom+window.scrollY);await page.evaluate(y=>window.scrollTo(0,y-10),boundary);await expect(nav).toBeHidden();await page.evaluate(y=>window.scrollTo(0,y+10),boundary);await expect(nav).toBeVisible();await expect.poll(()=>page.evaluate(()=>document.documentElement.classList.contains('has-mobile-shop-nav'))).toBe(true);await page.evaluate(()=>window.scrollTo(0,0));await expect(nav).toBeHidden();await expect(page.locator('.desktop-cart')).toBeHidden();
+});

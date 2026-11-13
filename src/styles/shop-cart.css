@@ -73,3 +73,5 @@ body:has(dialog[open]) .desktop-cart { visibility:hidden; }
  .gallery-item .card-cart-button { width:36px; height:40px; flex-basis:36px; min-height:40px; }
  .gallery-item .card-cart-button svg { width:20px; height:20px; }
 }
+/* Never paint the desktop cart launcher on mobile, even before nav mounts. */
+@media(max-width:768px) { .desktop-cart { display:none!important; } }
