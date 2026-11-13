@@ -64,3 +64,18 @@
  .catalog-view-switch button[aria-pressed="true"] { box-shadow:none; }
  .catalog-filter-clear { grid-column:1/-1; justify-self:start; padding:4px 0!important; min-height:32px!important; border:0!important; background:transparent!important; }
 }
+
+@media(max-width:768px) {
+ .catalog-filter-sheet { inset:auto 0 0; width:100%; max-height:86dvh; border-radius:22px 22px 0 0; border:0; box-shadow:0 -12px 48px #481a3020; }
+ .catalog-filter-sheet::backdrop { background:#32162645; }
+ .catalog-filter-sheet .orora-modal-heading { padding:16px 18px 12px; }
+ .catalog-filter-sheet .orora-modal-heading h2 { font:600 18px/1.3 var(--font-body); }
+ .catalog-filter-sheet .orora-modal-heading button { width:32px; height:32px; min-height:32px; border:0; background:#faeef3; }
+ .catalog-filter-sheet .orora-modal-content { padding:14px 18px 18px; }
+ .catalog-filter-sheet .catalog-filter-form { gap:12px; }
+ .catalog-filter-sheet .catalog-filter-form label { gap:5px; font-size:12px; }
+ .catalog-filter-sheet .catalog-filter-form :is(input,select) { min-height:44px; padding:10px; border-radius:10px; font-size:16px; background:#fff; }
+ .catalog-filter-sheet .catalog-filter-form label:has(input[type="search"]),.catalog-filter-sheet .catalog-filter-form label:has(select[id$="-price"]),.catalog-filter-sheet .catalog-filter-form label:has(select[id$="-sort"]) { grid-column:1/-1; }
+ .catalog-filter-sheet .catalog-filter-form :is(input,select):focus-visible { outline:2px solid var(--catalog-accent); outline-offset:1px; }
+ .catalog-filter-sheet .catalog-filter-form .catalog-filter-apply { min-height:46px; border-radius:12px; margin-top:4px; font-size:14px; }
+}
