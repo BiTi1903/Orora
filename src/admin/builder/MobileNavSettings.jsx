@@ -39,7 +39,7 @@ export default function MobileNavSettings({navbar,onChange}){
   <details><summary>Nội dung và giao diện thanh dưới</summary>
    <label><input type="checkbox" checked={value.glass!==false} onChange={e=>patch({glass:e.target.checked})}/>Hiệu ứng kính trong suốt</label>
    <label><input type="checkbox" checked={value.swipe!==false} onChange={e=>patch({swipe:e.target.checked})}/>Vuốt ngang để chọn mục — kính chạy theo ngón tay</label>
-   <label>Viền khúc sắc của bong bóng kính (0–1)<input type="number" min="0" max="1" step="0.05" value={value.rimOpacity??.65} onChange={e=>patch({rimOpacity:Number(e.target.value)})}/></label>
+   <label>Viền khúc sắc của bong bóng kính (0–1)<input type="number" min="0" max="1" step="0.05" value={value.rimOpacity??.8} onChange={e=>patch({rimOpacity:Number(e.target.value)})}/></label>
    <label>Độ kéo giãn kính như giọt nước (0–2)<input type="number" min="0" max="2" step="0.1" value={value.liquidStretch??1} onChange={e=>patch({liquidStretch:Number(e.target.value)})}/></label>
    <label>Mức hiệu ứng icon (0–2)<input type="number" min="0" max="2" step="0.1" value={value.iconEffect??1} onChange={e=>patch({iconEffect:Number(e.target.value)})}/></label>
    {[['opacity','Độ đục của kính (%)',76,35,100],['blur','Độ mờ nền (px)',20,0,32],['radius','Bo góc (px)',24,0,32]].map(([key,label,fallback,min,max])=><label key={key}>{label}<input type="number" min={min} max={max} value={value[key]??fallback} onChange={e=>patch({[key]:Number(e.target.value)})}/></label>)}
