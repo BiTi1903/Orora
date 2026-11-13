@@ -428,3 +428,6 @@
 /* Conversation text uses an opaque surface, independent of glass controls. */
 .orora-chat-panel { background:#fffafc; backdrop-filter:none; -webkit-backdrop-filter:none; }
 @media(max-width:768px) { .orora-chat-hint { max-width:min(180px,calc(100vw - 32px)); } .orora-chat-hint-message { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:12px; line-height:1.4; } }
+/* The hint is a single bubble; its clickable children have no extra surface. */
+.orora-chat-hint :is(.orora-chat-hint-message,.orora-chat-hint-close) { background:transparent; border:0; box-shadow:none; }
+.orora-chat-hint { box-shadow:0 4px 14px #b8446d12; }
