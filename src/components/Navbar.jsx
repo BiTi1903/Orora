@@ -153,7 +153,7 @@ function Navbar({
         onClick={closeMenu}
       />
 
-      <aside ref={drawerRef} className={`mobile-drawer${menuOpen ? " is-open" : ""}`} inert={!menuOpen} style={{'--drawer-bg':styles.drawer?.background||'#fffafc','--drawer-opacity':`${Math.max(40,Math.min(100,Number(styles.drawer?.opacity??82)))}%`,'--drawer-blur':`${Math.max(0,Math.min(32,Number(styles.drawer?.blur??24)))}px`,'--drawer-radius':`${Math.max(0,Math.min(32,Number(styles.drawer?.radius??24)))}px`,...toCss(styles.drawer?.text)}}>
+      <aside ref={drawerRef} className={`mobile-drawer${menuOpen ? " is-open" : ""}`} inert={!menuOpen} style={{'--drawer-width':`${Math.max(240,Math.min(360,Number(styles.drawer?.width??290)))}px`,'--drawer-bg':styles.drawer?.background||'#fffafc','--drawer-opacity':`${Math.max(40,Math.min(100,Number(styles.drawer?.opacity??82)))}%`,'--drawer-blur':`${Math.max(0,Math.min(32,Number(styles.drawer?.blur??24)))}px`,'--drawer-radius':`${Math.max(0,Math.min(32,Number(styles.drawer?.radius??24)))}px`,...toCss(styles.drawer?.text)}}>
         <div className="mobile-drawer-header">
           <Link to="/" className="logo" onClick={closeMenu}>
             {logo}<span></span>
