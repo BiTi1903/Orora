@@ -49,3 +49,18 @@
  .catalog-filter-sheet .catalog-filter-form { gap:16px 12px; }
  .catalog-filter-sheet .catalog-filter-apply { position:sticky; bottom:0; box-shadow:0 -5px 16px #fff; }
 }
+
+.catalog-view-switch svg { width:18px; height:18px; flex-shrink:0; }
+.catalog-view-switch button { display:flex; align-items:center; justify-content:center; gap:7px; box-shadow:none; }
+@media(max-width:768px) {
+ .catalog-toolbar { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:10px; padding:0 0 16px; margin-bottom:12px; border:0; border-bottom:1px solid var(--catalog-border); border-radius:0; background:transparent; box-shadow:none; }
+ .catalog-filter-mobile > button { min-height:44px; padding:10px 16px; border-radius:12px; background:var(--catalog-bg); font-size:14px; }
+ .catalog-filter-mobile > span { margin:0; text-align:center; font-size:12px; line-height:1.4; }
+ .catalog-result-tools { display:contents; }
+ .catalog-result-count { display:none; }
+ .catalog-view-switch { grid-column:3; grid-row:1; margin:0; padding:3px; border-radius:12px; gap:2px; background:var(--catalog-bg); }
+ .catalog-view-switch button { width:38px; min-height:38px; padding:8px; border-radius:9px; }
+ .catalog-view-switch button span { display:none; }
+ .catalog-view-switch button[aria-pressed="true"] { box-shadow:none; }
+ .catalog-filter-clear { grid-column:1/-1; justify-self:start; padding:4px 0!important; min-height:32px!important; border:0!important; background:transparent!important; }
+}
