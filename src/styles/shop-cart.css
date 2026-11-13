@@ -75,3 +75,10 @@ body:has(dialog[open]) .desktop-cart { visibility:hidden; }
 }
 /* Never paint the desktop cart launcher on mobile, even before nav mounts. */
 @media(max-width:768px) { .desktop-cart { display:none!important; } }
+
+/* Fill the action row consistently on narrow product cards. */
+@media(max-width:768px) {
+ .gallery-item .product-card-actions { width:100%; flex:1 0 100%; gap:8px; align-items:stretch; }
+ .gallery-item .product-card-actions .buy-button { flex:1 1 0; min-width:0; width:auto; min-height:44px; padding:10px 14px!important; justify-content:center; }
+ .gallery-item .card-cart-button { width:44px; height:44px; min-height:44px; flex:0 0 44px; }
+}
