@@ -1,5 +1,5 @@
 import CatalogFilters from "./CatalogFilters";
-import {catalogFilters,readCatalogFilters,writeCatalogFilters,filterCatalog,catalogVolumes,catalogPriceLabel,catalogFilterSettings,activeCatalogFilters} from "../lib/catalog-filters";
+import {catalogFilters,readCatalogFilters,writeCatalogFilters,filterCatalog,catalogPriceLabel,catalogFilterSettings,activeCatalogFilters} from "../lib/catalog-filters";
 import CatalogLoadError from "./CatalogLoadError";
 import useVisiblePlayback from "../hooks/useVisiblePlayback";
 import { productNumber, productSlug, withProductIdentity } from "../lib/product-identity";
@@ -295,7 +295,7 @@ function Collection({
   const rawProducts=preview?sampleProducts||[]:liveProducts;
   const availableProducts=excludeId?rawProducts.filter(product=>product.id!==excludeId&&product.slug!==excludeId):rawProducts;
   const catalog=withProductIdentity(availableProducts);
-  const effectiveFilters=filtering?catalogFilters({...savedFilters,q:'',min:'',max:'',volume:'',price:'all',...(filterSettings.showSearch===false?{q:''}:{}),...(filterSettings.showPrice===false?{min:'',max:'',price:'all'}:{}),...(filterSettings.showVolume===false?{volume:''}:{})}):catalogFilters({category:categoryId});
+  const effectiveFilters=filtering?catalogFilters({...savedFilters,category:'',q:'',min:'',max:'',volume:'',price:'all',...(filterSettings.showSearch===false?{q:''}:{}),...(filterSettings.showPrice===false?{min:'',max:'',price:'all'}:{}),...(filterSettings.showVolume===false?{volume:''}:{})}):catalogFilters({category:categoryId});
   const products=filterCatalog(catalog,effectiveFilters);
   const requestedView=savedFilters.view==='auto'?(filterSettings.layout||'auto'):savedFilters.view;
   const grid=filtering&&(requestedView==='grid'||(requestedView==='auto'&&(activeCatalogFilters(effectiveFilters)>0||availableProducts.length>12)));
@@ -419,7 +419,7 @@ function Collection({
         </h2>
       </div>
 
-      {filtering && <CatalogFilters value={effectiveFilters} activeView={preview||grid?'grid':'carousel'} categories={categories} volumes={catalogVolumes(catalog)} settings={filterSettings} count={products.length} total={catalog.length} onApply={changeFilters} onReset={()=>changeFilters(catalogFilters())}/>}
+      {filtering && <CatalogFilters value={effectiveFilters} activeView={preview||grid?'grid':'carousel'} settings={filterSettings} onApply={changeFilters}/>}
       {!filtering && !preview && !isRelated && categories.length > 0 && (
         <nav className="collection-categories" aria-label="Danh mục sản phẩm">
           <button type="button" aria-pressed={!categoryId} onClick={() => setCategoryId("")}>Tất cả</button>

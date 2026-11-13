@@ -115,3 +115,7 @@
  .catalog-filter-inline .catalog-filter-form select { font-size:16px; padding:8px; }
  .catalog-filter-inline .catalog-filter-apply { grid-column:1/-1; justify-self:end; min-width:100px; min-height:38px; margin-top:0; }
 }
+.catalog-price-pills { grid-column:1/-1; display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding-top:2px; }
+.catalog-price-pills button { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:40px; padding:8px 16px; border:1px solid var(--catalog-border); border-radius:999px; background:var(--catalog-bg); color:var(--catalog-accent); font:500 13px/1.4 var(--font-body); }
+.catalog-price-pills button[aria-pressed="true"] { background:var(--catalog-accent); color:white; border-color:var(--catalog-accent); }
+.catalog-price-pills button:focus-visible { outline:2px solid var(--catalog-accent); outline-offset:2px; }
