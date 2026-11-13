@@ -12,7 +12,7 @@ test('price filtering uses actual variants, never the gap between their prices o
  assert.deepEqual(filterCatalog(products,{price:'contact'}).map(p=>p.id),['3']);
  assert.deepEqual(filterCatalog(products,{sort:'priceDesc'}).map(p=>p.id),['2','1','4','3']);
  assert.deepEqual(filterCatalog(products,{sort:'priceAsc'}).map(p=>p.id),['4','1','2','3']);
- assert.match(catalogPriceLabel(products[0]),/^Từ 100\.000 đ$/);assert.equal(catalogPriceLabel(products[1]),'250000');
+ assert.equal(catalogPriceLabel(products[0]),'100000');assert.equal(catalogPriceLabel(products[1]),'250000');
  assert.equal(catalogPriceLabel(products[3]),'0');
 });
 test('filter links are shareable, bounded, preserve unrelated parameters and never mutate product data',()=>{

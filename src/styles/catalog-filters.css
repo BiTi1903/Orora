@@ -97,3 +97,7 @@
 .catalog-filter-sheet .catalog-filter-form :is(input,select) { min-height:44px; border-radius:10px; font-size:16px; }
 .catalog-filter-sheet .catalog-filter-form label { font-size:13px; }
 @media(max-width:768px) { .catalog-filter-sheet { width:100%; border-radius:20px 20px 0 0; } }
+.catalog-filter-inline { grid-column:1/-1; padding:14px; margin-top:4px; border:1px solid var(--catalog-border); border-radius:14px; background:var(--catalog-bg); }
+.catalog-filter-inline .catalog-filter-form { grid-template-columns:1fr 1fr auto; gap:12px; align-items:end; }
+.catalog-filter-inline .catalog-filter-form :is(input,select) { font-size:16px; }
+@media(max-width:768px) { .catalog-filter-inline { padding:12px; } .catalog-filter-inline .catalog-filter-form { grid-template-columns:1fr 1fr; } .catalog-filter-inline .catalog-filter-apply { grid-column:1/-1; } }

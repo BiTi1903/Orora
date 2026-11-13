@@ -60,3 +60,16 @@ body:has(dialog[open]) .desktop-cart { visibility:hidden; }
 .gallery-item .card-cart-button { margin:0; }
 @media(max-width:768px) { .gallery-item .product-bottom { gap:8px; } .gallery-item .product-card-actions { max-width:none; gap:6px; } }
 @media(min-width:769px) { .desktop-cart { background:#fffafc; backdrop-filter:none; } .shop-cart.is-modeless { background:#fffafb; backdrop-filter:none; -webkit-backdrop-filter:none; } }
+
+/* Compact price + view + cart action row. */
+.gallery-item .product-bottom { flex-direction:row; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.gallery-item .product-price { margin:0; white-space:nowrap; flex:1 0 auto; }
+.gallery-item .product-card-actions { width:auto; max-width:none; flex:0 0 auto; gap:6px; }
+.gallery-item .product-card-actions .buy-button { flex:none; min-width:68px; padding:10px 14px; gap:5px; }
+@media(max-width:768px) {
+ .gallery-item .product-bottom { gap:7px; }
+ .gallery-item .product-card-actions { gap:5px; }
+ .gallery-item .product-card-actions .buy-button { min-width:52px; padding:8px!important; }
+ .gallery-item .card-cart-button { width:36px; height:40px; flex-basis:36px; min-height:40px; }
+ .gallery-item .card-cart-button svg { width:20px; height:20px; }
+}

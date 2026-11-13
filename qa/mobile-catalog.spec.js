@@ -26,7 +26,7 @@ test('catalog paginates a larger list and filters categories and sorts actual va
   'hooks/useProducts.js':`export default function products(){return {products:${JSON.stringify(products)},loading:false}}`,
  });
  await expect(page.locator('.catalog-product-grid > div')).toHaveCount(12);await page.getByRole('button',{name:'Sau',exact:true}).click();await expect(page.locator('.catalog-product-grid > div')).toHaveCount(5);
- const controls=async()=>{await page.getByRole('button',{name:/^Bộ lọc/}).click();return page.getByRole('dialog',{name:'Bộ lọc',exact:true});};
+ const controls=async()=>{await page.getByRole('button',{name:/^Bộ lọc/}).click();return page.getByRole('form',{name:'Bộ lọc',exact:true});};
  const form=await controls();await expect(form.getByRole('spinbutton')).toHaveCount(0);await form.getByRole('combobox',{name:'Danh mục',exact:true}).selectOption('clean');await form.getByRole('combobox',{name:'Sắp xếp',exact:true}).selectOption('priceDesc');await form.getByRole('button',{name:'Áp dụng',exact:true}).click();await expect(page.locator('.catalog-product-grid > div')).toHaveCount(8);await expect(page.locator('.catalog-product-grid > div').first()).toContainText('SP 16');await controls();await form.getByRole('combobox',{name:'Sắp xếp',exact:true}).selectOption('priceAsc');await form.getByRole('button',{name:'Áp dụng',exact:true}).click();await expect(page.locator('.catalog-product-grid > div').first()).toContainText('SP 4');
  await page.getByRole('button',{name:'Xóa bộ lọc',exact:true}).click();await page.getByRole('button',{name:'Dạng trượt',exact:true}).click();await expect(page.getByRole('group',{name:'Chọn sản phẩm',exact:true})).toBeVisible();await fit(page);
 });

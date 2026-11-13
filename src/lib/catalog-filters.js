@@ -1,4 +1,4 @@
-import {parseVndPrice,formatVnd} from './commerce.js';
+import {parseVndPrice} from './commerce.js';
 import {productVolumeOptions,volumePriceText} from './product-options.js';
 export const CATALOG_QUERY_KEYS=['category','q','min','max','volume','price','sort','view','page'];
 export const normalizeSearch=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLocaleLowerCase('vi').trim();
@@ -19,9 +19,8 @@ export function productCatalogPrices(product){
  return {values:values.filter(value=>value!==null),unknown:values.some(value=>value===null)};
 }
 export function catalogPriceLabel(product,settings={}){
- const {values,unknown}=productCatalogPrices(product);if(!values.length)return String(product.price||settings.contactPriceLabel||'Liên hệ');
- const min=Math.min(...values),max=Math.max(...values);
- return min===max&&!unknown?String(min):`${settings.fromLabel||'Từ'} ${formatVnd(min)}`;
+ const {values}=productCatalogPrices(product);if(!values.length)return String(product.price||settings.contactPriceLabel||'Liên hệ');
+ return String(Math.min(...values));
 }
 export function catalogVolumes(products){
  const values=new Map();for(const product of products)for(const option of productVolumeOptions(product)){const key=volumeKey(option.label);if(!values.has(key))values.set(key,option.label);}
@@ -50,5 +49,5 @@ export function filterCatalog(products,value={}){
  return rows.map(row=>row.product);
 }
 export function activeCatalogFilters(value){const s=catalogFilters(value);return [s.category,s.q.trim(),s.volume,s.min!==''||s.max!==''?1:0,s.price!=='all'?1:0,s.sort!=='default'?1:0].filter(Boolean).length;}
-export const CATALOG_FILTER_TEXT={searchLabel:'Tìm sản phẩm',searchPlaceholder:'Tên hoặc mã sản phẩm…',filterLabel:'Bộ lọc',closeLabel:'Đóng bộ lọc',viewLabel:'Dạng hiển thị',categoryLabel:'Danh mục',allCategory:'Tất cả danh mục',unknownCategory:'Danh mục đã chọn',volumeLabel:'Dung tích',allVolume:'Tất cả dung tích',priceLabel:'Loại giá',allPrice:'Tất cả',pricedLabel:'Có giá niêm yết',contactLabel:'Liên hệ báo giá',minLabel:'Giá từ (đ)',maxLabel:'Giá đến (đ)',sortLabel:'Sắp xếp',defaultSort:'Theo số thứ tự',priceAsc:'Giá thấp đến cao',priceDesc:'Giá cao đến thấp',nameSort:'Tên A–Z',newestSort:'Mới thêm',applyLabel:'Áp dụng',clearLabel:'Xóa bộ lọc',resultLabel:'{count} / {total} sản phẩm',emptyLabel:'Không có sản phẩm phù hợp. Bạn thử đổi hoặc xóa bộ lọc nhé.',invalidPrice:'Nhập giá bằng số nguyên từ 0 đến 1 tỷ đồng.',invalidRange:'Giá đến cần lớn hơn hoặc bằng giá từ.',gridLabel:'Dạng lưới',carouselLabel:'Dạng trượt',previousLabel:'Trước',nextLabel:'Sau',pageLabel:'Trang {page}/{pages}',fromLabel:'Từ',contactPriceLabel:'Liên hệ'};
+export const CATALOG_FILTER_TEXT={searchLabel:'Tìm sản phẩm',searchPlaceholder:'Tên hoặc mã sản phẩm…',filterLabel:'Bộ lọc',closeLabel:'Đóng bộ lọc',viewLabel:'Dạng hiển thị',categoryLabel:'Danh mục',allCategory:'Tất cả danh mục',unknownCategory:'Danh mục đã chọn',volumeLabel:'Dung tích',allVolume:'Tất cả dung tích',priceLabel:'Loại giá',allPrice:'Tất cả',pricedLabel:'Có giá niêm yết',contactLabel:'Liên hệ báo giá',minLabel:'Giá từ (đ)',maxLabel:'Giá đến (đ)',sortLabel:'Sắp xếp',defaultSort:'Theo số thứ tự',priceAsc:'Giá thấp đến cao',priceDesc:'Giá cao đến thấp',nameSort:'Tên A–Z',newestSort:'Mới thêm',applyLabel:'Áp dụng',clearLabel:'Xóa bộ lọc',resultLabel:'{count} / {total} sản phẩm',emptyLabel:'Không có sản phẩm phù hợp. Bạn thử đổi hoặc xóa bộ lọc nhé.',invalidPrice:'Nhập giá bằng số nguyên từ 0 đến 1 tỷ đồng.',invalidRange:'Giá đến cần lớn hơn hoặc bằng giá từ.',gridLabel:'Dạng lưới',carouselLabel:'Dạng trượt',previousLabel:'Trước',nextLabel:'Sau',pageLabel:'Trang {page}/{pages}',contactPriceLabel:'Liên hệ'};
 export function catalogFilterSettings(value={}){value=value&&typeof value==='object'?value:{};const result={...value};for(const [key,fallback] of Object.entries(CATALOG_FILTER_TEXT))result[key]=typeof value[key]==='string'&&value[key].trim()?value[key]:fallback;return result;}
