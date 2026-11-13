@@ -19,7 +19,7 @@ test('mobile bottom navigation links to Story and scrolls home to the top, links
  await page.getByRole('button',{name:'Chat với ORORA',exact:true}).click();await expect(nav).toBeHidden();await page.getByRole('button',{name:'Đóng lựa chọn tư vấn',exact:true}).click();await expect(nav).toBeVisible();await fit(page);
 });
 const products=Array.from({length:17},(_,i)=>({id:String(i+1),number:String(i+1).padStart(2,'0'),name:i===2?'Dưỡng sáng':`SP ${i+1}`,price:i===16?'Liên hệ':String((i+1)*20000),categoryId:(i+1)%2?'care':'clean',...(i===1?{volumeOptions:[{id:'a',label:'100 ml',price:'100000'},{id:'b',label:'200ml',price:'500000'}]}:{})}));
-test('catalog paginates a larger list and combines accent-free search, category and actual variant prices',async({page})=>{
+test('catalog paginates a larger list and combines category and actual variant prices',async({page})=>{
  await mount(page,`import Collection from '/src/components/Collection.jsx';${render('R.createElement(Collection)')}`,{
   'hooks/useHomeContent.js':'export default function home(){return {loading:false,collectionTitle:"Sản phẩm",collectionStyles:{filters:{pageSize:12}}}}',
   'hooks/useCategories.js':categoryMock,
@@ -27,9 +27,7 @@ test('catalog paginates a larger list and combines accent-free search, category 
  });
  await expect(page.locator('.catalog-product-grid > div')).toHaveCount(12);await page.getByRole('button',{name:'Sau',exact:true}).click();await expect(page.locator('.catalog-product-grid > div')).toHaveCount(5);
  const controls=async()=>{await page.getByRole('button',{name:'Bộ lọc',exact:true}).click();return page.getByRole('dialog',{name:'Bộ lọc',exact:true});};
- let form=await controls();await form.getByRole('searchbox',{name:'Tìm sản phẩm',exact:true}).fill('duong sang');await form.getByRole('button',{name:'Áp dụng',exact:true}).click();await expect(page.locator('.catalog-product-grid > div')).toHaveCount(1);await expect(page.getByText('Dưỡng sáng',{exact:true})).toBeVisible();
- await page.getByRole('button',{name:'Xóa bộ lọc',exact:true}).click();
- form=await controls();await form.getByRole('combobox',{name:'Danh mục',exact:true}).selectOption('clean');await form.getByLabel('Giá từ (đ)',{exact:true}).fill('300000');await form.getByLabel('Giá đến (đ)',{exact:true}).fill('200000');await form.getByRole('button',{name:'Áp dụng',exact:true}).click();await expect(form.getByRole('alert')).toContainText('Giá đến cần lớn hơn');
+ let form=await controls();await expect(form.getByRole('searchbox')).toHaveCount(0);await expect(form.getByRole('combobox')).toHaveCount(1);await form.getByRole('combobox',{name:'Danh mục',exact:true}).selectOption('clean');await form.getByLabel('Giá từ (đ)',{exact:true}).fill('300000');await form.getByLabel('Giá đến (đ)',{exact:true}).fill('200000');await form.getByRole('button',{name:'Áp dụng',exact:true}).click();await expect(form.getByRole('alert')).toContainText('Giá đến cần lớn hơn');
  await form.getByLabel('Giá từ (đ)',{exact:true}).fill('200000');await form.getByLabel('Giá đến (đ)',{exact:true}).fill('300000');await form.getByRole('button',{name:'Áp dụng',exact:true}).click();await expect(page.locator('.catalog-product-grid > div')).toHaveCount(3);await expect(page.getByText('SP 10',{exact:true})).toBeVisible();await expect(page.getByText('SP 2',{exact:true})).toHaveCount(0);
  await page.getByRole('button',{name:'Xóa bộ lọc',exact:true}).click();await page.getByRole('button',{name:'Dạng trượt',exact:true}).click();await expect(page.getByRole('group',{name:'Chọn sản phẩm',exact:true})).toBeVisible();await fit(page);
 });

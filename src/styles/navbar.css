@@ -285,3 +285,11 @@
  body:has(.mobile-drawer.is-open) .mobile-shop-nav:not(.is-preview) { visibility:hidden; pointer-events:none; }
 }
 @media(prefers-reduced-motion:reduce) { .mobile-drawer { transition:none; } }
+@media(max-width:768px) {
+ .mobile-drawer { width:var(--drawer-screen-width,50vw); padding:16px 12px; }
+ .mobile-drawer-header { gap:4px; padding-bottom:12px; margin-bottom:14px; }
+ .mobile-drawer-header .logo { font-size:20px; overflow-wrap:anywhere; }
+ .mobile-drawer .drawer-close { width:32px; height:32px; flex-basis:32px; }
+ .mobile-drawer-links > a,.mobile-drawer-links summary { padding:12px 10px; font-size:14px; overflow-wrap:anywhere; }
+ .mobile-drawer-links .mobile-nav-submenu { margin-left:4px; padding-left:4px; }
+}
