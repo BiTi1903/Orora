@@ -5,10 +5,9 @@ import {activeCatalogFilters,catalogFilterSettings} from '../lib/catalog-filters
 import '../styles/catalog-filters.css';
 function Fields({draft,setDraft,categories,s,onSubmit,error}){
  const id=useId(),css=key=>toCss(s[key]);
- const field=(label,key,props={})=><label style={css('labels')} htmlFor={`${id}-${key}`}>{label}<input id={`${id}-${key}`} value={draft[key]} onChange={event=>setDraft(old=>({...old,[key]:event.target.value}))} style={css('inputs')} {...props}/></label>;
  return <form className="catalog-filter-form" onSubmit={onSubmit}>
   <label style={css('labels')} htmlFor={`${id}-category`}>{s.categoryLabel}<select id={`${id}-category`} value={draft.category} style={css('inputs')} onChange={event=>setDraft(old=>({...old,category:event.target.value}))}><option value="">{s.allCategory}</option>{draft.category&&!categories.some(c=>c.id===draft.category)&&<option value={draft.category}>{s.unknownCategory}</option>}{categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
-  {s.showPrice!==false&&<>{field(s.minLabel,'min',{type:'number',min:0,max:1000000000,step:1,inputMode:'numeric',disabled:draft.price==='contact'})}{field(s.maxLabel,'max',{type:'number',min:0,max:1000000000,step:1,inputMode:'numeric',disabled:draft.price==='contact'})}</>}
+  <label style={css('labels')} htmlFor={`${id}-sort`}>{s.sortLabel}<select id={`${id}-sort`} value={draft.sort} style={css('inputs')} onChange={event=>setDraft(old=>({...old,sort:event.target.value}))}><option value="default">{s.defaultSort}</option><option value="priceAsc">{s.priceAsc}</option><option value="priceDesc">{s.priceDesc}</option></select></label>
   <button type="submit" className="catalog-filter-apply" style={css('buttons')}>{s.applyLabel}</button>
   {error&&<p className="catalog-filter-error" role="alert" style={css('labels')}>{error}</p>}
  </form>;
@@ -17,7 +16,7 @@ export default function CatalogFilters({value,activeView,categories=[],settings=
  const s=catalogFilterSettings(settings),key=JSON.stringify(value),[oldKey,setOldKey]=useState(key),[draft,setDraft]=useState(value),[open,setOpen]=useState(false),[error,setError]=useState('');
  if(oldKey!==key){setOldKey(key);setDraft(value);setError('');}
  const apply=event=>{
-  event.preventDefault();const next={...draft,volume:'',price:'all',q:'',sort:'default',page:1};if(next.price==='contact'){next.min='';next.max='';}
+  event.preventDefault();const next={...draft,volume:'',price:'all',q:'',min:'',max:'',page:1};if(next.price==='contact'){next.min='';next.max='';}
   if([next.min,next.max].some(v=>v!==''&&(!/^\d+$/.test(v)||Number(v)>1000000000))){setError(s.invalidPrice);return;}
   if(next.min!==''&&next.max!==''&&Number(next.min)>Number(next.max)){setError(s.invalidRange);return;}
   setError('');onApply(next);setOpen(false);
