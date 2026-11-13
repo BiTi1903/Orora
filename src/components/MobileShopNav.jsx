@@ -23,11 +23,11 @@ export default function MobileShopNav({preview=false,previewData}){
  useEffect(()=>{
   if(!gated)return;
   let frame;const observed=new WeakSet();const sizes=new ResizeObserver(()=>schedule());
-  const measure=()=>{const boundary=document.querySelector('.marquee')||document.querySelector('.hero');for(const target of [boundary,document.querySelector('.hero')])if(target&&!observed.has(target)){observed.add(target);sizes.observe(target);}setPassedTicker(boundary?boundary.getBoundingClientRect().bottom<=0:!home.loading&&window.scrollY>0);};
+  const measure=()=>{const boundary=document.querySelector('.marquee')||document.querySelector('.hero');for(const target of [boundary,document.querySelector('.hero'),nav.current])if(target&&!observed.has(target)){observed.add(target);sizes.observe(target);}const room=window.innerHeight-(nav.current?.offsetHeight||s.height)-Math.max(0,Math.min(48,Number(s.revealGap??12)));setPassedTicker(window.scrollY>8&&(boundary?boundary.getBoundingClientRect().bottom<=room:!home.loading));};
   const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(measure);};
   schedule();window.addEventListener('scroll',schedule,{passive:true});window.addEventListener('resize',schedule);const content=new MutationObserver(schedule);content.observe(document.getElementById('root')||document.body,{subtree:true,childList:true});
   return()=>{cancelAnimationFrame(frame);sizes.disconnect();content.disconnect();window.removeEventListener('scroll',schedule);window.removeEventListener('resize',schedule);};
- },[gated,home.loading]);
+ },[gated,home.loading,s.height,s.revealGap]);
  const enabled=s.enabled!==false&&sectionIsEnabled(home,'navbar')&&!location.pathname.startsWith('/admin')&&(!home.loading||home.shellReady)&&items.length>0;
  useLayoutEffect(()=>{
   if(preview)return;

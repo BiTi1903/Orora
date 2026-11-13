@@ -9,7 +9,8 @@ export default function MobileNavSettings({navbar,onChange}){
  const edit=(index,next)=>patch({items:items.map((item,i)=>i===index?{...item,...next}:item)});
  return <SettingGroup title="Thanh điều hướng dưới — mobile">
   <label className="admin-check"><input type="checkbox" checked={value.enabled!==false} onChange={event=>patch({enabled:event.target.checked})}/>Hiện thanh cố định dưới màn hình điện thoại</label>
-  <label className="admin-check"><input type="checkbox" checked={value.afterTicker!==false} onChange={e=>patch({afterTicker:e.target.checked})}/>Trang chủ: chỉ hiện sau khi cuộn qua dải chữ chạy</label>
+  <label className="admin-check"><input type="checkbox" checked={value.afterTicker!==false} onChange={e=>patch({afterTicker:e.target.checked})}/>Trang chủ: hiện khi cuộn xuống đủ chỗ, không che dải chữ chạy</label>
+  <label>Khoảng hở với dải chữ chạy (px)<input type="number" min="0" max="48" value={value.revealGap??12} onChange={e=>patch({revealGap:Number(e.target.value)})}/></label>
   <label className="admin-check"><input type="checkbox" checked={value.spin!==false} onChange={e=>patch({spin:e.target.checked})}/>Xoay icon khi nhấn mục trên thanh dưới</label>
   <div className="builder-field">
    {items.map((item,index)=><fieldset key={index} style={{margin:'12px 0',padding:12,border:'1px solid #efd7e1',borderRadius:12}}><legend>Mục {index+1}</legend>
