@@ -34,6 +34,7 @@ test('catalog paginates a larger list and combines accent-free search, category 
 });
 test('admin can rename, style and disable the mobile bar with a live preview',async({page})=>{
  await mount(page,`import Settings from '/src/admin/builder/MobileNavSettings.jsx';function Fixture(){const [value,setValue]=R.useState({navStyles:{}});return R.createElement(Settings,{navbar:value,onChange:patch=>setValue(old=>({...old,...patch}))})};${render('R.createElement(Fixture)')}`,{'hooks/useHomeContent.js':'export default function home(){return {loading:false}}','hooks/useCategories.js':categoryMock});
- await page.getByText('Nội dung và giao diện thanh dưới',{exact:true}).click();await page.getByLabel('Trang chủ',{exact:true}).fill('Về nhà');await expect(page.locator('.mobile-shop-nav.is-preview').getByRole('link',{name:'Về nhà',exact:true})).toBeVisible();
+ await page.getByText('Nội dung và giao diện thanh dưới',{exact:true}).click();await page.getByLabel('Tên hiển thị',{exact:true}).first().fill('Về nhà');await expect(page.locator('.mobile-shop-nav.is-preview').getByRole('link',{name:'Về nhà',exact:true})).toBeVisible();
+ await page.getByRole('combobox',{name:'Đi đến',exact:true}).nth(1).selectOption('email');await page.getByRole('combobox',{name:'Biểu tượng',exact:true}).nth(1).selectOption('heart');await expect(page.locator('.mobile-shop-nav.is-preview a').nth(1)).toBeVisible();
  await page.getByRole('checkbox',{name:'Hiện thanh cố định dưới màn hình điện thoại',exact:true}).uncheck();await expect(page.locator('.mobile-shop-nav.is-preview')).toHaveCount(0);await fit(page);
 });

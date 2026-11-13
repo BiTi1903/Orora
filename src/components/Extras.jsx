@@ -617,6 +617,7 @@ export function Newsletter({
 
   return (
     <section
+      id={preview ? undefined : "newsletter"}
       className={`newsletter ${preview ? "newsletter--preview" : ""}`}
     >
       {preview ? Content : <Reveal>{Content}</Reveal>}
