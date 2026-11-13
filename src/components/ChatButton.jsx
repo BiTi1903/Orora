@@ -73,7 +73,7 @@ function ChatButton() {
         if (!current.moved && Math.hypot(dx, dy) < 8) return;
         current.moved = true;
         setDragging(true);
-        button.current.style.setProperty('--chat-stretch',String(home.navStyles?.surfaces?.chatStretch===false?1:1+Math.min(Math.abs(dx)/180,.45)));
+        button.current.style.setProperty('--chat-stretch',String((window.innerWidth>768||home.navStyles?.surfaces?.chatStretch===false)?1:1+Math.min(Math.abs(dx)/180,.45)));
         setPosition(clamp({ x: current.x + dx*.6, y: current.y + dy }));
       }}
       onPointerUp={finishDrag}
