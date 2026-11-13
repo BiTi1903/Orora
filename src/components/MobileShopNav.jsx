@@ -38,17 +38,45 @@ export default function MobileShopNav({preview=false,previewData}){
  const signature=JSON.stringify(items);
  useLayoutEffect(()=>{
   const bar=nav.current;if(!bar)return;
-  const place=()=>{const link=bar.querySelector('[aria-current="page"]');if(!link){bar.style.setProperty('--lens-opacity','0');return;}bar.style.setProperty('--lens-opacity','1');bar.style.setProperty('--lens-x',`${link.offsetLeft}px`);bar.style.setProperty('--lens-width',`${link.offsetWidth}px`);};
+  const place=()=>{if(gesture.current?.moved)return;const link=bar.querySelector('[aria-current="page"]');if(!link){bar.style.setProperty('--lens-opacity','0');return;}bar.style.setProperty('--lens-opacity','1');bar.style.setProperty('--lens-x',`${link.offsetLeft}px`);bar.style.setProperty('--lens-width',`${link.offsetWidth}px`);};
   place();const observer=new ResizeObserver(place);observer.observe(bar);return()=>observer.disconnect();
  },[location.pathname,location.hash,signature,enabled]);
- const reset=()=>{gesture.current=null;const bar=nav.current;if(!bar)return;bar.classList.remove('is-sliding');['--lens-stretch','--lens-squash','--lens-radius-left','--lens-radius-right'].forEach(key=>bar.style.removeProperty(key));bar.querySelectorAll('a').forEach(link=>{link.style.removeProperty('--icon-scale');link.style.removeProperty('--icon-lift');link.style.removeProperty('--icon-shift');link.style.removeProperty('--icon-glow');link.removeAttribute('data-glass-hover');});const link=bar.querySelector('[aria-current="page"]');bar.style.setProperty('--lens-opacity',link?'1':'0');if(link)bar.style.setProperty('--lens-x',`${link.offsetLeft}px`);};
- const pointerDown=e=>{if(s.swipe===false||e.button!==0||!e.isPrimary)return;gesture.current={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false};};
- const pointerMove=e=>{const g=gesture.current,bar=nav.current;if(!g||g.id!==e.pointerId)return;const dx=e.clientX-g.x,dy=e.clientY-g.y;if(!g.moved){if(Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>8){reset();return;}if(Math.abs(dx)<8)return;g.moved=true;bar.setPointerCapture(e.pointerId);}const links=[...bar.querySelectorAll('a')],bounds=bar.getBoundingClientRect(),first=links[0];if(!first)return;const width=first.offsetWidth,strength=window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:Math.max(0,Math.min(2,Number(s.liquidStretch??1))),stretch=1+Math.min(Math.abs(dx)/Math.max(width,1),1)*.55*strength,extra=width*(stretch-1)/2,x=Math.max(first.offsetLeft+extra,Math.min(bar.clientWidth-width-first.offsetLeft-extra,e.clientX-bounds.left-width/2)),direction=e.clientX-(g.lastX??g.x);g.lastX=e.clientX;bar.style.setProperty('--lens-stretch',String(stretch));bar.style.setProperty('--lens-squash',String(1-(stretch-1)*.2));bar.style.setProperty('--lens-radius-left',strength===0?'26px':direction>=0?'18px':'32px');bar.style.setProperty('--lens-radius-right',strength===0?'26px':direction>=0?'32px':'18px');links.forEach(link=>{const center=link.offsetLeft+link.offsetWidth/2,delta=e.clientX-bounds.left-center,influence=Math.max(0,1-Math.abs(delta)/(width*.85))*Math.max(0,Math.min(2,Number(s.iconEffect??1)));link.style.setProperty('--icon-scale',String(1+influence*.22));link.style.setProperty('--icon-lift',`${-influence*4}px`);link.style.setProperty('--icon-shift',`${delta*influence*.12}px`);link.style.setProperty('--icon-glow',String(influence*.4));if(influence>.5)link.setAttribute('data-glass-hover','');else link.removeAttribute('data-glass-hover');});bar.classList.add('is-sliding');bar.style.setProperty('--lens-opacity','1');bar.style.setProperty('--lens-width',`${width}px`);bar.style.setProperty('--lens-x',`${x}px`);};
- const pointerUp=e=>{const g=gesture.current,bar=nav.current;if(!g||g.id!==e.pointerId)return;const moved=g.moved;reset();if(moved){e.preventDefault();const links=[...bar.querySelectorAll('a')],bounds=bar.getBoundingClientRect();if(e.clientY>=bounds.top-30&&e.clientY<=bounds.bottom+30){const nearest=links.reduce((best,link)=>Math.abs(link.getBoundingClientRect().x+link.offsetWidth/2-e.clientX)<Math.abs(best.getBoundingClientRect().x+best.offsetWidth/2-e.clientX)?link:best,links[0]);nearest?.click();}suppressClick.current=Date.now()+400;}};
+ const reset=(target)=>{
+  cancelAnimationFrame(gesture.current?.frame);gesture.current=null;const bar=nav.current;if(!bar)return;
+  bar.classList.remove('is-sliding');['--lens-stretch','--lens-squash','--lens-radius-left','--lens-radius-right'].forEach(key=>bar.style.removeProperty(key));
+  bar.querySelectorAll('a').forEach(link=>{['--icon-scale','--icon-lift','--icon-shift','--icon-glow'].forEach(key=>link.style.removeProperty(key));link.removeAttribute('data-glass-hover');});
+  const link=target?.nodeType===1?target:bar.querySelector('[aria-current="page"]');bar.style.setProperty('--lens-opacity',link?'1':'0');if(link){bar.style.setProperty('--lens-x',`${link.offsetLeft}px`);bar.style.setProperty('--lens-width',`${link.offsetWidth}px`);}
+ };
+ useEffect(()=>()=>cancelAnimationFrame(gesture.current?.frame),[]);
+ const pointerDown=e=>{
+  if(s.swipe===false||e.button!==0||!e.isPrimary)return;
+  suppressClick.current=0;const bar=nav.current,bounds=bar.getBoundingClientRect();
+  gesture.current={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,direction:1,moved:false,left:bounds.left,width:bar.clientWidth,links:[...bar.querySelectorAll('a')].map(link=>({link,left:link.offsetLeft,width:link.offsetWidth}))};
+ };
+ const paintDrag=(point)=>{
+  const g=gesture.current,bar=nav.current;if(!g||!bar)return;
+  const dx=point.x-g.x,dy=point.y-g.y;
+  if(!g.moved){if(Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>8){reset();return;}if(Math.abs(dx)<8)return;g.moved=true;bar.setPointerCapture(g.id);}
+  const first=g.links[0];if(!first)return;
+  const width=first.width,strength=window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:Math.max(0,Math.min(2,Number(s.liquidStretch??1))),stretch=1+Math.min(Math.abs(dx)/Math.max(width,1),1)*.55*strength,extra=width*(stretch-1)/2;
+  const x=Math.max(first.left+extra,Math.min(g.width-width-first.left-extra,point.x-g.left-width/2));
+  const delta=point.x-g.lastX;if(Math.abs(delta)>.5)g.direction=Math.sign(delta);g.lastX=point.x;
+  bar.style.setProperty('--lens-stretch',String(stretch));bar.style.setProperty('--lens-squash',String(1-(stretch-1)*.2));
+  bar.style.setProperty('--lens-radius-left',strength===0?'26px':g.direction>0?'18px':'32px');bar.style.setProperty('--lens-radius-right',strength===0?'26px':g.direction>0?'32px':'18px');
+  g.links.forEach(({link,left,width:linkWidth})=>{const center=left+linkWidth/2,delta=point.x-g.left-center,influence=Math.max(0,1-Math.abs(delta)/(width*.85))*Math.max(0,Math.min(2,Number(s.iconEffect??1)));link.style.setProperty('--icon-scale',String(1+influence*.22));link.style.setProperty('--icon-lift',`${-influence*4}px`);link.style.setProperty('--icon-shift',`${delta*influence*.12}px`);link.style.setProperty('--icon-glow',String(influence*.4));if(influence>.5)link.setAttribute('data-glass-hover','');else link.removeAttribute('data-glass-hover');});
+  bar.classList.add('is-sliding');bar.style.setProperty('--lens-opacity','1');bar.style.setProperty('--lens-width',`${width}px`);bar.style.setProperty('--lens-x',`${x}px`);
+ };
+ const pointerMove=e=>{const g=gesture.current;if(!g||g.id!==e.pointerId)return;g.pending={x:e.clientX,y:e.clientY};if(g.frame!=null)return;g.frame=requestAnimationFrame(()=>{g.frame=null;if(gesture.current===g)paintDrag(g.pending);});};
+ const pointerUp=e=>{
+  const g=gesture.current;if(!g||g.id!==e.pointerId)return;cancelAnimationFrame(g.frame);paintDrag({x:e.clientX,y:e.clientY});if(gesture.current!==g)return;
+  const moved=g.moved,bar=nav.current,bounds=bar.getBoundingClientRect();let target=null;
+  if(moved&&e.clientY>=bounds.top-30&&e.clientY<=bounds.bottom+30){const x=e.clientX-g.left;target=g.links.reduce((best,row)=>Math.abs(row.left+row.width/2-x)<Math.abs(best.left+best.width/2-x)?row:best,g.links[0])?.link;}
+  reset(target);if(moved){e.preventDefault();target?.click();suppressClick.current=Date.now()+400;}
+ };
  if(!enabled&&!preview)return null;
  if(s.enabled===false||!items.length)return null;
  return <>
-  <nav onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={reset} onClickCapture={e=>{if(Date.now()<suppressClick.current){e.preventDefault();e.stopPropagation();}}} ref={nav} className={`mobile-shop-nav${preview?' is-preview':''}${waiting?' is-waiting':''}`} inert={waiting} aria-hidden={waiting||undefined} aria-label={s.title} style={{...mobileNavTheme(s),gridTemplateColumns:`repeat(${items.length},minmax(0,1fr))`}}>
+  <nav onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={reset} onClickCapture={e=>{if(e.nativeEvent.isTrusted&&e.detail!==0&&Date.now()<suppressClick.current){e.preventDefault();e.stopPropagation();}}} ref={nav} className={`mobile-shop-nav${preview?' is-preview':''}${waiting?' is-waiting':''}`} inert={waiting} aria-hidden={waiting||undefined} aria-label={s.title} style={{...mobileNavTheme(s),gridTemplateColumns:`repeat(${items.length},minmax(0,1fr))`}}>
    <span className="mobile-nav-lens" aria-hidden="true"/>
    {items.map(item=>{
     const internal=item.to.startsWith('/'),Tag=internal?Link:'a';

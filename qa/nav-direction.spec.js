@@ -1,0 +1,7 @@
+import {test,expect} from '@playwright/test';
+import {mount,render} from './fixtures';
+test('rapid right-left swipes keep selecting their target without a cooldown or stale frame',async({page})=>{
+ await mount(page,`import Nav from '/src/components/MobileShopNav.jsx';import {useLocation} from '/qa/runtime.js';function Route(){const l=useLocation();return R.createElement('output',{'data-testid':'route'},l.pathname+l.hash)};${render('R.createElement(R.Fragment,null,R.createElement(Nav),R.createElement(Route))')}`,{'hooks/useHomeContent.js':'export default function home(){return {loading:false,navStyles:{mobile:{afterTicker:false}}}}'});
+ const nav=page.locator('.mobile-shop-nav');if(page.viewportSize().width>768){await expect(nav).toBeHidden();return;}
+ for(let i=0;i<2;i++)for(const [from,to,path] of [['Trang chủ','Sản phẩm','/#shop'],['Sản phẩm','Story','/#about'],['Story','Sản phẩm','/#shop'],['Sản phẩm','Trang chủ','/']]){const start=await nav.getByRole('link',{name:from,exact:true}).boundingBox(),end=await nav.getByRole('link',{name:to,exact:true}).boundingBox();await page.mouse.move(start.x+start.width/2,start.y+20);await page.mouse.down();await page.mouse.move(end.x+end.width/2,end.y+20,{steps:8});await expect(nav).toHaveClass(/is-sliding/);await page.mouse.up();await expect(page.getByTestId('route')).toHaveText(path);await expect(nav).not.toHaveClass(/is-sliding/);expect(await nav.evaluate(el=>el.style.getPropertyValue('--lens-stretch'))).toBe('');}
+});
