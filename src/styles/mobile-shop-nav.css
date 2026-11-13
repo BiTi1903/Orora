@@ -46,3 +46,8 @@
 .mobile-shop-nav.is-sliding::before { transition:opacity .15s; box-shadow:inset 0 1px 3px #fff,0 4px 16px #68243e20; }
 .mobile-shop-nav [aria-current="page"] { background:transparent; box-shadow:none; }
 @media(prefers-reduced-motion:reduce) { .mobile-shop-nav::before { transition:none; } }
+
+.mobile-shop-nav > a svg { transform:translate(var(--icon-shift,0px),var(--icon-lift,0px)) scale(var(--icon-scale,1)); transform-origin:center; transition:transform .25s cubic-bezier(.2,.8,.2,1),filter .2s,color .2s; filter:drop-shadow(0 2px 3px rgb(184 68 109 / var(--icon-glow,0))); }
+.mobile-shop-nav.is-sliding > a svg { transition:color .15s; }
+.mobile-shop-nav > a[data-glass-hover] { color:var(--shop-nav-accent); }
+@media(prefers-reduced-motion:reduce) { .mobile-shop-nav > a svg { transform:none; transition:none; filter:none; } }
