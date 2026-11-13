@@ -1,3 +1,4 @@
+import MobileGlass from './components/MobileGlass';
 import MobileShopNav from "./components/MobileShopNav";
 import SiteAnalytics from "./components/SiteAnalytics";
 
@@ -137,7 +138,7 @@ function App() {
 
 
       </Routes>
-      {!location.pathname.startsWith("/admin") && <><ChatButton /><MobileShopNav /></>}
+      {!location.pathname.startsWith("/admin") && <><ChatButton /><MobileGlass/><MobileShopNav /></>}
 
     </>
   );

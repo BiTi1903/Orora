@@ -20,6 +20,11 @@ export default function MobileNavSettings({navbar,onChange}){
    </fieldset>)}
    <button type="button" disabled={items.length>=6} onClick={()=>patch({items:[...items,{label:'Email',target:'email',icon:'email'}]})}>Thêm mục</button>
   </div>
+  <details><summary>Kính trên các thành phần mobile</summary>
+   <div style={{padding:20,borderRadius:16,background:'linear-gradient(120deg,#f5b8ce,#e5dff4,#fff4f8)'}}><div style={{padding:16,borderRadius:14,border:'1px solid #ffffffbb',background:`rgb(255 250 252 / ${Math.max(45,Math.min(100,Number(navbar.navStyles?.surfaces?.opacity??78)))}%)`,backdropFilter:`blur(${Number(navbar.navStyles?.surfaces?.blur??18)}px)`,boxShadow:'inset 0 1px 0 white,0 4px 18px #68243e12'}}>Xem trước chất liệu kính</div></div>
+   {[['header','Navbar trên'],['chat','Nút chat'],['top','Nút lên đầu'],['tabs','Thanh thông tin sản phẩm'],['close','Nút đóng popup']].map(([key,label])=><label className="admin-check" key={key}><input type="checkbox" checked={navbar.navStyles?.surfaces?.[key]!==false} onChange={e=>onChange({navStyles:{...navbar.navStyles,surfaces:{...navbar.navStyles?.surfaces,[key]:e.target.checked}}})}/>{label}</label>)}
+   {[['opacity','Độ đục (%)',78,45,100],['blur','Độ mờ nền (px)',18,0,30]].map(([key,label,fallback,min,max])=><label key={key}>{label}<input type="number" min={min} max={max} value={navbar.navStyles?.surfaces?.[key]??fallback} onChange={e=>onChange({navStyles:{...navbar.navStyles,surfaces:{...navbar.navStyles?.surfaces,[key]:Number(e.target.value)}}})}/></label>)}
+  </details>
   <details><summary>Nội dung và giao diện thanh dưới</summary>
    <label><input type="checkbox" checked={value.glass!==false} onChange={e=>patch({glass:e.target.checked})}/>Hiệu ứng kính trong suốt</label>
    <label><input type="checkbox" checked={value.swipe!==false} onChange={e=>patch({swipe:e.target.checked})}/>Vuốt ngang để chọn mục — kính chạy theo ngón tay</label>
