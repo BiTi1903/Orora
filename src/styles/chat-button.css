@@ -424,3 +424,6 @@
 @media(min-width:769px) { .orora-chat-launcher { bottom:172px; } }
 @media(max-width:768px) { .orora-chat-launcher { bottom:calc(148px + env(safe-area-inset-bottom,0px)); } }
 @media(prefers-reduced-motion:reduce) { .orora-chat-launcher,.orora-chat-launcher > .chat-button { transition:none; } .orora-chat-launcher > .chat-button { transform:none; } }
+
+/* Conversation text uses an opaque surface, independent of glass controls. */
+.orora-chat-panel { background:#fffafc; backdrop-filter:none; -webkit-backdrop-filter:none; }
