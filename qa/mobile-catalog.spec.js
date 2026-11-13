@@ -3,17 +3,17 @@ import {mount,render,fit} from './fixtures';
 const errors=new WeakMap();test.beforeEach(({page})=>{const list=[];errors.set(page,list);page.on('pageerror',e=>list.push(e.message));});test.afterEach(({page})=>expect(errors.get(page)).toEqual([]));
 const categories=[{id:'care',name:'Dưỡng da'},{id:'clean',name:'Làm sạch'}];
 const categoryMock=`export default function cats(){return {categories:${JSON.stringify(categories)},error:null,retry:()=>{}}}`;
-test('mobile bottom navigation opens real categories, links to lookup and clears the floating chat button',async({page})=>{
+test('mobile bottom navigation links to Story and scrolls home to the top, links to lookup and clears the floating chat button',async({page})=>{
  await mount(page,`import Nav from '/src/components/MobileShopNav.jsx';import Chat from '/src/components/ChatButton.jsx';import Top from '/src/components/BackToTop.jsx';import {useLocation} from '/qa/runtime.js';function Route(){const l=useLocation();return R.createElement('output',{'data-testid':'route'},l.pathname+l.search+l.hash)};${render("R.createElement(R.Fragment,null,R.createElement('main',{style:{height:2400}},R.createElement(Top)),R.createElement(Nav),R.createElement(Chat),R.createElement(Route))")}`,{
   'hooks/useHomeContent.js':'export default function home(){return {loading:false,chatSettings:{hintEnabled:false}}}',
   'hooks/useCategories.js':categoryMock,
   'hooks/useChatConversation.js':'export default function chat(){return {metadata:{}}}',
  });
- const nav=page.getByRole('navigation',{name:'Danh mục sản phẩm',exact:true});
+ const nav=page.getByRole('navigation',{name:'Điều hướng mobile',exact:true});
  if(page.viewportSize().width>768){await expect(nav).toHaveCount(0);expect(await page.evaluate(()=>document.documentElement.classList.contains('has-mobile-shop-nav'))).toBe(false);return;}
  await expect(nav).toBeVisible();const n=await nav.boundingBox(),chat=await page.locator('.chat-button').boundingBox();expect(n.y+n.height).toBeCloseTo(1000,0);expect(chat.y+chat.height).toBeLessThan(n.y);
- await nav.getByRole('button',{name:'Danh mục',exact:true}).click();await expect(page.getByRole('dialog',{name:'Danh mục sản phẩm',exact:true})).toBeVisible();
- await page.getByRole('button',{name:'Dưỡng da',exact:true}).click();await expect(page.getByTestId('route')).toContainText('category=care#shop');await expect(page.locator('dialog')).toHaveCount(0);
+ await nav.getByRole('link',{name:'Story',exact:true}).click();await expect(page.getByTestId('route')).toHaveText('/#about');
+ await page.evaluate(()=>window.scrollTo(0,500));await nav.getByRole('link',{name:'Trang chủ',exact:true}).click();await expect.poll(()=>page.evaluate(()=>window.scrollY)).toBe(0);
  await nav.getByRole('link',{name:'Tra cứu',exact:true}).click();await expect(page.getByTestId('route')).toHaveText('/tra-cuu-don-hang');
  await page.getByRole('button',{name:'Chat với ORORA',exact:true}).click();await expect(nav).toBeHidden();await page.getByRole('button',{name:'Đóng lựa chọn tư vấn',exact:true}).click();await expect(nav).toBeVisible();await fit(page);
 });
