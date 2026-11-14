@@ -431,3 +431,7 @@
 /* The hint is a single bubble; its clickable children have no extra surface. */
 .orora-chat-hint :is(.orora-chat-hint-message,.orora-chat-hint-close) { background:transparent; border:0; box-shadow:none; }
 .orora-chat-hint { box-shadow:0 4px 14px #b8446d12; }
+/* Both chooser and conversation follow the side of the launcher. */
+:is(.orora-chat-channel-chooser,.orora-chat-panel)[data-dock-side="left"]:not(.is-preview) { left:12px; right:auto; }
+:is(.orora-chat-channel-chooser,.orora-chat-panel)[data-dock-side="right"]:not(.is-preview) { right:12px; left:auto; }
+.orora-chat-panel[data-dock-side] { top:var(--chat-panel-top,12px); bottom:auto; width:min(var(--chat-panel-width,340px),calc(100vw - 24px)); height:var(--chat-panel-height,520px); min-height:0; max-height:calc(var(--chat-viewport-height,100dvh) - 24px); }

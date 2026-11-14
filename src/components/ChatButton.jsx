@@ -23,6 +23,7 @@ function ChatButton() {
   const button = useRef(null);
   const drag = useRef(null);
   const dockSide=useRef('left');
+  const [popupSide,setPopupSide]=useState('left');
   const suppressClick = useRef(false);
   const [position, setPosition] = useState(null);
   const [dragging, setDragging] = useState(false);
@@ -47,7 +48,7 @@ function ChatButton() {
   const finishDrag = (event) => {
     if (!drag.current || event.pointerId !== drag.current.pointerId) return;
     suppressClick.current = drag.current.moved;
-    if(drag.current.moved){const dx=event.clientX-drag.current.startX;dockSide.current=event.type==='pointerup'&&Math.abs(dx)>60?(dx>0?'right':'left'):dockSide.current;setPosition(dock());}
+    if(drag.current.moved){const dx=event.clientX-drag.current.startX;dockSide.current=event.type==='pointerup'&&Math.abs(dx)>60?(dx>0?'right':'left'):dockSide.current;setPopupSide(dockSide.current);setPosition(dock());}
     button.current?.style.removeProperty('--chat-stretch');
     drag.current = null;
     setDragging(false);
@@ -96,7 +97,7 @@ function ChatButton() {
     >
       <span className="chat-icon" aria-hidden="true">{open ? "×" : "✦"}</span>
       <span className="chat-text">Trò chuyện cùng ORORA</span>
-    </button>{!open && <ChatHint open={false} dismissed={false} settings={settings} anchor={button} position={position} startedAt={hintEpoch} onOpen={() => { setChannel("choose");setOpen(true); }} />}</div>{open && (channel === "choose" ? <ChatChannelChooser settings={settings} id={panelId} zalo={zalo} onAI={() => setChannel("ai")} onClose={close} /> : <ChatPanel id={panelId} settings={settings} conversation={conversation} onClose={close} contactLinks={zalo ? [{ href: zalo }] : conversation.metadata?.links?.filter((link) => ["phone", "facebook", "contact"].includes(link.id)) || []} />)}</>
+    </button>{!open && <ChatHint open={false} dismissed={false} settings={settings} anchor={button} position={position} startedAt={hintEpoch} onOpen={() => { setChannel("choose");setOpen(true); }} />}</div>{open && (channel === "choose" ? <ChatChannelChooser dockSide={popupSide} settings={settings} id={panelId} zalo={zalo} onAI={() => setChannel("ai")} onClose={close} /> : <ChatPanel anchorY={position?.y} panelWidth={home.navStyles?.surfaces?.chatPanelWidth} panelHeight={home.navStyles?.surfaces?.chatPanelHeight} dockSide={popupSide} id={panelId} settings={settings} conversation={conversation} onClose={close} contactLinks={zalo ? [{ href: zalo }] : conversation.metadata?.links?.filter((link) => ["phone", "facebook", "contact"].includes(link.id)) || []} />)}</>
   );
 }
 

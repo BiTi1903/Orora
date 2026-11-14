@@ -19,7 +19,7 @@ function ChatLink({ href, children, className, onNavigate }) {
   return safe.startsWith("/") ? <Link to={safe} className={className} onClick={onNavigate}>{children}</Link> : <a href={safe} className={className} target={safe.startsWith("https:") ? "_blank" : undefined} rel="noopener noreferrer">{children}</a>;
 }
 
-export default function ChatPanel({ id, settings, conversation, onClose, contactLinks = [] }) {
+export default function ChatPanel({ id, settings, conversation, onClose, contactLinks = [], dockSide='right', anchorY, panelWidth=340, panelHeight=520 }) {
   const { messages, sending, error, send, retry, reset, metadata } = conversation;
   const [input, setInput] = useState("");
   const root = useRef(null), heading = useRef(null), log = useRef(null), followLatest = useRef(true);
@@ -35,13 +35,19 @@ export default function ChatPanel({ id, settings, conversation, onClose, contact
   }, [onClose]);
   useLayoutEffect(() => {
     const viewport = window.visualViewport;
-    const measure = () => { root.current?.style.setProperty("--chat-viewport-height", `${viewport?.height || innerHeight}px`); root.current?.style.setProperty("--chat-viewport-top", `${viewport?.offsetTop || 0}px`); root.current?.classList.toggle("is-compact", (viewport?.height || innerHeight) < 500); };
+    const measure = () => {
+      const viewportHeight=viewport?.height || innerHeight, viewportTop=viewport?.offsetTop || 0;
+      const height=Math.min(Math.max(280,Math.min(680,Number(panelHeight)||520)),Math.max(0,viewportHeight-24));
+      const top=Math.max(viewportTop+12,Math.min(viewportTop+viewportHeight-height-12,(anchorY ?? viewportTop+viewportHeight)-height-12));
+      root.current?.style.setProperty("--chat-panel-height",`${height}px`);
+      root.current?.style.setProperty("--chat-panel-top",`${top}px`);
+      root.current?.style.setProperty("--chat-viewport-height", `${viewport?.height || innerHeight}px`); root.current?.style.setProperty("--chat-viewport-top", `${viewport?.offsetTop || 0}px`); root.current?.classList.toggle("is-compact", (viewport?.height || innerHeight) < 500); };
     measure(); viewport?.addEventListener("resize", measure); viewport?.addEventListener("scroll", measure); window.addEventListener("resize", measure);
     return () => { viewport?.removeEventListener("resize", measure); viewport?.removeEventListener("scroll", measure); window.removeEventListener("resize", measure); };
-  }, []);
+  }, [anchorY,panelHeight]);
   useLayoutEffect(() => { if (log.current && followLatest.current) log.current.scrollTop = log.current.scrollHeight; }, [messages, sending, error]);
   const submit = (text, quick = false) => { if (send(text)) { followLatest.current = true; setInput(""); if (quick) log.current?.focus({ preventScroll: true }); } };
-  return <section ref={root} id={id} className="orora-chat-panel" role="dialog" aria-labelledby={titleId} style={chatAppearanceVars(settings)}>
+  return <section ref={root} id={id} data-dock-side={dockSide} className="orora-chat-panel" role="dialog" aria-labelledby={titleId} style={{...chatAppearanceVars(settings),"--chat-panel-width":`${Math.max(280,Math.min(440,Number(panelWidth)||340))}px`}}>
     <header className="orora-chat-heading"><span className="orora-chat-avatar" aria-hidden="true">✦</span><div><h2 ref={heading} id={titleId} tabIndex={-1}>{settings.title}</h2><p><span className="orora-chat-status-dot" />{mode === "ai" ? label("statusAi") : label("statusGuided")}</p></div><button type="button" className="orora-chat-icon-button" onClick={() => { followLatest.current = true; reset(); setInput(""); }} aria-label="Bắt đầu cuộc trò chuyện mới" title="Cuộc trò chuyện mới" disabled={!messages.length && !input}>↺</button><button type="button" className="orora-chat-icon-button" onClick={onClose} aria-label="Đóng chat">×</button></header>
     <div ref={log} onScroll={event=>{const viewport=event.currentTarget;followLatest.current=viewport.scrollHeight-viewport.scrollTop-viewport.clientHeight<56;}} className="orora-chat-log" role="log" tabIndex={-1} aria-label="Cuộc trò chuyện với ORORA" aria-live="polite" aria-relevant="additions">
       <div className="orora-chat-welcome"><span className="orora-chat-welcome-icon" aria-hidden="true">✧</span><h3>{label("welcomeTitle")}</h3><p>{settings.greeting}</p></div>
