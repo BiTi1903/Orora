@@ -1,3 +1,5 @@
+import DesktopCardSettings from './DesktopCardSettings';
+import ReviewCardSettings from './ReviewCardSettings';
 import CatalogFilterSettings from "./CatalogFilterSettings";
 import ProductLoadErrorSettings from "./ProductLoadErrorSettings";
 import CollectionCarouselSettings from "../CollectionCarouselSettings";
@@ -97,6 +99,7 @@ export function StylePanel({
 
       {section === "collection" && (
         <>
+        <DesktopCardSettings value={collection.productCardStyles?.desktopActions} onChange={patch=>onChange({_styleGroup:'productCardStyles',_styleKey:'desktopActions',style:patch})}/>
         <CatalogFilterSettings value={collection.collectionStyles?.filters} onChange={patch=>onChange({_styleGroup:"collectionStyles",_styleKey:"filters",style:patch})}/>
         <ProductLoadErrorSettings value={collection.collectionStyles?.loadError} onChange={patch=>onChange({_styleGroup:"collectionStyles",_styleKey:"loadError",style:patch})}/>
         <CollectionCarouselSettings value={collection.collectionStyles?.carousel} onChange={patch => onChange({ _styleGroup: "collectionStyles", _styleKey: "carousel", style: patch })} />
@@ -135,6 +138,8 @@ export function StylePanel({
       )}
 
       {section === "reviews" && (
+        <>
+        <ReviewCardSettings value={reviews.testimonialsStyles?.card} onChange={patch=>onChange({testimonialsStyles:{...reviews.testimonialsStyles,card:{...reviews.testimonialsStyles?.card,...patch}}})}/>
         <ReviewsSettings
           selected={selected}
           data={data}
@@ -142,6 +147,7 @@ export function StylePanel({
           onChange={onChange}
           onStyleChange={onStyleChange}
         />
+        </>
       )}
 
       {section === "footer" && (

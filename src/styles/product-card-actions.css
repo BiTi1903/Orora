@@ -12,3 +12,15 @@
  .collection .gallery-item .product-card-actions .buy-button { width:100%!important; height:44px!important; min-height:44px; max-height:44px; margin:0!important; padding:8px!important; }
 }
 .gallery-item .product-view-arrow { width:12px; height:12px; flex-shrink:0; }
+@media(min-width:769px) {
+ .collection .gallery-item .product-bottom { display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding-top:18px; }
+ .collection .gallery-item .product-price { flex:0 0 auto; margin:0!important; text-align:var(--desktop-price-align)!important; font-family:var(--desktop-price-family)!important; font-size:var(--desktop-price-size)!important; font-weight:var(--desktop-price-weight)!important; font-style:var(--desktop-price-style)!important; color:var(--desktop-price-color)!important; letter-spacing:var(--desktop-price-spacing)!important; line-height:var(--desktop-price-line-height)!important; }
+ .collection .gallery-item .product-card-actions { flex:0 0 auto; width:calc(var(--desktop-action-width) + 44px + var(--desktop-action-gap)); grid-template-columns:minmax(0,1fr) 44px; gap:var(--desktop-action-gap); }
+ .collection .gallery-item .product-card-actions .buy-button { border-radius:var(--desktop-action-radius)!important; background:var(--desktop-action-bg); color:var(--desktop-action-color)!important; font-size:var(--desktop-action-font-size)!important; font-weight:600; letter-spacing:.2px; padding:8px 14px; box-shadow:none; }
+ .collection .gallery-item .card-cart-button { border-radius:var(--desktop-action-radius); background:#fffafc; color:var(--desktop-action-bg); border-color:color-mix(in srgb,var(--desktop-action-bg) 20%,white); box-shadow:none; }
+ .collection .gallery-item .product-card-actions .buy-button:hover { box-shadow:0 4px 12px #b8446d1a; }
+}
+@media(min-width:769px) {
+ .collection .gallery-item .gallery-info { flex-direction:column; align-items:stretch; justify-content:flex-start; gap:6px; text-align:var(--desktop-card-title-align); }
+ .collection .gallery-item .gallery-info p { text-align:var(--desktop-card-title-align)!important; }
+}

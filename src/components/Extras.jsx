@@ -1,3 +1,4 @@
+import {reviewCardStyle} from '../lib/review-card-style';
 import {cdnSrc} from "../lib/image-cdn";
 import { useEffect, useRef, useState } from "react";
 import "../styles/extras.css";
@@ -454,6 +455,7 @@ export function Testimonials({
           const card = (
             <blockquote
               className={`review ${selectedClass(cardKey)}`}
+              style={reviewCardStyle(ts.card)}
               data-builder-key={preview ? cardKey : undefined}
               onClick={select(cardKey)}
             >

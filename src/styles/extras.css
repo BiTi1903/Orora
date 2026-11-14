@@ -296,3 +296,4 @@
 .newsletter-result { margin: 14px auto; max-width: 620px; font-size: 14px; }
 .newsletter-result.error { color: #9b1c32; }
 .newsletter-result.success { color: #23583b; }
+.review { position:relative; box-sizing:border-box; }
