@@ -22,30 +22,32 @@ function ChatButton() {
   const settings = chatSettings({ ...conversation.metadata?.settings, ...home.chatSettings });
   const button = useRef(null);
   const drag = useRef(null);
-  const dockSide=useRef('right');
+  const dockSide=useRef('left');
   const suppressClick = useRef(false);
   const [position, setPosition] = useState(null);
   const [dragging, setDragging] = useState(false);
   const clamp = (next) => {
     const rect = {width:button.current.offsetWidth,height:button.current.offsetHeight};
     const view = window.visualViewport;
-    const back=document.querySelector('.back-to-top');const reserved=document.documentElement.classList.contains('has-mobile-shop-nav')?(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-shop-nav-height'))||64):0;
-    const limit=back?window.innerHeight-(parseFloat(getComputedStyle(back).bottom)||0)-back.offsetHeight-12:(view?.height||window.innerHeight)-reserved-84;
-    return clampFloatingPosition(next, { width: view?.width || window.innerWidth, height: Math.max(rect.height+24,Math.min(view?.height||window.innerHeight,limit-(view?.offsetTop||0))), offsetLeft: view?.offsetLeft || 0, offsetTop: view?.offsetTop || 0 }, rect);
+    return clampFloatingPosition(next, { width: view?.width || window.innerWidth, height: view?.height||window.innerHeight, offsetLeft: view?.offsetLeft || 0, offsetTop: view?.offsetTop || 0 }, rect);
+  };
+  const dock=()=>{
+    const node=button.current;if(!node)return null;
+    const back=document.querySelector('.back-to-top'),reserved=document.documentElement.classList.contains('has-mobile-shop-nav')?(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-shop-nav-height'))||64):0;
+    const size=back?.offsetHeight||(window.innerWidth<=600?46:52),bottom=back?(parseFloat(getComputedStyle(back).bottom)||0):reserved?reserved+24:window.innerWidth<=600?82:96;
+    const top=window.innerHeight-bottom-size,gap=Math.max(8,Math.min(32,Number(home.navStyles?.surfaces?.chatDockGap??14)));
+    return clamp({x:dockSide.current==='left'?-10000:10000,y:dockSide.current==='left'?top+(size-node.offsetHeight)/2:top-node.offsetHeight-gap});
   };
   useEffect(() => {
-    const onResize = () => {
-      if (button.current) setPosition((current) => current ? clamp({...current,x:dockSide.current==='left'?-10000:10000}) : null);
-    };
-    const frame=requestAnimationFrame(()=>{if(button.current){const r=button.current.getBoundingClientRect();setPosition(clamp({x:r.left,y:r.top}));}});
-    window.addEventListener("resize", onResize);
-    window.visualViewport?.addEventListener("resize", onResize);
-    return () => { cancelAnimationFrame(frame);window.removeEventListener("resize", onResize); window.visualViewport?.removeEventListener("resize", onResize); };
-  }, [home.loading,settings.enabled]);
+    let frame;const update=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{if(!button.current||drag.current?.moved)return;const next=dock();setPosition(current=>current&&Math.abs(current.x-next.x)<.5&&Math.abs(current.y-next.y)<.5?current:next);});};
+    update();window.addEventListener('resize',update);window.visualViewport?.addEventListener('resize',update);
+    const observer=new MutationObserver(update);observer.observe(document.documentElement,{attributes:true,attributeFilter:['class','style']});
+    return()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('resize',update);window.visualViewport?.removeEventListener('resize',update);};
+  },[home.loading,settings.enabled,location.pathname,home.navStyles?.surfaces?.chatDockGap]);
   const finishDrag = (event) => {
     if (!drag.current || event.pointerId !== drag.current.pointerId) return;
     suppressClick.current = drag.current.moved;
-    if(drag.current.moved){const dx=event.clientX-drag.current.startX;dockSide.current=Math.abs(dx)>60?(dx>0?'right':'left'):dockSide.current;setPosition(current=>current?clamp({...current,x:dockSide.current==='left'?-10000:10000}):current);}
+    if(drag.current.moved){const dx=event.clientX-drag.current.startX;dockSide.current=event.type==='pointerup'&&Math.abs(dx)>60?(dx>0?'right':'left'):dockSide.current;setPosition(dock());}
     button.current?.style.removeProperty('--chat-stretch');
     drag.current = null;
     setDragging(false);
@@ -54,7 +56,7 @@ function ChatButton() {
   const close = useCallback(() => { setHintEpoch(Date.now());setOpen(false); requestAnimationFrame(() => button.current?.focus({ preventScroll: true })); }, []);
   if (home.loading || !settings.enabled) return null;
   return (
-    <><div className={`orora-chat-launcher${dragging?' is-dragging':''}`} style={position ? { left: position.x, top: position.y, right: "auto", bottom: "auto" } : undefined}><button type="button"
+    <><div className={`orora-chat-launcher${dragging?' is-dragging':''}`} style={position ? { left: position.x, top: position.y, right: "auto", bottom: "auto" } : {visibility:"hidden"}}><button type="button"
       ref={button}
       className={`chat-button${position ? " is-positioned" : ""}${dragging ? " is-dragging" : ""}`}
       onDragStart={(event) => event.preventDefault()}

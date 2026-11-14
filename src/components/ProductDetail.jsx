@@ -1,3 +1,4 @@
+import PurchaseSubtotal from './PurchaseSubtotal';
 import "../styles/product-detail.css";
 import { ProductFaq } from "./ProductDiscovery";
 import { careGuideForProduct } from "../lib/product-care-guide";
@@ -480,6 +481,7 @@ function ProductDetail({
 
 
           <ProductPurchaseSelection options={options} variantId={variantId} quantity={choice.quantity} onVariantChange={(variantId) => changeSelection({ variantId })} onQuantityChange={(quantity) => changeSelection({ quantity })} textProps={textProps} />
+          <PurchaseSubtotal product={product} variantId={variantId} quantity={choice.quantity} settings={purchase} preview={preview} onClick={preview?select('pdPurchaseOptions'):undefined}/>
           <section className={`purchase-options ${selectedClass("pdPurchaseOptions")}`} aria-label="Chọn kênh mua hàng" data-builder-key={preview ? "pdPurchaseOptions" : undefined} onClick={preview ? select("pdPurchaseOptions") : undefined}>
             <h2 {...textProps("pdPurchaseHeading", "purchaseHeading")}>{purchase.heading?.trim() || "Chọn cách mua hàng"}</h2>
           {(preview || showZalo || showCall || (!contact.zalo && contact.email && contactSettings.showZalo !== false)) && (

@@ -105,7 +105,6 @@ function App() {
                  {visible("reviews") && <Testimonials />}
    {visible("newsletter") && <Newsletter />}
               {visible("footer") && <Footer />}
-<BackToTop />
 <CursorSparkle />
 <Petals />
             </main>
@@ -139,7 +138,7 @@ function App() {
 
 
       </Routes>
-      {!location.pathname.startsWith("/admin") && <><ShopCart/><ChatButton /><MobileGlass/><MobileShopNav /></>}
+      {!location.pathname.startsWith("/admin") && <><ShopCart/><BackToTop/><ChatButton /><MobileGlass/><MobileShopNav /></>}
 
     </>
   );
