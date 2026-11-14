@@ -1,7 +1,7 @@
 .back-to-top {
   position: fixed;
   right: 24px;
-  bottom: 96px;
+  bottom: calc(var(--back-top-offset,24px) + env(safe-area-inset-bottom,0px));
   z-index: 900;
   width: 52px;
   height: 52px;
@@ -55,5 +55,6 @@
 .back-to-top:hover span { transform: translateY(-3px); }
 
 @media (max-width: 600px) {
-  .back-to-top { right: 16px; bottom: 82px; width: 46px; height: 46px; }
+  .back-to-top { right: 16px; bottom: calc(var(--back-top-mobile-offset,12px) + env(safe-area-inset-bottom,0px)); width: 46px; height: 46px; }
 }
+@media(min-width:601px) and (max-width:768px) { .back-to-top { bottom:calc(var(--back-top-mobile-offset,12px) + env(safe-area-inset-bottom,0px)); } }

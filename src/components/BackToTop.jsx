@@ -1,3 +1,4 @@
+import useHomeContent from "../hooks/useHomeContent";
 import { useEffect, useState } from "react";
 import "../styles/back-to-top.css";
 
@@ -5,6 +6,8 @@ const R = 20;
 const C = 2 * Math.PI * R;
 
 function BackToTop() {
+  const surfaces=useHomeContent().navStyles?.surfaces||{};
+  const offset=(value,fallback,max)=>Math.max(8,Math.min(max,Number(value??fallback)||fallback));
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -21,6 +24,7 @@ function BackToTop() {
 
   return (
     <button
+      style={{"--back-top-offset":`${offset(surfaces.backToTopOffset,24,80)}px`,"--back-top-mobile-offset":`${offset(surfaces.backToTopMobileOffset,12,40)}px`}}
       type="button"
       className={`back-to-top ${visible ? "show" : ""}`}
       tabIndex={visible?0:-1}

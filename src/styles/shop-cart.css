@@ -1,4 +1,4 @@
-.desktop-cart { position:fixed; bottom:24px; left:24px; z-index:1040; padding:12px 20px; border:1px solid var(--line); border-radius:24px; background:#fffafcdd; backdrop-filter:blur(16px); color:var(--rose-deep); cursor:pointer; }
+.desktop-cart { position:fixed; top:18px; right:24px; z-index:1040; padding:12px 20px; border:1px solid var(--line); border-radius:24px; background:#fffafcdd; backdrop-filter:blur(16px); color:var(--rose-deep); cursor:pointer; }
 .cart-row { display:flex; gap:14px; padding:16px 0; border-bottom:1px solid var(--line); }
 .cart-row img { width:70px; height:85px; object-fit:cover; border-radius:12px; }
 .cart-row > div { min-width:0; flex:1; }
@@ -52,3 +52,5 @@ body:has(dialog[open]) .desktop-cart { visibility:hidden; }
 
 /* Never paint the desktop cart launcher on mobile, even before nav mounts. */
 @media(max-width:768px) { .desktop-cart { display:none!important; } }
+
+.navbar .desktop-cart.is-in-navbar { position:static; inset:auto; display:flex; flex-shrink:0; min-height:40px; padding:8px 12px; border-radius:14px; background:#fffafc; backdrop-filter:none; color:var(--cart-accent,var(--rose-deep)); font-size:12px; white-space:nowrap; }

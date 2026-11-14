@@ -6,6 +6,9 @@ const TOGGLES=[['header','Navbar trên'],['chat','Nút chat'],['top','Nút lên 
 export default function SurfaceSettings({value={},onChange}){
  const fields=items=>items.map(([key,label,fallback,min,max,step=1])=><label className="builder-field" key={key}>{label}<input type="number" min={min} max={max} step={step} value={value[key]??fallback} onChange={e=>onChange({[key]:Number(e.target.value)})}/></label>);
  return <>
+  <SettingGroup title="Vị trí nút lên đầu trang">
+   {fields([["backToTopOffset","Khoảng cách mép dưới — desktop (px)",24,8,80],["backToTopMobileOffset","Khoảng hở trên thanh dưới — mobile (px)",12,8,40]])}
+  </SettingGroup>
   <SettingGroup title="Kích thước và vị trí khung chat AI">
    {fields(CHAT_FIELDS)}
    <small className="builder-help">Áp dụng cả desktop và mobile; khung tự thu vừa màn hình. Nội dung và kiểu chữ chỉnh tại Chat AI.</small>

@@ -1,6 +1,9 @@
+import {subscribeNavbarCartSlot,getNavbarCartSlot} from '../lib/navbar-cart-slot';
 import {useNavigate} from 'react-router-dom';
+import {createPortal} from 'react-dom';
+import CartButton from './CartButton';
 import {productPath} from '../lib/product-identity';
-import {useEffect,useState} from 'react';
+import {useEffect,useSyncExternalStore,useState} from 'react';
 import useHomeContent from '../hooks/useHomeContent';
 import useProducts from '../hooks/useProducts';
 import {productVolumeOptions,volumePriceText} from '../lib/product-options';
@@ -14,6 +17,7 @@ const key='orora-cart-v1';
 import {CART_COPY} from '../lib/cart-copy';
 export default function ShopCart(){
  const navigate=useNavigate();
+ const cartHost=useSyncExternalStore(subscribeNavbarCartSlot,getNavbarCartSlot,getNavbarCartSlot);
  const home=useHomeContent(),{products}=useProducts(),settings=home.navStyles?.cart||{},copy={...CART_COPY,...settings.copy};
  if(copy.order==='Đặt sản phẩm này')copy.order='Chi tiết';
  const [rows,setRows]=useState(()=>{try{const saved=JSON.parse(localStorage.getItem(key));return Array.isArray(saved)?saved.filter(r=>r&&typeof r.id==='string'&&typeof r.variantId==='string'&&Number.isInteger(r.quantity)&&r.quantity>0&&r.quantity<=20).slice(0,100):[];}catch{return [];}}),[open,setOpen]=useState(false),[pending,setPending]=useState(null),[variant,setVariant]=useState(''),[quantity,setQuantity]=useState(1),[notice,setNotice]=useState('');
@@ -27,7 +31,8 @@ export default function ShopCart(){
  const resolved=rows.map(r=>({...r,product:products.find(p=>p.id===r.id)}));
  const total=resolved.reduce((sum,r)=>{const p=r.product;if(!p)return null;const options=productVolumeOptions(p),option=options.find(v=>v.id===r.variantId);if(options.length&&!option)return null;const price=parseVndPrice(volumePriceText(p,option));return sum===null||price===null?null:sum+price*r.quantity;},0);
  if(settings.enabled===false||home.loading)return null;
- return <><button className="desktop-cart" data-cart-target onClick={()=>setOpen(true)} aria-label={copy.label}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 3h2l3 12h10l3-9H6M9 20h.01M18 20h.01"/></svg> {copy.label} ({rows.reduce((n,r)=>n+r.quantity,0)})</button><div className="cart-announcement" role="status">{notice}</div>
+ const cartButton=<CartButton settings={settings} count={rows.reduce((n,r)=>n+r.quantity,0)} inNavbar={Boolean(cartHost)} onClick={()=>setOpen(true)}/>;
+ return <>{cartHost?createPortal(cartButton,cartHost):cartButton}<div className="cart-announcement" role="status">{notice}</div>
  {pending&&<ModalDialog title={copy.choose} onClose={()=>setPending(null)}><ProductPurchaseSelection options={productVolumeOptions(pending.product)} variantId={variant} quantity={quantity} onVariantChange={setVariant} onQuantityChange={setQuantity}/><button className="cart-primary" disabled={!variant||!quantity} onClick={()=>{window.dispatchEvent(new CustomEvent('orora-cart-confirm',{detail:{...pending,variantId:variant,quantity}}));setPending(null);}}>{copy.add}</button></ModalDialog>}
  {open&&<ModalDialog allowBackgroundScroll={settings.backgroundScroll!==false} title={copy.title} className="shop-cart" style={{'--cart-accent':settings.accent||'#b8446d',...toCss(settings.text)}} onClose={()=>setOpen(false)}><div style={toCss(settings.text)}>{!rows.length&&<p>{copy.empty}</p>}{resolved.map((r,index)=>{const p=r.product,options=p?productVolumeOptions(p):[],option=options.find(v=>v.id===r.variantId),valid=p&&(!options.length||option);return <article className="cart-row" key={`${r.id}:${r.variantId}`}>{p?.image?<img src={cdnSrc(p.image,THUMB)} alt=""/>:<div className="cart-image-placeholder" aria-hidden="true"/>}<div className="cart-row-body"><strong>{p?.name||'Sản phẩm chưa khả dụng'}</strong>{option&&<p>{option.label}</p>}<p>{valid?(parseVndPrice(volumePriceText(p,option))===null?'Liên hệ':formatVnd(parseVndPrice(volumePriceText(p,option)))):'Vui lòng thêm lại sản phẩm'}</p><div className="cart-row-actions"><div className="cart-quantity"><button type="button" aria-label={`${copy.decrease} ${p?.name||r.id}`} disabled={r.quantity<=1} onClick={()=>setRows(old=>old.map((row,i)=>i===index?{...row,quantity:Math.max(1,row.quantity-1)}:row))}>−</button><input aria-label={`${copy.quantity} ${p?.name||r.id}`} type="number" min="1" max="20" value={r.quantity} onChange={e=>setRows(old=>old.map((row,i)=>i===index?{...row,quantity:Math.min(20,Math.max(1,Math.trunc(Number(e.target.value))||1))}:row))}/><button type="button" aria-label={`${copy.increase} ${p?.name||r.id}`} disabled={r.quantity>=20} onClick={()=>setRows(old=>old.map((row,i)=>i===index?{...row,quantity:Math.min(20,row.quantity+1)}:row))}>+</button></div><button onClick={()=>setRows(old=>old.filter((_,i)=>i!==index))}>{copy.remove}</button><button disabled={!valid} onClick={()=>{setOpen(false);navigate(productPath(p,products),{state:{cartSelection:{productId:p.id,variantId:r.variantId,quantity:r.quantity}}});}}>{copy.order}</button></div></div></article>;})}{rows.length>0&&<p>{copy.shipping}<br/>{copy.total}: <strong>{total===null?'Liên hệ':formatVnd(total)}</strong></p>}</div></ModalDialog>}
 </>;

@@ -293,3 +293,6 @@
  .mobile-drawer-links > a,.mobile-drawer-links summary { padding:12px 10px; font-size:14px; overflow-wrap:anywhere; }
  .mobile-drawer-links .mobile-nav-submenu { margin-left:4px; padding-left:4px; }
 }
+
+.navbar-cart-slot { flex-shrink:0; }
+@media(max-width:768px) { .navbar-cart-slot { display:none; } }

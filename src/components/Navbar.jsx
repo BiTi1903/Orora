@@ -1,3 +1,5 @@
+import {mountNavbarCartSlot} from "../lib/navbar-cart-slot";
+import CartButton from "./CartButton";
 import { contactLinks } from "../lib/contact";
 import { withTrackingNavLink } from "../lib/navbar-links";
 import { useState, useEffect, useRef } from "react";
@@ -134,6 +136,7 @@ function Navbar({
           })}
         </div>
 
+        <span ref={preview?undefined:mountNavbarCartSlot} className="navbar-cart-slot" data-desktop-cart-slot={preview?undefined:""}>{preview&&<CartButton settings={styles.cart} inNavbar preview onClick={event=>event.preventDefault()}/>}</span>
         <button
           className={`menu${menuOpen ? " menu--open" : ""}`}
           type="button"
