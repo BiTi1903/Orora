@@ -40,4 +40,17 @@
  #root .product-detail .product-slogan-card { padding:var(--pd-mobile-sloganPadding)!important; --slogan-gap:6px!important; }
  #root .product-detail .product-slogan-card h2 { font-size:var(--pd-mobile-sloganTitleSize)!important; line-height:1.4!important; }
  #root .product-detail .product-slogan-card p { font-size:var(--pd-mobile-sloganBodySize)!important; line-height:1.55!important; }
+ #root .product-detail .product-assurances { padding:2px var(--pd-mobile-assurancePadding)!important; }
+ #root .product-detail .product-assurance { gap:10px; padding:var(--pd-mobile-assuranceGap) 0; }
+ #root .product-detail .product-assurance-icon { flex-basis:18px; padding-top:2px; }
+ #root .product-detail .product-assurance-icon svg { width:18px; height:18px; }
+ #root .product-detail .product-assurance h3 { font-size:var(--pd-mobile-assuranceTitleSize)!important; line-height:1.4!important; margin:0 0 4px!important; }
+ #root .product-detail .product-assurance p { font-size:var(--pd-mobile-assuranceBodySize)!important; line-height:1.55!important; margin:0!important; }
+ #root .product-detail .product-care-guide { padding:var(--pd-mobile-carePadding)!important; --slogan-gap:8px!important; }
+ #root .product-detail .product-care-guide h2 { font-size:var(--pd-mobile-careTitleSize)!important; line-height:1.3!important; margin:0 0 8px!important; }
+ #root .product-detail .product-care-guide p { font-size:var(--pd-mobile-careBodySize)!important; line-height:1.6!important; }
+ #root .product-detail .product-care-grid { gap:var(--pd-mobile-careGap); margin-top:14px; }
+ #root .product-detail .product-care-item { padding:var(--pd-mobile-careItemPadding)!important; --slogan-gap:6px!important; }
+ #root .product-detail .product-care-item h3 { font-size:var(--pd-mobile-careItemTitleSize)!important; line-height:1.4!important; margin:0 0 6px!important; }
+ #root .product-detail .product-care-item a { font-size:var(--pd-mobile-careBodySize)!important; margin-top:8px; min-height:44px; display:inline-flex; align-items:center; }
 }

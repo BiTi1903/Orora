@@ -7,6 +7,11 @@ export const MOBILE_DETAIL_FIELDS = [
  ['sloganTitleSize','Tiêu đề slogan',15,12,24], ['sloganBodySize','Nội dung slogan',13,12,22],
  ['padding','Đệm khung thông tin',16,10,28], ['sectionGap','Khoảng cách các mục',18,10,32],
  ['sloganPadding','Đệm khung slogan',14,8,28],
+ ['assuranceTitleSize','Tiêu đề cam kết',13,12,20], ['assuranceBodySize','Nội dung cam kết',12,12,18],
+ ['assurancePadding','Đệm khung cam kết',14,8,28], ['assuranceGap','Đệm từng dòng cam kết',10,6,20],
+ ['careTitleSize','Tiêu đề hướng dẫn chăm sóc',22,18,30], ['careItemTitleSize','Tiêu đề từng cách chăm sóc',18,14,24],
+ ['careBodySize','Nội dung chăm sóc',13,12,20], ['carePadding','Đệm khung chăm sóc',14,8,28],
+ ['careItemPadding','Đệm từng thẻ chăm sóc',12,8,24], ['careGap','Khoảng cách các thẻ chăm sóc',10,6,24],
 ];
 export function mobileDetailVars(value={}) {
  return Object.fromEntries(MOBILE_DETAIL_FIELDS.map(([key,,fallback,min,max])=>{
