@@ -13,6 +13,7 @@ function HeroFieldSettings({ data, hero, onChange }) {
   if (data.type === "heroImage") {
     return (
       <SettingGroup title="Ảnh nền">
+        <small className="builder-help">Ảnh hero này cũng được dùng làm ảnh đại diện khi chia sẻ link trang chủ. Ứng dụng nhắn tin có thể cần cập nhật lại ảnh đã lưu đệm.</small>
         <div className="builder-field">
           <label>URL ảnh nền</label>
           <input

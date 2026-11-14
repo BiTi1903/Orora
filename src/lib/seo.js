@@ -1,3 +1,4 @@
+import {SHARE_IMAGE_PATH,heroShareImage} from "./share-image.js";
 import {parseVndPrice} from "./commerce.js";
 import { findProductByRoute, productPath } from "./product-identity.js";
 export const SITE_URL = "https://ororavn.com";
@@ -51,5 +52,5 @@ export function pageSeo(pathname, home = {}, products = [], productsLoading = fa
       ...(price !== null ? { offers: { "@type": "Offer", priceCurrency: "VND", price:String(price), url } } : {}),
     });
   }
-  return { ...page, url, image: (product?.image && imageUrl(product.image)) || `${SITE_URL}/og-image.jpg`, structuredData: { "@context": "https://schema.org", "@graph": graph } };
+  return { ...page, url, image: (product?.image && imageUrl(product.image)) || ((home.heroImage || home.heroImageMobile || home.heroMobileImage) ? heroShareImage(home,SITE_URL) : `${SITE_URL}${SHARE_IMAGE_PATH}`), structuredData: { "@context": "https://schema.org", "@graph": graph } };
 }

@@ -37,7 +37,7 @@ export default function EditHero() {
   return (
     <SectionShell
       title="Hero (đầu trang)"
-      hint="Chữ, nút và ảnh nền ở đầu trang."
+      hint="Chữ, nút và ảnh nền ở đầu trang. Ảnh hero cũng dùng làm ảnh đại diện khi chia sẻ link trang chủ."
       {...h}
       onSubmit={(e) =>
         h.save(e, {
