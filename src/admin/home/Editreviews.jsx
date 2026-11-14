@@ -1,3 +1,4 @@
+import ReviewCardSettings from "../builder/ReviewCardSettings";
 import useHomeForm from "./Usehomeform";
 import { Field, SectionShell } from "./Ui";
 import ImageField from "../ImageField";
@@ -9,6 +10,7 @@ export default function EditReviews() {
     "testimonialsHighlight",
     "testimonialsTitleEnd",
     "reviews",
+    "testimonialsStyles",
   ]);
 
   const reviews = h.form.reviews || [];
@@ -36,6 +38,8 @@ export default function EditReviews() {
         name="testimonialsTitleEnd"
         {...h}
       />
+
+      <ReviewCardSettings value={h.form.testimonialsStyles?.card} onChange={patch=>h.set("testimonialsStyles",{...h.form.testimonialsStyles,card:{...h.form.testimonialsStyles?.card,...patch}})}/>
 
       <div className="admin-list-block">
         {reviews.map((item, i) => (

@@ -45,3 +45,14 @@ test("section visibility saves only changed switches and preserves content and o
   const enabled = { ...edited, sectionVisibility: { ...edited.sectionVisibility, hero: true } };
   assert.deepEqual(changedValues(edited, editedSectionPayload(enabled, ["visibility"])), { sectionVisibility: { hero: true } });
 });
+
+test('navbar editor retains mobile, cart, drawer and surface settings when editing the logo', async () => {
+  const {createNav}=await import('../src/admin/builder/navbar-state.js');
+  const raw={navStyles:{mobile:{enabled:false,items:[{label:'Story',target:'story'}]},cart:{enabled:false,copy:{title:'Giỏ của bạn'}},surfaces:{frames:false,chatPanelWidth:320},drawer:{widthPercent:45},custom:{value:0},logo:{fontSize:31}}};
+  const loaded=createNav(raw);
+  for(const key of ['mobile','cart','surfaces','drawer','custom'])assert.deepEqual(loaded.navStyles[key],raw.navStyles[key]);
+  const edited={...loaded,navStyles:{...loaded.navStyles,logo:{...loaded.navStyles.logo,fontSize:32}}};
+  const {changedValues}=await import('../src/admin/builder/save-sections.js');
+  assert.deepEqual(changedValues(loaded,edited),{navStyles:{logo:{fontSize:32}}});
+  assert.equal(raw.navStyles.logo.fontSize,31);
+});

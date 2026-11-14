@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import {applyGlassSurfaces,watchGlassTabs} from "../../lib/glass-surfaces";
+import "../../styles/mobile-glass.css";
 
 const STATIC_STYLE = `
 *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
@@ -13,7 +15,7 @@ html { scrollbar-width: none; } body { margin: 0; }
 @media(max-width: 768px) { .gallery > :nth-child(n+3) { display: none; } }
 `;
 
-export default function PreviewFrame({ device, children }) {
+export default function PreviewFrame({ device, children, surfaces }) {
   const host = useRef(null);
   const [frameDocument, setFrameDocument] = useState(null);
   const [availableWidth, setAvailableWidth] = useState(0);
@@ -48,6 +50,14 @@ export default function PreviewFrame({ device, children }) {
     frameDocument.addEventListener("click", preventNavigation);
     return () => { observer.disconnect(); frameDocument.removeEventListener("click", preventNavigation); };
   }, [frameDocument]);
+
+  const surfaceKey=JSON.stringify(surfaces || {});
+  useEffect(() => {
+    if (!frameDocument) return;
+    const clear=applyGlassSurfaces(frameDocument.documentElement, JSON.parse(surfaceKey));
+    const stopTabs=watchGlassTabs(frameDocument);
+    return()=>{stopTabs();clear();};
+  }, [frameDocument, surfaceKey]);
 
   return (
     <div className="builder-frame-host" ref={host}>

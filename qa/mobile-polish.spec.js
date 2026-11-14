@@ -28,6 +28,8 @@ test('chat hint repeats after hiding or dismissal and resumes when chat closes',
   'hooks/useHomeContent.js':`export default function home(){return {loading:false,chatSettings:{hintDelay:1,hintDuration:1,hintRepeatDelay:2,hintText:'Bạn cần tư vấn?'}}}`,
   'hooks/useChatConversation.js':'export default function conversation(){return {metadata:{}}}',
  });
+ // The launcher measures its fixed dock on its first animation frame.
+ await page.clock.runFor(20);
  await expect(page.locator('.chat-button')).toBeVisible();
  const hint=page.locator('.orora-chat-hint');
  await expect(hint).toHaveCount(0);await page.clock.runFor(1000);await expect(hint).toBeVisible();
@@ -43,6 +45,8 @@ test('default hint timing is 5 seconds before first display, 3 visible and 10 hi
  await page.clock.install();
  await page.clock.pauseAt(new Date(Date.now()+60000));
  await mount(page,`import ChatButton from '/src/components/ChatButton.jsx';${render('R.createElement(ChatButton)')}`,{'hooks/useHomeContent.js':`export default function home(){return {loading:false}}`,'hooks/useChatConversation.js':'export default function conversation(){return {metadata:{}}}'});
+ // The launcher measures its fixed dock on its first animation frame.
+ await page.clock.runFor(20);
  await expect(page.locator('.chat-button')).toBeVisible();
  const hint=page.locator('.orora-chat-hint');
  await page.clock.runFor(4900);await expect(hint).toHaveCount(0);

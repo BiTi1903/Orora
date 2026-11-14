@@ -1,3 +1,4 @@
+import DesktopCardSettings from "../builder/DesktopCardSettings";
 import MobileImageSettings from "../builder/MobileImageSettings";
 import useHomeForm from "./Usehomeform";
 import { SectionShell } from "./Ui";
@@ -41,8 +42,8 @@ const ELEMENTS = [
   },
   {
     key: "button",
-    title: "Kiểu chữ — Nút “Xem chi tiết”",
-    sample: "Xem chi tiết ↗",
+    title: "Kiểu chữ — Nút “Xem”",
+    sample: "Xem ↗",
     previewBg: "#d9628a",
     fields: ["fontFamily", "fontSize", "fontWeight", "color", "letterSpacing", "textTransform"],
     defaults: { fontSize: 12, fontWeight: 500, letterSpacing: 1, color: "#ffffff" },
@@ -59,6 +60,7 @@ export default function EditProductCard() {
       {...h}
       onSubmit={h.save}
     >
+      <DesktopCardSettings value={h.form.productCardStyles?.desktopActions} onChange={patch=>h.set("productCardStyles",{...h.form.productCardStyles,desktopActions:{...h.form.productCardStyles?.desktopActions,...patch}})}/>
       <MobileImageSettings layout={h.form.productCardStyles?.imageLayout || {}} onChange={(patch) => h.set("productCardStyles", { ...h.form.productCardStyles, imageLayout: { ...h.form.productCardStyles?.imageLayout, ...patch } })} />
       <StyleList
         elements={ELEMENTS}

@@ -5,7 +5,7 @@ test.beforeEach(({page})=>{const errors=[];errorsByPage.set(page,errors);page.on
 test.afterEach(({page})=>expect(errorsByPage.get(page)).toEqual([]));
 test('HTML discovers the correct hero image before the app bundle finishes loading',async({page})=>{
  let releaseMain;
- await page.route('**/src/main.jsx',async route=>{await new Promise(resolve=>releaseMain=resolve);await route.fulfill({contentType:'application/javascript',body:'window.__mainReady=true;'});});
+ await page.route('**/src/main.jsx*',async route=>{await new Promise(resolve=>releaseMain=resolve);await route.fulfill({contentType:'application/javascript',body:'window.__mainReady=true;'});});
  await page.route('**/fonts.googleapis.com/**',route=>route.fulfill({contentType:'text/css',body:''}));
  await page.route('**/api/storefront-shell',route=>route.fulfill({json:{content:{heroTitle:'ORORA'},images:{desktop:'/hero-desktop.svg',mobile:'/hero-mobile.svg'}}}));
  await page.route('**/hero-*.svg',route=>route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900"><rect width="100%" height="100%" fill="pink"/></svg>'}));

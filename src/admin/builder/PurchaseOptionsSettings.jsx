@@ -24,7 +24,7 @@ export default function PurchaseOptionsSettings({ value = {}, onChange }) {
     <StyleTypographyBlock style={value.orderSubmitStyle || {}} onStyleChange={patch=>onChange({orderSubmitStyle:{...value.orderSubmitStyle,...patch}})} title="Chữ nút gửi đơn" />
     <StyleTypographyBlock style={value.loadingStyle || {}} onStyleChange={patch=>onChange({loadingStyle:{...value.loadingStyle,...patch}})} title="Chữ khi đang gửi đơn" />
     <SettingGroup title="Màu nền nút mua hàng">
-      {[["websiteBackground", "Website", "#b8446d"], ["tiktokBackground", "TikTok", "#171717"], ["facebookBackground", "Facebook", "#0866ff"]].map(([key, label, fallback]) => <div className="builder-field" key={key}><label>{label}</label><input type="color" value={value[key] || fallback} onChange={(event) => onChange({ [key]: event.target.value, ...(["facebookLabel", "tiktokLabel"].includes(key) ? { [key === "facebookLabel" ? "customFacebookLabel" : "customTiktokLabel"]: true } : {}) })} /></div>)}
+      {[["websiteBackground", "Website", "#b8446d"], ["tiktokBackground", "TikTok", "#171717"], ["facebookBackground", "Facebook", "#0866ff"]].map(([key, label, fallback]) => <div className="builder-field" key={key}><label>{label}</label><input type="color" value={value[key] || fallback} onChange={(event) => onChange({ [key]: event.target.value })} /></div>)}
     </SettingGroup>
     <StyleTypographyBlock style={value} onStyleChange={onChange} title="Kiểu chữ chung nút mua hàng" />
     <StyleTypographyBlock style={value.facebookStyle || {}} onStyleChange={(patch) => onChange({ facebookStyle: { ...value.facebookStyle, ...patch } })} title="Chữ riêng nút Facebook" />

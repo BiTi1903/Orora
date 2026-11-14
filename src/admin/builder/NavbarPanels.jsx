@@ -1,4 +1,5 @@
 import MobileNavSettings from "./MobileNavSettings";
+import SurfaceSettings from "./SurfaceSettings";
 import { SettingGroup, SelectField, StyleTypographyBlock } from "./ui";
 import { SPACE_OPTIONS } from "./options";
 
@@ -22,6 +23,7 @@ export function NavbarSettings({ selected, navbar, onChange, onStyleChange }) {
   return (
     <>
       <MobileNavSettings navbar={navbar} onChange={onChange}/>
+      <SurfaceSettings value={navbar.navStyles?.surfaces} onChange={patch=>onChange({navStyles:{...navbar.navStyles,surfaces:{...navbar.navStyles?.surfaces,...patch}}})}/>
       <SettingGroup title="Menu bên — mobile">
        <label>Màu nền kính<input type="color" value={navbar.navStyles?.drawer?.background||'#fffafc'} onChange={e=>onChange({navStyles:{...navbar.navStyles,drawer:{...navbar.navStyles?.drawer,background:e.target.value}}})}/></label>
        {[['widthPercent','Chiều rộng menu (% màn hình)',50,40,80],['opacity','Độ đục (%)',82,40,100],['blur','Độ mờ nền (px)',24,0,32],['radius','Bo góc (px)',24,0,32]].map(([key,label,fallback,min,max])=><label key={key}>{label}<input type="number" min={min} max={max} value={navbar.navStyles?.drawer?.[key]??fallback} onChange={e=>onChange({navStyles:{...navbar.navStyles,drawer:{...navbar.navStyles?.drawer,[key]:Number(e.target.value)}}})}/></label>)}

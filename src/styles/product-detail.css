@@ -1069,7 +1069,7 @@
 .order-tracking-panel .order-tracking-search-form { margin:0; gap:14px; }
 .order-tracking-modes { padding:3px; border-radius:12px; }
 .order-tracking-panel .order-tracking-modes button { min-height:40px; padding:9px 12px; border-radius:9px; }
-.order-tracking-mode-hint { margin:0!important; font-size:12px!important; line-height:1.5!important; }
+.order-tracking-mode-hint { margin:0; font-size:12px; line-height:1.5; }
 .order-tracking-guide { width:100%; padding:12px 4px; box-sizing:border-box; }
 .order-tracking-guide summary { font-size:13px; }
 @media(max-width:600px) { .order-tracking-search-layout .order-tracking-panel { padding:18px; } }

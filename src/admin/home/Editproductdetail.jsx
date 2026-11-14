@@ -62,8 +62,8 @@ const ELEMENTS = [
   },
   {
     key: "sectionTitle",
-    title: "Kiểu chữ — Tiêu đề mục (About / Details)",
-    sample: "About the product",
+    title: "Kiểu chữ — Tiêu đề nội dung sản phẩm",
+    sample: "Mô tả",
     defaults: {
       fontFamily: '"Cormorant Garamond", serif',
       fontSize: 26,
@@ -79,8 +79,8 @@ const ELEMENTS = [
   },
   {
     key: "rowLabel",
-    title: "Kiểu chữ — Tên thông tin (Material, Size...)",
-    sample: "Material",
+    title: "Kiểu chữ — Tên thông tin sản phẩm",
+    sample: "Thành phần",
     defaults: { fontSize: 13, fontWeight: 500, color: "#b8446d" },
   },
   {
@@ -101,37 +101,6 @@ export default function EditProductDetail() {
       {...h}
       onSubmit={h.save}
     >
-      <div className="admin-field">
-        <label>Tiêu đề About the product</label>
-        <input
-          value={h.form.productDetailStyles?.aboutTitle?.text ?? "About the product"}
-          onChange={(e) =>
-            h.set("productDetailStyles", {
-              ...(h.form.productDetailStyles || {}),
-              aboutTitle: {
-                ...(h.form.productDetailStyles?.aboutTitle || {}),
-                text: e.target.value,
-              },
-            })
-          }
-        />
-      </div>
-      <div className="admin-field">
-        <label>Tiêu đề Details</label>
-        <input
-          value={h.form.productDetailStyles?.detailsTitle?.text ?? "Details"}
-          onChange={(e) =>
-            h.set("productDetailStyles", {
-              ...(h.form.productDetailStyles || {}),
-              detailsTitle: {
-                ...(h.form.productDetailStyles?.detailsTitle || {}),
-                text: e.target.value,
-              },
-            })
-          }
-        />
-      </div>
-
       <ProductLoadErrorSettings value={h.form.productDetailStyles?.loadError||{}} onChange={patch=>h.set("productDetailStyles",{...h.form.productDetailStyles,loadError:{...h.form.productDetailStyles?.loadError,...patch}})}/>
       <PurchaseOptionsSettings value={h.form.productDetailStyles?.purchaseOptions || {}} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, purchaseOptions: { ...h.form.productDetailStyles?.purchaseOptions, ...patch } })} />
       <ProductContactSettings value={h.form.productDetailStyles?.contactActions || {}} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, contactActions: { ...h.form.productDetailStyles?.contactActions, ...patch } })} />
@@ -144,21 +113,7 @@ export default function EditProductDetail() {
       <StyleList
         elements={ELEMENTS}
         value={h.form.productDetailStyles}
-        onChange={(v) =>
-          h.set("productDetailStyles", {
-            ...v,
-            aboutTitle: {
-              ...(h.form.productDetailStyles?.aboutTitle || {}),
-              ...(v.aboutTitle || {}),
-              text: h.form.productDetailStyles?.aboutTitle?.text ?? "About the product",
-            },
-            detailsTitle: {
-              ...(h.form.productDetailStyles?.detailsTitle || {}),
-              ...(v.detailsTitle || {}),
-              text: h.form.productDetailStyles?.detailsTitle?.text ?? "Details",
-            },
-          })
-        }
+        onChange={(v) => h.set("productDetailStyles", v)}
       />
     </SectionShell>
   );

@@ -11,11 +11,12 @@ export default function useProductPanelSize(rootRef, product) {
     const card = root.querySelector(".product-detail-info");
     const content = root.querySelector(".product-purchase-content");
     if (!layout || !gallery || !image || !card || !content) return;
-    const media = window.matchMedia("(min-width: 901px)"); let frame;
+    const viewport = root.ownerDocument.defaultView || window;
+    const media = viewport.matchMedia("(min-width: 901px)"); let frame;
     const clear = () => { layout.style.removeProperty("--balanced-image-height"); };
     const measure = () => {
       if (!media.matches) { clear(); return; }
-      const style = getComputedStyle(card);
+      const style = viewport.getComputedStyle(card);
       const extra = ["paddingTop", "paddingBottom", "borderTopWidth", "borderBottomWidth"].reduce((sum, key) => sum + (Number.parseFloat(style[key]) || 0), 0);
       const galleryExtras = gallery.offsetHeight - image.offsetHeight;
       const height = `${Math.max(1, Math.ceil(content.offsetHeight + extra - galleryExtras))}px`;

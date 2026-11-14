@@ -4,7 +4,7 @@ import MobileImageSettings from "./MobileImageSettings";
 import { SloganAppearanceEditor, SloganTypographyEditor } from "../ProductSloganDesign";
 import { SettingGroup, SelectField, StyleTypographyBlock } from "./ui";
 import { CollectionSettings } from "./CollectionPanels";
-import { SPACE_OPTIONS, FONT_OPTIONS, SIZE_OPTIONS, toFullFontFamily, toBareFontFamily } from "./options";
+import { SPACE_OPTIONS } from "./options";
 
 export function ProductDetailSettings({
   selected,
@@ -481,28 +481,9 @@ export function ProductDetailSettings({
 
   const meta = data.meta;
   const style = productDetail[meta.styleKey] || {};
-  const valueStyleOnly = meta.styleKey === "rowValue";
 
   return (
     <>
-      {/* {showDetailNames && (
-        <SettingGroup title="Nội dung">
-          {[
-            ["material", "Material"],
-            ["size", "Size"],
-            ["color", "Color"],
-            ["origin", "Origin"],
-          ].map(([key, fallback]) => (
-            <div className="builder-field" key={key}>
-              <label>{fallback}</label>
-              <input
-                value={productDetail.detailLabels?.[key] ?? productDetail[`${key}Label`]?.text ?? fallback}
-                onChange={(e) => onChange({ __labelKey: key, text: e.target.value })}
-              />
-            </div>
-          ))}
-        </SettingGroup>
-      )} */}
       {meta.textKey && (
         <SettingGroup title="Nội dung">
           <div className="builder-field">
@@ -515,54 +496,7 @@ export function ProductDetailSettings({
         </SettingGroup>
       )}
 
-      {/* {(selected === "pdDetailsTitle" || String(selected || "").startsWith("pdLabel:")) && (
-        <SettingGroup title="Tên 4 mục">
-          {[
-            ["material", "Material"],
-            ["size", "Size"],
-            ["color", "Color"],
-            ["origin", "Origin"],
-          ].map(([key, fallback]) => (
-            <div className="builder-field" key={key}>
-              <label>{fallback}</label>
-              <input
-                value={productDetail.detailLabels?.[key] ?? productDetail[`${key}Label`]?.text ?? fallback}
-                onChange={(e) => {
-                  const prev = selected;
-                  onChange({
-                    __labelKey: key,
-                    text: e.target.value,
-                    __restore: prev,
-                  });
-                }}
-              />
-            </div>
-          ))}
-        </SettingGroup>
-      )} */}
-
-      {valueStyleOnly ? (
-        <SettingGroup title="Font / size dùng chung">
-          <small className="builder-help">
-            Áp dụng cho nội dung Material, Size, Color và Origin. Không sửa chữ ở đây.
-          </small>
-          <SelectField
-            label="Font"
-            value={toBareFontFamily(style.fontFamily)}
-            options={FONT_OPTIONS}
-            onChange={(value) => onStyleChange({ fontFamily: toFullFontFamily(value) })}
-          />
-          <SelectField
-            label="Size"
-            value={style.fontSize ?? 14}
-            options={SIZE_OPTIONS}
-            suffix="px"
-            onChange={(value) => onStyleChange({ fontSize: Number(value) })}
-          />
-        </SettingGroup>
-      ) : (
-        <StyleTypographyBlock style={style} onStyleChange={onStyleChange} />
-      )}
+      <StyleTypographyBlock style={style} onStyleChange={onStyleChange} />
 
         {(meta.textKey || String(selected || "").startsWith("rel")) && (
         <SettingGroup title="Padding / margin">

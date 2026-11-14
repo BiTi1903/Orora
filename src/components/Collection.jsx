@@ -11,25 +11,26 @@ import useProducts from "../hooks/useProducts";
 import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
 
-function usePerView() {
+function usePerView(rootRef) {
   const [perView, setPerView] = useState(3);
 
   useEffect(() => {
+    const viewport = rootRef.current?.ownerDocument.defaultView || window;
     const update = () => {
-      const w = window.innerWidth;
+      const w = viewport.innerWidth;
       setPerView(w <= 1000 ? 2 : 3);
     };
     update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, []);
+    viewport.addEventListener("resize", update);
+    return () => viewport.removeEventListener("resize", update);
+  }, [rootRef]);
 
   return perView;
 }
 
 function ProductCarousel({ products, cardStyles, preview, selectedElement, onSelect, keyMap = null, groupLayout = false, carouselSettings = {} }) {
-  const perView = usePerView();
   const viewRef = useRef(null);
+  const perView = usePerView(viewRef);
   useEffect(()=>{
     const view=viewRef.current;if(!view)return;
     const measure=()=>{const image=view.querySelector('.gallery-image');if(!image)return;let y=image.offsetHeight/2,node=image;while(node&&node!==view){y+=node.offsetTop;node=node.offsetParent;}view.style.setProperty('--gallery-arrow-y',`${y}px`);};
@@ -419,7 +420,7 @@ function Collection({
         </h2>
       </div>
 
-      {filtering && <CatalogFilters value={effectiveFilters} activeView={preview||grid?'grid':'carousel'} settings={filterSettings} onApply={changeFilters}/>}
+      {filtering && <CatalogFilters value={effectiveFilters} activeView={grid?'grid':'carousel'} settings={filterSettings} onApply={changeFilters}/>}
       {!filtering && !preview && !isRelated && categories.length > 0 && (
         <nav className="collection-categories" aria-label="Danh mục sản phẩm">
           <button type="button" aria-pressed={!categoryId} onClick={() => setCategoryId("")}>Tất cả</button>
@@ -427,11 +428,9 @@ function Collection({
         </nav>
       )}
       {/* PRODUCTS */}
-      {preview ? (
-        <div className="gallery">{products.slice(0,pageSize).map(product=><div key={product.id}>{card(product)}</div>)}</div>
-      ) : error ? (
+      {!preview && error ? (
         <CatalogLoadError value={headStyles.loadError || home.productDetailStyles?.loadError} onRetry={retry}/>
-      ) : loading ? (
+      ) : !preview && loading ? (
         <div className="catalog-loading" role="status" aria-label="Đang tải sản phẩm" aria-busy="true">
           {[0, 1].map((item) => <div key={item}><div className="loading-placeholder" /><div className="loading-placeholder loading-line" /></div>)}
         </div>

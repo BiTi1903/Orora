@@ -1,5 +1,5 @@
 import useDraftGuard from "../../hooks/useDraftGuard";
-import { withTrackingNavLink } from "../../lib/navbar-links";
+import {createNav} from "./navbar-state";
 import { PAGE_SECTIONS as SECTION_LIST, sectionIsEnabled } from "../../lib/page-sections";
 import { DEFAULT_PRODUCT_NEEDS, DEFAULT_PRODUCT_FAQ } from "../../lib/product-discovery";
 import { ProductNeedsView, ProductFaq } from "../../components/ProductDiscovery";
@@ -490,51 +490,6 @@ function createNewsletter(data = {}) {
   };
 }
 
-const DEFAULT_NAV = {
-  navLogo: "ORORA",
-  navLinks: [
-    { label: "Về Chúng Tôi", href: "/#about" },
-    { label: "Sản phẩm", href: "/#shop" },
-    { label: "Liên Hệ", href: "/#contact" },
-  ],
-  navStyles: {
-    logo: {
-      fontFamily: '"Cormorant Garamond", serif',
-      fontSize: 26,
-      fontWeight: 600,
-      letterSpacing: 2,
-      color: "#3a1526",
-    },
-    link: {
-      fontSize: 13,
-      fontWeight: 500,
-      letterSpacing: 1,
-      color: "#3a1526",
-    },
-  },
-};
-
-function createNav(data = {}) {
-  return {
-    navLogo: data.navLogo ?? DEFAULT_NAV.navLogo,
-    navLinks: withTrackingNavLink(Array.isArray(data.navLinks)
-      ? data.navLinks.map((item, index) => ({
-          ...item,
-          label: item.label || "",
-          href:
-            item.href && item.href !== "/"
-              ? item.href
-              : item.kind === "order-tracking" ? "/tra-cuu-don-hang" : DEFAULT_NAV.navLinks[index]?.href || "/",
-        }))
-      : DEFAULT_NAV.navLinks.map((item) => ({ ...item }))),
-    navStyles: {
-      logo: { ...DEFAULT_NAV.navStyles.logo, ...(data.navStyles?.logo || {}) },
-      link: { ...DEFAULT_NAV.navStyles.link, ...(data.navStyles?.link || {}) },
-    },
-  };
-}
-
-
 
 function mergeStyle(base, custom) {
   return {
@@ -932,7 +887,7 @@ export default function VisualBuilder() {
   const [newsletter, setNewsletter] = useState(DEFAULT_NEWSLETTER);
   const [footer, setFooter] = useState(DEFAULT_FOOTER);
   const [ticker, setTicker] = useState(DEFAULT_TICKER);
-  const [navbar, setNavbar] = useState(DEFAULT_NAV);
+  const [navbar, setNavbar] = useState(createNav);
   const [philosophy, setPhilosophy] = useState({
     philosophyBody: "✦ TRIẾT LÝ CỦA CHÚNG TÔI ✦\nTRÂN TRỌNG TỪNG CHÚT YÊU THƯƠNG DÀNH CHO CHÍNH MÌNH.",
     philosophyStyle: {
@@ -1006,7 +961,7 @@ export default function VisualBuilder() {
           setNewsletter(DEFAULT_NEWSLETTER);
           setFooter(DEFAULT_FOOTER);
           setTicker(DEFAULT_TICKER);
-          setNavbar(DEFAULT_NAV);
+          setNavbar(createNav());
         }
       })
       .finally(() => {
@@ -1655,7 +1610,7 @@ export default function VisualBuilder() {
             </div>
           </div>
 
-          <PreviewFrame device={previewDevice}>
+          <PreviewFrame device={previewDevice} surfaces={navbar.navStyles?.surfaces}>
             {activeSection === "productneeds" ? (
               <ProductNeedsView preview value={{ ...discovery.productNeeds, enabled: true }} products={discoveryProducts} loading={discoveryLoading} />
             ) : activeSection === "productfaq" ? (

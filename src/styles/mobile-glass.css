@@ -1,6 +1,5 @@
 /* Glass appearance is restricted to mobile screens. */
 @media(max-width:768px) {
-@media(max-width:768px) {
  html[data-glass-header] .navbar,html[data-glass-chat] .chat-button,html[data-glass-top] .back-to-top,html[data-glass-tabs] .product-information-nav,html[data-glass-close] :is(.orora-modal-heading > button,.drawer-close) { background:#fffafc; background:color-mix(in srgb,#fffafc var(--surface-opacity,78%),transparent); backdrop-filter:blur(var(--surface-blur,18px)) saturate(150%); -webkit-backdrop-filter:blur(var(--surface-blur,18px)) saturate(150%); border:1px solid #ffffffbb; box-shadow:inset 0 1px 0 #ffffffe0,0 4px 18px #68243e12; }
  html[data-glass-chat] .chat-button { color:var(--rose-deep); }
  html[data-glass-chat] .chat-button::before { display:none; }
@@ -9,7 +8,6 @@
  html[data-glass-tabs] .product-information-nav::before { content:''; pointer-events:none; position:absolute; top:0; left:0; transform:translate(var(--tab-x,0),var(--tab-y,0)); width:var(--tab-w,0); height:var(--tab-h,0); border:1px solid #ffffffc0; border-radius:12px; background:linear-gradient(135deg,#ffffffcf,#f4cedd88); box-shadow:0 2px 8px #68243e12,inset 0 1px 0 white; box-sizing:border-box; transition:transform .25s ease,width .25s ease; }
  html[data-glass-tabs] .product-information-nav a { position:relative; z-index:1; background:transparent; border-color:transparent; }
  html[data-glass-tabs] .product-information-nav a[aria-current="location"] { background:transparent; border-color:transparent; color:var(--rose-deep); }
-}
 @media(prefers-reduced-motion:reduce) { html[data-glass-tabs] .product-information-nav::before { transition:none; } }
 
 /* Shared glass finish keeps each button's existing color and typography. */

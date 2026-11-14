@@ -151,20 +151,13 @@ const PRODUCT_DETAIL_FIELD_MAP = {
   },
   pdSectionTitle: {
     styleKey: "sectionTitle",
-    label: "Tiêu đề mục (About / Details)",
-    sample: "About the product",
+    label: "Tiêu đề nội dung sản phẩm",
+    sample: "Mô tả",
   },
   pdAboutTitle: {
     styleKey: "aboutTitle",
-    textKey: "text",
-    label: "Tiêu đề About the product",
-    sample: "About the product",
-  },
-  pdDetailsTitle: {
-    styleKey: "detailsTitle",
-    textKey: "text",
-    label: "Tiêu đề Details",
-    sample: "Details",
+    label: "Tiêu đề Mô tả / Thông số / Hướng dẫn sử dụng",
+    sample: "Mô tả",
   },
   pdBody: {
     styleKey: "body",

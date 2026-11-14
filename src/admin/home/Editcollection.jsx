@@ -1,3 +1,4 @@
+import CatalogFilterSettings from "../builder/CatalogFilterSettings";
 import CollectionCarouselSettings from "../CollectionCarouselSettings";
 import useHomeForm from "./Usehomeform";
 import { Field, SectionShell } from "./Ui";
@@ -64,6 +65,7 @@ export default function EditCollection() {
       />
       <Field label="Tiêu đề dòng 2" name="collectionHighlight" {...h} />
 
+      <CatalogFilterSettings value={h.form.collectionStyles?.filters} onChange={patch=>h.set("collectionStyles",{...h.form.collectionStyles,filters:{...h.form.collectionStyles?.filters,...patch}})}/>
       <CollectionCarouselSettings value={h.form.collectionStyles?.carousel} onChange={patch => h.set("collectionStyles", { ...h.form.collectionStyles, carousel: { ...h.form.collectionStyles?.carousel, ...patch } })} />
 
       <StyleList

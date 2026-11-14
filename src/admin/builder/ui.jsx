@@ -11,7 +11,7 @@ import {
   toBareFontFamily,
 } from "./options";
 
-export function StyleTypographyBlock({ style = {}, onStyleChange, title = "Typography" }) {
+export function StyleTypographyBlock({ style = {}, onStyleChange, title = "Kiểu chữ" }) {
   return (
     <SettingGroup title={title}>
       <TypographyControls
@@ -63,7 +63,7 @@ export function TypographyControls({ style, onChange }) {
       <SelectField label="Cỡ chữ mobile (0 = tự động)" value={s.mobileFontSize ?? 0} options={[0, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 28, 32, 36, 40, 44, 48, 56, 64]} suffix="px" onChange={(value) => onChange({ mobileFontSize: Number(value) })} />
       <div className="builder-field-row">
         <SelectField
-          label="Size"
+          label="Cỡ chữ desktop"
           value={s.fontSize}
           options={SIZE_OPTIONS}
           suffix="px"
@@ -75,7 +75,7 @@ export function TypographyControls({ style, onChange }) {
         />
 
         <SelectField
-          label="Weight"
+          label="Độ đậm"
           value={s.fontWeight}
           options={WEIGHT_OPTIONS}
           onChange={(value) =>
@@ -96,7 +96,7 @@ export function TypographyControls({ style, onChange }) {
 
       <div className="builder-field-row">
         <SelectField
-          label="Letter spacing"
+          label="Giãn chữ"
           value={s.letterSpacing}
           options={LETTER_OPTIONS}
           suffix="px"
@@ -108,7 +108,7 @@ export function TypographyControls({ style, onChange }) {
         />
 
         <SelectField
-          label="Line height"
+          label="Giãn dòng"
           value={s.lineHeight}
           options={LINE_OPTIONS}
           onChange={(value) =>
@@ -124,11 +124,11 @@ export function TypographyControls({ style, onChange }) {
 
         <div className="builder-align">
           {[
-            ["left", "≡"],
-            ["center", "≡"],
-            ["right", "≡"],
-            ["justify", "☰"],
-          ].map(([value, icon]) => (
+            ["left", "≡", "Căn trái"],
+            ["center", "≡", "Căn giữa"],
+            ["right", "≡", "Căn phải"],
+            ["justify", "☰", "Căn đều"],
+          ].map(([value, icon, label]) => (
             <button
               key={value}
               type="button"
@@ -142,7 +142,9 @@ export function TypographyControls({ style, onChange }) {
                   textAlign: value,
                 })
               }
-              title={value}
+              title={label}
+              aria-label={label}
+              aria-pressed={s.textAlign === value}
             >
               {icon}
             </button>
@@ -155,6 +157,7 @@ export function TypographyControls({ style, onChange }) {
 
         <button
           type="button"
+          aria-pressed={Boolean(s.italic)}
           className={`builder-toggle ${
             s.italic ? "active" : ""
           }`}
@@ -164,11 +167,11 @@ export function TypographyControls({ style, onChange }) {
             })
           }
         >
-          <i>I</i> Italic
+          <i>I</i> In nghiêng
         </button>
       </div>
 
-      <SettingGroup title="Spacing">
+      <SettingGroup title="Khoảng cách">
         <div className="builder-field-row">
           <SelectField
             label="Margin trên"
@@ -308,15 +311,17 @@ export function SelectField({
 
 
 export function ColorField({ label, value, onChange }) {
+  const id = useId();
   const hex = toSafeHexColor(value);
   return (
     <div className="builder-color-field">
       <div>
-        <label>{label}</label>
+        <label htmlFor={id}>{label}</label>
         <span>{value || hex}</span>
       </div>
 
       <input
+        id={id}
         type="color"
         value={hex}
         onChange={(e) => onChange(e.target.value)}

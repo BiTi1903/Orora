@@ -27,24 +27,25 @@ function ChatButton() {
   const suppressClick = useRef(false);
   const [position, setPosition] = useState(null);
   const [dragging, setDragging] = useState(false);
-  const clamp = (next) => {
+  const clamp = useCallback((next) => {
     const rect = {width:button.current.offsetWidth,height:button.current.offsetHeight};
     const view = window.visualViewport;
     return clampFloatingPosition(next, { width: view?.width || window.innerWidth, height: view?.height||window.innerHeight, offsetLeft: view?.offsetLeft || 0, offsetTop: view?.offsetTop || 0 }, rect);
-  };
-  const dock=()=>{
+  }, []);
+  const chatDockGap=home.navStyles?.surfaces?.chatDockGap;
+  const dock=useCallback(()=>{
     const node=button.current;if(!node)return null;
     const back=document.querySelector('.back-to-top'),reserved=document.documentElement.classList.contains('has-mobile-shop-nav')?(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-shop-nav-height'))||64):0;
     const size=back?.offsetHeight||(window.innerWidth<=600?46:52),bottom=back?(parseFloat(getComputedStyle(back).bottom)||0):reserved?reserved+24:window.innerWidth<=600?82:96;
-    const top=window.innerHeight-bottom-size,gap=Math.max(8,Math.min(32,Number(home.navStyles?.surfaces?.chatDockGap??14)));
+    const top=window.innerHeight-bottom-size,gap=Math.max(8,Math.min(32,Number(chatDockGap??14)));
     return clamp({x:dockSide.current==='left'?-10000:10000,y:dockSide.current==='left'?top+(size-node.offsetHeight)/2:top-node.offsetHeight-gap});
-  };
+  }, [clamp,chatDockGap]);
   useEffect(() => {
     let frame;const update=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{if(!button.current||drag.current?.moved)return;const next=dock();setPosition(current=>current&&Math.abs(current.x-next.x)<.5&&Math.abs(current.y-next.y)<.5?current:next);});};
     update();window.addEventListener('resize',update);window.visualViewport?.addEventListener('resize',update);
     const observer=new MutationObserver(update);observer.observe(document.documentElement,{attributes:true,attributeFilter:['class','style']});
     return()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('resize',update);window.visualViewport?.removeEventListener('resize',update);};
-  },[home.loading,settings.enabled,location.pathname,home.navStyles?.surfaces?.chatDockGap]);
+  },[home.loading,settings.enabled,location.pathname,dock]);
   const finishDrag = (event) => {
     if (!drag.current || event.pointerId !== drag.current.pointerId) return;
     suppressClick.current = drag.current.moved;
