@@ -79,3 +79,15 @@ Giới hạn cần hiểu trước restore: đây là bản sao document đọc 
 ## Kết quả kiểm tra cục bộ
 
 209 kiểm tra logic và bộ trình duyệt16/16đạt; ESLint, production build và giới hạn entry bundle đạt. Dry-run restore1document giả lập trả `applied:false`; không dùng dữ liệu thật.
+
+## Giới hạn Vercel Hobby — 14/11/2026
+
+Dự án có 11 entrypoint serverless trong `api/`, dưới mức tối đa 12 của Hobby. Ba API công khai chỉ đọc được phục vụ bằng một function `api/storefront/[resource].js`:
+
+- `/api/storefront-shell` → `/api/storefront/shell`
+- `/api/share-image` → `/api/storefront/share-image`
+- `/api/sitemap` và `/sitemap.xml` → `/api/storefront/sitemap`
+
+Các rewrite giữ nguyên URL mà website, email và công cụ tìm kiếm đang dùng. Mỗi handler vẫn giữ phương thức HTTP, header cache và xử lý lỗi riêng. Không gộp quyền truy cập API quản trị vào nhóm công khai và không thay đổi database. `tests/vercel-routing.test.js` kiểm tra giới hạn function, rewrite và phản hồi của các route này.
+
+Nếu đang thấy deployment bị chặn do giới hạn function, triển khai commit mới chứa cấu trúc này; Redeploy commit cũ có 13 entrypoint sẽ vẫn bị chặn. Số entrypoint trong mã nguồn đã được kiểm tra; trạng thái Ready của Vercel cần xác nhận trên deployment mới.

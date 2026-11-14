@@ -1,8 +1,20 @@
 {
   "rewrites": [
     {
+      "source": "/api/storefront-shell",
+      "destination": "/api/storefront/shell"
+    },
+    {
+      "source": "/api/share-image",
+      "destination": "/api/storefront/share-image"
+    },
+    {
+      "source": "/api/sitemap",
+      "destination": "/api/storefront/sitemap"
+    },
+    {
       "source": "/sitemap.xml",
-      "destination": "/api/sitemap"
+      "destination": "/api/storefront/sitemap"
     },
     {
       "source": "/tra-cuu-don-hang",
