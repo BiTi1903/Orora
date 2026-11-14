@@ -1,0 +1,43 @@
+/* Mobile purchase and reading density; desktop rules are intentionally untouched.
+   Scoped overrides also beat older CMS desktop sizes applied inline. */
+@media(max-width:768px) {
+ #root .product-detail .product-detail-info,
+ #root .product-detail .product-information { padding:var(--pd-mobile-padding)!important; }
+ #root .product-detail .product-detail-number { font-size:11px!important; margin-bottom:10px; padding:5px 10px; }
+ #root .product-detail .product-detail-info h1 { font-size:var(--pd-mobile-nameSize)!important; line-height:1.2!important; margin:0 0 12px!important; }
+ #root .product-detail .product-detail-price { font-size:var(--pd-mobile-priceSize)!important; line-height:1.35!important; margin:0 0 12px!important; }
+ #root .product-detail .product-detail-description { font-size:var(--pd-mobile-descriptionSize)!important; line-height:1.65!important; margin:0 0 14px!important; }
+ #root .product-detail .product-purchase-content .product-purchase-selection { margin:12px 0; gap:10px; }
+ #root .product-detail .product-quantity-row { gap:10px; }
+ #root .product-detail .product-purchase-content :is(.product-quantity-row > label,.product-volume-options legend,.product-selection-help) { font-size:var(--pd-mobile-labelSize)!important; }
+ #root .product-detail .product-purchase-content .product-volume-choice span { font-size:var(--pd-mobile-buttonSize)!important; }
+ #root .product-detail .product-purchase-content .product-quantity-control { height:44px; }
+ #root .product-detail .product-purchase-content .product-quantity-control button { width:32px; }
+ #root .product-detail .product-purchase-content .product-quantity-control input { width:40px; }
+ #root .product-detail .purchase-subtotal { padding:10px 12px; margin:12px 0 16px; gap:4px 10px; }
+ #root .product-detail .purchase-subtotal > div { min-height:32px; gap:2px; }
+ #root .product-detail .purchase-subtotal :is(span,small) { font-size:var(--pd-mobile-labelSize)!important; line-height:1.45!important; }
+ #root .product-detail .purchase-subtotal strong { font-size:18px!important; }
+ #root .product-detail .purchase-subtotal.is-pending strong { font-size:var(--pd-mobile-labelSize)!important; }
+ #root .product-detail .purchase-options { margin:14px 0 0; }
+ #root .product-detail .purchase-options > h2 { font-size:var(--pd-mobile-labelSize)!important; margin-bottom:8px; }
+ #root .product-detail .purchase-options :is(.purchase-website,.purchase-social a) { min-height:44px; padding:9px 12px!important; font-size:var(--pd-mobile-buttonSize)!important; line-height:1.4!important; }
+ #root .product-detail .purchase-options > .product-consultation { margin-bottom:8px!important; }
+ #root .product-detail .purchase-divider { margin:10px 0; font-size:var(--pd-mobile-labelSize)!important; }
+ #root .product-detail .purchase-social { max-width:none; }
+ #root .product-detail .product-information-nav { padding:3px; gap:3px; }
+ #root .product-detail .product-information-nav a { padding:7px 5px; min-height:44px; }
+ #root .product-detail .product-information-nav strong { font-size:var(--pd-mobile-labelSize)!important; line-height:1.4!important; }
+ #root .product-detail .product-information > .product-information-section { margin-top:var(--pd-mobile-sectionGap); padding:var(--pd-mobile-sectionGap) 0 0; }
+ #root .product-detail .product-information-heading h2 { font-size:var(--pd-mobile-headingSize)!important; line-height:1.3!important; margin:0 0 12px!important; }
+ #root .product-detail .product-section-content { font-size:var(--pd-mobile-bodySize)!important; line-height:1.65!important; }
+ #root .product-detail .product-information-copy h3 { font-size:var(--pd-mobile-bodySize)!important; margin-bottom:8px; }
+ #root .product-detail .product-information-copy + .product-information-copy { margin-top:14px; }
+ #root .product-detail .product-detail-row { gap:10px; padding:12px 0; grid-template-columns:minmax(0,.8fr) minmax(0,2.2fr); }
+ #root .product-detail .product-detail-row > span { font-size:var(--pd-mobile-labelSize)!important; line-height:1.55!important; }
+ #root .product-detail .product-detail-value { font-size:var(--pd-mobile-specSize)!important; line-height:1.6!important; }
+ #root .product-detail .product-detail-row--unlabeled { grid-template-columns:minmax(0,1fr); }
+ #root .product-detail .product-slogan-card { padding:var(--pd-mobile-sloganPadding)!important; --slogan-gap:6px!important; }
+ #root .product-detail .product-slogan-card h2 { font-size:var(--pd-mobile-sloganTitleSize)!important; line-height:1.4!important; }
+ #root .product-detail .product-slogan-card p { font-size:var(--pd-mobile-sloganBodySize)!important; line-height:1.55!important; }
+}

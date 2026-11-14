@@ -1,3 +1,5 @@
+import {mobileDetailVars} from "../lib/product-detail-mobile";
+import "../styles/product-detail-mobile.css";
 import PurchaseSubtotal from './PurchaseSubtotal';
 import "../styles/product-detail.css";
 import { ProductFaq } from "./ProductDiscovery";
@@ -323,6 +325,7 @@ function ProductDetail({
     <article
       className={`product-detail ${preview ? "product-detail--preview" : ""}`}
       ref={pageRef}
+      style={mobileDetailVars(ps.mobileLayout)}
     >
       <div className="product-detail-top">
         {preview ? (
