@@ -12,6 +12,9 @@ export const MOBILE_DETAIL_FIELDS = [
  ['careTitleSize','Tiêu đề hướng dẫn chăm sóc',22,18,30], ['careItemTitleSize','Tiêu đề từng cách chăm sóc',18,14,24],
  ['careBodySize','Nội dung chăm sóc',13,12,20], ['carePadding','Đệm khung chăm sóc',14,8,28],
  ['careItemPadding','Đệm từng thẻ chăm sóc',12,8,24], ['careGap','Khoảng cách các thẻ chăm sóc',10,6,24],
+ ['faqTitleSize','Tiêu đề câu hỏi thường gặp',22,18,30], ['faqQuestionSize','Chữ câu hỏi',13,12,20],
+ ['faqBodySize','Chữ câu trả lời',13,12,20], ['faqPadding','Đệm khung câu hỏi thường gặp',14,8,28],
+ ['faqItemPadding','Đệm từng câu hỏi',12,8,24], ['faqGap','Khoảng cách các câu hỏi',8,4,20],
 ];
 export function mobileDetailVars(value={}) {
  return Object.fromEntries(MOBILE_DETAIL_FIELDS.map(([key,,fallback,min,max])=>{

@@ -53,4 +53,10 @@
  #root .product-detail .product-care-item { padding:var(--pd-mobile-careItemPadding)!important; --slogan-gap:6px!important; }
  #root .product-detail .product-care-item h3 { font-size:var(--pd-mobile-careItemTitleSize)!important; line-height:1.4!important; margin:0 0 6px!important; }
  #root .product-detail .product-care-item a { font-size:var(--pd-mobile-careBodySize)!important; margin-top:8px; min-height:44px; display:inline-flex; align-items:center; }
+ #root .product-detail .product-faq { padding:var(--pd-mobile-faqPadding)!important; --slogan-gap:8px!important; }
+ #root .product-detail .product-faq h2 { font-size:var(--pd-mobile-faqTitleSize)!important; line-height:1.3!important; margin:0 0 8px!important; }
+ #root .product-detail .product-faq p { font-size:var(--pd-mobile-faqBodySize)!important; line-height:1.6!important; }
+ #root .product-detail .product-faq-list { margin-top:12px; gap:var(--pd-mobile-faqGap); }
+ #root .product-detail .product-faq details { padding:var(--pd-mobile-faqItemPadding)!important; --slogan-gap:8px!important; }
+ #root .product-detail .product-faq summary { font-size:var(--pd-mobile-faqQuestionSize)!important; line-height:1.5!important; min-height:24px; }
 }
