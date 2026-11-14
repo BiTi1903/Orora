@@ -9,7 +9,7 @@ export const ORDER_TRACKING_FIELDS = [
   ['phoneHint','Giải thích cách tra cứu bằng số điện thoại','Xem các đơn đã đặt bằng số này'],['codeHint','Giải thích cách tra cứu bằng mã đơn','Tìm nhanh một đơn hàng cụ thể'],
   ['phoneLabel','Nhãn ô số điện thoại','Số điện thoại đặt hàng'],['codeLabel','Nhãn ô mã đơn','Mã đơn hàng'],
   ['phonePlaceholder','Gợi ý ô số điện thoại','Nhập số điện thoại khi đặt hàng'],['codePlaceholder','Gợi ý ô mã đơn','Ví dụ: OW_1234C'],
-  ['submitLabel','Nút tra cứu','Tra cứu đơn hàng'],['loadingLabel','Chữ khi đang tra cứu','Đang tra cứu…'],
+  ['submitLabel','Nút tra cứu','Tra cứu'],['loadingLabel','Chữ khi đang tra cứu','Đang tra cứu…'],
   ['help','Hướng dẫn dưới form','Chỉ cần nhập số điện thoại hoặc mã đơn, không cần nhập cả hai.'],
   ['guideTitle','Tiêu đề phần hướng dẫn','Hướng dẫn & hỗ trợ'],
   ['guideFirstTitle','Bước 1 — tiêu đề','Chọn cách tra cứu'],['guideFirstBody','Bước 1 — hướng dẫn','Dùng số điện thoại để tìm các đơn của bạn, hoặc mã đơn để xem một đơn cụ thể.'],
@@ -36,6 +36,7 @@ export function trackingTemplate(value,fields){return value.replace(/\{(\w+)\}/g
 export function trackingStyle(value,key){const style=value?.text?.[key]||{};return {...toCss(style),textDecoration:style.textDecoration};}
 export function trackingTheme(value={}){
  const vars={};
+ for(const [key,fallback,min,max] of [['formPadding',14,8,32],['fieldHeight',44,44,60]]){const n=Number(value[key]??fallback);vars[key==='formPadding'?'--tracking-form-padding':'--tracking-field-height']=`${Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback}px`;} 
  for(const [key,name] of [['accent','--tracking-accent'],['background','--tracking-card'],['border','--tracking-border']])if(value[key])vars[name]=value[key];
  if(value.radius!==''&&Number.isFinite(Number(value.radius)))vars['--tracking-radius']=`${Math.max(0,Math.min(40,Number(value.radius)))}px`;
  return vars;
