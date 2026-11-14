@@ -54,3 +54,9 @@ body:has(dialog[open]) .desktop-cart { visibility:hidden; }
 @media(max-width:768px) { .desktop-cart { display:none!important; } }
 
 .navbar .desktop-cart.is-in-navbar { position:static; inset:auto; display:flex; flex-shrink:0; min-height:40px; padding:8px 12px; border-radius:14px; background:#fffafc; backdrop-filter:none; color:var(--cart-accent,var(--rose-deep)); font-size:12px; white-space:nowrap; }
+
+.shop-cart.cart-motion[open] { animation:cart-popup-enter var(--cart-popup-duration,380ms) cubic-bezier(.16,1,.3,1) both; }
+.shop-cart.cart-motion.is-closing[open] { animation:cart-popup-exit calc(var(--cart-popup-duration,380ms) * .7) cubic-bezier(.4,0,1,1) both; pointer-events:none; }
+@keyframes cart-popup-enter { from { translate:0 110vh; opacity:0; } to { translate:0 0; opacity:1; } }
+@keyframes cart-popup-exit { from { translate:0 0; opacity:1; } to { translate:0 110vh; opacity:0; } }
+@media(prefers-reduced-motion:reduce) { .shop-cart.cart-motion[open],.shop-cart.cart-motion.is-closing[open] { animation:none; } }
