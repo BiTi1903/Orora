@@ -6,9 +6,9 @@ export default function PurchaseOptionsSettings({ value = {}, onChange }) {
   const labels = purchaseChannelLabels(value);
   return <>
     <SettingGroup title="Giá theo dung tích và số lượng">
-     <label><input type="checkbox" checked={value.subtotalEnabled!==false} onChange={e=>onChange({subtotalEnabled:e.target.checked})}/>Hiện tạm tính dưới phần chọn số lượng</label>
+     <label><input type="checkbox" checked={value.subtotalEnabled!==false} onChange={e=>onChange({subtotalEnabled:e.target.checked})}/>Hiện tạm tính sau khi chọn dung tích</label>
      <details><summary>Nội dung và kiểu chữ tạm tính</summary>
-     {[['subtotalLabel','Tiêu đề','Tạm tính'],['subtotalNote','Ghi chú','Chưa gồm phí giao hàng'],['subtotalChooseLabel','Khi chưa chọn dung tích','Chọn dung tích để xem tạm tính'],['subtotalQuantityLabel','Khi số lượng chưa hợp lệ','Chọn số lượng hợp lệ'],['subtotalContactLabel','Khi chưa có giá','Liên hệ để báo giá']].map(([key,label,fallback])=><label key={key}>{label}<input value={value[key]??''} placeholder={fallback} onChange={e=>onChange({[key]:e.target.value})}/></label>)}
+     {[['subtotalLabel','Tiêu đề','Tạm tính'],['subtotalNote','Ghi chú','Chưa gồm phí giao hàng'],['subtotalQuantityLabel','Khi số lượng chưa hợp lệ','Chọn số lượng hợp lệ'],['subtotalContactLabel','Khi chưa có giá','Liên hệ để báo giá']].map(([key,label,fallback])=><label key={key}>{label}<input value={value[key]??''} placeholder={fallback} onChange={e=>onChange({[key]:e.target.value})}/></label>)}
      <ColorField label="Nền khung tạm tính" value={value.subtotalBackground||'#fff7fa'} onChange={color=>onChange({subtotalBackground:color})}/><ColorField label="Viền khung tạm tính" value={value.subtotalBorderColor||'#efd7e1'} onChange={color=>onChange({subtotalBorderColor:color})}/>
      <StyleTypographyBlock title="Nhãn và ghi chú" style={value.subtotalLabelStyle||{}} onStyleChange={patch=>onChange({subtotalLabelStyle:{...value.subtotalLabelStyle,...patch}})}/><StyleTypographyBlock title="Số tiền tạm tính" style={value.subtotalValueStyle||{}} onStyleChange={patch=>onChange({subtotalValueStyle:{...value.subtotalValueStyle,...patch}})}/>
      </details>
