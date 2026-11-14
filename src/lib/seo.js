@@ -2,7 +2,7 @@ import {SHARE_IMAGE_PATH,heroShareImage} from "./share-image.js";
 import {parseVndPrice} from "./commerce.js";
 import { findProductByRoute, productPath } from "./product-identity.js";
 export const SITE_URL = "https://ororavn.com";
-export const SITE_NAME = "ORORA VN";
+export const SITE_NAME = "ORORA";
 const compact = (value) => String(value || "").replace(/\s+/g, " ").trim();
 const imageUrl = (value) => {
   try { const url = new URL(value, SITE_URL); return ["http:", "https:"].includes(url.protocol) ? url.href : null; } catch { return null; }
@@ -31,7 +31,7 @@ export function pageSeo(pathname, home = {}, products = [], productsLoading = fa
   page ||= { name: "Trang không tồn tại", title: "Trang không tồn tại | ORORA VN", description: "", noindex: true };
   const url = `${SITE_URL}${product ? productPath(product) : path}`;
   const graph = [
-    { "@type": "WebSite", "@id": `${SITE_URL}/#website`, name: SITE_NAME, alternateName: "ORORA", url: `${SITE_URL}/`, inLanguage: "vi-VN" },
+    { "@type": "WebSite", "@id": `${SITE_URL}/#website`, name: SITE_NAME, alternateName: "ORORA VN", url: `${SITE_URL}/`, inLanguage: "vi-VN" },
     { "@type": "Organization", "@id": `${SITE_URL}/#organization`, name: SITE_NAME, url: `${SITE_URL}/`,
       ...(home.footerEmail ? { email: home.footerEmail } : {}),
       ...(home.footerPhone ? { telephone: home.footerPhone } : {}),

@@ -12,6 +12,8 @@ test('non-JavaScript link crawlers discover the hero endpoint from both static i
  assert.match(html,/property="og:image"\s+content="https:\/\/ororavn.com\/api\/share-image\?v=hero-1"/);
  assert.match(html,/name="twitter:image"\s+content="https:\/\/ororavn.com\/api\/share-image\?v=hero-1"/);
  assert.ok(!html.includes('/og-image.jpg'));
+ const robots=readFileSync(new URL('../public/robots.txt',import.meta.url),'utf8');
+ assert.match(robots,/Allow: \/api\/share-image/);
  assert.equal(pageSeo('/').image,SITE_URL+SHARE_IMAGE_PATH);
  assert.equal(pageSeo('/',{heroImage:'/new-hero.jpg'}).image,SITE_URL+'/new-hero.jpg');
  assert.equal(pageSeo('/product/gel',{},[{id:'gel',name:'Gel',image:'/gel.jpg'}]).image,SITE_URL+'/gel.jpg');

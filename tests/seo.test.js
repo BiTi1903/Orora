@@ -23,6 +23,9 @@ test("old section URLs canonicalize to the homepage; admin and hidden products a
     const seo = pageSeo(path);
     assert.equal(seo.url, "https://ororavn.com/");
     assert.ok(!seo.noindex);
+    const site=seo.structuredData["@graph"].find(entry=>entry["@type"]==="WebSite");
+    assert.equal(site.name,"ORORA");
+    assert.equal(site.alternateName,"ORORA VN");
   }
   assert.equal(pageSeo("/admin").noindex, true);
   assert.equal(pageSeo("/product/hidden", {}, [{ id: "hidden", active: false }]).noindex, true);
