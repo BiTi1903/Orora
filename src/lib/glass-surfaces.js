@@ -27,7 +27,7 @@ export function watchGlassTabs(doc) {
   let frame;
   const measure = () => {
     doc.querySelectorAll('.product-information-nav').forEach(nav => {
-      const active = nav.querySelector('[aria-current="location"]');
+      const active = nav.querySelector('[aria-selected="true"], [aria-current="location"]');
       if (!active) return;
       for (const [key, value] of Object.entries({x: active.offsetLeft, y: active.offsetTop, w: active.offsetWidth, h: active.offsetHeight})) {
         nav.style.setProperty(`--tab-${key}`, `${value}px`);
@@ -39,7 +39,7 @@ export function watchGlassTabs(doc) {
     frame = viewport.requestAnimationFrame(measure);
   };
   const observer = new viewport.MutationObserver(update);
-  observer.observe(doc.getElementById('root') || doc.body, {subtree: true, childList: true, attributes: true, attributeFilter: ['aria-current']});
+  observer.observe(doc.getElementById('root') || doc.body, {subtree: true, childList: true, attributes: true, attributeFilter: ['aria-current','aria-selected']});
   viewport.addEventListener('resize', update);
   measure();
   return () => {

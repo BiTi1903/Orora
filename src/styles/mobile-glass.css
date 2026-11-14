@@ -6,8 +6,8 @@
  html[data-glass-top] .back-to-top { color:var(--rose-deep); }
  html[data-glass-tabs] .product-information-nav { position:sticky; isolation:isolate; border-radius:16px; padding:5px; gap:4px; }
  html[data-glass-tabs] .product-information-nav::before { content:''; pointer-events:none; position:absolute; top:0; left:0; transform:translate(var(--tab-x,0),var(--tab-y,0)); width:var(--tab-w,0); height:var(--tab-h,0); border:1px solid #ffffffc0; border-radius:12px; background:linear-gradient(135deg,#ffffffcf,#f4cedd88); box-shadow:0 2px 8px #68243e12,inset 0 1px 0 white; box-sizing:border-box; transition:transform .25s ease,width .25s ease; }
- html[data-glass-tabs] .product-information-nav a { position:relative; z-index:1; background:transparent; border-color:transparent; }
- html[data-glass-tabs] .product-information-nav a[aria-current="location"] { background:transparent; border-color:transparent; color:var(--rose-deep); }
+ html[data-glass-tabs] .product-information-nav button { position:relative; z-index:1; background:transparent; border-color:transparent; }
+ html[data-glass-tabs] .product-information-nav button[aria-selected="true"] { background:transparent; border-color:transparent; color:var(--rose-deep); }
 @media(prefers-reduced-motion:reduce) { html[data-glass-tabs] .product-information-nav::before { transition:none; } }
 
 /* Shared glass finish keeps each button's existing color and typography. */

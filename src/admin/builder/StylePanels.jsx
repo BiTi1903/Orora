@@ -1,3 +1,4 @@
+import InformationTabsSettings from "./InformationTabsSettings";
 import MobileDetailSettings from "./MobileDetailSettings";
 import DesktopCardSettings from './DesktopCardSettings';
 import ReviewCardSettings from './ReviewCardSettings';
@@ -117,6 +118,7 @@ export function StylePanel({
       {section === "productdetail" && (
         <>
         <ProductLoadErrorSettings value={productDetail.loadError||{}} onChange={patch=>onChange({loadError:{...productDetail.loadError,...patch}})}/>
+        <InformationTabsSettings value={productDetail.informationTabs} onChange={patch=>onChange({informationTabs:{...productDetail.informationTabs,...patch}})}/>
         <MobileDetailSettings value={productDetail.mobileLayout} onChange={patch=>onChange({mobileLayout:{...productDetail.mobileLayout,...patch}})}/>
         <ProductDetailSettings
           selected={selected}

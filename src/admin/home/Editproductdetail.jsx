@@ -1,3 +1,4 @@
+import InformationTabsSettings from "../builder/InformationTabsSettings";
 import MobileDetailSettings from "../builder/MobileDetailSettings";
 import ProductLoadErrorSettings from "../builder/ProductLoadErrorSettings";
 import PurchaseOptionsSettings from "../builder/PurchaseOptionsSettings";
@@ -102,6 +103,7 @@ export default function EditProductDetail() {
       {...h}
       onSubmit={h.save}
     >
+      <InformationTabsSettings value={h.form.productDetailStyles?.informationTabs} onChange={patch=>h.set("productDetailStyles",{...h.form.productDetailStyles,informationTabs:{...h.form.productDetailStyles?.informationTabs,...patch}})}/>
       <MobileDetailSettings value={h.form.productDetailStyles?.mobileLayout} onChange={patch=>h.set("productDetailStyles",{...h.form.productDetailStyles,mobileLayout:{...h.form.productDetailStyles?.mobileLayout,...patch}})}/>
       <ProductLoadErrorSettings value={h.form.productDetailStyles?.loadError||{}} onChange={patch=>h.set("productDetailStyles",{...h.form.productDetailStyles,loadError:{...h.form.productDetailStyles?.loadError,...patch}})}/>
       <PurchaseOptionsSettings value={h.form.productDetailStyles?.purchaseOptions || {}} onChange={(patch) => h.set("productDetailStyles", { ...h.form.productDetailStyles, purchaseOptions: { ...h.form.productDetailStyles?.purchaseOptions, ...patch } })} />

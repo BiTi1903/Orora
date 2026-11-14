@@ -516,7 +516,7 @@ function ProductDetail({
       </section>
 
       <div className="product-detail-lower">
-        <ProductInformation sections={sections} css={css} preview={preview} select={select} selectedClass={selectedClass} textProps={textProps} />
+        <ProductInformation key={`${product.id||product.slug}:${ps.informationTabs?.defaultTab||"description"}`} settings={ps.informationTabs} sections={sections} css={css} preview={preview} select={select} selectedClass={selectedClass} textProps={textProps} />
       </div>
       {!home.loading && <><ProductCareGuide value={careGuideForProduct(home.productCareGuide, product)} /><ProductFaq value={home.productFaq} product={product} /></>}
       </div>
