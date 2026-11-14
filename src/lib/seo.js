@@ -14,7 +14,7 @@ export function pageSeo(pathname, home = {}, products = [], productsLoading = fa
   const path = ["/san-pham", "/ve-orora", "/lien-he"].includes(normalized) ? "/" : normalized;
   const pages = {
     "/tra-cuu-don-hang": { name:"Tra cứu đơn hàng", title:"Tra cứu đơn hàng | ORORA VN", description:"Kiểm tra trạng thái đơn hàng ORORA bằng mã đơn hoặc số điện thoại đặt hàng.", noindex:true },
-    "/": { name: SITE_NAME, title: "ORORA VN — Mỹ phẩm & chăm sóc da", description: description(home.footerDescription) || "Khám phá sản phẩm làm đẹp và chăm sóc da của ORORA VN. Tìm hiểu sản phẩm và liên hệ ORORA." },
+    "/": { name: SITE_NAME, title: "ORORA", description: description(home.footerDescription) || "Khám phá sản phẩm làm đẹp và chăm sóc da của ORORA VN. Tìm hiểu sản phẩm và liên hệ ORORA." },
   };
   let page = pages[path];
   let product;

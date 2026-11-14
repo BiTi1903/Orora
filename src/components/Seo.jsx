@@ -12,7 +12,7 @@ export default function Seo() {
   const serialized = JSON.stringify(seo);
   useEffect(() => {
     const current = JSON.parse(serialized);
-    document.title = current.title;
+    document.title = "ORORA";
     document.documentElement.lang = "vi";
     const meta = (attribute, name, content) => {
       let element = document.head.querySelector(`meta[${attribute}="${name}"]`);
