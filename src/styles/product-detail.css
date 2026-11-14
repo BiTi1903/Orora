@@ -1076,3 +1076,21 @@
 
 .product-information-section[hidden] { display:none!important; }
 .product-information-nav button { cursor:pointer; font:inherit; }
+
+/* Long specifications read as full-width sections; short facts share a compact grid. */
+.product-specification-grid { display:grid; grid-template-columns:repeat(var(--spec-columns,2),minmax(0,1fr)); gap:16px; }
+#root .product-information .product-specification-grid .product-detail-row {
+ grid-template-columns:minmax(0,1fr); align-content:start; gap:8px; padding:18px 20px;
+ border:1px solid var(--line); border-radius:var(--spec-radius,16px); background:rgba(255,255,255,.45); min-width:0;
+}
+.product-specification-grid .product-detail-row--long { grid-column:1 / -1; }
+.product-specification-grid .product-detail-value { letter-spacing:normal; font-style:normal; }
+.product-specification-grid .product-content { max-width:80ch; }
+.product-information-prose { max-width:80ch; }
+.product-information .product-content { overflow-wrap:anywhere; }
+.product-information .product-content li + li { margin-top:6px; }
+@media(max-width:768px) {
+ .product-specification-grid { grid-template-columns:minmax(0,1fr); gap:10px; }
+ #root .product-detail .product-information .product-specification-grid .product-detail-row { grid-template-columns:minmax(0,1fr); padding:14px; gap:7px; }
+ .product-information .product-content li + li { margin-top:4px; }
+}

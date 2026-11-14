@@ -14,3 +14,17 @@ test('product information shows just the selected tab with keyboard controls and
  if(page.viewportSize().width<=768)await expect.poll(()=>page.locator('.product-information-nav').evaluate(el=>parseFloat(el.style.getPropertyValue('--tab-w')))).toBeGreaterThan(0);
  await fit(page);expect(errors).toEqual([]);
 });
+
+test('long ingredients span the grid and short facts stack cleanly on mobile',async({page})=>{
+ const ingredients='Thành phần hoạt tính: '+ 'Chiết xuất thực vật, dưỡng ẩm và chăm sóc da. '.repeat(24);
+ await mount(page,`import Info from '/src/components/ProductInformation.jsx';import '/src/styles/product-detail.css';import '/src/styles/product-detail-mobile.css';${render(`R.createElement('main',{className:'product-detail'},R.createElement(Info,{settings:{defaultTab:'specifications'},sections:[{id:'ingredients',group:'specifications',title:'Thành phần',content:${JSON.stringify(ingredients)}},{id:'size',group:'specifications',title:'Dung tích',content:'150 ml'},{id:'origin',group:'specifications',title:'Xuất xứ',content:'Nhật Bản'}],css:()=>({}),select:()=>()=>{},selectedClass:()=>''}))`)}`);
+ const rows=page.locator('.product-detail-row');
+ await expect(rows).toHaveCount(3);await expect(rows.first()).toContainText(ingredients);
+ const bounds=await rows.evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width};}));
+ const mobile=page.viewportSize().width<=768;
+ if(mobile){expect(bounds[1].width).toBeCloseTo(bounds[0].width,0);expect(bounds[2].y).toBeGreaterThan(bounds[1].y);}
+ else{expect(bounds[0].width).toBeGreaterThan(bounds[1].width*1.9);expect(bounds[1].y).toBeCloseTo(bounds[2].y,0);}
+ const label=await rows.first().locator(':scope > span').boundingBox();const content=await rows.first().locator('.product-detail-value').boundingBox();expect(content.y).toBeGreaterThan(label.y+label.height);
+ await expect(page.getByRole('button',{name:/Xem thêm|Thu gọn/})).toHaveCount(0);
+ await fit(page);
+});
