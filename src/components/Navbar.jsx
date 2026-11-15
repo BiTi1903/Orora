@@ -136,7 +136,7 @@ function Navbar({
           })}
         </div>
 
-        <span ref={preview?undefined:mountNavbarCartSlot} className="navbar-cart-slot" data-desktop-cart-slot={preview?undefined:""}>{preview&&<CartButton settings={styles.cart} inNavbar preview onClick={event=>event.preventDefault()}/>}</span>
+        <span ref={preview?undefined:mountNavbarCartSlot} className="navbar-cart-slot" data-desktop-cart-slot={preview?undefined:""}>{preview&&<CartButton settings={styles.cart} inNavbar preview className={selectedClass("navCart")} onClick={select("navCart")}/>}</span>
         <button
           className={`menu${menuOpen ? " menu--open" : ""}`}
           type="button"

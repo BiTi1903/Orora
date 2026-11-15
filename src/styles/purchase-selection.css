@@ -1,0 +1,25 @@
+/* Shared volume and quantity controls on the product card and in checkout. */
+.product-purchase-selection { display: grid; gap: 14px; margin: 20px 0; min-width: 0; }
+.product-volume-options, .website-order .product-volume-options { margin: 0; padding: 0; min-width: 0; border: 0; }
+.product-volume-options legend { margin-bottom: 9px; padding: 0; font: 500 13px/1.5 var(--font-body); color: var(--plum); }
+.product-volume-choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.product-volume-choice, .website-order label.product-volume-choice:not([hidden]) {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px; min-height: 40px; max-width: 100%; margin: 0; padding: 9px 13px;
+  border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--plum);
+  font-size: 13px; line-height: 1.5; cursor: pointer; overflow-wrap: anywhere;
+}
+.product-volume-choice input { position: absolute; width: 1px !important; min-height: 0 !important; height: 1px; margin: 0; padding: 0 !important; opacity: 0; }
+.product-volume-choice.is-selected,
+.website-order label.product-volume-choice.is-selected:not([hidden]) { background: #fff0f5; border-color: var(--rose-deep); color: var(--rose-deep); }
+.product-volume-choice:focus-within { outline: 2px solid var(--rose-deep); outline-offset: 3px; }
+.product-selection-help { margin: 7px 0 0; color: var(--plum-soft); font-size: 12px; }
+.product-quantity-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.product-quantity-row > label, .website-order .product-quantity-row > label:not([hidden]) { display: block; margin: 0; font-size: 13px; font-weight: 500; color: var(--plum); }
+.product-quantity-control { display: inline-flex; align-items: stretch; height: 40px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; }
+.product-quantity-control button { width: 36px; flex-shrink: 0; padding: 0; border: 0; background: #fff5f9; color: var(--rose-deep); font: 500 18px/1 var(--font-body); cursor: pointer; }
+.product-quantity-control button:disabled { opacity: .45; cursor: default; }
+.product-quantity-control input, .website-order .product-quantity-control input:not([type="checkbox"]) { appearance: textfield; width: 48px; min-height: 0; height: 100%; padding: 5px; border: 0; border-inline: 1px solid var(--line); border-radius: 0; text-align: center; color: var(--plum); background: #fff; font-size: 16px; }
+.product-quantity-control input::-webkit-inner-spin-button, .product-quantity-control input::-webkit-outer-spin-button { appearance: none; margin: 0; }
+.order-form-modal .product-purchase-selection { margin: 0 0 22px; }
+@media (max-width: 600px) { .product-volume-choice, .website-order label.product-volume-choice:not([hidden]) { min-height: 44px; } .product-quantity-control { height: 44px; } .product-quantity-control button { width: 40px; } }

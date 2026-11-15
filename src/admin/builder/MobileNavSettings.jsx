@@ -1,4 +1,3 @@
-import {CART_COPY} from '../../lib/cart-copy';
 import {SettingGroup,StyleTypographyBlock,ColorField} from './ui';
 import {NAV_TARGETS,NAV_ICONS,mobileNavItems,mobileNavSettings} from '../../lib/mobile-shop-nav';
 import MobileShopNav from '../../components/MobileShopNav';
@@ -24,15 +23,6 @@ export default function MobileNavSettings({navbar,onChange}){
    </fieldset>)}
    <button type="button" disabled={items.length>=6} onClick={()=>patch({items:[...items,{label:'Email',target:'email',icon:'email'}]})}>Thêm mục</button>
   </div>
-  <details><summary>Giỏ hàng — nội dung và kiểu hiển thị</summary>
-   <label><input type="checkbox" checked={navbar.navStyles?.cart?.enabled!==false} onChange={e=>onChange({navStyles:{...navbar.navStyles,cart:{...navbar.navStyles?.cart,enabled:e.target.checked}}})}/>Hiện giỏ hàng</label>
-   <label><input type="checkbox" checked={navbar.navStyles?.cart?.animation!==false} onChange={e=>onChange({navStyles:{...navbar.navStyles,cart:{...navbar.navStyles?.cart,animation:e.target.checked}}})}/>Hiệu ứng bay và nảy vào giỏ</label>
-   <label><input type="checkbox" checked={navbar.navStyles?.cart?.popupAnimation!==false} onChange={e=>onChange({navStyles:{...navbar.navStyles,cart:{...navbar.navStyles?.cart,popupAnimation:e.target.checked}}})}/>Giỏ hàng trượt từ dưới lên</label>
-   <label className="builder-field">Thời gian mở giỏ (ms)<input type="number" min={180} max={600} step={20} value={navbar.navStyles?.cart?.popupDuration??380} onChange={e=>onChange({navStyles:{...navbar.navStyles,cart:{...navbar.navStyles?.cart,popupDuration:Number(e.target.value)}}})}/></label>
-   <label><input type="checkbox" checked={navbar.navStyles?.cart?.backgroundScroll!==false} onChange={e=>onChange({navStyles:{...navbar.navStyles,cart:{...navbar.navStyles?.cart,backgroundScroll:e.target.checked}}})}/>Cho phép cuộn nền khi mở giỏ</label>
-   {Object.entries(CART_COPY).map(([key,fallback])=><label key={key}>{fallback}<input value={navbar.navStyles?.cart?.copy?.[key]??fallback} onChange={e=>onChange({navStyles:{...navbar.navStyles,cart:{...navbar.navStyles?.cart,copy:{...navbar.navStyles?.cart?.copy,[key]:e.target.value}}}})}/></label>)}
-   <StyleTypographyBlock title="Chữ trong giỏ hàng" style={navbar.navStyles?.cart?.text||{}} onStyleChange={patch=>onChange({navStyles:{...navbar.navStyles,cart:{...navbar.navStyles?.cart,text:{...navbar.navStyles?.cart?.text,...patch}}}})}/>
-  </details>
   <details><summary>Nội dung và giao diện thanh dưới</summary>
    <label><input type="checkbox" checked={value.glass!==false} onChange={e=>patch({glass:e.target.checked})}/>Hiệu ứng kính trong suốt</label>
    <label><input type="checkbox" checked={value.swipe!==false} onChange={e=>patch({swipe:e.target.checked})}/>Vuốt ngang để chọn mục — kính chạy theo ngón tay</label>

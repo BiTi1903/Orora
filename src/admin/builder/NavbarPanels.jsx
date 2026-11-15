@@ -1,3 +1,4 @@
+import CartSettings from "./CartSettings";
 import MobileNavSettings from "./MobileNavSettings";
 import SurfaceSettings from "./SurfaceSettings";
 import { SettingGroup, SelectField, StyleTypographyBlock } from "./ui";
@@ -20,8 +21,11 @@ export function NavbarSettings({ selected, navbar, onChange, onStyleChange }) {
     />
   );
 
+  if (selected === "navCart") return <CartSettings navbar={navbar} onChange={onChange}/>;
+
   return (
     <>
+      <CartSettings navbar={navbar} onChange={onChange}/>
       <MobileNavSettings navbar={navbar} onChange={onChange}/>
       <SurfaceSettings value={navbar.navStyles?.surfaces} onChange={patch=>onChange({navStyles:{...navbar.navStyles,surfaces:{...navbar.navStyles?.surfaces,...patch}}})}/>
       <SettingGroup title="Menu bên — mobile">
