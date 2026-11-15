@@ -94,6 +94,7 @@ export function TypographyControls({ style, onChange }) {
         }
       />
 
+      <details className="builder-advanced-controls"><summary>Giãn chữ và giãn dòng</summary>
       <div className="builder-field-row">
         <SelectField
           label="Giãn chữ"
@@ -118,6 +119,8 @@ export function TypographyControls({ style, onChange }) {
           }
         />
       </div>
+
+      </details>
 
       <div className="builder-field">
         <label>Căn lề</label>
@@ -171,7 +174,7 @@ export function TypographyControls({ style, onChange }) {
         </button>
       </div>
 
-      <SettingGroup title="Khoảng cách">
+      <details className="builder-advanced-controls"><summary>Khoảng cách và độ rộng</summary><SettingGroup title="Khoảng cách">
         <div className="builder-field-row">
           <SelectField
             label="Margin trên"
@@ -225,7 +228,7 @@ export function TypographyControls({ style, onChange }) {
         </div>
 
         <SelectField
-          label="Max width"
+          label="Chiều rộng tối đa"
           value={s.maxWidth}
           options={[
             30,
@@ -244,7 +247,7 @@ export function TypographyControls({ style, onChange }) {
             })
           }
         />
-      </SettingGroup>
+      </SettingGroup></details>
     </>
   );
 }

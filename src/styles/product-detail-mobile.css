@@ -14,8 +14,8 @@
  #root .product-detail .product-purchase-content .product-quantity-control { height:44px; }
  #root .product-detail .product-purchase-content .product-quantity-control button { width:32px; }
  #root .product-detail .product-purchase-content .product-quantity-control input { width:40px; }
- #root .product-detail .purchase-subtotal { padding:10px 12px; margin:12px 0 16px; gap:4px 10px; }
- #root .product-detail .purchase-subtotal > div { min-height:32px; gap:2px; }
+ #root .product-detail .purchase-subtotal { padding:var(--subtotal-padding,10px); margin:12px 0 16px; gap:4px 10px; }
+ #root .product-detail .purchase-subtotal > div { min-height:0; gap:2px; }
  #root .product-detail .purchase-subtotal :is(span,small) { font-size:var(--pd-mobile-labelSize)!important; line-height:1.45!important; }
  #root .product-detail .purchase-subtotal strong { font-size:18px!important; }
  #root .product-detail .purchase-subtotal.is-pending strong { font-size:var(--pd-mobile-labelSize)!important; }

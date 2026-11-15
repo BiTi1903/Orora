@@ -1,3 +1,4 @@
+import {normalizeSearch} from "../../lib/catalog-filters";
 import useDraftGuard from "../../hooks/useDraftGuard";
 import {createNav} from "./navbar-state";
 import { PAGE_SECTIONS as SECTION_LIST, sectionIsEnabled } from "../../lib/page-sections";
@@ -911,6 +912,9 @@ export default function VisualBuilder() {
   };
   const [activeSection, setActiveSection] = useState("about");
   const [selected, setSelected] = useState("title");
+  const [sectionSearch,setSectionSearch]=useState('');
+  const [selectionVersion,setSelectionVersion]=useState(0);
+  const selectElement=key=>{setSelected(key);setSelectionVersion(value=>value+1);};
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState(false);
@@ -1514,7 +1518,7 @@ export default function VisualBuilder() {
     <div className="visual-builder">
       <div className="builder-toolbar">
         <div>
-          <strong>Visual Page Builder</strong>
+          <strong>Chỉnh sửa giao diện</strong>
           <span>
             Chọn một phần trên preview để chỉnh sửa.
           </span>
@@ -1548,12 +1552,13 @@ export default function VisualBuilder() {
       <div className="builder-layout">
         <aside className="builder-sections">
           <div className="builder-panel-title">
-            <span>Sections</span>
+            <span>Các mục trên trang</span>
             <small>Trang chủ</small>
           </div>
 
+          <label className="builder-section-search">Tìm mục chỉnh sửa<input type="search" value={sectionSearch} onChange={event=>setSectionSearch(event.target.value)} placeholder="Ví dụ: navbar, sản phẩm…"/></label>
           <div className="builder-section-list">
-            {SECTION_LIST.map((section) => (
+            {SECTION_LIST.filter(section=>normalizeSearch(section.label).includes(normalizeSearch(sectionSearch))).map((section) => (
               <div className="builder-section-row" key={section.key}>
               <button
                 key={section.key}
@@ -1619,35 +1624,35 @@ export default function VisualBuilder() {
               <TickerPreview
                 ticker={ticker}
                 selected={selected}
-                onSelect={setSelected}
+                onSelect={selectElement}
               />
             ) : activeSection === "navbar" ? (
               <Navbar
                 preview
                 previewData={navbar}
                 selectedElement={selected}
-                onSelect={setSelected}
+                onSelect={selectElement}
               />
             ) : activeSection === "philosophy" ? (
               <ScrollText
                 preview
                 previewData={philosophy}
                 selectedElement={selected}
-                onSelect={setSelected}
+                onSelect={selectElement}
               />
             ) : activeSection === "hero" ? (
               <Hero
                 preview
                 previewData={hero}
                 selectedElement={selected}
-                onSelect={setSelected}
+                onSelect={selectElement}
               />
             ) : activeSection === "collection" ? (
               <Collection
                 preview
                 previewData={collection}
                 selectedElement={selected}
-                onSelect={setSelected}
+                onSelect={selectElement}
                 sampleProducts={sampleProducts.slice(0, 3)}
               />
             ) : activeSection === "productdetail" ? (
@@ -1657,42 +1662,42 @@ export default function VisualBuilder() {
                 previewProduct={detailProduct}
                 previewProducts={sampleProducts}
                 selectedElement={selected}
-                onSelect={setSelected}
+                onSelect={selectElement}
               />
             ) : activeSection === "features" ? (
               <Features
                 preview
                 previewData={features}
                 selectedElement={selected}
-                onSelect={setSelected}
+                onSelect={selectElement}
               />
             ) : activeSection === "reviews" ? (
               <Testimonials
                 preview
                 previewData={reviews}
                 selectedElement={selected}
-                onSelect={setSelected}
+                onSelect={selectElement}
               />
             ) : activeSection === "newsletter" ? (
               <Newsletter
                 preview
                 previewData={newsletter}
                 selectedElement={selected}
-                onSelect={setSelected}
+                onSelect={selectElement}
               />
             ) : activeSection === "footer" ? (
               <Footer
                 preview
                 previewData={footer}
                 selectedElement={selected}
-                onSelect={setSelected}
+                onSelect={selectElement}
               />
             ) : (
               <About
                 preview
                 previewData={about}
                 selectedElement={selected}
-                onSelect={setSelected}
+                onSelect={selectElement}
               />
             )}
           </PreviewFrame>
@@ -1700,6 +1705,7 @@ export default function VisualBuilder() {
 
         <aside className="builder-settings">
           {SECTION_LIST.find(section => section.key === activeSection)?.settingsKey ? <div className="admin-card"><h3>{SECTION_LIST.find(section => section.key === activeSection)?.label}</h3><p>Bật/tắt mục tại danh sách bên trái hoặc ngay trên Preview. Bấm Lưu tất cả để áp dụng; nội dung và giao diện vẫn được giữ.</p><p>Chỉnh nội dung, sản phẩm áp dụng và kiểu chữ tại Sản phẩm → Thiết lập dùng chung.</p><p>{isEnabled(activeSection) ? 'Đang bật trên website' : 'Đang tắt trên website · vẫn xem trước để kiểm tra'}</p></div> : <StylePanel
+            selectionVersion={selectionVersion}
             section={activeSection}
             selected={selected}
             data={selectedData}

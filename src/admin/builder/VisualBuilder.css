@@ -832,3 +832,52 @@
 
 .builder-device { flex-wrap:wrap; min-width:0; max-width:100%; }
 .builder-device button[role="switch"][aria-checked="true"] { background:#b8446d; color:#fff; border-color:#b8446d; }
+
+/* Inspector: selected content first; section-wide controls live in a separate tab. */
+.inspector-heading { padding:18px 16px 12px; background:#fff; }
+.inspector-heading > small { font-size:10px; color:#aa3a63; letter-spacing:1px; font-weight:700; }
+.inspector-heading h2 { margin:6px 0; font-size:16px; line-height:1.4; color:#3a1526; overflow-wrap:anywhere; }
+.inspector-heading p,.inspector-settings-help { margin:4px 0 0; color:#826b75; font-size:12px; line-height:1.6; }
+.inspector-tabs { position:sticky; top:0; z-index:10; display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:8px 12px; background:#fff; border-bottom:1px solid #ead9e0; }
+.inspector-tabs button { min-height:38px; padding:8px; border:0; border-radius:9px; background:#f5eff2; font-family:inherit; font-weight:600; font-size:12px; line-height:1.4; color:#785462; cursor:pointer; }
+.inspector-tabs button[aria-selected="true"] { color:#a9345f; background:#fce6ef; box-shadow:inset 0 0 0 1px #edbdd0; }
+.inspector-tabs button:focus-visible,.inspector-group > summary:focus-visible { outline:2px solid #b8446d; outline-offset:2px; }
+.builder-inspector [hidden] { display:none!important; }
+.inspector-settings-help { padding:12px 16px; }
+.inspector-group { margin:10px 12px; border:1px solid #ead9e0; border-radius:12px; background:#fff; overflow:hidden; }
+.inspector-group > summary { cursor:pointer; padding:13px 12px; color:#60404e; font-size:13px; font-weight:600; line-height:1.5; }
+.inspector-group[open] > summary { border-bottom:1px solid #f0e2e8; background:#fff8fb; color:#a9345f; }
+.inspector-group-content { padding:8px 4px; }
+.inspector-group .builder-setting-group { border-bottom:0; }
+.inspector-group .builder-setting-group > h3 { font-size:12px; color:#896f7b; padding-top:8px; }
+.inspector-group .inspector-group { margin-inline:4px; }
+.inspector-group .builder-help { padding:0 12px; }
+.builder-section-search { display:grid; gap:6px; padding:12px; font-size:11px; color:#806371; }
+.builder-section-search input { width:100%; min-width:0; min-height:36px; border:1px solid #ead9e0; border-radius:8px; padding:8px; background:#fffafb; font:inherit; font-size:12px; }
+@media(min-width:1200px){ .builder-layout { grid-template-columns:176px minmax(0,1fr) 340px; } }
+@media(min-width:901px) and (max-width:1199px){ .builder-layout { grid-template-columns:148px minmax(0,1fr) 310px; } }
+@media(max-width:900px){
+ .visual-builder { height:auto; min-height:0; max-height:none; }
+ .builder-layout { display:flex; flex-direction:column; height:auto; }
+ .builder-sections { width:100%; max-height:220px; border:0; border-bottom:1px solid #ead9e0; }
+ .builder-section-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .builder-section-search { padding-block:8px; }
+ .builder-canvas { height:auto; min-height:0; }
+ .builder-frame-host { max-height:520px; }
+ .builder-settings { height:auto; max-height:none; border-left:0; border-top:1px solid #ead9e0; overflow:visible; }
+ .builder-toolbar { align-items:stretch; }
+ .builder-toolbar-actions { justify-content:flex-end; }
+ .inspector-tabs { top:0; }
+}
+
+.builder-toolbar .admin-btn.primary, .builder-toolbar .admin-btn.primary:hover:not(:disabled) { background:linear-gradient(135deg,#d85c88,var(--a-deep,#b8446d)); color:#fff; white-space:nowrap; }
+.builder-advanced-controls { margin:12px 0; border:1px solid #ead9e0; border-radius:10px; padding:10px; }
+.builder-advanced-controls > summary { cursor:pointer; color:#805a6b; font-size:12px; line-height:1.5; }
+.builder-advanced-controls[open] > summary { margin-bottom:12px; }
+.builder-advanced-controls .builder-setting-group { padding:0; border:0; }
+@media(max-width:1000px){ .builder-settings-inner { display:block; } }
+@media(max-width:900px){
+ .builder-sections { max-height:none; overflow:visible; }
+ .builder-section-list { max-height:160px; overflow-y:auto; }
+ .builder-visibility-help { padding:6px 12px 10px; margin:0; }
+}

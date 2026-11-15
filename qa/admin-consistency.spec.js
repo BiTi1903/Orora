@@ -12,6 +12,11 @@ test('builder keeps saved navigation settings and saves only the edited leaf',as
   'lib/api.js':`export const getProduct=async()=>null;export const getHomeContent=async()=>({navLogo:'ORORA',navStyles:{mobile:{enabled:false},cart:{enabled:false},drawer:{widthPercent:45},surfaces:{chatPanelWidth:310,frames:false,rimOpacity:.65}}});export const saveHomeContent=async value=>{window.__saved=value};`,
  });
  await page.locator('.builder-sections').getByRole('button',{name:/Navbar/}).click();
+ await page.getByRole('tab',{name:'Thiết lập mục',exact:true}).click();
+ await page.locator('.inspector-group > summary').filter({hasText:'Thanh điều hướng dưới — mobile'}).click();
+ await page.getByText('Giỏ hàng navbar và popup',{exact:true}).click();
+ await page.getByText('Hiệu ứng kính, chat và nút nổi',{exact:true}).click();
+ await page.locator('.inspector-group > summary').filter({hasText:'Menu bên — mobile'}).click();
  await expect(page.getByLabel('Hiện thanh cố định dưới màn hình điện thoại')).not.toBeChecked();
  await expect(page.getByLabel('Hiện giỏ hàng',{exact:true})).not.toBeChecked();
  await expect(page.getByLabel('Chiều rộng khung chat AI (px)',{exact:true})).toHaveValue('310');

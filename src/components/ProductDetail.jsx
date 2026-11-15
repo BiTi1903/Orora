@@ -1,3 +1,6 @@
+import {createPortal} from "react-dom";
+import {defaultPurchaseVariant} from "../lib/purchase-defaults";
+import {getAddressOptions} from "../lib/address-api";
 import {mobileDetailVars} from "../lib/product-detail-mobile";
 import "../styles/product-detail-mobile.css";
 import PurchaseSubtotal from './PurchaseSubtotal';
@@ -149,7 +152,7 @@ function ProductDetail({
   const options = productVolumeOptions(product);
   const selectionKey = JSON.stringify([product.id || product.slug || id, options, cartLocation.key]);
   const incoming=cartLocation.state?.cartSelection;
-  const initialCart=incoming?.productId===product.id?{variantId:options.some(o=>o.id===incoming.variantId)?incoming.variantId:'',quantity:Number.isInteger(incoming.quantity)?Math.max(1,Math.min(20,incoming.quantity)):1}:{variantId:'',quantity:1};
+  const initialCart=incoming?.productId===product.id?{variantId:options.some(o=>o.id===incoming.variantId)?incoming.variantId:'',quantity:Number.isInteger(incoming.quantity)?Math.max(1,Math.min(20,incoming.quantity)):1}:{variantId:defaultPurchaseVariant(product,options)?.id||'',quantity:1};
   const choice = purchaseSelection?.key === selectionKey ? purchaseSelection : initialCart;
   const variant = selectedVolumeOption(options, choice.variantId);
   const variantId = variant?.id || "";
@@ -470,6 +473,7 @@ function ProductDetail({
             style={css("price")}
           >
             {formatProductPrice(displayedPrice)}
+            {variant && <small className="product-price-variant" style={toCss(ps.selectionValue)}> / {variant.label}</small>}
           </p>
 
           <p
@@ -501,7 +505,7 @@ function ProductDetail({
               </ConsultationDialog>}
             </div>
           )}
-            <button type="button" className="purchase-website" style={{ ...css("purchaseOptions"), background: purchase.websiteBackground }} onClick={preview ? select("pdPurchaseOptions") : () => setOrderProductId(product.id || product.slug)} aria-haspopup="dialog" aria-expanded={!preview && orderProductId === (product.id || product.slug)}><svg className="purchase-bag" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg><span>{(purchase.websiteLabel?.trim() && purchase.websiteLabel.trim() !== "Đặt hàng trên website" ? purchase.websiteLabel.trim() : "Đặt hàng ngay")}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
+            <button type="button" className="purchase-website" style={{ ...css("purchaseOptions"), background: purchase.websiteBackground }} onClick={preview ? select("pdPurchaseOptions") : () => setOrderProductId(product.id || product.slug)} onPointerEnter={()=>{if(!preview)getAddressOptions().catch(()=>{});}} onFocus={()=>{if(!preview)getAddressOptions().catch(()=>{});}} aria-haspopup="dialog" aria-expanded={!preview && orderProductId === (product.id || product.slug)}><svg className="purchase-bag" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg><span>{(purchase.websiteLabel?.trim() && purchase.websiteLabel.trim() !== "Đặt hàng trên website" ? purchase.websiteLabel.trim() : "Đặt hàng ngay")}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
             {(preview || tiktokShop || facebookShop) && <>
               <div className="purchase-divider"><span>{channelLabels.dividerLabel}</span></div>
               <div className="purchase-social" aria-label="Đặt hàng trên mạng xã hội">
@@ -509,7 +513,7 @@ function ProductDetail({
                 {(preview || tiktokShop) && <a className="purchase-tiktok" href={preview ? undefined : tiktokShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.tiktokBackground, ...(purchase.tiktokBackground ? { color: "#fff" } : {}), ...toCss(purchase.tiktokStyle) }}><svg className="purchase-channel-icon" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 2h-3v13.4a3 3 0 1 1-2.5-3V9.3a6.1 6.1 0 1 0 5.5 6.1V8.3a8 8 0 0 0 5 1.7V7a5 5 0 0 1-5-5Z"/></svg><span className={selectedClass("pdTiktokText")} data-builder-key={preview ? "pdTiktokText" : undefined} onClick={preview ? select("pdTiktokText") : undefined}>{channelLabels.tiktokLabel}</span><svg className="purchase-external" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8" /></svg></a>}
               </div>
             </>}
-            {!preview && orderProductId === (product.id || product.slug) && <OrderForm key={product.id || product.slug} product={product} home={home} selection={{ variantId, quantity: choice.quantity }} onSelectionChange={changeSelection} onClose={() => setOrderProductId(null)} />}
+            {!preview && orderProductId === (product.id || product.slug) && createPortal(<OrderForm key={product.id || product.slug} product={product} home={home} selection={{ variantId, quantity: choice.quantity }} onSelectionChange={changeSelection} onClose={() => setOrderProductId(null)} />, document.body)}
           </section>
 
         </div></div>
