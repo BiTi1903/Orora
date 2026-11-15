@@ -29,7 +29,6 @@ test('rapid next clicks never advance past the cloned end slides',async({page})=
  await expect(page.locator('.gallery-slide:not([inert])').first()).toContainText('Sản phẩm 2');
  await page.clock.runFor(900);
  await fit(page);
- if([390,1440].includes(page.viewportSize().width))await page.screenshot({path:`/workspace/work/audit/catalog-${page.viewportSize().width}.png`,fullPage:true});
 });
 test('vertical scroll and cancelled horizontal gestures do not change the selected products',async({page})=>{
  await catalog(page);
