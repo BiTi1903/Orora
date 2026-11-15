@@ -252,7 +252,7 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
             {(!styles.button?.text||styles.button.text.trim().toLocaleLowerCase('vi')==='xem chi tiết')?'Xem':styles.button.text}
             <svg className="product-view-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8"/></svg>
           </ButtonWrap>
-          {productId&&cartSettings.enabled!==false&&styles.cartEnabled!==false&&<button type="button" className="card-cart-button" aria-label={cartSettings.copy?.add||styles.cartLabel||'Thêm vào giỏ'} onClick={e=>{if(preview)return;e.stopPropagation();const r=e.currentTarget.getBoundingClientRect();window.dispatchEvent(new CustomEvent('orora-cart-add',{detail:{id:productId,source:{x:r.x,y:r.y}}}));}}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 3h2l3 12h10l3-9H6"/><circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/></svg></button>}
+          {productId&&cartSettings.enabled!==false&&styles.cartEnabled!==false&&<button type="button" className="card-cart-button" aria-label={cartSettings.copy?.add||styles.cartLabel||'Thêm vào giỏ'} onClick={e=>{if(preview)return;e.stopPropagation();const r=e.currentTarget.getBoundingClientRect();window.dispatchEvent(new CustomEvent('orora-cart-add',{detail:{id:productId,source:{x:r.x,y:r.y,width:r.width,height:r.height}}}));}}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M3 3h2l3 12h10l3-9H6"/><circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/></svg></button>}
           </div>
         </div>
       </div>

@@ -44,7 +44,7 @@ export default function CartSettings({navbar,onChange}){
   <SettingGroup title="Giỏ hàng — popup và nội dung chung">
    <details><summary>Hiệu ứng, nội dung và kiểu chữ trong giỏ</summary>
     <label><input type="checkbox" checked={value.animation!==false} onChange={event=>patch({animation:event.target.checked})}/>Hiệu ứng bay và nảy vào giỏ</label>
-    <label><input type="checkbox" checked={value.popupAnimation!==false} onChange={event=>patch({popupAnimation:event.target.checked})}/>Giỏ hàng trượt từ dưới lên</label>
+    <label><input type="checkbox" checked={value.popupAnimation!==false} onChange={event=>patch({popupAnimation:event.target.checked})}/>Popup giỏ hàng phóng lớn, nảy nhẹ</label>
     <label className="builder-field">Thời gian mở giỏ (ms)<input type="number" min={180} max={600} step={20} value={value.popupDuration??380} onChange={event=>patch({popupDuration:Number(event.target.value)})}/></label>
     <label><input type="checkbox" checked={value.backgroundScroll!==false} onChange={event=>patch({backgroundScroll:event.target.checked})}/>Cho phép cuộn nền khi mở giỏ</label>
     <ColorField label="Màu nhấn giỏ hàng" value={value.accent||'#b8446d'} onChange={accent=>patch({accent})}/>

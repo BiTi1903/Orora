@@ -1,6 +1,6 @@
 import { useLayoutEffect, useId, useRef } from "react";
 const locks = new WeakMap();
-export default function ModalDialog({ title, children, onClose, className = "", closeDisabled = false, closeLabel="Đóng cửa sổ", style, headingStyle, allowBackgroundScroll=false }) {
+export default function ModalDialog({ title, children, onClose, className = "", closeDisabled = false, closeLabel="Đóng cửa sổ", style, headingStyle, allowBackgroundScroll=false, motionSource, motionDuration=380 }) {
   const closeRef=useRef(onClose);useLayoutEffect(()=>{closeRef.current=()=>{if(!closeDisabled)onClose();};});
   const ref = useRef(null); const titleId = useId();
   useLayoutEffect(() => {
@@ -10,6 +10,19 @@ export default function ModalDialog({ title, children, onClose, className = "", 
     lock.count++; locks.set(body, lock); body.style.overflow = "hidden"; dialog.showModal();
     return () => { dialog.close(); lock.count--; if (!lock.count) { body.style.overflow = lock.overflow; locks.delete(body); } };
   }, [allowBackgroundScroll]);
+  useLayoutEffect(() => {
+    const dialog = ref.current;
+    if (!motionSource || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const box = dialog.getBoundingClientRect();
+    const x = motionSource.x + (motionSource.width || 0) / 2 - box.left - box.width / 2;
+    const y = motionSource.y + (motionSource.height || 0) / 2 - box.top - box.height / 2;
+    const animation = dialog.animate([
+      { transform: `translate(${x}px, ${y}px) scale(.12)`, opacity: 0 },
+      { transform: 'translate(0, 0) scale(1.035)', opacity: 1, offset: .78 },
+      { transform: 'translate(0, 0) scale(1)', opacity: 1 }
+    ], { duration: motionDuration, easing: 'cubic-bezier(.22,.75,.25,1)' });
+    return () => animation.cancel();
+  }, [motionSource, motionDuration]);
   return <>{allowBackgroundScroll&&<div className="orora-modeless-backdrop" aria-hidden="true"/>}<dialog ref={ref} className={`orora-modal ${className}${allowBackgroundScroll?' is-modeless':''}`} aria-labelledby={titleId} style={style} onClose={event=>{event.stopPropagation();if(!ref.current?.open)onClose();}} onCancel={(event) => {event.stopPropagation();event.preventDefault();if(!closeDisabled)onClose();}} onClick={(event) => {
     if (closeDisabled || event.target !== event.currentTarget) return;
     const box = event.currentTarget.getBoundingClientRect();
