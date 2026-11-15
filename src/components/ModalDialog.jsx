@@ -1,7 +1,9 @@
 import { useLayoutEffect, useId, useRef } from "react";
 const locks = new WeakMap();
-export default function ModalDialog({ title, children, onClose, className = "", closeDisabled = false, closeLabel="Đóng cửa sổ", style, headingStyle, allowBackgroundScroll=false, motionSource, motionDuration=380 }) {
+export default function ModalDialog({ title, children, onClose, className = "", closeDisabled = false, closeLabel="Đóng cửa sổ", style, headingStyle, allowBackgroundScroll=false, motionSource, motionDuration=650, motionClosing=false, onMotionClosed }) {
   const closeRef=useRef(onClose);useLayoutEffect(()=>{closeRef.current=()=>{if(!closeDisabled)onClose();};});
+  const motionRef=useRef(null),motionClosedRef=useRef(onMotionClosed);
+  useLayoutEffect(()=>{motionClosedRef.current=onMotionClosed;});
   const ref = useRef(null); const titleId = useId();
   useLayoutEffect(() => {
     const dialog = ref.current; const body = dialog.ownerDocument.body;
@@ -20,9 +22,18 @@ export default function ModalDialog({ title, children, onClose, className = "", 
       { transform: `translate(${x}px, ${y}px) scale(.12)`, opacity: 0 },
       { transform: 'translate(0, 0) scale(1.035)', opacity: 1, offset: .78 },
       { transform: 'translate(0, 0) scale(1)', opacity: 1 }
-    ], { duration: motionDuration, easing: 'cubic-bezier(.22,.75,.25,1)' });
-    return () => animation.cancel();
+    ], { duration: motionDuration, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'both' });
+    motionRef.current=animation;
+    return () => { animation.cancel(); motionRef.current=null; };
   }, [motionSource, motionDuration]);
+  useLayoutEffect(()=>{
+    if(!motionClosing)return;
+    const animation=motionRef.current;
+    if(!animation){motionClosedRef.current?.();return;}
+    animation.onfinish=()=>motionClosedRef.current?.();
+    animation.reverse();
+    return()=>{animation.onfinish=null;};
+  },[motionClosing]);
   return <>{allowBackgroundScroll&&<div className="orora-modeless-backdrop" aria-hidden="true"/>}<dialog ref={ref} className={`orora-modal ${className}${allowBackgroundScroll?' is-modeless':''}`} aria-labelledby={titleId} style={style} onClose={event=>{event.stopPropagation();if(!ref.current?.open)onClose();}} onCancel={(event) => {event.stopPropagation();event.preventDefault();if(!closeDisabled)onClose();}} onClick={(event) => {
     if (closeDisabled || event.target !== event.currentTarget) return;
     const box = event.currentTarget.getBoundingClientRect();

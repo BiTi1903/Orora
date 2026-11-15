@@ -2,6 +2,14 @@
 
 Ghi mọi lần sửa vào file này, mục mới nhất ở trên. Ngày ghi theo giờ Việt Nam; giữ lại lịch sử cũ. Mỗi mục nêu lý do, thay đổi, file liên quan, kiểm tra và ảnh hưởng đến database. Không ghi mật khẩu, token, khóa API hoặc dữ liệu khách hàng.
 
+## 15/11/2026 — Giỏ nảy chậm khi mở, đóng chạy ngược về nút
+
+- **Làm rõ:** Chủ website muốn mở nhỏ từ nút giỏ phía dưới nảy lên giữa, thu về cùng đường; không chỉ kéo dài hiệu ứng thu nhỏ.
+- **Sửa:** Giữ animation mở có tọa độ nguồn và chạy reverse chính animation đó khi đóng, kể cả khi đóng giữa lúc mở. Chỉ unmount sau animation kết thúc thay timer 70% thời gian. Không chạy thêm CSS thu nhỏ giữa màn hình khi đã có nguồn. Giỏ có thời gian tối thiểu 650ms (admin 650–1200ms), cấu hình cũ thấp hơn được giới hạn lúc hiển thị, không ghi đè database. Nhánh mở bằng sự kiện không có tọa độ giữ fallback và timer riêng. Tôn trọng tắt hiệu ứng/reduced motion.
+- **Khu vực:** ModalDialog, ShopCart, CartSettings, shop-cart.css và qa/cart.spec.js.
+- **Kiểm tra:** npm run check đạt 228 bài Node, lint, build, bundle. Hai bài giỏ ở 390/1440px đạt: bấm nút thực tế, kiểm tra animation đóng có playbackRate -1, dialog được gỡ sau chuyển động; chọn dung tích, số lượng và lưu giỏ vẫn đạt.
+- **Database:** Không sửa API, schema, rules hoặc dữ liệu production.
+
 ## 15/11/2026 — Popup chậm hơn, sửa tra cứu đơn và thanh dưới Safari
 
 - **Yêu cầu:** Popup nảy chậm hơn; form/chi tiết tra cứu đơn lệch, rối; thanh website chỉ hiện khi thanh Safari iPhone thu lại, kéo lên thì ẩn.
