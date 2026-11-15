@@ -916,3 +916,6 @@
 .inspector-heading .inspector-source-note { margin-top:10px; padding:9px 10px; border-left:2px solid #d4b5c5; background:#f2ebef; color:#6b5561; line-height:1.5; }
 
 @media(max-width:480px){ .builder-section-list { grid-template-columns:minmax(0,1fr); max-height:150px; } }
+
+/* Reserve scrollbar space so fit scaling cannot feed back into its own measurement. */
+.builder-frame-host { scrollbar-gutter: stable; overflow-anchor: none; }

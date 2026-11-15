@@ -24,31 +24,47 @@ export default function PreviewFrame({ device, children, surfaces, zoom="fit", s
   const scale = zoom==="actual" ? 1 : availableWidth > 0 ? Math.min(1, availableWidth / width) : 1;
 
   useEffect(() => {
-    const observer = new ResizeObserver(([entry]) => setAvailableWidth(entry.contentRect.width));
+    const observer = new ResizeObserver(([entry]) => {
+      const nextWidth = Math.floor(entry.contentRect.width);
+      if (nextWidth > 0) setAvailableWidth(previous => previous === nextWidth ? previous : nextWidth);
+    });
     observer.observe(host.current);
     return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
     if (!frameDocument) return;
+    const mirrors = new Map();
+    const staticStyle = frameDocument.createElement("style");
+    staticStyle.setAttribute("data-preview-style", "");
+    staticStyle.textContent = STATIC_STYLE;
+    frameDocument.head.append(staticStyle);
     const syncStyles = () => {
-      frameDocument.head.querySelectorAll("[data-preview-style]").forEach((node) => node.remove());
-      document.head.querySelectorAll('style, link[rel="stylesheet"]').forEach((node) => {
-        const clone = node.cloneNode(true);
-        clone.setAttribute("data-preview-style", "");
-        frameDocument.head.append(clone);
-      });
-      const staticStyle = frameDocument.createElement("style");
-      staticStyle.setAttribute("data-preview-style", "");
-      staticStyle.textContent = STATIC_STYLE;
-      frameDocument.head.append(staticStyle);
+      const sources = [...document.head.querySelectorAll('style, link[rel="stylesheet"]')];
+      for (const [source, mirror] of mirrors) {
+        if (!sources.includes(source)) { mirror.clone.remove(); mirrors.delete(source); }
+      }
+      let next = staticStyle;
+      for (const source of sources.reverse()) {
+        const signature = source.outerHTML;
+        let mirror = mirrors.get(source);
+        if (!mirror || mirror.signature !== signature) {
+          const clone = source.cloneNode(true);
+          clone.setAttribute("data-preview-style", "");
+          if (mirror) mirror.clone.replaceWith(clone);
+          mirror = { clone, signature };
+          mirrors.set(source, mirror);
+        }
+        if (mirror.clone.nextSibling !== next) frameDocument.head.insertBefore(mirror.clone, next);
+        next = mirror.clone;
+      }
     };
     syncStyles();
     const observer = new MutationObserver(syncStyles);
     observer.observe(document.head, { childList: true, subtree: true, characterData: true, attributes:true, attributeFilter:["rel","href"] });
     const preventNavigation = (event) => { if (event.target.closest("a")) event.preventDefault(); };
     frameDocument.addEventListener("click", preventNavigation);
-    return () => { observer.disconnect(); frameDocument.removeEventListener("click", preventNavigation); };
+    return () => { observer.disconnect(); mirrors.forEach(({ clone }) => clone.remove()); staticStyle.remove(); frameDocument.removeEventListener("click", preventNavigation); };
   }, [frameDocument]);
 
   const surfaceKey=JSON.stringify(surfaces || {});
@@ -69,9 +85,9 @@ export default function PreviewFrame({ device, children, surfaces, zoom="fit", s
 
   return (
     <div className="builder-frame-host" ref={host}>
-      <div style={{ width: width * scale, height: height * scale, margin: "0 auto" }}>
+      <div style={{ width: width * scale, height: height * scale, margin: "0 auto", position: "relative", overflow: "hidden", flexShrink: 0 }}>
         <iframe title={`Xem trước ${device === "mobile" ? "Mobile 390px" : "Desktop 1440px"}`} className="builder-preview-frame"
-          style={{ width, height, transform: `scale(${scale})`, transformOrigin: "top left" }}
+          style={{ position: "absolute", top: 0, left: 0, width, height, transform: `scale(${scale})`, transformOrigin: "top left" }}
           srcDoc={'<!doctype html><html lang="vi"><head><meta name="viewport" content="width=device-width,initial-scale=1" /></head><body><div id="root"><main id="preview-root"></main></div></body></html>'}
           onLoad={(event) => setFrameDocument(event.currentTarget.contentDocument)} />
       </div>
