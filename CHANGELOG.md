@@ -2,6 +2,15 @@
 
 Ghi mọi lần sửa vào file này, mục mới nhất ở trên. Ngày ghi theo giờ Việt Nam; giữ lại lịch sử cũ. Mỗi mục nêu lý do, thay đổi, file liên quan, kiểm tra và ảnh hưởng đến database. Không ghi mật khẩu, token, khóa API hoặc dữ liệu khách hàng.
 
+## 15/11/2026 — Bỏ điểm khựng hai nhịp khi popup giỏ phóng lên
+
+- **Yêu cầu:** Popup còn khựng như nhảy hai lần; muốn khung nhỏ từ nút giỏ phía dưới phóng lên mượt, nảy nhẹ rồi ổn định.
+- **Nguyên nhân đã xác minh:** Các đoạn easing cũ làm khung gần dừng tại mốc 62% (scale .94), sau đó tăng tốc lần nữa để tới scale 1.012. Kiểm tra trên animation thật tái hiện mức đổi vận tốc tại điểm nối 0.180099, vượt ngưỡng 0.1. Không có CSS scale chạy chồng trên đường mở từ nút giỏ.
+- **Sửa:** Thay các đoạn easing nối rời bằng một đường spring giảm chấn duy nhất, lấy mẫu 91 keyframe transform/opacity chuẩn. Vị trí và kích thước dùng chung tiến độ; bắt đầu tại tâm nút, chỉ vượt nhẹ khoảng 1.35% một lần rồi về đúng vị trí/kích thước cuối. Không tạo vòng lặp React hoặc JS cập nhật mỗi frame, không phụ thuộc CSS linear(). Giữ reverse cùng animation khi đóng, kể cả đóng giữa lúc mở; giữ thời gian/bật tắt hiệu ứng từ admin và reduced motion.
+- **Khu vực:** ModalDialog.jsx, lib/popup-motion.js và qa/popup-motion.spec.js.
+- **Kiểm tra:** Regression chuyển động trước sửa thất bại đúng điểm nối; sau sửa đạt. npm run check đạt 228 bài Node, ESLint, build và bundle. 24 kiểm tra trình duyệt ở 320/390/1440px đạt: vị trí nguồn, chỉ một animation, không tăng tốc lại ở điểm nối cũ, chỉ một lần overshoot, đóng ngược giữa/cuối chuyển động, reduced motion, chọn dung tích/số lượng và cấu hình admin. Đã rà phương trình spring để xác nhận chỉ một đỉnh nảy. Chưa đo trực tiếp FPS trên iPhone Safari thật.
+- **Database:** Không sửa API, schema, rules, cấu hình lưu trữ hoặc dữ liệu production.
+
 ## 15/11/2026 — Làm mềm popup và thiết kế lại thông tin tra cứu đơn
 
 - **Yêu cầu:** Popup giỏ nảy mượt/đẹp hơn; thông tin và UI track order đẹp, hợp lý.

@@ -1,4 +1,5 @@
 import { useLayoutEffect, useId, useRef } from "react";
+import {popupMotionKeyframes} from "../lib/popup-motion";
 const locks = new WeakMap();
 export default function ModalDialog({ title, children, onClose, className = "", closeDisabled = false, closeLabel="Đóng cửa sổ", style, headingStyle, allowBackgroundScroll=false, motionSource, motionDuration=650, motionClosing=false, onMotionClosed }) {
   const closeRef=useRef(onClose);useLayoutEffect(()=>{closeRef.current=()=>{if(!closeDisabled)onClose();};});
@@ -16,14 +17,9 @@ export default function ModalDialog({ title, children, onClose, className = "", 
     const dialog = ref.current;
     if (!motionSource || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const box = dialog.getBoundingClientRect();
-    const x = motionSource.x + (motionSource.width || 0) / 2 - box.left - box.width / 2;
-    const y = motionSource.y + (motionSource.height || 0) / 2 - box.top - box.height / 2;
-    const animation = dialog.animate([
-      { transform: `translate(${x}px, ${y}px) scale(.12)`, opacity: 0, offset: 0, easing: 'cubic-bezier(.2,.65,.3,1)' },
-      { transform: `translate(${x*.08}px, ${y*.08}px) scale(.94)`, opacity: 1, offset: .62, easing: 'cubic-bezier(.25,.6,.3,1)' },
-      { transform: 'translate(0, 0) scale(1.012)', opacity: 1, offset: .85, easing: 'cubic-bezier(.4,0,.3,1)' },
-      { transform: 'translate(0, 0) scale(1)', opacity: 1, offset: 1 }
-    ], { duration: motionDuration, easing: 'linear', fill: 'both' });
+    const animation = dialog.animate(popupMotionKeyframes(motionSource, box), {
+      duration: motionDuration, easing: 'linear', fill: 'both'
+    });
     motionRef.current=animation;
     return () => { animation.cancel(); motionRef.current=null; };
   }, [motionSource, motionDuration]);
