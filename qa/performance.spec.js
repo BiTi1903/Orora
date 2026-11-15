@@ -83,8 +83,8 @@ test('slideshow waits until it is visible before loading extra images or autopla
  await expect(page.locator('.product-slideshow-dots button[aria-pressed="true"]')).not.toHaveAttribute('aria-label','Ảnh 1');
 });
 
-test('mobile preload and responsive hero share one correctly sized image request',async({browser})=>{
- const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1.75,baseURL:'http://127.0.0.1:5173'});
+test('mobile preload and responsive hero share one correctly sized image request',async({browser,baseURL})=>{
+ const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1.75,baseURL});
  const page=await context.newPage();
  const {publicHomeShell}=await import('../src/lib/home-shell.js');
  const payload=publicHomeShell({heroTitle:'ORORA',heroImage:'https://res.cloudinary.com/demo/image/upload/v1/hero.jpg',sectionVisibility:{about:false,collection:false,productneeds:false,philosophy:false,features:false,reviews:false,newsletter:false,footer:false,ticker:false}});
