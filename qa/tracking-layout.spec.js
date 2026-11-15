@@ -11,3 +11,23 @@ test('long order details stay padded inside a single glass surface',async({page}
  if(page.viewportSize().width===390)await page.screenshot({path:'/workspace/work/tracking-detail-after.png'});
  await fit(page);
 });
+
+test('receipt keeps cancelled and pending orders truthful and honors editable labels',async({page})=>{
+ await mount(page,`import Details from '/src/components/OrderTrackingDetails.jsx';import {trackingCopy} from '/src/lib/order-tracking-copy.js';import '/src/styles/product-detail.css';${render("R.createElement('main',{style:{padding:20}},R.createElement(Details,{copy:trackingCopy({productSectionTitle:'Thông tin sản phẩm của bạn',totalLabel:'Cần thanh toán'}),styles:{text:{detailProduct:{color:'#123456'}}},order:{code:'OW_TEST',status:'cancelled',productName:'Sản phẩm thử',paymentMethod:'cod',paymentStatus:'refunded',quantity:2,subtotal:null,shippingFee:null,totalAmount:null}}))")}`);
+ await expect(page.getByRole('heading',{name:'Thông tin sản phẩm của bạn'})).toBeVisible();
+ await expect(page.locator('.tracking-product-name dd')).toHaveCSS('color','rgb(18, 52, 86)');
+ await expect(page.locator('.order-tracking-steps')).toHaveCount(0);
+ await expect(page.locator('.tracking-payment-badge')).toHaveText('Đã hoàn tiền');
+ await expect(page.locator('.is-total')).toContainText('Cần thanh toán');await expect(page.locator('.is-total dd')).toHaveText('Chờ xác nhận tổng tiền');
+ await fit(page);
+});
+
+test('admin previews edited receipt labels without looking up a real order',async({page})=>{
+ await mount(page,`import Settings from '/src/admin/OrderTrackingSettings.jsx';import '/src/styles/product-detail.css';${render("R.createElement(Settings)")}`,{'lib/api.js':'export const getHomeContent=async()=>({});export const saveHomeContent=async()=>{};export const explainError=()=>"Lỗi thử";'});
+ await page.getByRole('button',{name:'Nội dung kết quả',exact:true}).click();
+ await page.getByLabel('Chi tiết — nhóm sản phẩm',{exact:true}).fill('Sản phẩm trong đơn của bạn');
+ await page.getByRole('button',{name:'Xem trước',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Sản phẩm trong đơn của bạn',exact:true})).toBeVisible();
+ await expect(page.locator('.tracking-order-code')).toHaveText('OW_DEMO');
+ await expect(page.locator('.is-total dd')).toContainText('320.000');
+});

@@ -3,6 +3,7 @@ export default function OrderTrackingSearch({copy,styles={},mode,code,phone,busy
  const css=key=>trackingStyle(styles,key);
  const Form=preview?'div':'form';
  return <div className="order-tracking-search-layout"><div className="order-tracking-panel">
+  <h2 className="tracking-search-title" style={css("formTitle")}>{copy.formTitle}</h2>
 
   <Form className="order-tracking-search-form" onSubmit={preview?undefined:onSubmit} aria-label="Tra cứu đơn hàng" aria-busy={busy}>
    <div className="order-tracking-modes" role="group" aria-label="Tra cứu theo">{[['phone',copy.phoneTab],['code',copy.codeTab]].map(([key,label])=><button key={key} type="button" aria-pressed={mode===key} onClick={()=>onMode(key)}><strong style={css('modeTitle')}>{label}</strong></button>)}</div>

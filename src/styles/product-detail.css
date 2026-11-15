@@ -1087,3 +1087,22 @@ html[data-glass-frames] #root .order-tracking-modal .order-tracking-result,
  .order-tracking-steps li.is-reached::before { background:var(--tracking-accent,var(--rose-deep)); }
  .order-tracking-steps li:last-child { padding-bottom:0; border-color:transparent; }
 }
+
+/* Tracking receipt: group related information instead of one long table. */
+.order-tracking-panel .tracking-search-title { font-size:16px; margin:0 0 16px; }
+.order-tracking-result .tracking-status-section { padding-bottom:4px; }
+.tracking-order-code { font-size:12px; font-variant-numeric:tabular-nums; color:var(--plum-soft); letter-spacing:.04em; }
+.order-tracking-result .tracking-detail-section { margin-top:18px; padding-top:18px; border-top:1px solid var(--tracking-border,var(--line)); }
+.order-tracking-result .tracking-detail-section h3 { margin:0 0 10px; font:600 11px/1.5 var(--font-body); letter-spacing:.08em; text-transform:uppercase; color:var(--tracking-accent,var(--rose-deep)); }
+.order-tracking-result .tracking-detail-section dl { margin:0; }
+.order-tracking-result .tracking-detail-section dl > div { padding:7px 0; border:0; }
+.order-tracking-result .tracking-product-name { grid-template-columns:minmax(0,1fr); gap:4px; }
+.order-tracking-result .tracking-product-name dt { display:none; }
+.order-tracking-result .tracking-product-name dd { text-align:left; font-size:17px; font-weight:600; line-height:1.5; }
+.tracking-payment-badge { display:inline-block; font-size:12px; line-height:1.5; padding:4px 8px; border-radius:7px; background:#8a6e3810; color:#80602c; }
+.tracking-payment-badge.is-paid { background:#21745010; color:#217450; }
+.order-tracking-result .tracking-cost-section { padding:16px; border:1px solid var(--tracking-border,var(--line)); border-radius:14px; background:color-mix(in srgb,var(--tracking-accent,var(--rose-deep)) 3%,transparent); }
+.order-tracking-result .tracking-cost-section .is-total { border-top:1px dashed var(--tracking-border,var(--line)); padding-top:12px; margin-top:8px; font-size:18px; align-items:center; }
+.order-tracking-result .tracking-cost-section .is-total dt { font-size:14px; color:inherit; }
+.order-tracking-result .order-tracking-help { border-left:2px solid var(--tracking-border,var(--line)); padding-left:12px; }
+.order-tracking-modal { border-radius:var(--tracking-radius,24px); }

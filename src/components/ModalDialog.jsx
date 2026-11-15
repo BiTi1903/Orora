@@ -19,10 +19,11 @@ export default function ModalDialog({ title, children, onClose, className = "", 
     const x = motionSource.x + (motionSource.width || 0) / 2 - box.left - box.width / 2;
     const y = motionSource.y + (motionSource.height || 0) / 2 - box.top - box.height / 2;
     const animation = dialog.animate([
-      { transform: `translate(${x}px, ${y}px) scale(.12)`, opacity: 0 },
-      { transform: 'translate(0, 0) scale(1.035)', opacity: 1, offset: .78 },
-      { transform: 'translate(0, 0) scale(1)', opacity: 1 }
-    ], { duration: motionDuration, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'both' });
+      { transform: `translate(${x}px, ${y}px) scale(.12)`, opacity: 0, offset: 0, easing: 'cubic-bezier(.2,.65,.3,1)' },
+      { transform: `translate(${x*.08}px, ${y*.08}px) scale(.94)`, opacity: 1, offset: .62, easing: 'cubic-bezier(.25,.6,.3,1)' },
+      { transform: 'translate(0, 0) scale(1.012)', opacity: 1, offset: .85, easing: 'cubic-bezier(.4,0,.3,1)' },
+      { transform: 'translate(0, 0) scale(1)', opacity: 1, offset: 1 }
+    ], { duration: motionDuration, easing: 'linear', fill: 'both' });
     motionRef.current=animation;
     return () => { animation.cancel(); motionRef.current=null; };
   }, [motionSource, motionDuration]);

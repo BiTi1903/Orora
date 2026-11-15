@@ -2,6 +2,16 @@
 
 Ghi mọi lần sửa vào file này, mục mới nhất ở trên. Ngày ghi theo giờ Việt Nam; giữ lại lịch sử cũ. Mỗi mục nêu lý do, thay đổi, file liên quan, kiểm tra và ảnh hưởng đến database. Không ghi mật khẩu, token, khóa API hoặc dữ liệu khách hàng.
 
+## 15/11/2026 — Làm mềm popup và thiết kế lại thông tin tra cứu đơn
+
+- **Yêu cầu:** Popup giỏ nảy mượt/đẹp hơn; thông tin và UI track order đẹp, hợp lý.
+- **Chuyển động:** Chia đường phóng từ nút thành các đoạn tăng kích thước liên tục, giảm overshoot từ 1.035 xuống 1.012, easing riêng cho từng đoạn và đoạn cuối hạ nhẹ về 1. Vẫn reverse chính chuyển động khi đóng; giữ thời gian chỉnh trong admin, reduced motion và bật/tắt hiệu ứng.
+- **Chi tiết đơn:** Tách rõ tình trạng/ngày giờ, sản phẩm đã đặt, thông tin thanh toán và khung chi phí. Tên sản phẩm nổi bật, dung tích/số lượng có hàng riêng; nhãn thanh toán thể hiện đúng dữ liệu; tổng tiền có đường phân cách và điểm nhấn. Đơn hủy không hiện tiến trình giao, số tiền null vẫn báo chờ xác nhận, không tự suy đoán trạng thái hoặc số tiền.
+- **Form và admin:** Khôi phục tiêu đề form đang có bộ chỉnh; bổ sung nhãn nội dung chi tiết vào tab Nội dung kết quả, thêm bộ chỉnh chữ tiêu đề nhóm/tên sản phẩm/tổng tiền. Tab Xem trước dùng chung component chi tiết với dữ liệu OW_DEMO được ghi rõ là minh họa; không tra cứu đơn thật. Trang thật đọc các cấu hình tương ứng, giữ các tùy chỉnh cũ.
+- **Khu vực:** ModalDialog, OrderTracking/Details/Search, order-tracking-copy, OrderTrackingSettings, product-detail.css và qa/tracking-layout.spec.js.
+- **Kiểm tra:** npm run check cuối đạt 228 bài Node, lint, build, bundle. 27 kiểm tra giỏ/checkout/tra cứu/admin ở 320/390/1440px đạt; sau bổ sung bộ chỉnh chạy lại 15 kiểm tra bố cục và admin đạt, thêm 1 kiểm tra sửa nhãn rồi xem trước ở admin đạt. Đã xem ảnh chi tiết đơn ở 390px. Kiểm tra tên dài không tràn, đơn hủy, hoàn tiền, số tiền chưa xác nhận và cấu hình chữ được áp dụng.
+- **Database:** Không thay API, schema, rules hoặc dữ liệu đơn hàng/production. Các khóa nội dung mới chỉ là fallback giao diện và lựa chọn sẵn trong editor; không ghi cấu hình hay dữ liệu lên production khi làm/kiểm tra.
+
 ## 15/11/2026 — Giỏ nảy chậm khi mở, đóng chạy ngược về nút
 
 - **Làm rõ:** Chủ website muốn mở nhỏ từ nút giỏ phía dưới nảy lên giữa, thu về cùng đường; không chỉ kéo dài hiệu ứng thu nhỏ.

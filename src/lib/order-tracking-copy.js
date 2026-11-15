@@ -1,5 +1,12 @@
 import { toCss } from './typography.js';
 export const ORDER_TRACKING_FIELDS = [
+  ['progressTitle','Chi tiết — tiến trình','Tình trạng đơn hàng'],
+  ['createdLabel','Chi tiết — ngày đặt','Đặt lúc'],['updatedLabel','Chi tiết — ngày cập nhật','Cập nhật'],
+  ['productSectionTitle','Chi tiết — nhóm sản phẩm','Sản phẩm đã đặt'],['productLabel','Chi tiết — nhãn sản phẩm','Sản phẩm'],['volumeLabel','Chi tiết — dung tích','Dung tích'],
+  ['paymentSectionTitle','Chi tiết — nhóm thanh toán','Thông tin thanh toán'],['methodLabel','Chi tiết — phương thức','Phương thức thanh toán'],
+  ['costSectionTitle','Chi tiết — nhóm chi phí','Chi tiết số tiền'],['subtotalLabel','Chi tiết — tiền sản phẩm','Tiền sản phẩm'],['shippingLabel','Chi tiết — phí giao hàng','Phí giao hàng'],['totalLabel','Chi tiết — tổng tiền','Tổng tiền'],
+  ['cancelledHelp','Chi tiết — đơn đã hủy','Đơn hàng đã được hủy. Liên hệ ORORA nếu bạn cần hỗ trợ.'],
+
   ['backLabel','Nút trở về','Trở về trang chủ'],
   ['eyebrow','Dòng chữ nhỏ','ORORA · ĐƠN HÀNG CỦA BẠN'],
   ['title','Tiêu đề trang','Tra cứu đơn hàng'],
@@ -27,8 +34,8 @@ export const ORDER_TRACKING_FIELDS = [
   ['moreHelp','Hướng dẫn tải thêm','Số lượng theo tình trạng tính trên các đơn đã tải. Xem thêm để kiểm tra đơn cũ hơn.'],
   ['statusHelp','Ghi chú dưới kết quả','Trạng thái do ORORA cập nhật khi xử lý đơn. Đây chưa phải hành trình vận chuyển trực tiếp từ đơn vị giao hàng.'],
 ];
-export const TRACKING_RESULT_KEYS=['paidLabel','unpaidLabel','refundedLabel','paymentLabel','resultTitle','resultSummary','allLabel','detailLabel','quantityLabel','pendingTotalLabel','emptyFilterLabel','previousLabel','nextLabel','pageLabel','moreLabel','moreLoadingLabel','moreHelp','statusHelp'];
-export const TRACKING_STYLE_GROUPS=[['eyebrow','Dòng chữ nhỏ'],['title','Tiêu đề trang'],['intro','Lời giới thiệu'],['formTitle','Tiêu đề khung nhập'],['modeTitle','Tên cách tra cứu'],['modeBody','Mô tả cách tra cứu'],['label','Nhãn ô nhập'],['input','Chữ trong ô nhập'],['button','Nút tra cứu'],['guideTitle','Tiêu đề hướng dẫn'],['guideBody','Nội dung hướng dẫn'],['help','Ghi chú và liên hệ'],['resultTitle','Tiêu đề kết quả'],['resultBody','Nội dung kết quả']];
+export const TRACKING_RESULT_KEYS=['progressTitle','createdLabel','updatedLabel','productSectionTitle','productLabel','volumeLabel','paymentSectionTitle','methodLabel','costSectionTitle','subtotalLabel','shippingLabel','totalLabel','cancelledHelp','paidLabel','unpaidLabel','refundedLabel','paymentLabel','resultTitle','resultSummary','allLabel','detailLabel','quantityLabel','pendingTotalLabel','emptyFilterLabel','previousLabel','nextLabel','pageLabel','moreLabel','moreLoadingLabel','moreHelp','statusHelp'];
+export const TRACKING_STYLE_GROUPS=[['detailHeading','Chi tiết — tiêu đề nhóm'],['detailProduct','Chi tiết — tên sản phẩm'],['detailTotal','Chi tiết — tổng tiền'],['eyebrow','Dòng chữ nhỏ'],['title','Tiêu đề trang'],['intro','Lời giới thiệu'],['formTitle','Tiêu đề khung nhập'],['modeTitle','Tên cách tra cứu'],['modeBody','Mô tả cách tra cứu'],['label','Nhãn ô nhập'],['input','Chữ trong ô nhập'],['button','Nút tra cứu'],['guideTitle','Tiêu đề hướng dẫn'],['guideBody','Nội dung hướng dẫn'],['help','Ghi chú và liên hệ'],['resultTitle','Tiêu đề kết quả'],['resultBody','Nội dung kết quả']];
 export function trackingCopy(value = {}) {
   return Object.fromEntries(ORDER_TRACKING_FIELDS.map(([key,,fallback]) => [key,typeof value?.[key] === 'string' && value[key].trim() ? value[key] : fallback]));
 }
