@@ -1,5 +1,5 @@
 import useHomeContent from "../hooks/useHomeContent";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "../styles/back-to-top.css";
 
 const R = 20;
@@ -8,19 +8,33 @@ const C = 2 * Math.PI * R;
 function BackToTop() {
   const surfaces=useHomeContent().navStyles?.surfaces||{};
   const offset=(value,fallback,max)=>Math.max(8,Math.min(max,Number(value??fallback)||fallback));
-  const [progress, setProgress] = useState(0);
+  const [visible, setVisible] = useState(false);
+  const ring = useRef(null);
 
   useEffect(() => {
-    const onScroll = () => {
+    let frame = 0, previous = -1;
+    const measure = () => {
+      frame = 0;
       const max = document.documentElement.scrollHeight - window.innerHeight;
-      setProgress(max > 0 ? Math.min(window.scrollY / max, 1) : 0);
+      const progress = max > 0 ? Math.max(0, Math.min(window.scrollY / max, 1)) : 0;
+      if (progress !== previous) {
+        ring.current?.setAttribute("stroke-dashoffset", String(C * (1 - progress)));
+        previous = progress;
+      }
+      // React only changes when the button becomes visible/hidden, not per pixel.
+      setVisible(progress > .06);
     };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(measure); };
+    measure();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    const observer = window.ResizeObserver ? new ResizeObserver(schedule) : null;
+    observer?.observe(document.documentElement);
+    return () => {
+      cancelAnimationFrame(frame);observer?.disconnect();
+      window.removeEventListener("scroll", schedule);window.removeEventListener("resize", schedule);
+    };
   }, []);
-
-  const visible = progress > 0.06;
 
   return (
     <button
@@ -35,12 +49,13 @@ function BackToTop() {
       <svg viewBox="0 0 48 48" aria-hidden="true">
         <circle className="btt-track" cx="24" cy="24" r={R} />
         <circle
+          ref={ring}
           className="btt-bar"
           cx="24"
           cy="24"
           r={R}
           strokeDasharray={C}
-          strokeDashoffset={C * (1 - progress)}
+          strokeDashoffset={C}
         />
       </svg>
       <span>↑</span>

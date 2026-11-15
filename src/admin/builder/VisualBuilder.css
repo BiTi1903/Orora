@@ -75,7 +75,7 @@
   min-height: 0;
   display: grid;
   /* Sidebar trái hẹp hơn, panel phải vừa đủ, preview chiếm phần còn lại */
-  grid-template-columns: 168px minmax(0, 1fr) 280px;
+  grid-template-columns: 176px minmax(0, 1fr) 340px;
   height: 100%;
 }
 
@@ -691,58 +691,6 @@
 
 /* RESPONSIVE */
 
-@media (max-width: 1400px) {
-  .builder-layout {
-    grid-template-columns: 160px minmax(0, 1fr) 260px;
-  }
-}
-
-@media (max-width: 1200px) {
-  .builder-layout {
-    grid-template-columns: 150px minmax(0, 1fr) 250px;
-  }
-}
-
-@media (max-width: 1000px) {
-  .visual-builder {
-    height: auto;
-    max-height: none;
-    min-height: 0;
-  }
-
-  .builder-layout {
-    grid-template-columns: 150px 1fr;
-    height: auto;
-  }
-
-  .builder-settings {
-    grid-column: 1 / -1;
-    height: auto;
-    max-height: 420px;
-    border-left: 0;
-    border-top: 1px solid rgba(184, 68, 109, 0.12);
-  }
-
-  .builder-settings-inner {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .builder-panel-title {
-    grid-column: 1 / -1;
-  }
-
-  .builder-sections {
-    height: auto;
-    max-height: 280px;
-  }
-
-  .builder-canvas {
-    min-height: 560px;
-    height: auto;
-  }
-}
-
 @media (max-width: 700px) {
   .builder-toolbar {
     align-items: flex-start;
@@ -752,33 +700,6 @@
   .builder-toolbar-actions {
     width: 100%;
     justify-content: flex-end;
-  }
-
-  .builder-layout {
-    display: block;
-  }
-
-  .builder-sections {
-    border-right: 0;
-    border-bottom: 1px solid rgba(184, 68, 109, 0.12);
-    max-height: none;
-  }
-
-  .builder-section-list {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .builder-canvas {
-    min-height: 520px;
-  }
-
-  .builder-settings {
-    max-height: 480px;
-  }
-
-  .builder-settings-inner {
-    display: block;
   }
 }
 .builder-device { display: flex; gap: 6px; }
@@ -854,14 +775,14 @@
 .inspector-group .builder-help { padding:0 12px; }
 .builder-section-search { display:grid; gap:6px; padding:12px; font-size:11px; color:#806371; }
 .builder-section-search input { width:100%; min-width:0; min-height:36px; border:1px solid #ead9e0; border-radius:8px; padding:8px; background:#fffafb; font:inherit; font-size:12px; }
-@media(min-width:1200px){ .builder-layout { grid-template-columns:176px minmax(0,1fr) 340px; } }
-@media(min-width:901px) and (max-width:1199px){ .builder-layout { grid-template-columns:148px minmax(0,1fr) 310px; } }
-@media(max-width:900px){
+@media(min-width:1001px) and (max-width:1199px){ .builder-layout { grid-template-columns:148px minmax(0,1fr) 310px; } }
+@media(max-width:1000px){
  .visual-builder { height:auto; min-height:0; max-height:none; }
  .builder-layout { display:flex; flex-direction:column; height:auto; }
- .builder-sections { width:100%; max-height:220px; border:0; border-bottom:1px solid #ead9e0; }
- .builder-section-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .builder-sections { width:100%; height:auto; max-height:none; overflow:visible; border:0; border-bottom:1px solid #ead9e0; }
+ .builder-section-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); max-height:160px; overflow-y:auto; }
  .builder-section-search { padding-block:8px; }
+ .builder-visibility-help { padding:6px 12px 10px; margin:0; }
  .builder-canvas { height:auto; min-height:0; }
  .builder-frame-host { max-height:520px; }
  .builder-settings { height:auto; max-height:none; border-left:0; border-top:1px solid #ead9e0; overflow:visible; }
@@ -875,12 +796,6 @@
 .builder-advanced-controls > summary { cursor:pointer; color:#805a6b; font-size:12px; line-height:1.5; }
 .builder-advanced-controls[open] > summary { margin-bottom:12px; }
 .builder-advanced-controls .builder-setting-group { padding:0; border:0; }
-@media(max-width:1000px){ .builder-settings-inner { display:block; } }
-@media(max-width:900px){
- .builder-sections { max-height:none; overflow:visible; }
- .builder-section-list { max-height:160px; overflow-y:auto; }
- .builder-visibility-help { padding:6px 12px 10px; margin:0; }
-}
 
 /* A named element picker and one open control group keep editing focused. */
 .inspector-heading { background:#fbf8fa; border-bottom:1px solid #e8dde3; }

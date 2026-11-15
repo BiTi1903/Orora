@@ -37,32 +37,41 @@ function ScrollText({
     const sec = secRef.current;
     if (!sec) return;
     const spans = sec.querySelectorAll(".st-word");
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) {
-      spans.forEach((s) => s.classList.add("on"));
-      return;
-    }
-    let raf = 0;
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let raf = 0, previousCount = -1, inView = !window.IntersectionObserver;
+    const paint = count => {
+      if (count === previousCount) return;
+      const from = previousCount < 0 ? 0 : Math.min(previousCount, count);
+      const to = previousCount < 0 ? spans.length : Math.max(previousCount, count);
+      for (let index = from; index < to; index++) spans[index].classList.toggle("on", index < count);
+      previousCount = count;
+    };
     const update = () => {
-      const r = sec.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const p = Math.min(Math.max((vh * 0.8 - r.top) / (r.height * 0.9), 0), 1);
-      const count = Math.round(p * spans.length);
-      spans.forEach((s, i) => s.classList.toggle("on", i < count));
       raf = 0;
+      if (motion.matches) { paint(spans.length); return; }
+      const r = sec.getBoundingClientRect();
+      const p = Math.min(Math.max((window.innerHeight * .8 - r.top) / Math.max(1, r.height * .9), 0), 1);
+      paint(Math.round(p * spans.length));
     };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update);
-    };
+    if (preview) { paint(spans.length); return; }
+    const schedule = () => { if (!raf) raf = requestAnimationFrame(update); };
+    const onScroll = () => { if (inView && !motion.matches) schedule(); };
+    const observer = window.IntersectionObserver ? new IntersectionObserver(entries => {
+      inView = entries.some(entry => entry.isIntersecting);
+      // Enter/exit also paints the fully revealed or unrevealed endpoint.
+      schedule();
+    }) : null;
+    observer?.observe(sec);
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("resize", schedule);
+    motion.addEventListener("change", schedule);
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      cancelAnimationFrame(raf);
+      observer?.disconnect();cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);window.removeEventListener("resize", schedule);
+      motion.removeEventListener("change", schedule);
     };
-  }, [text, accentCount]);
+  }, [text, accentCount, preview]);
 
 
   return (

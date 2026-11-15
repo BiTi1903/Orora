@@ -17,7 +17,9 @@ async function mountPausedCart(page){
   };
  });
  await mount(page,fixture,modules);
+ if(page.viewportSize().width<=768)await page.evaluate(()=>window.scrollTo(0,200));
  const trigger=page.locator('[data-cart-target]:visible').last();
+ await expect(trigger).toBeVisible();
  const source=await trigger.boundingBox();
  await trigger.click();
  const cart=page.getByRole('dialog',{name:'Giỏ hàng',exact:true});
@@ -64,6 +66,9 @@ for(const progress of [.38,1])test(`cart reverses the same motion back to its tr
  // Calling the real close control in-page also covers closing mid-animation.
  await cart.getByRole('button',{name:'Đóng cửa sổ',exact:true}).evaluate(button=>button.click());
  await expect.poll(()=>cart.evaluate(dialog=>dialog.getAnimations()[0]?.playbackRate)).toBe(-1);
+ // A queued forward finish event must not remove the dialog during its return.
+ await cart.evaluate(dialog=>{const animation=dialog.getAnimations()[0];animation.pause();animation.dispatchEvent(new Event('finish'));});
+ await expect(cart).toHaveCount(1);
  const returned=await cart.evaluate(dialog=>{
   const animation=dialog.getAnimations()[0];animation.pause();animation.currentTime=0;
   const box=dialog.getBoundingClientRect();
@@ -79,6 +84,7 @@ for(const progress of [.38,1])test(`cart reverses the same motion back to its tr
 test('reduced motion opens and closes the cart without the spring',async({page})=>{
  await page.emulateMedia({reducedMotion:'reduce'});
  await mount(page,fixture,modules);
+ if(page.viewportSize().width<=768)await page.evaluate(()=>window.scrollTo(0,200));
  await page.locator('[data-cart-target]:visible').last().click();
  const cart=page.getByRole('dialog',{name:'Giỏ hàng',exact:true});await expect(cart).toBeVisible();
  expect(await cart.evaluate(dialog=>dialog.getAnimations().length)).toBe(0);

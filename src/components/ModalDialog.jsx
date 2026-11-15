@@ -14,6 +14,28 @@ export default function ModalDialog({ title, children, onClose, className = "", 
     return () => { dialog.close(); lock.count--; if (!lock.count) { body.style.overflow = lock.overflow; locks.delete(body); } };
   }, [allowBackgroundScroll]);
   useLayoutEffect(() => {
+    const dialog = ref.current, viewport = window.visualViewport;
+    let frame = null;
+    const measure = () => {
+      const zoomed = viewport && Math.abs(viewport.scale - 1) > .01;
+      dialog.style.setProperty('--modal-viewport-height', `${zoomed ? window.innerHeight : viewport?.height || window.innerHeight}px`);
+      dialog.style.setProperty('--modal-viewport-top', `${zoomed ? 0 : viewport?.offsetTop || 0}px`);
+    };
+    const schedule = () => {
+      if (frame === null) frame = requestAnimationFrame(() => { frame = null; measure(); });
+    };
+    measure();
+    viewport?.addEventListener('resize', schedule);
+    viewport?.addEventListener('scroll', schedule);
+    window.addEventListener('resize', schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      viewport?.removeEventListener('resize', schedule);
+      viewport?.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+    };
+  }, []);
+  useLayoutEffect(() => {
     const dialog = ref.current;
     if (!motionSource || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const box = dialog.getBoundingClientRect();
@@ -27,10 +49,21 @@ export default function ModalDialog({ title, children, onClose, className = "", 
     if(!motionClosing)return;
     const animation=motionRef.current;
     if(!animation){motionClosedRef.current?.();return;}
-    animation.onfinish=()=>motionClosedRef.current?.();
-    animation.reverse();
+    // A keyboard/viewport change may have moved the settled dialog. Rebase at
+    // identity before reversing so the flight still ends at the captured trigger.
+    if(animation.playState==='finished'&&motionSource){
+      animation.effect.setKeyframes(popupMotionKeyframes(motionSource,ref.current.getBoundingClientRect()));
+    }
+    animation.onfinish=()=>{
+      // WebKit can deliver the forward finish event after reverse was requested.
+      if(animation.playbackRate<0&&animation.currentTime<=0)motionClosedRef.current?.();
+    };
+    // reverse() can stay pending on a finished, filled WebKit animation.
+    // Setting the rate explicitly preserves its current point and starts it back.
+    animation.playbackRate=-Math.abs(animation.playbackRate||1);
+    animation.play();
     return()=>{animation.onfinish=null;};
-  },[motionClosing]);
+  },[motionClosing,motionSource]);
   return <>{allowBackgroundScroll&&<div className="orora-modeless-backdrop" aria-hidden="true"/>}<dialog ref={ref} className={`orora-modal ${className}${allowBackgroundScroll?' is-modeless':''}`} aria-labelledby={titleId} style={style} onClose={event=>{event.stopPropagation();if(!ref.current?.open)onClose();}} onCancel={(event) => {event.stopPropagation();event.preventDefault();if(!closeDisabled)onClose();}} onClick={(event) => {
     if (closeDisabled || event.target !== event.currentTarget) return;
     const box = event.currentTarget.getBoundingClientRect();

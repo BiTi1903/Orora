@@ -24,8 +24,6 @@ export default function ProductSlideshow({
   const list = clean(images);
   const root=useRef(null);
   const canPlay=useVisiblePlayback(root,autoPlay && list.length>1);
-  const [started,setStarted]=useState(false);
-  if(canPlay&&!started)setStarted(true);
   const isControlled = controlledIndex != null && typeof onIndexChange === "function";
   const imagesKey = JSON.stringify(list);
   const [previousImagesKey, setPreviousImagesKey] = useState(imagesKey);
@@ -39,6 +37,16 @@ export default function ProductSlideshow({
   const index = isControlled
     ? Math.min(Math.max(0, controlledIndex), Math.max(0, list.length - 1))
     : internalIndex;
+
+  // Warm just the next slide while visible. Keep previously used images attached
+  // so crossfades/manual navigation reuse the browser cache without a load burst.
+  const [loaded, setLoaded] = useState({key: imagesKey, sources: []});
+  const needed = [list[index], ...(canPlay ? [list[(index + 1) % list.length]] : [])].filter(Boolean);
+  const loadedSources = loaded.key === imagesKey ? loaded.sources : [];
+  const sources = [...new Set([...loadedSources, ...needed])];
+  if (loaded.key !== imagesKey || sources.length !== loadedSources.length) {
+    setLoaded({key: imagesKey, sources});
+  }
 
   const setIndex = (next) => {
     if (isControlled) onIndexChange(next);
@@ -67,7 +75,7 @@ export default function ProductSlideshow({
       {list.map((src, i) => (
         <img
           key={`${src}-${i}`}
-          {...(i===index || started ? responsiveImage(src,{sizes}) : {})}
+          {...(sources.includes(src) ? responsiveImage(src,{sizes}) : {})}
           loading="lazy"
           decoding="async"
           alt={i === index ? alt : ""}
