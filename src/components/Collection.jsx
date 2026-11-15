@@ -72,9 +72,11 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
   }, [perView, gap]);
 
   const goNext = useCallback(() => {
+    // Wait for the cloned end slides to reset before accepting another step.
+    if (indexRef.current >= count) return;
     setAnimating(true);
     setSlide(indexRef.current + 1);
-  }, [setSlide]);
+  }, [count, setSlide]);
 
   const goPrev = useCallback(() => {
     if (indexRef.current > 0) {
@@ -138,15 +140,19 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
       if (!drag || drag.id !== e.pointerId) return;
       const dx = e.clientX - drag.x;
       const dy = e.clientY - drag.y;
-      if (Math.abs(dx) > 5) movedRef.current = true;
-      if (Math.abs(dx) > Math.abs(dy)) e.preventDefault();
+      if (!movedRef.current) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) < 8) return;
+        if (Math.abs(dy) >= Math.abs(dx)) { cancel(); return; }
+        movedRef.current = true;
+      }
+      e.preventDefault();
       setDragX(dx);
     };
 
     const end = (e) => {
       const drag = dragRef.current;
       if (!drag || drag.id !== e.pointerId) return;
-      const dx = e.clientX - drag.x;
+      const dx = movedRef.current ? e.clientX - drag.x : 0;
       dragRef.current = null;
       setDragging(false);
       setDragX(0);
@@ -156,15 +162,24 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
       else if (dx >= threshold) goPrev();
     };
 
+    const cancel = (event) => {
+      if (event && dragRef.current?.id !== event.pointerId) return;
+      dragRef.current = null;
+      movedRef.current = false;
+      setDragging(false);
+      setDragX(0);
+      setPaused(false);
+    };
+
     el.addEventListener("pointerdown", start);
     window.addEventListener("pointermove", move, { passive: false });
     window.addEventListener("pointerup", end);
-    window.addEventListener("pointercancel", end);
+    window.addEventListener("pointercancel", cancel);
     return () => {
       el.removeEventListener("pointerdown", start);
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", end);
-      window.removeEventListener("pointercancel", end);
+      window.removeEventListener("pointercancel", cancel);
     };
   }, [looping, count, perView, goNext, goPrev, stepSize]);
 
@@ -205,11 +220,6 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
           >
             <ProductCard productId={product.id}
               image={product.image}
-              image2={product.image2}
-              image3={product.image3}
-              image4={product.image4}
-              image5={product.image5}
-              image6={product.image6}
               number={productNumber(product, products)}
               name={product.name}
               description={product.description}

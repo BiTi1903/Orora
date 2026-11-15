@@ -101,7 +101,6 @@ function App() {
               {visible("philosophy") && <ScrollText />}
 
               {visible("features") && <Features />}
-              {/* <Ritual /> */}
                  {visible("reviews") && <Testimonials />}
    {visible("newsletter") && <Newsletter />}
               {visible("footer") && <Footer />}

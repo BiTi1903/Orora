@@ -298,7 +298,6 @@
 .order-mail-history-filters select { width: 100%; min-height: 44px; padding: 11px; background: #fffafc; color: var(--a-plum); border: 1px solid var(--a-line); border-radius: 12px; font: inherit; font-size: 14px; }
 .order-mail-history-filters select:focus-visible { outline: 2px solid var(--a-deep); outline-offset: 2px; }
 .order-mail-history-list { max-height: 650px; overflow-y: auto; }
-@media (max-width: 600px) { .order-mail-history-filters { grid-template-columns: minmax(0, 1fr); } }
 
 .admin-filter-panel { margin: 16px 0; padding: 16px; border: 1px solid var(--a-line); border-radius: 14px; background: #fff; }
 .admin-filter-panel summary { cursor: pointer; font-size: 14px; color: var(--a-deep); }
