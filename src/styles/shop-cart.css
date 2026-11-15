@@ -12,7 +12,7 @@
 @media(max-width:768px) { .shop-cart { max-height:85vh; max-height:85dvh; inset:0; margin:auto; border-radius:22px; } }
 .cart-count { position:absolute; right:12%; top:2px; min-width:16px; padding:2px; border-radius:10px; background:var(--rose-deep); color:white; font:600 10px/1.2 sans-serif; text-align:center; }
 .shop-cart button { color:var(--cart-accent,var(--rose-deep)); }
-body:has(dialog[open]) .desktop-cart { visibility:hidden; }
+body:has(dialog[open]:not(.shop-cart)) .desktop-cart { visibility:hidden; }
 .cart-row button { padding:7px 10px; min-height:36px; margin:3px; font-size:12px; }
 .shop-cart .orora-modal-content { padding:8px 16px 16px; }
 .shop-cart { width:min(520px,calc(100% - 24px)); }

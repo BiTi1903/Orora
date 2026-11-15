@@ -24,6 +24,7 @@ async function mountPausedCart(page){
  await trigger.click();
  const cart=page.getByRole('dialog',{name:'Giỏ hàng',exact:true});
  await expect(cart).toHaveCount(1);
+ if(page.viewportSize().width<=768)await expect(page.locator('.mobile-shop-nav')).toBeVisible();
  return {cart,source};
 }
 

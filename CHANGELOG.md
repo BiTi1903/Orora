@@ -2,6 +2,14 @@
 
 Ghi mọi lần sửa vào file này, mục mới nhất ở trên. Ngày ghi theo giờ Việt Nam; giữ lại lịch sử cũ. Mỗi mục nêu lý do, thay đổi, file liên quan, kiểm tra và ảnh hưởng đến database. Không ghi mật khẩu, token, khóa API hoặc dữ liệu khách hàng.
 
+## 16/11/2026 — Giữ thanh dưới khi mở giỏ và tránh lóe khung khi đóng
+
+- **Yêu cầu:** Giỏ bị chớp khi tắt; thanh điều hướng dưới phải còn khi mở giỏ.
+- **Sửa:** Loại giỏ hàng khỏi selector ẩn thanh dưới/nút giỏ desktop khi dialog mở. Với giỏ modeless, thanh dưới nằm trên lớp nền popup, giữ điều kiện Safari/bàn phím hiện có; các dialog khác và chat vẫn có hành vi cũ. Khi animation thu về nguồn kết thúc, ẩn dialog đồng bộ trước khi React gỡ/cancel animation để tránh lóe lại khung đầy đủ.
+- **Khu vực:** ModalDialog.jsx, mobile-shop-nav.css, shop-cart.css, qa/popup-motion.spec.js.
+- **Kiểm tra:** npm run check đạt228 bài Node, lint/build/bundle. 10 kiểm tra giỏ/chuyển động ở390/1440px và8 kiểm tra WebKit iOS/desktop đạt; thêm xác nhận thanh dưới vẫn hiện trong lúc giỏ mở. Chưa đối chiếu trực tiếp trên thiết bị thật.
+- **Database:** Không thay API, schema, rules hoặc dữ liệu production.
+
 ## 16/11/2026 — Tối ưu tải ảnh, cuộn và tương thích giao diện mobile/trình duyệt
 
 - **Yêu cầu:** Rà giao diện/code lặp, độ mượt, hiệu suất và khả năng thích nghi Android/iOS/trình duyệt, giữ nguyên database.

@@ -56,7 +56,11 @@ export default function ModalDialog({ title, children, onClose, className = "", 
     }
     animation.onfinish=()=>{
       // WebKit can deliver the forward finish event after reverse was requested.
-      if(animation.playbackRate<0&&animation.currentTime<=0)motionClosedRef.current?.();
+      if(animation.playbackRate<0&&animation.currentTime<=0){
+        // Keep the final invisible frame while React removes the dialog.
+        ref.current.style.visibility='hidden';
+        motionClosedRef.current?.();
+      }
     };
     // reverse() can stay pending on a finished, filled WebKit animation.
     // Setting the rate explicitly preserves its current point and starts it back.
