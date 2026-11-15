@@ -1,5 +1,7 @@
 # ORORA website
 
+- [Nhật ký thay đổi — đọc trước mỗi lần sửa](CHANGELOG.md)
+
 React/Vite storefront and admin, Firebase data, Vercel APIs.
 
 ```sh
