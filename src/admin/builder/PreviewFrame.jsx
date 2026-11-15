@@ -15,13 +15,13 @@ html { scrollbar-width: none; } body { margin: 0; }
 @media(max-width: 768px) { .gallery > :nth-child(n+3) { display: none; } }
 `;
 
-export default function PreviewFrame({ device, children, surfaces }) {
+export default function PreviewFrame({ device, children, surfaces, zoom="fit", selectedKey }) {
   const host = useRef(null);
   const [frameDocument, setFrameDocument] = useState(null);
   const [availableWidth, setAvailableWidth] = useState(0);
   const width = device === "mobile" ? 390 : 1440;
   const height = 900;
-  const scale = availableWidth > 0 ? Math.min(1, availableWidth / width) : 1;
+  const scale = zoom==="actual" ? 1 : availableWidth > 0 ? Math.min(1, availableWidth / width) : 1;
 
   useEffect(() => {
     const observer = new ResizeObserver(([entry]) => setAvailableWidth(entry.contentRect.width));
@@ -58,6 +58,14 @@ export default function PreviewFrame({ device, children, surfaces }) {
     const stopTabs=watchGlassTabs(frameDocument);
     return()=>{stopTabs();clear();};
   }, [frameDocument, surfaceKey]);
+
+  useEffect(()=>{
+    if(!frameDocument||!selectedKey)return;
+    const node=[...frameDocument.querySelectorAll('[data-builder-key]')].find(element=>element.dataset.builderKey===selectedKey);
+    if(!node)return;
+    const view=frameDocument.defaultView,box=node.getBoundingClientRect();
+    if(box.top<0||box.top>view.innerHeight-60)view.scrollTo({top:Math.max(0,view.scrollY+box.top-60),behavior:'instant'});
+  },[frameDocument,selectedKey]);
 
   return (
     <div className="builder-frame-host" ref={host}>

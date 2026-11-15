@@ -877,6 +877,8 @@ function buildHomePayload({ about, hero, collection, productDetail, features, re
 
 export default function VisualBuilder() {
   const [previewDevice, setPreviewDevice] = useState("desktop");
+  const [previewZoom,setPreviewZoom]=useState("fit");
+  const [editVersion,setEditVersion]=useState(0),[savedVersion,setSavedVersion]=useState(0);
   const [about, setAbout] = useState(DEFAULT_ABOUT);
   const [hero, setHero] = useState(DEFAULT_HERO);
   const [collection, setCollection] = useState(DEFAULT_COLLECTION);
@@ -905,6 +907,7 @@ export default function VisualBuilder() {
   const { products: discoveryProducts, loading: discoveryLoading } = useProducts();
   const isEnabled = key => sectionIsEnabled({ ...discovery, sectionVisibility }, key);
   const toggleSection = key => {
+    setEditVersion(value=>value+1);
     const field = SECTION_LIST.find(section => section.key === key)?.settingsKey;
     dirtySections.current.add(field ? key : 'visibility');
     if (field) setDiscovery(current => ({ ...current, [field]: { ...current[field], enabled: current[field]?.enabled === false } }));
@@ -1032,6 +1035,7 @@ export default function VisualBuilder() {
   ]);
 
   const updateSelected = (patch) => {
+    setEditVersion(value=>value+1);
     dirtySections.current.add(activeSection);
     if (activeSection === "philosophy") {
       setPhilosophy((current) => ({ ...current, ...patch }));
@@ -1272,6 +1276,7 @@ export default function VisualBuilder() {
   };
 
   const updateSelectedStyle = (patch) => {
+    setEditVersion(value=>value+1);
     dirtySections.current.add(activeSection);
     if (activeSection === "philosophy") {
       const styleKey = patch._styleKey || (selected === "philLabel" ? "label" : "text");
@@ -1481,10 +1486,11 @@ export default function VisualBuilder() {
 
 
       const patch = changedValues(baseline.current || {}, editedSectionPayload(payload, pendingSections));
-      if (!Object.keys(patch).length) return setMessage({ type: "success", text: "Chưa có thay đổi để lưu." });
+      if (!Object.keys(patch).length) {setSavedVersion(editVersion);return setMessage({ type: "success", text: "Chưa có thay đổi để lưu." });}
       await saveHomeContent(patch);
       baseline.current = mergeSavedValues(baseline.current || {}, patch);
       markDraftSaved();
+      setSavedVersion(editVersion);
 
       setMessage({
         type: "success",
@@ -1525,7 +1531,8 @@ export default function VisualBuilder() {
         </div>
 
         <div className="builder-toolbar-actions">
-          {message && (
+          <span className={`builder-save-state${editVersion!==savedVersion?' is-dirty':''}`} role="status">{saving?'Đang lưu thay đổi…':editVersion!==savedVersion?'Có thay đổi chưa lưu':'Các thay đổi đã được lưu'}</span>
+          {message?.type === "error" && (
             <span
               className={
                 message.type === "success"
@@ -1612,10 +1619,11 @@ export default function VisualBuilder() {
               <button type="button" role="switch" aria-label="Hiển thị mục đang xem trước trên website" aria-checked={isEnabled(activeSection)} disabled={loading || loadError || saving} onClick={() => toggleSection(activeSection)}>{!isEnabled(activeSection) ? "Đang tắt · Bật" : "Đang bật · Tắt"}</button>
               <button type="button" aria-pressed={previewDevice === "desktop"} onClick={() => setPreviewDevice("desktop")}>Desktop</button>
               <button type="button" aria-pressed={previewDevice === "mobile"} onClick={() => setPreviewDevice("mobile")}>Mobile</button>
+              <label className="builder-zoom-label">Tỉ lệ xem<select aria-label="Tỉ lệ xem trước" value={previewZoom} onChange={event=>setPreviewZoom(event.target.value)}><option value="fit">Vừa khung</option><option value="actual">100% — kích thước thật</option></select></label>
             </div>
           </div>
 
-          <PreviewFrame device={previewDevice} surfaces={navbar.navStyles?.surfaces}>
+          <PreviewFrame device={previewDevice} zoom={previewZoom} selectedKey={selected} surfaces={navbar.navStyles?.surfaces}>
             {activeSection === "productneeds" ? (
               <ProductNeedsView preview value={{ ...discovery.productNeeds, enabled: true }} products={discoveryProducts} loading={discoveryLoading} />
             ) : activeSection === "productfaq" ? (
@@ -1705,6 +1713,7 @@ export default function VisualBuilder() {
 
         <aside className="builder-settings">
           {SECTION_LIST.find(section => section.key === activeSection)?.settingsKey ? <div className="admin-card"><h3>{SECTION_LIST.find(section => section.key === activeSection)?.label}</h3><p>Bật/tắt mục tại danh sách bên trái hoặc ngay trên Preview. Bấm Lưu tất cả để áp dụng; nội dung và giao diện vẫn được giữ.</p><p>Chỉnh nội dung, sản phẩm áp dụng và kiểu chữ tại Sản phẩm → Thiết lập dùng chung.</p><p>{isEnabled(activeSection) ? 'Đang bật trên website' : 'Đang tắt trên website · vẫn xem trước để kiểm tra'}</p></div> : <StylePanel
+            onSelect={selectElement}
             selectionVersion={selectionVersion}
             section={activeSection}
             selected={selected}

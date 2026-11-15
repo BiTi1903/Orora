@@ -1,4 +1,5 @@
-import { useId } from "react";
+import {useContext,useId,useLayoutEffect,useMemo,useRef} from "react";
+import {CompactInspectorContext} from "./inspector-context";
 import { toSafeHexColor } from "./ui.helpers";
 import {
   FONT_OPTIONS,
@@ -174,7 +175,7 @@ export function TypographyControls({ style, onChange }) {
         </button>
       </div>
 
-      <details className="builder-advanced-controls"><summary>Khoảng cách và độ rộng</summary><SettingGroup title="Khoảng cách">
+      <details className="builder-advanced-controls"><summary>Khoảng cách và độ rộng</summary><SettingGroup title="Khoảng cách" collapsible={false}>
         <div className="builder-field-row">
           <SelectField
             label="Margin trên"
@@ -253,15 +254,19 @@ export function TypographyControls({ style, onChange }) {
 }
 
 
-export function SettingGroup({ title, children }) {
-  return (
-    <div className="builder-setting-group">
-      <h3>{title}</h3>
-      <div className="builder-setting-content">
-        {children}
-      </div>
-    </div>
-  );
+export function SettingGroup({title,children,collapsible=true}){
+  const scope=useContext(CompactInspectorContext),ref=useRef(null);
+  const compact=Boolean(scope&&!scope.nested&&collapsible);
+  const nestedScope=useMemo(()=>scope?{...scope,nested:true}:null,[scope]);
+  const content=<CompactInspectorContext.Provider value={nestedScope}>{children}</CompactInspectorContext.Provider>;
+  useLayoutEffect(()=>{
+    if(!compact||!ref.current)return;
+    ref.current.open=scope.root.current?.querySelector('[data-compact-setting]')===ref.current;
+  },[scope,title,compact]);
+  if(compact)return <details name={scope.groupName} ref={ref} className="builder-setting-group compact-setting-group" data-compact-setting>
+    <summary><h3>{title}</h3></summary><div className="builder-setting-content">{content}</div>
+  </details>;
+  return <div className="builder-setting-group"><h3>{title}</h3><div className="builder-setting-content">{content}</div></div>;
 }
 
 

@@ -1,3 +1,5 @@
+import {inspectorElements} from "./element-options";
+import {PAGE_SECTIONS} from "../../lib/page-sections";
 import Inspector,{InspectorGroup} from "./Inspector";
 import HeroGlassSettings from "./HeroGlassSettings";
 import InformationTabsSettings from "./InformationTabsSettings";
@@ -39,6 +41,7 @@ export function StylePanel({
   onChange,
   onStyleChange,
   selectionVersion=0,
+  onSelect,
 }) {
   if (!data) {
     return (
@@ -94,7 +97,7 @@ export function StylePanel({
 <InspectorGroup title="Bố cục và chữ trên điện thoại"><MobileDetailSettings value={productDetail.mobileLayout} onChange={patch=>onChange({mobileLayout:{...productDetail.mobileLayout,...patch}})}/></InspectorGroup></>:section==='reviews'?<><InspectorGroup title="Khung thẻ đánh giá"><ReviewCardSettings value={reviews.testimonialsStyles?.card} onChange={patch=>onChange({testimonialsStyles:{...reviews.testimonialsStyles,card:{...reviews.testimonialsStyles?.card,...patch}}})}/></InspectorGroup></>:null;
   return (
     <div className="builder-settings-inner">
-      <Inspector title={section==='navbar'?(selected==='navLogo'?'Logo navbar':selected==='navCart'?'Giỏ hàng navbar':'Liên kết navbar'):sideLabel} selectionKey={`${section}:${selected}:${selectionVersion}`} settings={settings} selected={<>
+      <Inspector sourceNote={(section==='productdetail'&&['pdName','pdPrice','pdDescription','pdImage','pdThumbs'].includes(selected))||(section==='collection'&&String(selected).startsWith('card'))?'Nội dung, ảnh và giá sản phẩm sửa trong mục Sản phẩm. Bộ chỉnh này thay đổi cách hiển thị.':undefined} elementOptions={inspectorElements(section,{navbar,about,features,reviews})} selectedElement={selected} onSelect={onSelect} sectionLabel={PAGE_SECTIONS.find(item=>item.key===section)?.label} title={section==='navbar'?(selected==='navLogo'?'Logo navbar':selected==='navCart'?'Giỏ hàng navbar':'Liên kết navbar'):sideLabel} selectionKey={`${section}:${selected}:${selectionVersion}`} settings={settings} selected={<>
       {section === "hero" && (
         <HeroSettings
           selected={selected}
