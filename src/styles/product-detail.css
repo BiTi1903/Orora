@@ -1058,3 +1058,32 @@
  #root .product-detail .product-information .product-specification-grid .product-detail-row { grid-template-columns:minmax(0,1fr); padding:14px; gap:7px; }
  .product-information .product-content li + li { margin-top:4px; }
 }
+
+/* Order details: one padded surface, readable rows and a continuous timeline. */
+.order-tracking-modal .orora-modal-heading { gap:12px; padding:18px 20px; }
+.order-tracking-modal .orora-modal-heading h2 { min-width:0; font-size:clamp(18px,4.6vw,24px); overflow-wrap:anywhere; }
+.order-tracking-modal .orora-modal-content { padding:20px; }
+html[data-glass-frames] #root .order-tracking-modal .order-tracking-result,
+.order-tracking-modal .order-tracking-result { border:0; border-radius:0; padding:0; background:transparent; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; }
+.order-tracking-modal .order-tracking-result { font-size:14px; line-height:1.6; }
+.order-tracking-result-heading strong { background:color-mix(in srgb,var(--tracking-accent,var(--rose-deep)) 8%,transparent); padding:5px 10px; border-radius:8px; }
+.order-tracking-dates { display:grid; gap:4px; }
+.order-tracking-dates p { display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 12px; margin:0; }
+.order-tracking-dates span { color:var(--plum-soft); }
+.order-tracking-result dl > div { align-items:start; gap:12px; }
+.order-tracking-result :is(dt,dd) { min-width:0; overflow-wrap:anywhere; }
+.order-tracking-result dl > .is-total { font-weight:600; font-size:16px; color:var(--tracking-accent,var(--rose-deep)); }
+.order-tracking-result .order-tracking-help { font-size:12px; line-height:1.65; margin:16px 0 0; }
+@media(max-width:600px) {
+ .order-tracking-modal { max-height:calc(100dvh - 24px); width:calc(100% - 24px); border-radius:20px; }
+ .order-tracking-modal .orora-modal-heading { padding:14px 16px; }
+ .order-tracking-modal .orora-modal-content { padding:16px; }
+ .order-tracking-result dl > .is-wide { grid-template-columns:minmax(0,1fr); gap:4px; }
+ .order-tracking-result dl > .is-wide dd { text-align:left; }
+ .order-tracking-steps { grid-template-columns:minmax(0,1fr); gap:0; margin:18px 0; }
+ .order-tracking-steps li { position:relative; border:0; border-left:2px solid var(--line); padding:0 0 14px 18px; margin-left:5px; }
+ .order-tracking-steps li::before { content:''; position:absolute; left:-5px; top:5px; width:8px; height:8px; border-radius:50%; background:var(--line); }
+ .order-tracking-steps li.is-reached { border-color:var(--tracking-accent,var(--rose-deep)); }
+ .order-tracking-steps li.is-reached::before { background:var(--tracking-accent,var(--rose-deep)); }
+ .order-tracking-steps li:last-child { padding-bottom:0; border-color:transparent; }
+}

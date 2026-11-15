@@ -22,7 +22,7 @@ export default function ShopCart(){
 
  const cartHost=useSyncExternalStore(subscribeNavbarCartSlot,getNavbarCartSlot,getNavbarCartSlot);
  const home=useHomeContent(),{products}=useProducts(),settings=home.navStyles?.cart||{},copy={...CART_COPY,...settings.copy};
- const popupDuration=Math.max(180,Math.min(600,Number(settings.popupDuration)||380));
+ const popupDuration=Math.max(180,Math.min(1200,Number(settings.popupDuration)||650));
  const popupMotion=settings.popupAnimation!==false;
  if(copy.order==='Đặt sản phẩm này')copy.order='Chi tiết';
  const [rows,setRows]=useState(()=>{try{const saved=JSON.parse(localStorage.getItem(key));return Array.isArray(saved)?saved.filter(r=>r&&typeof r.id==='string'&&typeof r.variantId==='string'&&Number.isInteger(r.quantity)&&r.quantity>0&&r.quantity<=20).slice(0,100):[];}catch{return [];}}),[open,setOpen]=useState(false),[pending,setPending]=useState(null),[notice,setNotice]=useState('');

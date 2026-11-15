@@ -2,6 +2,15 @@
 
 Ghi mọi lần sửa vào file này, mục mới nhất ở trên. Ngày ghi theo giờ Việt Nam; giữ lại lịch sử cũ. Mỗi mục nêu lý do, thay đổi, file liên quan, kiểm tra và ảnh hưởng đến database. Không ghi mật khẩu, token, khóa API hoặc dữ liệu khách hàng.
 
+## 15/11/2026 — Popup chậm hơn, sửa tra cứu đơn và thanh dưới Safari
+
+- **Yêu cầu:** Popup nảy chậm hơn; form/chi tiết tra cứu đơn lệch, rối; thanh website chỉ hiện khi thanh Safari iPhone thu lại, kéo lên thì ẩn.
+- **Popup:** Tăng mặc định 380ms lên 650ms, mở rộng mức chỉnh admin đến 1200ms, giữ giá trị thời gian đã lưu nếu có; không ghi đè cấu hình production.
+- **Tra cứu:** Khung chi tiết dùng một lớp nền; bỏ lớp glass lồng bên trong, thêm khoảng đệm rõ. Ngày giờ căn thành hàng; sản phẩm và cách thanh toán dài dùng dòng riêng trên mobile, tiến trình dọc thay hai hàng bị đứt, nhấn tổng tiền. Kế thừa màu và kiểu chữ kết quả đã chỉnh trong admin vào modal. Không thay API hay nội dung đơn.
+- **Safari:** Hook useSafariToolbar đo visualViewport so với 100lvh và hướng cuộn, ẩn thanh web khi chrome trình duyệt mở, cuộn lên, ở đầu trang, zoom hoặc ô nhập được focus; chỉ hiện khi viewport mở rộng và không còn điều kiện ẩn. Áp dụng iOS Safari, bỏ qua preview/PWA và trình duyệt khác; giữ điều kiện qua ticker hiện có. Cập nhật inert/aria và khoảng chừa đáy theo trạng thái thanh. Gỡ toàn bộ listener/probe khi unmount.
+- **Kiểm tra:** npm run check đạt 228 bài Node, lint/build/bundle. 13 kiểm tra checkout, giỏ, tra cứu và thanh dưới ở 390/1440px đạt; thêm 8 kiểm tra bố cục và thanh dưới ở 320/390/1440px đạt (bỏ ca Safari trên desktop). ESLint bổ sung đạt. Đã xem ảnh khung chi tiết ở 390px, kiểm tra không tràn và không lồng lớp blur. Mô phỏng geometry và UA Safari đạt; chưa xác minh trực tiếp toolbar trên iPhone Safari thật vì trình duyệt không cung cấp sự kiện trạng thái toolbar.
+- **Database:** Không thay schema, API, rules hoặc dữ liệu production; không lưu thay đổi cấu hình lên database trong quá trình làm.
+
 ## 15/11/2026 — Đúng popup giỏ ở thanh dưới
 
 - **Làm rõ:** Chủ website nói popup giỏ từ thanh điều hướng dưới, không phải chỉ popup chọn dung tích trên card.

@@ -48,6 +48,6 @@ export default function OrderTracking() {
     {pageCount > 1 && <div className="order-tracking-pagination"><button type="button" disabled={activePage === 1} onClick={() => setPage(activePage-1)}>{copy.previousLabel}</button><span>{trackingTemplate(copy.pageLabel,{page:activePage,pages:pageCount})}</span><button type="button" disabled={activePage === pageCount} onClick={() => setPage(activePage+1)}>{copy.nextLabel}</button></div>}
     {nextCursor && <><p className="order-tracking-help">{copy.moreHelp}</p><button className="order-tracking-more" aria-busy={busy} type="button" disabled={busy} onClick={() => lookup(nextCursor)}>{busy ? copy.moreLoadingLabel : copy.moreLabel}</button></>}
   </div>}
-  {selected && <ModalDialog title={`Đơn hàng ${selected.code}`} className="order-tracking-modal" onClose={() => setSelectedCode(null)}><OrderTrackingDetails order={selected} copy={copy} /></ModalDialog>}
+  {selected && <ModalDialog title={`Đơn hàng ${selected.code}`} className="order-tracking-modal" style={{...trackingTheme(styles),...css("resultBody")}} headingStyle={css("resultTitle")} onClose={() => setSelectedCode(null)}><OrderTrackingDetails order={selected} copy={copy} /></ModalDialog>}
   </section>;
 }

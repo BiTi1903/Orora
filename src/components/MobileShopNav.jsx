@@ -1,5 +1,6 @@
 import {useEffect,useState,useLayoutEffect,useRef} from 'react';
 import {Link,useLocation} from 'react-router-dom';
+import useSafariToolbar from '../hooks/useSafariToolbar';
 import useHomeContent from '../hooks/useHomeContent';
 import {sectionIsEnabled} from '../lib/page-sections';
 import {mobileNavSettings,mobileNavTheme,mobileNavItems} from '../lib/mobile-shop-nav';
@@ -19,7 +20,8 @@ export default function MobileShopNav({preview=false,previewData}){
  if(home.navStyles?.cart?.enabled!==false)items.push({id:'cart',icon:'products',to:'/#cart',label:home.navStyles?.cart?.copy?.label||'Giỏ hàng'});
  const [passedTicker,setPassedTicker]=useState(false);
  const gated=!preview&&location.pathname==='/'&&s.afterTicker!==false;
- const waiting=gated&&!passedTicker;
+ const safariToolbar=useSafariToolbar(preview);
+ const waiting=(gated&&!passedTicker)||safariToolbar;
  useEffect(()=>{
   if(!gated)return;
   let frame;const observed=new WeakSet();const sizes=new ResizeObserver(()=>schedule());
