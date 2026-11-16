@@ -11,7 +11,7 @@ import ProductPoliciesSettings from "./ProductPoliciesSettings";
 import ProductReviewsEditor from "./ProductReviewsEditor";
 import ProductContentEditor from "./ProductContentEditor";
 import { productSections, productSectionGroup, PRODUCT_CONTENT_GROUPS, secondaryProductImages } from "../lib/product-content";
-import ShopLinksSettings from "./ShopLinksSettings";
+import StoreSettingsLink from "./StoreSettingsLink";
 import { useEffect, useRef, useState } from "react";
 import { explainError, getProducts, removeProduct, saveProduct, saveCategory, setProductCategory } from "../lib/api";
 import useCategories from "../hooks/useCategories";
@@ -191,7 +191,7 @@ export default function ProductsAdmin() {
       <div className="product-shared-header"><div><h2>Thiết lập dùng chung</h2><p className="admin-muted">Chọn nhóm bên dưới để chỉnh. Mỗi nhóm có nút lưu riêng; nội dung đang nhập được giữ khi chuyển nhóm hoặc về danh sách.</p></div><button type="button" className="admin-btn" onClick={()=>setView("products")}>← Danh sách sản phẩm</button></div>
       <div className="product-shared-layout"><nav className="product-shared-nav" aria-label="Nhóm thiết lập dùng chung">{SHARED_SETTINGS.map(([id,title,description])=><button type="button" key={id} aria-pressed={sharedPanel===id} onClick={()=>setSharedPanel(id)}><strong>{title}</strong><small>{description}</small></button>)}</nav><div className="product-shared-panels">
 
-      <section hidden={sharedPanel!=="links"} aria-label="Kênh mua hàng và liên hệ" className="product-shared-panel"><ShopLinksSettings /></section>
+      <section hidden={sharedPanel!=="links"} aria-label="Kênh mua hàng và liên hệ" className="product-shared-panel"><StoreSettingsLink section="links"/></section>
       <section hidden={sharedPanel!=="policies"} aria-label="Cam kết và chính sách" className="product-shared-panel"><ProductPoliciesSettings /></section>
       <section hidden={sharedPanel!=="categories"} aria-label="Danh mục sản phẩm" className="product-shared-panel">
       {categoriesError && <div className="admin-error">Không tải được danh mục: {explainError(categoriesError)}</div>}

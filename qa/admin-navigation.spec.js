@@ -11,7 +11,7 @@ test('grouped admin keeps drafts and all navigation reachable on short screens',
  modules['admin/HomeAdmin.jsx']='import {R} from "/qa/runtime.js";const {createElement,useState}=R;export default function Home(){const [value,set]=useState("");return createElement("label",null,"Bản nhập thử",createElement("input",{value,onChange:e=>set(e.target.value)}))}';
  for(const name of ['AdminLogin','ProductsAdmin','OrdersAdmin','NewsletterAdmin','InventoryAdmin','ShippingAdmin','ChatSettings','EmailExport','AnalyticsDashboard'])modules[`admin/${name}.jsx`]='export default function Panel(){return null}';
  await mount(page,`import Admin from '/src/admin/AdminApp.jsx';${render('R.createElement(Admin)')}`,modules);
- const nav=page.getByRole('navigation',{name:'Menu quản trị'});await expect(nav.getByRole('button')).toHaveCount(9);
+ const nav=page.getByRole('navigation',{name:'Menu quản trị'});await expect(nav.getByRole('button')).toHaveCount(10);
  await expect(page.getByText('Đơn chờ xác nhận',{exact:true})).toBeVisible();
  await expect(page.locator('.admin-stat').filter({hasText:'Đơn chờ xác nhận'}).locator('strong')).toHaveText('7');
  await nav.getByRole('button',{name:'Trang chủ',exact:true}).click();await page.getByLabel('Bản nhập thử').fill('Giữ bản nhập');

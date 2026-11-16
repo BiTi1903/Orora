@@ -14,11 +14,11 @@ test('builder keeps saved navigation settings and saves only the edited leaf',as
  await page.locator('.builder-sections').getByRole('button',{name:/Navbar/}).click();
  await page.getByRole('tab',{name:'Thiết lập mục',exact:true}).click();
  await page.locator('.inspector-group > summary').filter({hasText:'Thanh điều hướng dưới — mobile'}).click();
- await page.getByText('Giỏ hàng navbar và popup',{exact:true}).click();
+
  await page.getByText('Hiệu ứng kính, chat và nút nổi',{exact:true}).click();
  await page.locator('.inspector-group > summary').filter({hasText:'Menu bên — mobile'}).click();
  await expect(page.getByLabel('Hiện thanh cố định dưới màn hình điện thoại')).not.toBeChecked();
- await expect(page.getByLabel('Hiện giỏ hàng',{exact:true})).not.toBeChecked();
+ await expect(page.frameLocator('iframe').getByRole('button',{name:'Giỏ hàng',exact:true})).toHaveCount(0);
  await expect(page.getByLabel('Chiều rộng khung chat AI (px)',{exact:true})).toHaveValue('310');
  await expect(page.getByLabel('Chiều rộng menu (% màn hình)',{exact:true})).toHaveValue('45');
  await page.getByLabel('Chiều rộng khung chat AI (px)',{exact:true}).fill('320');

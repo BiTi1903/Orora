@@ -1,3 +1,4 @@
+import {TRANSFORM_OPTIONS} from "../../lib/typography";
 import {useContext,useId,useLayoutEffect,useMemo,useRef} from "react";
 import {CompactInspectorContext} from "./inspector-context";
 import { toSafeHexColor } from "./ui.helpers";
@@ -14,7 +15,7 @@ import {
 
 export function StyleTypographyBlock({ style = {}, onStyleChange, title = "Kiểu chữ" }) {
   return (
-    <SettingGroup title={title}>
+    <SettingGroup title={title} collapsible={false}>
       <TypographyControls
         style={{
           fontFamily: toBareFontFamily(style.fontFamily),
@@ -26,6 +27,7 @@ export function StyleTypographyBlock({ style = {}, onStyleChange, title = "Kiể
           lineHeight: style.lineHeight ?? "",
           italic: style.italic || style.fontStyle === "italic",
           textAlign: style.textAlign || "left",
+          textTransform: style.textTransform || "",
           marginTop: style.marginTop ?? 0,
           marginBottom: style.marginBottom ?? 0,
           paddingTop: style.paddingTop ?? 0,
@@ -52,6 +54,9 @@ export function TypographyControls({ style, onChange }) {
   const s = style || {};
   return (
     <>
+      <ColorField label="Màu chữ" value={s.color} onChange={color=>onChange({color})}/>
+      <details className="builder-advanced-controls"><summary>Nâng cao · Kiểu chữ và khoảng cách</summary>
+      <label className="builder-field">Chữ hoa / thường<select value={s.textTransform||''} onChange={e=>onChange({textTransform:e.target.value})}>{TRANSFORM_OPTIONS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
       <SelectField
         label="Font"
         value={s.fontFamily}
@@ -86,14 +91,6 @@ export function TypographyControls({ style, onChange }) {
           }
         />
       </div>
-
-      <ColorField
-        label="Màu chữ"
-        value={s.color}
-        onChange={(value) =>
-          onChange({ color: value })
-        }
-      />
 
       <details className="builder-advanced-controls"><summary>Giãn chữ và giãn dòng</summary>
       <div className="builder-field-row">
@@ -249,6 +246,7 @@ export function TypographyControls({ style, onChange }) {
           }
         />
       </SettingGroup></details>
+      </details>
     </>
   );
 }
@@ -257,14 +255,15 @@ export function TypographyControls({ style, onChange }) {
 export function SettingGroup({title,children,collapsible=true}){
   const scope=useContext(CompactInspectorContext),ref=useRef(null);
   const compact=Boolean(scope&&!scope.nested&&collapsible);
+  const advanced=/khung|padding|margin|khoảng cách|bố cục|tỷ lệ|hiệu ứng/i.test(title);
   const nestedScope=useMemo(()=>scope?{...scope,nested:true}:null,[scope]);
   const content=<CompactInspectorContext.Provider value={nestedScope}>{children}</CompactInspectorContext.Provider>;
   useLayoutEffect(()=>{
     if(!compact||!ref.current)return;
-    ref.current.open=scope.root.current?.querySelector('[data-compact-setting]')===ref.current;
-  },[scope,title,compact]);
+    ref.current.open=!advanced&&scope.root.current?.querySelector('[data-compact-setting]')===ref.current;
+  },[scope,title,compact,advanced]);
   if(compact)return <details name={scope.groupName} ref={ref} className="builder-setting-group compact-setting-group" data-compact-setting>
-    <summary><h3>{title}</h3></summary><div className="builder-setting-content">{content}</div>
+    <summary><h3>{advanced?`Nâng cao · ${title}`:title}</h3></summary><div className="builder-setting-content">{content}</div>
   </details>;
   return <div className="builder-setting-group"><h3>{title}</h3><div className="builder-setting-content">{content}</div></div>;
 }

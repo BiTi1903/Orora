@@ -6,3 +6,8 @@ export async function mount(page,code,modules={}){
 }
 export const render=element=>`D.createRoot(document.getElementById('root')).render(R.createElement(MemoryRouter,null,${element}));`;
 export const fit=async page=>expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+export async function reveal(control){
+ for(const details of await control.locator('xpath=ancestor::details').all()){
+  if(!await details.evaluate(el=>el.open))await details.locator(':scope > summary').click();
+ }
+}

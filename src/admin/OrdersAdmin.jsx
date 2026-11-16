@@ -1,4 +1,4 @@
-import OrderTrackingSettings from "./OrderTrackingSettings";
+import StoreSettingsLink from "./StoreSettingsLink";
 import { ORDER_STATUSES as STATUSES } from "../lib/order-tracking";
 import { orderProductName } from "../lib/product-options";
 import OrderActivity from "./OrderActivity";
@@ -98,7 +98,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
   return <section aria-busy={busy}>
     <div className="admin-top"><div><h1>Đơn hàng</h1><p className="admin-muted">Chọn một đơn để xem thông tin người mua, thanh toán và lịch sử gửi thư.</p></div>{view === "orders" && <button className="admin-btn" disabled={busy} onClick={() => perform(async () => { const data = await orderRequest(); extended.current = false; setOrders(data.orders); setCursor(data.nextCursor); setReady(true); onOrderChanged?.(); })}>Tải lại</button>}</div>
     <nav className="admin-section-tabs" aria-label="Các mục đơn hàng">{[["orders", "Danh sách đơn"], ["customers", "Khách hàng"], ["history", "Lịch sử email"], ["automation", "Thư tự động"], ["tracking", "Chữ trang tra cứu"]].map(([key, label]) => <button key={key} type="button" aria-current={view === key ? "page" : undefined} onClick={() => navigate(key)}>{label}</button>)}</nav>
-    {openedViews.includes("tracking") && <div hidden={view !== "tracking"}><OrderTrackingSettings /></div>}
+    {openedViews.includes("tracking") && <div hidden={view !== "tracking"}><StoreSettingsLink section="tracking"/></div>}
     {openedViews.includes("automation") && <div hidden={view !== "automation"}><OrderEmails initialDraft={initialMailDraft?.purpose === "automation" ? initialMailDraft : null} onManageTemplates={onOpenEmailTemplates} /></div>}
     {openedViews.includes("history") && <div hidden={view !== "history"}><OrderMailHistory refreshKey={mailRevision} onReuse={(draft, original) => setComposer({ draft, reused: true, original })} /></div>}
     {openedViews.includes("customers") && <div hidden={view !== "customers"}><OrderCustomers onViewOrders={(email, allOrders) => { setOrders(allOrders); setCursor(null); setSearch(email); setFilters(EMPTY_ORDER_FILTERS); setCustomerEmail(email); setStatusFilter("all"); sequence.current.value++; setDetail(null); setReady(true); setView("orders"); }} /></div>}

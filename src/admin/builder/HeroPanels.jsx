@@ -1,3 +1,4 @@
+import ImageUploadControl from "./ImageUploadControl";
 import { SettingGroup, StyleTypographyBlock } from "./ui";
 
 function HeroFieldSettings({ data, hero, onChange }) {
@@ -12,6 +13,8 @@ function HeroFieldSettings({ data, hero, onChange }) {
   if (data.type === "heroImage") {
     return (
       <SettingGroup title="Ảnh nền">
+        <ImageUploadControl label="Ảnh nền máy tính" value={hero.heroImage || ""} width={2000} onChange={heroImage => onChange({ heroImage })}/>
+        <ImageUploadControl label="Ảnh nền điện thoại" value={hero.heroImageMobile || ""} width={1200} onChange={heroImageMobile => onChange({ heroImageMobile })}/>
         <small className="builder-help">Ảnh hero này cũng được dùng làm ảnh đại diện khi chia sẻ link trang chủ. Ứng dụng nhắn tin có thể cần cập nhật lại ảnh đã lưu đệm.</small>
         <div className="builder-field">
           <label>URL ảnh nền</label>
@@ -162,9 +165,9 @@ function HeroFieldSettings({ data, hero, onChange }) {
 }
 
 export function HeroSettings(props) {
-  const {hero,onChange,data}=props;
+  const {hero,onChange,data,selected}=props;
   const style=(key,patch)=>onChange({heroStyles:{...hero.heroStyles,[key]:{...hero.heroStyles?.[key],...patch}}});
-  return <><HeroFieldSettings {...props} />{data?.type === "heroRotator" && <>
+  return <><HeroFieldSettings {...props} />{["heroText","heroButton"].includes(data?.type)&&<StyleTypographyBlock title="Kiểu chữ phần đang chọn" style={hero.heroStyles?.[selected]||{}} onStyleChange={patch=>style(selected,patch)}/>}{data?.type === "heroRotator" && <>
    <StyleTypographyBlock title="Chữ trước / sau" style={hero.heroStyles?.rotator || {}} onStyleChange={patch=>style('rotator',patch)}/>
    <StyleTypographyBlock title="Từ thay đổi — kiểu chữ và độ đậm" style={hero.heroStyles?.rotatorAccent || {}} onStyleChange={patch=>style('rotatorAccent',patch)}/>
   </>}</>;

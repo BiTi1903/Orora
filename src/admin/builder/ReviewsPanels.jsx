@@ -1,3 +1,4 @@
+import ImageUploadControl from "./ImageUploadControl";
 import { SettingGroup, StyleTypographyBlock, TypographyControls } from "./ui";
 import { toFullFontFamily, toBareFontFamily } from "./options";
 
@@ -78,6 +79,7 @@ export function ReviewsSettings({
 
           <div className="builder-field">
             <label>Ảnh khách hàng (URL)</label>
+            <ImageUploadControl label="Ảnh khách hàng" value={item.image || ""} width={400} onChange={image => onChange({ _reviewIndex: index, _reviewItem: { image } })}/>
             <input
               value={item.image || ""}
               onChange={(e) =>
@@ -89,7 +91,7 @@ export function ReviewsSettings({
               placeholder="Dán link ảnh hoặc /avatar.jpg"
             />
             <small className="builder-help">
-              Ảnh tròn nhỏ cạnh tên. Có thể tải lên ở Form cũ → Cảm nhận.
+              Ảnh tròn nhỏ cạnh tên.
             </small>
           </div>
 
@@ -125,6 +127,7 @@ export function ReviewsSettings({
               color: styles.reviewName?.color || "",
               letterSpacing: styles.reviewName?.letterSpacing ?? "",
               lineHeight: styles.reviewName?.lineHeight ?? "",
+              textTransform: styles.reviewName?.textTransform ?? "",
               italic:
                 styles.reviewName?.italic ||
                 styles.reviewName?.fontStyle === "italic",

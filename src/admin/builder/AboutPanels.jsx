@@ -1,3 +1,4 @@
+import ImageUploadControl from "./ImageUploadControl";
 import {
   SettingGroup,
   SelectField,
@@ -60,6 +61,7 @@ export function ImageSettings({ data, onChange }) {
   return (
     <>
       <SettingGroup title="Ảnh">
+        <ImageUploadControl label="Ảnh chính" value={data.src || ""} width={2000} onChange={src => onChange({ src })}/>
         <div className="builder-field">
           <label>Ảnh chính</label>
           <input
@@ -73,6 +75,7 @@ export function ImageSettings({ data, onChange }) {
         {[0, 1, 2].map((index) => (
           <div className="builder-field" key={index}>
             <label>Ảnh phụ {index + 1}</label>
+            <ImageUploadControl label={`Ảnh phụ ${index + 1}`} value={(data.extras || [])[index] || ""} onChange={url => { const extras = [...(data.extras || ["", "", ""])]; extras[index] = url; onChange({ extras }); }}/>
             <input
               value={(data.extras || [])[index] || ""}
               onChange={(e) => {
@@ -229,6 +232,7 @@ export function StatsSettings({ stats, about, onChange }) {
             color: labelStyle.color || "",
             letterSpacing: labelStyle.letterSpacing ?? "",
             lineHeight: labelStyle.lineHeight ?? "",
+            textTransform: labelStyle.textTransform ?? "",
             italic:
               labelStyle.italic || labelStyle.fontStyle === "italic",
             textAlign: labelStyle.textAlign || "left",

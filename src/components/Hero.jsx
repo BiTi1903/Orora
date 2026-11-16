@@ -110,7 +110,7 @@ function Hero({
         data-builder-key={preview ? "chip1" : undefined}
         onClick={select("chip1")}
       >
-        <span className="chip-in">
+        <span className="chip-in" style={toCss(hs.chip1,{responsive:true})}>
           <b>✦</b> {c.heroChip1}
         </span>
       </div>}
@@ -121,7 +121,7 @@ function Hero({
         data-builder-key={preview ? "chip2" : undefined}
         onClick={select("chip2")}
       >
-        <span className="chip-in">
+        <span className="chip-in" style={toCss(hs.chip2,{responsive:true})}>
           <b>♡</b> {c.heroChip2}
         </span>
       </div>}
@@ -132,7 +132,7 @@ function Hero({
         data-builder-key={preview ? "chip3" : undefined}
         onClick={select("chip3")}
       >
-        <span className="chip-in">
+        <span className="chip-in" style={toCss(hs.chip3,{responsive:true})}>
           <b>✧</b> {c.heroChip3}
         </span>
       </div>}
@@ -157,7 +157,7 @@ function Hero({
             />
           </defs>
 
-          <text>
+          <text style={{...toCss(hs.ring),fill:hs.ring?.color}}>
             <textPath href={preview ? "#ringPathPreview" : "#ringPath"}>
               {c.heroRingText}
             </textPath>
@@ -173,6 +173,7 @@ function Hero({
       <div className="hero-content" style={{visibility:fontState === "pending" ? "hidden" : undefined}} onClick={(e) => e.stopPropagation()}>
         {typeof c.heroEyebrow === "string" && c.heroEyebrow.trim() && <p
           className={`small-text ${selectedClass("eyebrow")}`}
+          style={toCss(hs.eyebrow,{responsive:true})}
           data-builder-key={preview ? "eyebrow" : undefined}
           onClick={select("eyebrow")}
         >
@@ -183,6 +184,7 @@ function Hero({
           className={`hero-title ${selectedClass("title")}`}
           aria-label={c.heroTitle || undefined}
           key={c.heroTitle}
+          style={toCss(hs.title,{responsive:true})}
           data-builder-key={preview ? "title" : undefined}
           onClick={select("title")}
         >
@@ -203,6 +205,7 @@ function Hero({
 
         <p
           className={`description ${selectedClass("description")}`}
+          style={toCss(hs.description,{responsive:true})}
           data-builder-key={preview ? "description" : undefined}
           onClick={select("description")}
         >
@@ -232,7 +235,8 @@ function Hero({
           <a
             href={preview ? undefined : c.heroButtonLink || "#about"}
             className={`hero-btn hero-btn-primary ${selectedClass("btnPrimary")}`}
-            data-builder-key={preview ? "btnPrimary" : undefined}
+            style={toCss(hs.btnPrimary,{responsive:true})}
+          data-builder-key={preview ? "btnPrimary" : undefined}
             onClick={select("btnPrimary")}
           >
             {c.heroButtonText}
@@ -242,7 +246,8 @@ function Hero({
           <a
             href={preview ? undefined : c.shopButtonLink || "#shop"}
             className={`hero-btn hero-btn-ghost ${selectedClass("btnSecondary")}`}
-            data-builder-key={preview ? "btnSecondary" : undefined}
+            style={toCss(hs.btnSecondary,{responsive:true})}
+          data-builder-key={preview ? "btnSecondary" : undefined}
             onClick={select("btnSecondary")}
           >
             {c.shopButtonText}
@@ -255,7 +260,8 @@ function Hero({
       ========================= */}
       {(preview || c.heroScrollText) && <div
         className={`scroll ${selectedClass("scroll")}`}
-        data-builder-key={preview ? "scroll" : undefined}
+        style={toCss(hs.scroll,{responsive:true})}
+          data-builder-key={preview ? "scroll" : undefined}
         onClick={select("scroll")}
       >
         <span>{c.heroScrollText}</span>

@@ -3,11 +3,11 @@ import {InspectorGroup} from "./Inspector";
 import { useId } from "react";
 import { purchaseChannelLabels } from "../../lib/commerce";
 import { SettingGroup, StyleTypographyBlock, ColorField } from "./ui";
-export default function PurchaseOptionsSettings({ value = {}, onChange }) {
+export default function PurchaseOptionsSettings({ value = {}, onChange, initialGroup="subtotal" }) {
   const id = useId();
   const labels = purchaseChannelLabels(value);
   return <>
-    <InspectorGroup title="Giá và tạm tính" open><SettingGroup title="Giá theo dung tích và số lượng">
+    <InspectorGroup title="Giá và tạm tính" open={initialGroup==="subtotal"}><SettingGroup title="Giá theo dung tích và số lượng">
      <label><input type="checkbox" checked={value.subtotalEnabled!==false} onChange={e=>onChange({subtotalEnabled:e.target.checked})}/>Hiện tạm tính sau khi chọn dung tích</label>
      <details><summary>Nội dung và kiểu chữ tạm tính</summary>
      {[['subtotalLabel','Tiêu đề','Tạm tính'],['subtotalNote','Ghi chú','Chưa gồm phí giao hàng'],['subtotalQuantityLabel','Khi số lượng chưa hợp lệ','Chọn số lượng hợp lệ'],['subtotalContactLabel','Khi chưa có giá','Liên hệ để báo giá']].map(([key,label,fallback])=><label key={key}>{label}<input value={value[key]??''} placeholder={fallback} onChange={e=>onChange({[key]:e.target.value})}/></label>)}
@@ -17,10 +17,10 @@ export default function PurchaseOptionsSettings({ value = {}, onChange }) {
      </details>
     </SettingGroup>
     </InspectorGroup><InspectorGroup title="Nội dung các kênh mua hàng"><SettingGroup title="Nút chọn kênh mua hàng">
-      <small className="builder-help">Gán link TikTok/Facebook và chọn phương thức thanh toán ở Admin → Sản phẩm → Kênh mua hàng dùng chung.</small>
+      <small className="builder-help">Gán link TikTok/Facebook và chọn phương thức thanh toán ở Cửa hàng → Kênh mua và thanh toán.</small>
       {[["heading", "Tiêu đề", "Chọn cách mua hàng"], ["websiteLabel", "Nút đặt trên web", "Đặt hàng ngay"], ["dividerLabel", "Dòng phân cách", "hoặc đặt hàng tại"], ["tiktokLabel", "Nút TikTok", "Tiktok"], ["facebookLabel", "Nút Facebook", "Fb"]].map(([key, label, placeholder]) => <div className="builder-field" key={key}><label htmlFor={`${id}-${key}`}>{label}</label><input id={`${id}-${key}`} maxLength={80} value={value[key] ? labels[key] ?? value[key] : ""} placeholder={placeholder} onChange={(event) => onChange({ [key]: event.target.value, ...(["facebookLabel", "tiktokLabel"].includes(key) ? { [key === "facebookLabel" ? "customFacebookLabel" : "customTiktokLabel"]: true } : {}) })} /></div>)}
     </SettingGroup>
-    </InspectorGroup><InspectorGroup title="Form đặt hàng trên website"><CheckoutSettings value={value} onChange={onChange}/><SettingGroup title="Nút xác nhận trong form đặt hàng">
+    </InspectorGroup><InspectorGroup title="Form đặt hàng trên website" open={initialGroup==="checkout"}><CheckoutSettings value={value} onChange={onChange}/><SettingGroup title="Nút xác nhận trong form đặt hàng">
       {[["orderSubmitLabel","Chữ nút gửi đơn","Đặt hàng ngay"],["orderBusyLabel","Chữ khi đang gửi đơn","Đang gửi đơn hàng…"],["orderTimeoutLabel","Thông báo khi chờ quá lâu","Chưa nhận được phản hồi. Bạn có thể thử gửi lại với cùng thông tin hoặc tra cứu đơn hàng để kiểm tra."]].map(([key,label,placeholder])=><div className="builder-field" key={key}><label htmlFor={`${id}-${key}`}>{label}</label><input id={`${id}-${key}`} maxLength={key==="orderTimeoutLabel"?240:100} value={value[key]||""} placeholder={placeholder} onChange={event=>onChange({[key]:event.target.value})}/></div>)}
       <small className="builder-help">Khi gửi sẽ hiện ba chấm nhỏ cùng màu chữ, giữ đơn không bị gửi lặp. Chỉ báo thành công sau khi máy chủ xác nhận.</small>
     </SettingGroup>

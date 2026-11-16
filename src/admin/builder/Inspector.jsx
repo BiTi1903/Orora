@@ -1,3 +1,4 @@
+import {matchesInspectorSearch} from "./element-options";
 import {CompactInspectorContext} from "./inspector-context";
 import {useContext,useId,useMemo,useRef,useState} from 'react';
 
@@ -15,6 +16,10 @@ export function InspectorGroup({title,description,children,open=false}){
 export default function Inspector({title,selectionKey,selected,settings,elementOptions=[],selectedElement,onSelect,sectionLabel,sourceNote}){
  const id=useId(),tabs=useRef(null),selectedRoot=useRef(null);
  const scope=useMemo(()=>({root:selectedRoot,selectionKey,groupName:`${id}-groups`}),[id,selectionKey]);
+ const [elementSearch,setElementSearch]=useState('');
+ const [searchSection,setSearchSection]=useState(sectionLabel);
+ if(searchSection!==sectionLabel){setSearchSection(sectionLabel);setElementSearch('');}
+ const matches=elementOptions.filter(option=>matchesInspectorSearch(option.label,elementSearch));
  const [tab,setTab]=useState('selected'),[previous,setPrevious]=useState(selectionKey);
  const [visitedSettings,setVisitedSettings]=useState(false);
  const chooseTab=next=>{if(next==='settings')setVisitedSettings(true);setTab(next);};
@@ -30,8 +35,8 @@ export default function Inspector({title,selectionKey,selected,settings,elementO
  };
  return <div className="builder-inspector">
   <header className="inspector-heading">
-   <small>{sectionLabel||'ĐANG CHỈNH SỬA'}</small><h2>{title}</h2>
-   {elementOptions.length>0&&<div className="inspector-element-picker"><label htmlFor={`${id}-element`}>Chọn thành phần cần sửa</label><select id={`${id}-element`} value={selectedElement} onChange={event=>onSelect?.(event.target.value)}>{!elementOptions.some(option=>option.value===selectedElement)&&<option value={selectedElement}>{title}</option>}{elementOptions.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></div>}
+   <nav className="inspector-breadcrumb" aria-label="Vị trí đang chỉnh"><span>Trang chủ</span><span aria-hidden="true">›</span><span>{sectionLabel}</span><span aria-hidden="true">›</span><strong>{title.startsWith(sectionLabel+' · ')?title.slice(sectionLabel.length+3):title}</strong></nav><small>{sectionLabel||'ĐANG CHỈNH SỬA'}</small><h2>{title}</h2>
+   {elementOptions.length>0&&<div className="inspector-element-picker"><label htmlFor={`${id}-element`}>Chọn thành phần cần sửa</label><input type="search" aria-label="Tìm nhanh phần tử" placeholder="Tìm tiêu đề, ảnh, nút…" value={elementSearch} onChange={event=>setElementSearch(event.target.value)}/><select id={`${id}-element`} value={selectedElement} onChange={event=>onSelect?.(event.target.value)}>{!matches.some(option=>option.value===selectedElement)&&<option value={selectedElement}>{title}</option>}{matches.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></div>}
    <p>Chọn từ danh sách hoặc bấm vào bản xem trước. Mở nhóm cần chỉnh ở bên dưới.</p>
    {sourceNote&&<p className="inspector-source-note">{sourceNote}</p>}
   </header>

@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {mount,render,fit} from './fixtures';
+import {mount,render,fit,reveal} from './fixtures';
 const mocks={
  'hooks/useHomeContent.js':'export default function home(){return {loading:false}}',
  'hooks/useProducts.js':'export default function products(){return {products:[],loading:false}}',
@@ -26,7 +26,7 @@ test('navbar cart settings preview typography and shape independently and keep s
  await expect(preview.getByRole('button')).toHaveCSS('border-radius','24px');
  await page.getByLabel('Màu nền nút navbar',{exact:true}).fill('#123456');await expect(preview.getByRole('button')).toHaveCSS('background-color','rgb(18, 52, 86)');
  const text=page.locator('.builder-setting-group').filter({has:page.getByRole('heading',{name:'Chữ nút giỏ hàng navbar',exact:true})}).last();
- await text.getByLabel('Cỡ chữ desktop',{exact:true}).selectOption('18');await expect(preview.getByRole('button')).toHaveCSS('font-size','18px');
+ await reveal(text.getByLabel('Cỡ chữ desktop',{exact:true}));await text.getByLabel('Cỡ chữ desktop',{exact:true}).selectOption('18');await expect(preview.getByRole('button')).toHaveCSS('font-size','18px');
  await page.getByLabel('Hiện số lượng trên nút',{exact:true}).uncheck();await expect(preview.getByRole('button')).toHaveText('Túi đồ');
  await page.getByText('Nội dung và kích thước popup chọn dung tích',{exact:true}).click();await page.getByLabel('Chiều rộng popup desktop (px)',{exact:true}).fill('400');await page.getByLabel('Chiều rộng popup mobile (px)',{exact:true}).fill('280');
  const popup=page.getByLabel('Xem trước popup chọn dung tích',{exact:true});const width=(await popup.boundingBox()).width;expect(width).toBeLessThanOrEqual(page.viewportSize().width<=768?281:401);
@@ -34,14 +34,14 @@ test('navbar cart settings preview typography and shape independently and keep s
  const saved=await page.evaluate(()=>window.__navbar);expect(saved.navStyles.mobile.enabled).toBe(false);expect(saved.navStyles.cart.futureSetting).toBe('keep');expect(saved.navStyles.cart.text.color).toBe('#112233');await fit(page);
 });
 test('builder saves only the changed cart fields and the live navbar and popup consume them',async({page})=>{
- await mount(page,`import Builder from '/src/admin/builder/VisualBuilder.jsx';${render("R.createElement('main',{className:'admin-main'},R.createElement(Builder))")}`,{...mocks,
+ await mount(page,`import Builder from '/qa/BuilderHarness.jsx';${render("R.createElement('main',{className:'admin-main'},R.createElement(Builder))")}`,{...mocks,
   'lib/api.js':`export const getProduct=async()=>null;export const getHomeContent=async()=>({navLogo:'ORORA',navStyles:{cart:{copy:{label:'Giỏ hàng'},selectionPopup:{width:360},navbarButton:{radius:14},unknown:'keep'},mobile:{enabled:false}}});export const saveHomeContent=async payload=>{window.__saved=payload};`,
  });
  await page.locator('.builder-sections').getByRole('button',{name:/Navbar/}).click();
  await page.frameLocator('iframe').getByRole('button',{name:'Giỏ hàng',exact:true}).click();
- await expect(page.getByLabel('Chữ logo',{exact:true})).toHaveCount(0);
+ await expect(page.getByLabel('Chữ logo',{exact:true})).toHaveCount(0);await page.getByRole('button',{name:'Mở Cửa hàng · Giỏ hàng',exact:true}).click();
  await page.getByText('Khung và kiểu chữ nút navbar',{exact:true}).click();await page.getByLabel('Bo góc nút (px)',{exact:true}).fill('24');await page.getByLabel('Màu nền nút navbar',{exact:true}).fill('#123456');
- await page.getByLabel('Tên nút giỏ hàng',{exact:true}).fill('Túi ORORA');await page.locator('.compact-setting-group > summary').filter({hasText:'Popup chọn dung tích — khung gọn'}).click();await page.getByText('Nội dung và kích thước popup chọn dung tích',{exact:true}).click();await page.getByLabel('Chiều rộng popup desktop (px)',{exact:true}).fill('400');
+ await page.getByLabel('Tên nút giỏ hàng',{exact:true}).fill('Túi ORORA');await page.getByText('Nội dung và kích thước popup chọn dung tích',{exact:true}).click();await page.getByLabel('Chiều rộng popup desktop (px)',{exact:true}).fill('400');
  await page.getByRole('button',{name:'💾 Lưu tất cả',exact:true}).click();
  await expect.poll(()=>page.evaluate(()=>window.__saved)).toEqual({navStyles:{cart:{copy:{label:'Túi ORORA'},selectionPopup:{width:400},navbarButton:{radius:24,background:'#123456'}}}});
  const saved=await page.evaluate(()=>window.__saved.navStyles.cart);

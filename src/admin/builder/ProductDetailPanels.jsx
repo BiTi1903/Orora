@@ -1,4 +1,5 @@
-import PurchaseOptionsSettings from "./PurchaseOptionsSettings";
+import StoreSettingsLink from "../StoreSettingsLink";
+import {ColorField} from "./ui";
 import ProductContactSettings from "./ProductContactSettings";
 import MobileImageSettings from "./MobileImageSettings";
 import { SloganAppearanceEditor, SloganTypographyEditor } from "../ProductSloganDesign";
@@ -20,7 +21,14 @@ export function ProductDetailSettings({
       </div>
     );
   }
-  if (["pdPurchaseOptions", "pdFacebookText", "pdTiktokText"].includes(selected)) return <PurchaseOptionsSettings value={productDetail.purchaseOptions || {}} onChange={onStyleChange} />;
+  if(selected==='pdPurchaseOptions')return <StoreSettingsLink section="checkout"/>;
+  if(['pdWebsiteText','pdFacebookText','pdTiktokText'].includes(selected)){
+    const value=productDetail.purchaseOptions||{},channel=selected==='pdWebsiteText'?'website':selected==='pdFacebookText'?'facebook':'tiktok',label=channel==='website'?'Website':channel==='facebook'?'Facebook':'TikTok';
+    return <><SettingGroup title={`Nội dung nút ${label}`}><label className="builder-field">{`Chữ nút ${label}`}<input value={value[`${channel}Label`]||''} placeholder={channel==='website'?'Đặt hàng ngay':label} onChange={e=>onStyleChange({[`${channel}Label`]:e.target.value,...(channel==='website'?{}:{[channel==='facebook'?'customFacebookLabel':'customTiktokLabel']:true})})}/></label><ColorField label={`Nền nút ${label}`} value={value[`${channel}Background`]||'#b8446d'} onChange={color=>onStyleChange({[`${channel}Background`]:color})}/></SettingGroup><StyleTypographyBlock title={`Kiểu chữ nút ${label}`} style={channel==='website'?value:value[`${channel}Style`]||{}} onStyleChange={patch=>onStyleChange(channel==='website'?patch:{[`${channel}Style`]:{...value[`${channel}Style`],...patch}})}/></>;
+  }
+  const tabKey={pdTabDescription:'description',pdTabSpecifications:'specifications',pdTabUsage:'usage'}[selected];
+  if(tabKey){const tabs=productDetail.informationTabs||{};return <><SettingGroup title="Tên tab thông tin"><label className="builder-field">Tên tab<input value={tabs.labels?.[tabKey]||''} onChange={e=>onChange({informationTabs:{...tabs,labels:{...tabs.labels,[tabKey]:e.target.value}}})}/></label></SettingGroup><p className="builder-help">Màu và kiểu chữ dùng chung cho ba tab để giữ giao diện đồng nhất.</p><StyleTypographyBlock style={productDetail.navigation||{}} onStyleChange={onStyleChange}/></>;}
+
   if (selected === "pdContactActions") return <ProductContactSettings value={productDetail.contactActions || {}} onChange={onStyleChange} />;
   if (selected === "pdSloganCard") return <SloganAppearanceEditor value={productDetail.sloganCard} onChange={onStyleChange} />;
   if (["pdSloganTitle", "pdSloganBody"].includes(selected)) return <SloganTypographyEditor title={selected === "pdSloganTitle" ? "Slogan — Chữ tiêu đề" : "Slogan — Chữ nội dung"} body={selected === "pdSloganBody"} value={productDetail[selected === "pdSloganTitle" ? "sloganTitle" : "sloganBody"]} onChange={onStyleChange} />;

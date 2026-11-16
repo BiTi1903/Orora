@@ -1,6 +1,6 @@
 import {useId} from "react";
 import {InspectorGroup} from "./Inspector";
-import CartSettings from "./CartSettings";
+import StoreSettingsLink from "../StoreSettingsLink";
 import MobileNavSettings from "./MobileNavSettings";
 import SurfaceSettings from "./SurfaceSettings";
 import { SettingGroup, SelectField, StyleTypographyBlock } from "./ui";
@@ -24,7 +24,7 @@ export function NavbarSettings({ selected, navbar, onChange, onStyleChange }) {
     />
   );
 
-  if (selected === "navCart") return <CartSettings navbar={navbar} onChange={onChange}/>;
+  if (selected === "navCart") return <StoreSettingsLink section="cart"/>;
 
   return (
     <>
@@ -89,7 +89,7 @@ export function NavbarSettings({ selected, navbar, onChange, onStyleChange }) {
 }
 
 export function NavbarSectionSettings({navbar,onChange,includeCart=true}){return <>
- {includeCart&&<InspectorGroup title="Giỏ hàng navbar và popup"><CartSettings navbar={navbar} onChange={onChange}/></InspectorGroup>}
+ {includeCart&&<InspectorGroup title="Giỏ hàng navbar và popup"><StoreSettingsLink section="cart"/></InspectorGroup>}
  <InspectorGroup title="Thanh điều hướng dưới — mobile"><MobileNavSettings navbar={navbar} onChange={onChange}/></InspectorGroup>
  <InspectorGroup title="Hiệu ứng kính, chat và nút nổi"><SurfaceSettings value={navbar.navStyles?.surfaces} onChange={patch=>onChange({navStyles:{...navbar.navStyles,surfaces:{...navbar.navStyles?.surfaces,...patch}}})}/></InspectorGroup>
  <InspectorGroup title="Menu bên — mobile">      <SettingGroup title="Menu bên — mobile">

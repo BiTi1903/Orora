@@ -102,11 +102,15 @@ const COLLECTION_FIELD_MAP = {
 
 
 const PRODUCT_DETAIL_FIELD_MAP = {
+  pdWebsiteText: {type:"pdPurchaseOptions",styleKey:"purchaseOptions",label:"Website · Chữ nút đặt hàng"},
+  pdTabDescription: {styleKey:"navigation",label:"Tab Mô tả"},
+  pdTabSpecifications: {styleKey:"navigation",label:"Tab Thông số"},
+  pdTabUsage: {styleKey:"navigation",label:"Tab Hướng dẫn sử dụng"},
   pdFacebookText: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Chữ nút Facebook" },
   pdTiktokText: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Chữ nút TikTok" },
   pdSelectionLabel: { styleKey: "selectionLabel", label: "Dung tích / số lượng — Nhãn", sample: "Dung tích" },
   pdSelectionValue: { styleKey: "selectionValue", label: "Dung tích — Lựa chọn", sample: "100 ml" },
-  pdNavigation: { styleKey: "navigation", label: "Nút Mô tả / Thông số / Hướng dẫn sử dụng", sample: "Nút Mô tả / Thông số / Hướng dẫn sử dụng" },
+  pdNavigation: { styleKey: "navigation", label: "Kiểu chữ chung các tab thông tin", sample: "Nút Mô tả / Thông số / Hướng dẫn sử dụng" },
   pdSubheading: { styleKey: "subheading", label: "Tên mục trong nội dung", sample: "Tên mục trong nội dung" },
   pdPurchaseHeading: { styleKey: "purchaseHeading", label: "Chữ Chọn cách mua hàng", sample: "Chữ Chọn cách mua hàng" },
   pdAssuranceTitle: { styleKey: "assuranceTitle", label: "Cam kết — Tiêu đề", sample: "Cam kết — Tiêu đề" },
@@ -117,8 +121,8 @@ const PRODUCT_DETAIL_FIELD_MAP = {
   pdReviewTitle: { styleKey: "reviewTitle", label: "Đánh giá — Tiêu đề", sample: "Đánh giá — Tiêu đề" },
   pdReviewName: { styleKey: "reviewName", label: "Đánh giá — Tên hiển thị", sample: "Đánh giá — Tên hiển thị" },
   pdReviewBody: { styleKey: "reviewBody", label: "Đánh giá — Nội dung", sample: "Đánh giá — Nội dung" },
-  pdPurchaseOptions: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Nút mua hàng web / TikTok / Facebook" },
-  pdContactActions: { type: "pdContactActions", styleKey: "contactActions", label: "Nút tư vấn Zalo / gọi" },
+  pdPurchaseOptions: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Khung chọn cách mua" },
+  pdContactActions: { type: "pdContactActions", styleKey: "contactActions", label: "Thiết lập liên hệ" },
   pdImage: {
     type: "pdImage",
     styleKey: "imageLayout",
@@ -156,7 +160,7 @@ const PRODUCT_DETAIL_FIELD_MAP = {
   },
   pdAboutTitle: {
     styleKey: "aboutTitle",
-    label: "Tiêu đề Mô tả / Thông số / Hướng dẫn sử dụng",
+    label: "Tiêu đề nội dung",
     sample: "Mô tả",
   },
   pdBody: {
@@ -382,6 +386,11 @@ const NEWSLETTER_FIELD_MAP = {
     styleKey: "button",
   },
 };
+
+// Context is part of every public picker label, including labels reused by sections.
+for(const [map,prefix] of [[HERO_FIELD_MAP,'Hero'],[COLLECTION_FIELD_MAP,'Sản phẩm'],[PRODUCT_DETAIL_FIELD_MAP,'Chi tiết sản phẩm'],[FEATURES_TEXT_MAP,'Ưu điểm'],[REVIEWS_TEXT_MAP,'Đánh giá'],[FOOTER_FIELD_MAP,'Chân trang'],[NEWSLETTER_FIELD_MAP,'Nhận tin']]){
+ for(const [key,meta] of Object.entries(map))meta.label=`${map===COLLECTION_FIELD_MAP&&key.startsWith('card')?'Thẻ sản phẩm':prefix} · ${meta.label}`;
+}
 
 export {
   HERO_FIELD_MAP,

@@ -834,3 +834,13 @@
 
 /* Reserve scrollbar space so fit scaling cannot feed back into its own measurement. */
 .builder-frame-host { scrollbar-gutter: stable; overflow-anchor: none; }
+.visual-builder.is-store-workspace { height:auto; min-height:0; max-height:none; overflow:visible; }
+.store-workspace { padding:20px; min-width:0; }
+.store-workspace [hidden] { display:none!important; }
+.store-workspace .admin-section-tabs { flex-wrap:wrap; }
+.inspector-breadcrumb { display:flex; flex-wrap:wrap; align-items:center; gap:5px; font-size:11px; color:var(--plum-soft); margin-bottom:12px; overflow-wrap:anywhere; }
+.inspector-breadcrumb strong { color:var(--plum); font-weight:500; }
+.inspector-element-picker input { width:100%; min-width:0; margin:6px 0; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--plum); font:inherit; }
+.inspector-element-picker input:focus-visible { outline:2px solid var(--pink); outline-offset:2px; }
+.builder-search-results { display:grid; gap:5px; padding:10px; max-height:280px; overflow:auto; }
+.builder-search-results button { text-align:left; white-space:normal; border:1px solid var(--line); border-radius:8px; padding:8px; background:#fff; color:var(--plum); }

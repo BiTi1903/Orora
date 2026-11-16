@@ -2,6 +2,15 @@
 
 Ghi mọi lần sửa vào file này, mục mới nhất ở trên. Ngày ghi theo giờ Việt Nam; giữ lại lịch sử cũ. Mỗi mục nêu lý do, thay đổi, file liên quan, kiểm tra và ảnh hưởng đến database. Không ghi mật khẩu, token, khóa API hoặc dữ liệu khách hàng.
 
+## 16/11/2026 — Gọn Visual Builder, bỏ Form cũ và gom cài đặt cửa hàng
+
+- **Yêu cầu:** Giảm nhãn trùng, nhiều điều khiển cùng lúc và hai nơi chỉnh cùng nội dung; tìm đúng phần tử và giữ bản nhập khi chuyển mục.
+- **Giao diện:** Nhãn có ngữ cảnh phần trang; tách từng tab mô tả/thông số/hướng dẫn và từng nút web/Facebook/TikTok. Có tìm phần tử theo từ khóa tiếng Việt và đường dẫn Trang chủ › phần › phần tử. Nội dung/màu hiện trước, font, biến đổi chữ, giãn dòng và khung nằm trong Nâng cao; giữ các giá trị kiểu chữ của form trước. Hero đọc các kiểu chữ đã chỉnh trong cấu hình.
+- **Cửa hàng:** Thêm mục admin chung cho Giỏ hàng, Form đặt hàng, Kênh mua và thanh toán, Tra cứu đơn; các vị trí cũ dẫn đến đúng mục. Trang chủ và Cửa hàng dùng cùng một draft, chuyển mục không mất bản nhập. Giỏ/form dùng Lưu tất cả; kênh mua/tra cứu giữ nút lưu riêng, ẩn thanh lưu chung ở hai mục này để tránh nhầm. Các màn hình chưa dùng được tải trì hoãn.
+- **Dọn code:** Bỏ 16 file của Form cũ sau khi đối chiếu khóa trong docs/admin-editor-coverage.md. Giữ tải ảnh lên cho Hero, Câu chuyện, Đánh giá qua ImageField dùng chung, chỉ tải bộ chọn khi mở. Tách defaults/model/payload khỏi VisualBuilder (1.735 xuống 882 dòng), gom 13 trạng thái nội dung vào useBuilderDraft; không nhân đôi draft cho Cửa hàng. Quy trình không còn hiển thị vẫn giữ nguyên dữ liệu đã lưu.
+- **Kiểm tra:** npm run check đạt 228 bài Node, lint/build/bundle; entry và static imports gzip 132.967 byte, dưới 330.000. Bộ Chromium toàn bộ đạt 323 bài, 13 bài bỏ qua ở 320/390/768/1440 px trước bước rà cuối tải ảnh/ẩn thanh lưu. Sau bước rà cuối, 8 bài luồng mới ở 390/1440 px và 12 lượt Chromium Android/WebKit iOS/WebKit desktop đều đạt (giả lập trình duyệt, không phải thiết bị thật). Đã xem ảnh chụp mobile và chỉnh ô tìm nhanh đồng bộ bộ điều khiển. Các bài mới kiểm tra tìm kiếm, Nâng cao, sửa từng tab/nút, giữ draft và payload chỉ gồm trường sửa; kiểm tra riêng các luồng cũ giỏ hàng, lưu lỗi/chờ, navigation và chống tràn ngang.
+- **Database:** Không sửa API, schema, rules hoặc dữ liệu production; giữ khóa cấu hình, cơ chế leaf patch và nội dung không được chỉnh. Không tải ảnh thật hay ghi dữ liệu production trong kiểm tra.
+
 ## 16/11/2026 — Sửa nút giỏ vừa đóng ngoài vừa mở lại popup
 
 - **Nguyên nhân:** Sau khi giữ nút giỏ hiện khi popup mở, pointerup trên nút có thể gọi đóng bên ngoài rồi click lại gọi mở, đổi source và tạo hoạt ảnh mới. Khi tắt motion, popup có thể gỡ ngay ở pointerup rồi mở lại ở click.
