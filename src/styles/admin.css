@@ -23,18 +23,18 @@
 
 .admin-brand { font-family: "Cormorant Garamond", Georgia, serif; font-size: 28px; font-weight: 600; letter-spacing: 4px; color: var(--a-plum); }
 
-.admin-muted { font-size: 14px; color: rgba(58, 21, 38, 0.6); }
+.admin-muted { font-size: 14px; color: rgba(58, 21, 38, 0.7); }
 
 /* ---- thanh bên ---- */
 .admin-side {
-  position: sticky; top: 0; height: 100vh; overflow-y: auto; scrollbar-gutter: stable;
+  position: sticky; top: 0; height: 100vh; height: 100dvh; overflow-y: auto; scrollbar-gutter: stable;
   min-width: 0; padding: 30px 22px; display: flex; flex-direction: column; gap: 30px;
   background: #fff; border-right: 1px solid var(--a-line);
 }
 
 .admin-nav { flex-shrink: 0; display: flex; flex-direction: column; gap: 6px; }
 .admin-nav-group { display: flex; flex-direction: column; gap: 6px; }
-.admin-nav-title { margin: 16px 18px 2px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(58, 21, 38, 0.6); }
+.admin-nav-title { margin: 16px 18px 2px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(58, 21, 38, 0.7); }
 
 .admin-nav button {
   padding: 13px 18px; border: 0; border-radius: 14px; text-align: left;
@@ -154,7 +154,7 @@
 .admin-badge { padding: 5px 12px; font-size: 12px; border-radius: 30px; color: #2f7d55; background: #e5f5ec; }
 .admin-badge.off { color: #8a6a76; background: #f3e9ed; }
 
-.admin-empty { padding: 30px 10px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; color: rgba(58, 21, 38, 0.6); }
+.admin-empty { padding: 30px 10px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; color: rgba(58, 21, 38, 0.7); }
 
 /* ---- thông báo ---- */
 .admin-success, .admin-error { padding: 12px 16px; border-radius: 14px; font-size: 14px; }
