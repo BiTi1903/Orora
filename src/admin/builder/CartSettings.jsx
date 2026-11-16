@@ -25,7 +25,7 @@ export default function CartSettings({navbar,onChange}){
     <ColorField label="Màu viền nút navbar" value={button.borderColor||'#efd7e1'} onChange={borderColor=>patchButton({borderColor})}/>
     <StyleTypographyBlock title="Chữ nút giỏ hàng navbar" style={button.text||value.text||{}} onStyleChange={next=>patchButton({text:{...(button.text||value.text),...next}})}/>
    </details>
-   <div className="cart-button-preview" aria-label="Xem trước nút giỏ hàng navbar"><CartButton settings={value} count={2} inNavbar preview onClick={event=>event.preventDefault()}/></div>
+   <div data-admin-preview className="cart-button-preview" aria-label="Xem trước nút giỏ hàng navbar"><CartButton settings={value} count={2} inNavbar preview onClick={event=>event.preventDefault()}/></div>
   </SettingGroup>
   <SettingGroup title="Popup chọn dung tích — khung gọn">
    <details><summary>Nội dung và kích thước popup chọn dung tích</summary>
@@ -39,7 +39,7 @@ export default function CartSettings({navbar,onChange}){
     <StyleTypographyBlock title="Chữ trong popup chọn dung tích" style={popup.text||{}} onStyleChange={next=>patchPopup({text:{...popup.text,...next}})}/>
     <StyleTypographyBlock title="Chữ nút thêm vào giỏ" style={popup.buttonText||{}} onStyleChange={next=>patchPopup({buttonText:{...popup.buttonText,...next}})}/>
    </details>
-   <div className="cart-selection-preview"><CartSelectionDialog preview settings={value} options={previewOptions}/></div>
+   <div data-admin-preview className="cart-selection-preview"><CartSelectionDialog preview settings={value} options={previewOptions}/></div>
   </SettingGroup>
   <SettingGroup title="Giỏ hàng — popup và nội dung chung">
    <details><summary>Hiệu ứng, nội dung và kiểu chữ trong giỏ</summary>

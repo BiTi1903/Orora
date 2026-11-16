@@ -27,8 +27,8 @@ export default function AdminLogin({ onLoggedIn }) {
     </div>
     {!firebaseConfigured && <div className="admin-error">Chưa cấu hình Firebase. Hãy tạo file .env.local theo mẫu .env.example.</div>}
     {error && <div className="admin-error">{error}</div>}
-    <div className="admin-field"><label>Email</label><input value={email} onChange={e=>setEmail(e.target.value)} type="email" required /></div>
-    <div className="admin-field"><label>Mật khẩu</label><input value={password} onChange={e=>setPassword(e.target.value)} type="password" required /></div>
+    <div className="admin-field"><label htmlFor="admin-login-email">Email</label><input id="admin-login-email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} type="email" required /></div>
+    <div className="admin-field"><label htmlFor="admin-login-password">Mật khẩu</label><input id="admin-login-password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} type="password" required /></div>
     <button className="admin-btn primary" aria-busy={busy} disabled={!firebaseConfigured || busy}>Đăng nhập</button>
   </form></div>;
 }

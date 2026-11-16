@@ -12,5 +12,5 @@ export default function CheckoutSettings({value={},onChange}){return <>
   <StyleTypographyBlock title="Tiêu đề trong form" style={value.formHeadingStyle||{}} onStyleChange={patch=>onChange({formHeadingStyle:{...value.formHeadingStyle,...patch}})}/>
   <StyleTypographyBlock title="Chữ trong form" style={value.formTextStyle||{}} onStyleChange={patch=>onChange({formTextStyle:{...value.formTextStyle,...patch}})}/>
  </div></details>
- <details className="inspector-group"><summary>Xem trước form đặt hàng</summary><OrderFormPreview appearance={value}/></details>
+ <details className="inspector-group"><summary>Xem trước form đặt hàng</summary><div data-admin-preview><OrderFormPreview appearance={value}/></div></details>
  </>;}

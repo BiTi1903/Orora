@@ -42,7 +42,7 @@ test('inspector separates selected fields and section settings and keeps drafts 
  await page.getByText('Hiệu ứng kính, chat và nút nổi',{exact:true}).click();await page.getByLabel('Chiều rộng khung chat AI (px)',{exact:true}).fill('320');
  await page.getByRole('tab',{name:'Đang chọn',exact:true}).click();await expect(page.getByLabel('Chữ logo',{exact:true})).toHaveValue('ORORA MỚI');
  await page.getByRole('tab',{name:'Thiết lập mục',exact:true}).click();await page.frameLocator('iframe').locator('[data-builder-key="navLogo"]').click();await expect(page.getByRole('tab',{name:'Đang chọn',exact:true})).toHaveAttribute('aria-selected','true');
- await page.getByRole('button',{name:'💾 Lưu tất cả',exact:true}).click();await expect.poll(()=>page.evaluate(()=>window.__saved)).toEqual({navLogo:'ORORA MỚI',navStyles:{surfaces:{chatPanelWidth:320}}});await expect(page.getByRole('button',{name:'💾 Lưu tất cả',exact:true})).not.toHaveCSS('background-image','none');
+ await page.getByRole('button',{name:'💾 Lưu tất cả',exact:true}).click();await expect.poll(()=>page.evaluate(()=>window.__saved)).toEqual({navLogo:'ORORA MỚI',navStyles:{surfaces:{chatPanelWidth:320}}});await expect(page.getByRole('button',{name:'💾 Lưu tất cả',exact:true})).toHaveCSS('background-color','rgb(184, 68, 109)');
  await page.getByLabel('Tìm mục chỉnh sửa',{exact:true}).fill('');await fit(page);await page.screenshot({path:testInfo.outputPath('visual-admin.png'),fullPage:true});
 });
 test('checkout appearance and content preview share the live presentation and preserve other purchase settings',async({page})=>{
