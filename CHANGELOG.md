@@ -2,6 +2,13 @@
 
 Ghi mọi lần sửa vào file này, mục mới nhất ở trên. Ngày ghi theo giờ Việt Nam; giữ lại lịch sử cũ. Mỗi mục nêu lý do, thay đổi, file liên quan, kiểm tra và ảnh hưởng đến database. Không ghi mật khẩu, token, khóa API hoặc dữ liệu khách hàng.
 
+## 16/11/2026 — Sửa Quality checks lỗi đường dẫn ảnh trên GitHub Actions
+
+- **Nguyên nhân:** Run #86 tại commit 9d75980 có check đạt, browser có 294 ca đạt/13 bỏ qua và một ca lỗi ENOENT khi ghi ảnh vào /workspace/work/tracking-detail-after.png. Đường dẫn cục bộ không tồn tại trên GitHub runner; không phải lỗi dữ liệu hoặc thao tác tra cứu.
+- **Sửa:** qa/tracking-layout.spec.js dùng testInfo.outputPath('tracking-detail.png') để Playwright tạo thư mục kết quả riêng theo ca/project/runner. Giữ nguyên toàn bộ assertion, không bỏ ca kiểm tra hoặc tăng retry để che lỗi.
+- **Kiểm tra:** CI=1 chạy lại ba ca tracking-layout tại390px đạt3/3; ESLint đạt. Xác nhận ảnh thật được tạo trong test-results của ca kiểm tra. Workflow đầy đủ tự chạy lại sau push để xác nhận trên GitHub Actions.
+- **Database:** Chỉ sửa bài kiểm tra và log; không đổi ứng dụng, API, schema hoặc dữ liệu production.
+
 ## 16/11/2026 — Giữ thanh dưới khi mở giỏ và tránh lóe khung khi đóng
 
 - **Yêu cầu:** Giỏ bị chớp khi tắt; thanh điều hướng dưới phải còn khi mở giỏ.
