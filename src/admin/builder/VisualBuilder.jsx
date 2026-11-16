@@ -892,15 +892,10 @@ export default function VisualBuilder() {
   const [ticker, setTicker] = useState(DEFAULT_TICKER);
   const [navbar, setNavbar] = useState(createNav);
   const [philosophy, setPhilosophy] = useState({
-    philosophyBody: "✦ TRIẾT LÝ CỦA CHÚNG TÔI ✦\nTRÂN TRỌNG TỪNG CHÚT YÊU THƯƠNG DÀNH CHO CHÍNH MÌNH.",
-    philosophyStyle: {
-      fontFamily: '"Cormorant Garamond", serif',
-      fontSize: 42,
-      fontWeight: 500,
-      lineHeight: 1.35,
-      textAlign: "center",
-      color: "#3a1526",
-    },
+    philosophyLabel: "✦ TRIẾT LÝ CỦA CHÚNG TÔI ✦",
+    philosophyBody: "TRÂN TRỌNG TỪNG CHÚT YÊU THƯƠNG DÀNH CHO CHÍNH MÌNH.",
+    philosophyAccentCount: 4,
+    philosophyStyles: {},
   });
   const [sectionVisibility, setSectionVisibility] = useState({});
   const [discovery, setDiscovery] = useState({ productNeeds: DEFAULT_PRODUCT_NEEDS, productFaq: DEFAULT_PRODUCT_FAQ });

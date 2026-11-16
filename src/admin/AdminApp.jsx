@@ -17,16 +17,12 @@ import OrdersAdmin from "./OrdersAdmin";
 import NewsletterAdmin from "./NewsletterAdmin";
 import "../styles/admin.css";
 
-const TABS = [
-  ["dashboard", "Tổng quan"],
-  ["home", "Trang chủ"],
-  ["products", "Sản phẩm"],
-  ["chat", "Chat AI"],
-  ["orders", "Đơn hàng"],
-  ["newsletter", "Email"],
-  ["inventory", "Kiểm Hàng"],
-  ["shipping", "Phí vận chuyển"],
-  ["export", "Xuất Excel"],
+/* Menu chia nhóm theo công việc; mỗi mục là [khóa, nhãn]. */
+const GROUPS = [
+  { title: null, items: [["dashboard", "Tổng quan"]] },
+  { title: "Bán hàng", items: [["orders", "Đơn hàng"], ["inventory", "Kiểm kho"], ["shipping", "Phí vận chuyển"]] },
+  { title: "Giao diện và nội dung", items: [["home", "Trang chủ"], ["products", "Sản phẩm"]] },
+  { title: "Khách hàng", items: [["newsletter", "Email"], ["chat", "Chat AI"], ["export", "Xuất danh sách email"]] },
 ];
 
 export default function AdminApp() {
@@ -41,30 +37,54 @@ export default function AdminApp() {
   return <AdminWorkspace key={user.uid} user={user} />;
 }
 
+function OrderBadge({ notifications }) {
+  const pending = notifications.snapshot?.pendingCount;
+  if (notifications.error && !pending) return <span id="admin-pending-order-count" className="admin-order-count" title={`Chưa cập nhật số đơn: ${notifications.error}`} aria-label="Chưa cập nhật được số đơn chờ">!</span>;
+  if (pending > 0) return <span id="admin-pending-order-count" className="admin-order-count" aria-label={`${pending} đơn chờ xác nhận`} title={notifications.error ? `Số đã ghi nhận; chưa cập nhật lại: ${notifications.error}` : "Đơn chờ xác nhận · tự cập nhật mỗi phút"}>{pending}</span>;
+  return null;
+}
+
 function AdminWorkspace({ user }) {
   const notifications = useOrderNotifications();
   const [pendingRequest, setPendingRequest] = useState(null);
   const [visited, setVisited] = useState([]);
-  const navigate = (key) => { setVisited((items) => items.includes(key) ? items : [...items, key]); setTab(key); };
   const [orderMailDraft, setOrderMailDraft] = useState(null);
   const [orderMailVersion, setOrderMailVersion] = useState(0);
   const [emailSection, setEmailSection] = useState({ view: "contacts" });
   const [tab, setTab] = useState("dashboard");
+  const navigate = (key) => { setVisited((items) => items.includes(key) ? items : [...items, key]); setTab(key); };
+  const orderBadgeShown = notifications.snapshot?.pendingCount > 0 || notifications.error;
+
+  /* Các mục giữ trạng thái sau lần mở đầu (ẩn bằng `hidden`, không gỡ khỏi trang). */
+  const panels = {
+    home: <HomeAdmin />,
+    products: <ProductsAdmin />,
+    chat: <ChatSettings />,
+    orders: <OrdersAdmin refreshKey={notifications.revision} pendingRequest={pendingRequest} onOrderChanged={notifications.refresh} key={`${user.uid}:${orderMailVersion}`} initialMailDraft={orderMailDraft} onOpenEmailTemplates={() => { setEmailSection({ view: "templates" }); navigate("newsletter"); }} />,
+    shipping: <ShippingAdmin key={user.uid} />,
+    inventory: <InventoryAdmin key={user.uid} />,
+    newsletter: <NewsletterAdmin initialView={emailSection.view} viewRequest={emailSection} onOpenOrderMail={(draft) => { setOrderMailDraft(draft); setOrderMailVersion((value) => value + 1); navigate("orders"); }} />,
+  };
 
   return (
     <div className="admin-shell">
       <aside className="admin-side">
         <div className="admin-brand">ORORA</div>
-        <nav className="admin-nav">
-          {TABS.map(([key, label]) => (
-            <button key={key} aria-label={label} aria-describedby={key === "orders" && (notifications.snapshot?.pendingCount > 0 || notifications.error) ? "admin-pending-order-count" : undefined} aria-current={tab === key ? "page" : undefined} className={tab === key ? "active" : ""} onClick={() => navigate(key)}>
-              {label}{key === "orders" && notifications.error && !notifications.snapshot?.pendingCount && <span id="admin-pending-order-count" className="admin-order-count" title={`Chưa cập nhật số đơn: ${notifications.error}`} aria-label="Chưa cập nhật được số đơn chờ">!</span>}{key === "orders" && notifications.snapshot?.pendingCount > 0 && <span id="admin-pending-order-count" className="admin-order-count" aria-label={`${notifications.snapshot.pendingCount} đơn chờ xác nhận`} title={notifications.error ? `Số đã ghi nhận; chưa cập nhật lại: ${notifications.error}` : "Đơn chờ xác nhận · tự cập nhật mỗi phút"}>{notifications.snapshot.pendingCount}</span>}
-            </button>
+        <nav className="admin-nav" aria-label="Menu quản trị">
+          {GROUPS.map(({ title, items }) => (
+            <div className="admin-nav-group" key={title || "main"} role="group" aria-label={title || undefined}>
+              {title && <span className="admin-nav-title" aria-hidden="true">{title}</span>}
+              {items.map(([key, label]) => (
+                <button key={key} aria-label={label} aria-describedby={key === "orders" && orderBadgeShown ? "admin-pending-order-count" : undefined} aria-current={tab === key ? "page" : undefined} className={tab === key ? "active" : ""} onClick={() => navigate(key)}>
+                  {label}{key === "orders" && <OrderBadge notifications={notifications} />}
+                </button>
+              ))}
+            </div>
           ))}
         </nav>
         <div className="admin-side-bottom">
           <span className="admin-muted">{user.email}</span>
-          <span className="admin-muted" style={{ fontSize: 11 }}>UID: {user.uid}</span>
+          <details className="admin-muted admin-uid"><summary>Mã tài khoản (UID)</summary><span>{user.uid}</span></details>
           <a href="/" target="_blank" rel="noopener noreferrer" className="admin-btn">Xem website</a>
           <button className="admin-btn" onClick={() => {if(!dirtyRegistry.hasChanges()||window.confirm("Bạn có thay đổi chưa lưu. Đăng xuất và bỏ những thay đổi này?"))signOut(auth);}}>Đăng xuất</button>
         </div>
@@ -73,15 +93,9 @@ function AdminWorkspace({ user }) {
       <main className="admin-main">
         {notifications.incoming && <div className="admin-order-notification" role="status"><div><strong>Có đơn hàng mới · {notifications.incoming.code}</strong><p>{notifications.snapshot?.pendingCount ?? ""} đơn đang chờ xác nhận.</p></div><button type="button" className="admin-btn" onClick={() => { setPendingRequest({ id: notifications.incoming.id }); navigate("orders"); notifications.dismiss(); }}>Xem đơn chờ</button><button type="button" className="notification-dismiss" aria-label="Đóng thông báo đơn mới" onClick={notifications.dismiss}>×</button></div>}
 
-        {tab === "dashboard" && <Dashboard sectionCount={TABS.length} />}
-        {visited.includes("home") && <div className="admin-workspace-panel" hidden={tab !== "home"}><HomeAdmin /></div>}
-        {visited.includes("products") && <div className="admin-workspace-panel" hidden={tab !== "products"}><ProductsAdmin /></div>}
-        {visited.includes("chat") && <div className="admin-workspace-panel" hidden={tab !== "chat"}><ChatSettings /></div>}
-        {visited.includes("orders") && <div className="admin-workspace-panel" hidden={tab !== "orders"}><OrdersAdmin refreshKey={notifications.revision} pendingRequest={pendingRequest} onOrderChanged={notifications.refresh} key={`${user.uid}:${orderMailVersion}`} initialMailDraft={orderMailDraft} onOpenEmailTemplates={() => { setEmailSection({ view: "templates" }); navigate("newsletter"); }} /></div>}
+        {tab === "dashboard" && <Dashboard pendingCount={notifications.snapshot?.pendingCount} />}
+        {Object.entries(panels).filter(([key]) => visited.includes(key)).map(([key, panel]) => <div key={key} className="admin-workspace-panel" hidden={tab !== key}>{panel}</div>)}
         {tab === "export" && <EmailExport key={user.uid} request={newsletterRequest} />}
-        {visited.includes("shipping") && <div className="admin-workspace-panel" hidden={tab !== "shipping"}><ShippingAdmin key={user.uid} /></div>}
-        {visited.includes("inventory") && <div className="admin-workspace-panel" hidden={tab !== "inventory"}><InventoryAdmin key={user.uid} /></div>}
-        {visited.includes("newsletter") && <div className="admin-workspace-panel" hidden={tab !== "newsletter"}><NewsletterAdmin initialView={emailSection.view} viewRequest={emailSection} onOpenOrderMail={(draft) => { setOrderMailDraft(draft); setOrderMailVersion((value) => value + 1); navigate("orders"); }} /></div>}
       </main>
     </div>
   );

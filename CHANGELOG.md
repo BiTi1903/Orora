@@ -2,6 +2,16 @@
 
 Ghi mọi lần sửa vào file này, mục mới nhất ở trên. Ngày ghi theo giờ Việt Nam; giữ lại lịch sử cũ. Mỗi mục nêu lý do, thay đổi, file liên quan, kiểm tra và ảnh hưởng đến database. Không ghi mật khẩu, token, khóa API hoặc dữ liệu khách hàng.
 
+## 16/11/2026 — Áp dụng bản dọn admin từ tài liệu và sửa responsive menu
+
+- **Yêu cầu:** Chủ website yêu cầu thực hiện sau khi rà files.zip và Orora-thay-doi.md. Chỉ lấy patch admin, giữ các bản sửa giỏ và CI đang có; không chép đè toàn bộ ZIP cũ.
+- **Menu và code:** Chia menu thành nhóm Tổng quan, Bán hàng, Giao diện và nội dung, Khách hàng; đổi nhãn Kiểm kho/Xuất danh sách email. Tách OrderBadge, dùng bảng panels thay các khối render lặp nhưng giữ các màn đã mở trong DOM và giữ key/state các luồng email/đơn hàng. UID đặt trong details để vẫn lấy được khi cần cấp quyền.
+- **Tổng quan/Builder:** Thay thẻ đếm số tab bằng số đơn chờ từ useOrderNotifications sẵn có. Bỏ khóa philosophyStyle chết, đồng bộ mặc định philosophyLabel/philosophyBody/philosophyAccentCount/philosophyStyles với phần tải dữ liệu.
+- **Responsive bổ sung:** Sidebar desktop cuộn riêng để không khuất UID/đăng xuất ở chiều cao600px. Kiểm tra phát hiện menu trong patch tràn ngang ở mobile; bổ sung minmax(0,1fr), giới hạn chiều rộng và wrap nhóm/tài khoản, mobile dùng chiều cao tự nhiên.
+- **Kiểm tra:** npm run check đạt228 bài Node, lint/build/bundle; sau chỉnh CSS cuối đã chạy lại lint, build và bundle, gzip131934bytes. 14 kiểm tra admin/navigation/inspector ở390/1440px đạt; thêm2 ca tại320/768px đạt. Xác nhận9 nút menu, số đơn chờ, giữ bản nhập qua đổi tab, UID/đăng xuất tới được trên màn hình thấp và không tràn ngang. Dùng tài khoản/dữ liệu giả trong fixture, không đăng nhập hay ghi dữ liệu thật.
+- **Bảo toàn:** Giữ nguyên testInfo.outputPath của bản sửa CI 0e76cc0. Những đề xuất bỏ Form cũ, chuyển cài đặt cửa hàng, tách VisualBuilder lớn và xóa ZIP chưa được thực hiện trong lần áp dụng này.
+- **Database:** Không đổi API, schema, Firebase rules, hooks dữ liệu hoặc dữ liệu production.
+
 ## 16/11/2026 — Sửa Quality checks lỗi đường dẫn ảnh trên GitHub Actions
 
 - **Nguyên nhân:** Run #86 tại commit 9d75980 có check đạt, browser có 294 ca đạt/13 bỏ qua và một ca lỗi ENOENT khi ghi ảnh vào /workspace/work/tracking-detail-after.png. Đường dẫn cục bộ không tồn tại trên GitHub runner; không phải lỗi dữ liệu hoặc thao tác tra cứu.

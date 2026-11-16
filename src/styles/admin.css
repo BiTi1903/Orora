@@ -27,12 +27,14 @@
 
 /* ---- thanh bên ---- */
 .admin-side {
-  position: sticky; top: 0; height: 100vh;
-  padding: 30px 22px; display: flex; flex-direction: column; gap: 30px;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto; scrollbar-gutter: stable;
+  min-width: 0; padding: 30px 22px; display: flex; flex-direction: column; gap: 30px;
   background: #fff; border-right: 1px solid var(--a-line);
 }
 
-.admin-nav { display: flex; flex-direction: column; gap: 6px; }
+.admin-nav { flex-shrink: 0; display: flex; flex-direction: column; gap: 6px; }
+.admin-nav-group { display: flex; flex-direction: column; gap: 6px; }
+.admin-nav-title { margin: 16px 18px 2px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(58, 21, 38, 0.6); }
 
 .admin-nav button {
   padding: 13px 18px; border: 0; border-radius: 14px; text-align: left;
@@ -42,9 +44,11 @@
 .admin-nav button:hover { background: #fff0f5; }
 .admin-nav button.active { color: #fff; background: linear-gradient(135deg, #ee8eae, var(--a-deep)); }
 
-.admin-side-bottom { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+.admin-side-bottom { flex-shrink: 0; margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
 .admin-side-bottom .admin-muted { font-size: 12px; overflow-wrap: anywhere; }
 .admin-side-bottom .admin-btn { width: 100%; }
+.admin-uid summary { cursor: pointer; }
+.admin-uid span { display: block; margin-top: 4px; font-size: 11px; overflow-wrap: anywhere; }
 
 .admin-main { padding: 40px 5%; min-width: 0; }
 
@@ -172,10 +176,12 @@
 
 /* ---- điện thoại ---- */
 @media (max-width: 800px) {
-  .admin-shell { grid-template-columns: 1fr; }
-  .admin-side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 14px; padding: 18px 20px; border-right: 0; border-bottom: 1px solid var(--a-line); }
-  .admin-nav { flex-direction: row; flex-wrap: wrap; }
-  .admin-side-bottom { margin-top: 0; margin-left: auto; flex-direction: row; align-items: center; flex-wrap: wrap; }
+  .admin-shell { grid-template-columns: minmax(0,1fr); }
+  .admin-side { position: static; height: auto; overflow: visible; scrollbar-gutter: auto; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 14px; padding: 18px 20px; border-right: 0; border-bottom: 1px solid var(--a-line); }
+  .admin-nav { width: 100%; min-width: 0; flex-direction: row; flex-wrap: wrap; }
+  .admin-nav-group { min-width: 0; max-width: 100%; flex-direction: row; flex-wrap: wrap; }
+  .admin-nav-title { display: none; }
+  .admin-side-bottom { max-width: 100%; margin-top: 0; margin-left: auto; flex-direction: row; align-items: center; flex-wrap: wrap; }
   .admin-side-bottom .admin-btn { width: auto; }
   .admin-main { padding: 26px 20px; }
   .admin-shell h1 { font-size: 32px; }
