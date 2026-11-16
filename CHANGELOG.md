@@ -2,6 +2,13 @@
 
 Ghi mọi lần sửa vào file này, mục mới nhất ở trên. Ngày ghi theo giờ Việt Nam; giữ lại lịch sử cũ. Mỗi mục nêu lý do, thay đổi, file liên quan, kiểm tra và ảnh hưởng đến database. Không ghi mật khẩu, token, khóa API hoặc dữ liệu khách hàng.
 
+## 16/11/2026 — Sửa nút giỏ vừa đóng ngoài vừa mở lại popup
+
+- **Nguyên nhân:** Sau khi giữ nút giỏ hiện khi popup mở, pointerup trên nút có thể gọi đóng bên ngoài rồi click lại gọi mở, đổi source và tạo hoạt ảnh mới. Khi tắt motion, popup có thể gỡ ngay ở pointerup rồi mở lại ở click.
+- **Sửa:** ModalDialog hỗ trợ selector loại trừ khỏi xử lý bấm ngoài; chỉ ShopCart truyền [data-cart-target]. Nút giỏ desktop chuyển thành bật/tắt; thanh dưới gửi cờ toggle trong sự kiện mở để bấm lần hai đóng một lần, giữ nguyên ý nghĩa mở của các sự kiện không có cờ. Bấm ngoài ở vị trí khác vẫn đóng; nút X/Escape và hoạt ảnh thu về nguồn giữ nguyên. closeCart dùng callback ổn định, listener đọc đúng trạng thái open hiện tại.
+- **Kiểm tra:** npm run check đạt 228 bài Node/lint/build/bundle. 14 kiểm tra giỏ/chuyển động ở 390/1440 px đạt. Thêm 6 lượt trên Chromium Android/WebKit iOS/desktop đạt, cả bật và tắt motion: mở bằng nút thật, bấm lại đóng, không tạo animation mở mới, mở lại được và bấm ngoài đóng được. ESLint cho spec/config bổ sung đạt.
+- **Database:** Không đổi API, schema, rules hoặc dữ liệu production; cờ toggle chỉ nằm trong sự kiện giao diện, không lưu vào cấu hình hay đơn hàng.
+
 ## 16/11/2026 — Tăng tương phản admin và bỏ mock phụ thuộc tên file Vite
 
 - **Yêu cầu:** Sửa các điểm nhỏ đã rà sau bản dọn admin: tương phản, chiều cao sidebar, mock test dễ vỡ và trình bày log.

@@ -6,7 +6,7 @@ export default defineConfig({
  ...base,
  testMatch:[
   '**/browser-adaptation.spec.js','**/mobile-nav-reveal.spec.js',
-  '**/popup-motion.spec.js','**/tracking-layout.spec.js',
+  '**/popup-motion.spec.js','**/cart-toggle.spec.js','**/tracking-layout.spec.js',
   '**/ui-efficiency.spec.js','**/responsive-cleanup.spec.js',
   '**/shopping.spec.js',
  ],
