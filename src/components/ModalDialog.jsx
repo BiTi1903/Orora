@@ -49,11 +49,24 @@ export default function ModalDialog({ title, children, onClose, className = "", 
     if(!motionClosing)return;
     const animation=motionRef.current;
     if(!animation){motionClosedRef.current?.();return;}
-    // A keyboard/viewport change may have moved the settled dialog. Rebase at
-    // identity before reversing so the flight still ends at the captured trigger.
-    if(animation.playState==='finished'&&motionSource){
-      animation.effect.setKeyframes(popupMotionKeyframes(motionSource,ref.current.getBoundingClientRect()));
-    }
+    const dialog=ref.current;
+    const current=getComputedStyle(dialog);
+    const frame={transform:current.transform,opacity:current.opacity,offset:1};
+    const elapsed=Number(animation.currentTime)||0;
+    if(elapsed<=0){dialog.style.visibility='hidden';motionClosedRef.current?.();return;}
+    // Returning through the opening spring's overshoot would enlarge the cart
+    // again. Start at its actual painted frame and shrink directly to the source.
+    // Only a settled dialog can be remeasured without including its transform.
+    const origin=animation.playState==='finished'&&motionSource
+      ?popupMotionKeyframes(motionSource,dialog.getBoundingClientRect())[0]
+      :animation.effect.getKeyframes()[0];
+    animation.pause();
+    animation.effect.setKeyframes([
+      {transform:origin.transform,opacity:origin.opacity,offset:0},frame
+    ]);
+    const duration=Math.max(100,Math.min(motionDuration,elapsed));
+    animation.effect.updateTiming({duration,easing:'cubic-bezier(.4,0,.2,1)'});
+    animation.currentTime=duration;
     animation.onfinish=()=>{
       // WebKit can deliver the forward finish event after reverse was requested.
       if(animation.playbackRate<0&&animation.currentTime<=0){
@@ -63,11 +76,11 @@ export default function ModalDialog({ title, children, onClose, className = "", 
       }
     };
     // reverse() can stay pending on a finished, filled WebKit animation.
-    // Setting the rate explicitly preserves its current point and starts it back.
+    // Set the return direction while paused, then resume from the captured frame.
     animation.playbackRate=-Math.abs(animation.playbackRate||1);
     animation.play();
     return()=>{animation.onfinish=null;};
-  },[motionClosing,motionSource]);
+  },[motionClosing,motionSource,motionDuration]);
   return <>{allowBackgroundScroll&&<div className="orora-modeless-backdrop" aria-hidden="true"/>}<dialog ref={ref} className={`orora-modal ${className}${allowBackgroundScroll?' is-modeless':''}`} aria-labelledby={titleId} style={style} onClose={event=>{event.stopPropagation();if(!ref.current?.open)onClose();}} onCancel={(event) => {event.stopPropagation();event.preventDefault();if(!closeDisabled)onClose();}} onClick={(event) => {
     if (closeDisabled || event.target !== event.currentTarget) return;
     const box = event.currentTarget.getBoundingClientRect();

@@ -2,6 +2,14 @@
 
 Ghi mọi lần sửa vào file này, mục mới nhất ở trên. Ngày ghi theo giờ Việt Nam; giữ lại lịch sử cũ. Mỗi mục nêu lý do, thay đổi, file liên quan, kiểm tra và ảnh hưởng đến database. Không ghi mật khẩu, token, khóa API hoặc dữ liệu khách hàng.
 
+## 16/11/2026 — Giỏ hàng đóng ngay khi đang mở không phình thêm một nhịp
+
+- **Lỗi và tái hiện:** Đóng khi hoạt ảnh mở chưa xong có thể chạy ngược qua đoạn spring vượt kích thước đích, làm khung phình thêm trước khi thu. Test mới tại khoảng 70% thời lượng mở thất bại trên bản trước khi sửa: scale tăng từ khoảng 1,00416 lên 1,00519 khi đang đóng. Các kiểm tra cũ chỉ xác nhận điểm đầu/cuối và một animation nên không bắt được chiều tăng này.
+- **Sửa:** ModalDialog chụp transform/opacity đang hiển thị, dùng chính animation hiện tại thu liên tục về nguồn với easing không nảy; thời lượng theo phần đã mở, tối thiểu 100ms. Không reset về khung lớn hay phát lại spring khi đóng; giữ nảy lúc mở và giữ frame cuối ẩn đến khi React gỡ. Nếu đóng trước frame mở đầu thì gỡ ngay. Vẫn bỏ qua sự kiện finish chiều mở đến muộn trên WebKit.
+- **Dọn luồng dự phòng:** Sự kiện mở thiếu vị trí nguồn dùng nút giỏ đang hiện (hoặc tâm đáy viewport), cùng một luồng WAAPI; bỏ animation CSS đóng riêng bắt đầu từ scale 1 và timer gỡ dự phòng. Không thay đổi chế độ tắt chuyển động hoặc khả năng giữ thanh dưới khi giỏ mở. Cài đặt bật/tắt và thời lượng trong admin giữ nguyên.
+- **Kiểm tra:** npm run check đạt 228 bài Node, lint, build và bundle (gzip 133.110 byte, dưới giới hạn 330.000). 20 bài giỏ hàng/chuyển động/toggle tại 390/1440 px đạt; kiểm tra các frame đóng tại 12%, 38%, 70% không đổi vị trí/kích thước ngay lúc chuyển chiều và scale chỉ giảm. Thêm 24 lượt chức năng/motion và 9 lượt liên tục frame trên Chromium Android/WebKit iOS/WebKit desktop đạt (giả lập, không phải thiết bị thật). 9 lượt frame chạy lại sau khi test chờ animation.ready để phép đo Safari không lệch do pause còn pending. ESLint bổ sung cho spec/runtime đạt.
+- **Database:** Không sửa API, schema, rules, cấu hình đã lưu hoặc dữ liệu production; chỉ sửa chuyển động giao diện và test.
+
 ## 16/11/2026 — Gọn Visual Builder, bỏ Form cũ và gom cài đặt cửa hàng
 
 - **Yêu cầu:** Giảm nhãn trùng, nhiều điều khiển cùng lúc và hai nơi chỉnh cùng nội dung; tìm đúng phần tử và giữ bản nhập khi chuyển mục.

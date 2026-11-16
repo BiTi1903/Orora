@@ -5,9 +5,9 @@ const modules={
  'hooks/useHomeContent.js':'export default function home(){return {loading:false,navStyles:{mobile:{afterTicker:false}}}}',
  'hooks/useProducts.js':'export default function products(){return {products:[],loading:false}}',
 };
-const fixture=`import Cart from '/src/components/ShopCart.jsx';import Nav from '/src/components/MobileShopNav.jsx';${render("R.createElement(R.Fragment,null,R.createElement('main',{style:{height:2400}},'Nội dung'),R.createElement(Cart),R.createElement(Nav))")}`;
+const fixture=`import {flushSync} from '/qa/runtime.js';window.__flushSync=flushSync;import Cart from '/src/components/ShopCart.jsx';import Nav from '/src/components/MobileShopNav.jsx';${render("R.createElement(R.Fragment,null,R.createElement('main',{style:{height:2400}},'Nội dung'),R.createElement(Cart),R.createElement(Nav))")}`;
 
-async function mountPausedCart(page){
+async function mountPausedCart(page,withoutSource=false){
  await page.addInitScript(()=>{
   const animate=Element.prototype.animate;
   Element.prototype.animate=function(...args){
@@ -21,7 +21,7 @@ async function mountPausedCart(page){
  const trigger=page.locator('[data-cart-target]:visible').last();
  await expect(trigger).toBeVisible();
  const source=await trigger.boundingBox();
- await trigger.click();
+ if(withoutSource)await page.evaluate(()=>window.dispatchEvent(new CustomEvent('orora-cart-open')));else await trigger.click();
  const cart=page.getByRole('dialog',{name:'Giỏ hàng',exact:true});
  await expect(cart).toHaveCount(1);
  if(page.viewportSize().width<=768)await expect(page.locator('.mobile-shop-nav')).toBeVisible();
@@ -90,4 +90,49 @@ test('reduced motion opens and closes the cart without the spring',async({page})
  const cart=page.getByRole('dialog',{name:'Giỏ hàng',exact:true});await expect(cart).toBeVisible();
  expect(await cart.evaluate(dialog=>dialog.getAnimations().length)).toBe(0);
  await cart.getByRole('button',{name:'Đóng cửa sổ',exact:true}).click();await expect(cart).toHaveCount(0);
+});
+
+for(const progress of [.12,.38,.7])test(`closing a running cart at ${progress} keeps its current frame`,async({page})=>{
+ const {cart}=await mountPausedCart(page);
+ await sample(cart,progress);
+ await cart.evaluate(async dialog=>{const animation=dialog.getAnimations()[0];animation.play();await animation.ready;});
+ const frames=await cart.evaluate(async dialog=>{
+  const animation=dialog.getAnimations()[0];
+  // Safari's compositor may advance within this task. Freeze the current
+  // opening frame so the before/after continuity comparison uses one instant.
+  animation.pause();await animation.ready;
+  const read=()=>({time:animation.currentTime,transform:getComputedStyle(dialog).transform,opacity:getComputedStyle(dialog).opacity});
+  const before=read();
+  window.__flushSync(()=>dialog.querySelector('.orora-modal-heading button').click());
+  return {before,after:read(),animations:dialog.getAnimations().length};
+ });
+ expect(frames.animations).toBe(1);
+ expect(frames.after.transform).toBe(frames.before.transform);
+ expect(frames.after.opacity).toBe(frames.before.opacity);
+ const scales=await cart.evaluate(dialog=>{
+  const animation=dialog.getAnimations()[0];animation.pause();
+  const start=animation.currentTime;
+  return Array.from({length:31},(_,index)=>{animation.currentTime=start*(1-index/30);return new DOMMatrixReadOnly(getComputedStyle(dialog).transform).a;});
+ });
+ for(let index=1;index<scales.length;index++)expect(scales[index]).toBeLessThanOrEqual(scales[index-1]+.00001);
+ await cart.evaluate(dialog=>dialog.getAnimations()[0].finish());
+ await expect(cart).toHaveCount(0);
+});
+
+test('cart opened without source still uses one reversible flight from its visible trigger',async({page})=>{
+ const {cart,source}=await mountPausedCart(page,true);
+ const start=await sample(cart,0);
+ expect(start.animations).toBe(1);expect(start.cssScale).toBe('none');
+ expect(Math.abs(start.x-source.x-source.width/2)).toBeLessThan(1);
+ expect(Math.abs(start.y-source.y-source.height/2)).toBeLessThan(1);
+ await sample(cart,.3);
+ await cart.getByRole('button',{name:'Đóng cửa sổ',exact:true}).evaluate(button=>button.click());
+ await expect(cart).toHaveCount(0);
+});
+
+test('closing before the first opening frame removes the cart without jumping to the end',async({page})=>{
+ const {cart}=await mountPausedCart(page);
+ await sample(cart,0);
+ await cart.getByRole('button',{name:'Đóng cửa sổ',exact:true}).evaluate(button=>button.click());
+ await expect(cart).toHaveCount(0);
 });
