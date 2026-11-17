@@ -1,3 +1,10 @@
+## 17/11/2026 — Bỏ thanh bên Safari, hiện thanh dưới theo hướng cuộn
+
+- Theo yêu cầu mới, ngừng dùng menu bên trên trang thật và preview, kể cả cấu hình cũ đã chọn kiểu bên; bỏ bộ chỉnh thanh bên trong admin.
+- Safari hiện thanh dưới khi cuộn xuống, ẩn khi cuộn lên/ở đầu trang; không chờ vượt hero và không phụ thuộc ước lượng chiều cao toolbar. Giữ bảo vệ bàn phím/zoom và thiết lập màu/chữ/icon của thanh dưới.
+- Database: không thay đổi dữ liệu, schema, rules hoặc tự ghi cấu hình production.
+- Kiểm tra: 232 test code đạt; lint không có lỗi (còn cảnh báo ref cleanup ở hook kéo cũ), build và giới hạn bundle đạt. 6 test UI thanh dưới tại 390px đạt, gồm hướng cuộn Safari và bàn phím/zoom. Bỏ hai spec menu bên đã ngừng dùng, cập nhật kỳ vọng Safari theo yêu cầu mới. Chưa thử iPhone vật lý.
+
 ## 17/11/2026 — Nút tròn nép cạnh Safari, menu gọn và tránh giỏ hàng
 
 - **Yêu cầu:** Nút tròn kiểu nút trợ năng, nép cạnh khi thu gọn, kéo lên/xuống được; menu dọc nhỏ và tự thu khi bấm Giỏ hàng. Khi mở giỏ, nút chuyển xuống dưới khung để không bị che.

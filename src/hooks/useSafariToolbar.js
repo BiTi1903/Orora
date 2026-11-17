@@ -21,11 +21,6 @@ export default function useSafariToolbar(preview=false,ignoreToolbar=false){
    const safari=ios&&/Safari/.test(navigator.userAgent)&&!/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
    const toolbar=!ignoreToolbar&&safari&&!navigator.standalone&&!window.matchMedia('(display-mode: standalone)').matches;
    const viewport=window.visualViewport;
-   const probe=toolbar&&window.CSS?.supports('height','100lvh')?document.createElement('div'):null;
-   if(probe){
-    probe.style.cssText='position:fixed;visibility:hidden;pointer-events:none;width:0;height:100lvh;top:0;left:0;';
-    probe.setAttribute('aria-hidden','true');document.body.append(probe);
-   }
    let frame=null,directionY=Math.max(0,window.scrollY),up=false,layoutWidth=window.innerWidth,largestHeight=window.innerHeight;
    const measure=()=>{
     const y=Math.max(0,window.scrollY),delta=y-directionY;
@@ -37,7 +32,7 @@ export default function useSafariToolbar(preview=false,ignoreToolbar=false){
     largestHeight=Math.max(largestHeight,window.innerHeight,height);
     const keyboard=acceptsKeyboard(document.activeElement)||largestHeight-height>Math.max(120,largestHeight*.2);
     const zoomed=viewport&&Math.abs(viewport.scale-1)>.01;
-    const expandedToolbar=toolbar&&(up||y<8||(probe&&probe.getBoundingClientRect().height-height>24));
+    const expandedToolbar=toolbar&&(up||y<8);
     setHidden(Boolean(keyboard||zoomed||expandedToolbar));
    };
    const schedule=()=>{if(frame===null)frame=requestAnimationFrame(()=>{frame=null;measure();});};
@@ -45,7 +40,7 @@ export default function useSafariToolbar(preview=false,ignoreToolbar=false){
    window.addEventListener('scroll',schedule,{passive:true});window.addEventListener('resize',schedule);
    viewport?.addEventListener('resize',schedule);viewport?.addEventListener('scroll',schedule);
    document.addEventListener('focusin',schedule);document.addEventListener('focusout',schedule);
-   disconnect=()=>{cancelAnimationFrame(frame);probe?.remove();window.removeEventListener('scroll',schedule);window.removeEventListener('resize',schedule);viewport?.removeEventListener('resize',schedule);viewport?.removeEventListener('scroll',schedule);document.removeEventListener('focusin',schedule);document.removeEventListener('focusout',schedule);};
+   disconnect=()=>{cancelAnimationFrame(frame);window.removeEventListener('scroll',schedule);window.removeEventListener('resize',schedule);viewport?.removeEventListener('resize',schedule);viewport?.removeEventListener('scroll',schedule);document.removeEventListener('focusin',schedule);document.removeEventListener('focusout',schedule);};
   };
   connect();media.addEventListener('change',connect);
   return()=>{disconnect();media.removeEventListener('change',connect);};
