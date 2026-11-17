@@ -2,6 +2,16 @@
 
 Ghi mọi lần sửa vào file này, mục mới nhất ở trên. Ngày ghi theo giờ Việt Nam; giữ lại lịch sử cũ. Mỗi mục nêu lý do, thay đổi, file liên quan, kiểm tra và ảnh hưởng đến database. Không ghi mật khẩu, token, khóa API hoặc dữ liệu khách hàng.
 
+## 17/11/2026 — Phản hồi nhấn toàn bộ nút và hiệu ứng mở form chat
+
+- **Yêu cầu:** Bổ sung hiệu ứng khi nhấn toàn bộ nút website/admin và hiệu ứng bật form chat.
+- **Nút:** Bỏ rule scale khi nhấn riêng của kính để bật/tắt có hiệu lực thống nhất. Dùng chung button-press.js và ButtonPressFeedback, lắng nghe click ở document để hỗ trợ cả chuột/chạm/bàn phím, nút thêm giỏ có stopPropagation và nút trong iframe Builder. Nhấn xuống nhẹ rồi trở về; chat nảy rõ hơn. Animate individual scale nên giữ transform hover/kéo giãn đang có; hủy lượt cũ khi nhấn liên tục, không cộng dồn. Bỏ qua nút disabled/inert, giữ chặn click khi kéo nút chat. Tự tắt khi prefers-reduced-motion; không thêm vòng đo/RAF liên tục.
+- **Mở chat:** ChatChannelChooser và ChatPanel dùng chung useChatEntrance, khung nhỏ đi từ tâm nút chat tới vị trí hoàn chỉnh bằng một hoạt ảnh transform/opacity 420ms mặc định. Chạy trước khi vẽ, hủy khi đóng/unmount và không phát lại khi cập nhật hội thoại. Dùng tọa độ tương đối theo cạnh khung để giữ điểm xuất phát khi font Safari làm đổi chiều cao; giữ focus preventScroll và cơ chế viewport của panel. Chưa thay đổi hoạt ảnh đóng form chat.
+- **Admin:** Navbar → Thiết lập mục → Hiệu ứng nút, kính và khung chat có bật/tắt nhấn nút, thời gian 120–500ms, độ nhún 2–10%, cùng bật/tắt mở form chat và thời gian 200–700ms. Có nút nhấn thử và mở thử form; preview và trang thật dùng chung code/config navStyles.surfaces. Lưu theo leaf patch, giữ blur/các thiết lập không liên quan; không có cấu hình nhấn nút trùng ở trang Chat AI.
+- **Kiểm tra:** Đang cập nhật kết quả kiểm tra cuối trước commit.
+- **Kiểm tra:** 230 bài Node, lint/build/bundle đạt trên mã cuối (entry/static JS gzip 135.115 byte, dưới giới hạn 330.000). 24 bài hồi quy admin/checkout và 14 bài hành vi ở 390/1440px đạt. Ma trận cuối có 21 bài đạt trên Chromium Android, WebKit iOS và WebKit desktop (giả lập trình duyệt, không phải điện thoại thật): click/Space/Enter, SVG và stopPropagation, nhấn liên tục không cộng hoạt ảnh, giữ transform kéo/hover, tắt hiệu ứng cả khi kính bật, reduced-motion, nguồn mở form/AI và đóng sớm, preview và lưu đúng leaf patch. Test Safari chờ animation.ready trước khi lấy mẫu frame; lỗi font làm lệch tâm nguồn đã được sửa bằng tọa độ tương đối. Không gọi dịch vụ chat thật.
+- **Database:** Không đổi API, schema, rules hoặc dữ liệu/config production. Tùy chọn mới chỉ ghi khi admin chủ động lưu; kiểm thử dùng dữ liệu mẫu và chặn API, không tạo đơn/gửi chat hoặc ghi production.
+
 ## 17/11/2026 — Làm gọn admin, thanh lưu mobile và đồng bộ giao diện website
 
 - **Yêu cầu:** Rà các điểm rối của admin/Cửa hàng/Builder, chuẩn hóa CSS và sửa các bất hợp lý ở footer, hero, thẻ sản phẩm mobile, thang chữ và form tra cứu. Tiếp tục bảo toàn dữ liệu đã lưu.

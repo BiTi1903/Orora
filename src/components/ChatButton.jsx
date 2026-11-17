@@ -1,3 +1,4 @@
+import {animateButtonPress, cancelButtonPress} from "../lib/button-press";
 import ChatChannelChooser from "./ChatChannelChooser";
 import ChatHint from "./ChatHint";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
@@ -64,6 +65,7 @@ function ChatButton() {
       onDragStart={(event) => event.preventDefault()}
       onPointerDown={(event) => {
         if (event.button !== 0 || !event.isPrimary) return;
+        cancelButtonPress(event.currentTarget, "orora-chat-press");
         const rect = event.currentTarget.getBoundingClientRect();
         suppressClick.current = false;
         drag.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, x: rect.left, y: rect.top, moved: false };
@@ -87,6 +89,7 @@ function ChatButton() {
         if (event.detail !== 0 && suppressClick.current) {
           event.preventDefault(); event.stopPropagation(); suppressClick.current = false; return;
         }
+        animateButtonPress(event.currentTarget,true);
         if (open) setHintEpoch(Date.now());
         if (!open) setChannel("choose");
         setOpen((current) => !current);
@@ -98,7 +101,7 @@ function ChatButton() {
     >
       <span className="chat-icon" aria-hidden="true">{open ? "×" : "✦"}</span>
       <span className="chat-text">Trò chuyện cùng ORORA</span>
-    </button>{!open && <ChatHint open={false} dismissed={false} settings={settings} anchor={button} position={position} startedAt={hintEpoch} onOpen={() => { setChannel("choose");setOpen(true); }} />}</div>{open && (channel === "choose" ? <ChatChannelChooser dockSide={popupSide} settings={settings} id={panelId} zalo={zalo} onAI={() => setChannel("ai")} onClose={close} /> : <ChatPanel anchorY={position?.y} panelWidth={home.navStyles?.surfaces?.chatPanelWidth} panelHeight={home.navStyles?.surfaces?.chatPanelHeight} dockSide={popupSide} id={panelId} settings={settings} conversation={conversation} onClose={close} contactLinks={zalo ? [{ href: zalo }] : conversation.metadata?.links?.filter((link) => ["phone", "facebook", "contact"].includes(link.id)) || []} />)}</>
+    </button>{!open && <ChatHint open={false} dismissed={false} settings={settings} anchor={button} position={position} startedAt={hintEpoch} onOpen={() => { setChannel("choose");setOpen(true); }} />}</div>{open && (channel === "choose" ? <ChatChannelChooser anchor={button} motion={home.navStyles?.surfaces} dockSide={popupSide} settings={settings} id={panelId} zalo={zalo} onAI={() => setChannel("ai")} onClose={close} /> : <ChatPanel anchor={button} motion={home.navStyles?.surfaces} anchorY={position?.y} panelWidth={home.navStyles?.surfaces?.chatPanelWidth} panelHeight={home.navStyles?.surfaces?.chatPanelHeight} dockSide={popupSide} id={panelId} settings={settings} conversation={conversation} onClose={close} contactLinks={zalo ? [{ href: zalo }] : conversation.metadata?.links?.filter((link) => ["phone", "facebook", "contact"].includes(link.id)) || []} />)}</>
   );
 }
 

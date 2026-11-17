@@ -1,3 +1,4 @@
+import useChatEntrance from "../hooks/useChatEntrance";
 import { chatAppearanceVars, CHAT_LABELS } from "../lib/chat-appearance";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -19,7 +20,7 @@ function ChatLink({ href, children, className, onNavigate }) {
   return safe.startsWith("/") ? <Link to={safe} className={className} onClick={onNavigate}>{children}</Link> : <a href={safe} className={className} target={safe.startsWith("https:") ? "_blank" : undefined} rel="noopener noreferrer">{children}</a>;
 }
 
-export default function ChatPanel({ id, settings, conversation, onClose, contactLinks = [], dockSide='right', anchorY, panelWidth=340, panelHeight=520 }) {
+export default function ChatPanel({ id, settings, conversation, onClose, contactLinks = [], dockSide='right', anchorY, panelWidth=340, panelHeight=520, anchor, motion }) {
   const { messages, sending, error, send, retry, reset, metadata } = conversation;
   const [input, setInput] = useState("");
   const root = useRef(null), heading = useRef(null), log = useRef(null), followLatest = useRef(true);
@@ -46,6 +47,7 @@ export default function ChatPanel({ id, settings, conversation, onClose, contact
     return () => { viewport?.removeEventListener("resize", measure); viewport?.removeEventListener("scroll", measure); window.removeEventListener("resize", measure); };
   }, [anchorY,panelHeight]);
   useLayoutEffect(() => { if (log.current && followLatest.current) log.current.scrollTop = log.current.scrollHeight; }, [messages, sending, error]);
+  useChatEntrance(root,anchor,motion);
   const submit = (text, quick = false) => { if (send(text)) { followLatest.current = true; setInput(""); if (quick) log.current?.focus({ preventScroll: true }); } };
   return <section ref={root} id={id} data-dock-side={dockSide} className="orora-chat-panel" role="dialog" aria-labelledby={titleId} style={{...chatAppearanceVars(settings),"--chat-panel-width":`${Math.max(280,Math.min(440,Number(panelWidth)||340))}px`}}>
     <header className="orora-chat-heading"><span className="orora-chat-avatar" aria-hidden="true">✦</span><div><h2 ref={heading} id={titleId} tabIndex={-1}>{settings.title}</h2><p><span className="orora-chat-status-dot" />{mode === "ai" ? label("statusAi") : label("statusGuided")}</p></div><button type="button" className="orora-chat-icon-button" onClick={() => { followLatest.current = true; reset(); setInput(""); }} aria-label="Bắt đầu cuộc trò chuyện mới" title="Cuộc trò chuyện mới" disabled={!messages.length && !input}>↺</button><button type="button" className="orora-chat-icon-button" onClick={onClose} aria-label="Đóng chat">×</button></header>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import {installButtonPressFeedback} from "../../lib/button-press";
 import {applyGlassSurfaces,watchGlassTabs} from "../../lib/glass-surfaces";
 import "../../styles/mobile-glass.css";
 
@@ -72,7 +73,8 @@ export default function PreviewFrame({ device, children, surfaces, zoom="fit", s
     if (!frameDocument) return;
     const clear=applyGlassSurfaces(frameDocument.documentElement, JSON.parse(surfaceKey));
     const stopTabs=watchGlassTabs(frameDocument);
-    return()=>{stopTabs();clear();};
+    const stopPress=installButtonPressFeedback(frameDocument,JSON.parse(surfaceKey));
+    return()=>{stopPress();stopTabs();clear();};
   }, [frameDocument, surfaceKey]);
 
   useEffect(()=>{

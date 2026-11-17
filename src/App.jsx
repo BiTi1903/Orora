@@ -1,3 +1,4 @@
+import ButtonPressFeedback from './components/ButtonPressFeedback';
 import ShopCart from './components/ShopCart';
 import MobileGlass from './components/MobileGlass';
 import MobileShopNav from "./components/MobileShopNav";
@@ -65,6 +66,7 @@ function App() {
   return (
     <>
 
+      <ButtonPressFeedback settings={home.navStyles?.surfaces} />
       <SiteAnalytics />
       <Seo />
       <ScrollToTop />

@@ -113,3 +113,8 @@ button[aria-busy="true"]::before {
  }
  .shop-cart.orora-modal[open] { max-height:min(85vh,var(--modal-available-height)); max-height:min(85dvh,var(--modal-available-height)); }
 }
+
+/* Feedback uses individual scale, preserving hover and drag transforms. */
+@media(prefers-reduced-motion:no-preference) {
+ html:not([data-button-press="off"]) :is(button,input[type="button"],input[type="submit"],input[type="reset"],[role="button"],a[class*="button"],a[class*="btn"],.product-contact-actions a,.orora-chat-channel-options a,.mobile-shop-nav a,.purchase-facebook,.purchase-tiktok):not(:disabled):not([aria-disabled="true"]):not(.is-dragging):not([data-press-preview]):active { scale:var(--button-press-scale,.96); }
+}
