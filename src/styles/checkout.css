@@ -50,3 +50,12 @@
 @media(max-width:600px){ .checkout-form .order-field-row { grid-template-columns:minmax(0,1fr); gap:0; } .order-form-modal .orora-modal-heading h2 { font-size:18px; } }
 
 .checkout-form { margin:0; padding:0; border:0; border-radius:0; background:transparent; font-size:13px; }
+
+.order-success-modal .order-received { font-size:var(--receipt-size,13px); }
+.order-success-modal .order-received-details { margin:12px 0; padding-top:10px; }
+.order-success-modal .order-received-details dl { gap:6px; }
+.order-success-modal .order-received-details dl > div { font-size:var(--receipt-size,13px); line-height:1.5; }
+.order-success-modal .order-received-details h3 { font-size:14px; margin-bottom:8px; }
+.order-receipt-buttons { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+.order-receipt-buttons > :is(a,button) { display:inline-flex; align-items:center; justify-content:center; min-height:44px; border:1px solid var(--line); padding:8px 12px; border-radius:12px; background:#fff; color:var(--rose-deep); text-decoration:none; font:inherit; }
+.order-receipt-actions small { display:block; line-height:1.5; color:var(--plum-soft); }

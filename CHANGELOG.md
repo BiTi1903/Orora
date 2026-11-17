@@ -1,3 +1,11 @@
+## 17/11/2026 — Đơn thành công gọn hơn, liên hệ xác nhận và lưu ảnh đơn
+
+- Thu nhỏ chữ/khoảng cách phần thông tin đơn sau đặt hàng. Thêm nút xác nhận qua Zalo/Facebook từ cấu hình liên hệ hiện có; link không hợp lệ hoặc chưa cấu hình không được hiển thị, không tự gửi tin nhắn.
+- Nút Lưu ảnh đơn hàng tạo PNG ngay trong trình duyệt, gồm mã đơn, sản phẩm/dung tích/số lượng, người nhận/điện thoại/địa chỉ, phương thức thanh toán và các số tiền. Tiền chưa xác định ghi Xác nhận sau; ảnh ghi rõ đang chờ xác nhận, chưa xác nhận thanh toán. Không gửi dữ liệu ảnh tới dịch vụ ngoài, không thêm thư viện chụp DOM. Có trạng thái tạo ảnh/lỗi và hướng dẫn nơi tải về trên iPhone.
+- Admin: Form đặt hàng → Sau khi đặt hàng thành công có chỉnh nhãn hướng dẫn/nút, cỡ chữ thông tin 12–16px và preview nút dùng chung component. Liên hệ lấy Zalo trong contactActions/số footer và Facebook cửa hàng/footer.
+- Database: không đổi API, schema, rules hoặc dữ liệu production; các tùy chỉnh dùng cấu hình purchaseOptions hiện có khi admin chủ động lưu.
+- Kiểm tra: 235 test Node, lint/build/bundle đạt; 5 test UI tại 390px đạt (checkout/editor và tải PNG), thêm 2 test tải PNG trên WebKit iOS/Chromium Android đạt. Kiểm tra chữ ký file PNG, tên file, ảnh dài đủ chứa địa chỉ nhiều dòng và link liên hệ. Chưa thử tải trên iPhone vật lý.
+
 ## 17/11/2026 — Retry kết nối mail và phục hồi lượt gửi bị gián đoạn
 
 - Email đơn hàng thử lại tối đa một lần khi transport xác nhận lỗi kết nối trước khi gửi; chỉ retry nếu lượt đầu không quá 16 giây, dành thời gian ghi kết quả trong giới hạn function. Không retry lỗi xác thực, từ chối SMTP hay kết quả không rõ.
