@@ -1,10 +1,8 @@
-import {useState} from 'react';
 import {SettingGroup,StyleTypographyBlock,ColorField} from './ui';
 import {NAV_TARGETS,NAV_ICONS,mobileNavItems,mobileNavSettings} from '../../lib/mobile-shop-nav';
 import MobileShopNav from '../../components/MobileShopNav';
 
 export default function MobileNavSettings({navbar,onChange}){
- const [previewSafari,setPreviewSafari]=useState(false);
  const value=navbar.navStyles?.mobile||{},patch=next=>onChange({navStyles:{...navbar.navStyles,mobile:{...value,...next}}});
  const items=Array.isArray(value.items)?value.items:mobileNavItems(mobileNavSettings(value));
  const edit=(index,next)=>patch({items:items.map((item,i)=>i===index?{...item,...next}:item)});
@@ -38,7 +36,6 @@ export default function MobileNavSettings({navbar,onChange}){
    {[['height','Chiều cao tối thiểu (px)',64,56,88],['iconSize','Kích thước biểu tượng (px)',22,16,28]].map(([key,label,fallback,min,max])=><div className="builder-field" key={key}><label>{label}<input type="number" min={min} max={max} value={value[key]??fallback} onChange={event=>patch({[key]:Number(event.target.value)})}/></label></div>)}
    <StyleTypographyBlock title="Chữ trên thanh điều hướng" style={value.textStyle||{}} onStyleChange={next=>patch({textStyle:{...value.textStyle,...next}})}/>
   </details>
-  <label className="admin-check"><input type="checkbox" role="switch" checked={previewSafari} onChange={e=>setPreviewSafari(e.target.checked)}/>Xem thử kiểu Safari</label>
-  <MobileShopNav preview previewSafari={previewSafari} previewData={{...navbar,loading:false}}/>
+  <MobileShopNav preview previewData={{...navbar,loading:false}}/>
  </SettingGroup>;
 }

@@ -4,7 +4,7 @@ test('mobile nav appears as soon as there is room below the ticker and no deskto
  await mount(page,`import Nav from '/src/components/MobileShopNav.jsx';import Cart from '/src/components/ShopCart.jsx';${render("R.createElement(R.Fragment,null,R.createElement('main',null,R.createElement('section',{className:'hero',style:{height:600}},'Hero'),R.createElement('div',{className:'marquee',style:{height:50}},'Dải chữ'),R.createElement('div',{style:{height:2800}},'Nội dung')),R.createElement(Cart),R.createElement(Nav))")}`,{'hooks/useHomeContent.js':'export default function home(){return {loading:false,navStyles:{mobile:{safariLayout:"bar"}}}}','hooks/useProducts.js':'export default function products(){return {products:[],loading:false}}'});
  const nav=page.locator('.mobile-shop-nav');
  if(page.viewportSize().width>768){await expect(nav).toBeHidden();await expect(page.locator('.desktop-cart')).toBeVisible();return;}
- await expect(page.locator('.desktop-cart')).toBeHidden();await expect(nav).toBeHidden();expect(await page.evaluate(()=>document.documentElement.classList.contains('has-mobile-shop-nav'))).toBe(false);
+ await expect(page.locator('.desktop-cart')).toBeHidden();await expect(nav).toBeHidden();expect(await page.evaluate(()=>document.documentElement.classList.contains('has-mobile-shop-nav'))).toBe(true);
  const boundary=await page.locator('.marquee').evaluate(el=>el.getBoundingClientRect().bottom+window.scrollY)-page.viewportSize().height+(await nav.evaluate(el=>el.offsetHeight))+12;await page.evaluate(y=>window.scrollTo(0,y-10),boundary);await expect(nav).toBeHidden();await page.evaluate(y=>window.scrollTo(0,y+10),boundary);await expect(nav).toBeVisible();expect((await page.locator('.marquee').boundingBox()).y+50).toBeGreaterThan(0);await expect.poll(()=>page.evaluate(()=>document.documentElement.classList.contains('has-mobile-shop-nav'))).toBe(true);await page.evaluate(()=>window.scrollTo(0,0));await expect(nav).toBeHidden();await expect(page.locator('.desktop-cart')).toBeHidden();
 });
 
@@ -19,7 +19,9 @@ test('iPhone Safari nav follows scroll direction regardless of browser chrome he
  const nav=page.locator('.mobile-shop-nav');await expect(nav).toBeHidden();
  await page.evaluate(()=>window.scrollTo(0,300));await expect(nav).toBeVisible();
  await page.evaluate(()=>{window.visualViewport.height=window.innerHeight;window.visualViewport.dispatchEvent(new Event('resize'));});await expect(nav).toBeVisible();
+ const documentHeight=await page.evaluate(()=>document.documentElement.scrollHeight);
  await page.evaluate(()=>window.scrollTo(0,260));await expect(nav).toBeHidden();
+ expect(await page.evaluate(()=>document.documentElement.scrollHeight)).toBe(documentHeight);
  await page.evaluate(()=>window.scrollTo(0,340));await expect(nav).toBeVisible();
  await page.getByLabel('Nhập thử').evaluate(el=>el.focus({preventScroll:true}));await expect(nav).toBeHidden();
 });

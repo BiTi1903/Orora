@@ -1,3 +1,11 @@
+## 17/11/2026 — Dọn code thanh bên và ổn định khoảng đệm thanh dưới
+
+- Xóa state, effect, JSX, hook kéo và CSS của thanh bên đã bỏ; bỏ tùy chọn preview Safari không còn tác dụng cùng các ngoại lệ nhấn/đóng giỏ dành riêng cho nút bên.
+- Dùng chung nhận diện Safari giữa hook hướng cuộn và component; thống nhất loại trừ trình duyệt iOS khác và standalone.
+- Giữ khoảng đệm cuối trang khi thanh dưới tạm ẩn, tránh đổi chiều cao nội dung theo hướng cuộn. Giữ nguyên các điều khiển màu/chữ/icon trong admin.
+- Database: không đổi dữ liệu, schema, rules hoặc tự lưu cấu hình production; giữ các trường cấu hình cũ để không ảnh hưởng dữ liệu.
+- Kiểm tra: 232 test Node, lint/build/bundle đạt (gzip 137.261 byte); 8 test UI thanh dưới và giỏ hàng tại 390px đạt. Bổ sung kiểm tra chiều cao tài liệu không đổi khi Safari ẩn thanh; cập nhật kỳ vọng khoảng đệm luôn được giữ. Chưa thử trên iPhone vật lý.
+
 ## 17/11/2026 — Bỏ thanh bên Safari, hiện thanh dưới theo hướng cuộn
 
 - Theo yêu cầu mới, ngừng dùng menu bên trên trang thật và preview, kể cả cấu hình cũ đã chọn kiểu bên; bỏ bộ chỉnh thanh bên trong admin.
