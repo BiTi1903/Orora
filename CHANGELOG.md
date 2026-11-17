@@ -1,3 +1,11 @@
+## 17/11/2026 — Retry kết nối mail và phục hồi lượt gửi bị gián đoạn
+
+- Email đơn hàng thử lại tối đa một lần khi transport xác nhận lỗi kết nối trước khi gửi; chỉ retry nếu lượt đầu không quá 16 giây, dành thời gian ghi kết quả trong giới hạn function. Không retry lỗi xác thực, từ chối SMTP hay kết quả không rõ.
+- Khi có yêu cầu gửi tiếp, sending quá 5 phút có timestamp hợp lệ được chuyển sang unknown ở đơn và sự kiện cũ, không gửi lại trong lượt phục hồi. Admin cần kiểm tra Microsoft và xác nhận gửi lại bằng yêu cầu mới. Không có cron quét nền; bản ghi cũ không timestamp vẫn bị chặn để tránh gửi trùng.
+- MailWriter cảnh báo nguy cơ gửi trùng khi kết quả cũ chưa rõ. Kết quả lượt cũ không ghi đè trạng thái lượt mới.
+- Database: dùng trường/trạng thái hiện có, không migration, không sửa rules/config production; chỉ cập nhật trạng thái gửi qua luồng xử lý đơn được yêu cầu. Không gửi mail thật trong kiểm thử. Cấu hình Exchange/quota cần kiểm tra riêng trên Microsoft.
+- Kiểm tra: 235 test Node đạt, gồm retry thành công/giới hạn lượt, không retry kết quả mơ hồ, chặn sending còn hạn và phục hồi sending hết hạn; lint/build/bundle đạt. Test dùng DB trong bộ nhớ và mail giả, không gửi mail hoặc sửa dữ liệu production. Chưa chạy UI trình duyệt cho thay đổi MailWriter.
+
 ## 17/11/2026 — Dọn code thanh bên và ổn định khoảng đệm thanh dưới
 
 - Xóa state, effect, JSX, hook kéo và CSS của thanh bên đã bỏ; bỏ tùy chọn preview Safari không còn tác dụng cùng các ngoại lệ nhấn/đóng giỏ dành riêng cho nút bên.

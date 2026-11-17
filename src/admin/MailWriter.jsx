@@ -2,10 +2,17 @@ import { useEffect, useId, useRef, useState } from "react";
 import { auth } from "../lib/firebaseAuth";
 import { orderRequest, MAIL_STATES } from "./order-api";
 
+function mailTime(value) {
+  if (!value) return NaN;
+  if (typeof value === "object" && (value._seconds ?? value.seconds) != null) return Number(value._seconds ?? value.seconds) * 1000;
+  return new Date(value).getTime();
+}
 export default function MailWriter({ mode, onModeChange, value, onChange, onChooseTemplate, request, onApply, onSendPrivate, privateRecipients, privateSendLabel, privateSendDisabled, disabled, allowedModes = ["welcome_auto", "order_auto", "private"], title = "Viết Thư", initialOrderId = "", purpose = "combined", onSent }) {
   const fieldId = useId();
   const canSendOrder = mode === "order_auto" && purpose !== "automation";
   const lockedOrder = canSendOrder && Boolean(initialOrderId);
+  const [checkedAt,setCheckedAt]=useState(()=>Date.now());
+  useEffect(()=>{const timer=setInterval(()=>setCheckedAt(Date.now()),30000);return()=>clearInterval(timer);},[]);
   const [busyAction,setBusyAction]=useState("");
   const [localBusy, setLocalBusy] = useState(false);
   const [notice, setNotice] = useState(null);
@@ -49,9 +56,9 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
       {mode !== "private" && purpose !== "send" && <div><button type="button" className="admin-btn primary" aria-busy={localBusy && busyAction === "save"} disabled={!valid} onClick={() => perform(() => onApply(mode, value),"save")}>Lưu làm thư {mode === "order_auto" ? "đơn hàng" : "đăng ký"} tự động</button><p className="admin-muted">Lưu chỉ áp dụng cho các lần gửi tự động mới. Gửi thử hoặc gửi cho một đơn không thay đổi cấu hình tự động.</p></div>}
       {mode === "private" && <div className="admin-form"><button type="button" className="admin-btn primary" aria-busy={localBusy && busyAction === "private"} disabled={!valid || privateSendDisabled} onClick={() => perform(() => onSendPrivate(value),"private")}>{privateSendLabel}</button></div>}
       {canSendOrder && <div className="writer-block admin-form">
-        <div className="admin-actions"><button type="button" className="admin-btn primary" aria-busy={localBusy && busyAction === "order"} disabled={!valid || !selectedOrder?.customer.email || ["sending", "unknown"].includes(selectedOrder?.confirmationMail?.state)} onClick={() => {
-          const confirmResend = selectedOrder.confirmationMail?.state === "accepted";
-          if (!window.confirm(`Gửi nội dung đang soạn cho ${selectedOrder.customer.email}, đơn ${selectedOrder.code}?${confirmResend ? " Đã nhận thư trước đó của đơn này; đây là lần gửi thêm." : ""}`)) return;
+        <div className="admin-actions"><button type="button" className="admin-btn primary" aria-busy={localBusy && busyAction === "order"} disabled={!valid || !selectedOrder?.customer.email || (selectedOrder?.confirmationMail?.state === "sending" && !(mailTime(selectedOrder.confirmationMail.updatedAt) > 0 && checkedAt - mailTime(selectedOrder.confirmationMail.updatedAt) > 300000))} onClick={() => {
+          const confirmResend = ["accepted", "unknown"].includes(selectedOrder.confirmationMail?.state);
+          if (!window.confirm(`Gửi nội dung đang soạn cho ${selectedOrder.customer.email}, đơn ${selectedOrder.code}?${confirmResend ? " Có thể đã gửi thư trước đó. Chỉ tiếp tục sau khi kiểm tra thư đã gửi trên Microsoft; gửi lại có thể tạo thư trùng." : ""}`)) return;
           perform(async () => {
             const signature = JSON.stringify({ orderId, value });
             if (attempt.current?.signature !== signature) attempt.current = { signature, id: crypto.randomUUID() };

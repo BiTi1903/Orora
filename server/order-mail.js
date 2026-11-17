@@ -29,11 +29,22 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
   const claimed = await db.runTransaction(async (tx) => {
     const [order, event, template] = await tx.getAll(orderRef, eventRef, db.collection("newsletterSettings").doc("orderConfirmation"));
     if (!order.exists) throw Object.assign(new Error("Không tìm thấy đơn hàng."), { status: 404 });
-    if (event.exists) return null;
+
     const data = order.data();
     if (!validOrderEmail(data.customer?.email)) throw Object.assign(new Error("Đơn này chưa có email người mua hợp lệ."), { status: 400 });
-    const previous = data.confirmationMail?.state;
-    if (["sending", "unknown"].includes(previous)) throw Object.assign(new Error("Kết quả gửi trước chưa rõ hoặc đang xử lý. Kiểm tra thư đã gửi trên Microsoft trước khi gửi lại."), { status: 409 });
+    let previous = data.confirmationMail?.state;
+    const stamp = data.confirmationMail?.updatedAt;
+    const timestamp = stamp?.toMillis?.() ?? (stamp ? new Date(stamp).getTime() : NaN);
+    const stale = previous === "sending" && Number.isFinite(timestamp) && Date.now() - timestamp > 5 * 60 * 1000;
+    if (stale) {
+      const updatedAt = new Date();
+      const oldId = data.confirmationMail?.eventId;
+      if (oldId && /^(confirmation-auto|manual-[a-f0-9-]{36})$/i.test(oldId)) tx.set(orderRef.collection("mailEvents").doc(oldId), { state: "unknown", errorCode: "mail_smtp_outcome_unknown", errorMessage: "Quá thời gian xử lý. Kiểm tra Microsoft trước khi gửi lại.", updatedAt }, { merge: true });
+      tx.set(orderRef, { confirmationMail: { ...data.confirmationMail, state: "unknown", updatedAt } }, { merge: true });
+      return { expired: true };
+    }
+    if (event.exists) return null;
+    if ((previous === "sending" || previous === "unknown" && !(manual && confirmResend))) throw Object.assign(new Error("Kết quả gửi trước chưa rõ hoặc đang xử lý. Kiểm tra thư đã gửi trên Microsoft trước khi gửi lại."), { status: 409 });
     if (manual && previous === "accepted" && !confirmResend) throw Object.assign(new Error("Thư đã được Microsoft nhận. Cần xác nhận gửi lại để tránh gửi trùng."), { status: 409 });
     let message; let sourceTemplate; let templateError = false;
     try { sourceTemplate = manual && customMessage ? validateOrderTemplate(customMessage) : template.exists ? validateOrderTemplate(template.data()) : DEFAULT_ORDER_MESSAGE; message = renderOrderMessage(sourceTemplate, data); }
@@ -45,11 +56,18 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
     return { recipient: data.customer.email, message, templateError, snapshot };
   });
   if (!claimed) return { duplicate: true };
+  if (claimed.expired) return { state: "unknown" };
   if (claimed.templateError) return { state: "failed" };
   let state = "accepted"; let errorCode = ""; let errorMessage = ""; let tracking = {};
   try {
     if (typeof sendMail !== "function") throw new Error("mail_configuration_missing");
-    tracking = safeMailTracking(await sendMail(claimed.recipient, claimed.message));
+    const started = Date.now();
+    try { tracking = safeMailTracking(await sendMail(claimed.recipient, claimed.message)); }
+    catch (error) {
+      if (error.message !== "mail_smtp_connection_failed" || Date.now() - started > 16000) throw error;
+      // A single proven pre-submission retry, leaving time for the final write.
+      tracking = safeMailTracking(await sendMail(claimed.recipient, claimed.message));
+    }
   } catch (error) {
     tracking = safeMailTracking(error.mailTracking);
     const known = ["mail_configuration_missing", "mail_transport_invalid", "mail_auth_failed", "mail_send_failed", "mail_smtp_auth_failed", "mail_smtp_connection_failed"].includes(error.message);
@@ -57,11 +75,12 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
     ({ errorCode, errorMessage } = describeMailError(error));
   }
   const updatedAt = new Date();
-  // If writing the result fails, leave 'sending' in place; never automatically resend.
+  // An interrupted write is recovered conservatively on the next send request.
   await db.runTransaction(async (tx) => {
+    const latest = await tx.get(orderRef);
     if (state === "accepted") await recordTemplateUse(tx, db, claimed.snapshot);
     tx.set(eventRef, { state, errorCode, errorMessage, ...tracking, updatedAt }, { merge: true });
-    tx.set(orderRef, { confirmationMail: { state, eventId: eventRef.id, updatedAt } }, { merge: true });
+    if (latest.data()?.confirmationMail?.eventId === eventRef.id) tx.set(orderRef, { confirmationMail: { state, eventId: eventRef.id, updatedAt } }, { merge: true });
   });
   return { state, ...(errorCode ? { errorCode, errorMessage } : {}) };
 }
