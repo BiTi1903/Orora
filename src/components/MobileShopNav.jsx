@@ -1,5 +1,6 @@
+import useSideNavDrag from "../hooks/useSideNavDrag";
 import useMobileSafari from "../hooks/useMobileSafari";
-import {useEffect,useState,useLayoutEffect,useRef,useId} from 'react';
+import {useEffect,useState,useLayoutEffect,useRef,useId,useCallback} from 'react';
 import {Link,useLocation} from 'react-router-dom';
 import useSafariToolbar from '../hooks/useSafariToolbar';
 import useHomeContent from '../hooks/useHomeContent';
@@ -16,7 +17,17 @@ export default function MobileShopNav({preview=false,previewData,previewSafari=f
  const s=mobileNavSettings(home.navStyles?.mobile),location=useLocation();
  const safari=useMobileSafari(),sideMode=(preview?previewSafari:safari)&&s.safariLayout!=='bar';
  const [expanded,setExpanded]=useState(false);
+ const [cartOpen,setCartOpen]=useState(()=>!preview&&Boolean(document.querySelector('.shop-cart[open]')));
  const shell=useRef(null),toggle=useRef(null),navId=useId();
+ const collapse=useCallback(()=>setExpanded(false),[]);
+ const dropSize=Math.max(44,Math.min(64,Number(s.safariSize)||52));
+ const dragHandlers=useSideNavDrag({enabled:sideMode,preview,root:shell,size:dropSize,draggable:s.safariDraggable!==false,onCollapse:collapse});
+ useEffect(()=>{
+  if(!sideMode||preview)return;
+  const update=()=>{const open=Boolean(document.querySelector('.shop-cart[open]'));setCartOpen(open);if(open)collapse();};
+  const observer=new MutationObserver(update);observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['open']});
+  const frame=requestAnimationFrame(update);return()=>{cancelAnimationFrame(frame);observer.disconnect();};
+ },[sideMode,preview,collapse]);
  const [cartCount,setCartCount]=useState(()=>{try{const rows=JSON.parse(localStorage.getItem('orora-cart-v1'));return Array.isArray(rows)?rows.reduce((n,r)=>n+(Number.isInteger(r?.quantity)&&r.quantity>0&&r.quantity<=20?r.quantity:0),0):0;}catch{return 0;}});
  useEffect(()=>{const update=e=>setCartCount(Number(e.detail)||0);window.addEventListener('orora-cart-count',update);return()=>window.removeEventListener('orora-cart-count',update);},[]);
  const nav=useRef(null),gesture=useRef(null),suppressClick=useRef(0);
@@ -92,13 +103,14 @@ export default function MobileShopNav({preview=false,previewData,previewSafari=f
  },[expanded,sideMode]);
  if(!enabled&&!preview)return null;
  if(s.enabled===false||!items.length)return null;
- return <div ref={shell} className={sideMode?`safari-side-nav${preview?' is-preview':''}${expanded?' is-expanded':''}${waiting?' is-waiting':''}`:'mobile-shop-nav-shell'} style={sideMode?{...mobileNavTheme(s),'--safari-side-offset':`${Math.max(-180,Math.min(180,Number(s.safariOffset)||0))}px`,'--safari-drop-size':`${Math.max(44,Math.min(64,Number(s.safariSize)||52))}px`,'--safari-expand-duration':`${Math.max(200,Math.min(600,Number(s.safariDuration)||340))}ms`}:undefined} inert={sideMode&&waiting} aria-hidden={sideMode&&waiting||undefined}>
-  {sideMode&&<button ref={toggle} type="button" className="safari-nav-toggle" aria-label={expanded?s.safariCloseLabel:s.safariOpenLabel} aria-expanded={expanded} aria-controls={navId} onClick={()=>setExpanded(v=>!v)}><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d={expanded?'m6 9 6 6 6-6':'M12 2C9 7 4 10 4 15a8 8 0 0 0 16 0c0-5-5-8-8-13ZM8 15a4 4 0 0 0 4 4'}/></svg></button>}
+ return <div ref={shell} className={sideMode?`safari-side-nav${preview?' is-preview':''}${expanded?' is-expanded':''}${waiting?' is-waiting':''}${s.safariAutoTuck===false?' no-auto-tuck':''}`:'mobile-shop-nav-shell'} style={sideMode?{...mobileNavTheme(s),'--safari-side-offset':`${Math.max(-180,Math.min(180,Number(s.safariOffset)||0))}px`,'--safari-drop-size':`${Math.max(44,Math.min(64,Number(s.safariSize)||52))}px`,'--safari-expand-duration':`${Math.max(200,Math.min(600,Number(s.safariDuration)||340))}ms`}:undefined} inert={sideMode&&waiting} aria-hidden={sideMode&&waiting||undefined}>
+  {sideMode&&<button {...dragHandlers} ref={toggle} type="button" className="safari-nav-toggle" style={{background:'transparent',border:0,boxShadow:'none'}} aria-label={cartOpen?s.safariCartCloseLabel:expanded?s.safariCloseLabel:s.safariOpenLabel} aria-expanded={expanded} aria-controls={navId} onClick={()=>{if(!preview&&document.querySelector('.shop-cart[open]')){window.dispatchEvent(new CustomEvent('orora-cart-open',{detail:{toggle:true}}));return;}setExpanded(v=>!v);}}><span className="safari-nav-core"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d={expanded||cartOpen?'M7 7l10 10M17 7 7 17':'M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Z'}/></svg></span></button>}
+
   <nav id={navId} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={reset} onClickCapture={e=>{if(e.nativeEvent.isTrusted&&e.detail!==0&&Date.now()<suppressClick.current){e.preventDefault();e.stopPropagation();}}} ref={nav} className={`mobile-shop-nav${preview?' is-preview':''}${waiting?' is-waiting':''}${sideMode?' is-side':''}`} inert={waiting||(sideMode&&!expanded)} aria-hidden={waiting||(sideMode&&!expanded)||undefined} aria-label={s.title} style={{...mobileNavTheme(s),'--safari-menu-height':`${Math.max(s.height,Math.min(420,items.length*52+10))}px`,gridTemplateColumns:sideMode?'minmax(0,1fr)':`repeat(${items.length},minmax(0,1fr))`}}>
    <span className="mobile-nav-lens" aria-hidden="true"/>
    {items.map(item=>{
     const internal=item.to.startsWith('/'),Tag=internal?Link:'a';
-    return <Tag key={item.id} data-cart-target={item.id==='cart'?'':undefined} {...(internal?{to:preview?'#':item.to}:{href:preview?'#':item.to})} onClick={event=>{if(preview){event.preventDefault();return;}if(s.spin!==false&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches)event.currentTarget.querySelector('svg')?.animate([{transform:'rotate(0deg) scale(1)'},{transform:'rotate(180deg) scale(.8)',offset:.45},{transform:'rotate(360deg) scale(1)'}],{duration:460,easing:'cubic-bezier(.2,.8,.2,1)'});if(item.id==='cart'){event.preventDefault();window.dispatchEvent(new CustomEvent('orora-cart-open',{detail:{toggle:true,source:event.currentTarget.getBoundingClientRect().toJSON()}}));return;}if(sideMode)setExpanded(false);if(item.to==='/')window.scrollTo({top:0,left:0,behavior:'instant'});if(internal&&item.to.startsWith('/#')&&location.pathname==='/')document.getElementById(item.to.slice(2))?.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}} aria-current={location.pathname+location.hash===item.to?'page':undefined}><Icon kind={item.icon}/>{item.id==='cart'&&cartCount>0&&<sup className="cart-count">{cartCount}</sup>}<span style={toCss(s.textStyle)}>{item.label}</span></Tag>;
+    return <Tag key={item.id} data-cart-target={item.id==='cart'?'':undefined} {...(internal?{to:preview?'#':item.to}:{href:preview?'#':item.to})} onClick={event=>{if(preview){event.preventDefault();return;}if(s.spin!==false&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches)event.currentTarget.querySelector('svg')?.animate([{transform:'rotate(0deg) scale(1)'},{transform:'rotate(180deg) scale(.8)',offset:.45},{transform:'rotate(360deg) scale(1)'}],{duration:460,easing:'cubic-bezier(.2,.8,.2,1)'});if(item.id==='cart'){event.preventDefault();if(sideMode)setExpanded(false);window.dispatchEvent(new CustomEvent('orora-cart-open',{detail:{toggle:true,source:event.currentTarget.getBoundingClientRect().toJSON()}}));return;}if(sideMode)setExpanded(false);if(item.to==='/')window.scrollTo({top:0,left:0,behavior:'instant'});if(internal&&item.to.startsWith('/#')&&location.pathname==='/')document.getElementById(item.to.slice(2))?.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}} aria-current={location.pathname+location.hash===item.to?'page':undefined}><Icon kind={item.icon}/>{item.id==='cart'&&cartCount>0&&<sup className="cart-count">{cartCount}</sup>}<span style={toCss(s.textStyle)}>{item.label}</span></Tag>;
    })}
   </nav>
 

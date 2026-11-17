@@ -116,7 +116,7 @@ button[aria-busy="true"]::before {
 
 /* Feedback uses individual scale, preserving hover and drag transforms. */
 @media(prefers-reduced-motion:no-preference) {
- html:not([data-button-press="off"]) :is(button,input[type="button"],input[type="submit"],input[type="reset"],[role="button"],a[class*="button"],a[class*="btn"],.product-contact-actions a,.orora-chat-channel-options a,.mobile-shop-nav a,.purchase-facebook,.purchase-tiktok):not(:disabled):not([aria-disabled="true"]):not(.is-dragging):not([data-press-preview]):active { scale:var(--button-press-scale,.96); }
+ html:not([data-button-press="off"]) :is(button,input[type="button"],input[type="submit"],input[type="reset"],[role="button"],a[class*="button"],a[class*="btn"],.product-contact-actions a,.orora-chat-channel-options a,.mobile-shop-nav a,.purchase-facebook,.purchase-tiktok):not(:disabled):not([aria-disabled="true"]):not(.is-dragging):not(.safari-nav-toggle):not([data-press-preview]):active { scale:var(--button-press-scale,.96); }
 }
 
 .orora-button-icon { display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; vertical-align:middle; line-height:1; }

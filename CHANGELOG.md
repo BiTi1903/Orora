@@ -1,3 +1,11 @@
+## 17/11/2026 — Nút tròn nép cạnh Safari, menu gọn và tránh giỏ hàng
+
+- **Yêu cầu:** Nút tròn kiểu nút trợ năng, nép cạnh khi thu gọn, kéo lên/xuống được; menu dọc nhỏ và tự thu khi bấm Giỏ hàng. Khi mở giỏ, nút chuyển xuống dưới khung để không bị che.
+- **Giao diện và hành vi:** Menu rộng tối đa 148px, hàng có vùng chạm tối thiểu 44px. Tách mặt nút tròn khỏi vùng chạm; kéo dùng pointer capture và requestAnimationFrame, giới hạn trong viewport, chặn click sau kéo. Giỏ mở sẽ tự thu menu, dành khoảng trống phía dưới cho nút; nút chuyển thành Đóng giỏ hàng. Bỏ qua nút này trong xử lý bấm ngoài của giỏ để tránh đóng rồi bật lại. Android giữ thanh dưới hiện có. Tôn trọng giảm chuyển động và trạng thái bàn phím/zoom.
+- **Admin:** Có bật/tắt nép cạnh và kéo nút, nhãn đóng giỏ, giữ chỉnh kích thước/vị trí/tốc độ/màu có sẵn. Preview dùng chung component, đồng bộ chiều rộng menu 148px. Gộp rule kích thước menu để tránh ghi đè CSS trùng.
+- **Kiểm tra:** 232 bài Node đạt, lint/build/bundle đạt (gzip JS đầu trang 138.573 byte, dưới 330.000). Bộ 10 bài UI tại 390px đã đạt trước bước gộp CSS; Lượt cuối trên Chromium Android, WebKit iOS và WebKit desktop: 28 bài đạt, 8 bài bỏ qua đúng viewport; kiểm tra thêm giỏ đầy/menu ở 320px đạt. Có ảnh chụp nút thu gọn, menu và giỏ đầy với dữ liệu mẫu. Chưa thử trên iPhone vật lý.
+- **Database:** Không sửa API, schema, rules hoặc dữ liệu/config production. Cấu hình mới chỉ lưu khi admin chủ động lưu; vị trí kéo giữ trong phiên trang, không tự ghi database. Test dùng fixture/dữ liệu mẫu, không tạo đơn thật.
+
 # Nhật ký thay đổi ORORA
 
 Ghi mọi lần sửa vào file này, mục mới nhất ở trên. Ngày ghi theo giờ Việt Nam; giữ lại lịch sử cũ. Mỗi mục nêu lý do, thay đổi, file liên quan, kiểm tra và ảnh hưởng đến database. Không ghi mật khẩu, token, khóa API hoặc dữ liệu khách hàng.

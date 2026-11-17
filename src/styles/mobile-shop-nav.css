@@ -64,23 +64,37 @@
 @media(max-width:768px) { body:has(.shop-cart.is-modeless[open]) .mobile-shop-nav { z-index:1301; } }
 
 /* Safari uses a compact edge trigger and a vertical list kept inside the viewport. */
-.safari-side-nav { --safari-dock-center:clamp(48px,calc(50vh + var(--safari-side-offset,0px)),calc(100vh - 96px)); position:fixed; z-index:1050; right:max(10px,env(safe-area-inset-right,0px)); top:calc(var(--safari-dock-center) - var(--safari-drop-size,52px) / 2); width:var(--safari-drop-size,52px); height:var(--safari-drop-size,52px); pointer-events:none; }
+.safari-side-nav { --safari-dock-center:clamp(48px,calc(50vh + var(--safari-side-offset,0px)),calc(100vh - 96px)); position:fixed; z-index:1050; right:env(safe-area-inset-right,0px); transition:right .3s ease,top .3s ease; top:calc(var(--safari-dock-center) - var(--safari-drop-size,52px) / 2); width:var(--safari-drop-size,52px); height:var(--safari-drop-size,52px); pointer-events:none; }
 @supports(height:100dvh) { .safari-side-nav { --safari-dock-center:clamp(48px,calc(50dvh + var(--safari-side-offset,0px)),calc(100dvh - 96px)); } }
 .safari-nav-toggle { position:relative; isolation:isolate; display:grid; place-items:center; width:var(--safari-drop-size,52px); height:var(--safari-drop-size,52px); padding:0; border:1px solid var(--shop-nav-border); border-radius:58% 42% 54% 46% / 56% 45% 55% 44%; color:var(--shop-nav-accent); background:var(--shop-nav-bg); background:color-mix(in srgb,var(--shop-nav-bg) var(--shop-nav-opacity),transparent); backdrop-filter:blur(var(--shop-nav-blur)); -webkit-backdrop-filter:blur(var(--shop-nav-blur)); box-shadow:inset 0 1px 0 #fff9,0 6px 20px #68243e24; pointer-events:auto; cursor:pointer; }
 .safari-nav-toggle:focus-visible { outline:2px solid var(--shop-nav-accent); outline-offset:3px; }
-.safari-nav-toggle > svg { width:calc(var(--safari-drop-size,52px) * .48); height:calc(var(--safari-drop-size,52px) * .48); }
-.safari-side-nav .mobile-shop-nav.is-side { position:fixed; left:auto; bottom:auto; right:calc(max(10px,env(safe-area-inset-right,0px)) + var(--safari-drop-size,52px) + 8px); top:clamp(24px,calc(var(--safari-dock-center) - var(--safari-menu-height,270px) / 2),calc(100vh - min(var(--safari-menu-height,270px),calc(100vh - 48px)) - 24px)); display:grid; width:min(200px,calc(100vw - var(--safari-drop-size,52px) - 32px - env(safe-area-inset-right,0px) - env(safe-area-inset-left,0px))); min-width:0; min-height:var(--shop-nav-height,64px); max-height:calc(100vh - 48px); padding:5px; border:1px solid var(--shop-nav-border); border-radius:24px; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; touch-action:pan-y; opacity:0; visibility:hidden; pointer-events:none; transform:scale(.8,.08); transform-origin:right center; transition:transform var(--safari-expand-duration,340ms) cubic-bezier(.16,1,.3,1),opacity .2s ease,visibility .2s; }
+.safari-side-nav .mobile-shop-nav.is-side { position:fixed; left:auto; bottom:auto; right:calc(max(10px,env(safe-area-inset-right,0px)) + var(--safari-drop-size,52px) + 8px); top:clamp(24px,calc(var(--safari-dock-center) - var(--safari-menu-height,270px) / 2),calc(100vh - min(var(--safari-menu-height,270px),calc(100vh - 48px)) - 24px)); display:grid; width:min(148px,calc(100vw - var(--safari-drop-size,52px) - 32px - env(safe-area-inset-right,0px) - env(safe-area-inset-left,0px))); min-width:0; min-height:var(--shop-nav-height,64px); max-height:calc(100vh - 48px); padding:4px; border:1px solid var(--shop-nav-border); border-radius:18px; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; touch-action:pan-y; opacity:0; visibility:hidden; pointer-events:none; transform:scale(.8,.08); transform-origin:right center; transition:transform var(--safari-expand-duration,340ms) cubic-bezier(.16,1,.3,1),opacity .2s ease,visibility .2s; }
 @supports(height:100dvh) { .safari-side-nav .mobile-shop-nav.is-side { top:clamp(24px,calc(var(--safari-dock-center) - var(--safari-menu-height,270px) / 2),calc(100dvh - min(var(--safari-menu-height,270px),calc(100dvh - 48px)) - 24px)); max-height:calc(100dvh - 48px); } }
 .safari-side-nav.is-expanded .mobile-shop-nav.is-side { opacity:1; visibility:visible; pointer-events:auto; transform:none; }
 .safari-side-nav.is-waiting { visibility:hidden; pointer-events:none; }
 .safari-side-nav.is-waiting .safari-nav-toggle { pointer-events:none; }
-.safari-side-nav .mobile-shop-nav.is-side > a { min-height:52px; font-size:12px; flex-direction:row; justify-content:flex-start; gap:10px; padding:8px 12px; text-align:left; }
+.safari-side-nav .mobile-shop-nav.is-side > a { min-height:44px; font-size:12px; flex-direction:row; justify-content:flex-start; gap:8px; padding:6px 8px; text-align:left; }
 .safari-side-nav .mobile-nav-lens { top:var(--lens-y,5px); height:var(--lens-height,52px); transform:translateX(var(--lens-x,0px)); }
 .safari-side-nav.is-preview { position:relative; inset:auto; width:100%; height:auto; display:flex; flex-direction:row-reverse; align-items:center; gap:8px; margin:16px 0; }
 .safari-side-nav.is-preview .safari-nav-toggle { flex-shrink:0; }
-.safari-side-nav.is-preview .mobile-shop-nav.is-side { position:relative; inset:auto; width:200px; flex:0 1 auto; max-height:320px; }
+.safari-side-nav.is-preview .mobile-shop-nav.is-side { position:relative; inset:auto; width:148px; flex:0 1 auto; max-height:320px; }
 body:has(dialog[open]:not(.shop-cart),.orora-chat-panel,.orora-chat-channel-chooser) .safari-side-nav:not(.is-preview) { visibility:hidden; pointer-events:none; }
 body:has(dialog[open]:not(.shop-cart),.orora-chat-panel,.orora-chat-channel-chooser) .safari-side-nav:not(.is-preview) .safari-nav-toggle { pointer-events:none; }
 body:has(dialog[open]:not(.shop-cart),.orora-chat-panel,.orora-chat-channel-chooser) .safari-side-nav:not(.is-preview) .mobile-shop-nav.is-side { visibility:hidden; pointer-events:none; }
 body:has(.shop-cart.is-modeless[open]) .safari-side-nav { z-index:1302; }
 @media(prefers-reduced-motion:reduce) { .safari-side-nav .mobile-shop-nav.is-side { transition:none; } }
+
+/* Edge-assist control: a full touch target surrounds the recessed round face. */
+.safari-nav-toggle { overflow:hidden; touch-action:none; border-radius:0; }
+.safari-nav-core { display:grid; place-items:center; width:100%; height:100%; border:1px solid var(--shop-nav-border); border-radius:50%; background:var(--shop-nav-bg); background:color-mix(in srgb,var(--shop-nav-bg) var(--shop-nav-opacity),transparent); color:var(--shop-nav-accent); backdrop-filter:blur(var(--shop-nav-blur)); -webkit-backdrop-filter:blur(var(--shop-nav-blur)); box-shadow:inset 0 1px 0 #fff9; transform:translateX(50%); opacity:.65; transition:transform .3s ease,opacity .3s ease; }
+.safari-side-nav.is-expanded { right:max(10px,env(safe-area-inset-right,0px)); }
+.safari-side-nav.is-expanded .safari-nav-core,.safari-nav-toggle:focus-visible .safari-nav-core,.safari-side-nav.no-auto-tuck .safari-nav-core,.safari-side-nav.is-dragging .safari-nav-core { transform:none; opacity:1; }
+.safari-side-nav.is-dragging { transition:none; }
+.safari-nav-core > svg { width:calc(var(--safari-drop-size,52px) * .48); height:calc(var(--safari-drop-size,52px) * .48); }
+.safari-side-nav .mobile-shop-nav.is-side > a > svg { width:18px; height:18px; }
+body:has(.shop-cart[open]) .safari-side-nav:not(.is-preview) { top:calc(100vh - var(--safari-drop-size,52px) - 12px - env(safe-area-inset-bottom,0px)); right:max(8px,env(safe-area-inset-right,0px)); z-index:1302; }
+@supports(height:100dvh) { body:has(.shop-cart[open]) .safari-side-nav:not(.is-preview) { top:calc(100dvh - var(--safari-drop-size,52px) - 12px - env(safe-area-inset-bottom,0px)); } }
+body:has(.shop-cart[open]) .safari-side-nav:not(.is-preview) .mobile-shop-nav.is-side { visibility:hidden; opacity:0; pointer-events:none; }
+body:has(.shop-cart[open]) .safari-side-nav:not(.is-preview) .safari-nav-core { transform:none; opacity:1; }
+@media(max-width:768px) { body:has(.safari-side-nav:not(.is-preview):not(.is-waiting)) .shop-cart.orora-modal[open] { --modal-available-height:calc(var(--modal-viewport-height,100vh) - 112px - env(safe-area-inset-bottom,0px)); bottom:calc(100% - var(--modal-viewport-top,0px) - var(--modal-viewport-height,100vh) + 88px + env(safe-area-inset-bottom,0px)); } }
+@media(prefers-reduced-motion:reduce) { .safari-side-nav,.safari-nav-core { transition:none; } }

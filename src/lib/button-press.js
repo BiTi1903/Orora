@@ -37,7 +37,7 @@ export function installButtonPressFeedback(doc, settings = {}) {
   root.style.setProperty('--button-press-scale', String(1-bounded(settings.pressDepth,4,2,10)/100));
   const target = event => {
     const button = event.target?.closest?.('button,input[type="button"],input[type="submit"],input[type="reset"],[role="button"],a[class*="button"],a[class*="btn"],.product-contact-actions a,.orora-chat-channel-options a,.mobile-shop-nav a,.purchase-facebook,.purchase-tiktok');
-    return button && !button.matches('.chat-button,[data-press-preview],:disabled,[aria-disabled="true"]') && !button.closest('[inert],.is-dragging') ? button : null;
+    return button && !button.matches('.chat-button,.safari-nav-toggle,[data-press-preview],:disabled,[aria-disabled="true"]') && !button.closest('[inert],.is-dragging') ? button : null;
   };
   const press = event => { const button = target(event); if (button) animateButtonPress(button); };
   const cancel = event => cancelButtonPress(target(event));
