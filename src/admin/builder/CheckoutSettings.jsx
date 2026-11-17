@@ -14,9 +14,11 @@ export default function CheckoutSettings({value={},onChange}){return <>
   <StyleTypographyBlock title="Chữ trong form" style={value.formTextStyle||{}} onStyleChange={patch=>onChange({formTextStyle:{...value.formTextStyle,...patch}})}/>
  </div></details>
  <details className="inspector-group"><summary>Sau khi đặt hàng thành công</summary><div className="inspector-group-content">
- {Object.entries({receiptContactLabel:'Lời nhắc liên hệ xác nhận',receiptZaloLabel:'Nút Zalo',receiptFacebookLabel:'Nút Facebook',receiptSaveLabel:'Nút lưu ảnh đơn'}).map(([key,label])=><label className="builder-field" key={key}>{label}<input value={value[key]||''} onChange={event=>onChange({[key]:event.target.value})}/></label>)}
+ {Object.entries({receiptContactLabel:'Tiêu đề xác nhận nhanh',receiptContactHint:'Chú thích xác nhận',receiptSaveHint:'Chú thích lưu ảnh',receiptZaloLabel:'Nút Zalo',receiptFacebookLabel:'Nút Facebook',receiptSaveLabel:'Nút lưu ảnh đơn'}).map(([key,label])=><label className="builder-field" key={key}>{label}<input value={value[key]||''} onChange={event=>onChange({[key]:event.target.value})}/></label>)}
  <label className="builder-field">Cỡ chữ thông tin đơn (px)<input type="number" min="12" max="16" value={value.receiptFontSize??13} onChange={event=>onChange({receiptFontSize:Number(event.target.value)})}/></label>
  <p className="builder-help">Zalo dùng số điện thoại liên hệ hoặc link Zalo hiện có; Facebook dùng link cửa hàng hoặc Facebook footer. Chỉ hiện nút khi có link hợp lệ.</p>
+ <ColorField label="Màu nút tải ảnh" value={value.receiptAccent||'#b8446d'} onChange={receiptAccent=>onChange({receiptAccent})}/>
+ <ColorField label="Nền khung xác nhận nhanh" value={value.receiptBackground||'#fff5f8'} onChange={receiptBackground=>onChange({receiptBackground})}/>
  <OrderReceiptActions preview appearance={value} home={{footerPhone:'0900000000',footerFacebook:'https://www.facebook.com/orora'}}/>
  </div></details>
  <details className="inspector-group"><summary>Xem trước form đặt hàng</summary><div data-admin-preview><OrderFormPreview appearance={value}/></div></details>

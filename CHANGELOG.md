@@ -1,3 +1,9 @@
+## 17/11/2026 — Thiết kế khung xác nhận nhanh bằng icon
+
+- Khung hành động sau đặt đơn chia thành hàng xác nhận nhanh qua icon Facebook/Zalo và hàng chữ Lưu ảnh đơn với nút icon tải xuống. Nút có vùng chạm 44px, tên truy cập/tooltip, trạng thái bận và focus bàn phím; giữ chức năng tải PNG và link liên hệ đã kiểm tra.
+- Admin giữ nhãn nút, thêm màu nút tải/nền khung; preview dùng cùng component. Không thay đổi database, API hay dữ liệu production.
+- Kiểm tra: 235 test Node, lint/build/bundle đạt; 2 test tải PNG/link/icon/không tràn ngang trên Chromium Android và WebKit iOS đạt. Chưa thử trên điện thoại vật lý.
+
 ## 17/11/2026 — Đơn thành công gọn hơn, liên hệ xác nhận và lưu ảnh đơn
 
 - Thu nhỏ chữ/khoảng cách phần thông tin đơn sau đặt hàng. Thêm nút xác nhận qua Zalo/Facebook từ cấu hình liên hệ hiện có; link không hợp lệ hoặc chưa cấu hình không được hiển thị, không tự gửi tin nhắn.

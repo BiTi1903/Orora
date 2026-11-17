@@ -56,6 +56,17 @@
 .order-success-modal .order-received-details dl { gap:6px; }
 .order-success-modal .order-received-details dl > div { font-size:var(--receipt-size,13px); line-height:1.5; }
 .order-success-modal .order-received-details h3 { font-size:14px; margin-bottom:8px; }
-.order-receipt-buttons { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
-.order-receipt-buttons > :is(a,button) { display:inline-flex; align-items:center; justify-content:center; min-height:44px; border:1px solid var(--line); padding:8px 12px; border-radius:12px; background:#fff; color:var(--rose-deep); text-decoration:none; font:inherit; }
-.order-receipt-actions small { display:block; line-height:1.5; color:var(--plum-soft); }
+.order-receipt-actions { margin:16px 0; padding:14px; border:1px solid var(--line); border-radius:18px; background:var(--receipt-surface,#fff5f8); }
+.order-receipt-contact,.order-receipt-save { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.order-receipt-contact { padding-bottom:14px; margin-bottom:14px; border-bottom:1px solid var(--line); }
+.order-receipt-actions strong { display:block; font-size:13px; line-height:1.5; }
+.order-receipt-actions small { display:block; margin-top:3px; font-size:11px; line-height:1.5; color:var(--plum-soft); }
+.order-receipt-socials { display:flex; gap:8px; flex-shrink:0; }
+.order-receipt-actions .receipt-social,.order-received .receipt-download,.order-receipt-actions .receipt-download { display:grid; place-items:center; width:44px; height:44px; min-width:44px; padding:10px; border:1px solid var(--line); border-radius:14px; background:#fff; text-decoration:none; cursor:pointer; }
+.receipt-social svg,.receipt-download svg { width:24px; height:24px; }
+.receipt-facebook { color:#1877f2; }
+.receipt-zalo { color:#0068ff; }
+.order-receipt-actions .receipt-download { color:var(--receipt-accent,#b8446d); }
+.order-receipt-actions .receipt-download-note { margin-top:12px; font-size:10px; }
+.receipt-download:disabled { opacity:.5; cursor:wait; }
+.receipt-social:focus-visible,.receipt-download:focus-visible { outline:2px solid var(--receipt-accent,#b8446d); outline-offset:3px; }
