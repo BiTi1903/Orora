@@ -1,3 +1,5 @@
+import PetalSettings from "./PetalSettings";
+import ButtonIconSettings from "./ButtonIconSettings";
 import {useRef,useState} from "react";
 import ChatChannelChooser from "../../components/ChatChannelChooser";
 import "../../styles/chat-button.css";
@@ -25,6 +27,8 @@ export default function SurfaceSettings({value={},onChange}){
    {previewChat&&<div data-admin-preview><ChatChannelChooser anchor={chatAnchor} motion={value} preview animatePreview onAI={()=>{}} onClose={()=>setPreviewChat(false)}/></div>}
    <small className="builder-help">Khung lớn dần từ vị trí nút mở, không bật hai lần; áp dụng cả khung chọn Zalo/AI và hội thoại AI.</small>
   </SettingGroup>
+  <PetalSettings value={value.petals} onChange={patch=>onChange({petals:{...value.petals,...patch}})}/>
+  <ButtonIconSettings value={value.buttonIcons} onChange={buttonIcons=>onChange({buttonIcons})}/>
   <SettingGroup title="Vị trí nút lên đầu trang">
    {fields([["backToTopOffset","Khoảng cách mép dưới — desktop (px)",24,8,80],["backToTopMobileOffset","Khoảng hở trên thanh dưới — mobile (px)",12,8,40]])}
   </SettingGroup>

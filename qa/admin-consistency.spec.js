@@ -15,7 +15,7 @@ test('builder keeps saved navigation settings and saves only the edited leaf',as
  await page.getByRole('tab',{name:'Thiết lập mục',exact:true}).click();
  await page.locator('.inspector-group > summary').filter({hasText:'Thanh điều hướng dưới — mobile'}).click();
 
- await page.getByText('Hiệu ứng nút, kính và khung chat',{exact:true}).click();
+ await page.getByText('Hiệu ứng, cánh hoa và icon nút',{exact:true}).click();
  await page.locator('.inspector-group > summary').filter({hasText:'Menu bên — mobile'}).click();
  await expect(page.getByLabel('Hiện thanh cố định dưới màn hình điện thoại')).not.toBeChecked();
  await expect(page.frameLocator('iframe').getByRole('button',{name:'Giỏ hàng',exact:true})).toHaveCount(0);

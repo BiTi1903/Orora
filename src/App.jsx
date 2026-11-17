@@ -1,3 +1,4 @@
+import {ButtonIconProvider} from "./components/ButtonIcon";
 import ButtonPressFeedback from './components/ButtonPressFeedback';
 import ShopCart from './components/ShopCart';
 import MobileGlass from './components/MobileGlass';
@@ -64,7 +65,7 @@ function App() {
 
 
   return (
-    <>
+    <ButtonIconProvider value={home.navStyles?.surfaces?.buttonIcons}>
 
       <ButtonPressFeedback settings={home.navStyles?.surfaces} />
       <SiteAnalytics />
@@ -107,7 +108,7 @@ function App() {
    {visible("newsletter") && <Newsletter />}
               {visible("footer") && <Footer />}
 <CursorSparkle />
-<Petals />
+{!home.loading && <Petals settings={home.navStyles?.surfaces?.petals} />}
             </main>
           }
         />
@@ -141,7 +142,7 @@ function App() {
       </Routes>
       {!location.pathname.startsWith("/admin") && <><ShopCart/><BackToTop/><ChatButton /><MobileGlass/><MobileShopNav /></>}
 
-    </>
+    </ButtonIconProvider>
   );
 }
 

@@ -45,7 +45,7 @@ body:has(dialog[open]:not(.shop-cart)) .desktop-cart { visibility:hidden; }
 .desktop-cart.is-in-navbar { position:static; inset:auto; display:flex; flex-shrink:0; min-height:var(--cart-button-height,40px); padding:var(--cart-button-paddingY,8px) var(--cart-button-paddingX,12px); border-radius:var(--cart-button-radius,14px); border:var(--cart-button-borderWidth,1px) solid var(--cart-button-border,var(--line)); background:var(--cart-button-bg,#fffafc); gap:var(--cart-button-gap,6px); backdrop-filter:none; color:var(--cart-accent,var(--rose-deep)); font-size:12px; max-width:min(var(--cart-button-maxWidth,240px),100%); white-space:normal; }
 
 
-.desktop-cart.is-in-navbar > svg { width:var(--cart-button-iconSize,20px); height:var(--cart-button-iconSize,20px); flex-shrink:0; }
+.desktop-cart.is-in-navbar .orora-button-icon:not([data-icon-size]) > svg { width:var(--cart-button-iconSize,20px); height:var(--cart-button-iconSize,20px); flex-shrink:0; }
 .desktop-cart.is-in-navbar > span { min-width:0; overflow-wrap:anywhere; text-align:inherit; }
 .cart-button-preview { display:flex; justify-content:center; padding:16px 0; }
 .cart-button-preview .desktop-cart { display:flex!important; visibility:visible!important; }

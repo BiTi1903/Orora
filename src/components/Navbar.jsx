@@ -1,3 +1,4 @@
+import ButtonIcon from "./ButtonIcon";
 import {mountNavbarCartSlot} from "../lib/navbar-cart-slot";
 import CartButton from "./CartButton";
 import { contactLinks } from "../lib/contact";
@@ -28,8 +29,8 @@ function NavDropdown({ children, label, items, onSelect }) {
   const [open, setOpen] = useState(false);
   const toggleRef = useRef(null);
   return <div className="nav-dropdown" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false); }} onKeyDown={(event) => { if (event.key === "Escape") { setOpen(false); toggleRef.current?.focus(); event.stopPropagation(); } }}>
-    <div className="nav-dropdown-heading">{children}<button ref={toggleRef} type="button" className="nav-dropdown-toggle" aria-label={`Mở danh sách ${label}`} aria-expanded={open} onClick={() => setOpen(!open)}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
-    {open && <div className="nav-dropdown-panel">{items.map((entry) => entry.external ? <a key={entry.href} href={entry.href} target="_blank" rel="noreferrer" onClick={() => { setOpen(false); onSelect?.(); }}>{entry.label}<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8"/></svg></a> : <Link key={entry.href} to={entry.href} onClick={() => { setOpen(false); onSelect?.(); }}>{entry.label}</Link>)}</div>}
+    <div className="nav-dropdown-heading">{children}<button ref={toggleRef} type="button" className="nav-dropdown-toggle" aria-label={`Mở danh sách ${label}`} aria-expanded={open} onClick={() => setOpen(!open)}><ButtonIcon name="navDropdown" defaultSize={12} allowHidden={false}/></button></div>
+    {open && <div className="nav-dropdown-panel">{items.map((entry) => entry.external ? <a key={entry.href} href={entry.href} target="_blank" rel="noreferrer" onClick={() => { setOpen(false); onSelect?.(); }}>{entry.label}<ButtonIcon name="navExternal" defaultSize={12}/></a> : <Link key={entry.href} to={entry.href} onClick={() => { setOpen(false); onSelect?.(); }}>{entry.label}</Link>)}</div>}
   </div>;
 }
 
@@ -168,7 +169,7 @@ function Navbar({
           {links.map((item, index) => {
             const entries = submenu(item, index);
             if (!entries.length) return <Link key={index} to={resolveHref(item, index)} onClick={closeMenu}>{item.label}</Link>;
-            return <details className="mobile-nav-group" key={index}><summary>{item.label}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div className="mobile-nav-submenu">{entries.map((entry) => entry.external ? <a key={entry.href} href={entry.href} target="_blank" rel="noreferrer" onClick={closeMenu}>{entry.label}</a> : <Link key={entry.href} to={entry.href} onClick={closeMenu}>{entry.label}</Link>)}</div></details>;
+            return <details className="mobile-nav-group" key={index}><summary>{item.label}<ButtonIcon name="navMobileDropdown" defaultSize={14} allowHidden={false}/></summary><div className="mobile-nav-submenu">{entries.map((entry) => entry.external ? <a key={entry.href} href={entry.href} target="_blank" rel="noreferrer" onClick={closeMenu}>{entry.label}</a> : <Link key={entry.href} to={entry.href} onClick={closeMenu}>{entry.label}</Link>)}</div></details>;
           })}
         </nav>
       </aside>

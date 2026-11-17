@@ -1,3 +1,4 @@
+import ButtonIcon from "./ButtonIcon";
 import useHeroFonts from "../hooks/useHeroFonts";
 import {toCss} from "../lib/typography";
 import {heroImageSources} from "../lib/image-cdn";
@@ -240,7 +241,7 @@ function Hero({
             onClick={select("btnPrimary")}
           >
             {c.heroButtonText}
-            <span>↗</span>
+            <ButtonIcon name="heroPrimary"/>
           </a>
 
           <a

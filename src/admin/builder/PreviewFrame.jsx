@@ -1,3 +1,4 @@
+import {ButtonIconProvider} from "../../components/ButtonIcon";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {installButtonPressFeedback} from "../../lib/button-press";
@@ -93,7 +94,7 @@ export default function PreviewFrame({ device, children, surfaces, zoom="fit", s
           srcDoc={'<!doctype html><html lang="vi"><head><meta name="viewport" content="width=device-width,initial-scale=1" /></head><body><div id="root"><main id="preview-root"></main></div></body></html>'}
           onLoad={(event) => setFrameDocument(event.currentTarget.contentDocument)} />
       </div>
-      {frameDocument && createPortal(children, frameDocument.getElementById("preview-root"))}
+      {frameDocument && createPortal(<ButtonIconProvider value={surfaces?.buttonIcons}>{children}</ButtonIconProvider>, frameDocument.getElementById("preview-root"))}
     </div>
   );
 }

@@ -5,7 +5,7 @@ import base from './playwright.config.js';
 export default defineConfig({
  ...base,
  testMatch:[
-  '**/button-press.spec.js','**/presentation-polish.spec.js','**/card-actions.spec.js','**/browser-adaptation.spec.js','**/mobile-nav-reveal.spec.js',
+  '**/petals-icons.spec.js','**/button-press.spec.js','**/presentation-polish.spec.js','**/card-actions.spec.js','**/browser-adaptation.spec.js','**/mobile-nav-reveal.spec.js',
   '**/popup-motion.spec.js','**/cart-toggle.spec.js','**/tracking-layout.spec.js',
   '**/ui-efficiency.spec.js','**/responsive-cleanup.spec.js',
   '**/shopping.spec.js','**/editor-simplification.spec.js','**/admin-appearance.spec.js','**/builder-spacing.spec.js','**/tracking-navigation.spec.js',

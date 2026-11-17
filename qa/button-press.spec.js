@@ -30,7 +30,7 @@ test('admin previews and saves global feedback without changing unrelated settin
   'lib/api.js':`export const getHomeContent=async()=>({navStyles:{surfaces:{blur:18}}});export const getProduct=async()=>null;export const saveHomeContent=async patch=>window.__saved=patch;`,
  });
  await page.locator('.builder-sections').getByRole('button',{name:/Navbar/}).click();await page.getByRole('tab',{name:'Thiết lập mục',exact:true}).click();
- await page.getByText('Hiệu ứng nút, kính và khung chat',{exact:true}).click();
+ await page.getByText('Hiệu ứng, cánh hoa và icon nút',{exact:true}).click();
  const duration=page.getByLabel('Thời gian phản hồi nút (ms)',{exact:true});await reveal(duration);await duration.fill('400');
  const preview=page.getByRole('button',{name:'Nhấn thử hiệu ứng',exact:true});await preview.click();expect(await preview.evaluate(node=>node.getAnimations().find(a=>a.id==='orora-button-press')?.effect.getTiming().duration)).toBe(400);
  await page.getByRole('switch',{name:'Hiệu ứng nhấn cho toàn bộ nút',exact:true}).uncheck();await preview.click();expect(await preview.evaluate(node=>node.getAnimations().filter(a=>a.id==='orora-button-press').length)).toBe(0);
