@@ -7,25 +7,25 @@ export default function MobileNavSettings({navbar,onChange}){
  const items=Array.isArray(value.items)?value.items:mobileNavItems(mobileNavSettings(value));
  const edit=(index,next)=>patch({items:items.map((item,i)=>i===index?{...item,...next}:item)});
  return <SettingGroup title="Thanh điều hướng dưới — mobile">
-  <label className="admin-check"><input type="checkbox" checked={value.enabled!==false} onChange={event=>patch({enabled:event.target.checked})}/>Hiện thanh cố định dưới màn hình điện thoại</label>
-  <label className="admin-check"><input type="checkbox" checked={value.afterTicker!==false} onChange={e=>patch({afterTicker:e.target.checked})}/>Trang chủ: hiện khi cuộn xuống đủ chỗ, không che dải chữ chạy</label>
+  <label className="admin-check"><input type="checkbox" role="switch" checked={value.enabled!==false} onChange={event=>patch({enabled:event.target.checked})}/>Hiện thanh cố định dưới màn hình điện thoại</label>
+  <label className="admin-check"><input type="checkbox" role="switch" checked={value.afterTicker!==false} onChange={e=>patch({afterTicker:e.target.checked})}/>Trang chủ: hiện khi cuộn xuống đủ chỗ, không che dải chữ chạy</label>
   <label>Khoảng hở với dải chữ chạy (px)<input type="number" min="0" max="48" value={value.revealGap??12} onChange={e=>patch({revealGap:Number(e.target.value)})}/></label>
-  <label className="admin-check"><input type="checkbox" checked={value.spin!==false} onChange={e=>patch({spin:e.target.checked})}/>Xoay icon khi nhấn mục trên thanh dưới</label>
+  <label className="admin-check"><input type="checkbox" role="switch" checked={value.spin!==false} onChange={e=>patch({spin:e.target.checked})}/>Xoay icon khi nhấn mục trên thanh dưới</label>
   <div className="builder-field">
    {items.map((item,index)=><fieldset key={index} style={{margin:'12px 0',padding:12,border:'1px solid #efd7e1',borderRadius:12}}><legend>Mục {index+1}</legend>
     <label>Tên hiển thị<input value={item.label||''} maxLength={80} onChange={e=>edit(index,{label:e.target.value})}/></label>
     <label>Đi đến<select value={item.target||'custom'} onChange={e=>edit(index,{target:e.target.value})}>{Object.entries(NAV_TARGETS).map(([key,[label]])=><option key={key} value={key}>{label}</option>)}</select></label>
     {item.target==='custom'&&<label>Đường dẫn<input placeholder="https://… hoặc /#newsletter" value={item.url||''} onChange={e=>edit(index,{url:e.target.value})}/></label>}
     <label>Biểu tượng<select value={item.icon||'link'} onChange={e=>edit(index,{icon:e.target.value})}>{Object.entries(NAV_ICONS).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>
-    <label><input type="checkbox" checked={item.enabled!==false} onChange={e=>edit(index,{enabled:e.target.checked})}/>Hiển thị mục này</label>
+    <label><input type="checkbox" role="switch" checked={item.enabled!==false} onChange={e=>edit(index,{enabled:e.target.checked})}/>Hiển thị mục này</label>
     <button type="button" disabled={!index} onClick={()=>{const next=[...items];[next[index-1],next[index]]=[next[index],next[index-1]];patch({items:next});}}>Đưa lên trước</button>
     <button type="button" onClick={()=>patch({items:items.filter((_,i)=>i!==index)})}>Xóa mục</button>
    </fieldset>)}
    <button type="button" disabled={items.length>=6} onClick={()=>patch({items:[...items,{label:'Email',target:'email',icon:'email'}]})}>Thêm mục</button>
   </div>
   <details><summary>Nội dung và giao diện thanh dưới</summary>
-   <label><input type="checkbox" checked={value.glass!==false} onChange={e=>patch({glass:e.target.checked})}/>Hiệu ứng kính trong suốt</label>
-   <label><input type="checkbox" checked={value.swipe!==false} onChange={e=>patch({swipe:e.target.checked})}/>Vuốt ngang để chọn mục — kính chạy theo ngón tay</label>
+   <label><input type="checkbox" role="switch" checked={value.glass!==false} onChange={e=>patch({glass:e.target.checked})}/>Hiệu ứng kính trong suốt</label>
+   <label><input type="checkbox" role="switch" checked={value.swipe!==false} onChange={e=>patch({swipe:e.target.checked})}/>Vuốt ngang để chọn mục — kính chạy theo ngón tay</label>
    <label>Viền khúc sắc của bong bóng kính (0–1)<input type="number" min="0" max="1" step="0.05" value={value.rimOpacity??.8} onChange={e=>patch({rimOpacity:Number(e.target.value)})}/></label>
    <label>Độ kéo giãn kính như giọt nước (0–2)<input type="number" min="0" max="2" step="0.1" value={value.liquidStretch??1} onChange={e=>patch({liquidStretch:Number(e.target.value)})}/></label>
    <label>Mức hiệu ứng icon (0–2)<input type="number" min="0" max="2" step="0.1" value={value.iconEffect??1} onChange={e=>patch({iconEffect:Number(e.target.value)})}/></label>

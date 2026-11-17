@@ -246,7 +246,7 @@ function Hero({
           <a
             href={preview ? undefined : c.shopButtonLink || "#shop"}
             className={`hero-btn hero-btn-ghost ${selectedClass("btnSecondary")}`}
-            style={toCss(hs.btnSecondary,{responsive:true})}
+            style={{...toCss(hs.btnSecondary,{responsive:true}),backgroundColor:hs.btnSecondary?.backgroundColor,borderColor:hs.btnSecondary?.borderColor,borderRadius:hs.btnSecondary?.borderRadius==null?undefined:`${hs.btnSecondary.borderRadius}px`}}
           data-builder-key={preview ? "btnSecondary" : undefined}
             onClick={select("btnSecondary")}
           >

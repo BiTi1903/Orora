@@ -15,10 +15,10 @@ export default function CartSettings({navbar,onChange}){
  const copy=(key,label)=> <label className="builder-field" key={key}>{label}<input value={value.copy?.[key]??CART_COPY[key]} onChange={event=>patch({copy:{...value.copy,[key]:event.target.value}})}/></label>;
  return <>
   <SettingGroup title="Giỏ hàng trên navbar — desktop">
-   <label><input type="checkbox" checked={value.enabled!==false} onChange={event=>patch({enabled:event.target.checked})}/>Hiện giỏ hàng</label>
+   <label><input type="checkbox" role="switch" checked={value.enabled!==false} onChange={event=>patch({enabled:event.target.checked})}/>Hiện giỏ hàng</label>
    {copy('label','Tên nút giỏ hàng')}
-   <label><input type="checkbox" checked={button.showIcon!==false} onChange={event=>patchButton({showIcon:event.target.checked})}/>Hiện icon giỏ hàng</label>
-   <label><input type="checkbox" checked={button.showCount!==false} onChange={event=>patchButton({showCount:event.target.checked})}/>Hiện số lượng trên nút</label>
+   <label><input type="checkbox" role="switch" checked={button.showIcon!==false} onChange={event=>patchButton({showIcon:event.target.checked})}/>Hiện icon giỏ hàng</label>
+   <label><input type="checkbox" role="switch" checked={button.showCount!==false} onChange={event=>patchButton({showCount:event.target.checked})}/>Hiện số lượng trên nút</label>
    <details><summary>Khung và kiểu chữ nút navbar</summary>
     <NumberFields fields={CART_BUTTON_FIELDS} value={button} onChange={patchButton}/>
     <ColorField label="Màu nền nút navbar" value={button.background||'#fffafc'} onChange={background=>patchButton({background})}/>
@@ -30,7 +30,7 @@ export default function CartSettings({navbar,onChange}){
   <SettingGroup title="Popup chọn dung tích — khung gọn">
    <details><summary>Nội dung và kích thước popup chọn dung tích</summary>
     {copy('choose','Tiêu đề chọn dung tích')}{copy('volume','Nhãn dung tích')}{copy('quantity','Nhãn số lượng')}{copy('add','Nút thêm vào giỏ')}
-    <label><input type="checkbox" checked={popup.showHelp===true} onChange={event=>patchPopup({showHelp:event.target.checked})}/>Hiện hướng dẫn chọn dung tích</label>
+    <label><input type="checkbox" role="switch" checked={popup.showHelp===true} onChange={event=>patchPopup({showHelp:event.target.checked})}/>Hiện hướng dẫn chọn dung tích</label>
     {copy('chooseHelp','Hướng dẫn chọn dung tích')}
     <NumberFields fields={CART_SELECTION_FIELDS} value={popup} onChange={patchPopup}/>
     <ColorField label="Màu nền popup chọn dung tích" value={popup.background||'#fffafb'} onChange={background=>patchPopup({background})}/>
@@ -43,10 +43,10 @@ export default function CartSettings({navbar,onChange}){
   </SettingGroup>
   <SettingGroup title="Giỏ hàng — popup và nội dung chung">
    <details><summary>Hiệu ứng, nội dung và kiểu chữ trong giỏ</summary>
-    <label><input type="checkbox" checked={value.animation!==false} onChange={event=>patch({animation:event.target.checked})}/>Hiệu ứng bay và nảy vào giỏ</label>
-    <label><input type="checkbox" checked={value.popupAnimation!==false} onChange={event=>patch({popupAnimation:event.target.checked})}/>Popup giỏ hàng phóng lớn, nảy nhẹ</label>
+    <label><input type="checkbox" role="switch" checked={value.animation!==false} onChange={event=>patch({animation:event.target.checked})}/>Hiệu ứng bay và nảy vào giỏ</label>
+    <label><input type="checkbox" role="switch" checked={value.popupAnimation!==false} onChange={event=>patch({popupAnimation:event.target.checked})}/>Popup giỏ hàng phóng lớn, nảy nhẹ</label>
     <label className="builder-field">Thời gian mở giỏ (ms)<input type="number" min={650} max={1200} step={20} value={Math.max(650,value.popupDuration??650)} onChange={event=>patch({popupDuration:Number(event.target.value)})}/></label>
-    <label><input type="checkbox" checked={value.backgroundScroll!==false} onChange={event=>patch({backgroundScroll:event.target.checked})}/>Cho phép cuộn nền khi mở giỏ</label>
+    <label><input type="checkbox" role="switch" checked={value.backgroundScroll!==false} onChange={event=>patch({backgroundScroll:event.target.checked})}/>Cho phép cuộn nền khi mở giỏ</label>
     <ColorField label="Màu nhấn giỏ hàng" value={value.accent||'#b8446d'} onChange={accent=>patch({accent})}/>
     {Object.entries(CART_COPY).filter(([key])=>!['label','choose','volume','quantity','add','chooseHelp'].includes(key)).map(([key,fallback])=>copy(key,fallback))}
     <StyleTypographyBlock title="Chữ trong giỏ hàng" style={value.text||{}} onStyleChange={next=>patch({text:{...value.text,...next}})}/>

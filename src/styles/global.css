@@ -2,6 +2,10 @@
    TOKENS
 ===================================================== */
 :root {
+  --text-section-title: clamp(32px, 4.5vw, 64px);
+  --text-section-leading: 1.15;
+  --text-section-subtitle: clamp(16px, 1.8vw, 20px);
+  --text-caption: 12px;
   --bg: #fffafc;
   --blush: #fff0f5;
   --petal: #fde2ec;

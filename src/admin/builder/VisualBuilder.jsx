@@ -13,7 +13,7 @@ import { editedSectionPayload, changedValues, mergeSavedValues } from "./save-se
 import PreviewFrame from "./PreviewFrame";
 import { PREVIEW_PRODUCTS } from "./preview-products";
 import { DEFAULT_TICKER } from "./defaults";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { getHomeContent, saveHomeContent } from "../../lib/api";
 import About from "../../components/About";
 import Hero from "../../components/Hero";
@@ -71,6 +71,22 @@ export default function VisualBuilder({workspace="home",requestedStoreSection="c
   const dirtySections = useRef(new Set());
   const baseline = useRef(null);
   const [message, setMessage] = useState(null);
+  const builderRoot = useRef(null), saveBar = useRef(null);
+  useLayoutEffect(() => {
+    const root = builderRoot.current, bar = saveBar.current;
+    if (!root || !bar) return;
+    const measure = () => {
+      const height = `${Math.ceil(bar.getBoundingClientRect().height)}px`;
+      if (root.style.getPropertyValue('--builder-save-height') !== height) {
+        root.style.setProperty('--builder-save-height', height);
+      }
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(bar);
+    return () => observer.disconnect();
+  }, [loading, workspace, storeTab]);
+
 
   useEffect(() => {
     let alive = true;
@@ -661,7 +677,7 @@ export default function VisualBuilder({workspace="home",requestedStoreSection="c
   }
 
   return (
-    <div className={`visual-builder${workspace==="store"?" is-store-workspace":""}`}>
+    <div ref={builderRoot} className={`visual-builder${workspace==="store"?" is-store-workspace":""}`}>
       <div className="builder-toolbar" hidden={workspace === "store" && ["tracking", "links"].includes(storeTab)} style={workspace === "store" && ["tracking", "links"].includes(storeTab) ? { display: "none" } : undefined}>
         <div>
           <strong>{workspace==="store"?"Cài đặt cửa hàng":"Chỉnh sửa giao diện"}</strong>
@@ -670,7 +686,7 @@ export default function VisualBuilder({workspace="home",requestedStoreSection="c
           </span>
         </div>
 
-        <div className="builder-toolbar-actions">
+        <div ref={saveBar} className="builder-toolbar-actions" aria-label="Lưu thay đổi giao diện">
           <span className={`builder-save-state${editVersion!==savedVersion?' is-dirty':''}`} role="status">{saving?'Đang lưu thay đổi…':editVersion!==savedVersion?'Có thay đổi chưa lưu':'Các thay đổi đã được lưu'}</span>
           {message?.type === "error" && (
             <span
@@ -757,12 +773,13 @@ export default function VisualBuilder({workspace="home",requestedStoreSection="c
             <span>{!isEnabled(activeSection) ? "Mục này đang tắt trên website · Vẫn có thể chỉnh sửa tại đây" : "Sản phẩm mẫu · Xem trước tĩnh · Không thay đổi dữ liệu"}</span>
 
 
-            <div className="builder-device" role="group" aria-label="Điều khiển xem trước">
+            <div className="builder-preview-controls" role="group" aria-label="Điều khiển xem trước"><div className="builder-preview-visibility">
               <button type="button" role="switch" aria-label="Hiển thị mục đang xem trước trên website" aria-checked={isEnabled(activeSection)} disabled={loading || loadError || saving} onClick={() => toggleSection(activeSection)}>{!isEnabled(activeSection) ? "Đang tắt · Bật" : "Đang bật · Tắt"}</button>
+              </div><div className="builder-device" role="group" aria-label="Thiết bị và tỉ lệ">
               <button type="button" aria-pressed={previewDevice === "desktop"} onClick={() => setPreviewDevice("desktop")}>Desktop</button>
               <button type="button" aria-pressed={previewDevice === "mobile"} onClick={() => setPreviewDevice("mobile")}>Mobile</button>
               <label className="builder-zoom-label">Tỉ lệ xem<select aria-label="Tỉ lệ xem trước" value={previewZoom} onChange={event=>setPreviewZoom(event.target.value)}><option value="fit">Vừa khung</option><option value="actual">100% — kích thước thật</option></select></label>
-            </div>
+            </div></div>
           </div>
 
           <PreviewFrame device={previewDevice} zoom={previewZoom} selectedKey={selected} surfaces={navbar.navStyles?.surfaces}>

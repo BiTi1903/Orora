@@ -19,7 +19,7 @@ function createTextStyle(style = {}) {
       : undefined,
 
     fontSize:
-      s.fontSize != null
+      s.fontSize != null && s.fontSize !== ""
         ? `${Number(s.fontSize)}px`
         : undefined,
 
@@ -143,7 +143,7 @@ function normalizeBuilder(data) {
       style: {
         ...defaultStyle,
         fontFamily: "Cormorant Garamond",
-        fontSize: 80,
+        fontSize: "",
         fontWeight: 600,
         color: "#3a1526",
         letterSpacing: -2,
@@ -158,7 +158,7 @@ function normalizeBuilder(data) {
       style: {
         ...defaultStyle,
         fontFamily: "Cormorant Garamond",
-        fontSize: 80,
+        fontSize: "",
         fontWeight: 400,
         color: "#e2678f",
         italic: true,

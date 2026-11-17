@@ -1,7 +1,10 @@
+import {useId} from "react";
+import {contrastRatio} from "../../lib/color-contrast";
 import ImageUploadControl from "./ImageUploadControl";
-import { SettingGroup, StyleTypographyBlock } from "./ui";
+import { SettingGroup, StyleTypographyBlock, ColorField } from "./ui";
 
 function HeroFieldSettings({ data, hero, onChange }) {
+  const fieldId=useId();
   if (!data || data.type === "heroEmpty") {
     return (
       <div className="builder-empty">
@@ -139,9 +142,10 @@ function HeroFieldSettings({ data, hero, onChange }) {
     return (
       <SettingGroup title={label}>
         <div className="builder-field">
-          <label>Nội dung</label>
+          <label htmlFor={`${fieldId}-content`}>Nội dung</label>
           {rows ? (
             <textarea
+              id={`${fieldId}-content`}
               rows={rows}
               value={hero[key] || ""}
               onChange={(e) =>
@@ -150,6 +154,7 @@ function HeroFieldSettings({ data, hero, onChange }) {
             />
           ) : (
             <input
+              id={`${fieldId}-content`}
               value={hero[key] || ""}
               onChange={(e) =>
                 onChange({ [key]: e.target.value })
@@ -165,10 +170,30 @@ function HeroFieldSettings({ data, hero, onChange }) {
 }
 
 export function HeroSettings(props) {
-  const {hero,onChange,data,selected}=props;
-  const style=(key,patch)=>onChange({heroStyles:{...hero.heroStyles,[key]:{...hero.heroStyles?.[key],...patch}}});
-  return <><HeroFieldSettings {...props} />{["heroText","heroButton"].includes(data?.type)&&<StyleTypographyBlock title="Kiểu chữ phần đang chọn" style={hero.heroStyles?.[selected]||{}} onStyleChange={patch=>style(selected,patch)}/>}{data?.type === "heroRotator" && <>
-   <StyleTypographyBlock title="Chữ trước / sau" style={hero.heroStyles?.rotator || {}} onStyleChange={patch=>style('rotator',patch)}/>
-   <StyleTypographyBlock title="Từ thay đổi — kiểu chữ và độ đậm" style={hero.heroStyles?.rotatorAccent || {}} onStyleChange={patch=>style('rotatorAccent',patch)}/>
-  </>}</>;
+  const {hero, onChange, data, selected} = props;
+  const style = (key, patch) => onChange({heroStyles: {
+    ...hero.heroStyles,
+    [key]: {...hero.heroStyles?.[key], ...patch},
+  }});
+  const secondary = hero.heroStyles?.btnSecondary || {};
+  const ratio = contrastRatio(secondary.color || '#852447', secondary.backgroundColor || 'rgba(255,250,252,.96)');
+  const lowContrast = ratio != null && ratio < 4.5;
+
+  return <>
+    <HeroFieldSettings {...props} />
+    {selected === 'btnSecondary' && <SettingGroup title="Nền và độ tương phản nút phụ">
+      <ColorField label="Nền nút phụ" value={secondary.backgroundColor || '#fffafc'} onChange={backgroundColor => style('btnSecondary', {backgroundColor})}/>
+      <ColorField label="Viền nút phụ" value={secondary.borderColor || '#a9345f'} onChange={borderColor => style('btnSecondary', {borderColor})}/>
+      <label className="builder-field">Bo góc nút phụ (px)<input type="number" min="0" max="80" value={secondary.borderRadius ?? 40} onChange={event => style('btnSecondary', {borderRadius: Number(event.target.value)})}/></label>
+      <p className="builder-help" role={lowContrast ? 'alert' : undefined}>
+        {ratio == null ? 'Chưa tính được độ tương phản cho màu này.' : `Độ tương phản ước tính: ${ratio.toFixed(2)}:1.${lowContrast ? ' Dưới 4,5:1 — nên tăng tương phản chữ và nền.' : ''}`}
+        {' '}Kiểm tra thêm trên ảnh thật; nền kính có thể làm thay đổi kết quả.
+      </p>
+    </SettingGroup>}
+    {["heroText", "heroButton"].includes(data?.type) && <StyleTypographyBlock title="Kiểu chữ phần đang chọn" style={hero.heroStyles?.[selected] || {}} onStyleChange={patch => style(selected, patch)}/>}
+    {data?.type === "heroRotator" && <>
+      <StyleTypographyBlock title="Chữ trước / sau" style={hero.heroStyles?.rotator || {}} onStyleChange={patch => style('rotator', patch)}/>
+      <StyleTypographyBlock title="Từ thay đổi — kiểu chữ và độ đậm" style={hero.heroStyles?.rotatorAccent || {}} onStyleChange={patch => style('rotatorAccent', patch)}/>
+    </>}
+  </>;
 }

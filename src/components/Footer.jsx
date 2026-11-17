@@ -1,3 +1,4 @@
+import {footerCopy} from "../lib/footer-copy";
 import { contactLinks } from "../lib/contact";
 import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
@@ -30,7 +31,7 @@ function Footer({
 }) {
   const home=useHomeContent();
 
-  const data = preview && previewData ? previewData : home || {};
+  const data = footerCopy(preview && previewData ? previewData : home || {});
   const { zalo } = contactLinks(data, "", data.productDetailStyles?.contactActions || {});
   const fs = data.footerStyles || {};
   const css = (key) => toCss(fs[key], { responsive: true });

@@ -1,3 +1,4 @@
+import "../styles/order-tracking.css";
 import { trackingStyle } from '../lib/order-tracking-copy';
 export default function OrderTrackingSearch({copy,styles={},mode,code,phone,busy,error,onMode,onCode,onPhone,onSubmit,preview=false}){
  const css=key=>trackingStyle(styles,key);

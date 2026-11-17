@@ -295,9 +295,9 @@
 .hero-btn-primary:hover span { transform: translate(4px, -4px); }
 
 .hero-btn-ghost {
-  color: var(--rose-deep);
-  background: rgba(255, 255, 255, 0.72);
-  border-color: var(--rose-soft);
+  color: #852447;
+  background: rgba(255, 250, 252, 0.96);
+  border-color: #a9345f;
   backdrop-filter: blur(10px);
 }
 

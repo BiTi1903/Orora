@@ -40,7 +40,7 @@ const DEFAULT_ABOUT = {
     style: {
       ...DEFAULT_STYLE,
       fontFamily: "Cormorant Garamond",
-      fontSize: 80,
+      fontSize: "",
       fontWeight: 600,
       color: "#3a1526",
       letterSpacing: -2,
@@ -54,7 +54,7 @@ const DEFAULT_ABOUT = {
     style: {
       ...DEFAULT_STYLE,
       fontFamily: "Cormorant Garamond",
-      fontSize: 80,
+      fontSize: "",
       fontWeight: 400,
       color: "#e2678f",
       italic: true,

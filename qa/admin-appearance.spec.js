@@ -30,6 +30,7 @@ async function audit(page){
   const box=el.getBoundingClientRect();if(!box.width||!box.height||el.closest('[data-admin-preview],.builder-preview,dialog,details:not([open])'))return [];
   const css=getComputedStyle(el),type=el.type;
   const label=el.getAttribute('aria-label')||el.id||el.outerHTML.slice(0,100);
+  if(el.getAttribute('role')==='switch')return box.width===44&&box.height===26?[]:[`Switch stretched: ${label} ${box.width}x${box.height}`];
   if(['checkbox','radio'].includes(type))return box.width<=24&&box.height<=24&&parseFloat(css.paddingLeft)===0?[]:[`Choice stretched: ${label} ${box.width}x${box.height}`];
   if(type==='range')return box.height<=32?[]:[`Range stretched: ${label}`];
   if(['color','hidden','file'].includes(type))return [];
@@ -52,7 +53,7 @@ test('all ten real admin pages use styled controls and fit the viewport',async({
 test('store checkboxes, checkout inputs, payment choices and lookup are usable',async({page},testInfo)=>{
  test.setTimeout(90000);const errors=await admin(page);
  await page.getByRole('navigation',{name:'Menu quản trị'}).getByRole('button',{name:'Cửa hàng',exact:true}).click();
- const choice=page.getByLabel('Hiện giỏ hàng',{exact:true});await expect(choice).toHaveCSS('appearance','none');await expect(choice).toHaveCSS('background-image',/data:image/);await expect(choice).toBeChecked();await choice.uncheck();await expect(choice).not.toBeChecked();await choice.check();await choice.focus();await page.keyboard.press('Space');await expect(choice).not.toBeChecked();await page.keyboard.press('Space');await expect(choice).toBeChecked();
+ const choice=page.getByLabel('Hiện giỏ hàng',{exact:true});await expect(choice).toHaveCSS('appearance','none');await expect(choice).toHaveCSS('background-image',/radial-gradient/);await expect(choice).toBeChecked();await choice.uncheck();await expect(choice).not.toBeChecked();await choice.check();await choice.focus();await page.keyboard.press('Space');await expect(choice).not.toBeChecked();await page.keyboard.press('Space');await expect(choice).toBeChecked();
  await expect(page.locator('.cart-selection-preview input[type=number]')).toHaveCSS('border-top-style','none');
  const input=page.getByLabel('Tên nút giỏ hàng',{exact:true});await input.fill('Túi sản phẩm');await input.focus();await expect(input).toBeFocused();await expect(input).toHaveCSS('outline-style','solid');
  const tabs=page.getByRole('navigation',{name:'Thiết lập cửa hàng'});

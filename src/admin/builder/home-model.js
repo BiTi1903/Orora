@@ -1,3 +1,4 @@
+import {footerCopy,FOOTER_LABELS} from "../../lib/footer-copy";
 import {DEFAULT_ABOUT,DEFAULT_TICKER} from "./defaults";
 
 const DEFAULT_HERO = {
@@ -34,7 +35,7 @@ const DEFAULT_COLLECTION = {
     },
     title: {
       fontFamily: '"Cormorant Garamond", serif',
-      fontSize: 72,
+      fontSize: "",
       fontWeight: 600,
       letterSpacing: -3,
       lineHeight: 0.92,
@@ -42,7 +43,7 @@ const DEFAULT_COLLECTION = {
     },
     highlight: {
       fontFamily: '"Cormorant Garamond", serif',
-      fontSize: 72,
+      fontSize: "",
       fontWeight: 400,
       letterSpacing: -3,
       lineHeight: 0.92,
@@ -54,7 +55,7 @@ const DEFAULT_COLLECTION = {
     number: {
       fontSize: 12,
       letterSpacing: 1,
-      color: "#e2678f",
+      color: "#b8446d",
     },
     name: {
       fontFamily: '"Cormorant Garamond", serif',
@@ -260,7 +261,7 @@ const DEFAULT_FEATURES = {
     },
     title: {
       fontFamily: '"Cormorant Garamond", serif',
-      fontSize: 48,
+      fontSize: "",
       fontWeight: 600,
       color: "#3a1526",
     },
@@ -313,20 +314,20 @@ const DEFAULT_REVIEWS = {
     },
     title: {
       fontFamily: '"Cormorant Garamond", serif',
-      fontSize: 48,
+      fontSize: "",
       fontWeight: 600,
       color: "#3a1526",
     },
     highlight: {
       fontFamily: '"Cormorant Garamond", serif',
-      fontSize: 48,
+      fontSize: "",
       fontWeight: 400,
       color: "#e2678f",
       fontStyle: "italic",
     },
     titleEnd: {
       fontFamily: '"Cormorant Garamond", serif',
-      fontSize: 48,
+      fontSize: "",
       fontWeight: 600,
       color: "#3a1526",
     },
@@ -345,25 +346,19 @@ const DEFAULT_REVIEWS = {
 };
 
 const DEFAULT_FOOTER = {
+  ...FOOTER_LABELS,
   footerLogo: "ORORA",
   footerDescription: "Chăm sóc làn da, nuôi dưỡng sự tự tin.",
-  footerInfoTitle: "Information",
-  footerAboutText: "About us",
-  footerShopText: "Shop",
   footerTrackingText: "Tra cứu đơn hàng",
-  footerTermsText: "Terms & Conditions",
-  footerPrivacyText: "Privacy Policy",
-  footerContactTitle: "Contact",
   footerZaloText: "Zalo",
   footerPhone: "0822.466.800",
   footerEmail: "sales@ororavn.com",
   footerAddress: "207A Nguyễn Văn Thủ, Tân Định, HCM",
-  footerSocialTitle: "Follow us",
   footerInstagram: "#",
   footerFacebook: "#",
   footerTikTok: "#",
   footerYouTube: "#",
-  footerCopyright: "© 2026 ORORA. All rights reserved.",
+  footerCopyright: "© 2026 ORORA. Bảo lưu mọi quyền.",
   footerCompanyNumber: "CTY TNHH ORORA No. 0123456789",
   footerStyles: {
     logo: {
@@ -407,13 +402,13 @@ const DEFAULT_NEWSLETTER = {
   newsletterStyles: {
     title: {
       fontFamily: '"Cormorant Garamond", serif',
-      fontSize: 48,
+      fontSize: "",
       fontWeight: 600,
       color: "#3a1526",
     },
     highlight: {
       fontFamily: '"Cormorant Garamond", serif',
-      fontSize: 48,
+      fontSize: "",
       fontWeight: 500,
       fontStyle: "italic",
       color: "#b8446d",
@@ -677,6 +672,7 @@ function createReviews(data = {}) {
 }
 
 function createFooter(data = {}) {
+  data=footerCopy(data);
   const result = { ...DEFAULT_FOOTER };
   for (const key of Object.keys(DEFAULT_FOOTER)) {
     if (key === "footerStyles") continue;

@@ -46,7 +46,7 @@
   }
 
   .collection-header h2 {
-    font-size: 65px;
+    font-size: var(--text-section-title);
     letter-spacing: -4px;
   }
 
@@ -81,7 +81,7 @@
   }
 
   .collection-header h2 {
-    font-size: 54px;
+    font-size: var(--text-section-title);
   }
 
   .gallery {

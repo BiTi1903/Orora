@@ -51,7 +51,7 @@
   border-radius: var(--ad-r-md);
   outline: none;
   color: var(--a-plum);
-  background-color: #fff;
+  background-color: var(--ad-surface);
   font: 400 14px/1.5 "Jost", "Segoe UI", Arial, sans-serif;
   transition: border-color .15s, box-shadow .15s, background-color .15s;
 }
@@ -65,7 +65,7 @@
 :is(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) select[multiple]:not(:where([data-admin-preview] *, .builder-preview *)) { appearance: auto; background-image: none; padding-right: 13px; }
 :where(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) textarea:not(:where([data-admin-preview] *, .builder-preview *)) { resize: vertical; min-height: 96px; }
 :where(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) input:not(:where([data-admin-preview] *, .builder-preview *))::placeholder,
-:where(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) textarea:not(:where([data-admin-preview] *, .builder-preview *))::placeholder { color: #88737d; opacity: 1; }
+:where(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) textarea:not(:where([data-admin-preview] *, .builder-preview *))::placeholder { color: var(--ad-muted); opacity: 1; }
 
 :is(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) input:is([type="checkbox"], [type="radio"]):not(:where([data-admin-preview] *, .builder-preview *)) {
   appearance: none;
@@ -94,7 +94,7 @@
   border-color: var(--ad-primary); background-color: var(--ad-primary);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.4 6.4l2.4 2.4 4.8-5.2' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
-:is(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) input[type="checkbox"]:indeterminate:not(:where([data-admin-preview] *, .builder-preview *)) { background-color: var(--ad-primary); border-color: var(--ad-primary); background-image: linear-gradient(#fff,#fff); background-size: 9px 2px; }
+:is(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) input[type="checkbox"]:indeterminate:not(:where([data-admin-preview] *, .builder-preview *)) { background-color: var(--ad-primary); border-color: var(--ad-primary); background-image: linear-gradient(var(--ad-surface),var(--ad-surface)); background-size: 9px 2px; }
 :is(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) input[type="radio"]:not(:where([data-admin-preview] *, .builder-preview *)) { border-radius: 50%; }
 :is(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) input[type="radio"]:checked:not(:where([data-admin-preview] *, .builder-preview *)) { border-color: var(--ad-primary); background-image: radial-gradient(circle, var(--ad-primary) 0 4px, transparent 4.5px); }
 :is(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) label:has(> input:is([type="checkbox"], [type="radio"])):not(:where([data-admin-preview] *, .builder-preview *)) {
@@ -103,40 +103,39 @@
   gap: 10px;
   min-height: 40px;
   padding: 8px 10px;
-  border-radius: 10px;
+  border-radius: var(--ad-r-md);
   font-size: 14px;
   line-height: 1.55;
   color: var(--a-plum);
   cursor: pointer;
   overflow-wrap: anywhere;
 }
-:where(.admin-shell, .admin-main, .admin-login, .visual-builder) label:has(> input:checked):not(:where([data-admin-preview] *, .builder-preview *)) { background-color: var(--ad-primary-soft); }
+:where(.admin-shell, .admin-main, .admin-login, .visual-builder) label:has(> input:checked):not(:where([data-admin-preview] *, .builder-preview *)) { font-weight: 600; }
 :is(.admin-shell, .admin-main, .admin-login, .visual-builder) input[type="range"]:not(:where([data-admin-preview] *, .builder-preview *)) { appearance: auto; min-height: 28px; height: 28px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; accent-color: var(--a-deep); }
-:is(.admin-shell, .admin-main, .admin-login, .visual-builder) input[type="color"]:not(:where([data-admin-preview] *, .builder-preview *)) { display: block; flex: 0 0 48px; width: 48px; max-width: 100%; height: 40px; min-height: 40px; padding: 4px; border: 1px solid var(--ad-line-strong); border-radius: 10px; background: #fff; cursor: pointer; }
-:where(.admin-shell, .admin-main, .admin-login, .visual-builder) input[type="file"]::file-selector-button { padding: 9px 12px; margin-right: 10px; border: 1px solid var(--a-line); border-radius: 9px; background: #fff; color: var(--a-deep); font: inherit; cursor: pointer; }
+:is(.admin-shell, .admin-main, .admin-login, .visual-builder) input[type="color"]:not(:where([data-admin-preview] *, .builder-preview *)) { display: block; flex: 0 0 48px; width: 48px; max-width: 100%; height: 40px; min-height: 40px; padding: 4px; border: 1px solid var(--ad-line-strong); border-radius: var(--ad-r-md); background: var(--ad-surface); cursor: pointer; }
+:where(.admin-shell, .admin-main, .admin-login, .visual-builder) input[type="file"]::file-selector-button { padding: 9px 12px; margin-right: 10px; border: 1px solid var(--a-line); border-radius: var(--ad-r-sm); background: var(--ad-surface); color: var(--a-deep); font: inherit; cursor: pointer; }
 
-:where(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) button:where(:not([class])):not(:where([data-admin-preview] *, .builder-preview *)) { min-height: 40px; padding: 9px 14px; border: 1px solid var(--a-line); border-radius: 10px; color: var(--a-plum); background: #fff; font: inherit; cursor: pointer; }
+:where(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) button:where(:not([class])):not(:where([data-admin-preview] *, .builder-preview *)) { min-height: 40px; padding: 9px 14px; border: 1px solid var(--a-line); border-radius: var(--ad-r-md); color: var(--a-plum); background: var(--ad-surface); font: inherit; cursor: pointer; }
 :is(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) :is(input, select, textarea, button, summary, a):focus-visible:not(:where([data-admin-preview] *, .builder-preview *)) { outline: 2px solid var(--a-focus); outline-offset: 3px; }
 :is(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) :is(input, select, textarea):focus:not(:where([data-admin-preview] *, .builder-preview *)) { border-color: var(--a-focus); box-shadow: var(--ad-ring); }
-:is(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) :is(input, select, textarea):disabled:not(:where([data-admin-preview] *, .builder-preview *)) { cursor: not-allowed; opacity: .65; background-color: #f4eff2; }
-:is(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) :is(input, textarea)[readonly]:not(:where([data-admin-preview] *, .builder-preview *)) { background-color: #f8f4f6; color: var(--a-muted); }
-:where(.admin-shell, .admin-main, .admin-login, .visual-builder) [aria-invalid="true"] { border-color: #b33b35; }
+:is(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) :is(input, select, textarea):disabled:not(:where([data-admin-preview] *, .builder-preview *)) { cursor: not-allowed; opacity: .65; background-color: var(--ad-surface-2); }
+:is(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) :is(input, textarea)[readonly]:not(:where([data-admin-preview] *, .builder-preview *)) { background-color: var(--ad-surface-2); color: var(--a-muted); }
+:where(.admin-shell, .admin-main, .admin-login, .visual-builder) [aria-invalid="true"] { border-color: var(--ad-danger); }
 :where(.admin-shell, .admin-main, .admin-login, .visual-builder) button:disabled:not(:where([data-admin-preview] *, .builder-preview *)) { cursor: not-allowed; opacity: .55; }
 
-:where(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) summary:not(:where([data-admin-preview] *, .builder-preview *)) { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--a-line); border-radius: 10px; background: #fff; color: var(--a-plum); font-size: 14px; font-weight: 500; list-style: none; cursor: pointer; overflow-wrap: anywhere; }
+:where(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) summary:not(:where([data-admin-preview] *, .builder-preview *)) { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--a-line); border-radius: var(--ad-r-md); background: var(--ad-surface); color: var(--a-plum); font-size: 14px; font-weight: 500; list-style: none; cursor: pointer; overflow-wrap: anywhere; }
 :where(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) summary:not(:where([data-admin-preview] *, .builder-preview *))::-webkit-details-marker { display: none; }
 :where(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) summary:not(:where([data-admin-preview] *, .builder-preview *))::after { content: '+'; flex-shrink: 0; font-size: 18px; color: var(--a-muted); }
 :where(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) details[open] > summary:not(:where([data-admin-preview] *, .builder-preview *))::after { content: '−'; }
 :where(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) details[open] > summary:not(:where([data-admin-preview] *, .builder-preview *)) { margin-bottom: 12px; }
-:where(.admin-shell, .admin-main, .admin-login, .visual-builder) fieldset:not(:where([data-admin-preview] *, .builder-preview *)) { min-width: 0; border-color: var(--a-line); border-radius: 12px; }
+:where(.admin-shell, .admin-main, .admin-login, .visual-builder) fieldset:not(:where([data-admin-preview] *, .builder-preview *)) { min-width: 0; border-color: var(--a-line); border-radius: var(--ad-r-md); }
 :where(.admin-shell, .admin-main, .admin-login, .visual-builder) legend:not(:where([data-admin-preview] *, .builder-preview *)) { padding-inline: 6px; font-size: 13px; font-weight: 600; color: var(--a-deep); }
 :where(.admin-shell, .admin-main, .admin-login, .visual-builder) :is(.admin-form, .admin-card, .admin-field, .admin-workspace-panel) { min-width: 0; }
 :where(.admin-shell, .admin-main, .admin-login, .visual-builder) .admin-field > label:has(> :is(input, select, textarea)):not(:where([data-admin-preview] *, .builder-preview *)) { display: grid; gap: 7px; }
 :where(.admin-shell, .admin-main, .admin-login, .visual-builder) [hidden] { display: none !important; }
 
 @media (hover: hover) {
-  :where(.admin-shell, .admin-main, .admin-login, .visual-builder) label:has(> input:is([type="checkbox"], [type="radio"])):hover { background-color: var(--ad-primary-soft); }
-  :where(.admin-shell, .admin-main, .admin-login, .visual-builder) summary:hover:not(:where([data-admin-preview] *, .builder-preview *)) { border-color: #c995ac; }
+  :where(.admin-shell, .admin-main, .admin-login, .visual-builder) summary:hover:not(:where([data-admin-preview] *, .builder-preview *)) { border-color: var(--ad-line-strong); }
 }
 @media (max-width: 800px), (pointer: coarse) {
   :is(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) :is(input, select, textarea):not(:where([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="hidden"], [type="button"], [type="submit"], [type="reset"])):not(:where([data-admin-preview] *, .builder-preview *)) { font-size: 16px !important; }
@@ -152,3 +151,13 @@
 
 /* Embedded customer views inherit the website text rhythm, not the editor form rhythm. */
 [data-admin-preview] { font-family: var(--font-body); line-height: normal; }
+
+/* Boolean settings are switches; multi-select choices remain checkboxes. */
+:is(.admin-shell,.admin-main,.visual-builder) input[role="switch"]:not(:where([data-admin-preview] *)) {
+ width:44px; height:26px; min-height:26px; flex:0 0 44px; padding:0; border:1px solid var(--ad-line-strong); border-radius:var(--ad-r-pill);
+ background-color:var(--ad-line-strong); background-image:radial-gradient(circle,var(--ad-surface) 70%,transparent 72%); background-size:18px 18px; background-position:3px center; background-repeat:no-repeat;
+ transition:background-position .15s,background-color .15s,border-color .15s;
+}
+:is(.admin-shell,.admin-main,.visual-builder) input[role="switch"]:checked:not(:where([data-admin-preview] *)) { background-color:var(--ad-primary); border-color:var(--ad-primary); background-image:radial-gradient(circle,var(--ad-surface) 70%,transparent 72%); background-size:18px 18px; background-position:21px center; }
+@media(prefers-reduced-motion:reduce) { :is(.admin-shell,.admin-main,.visual-builder) input[role="switch"] { transition:none; } }
+@media(forced-colors:active) { :is(.admin-shell,.admin-main,.visual-builder) input[role="switch"] { appearance:auto; -webkit-appearance:auto; background-image:none!important; } }

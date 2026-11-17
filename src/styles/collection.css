@@ -68,8 +68,8 @@
   align-items: center;
   text-align: center;
   font-family: var(--font-display);
-  font-size: clamp(56px, 8.5vw, 130px);
-  line-height: 0.92;
+  font-size: var(--text-section-title);
+  line-height: var(--text-section-leading);
   letter-spacing: -3px;
   font-weight: 600;
 }
@@ -169,9 +169,9 @@
 }
 
 .gallery-info span {
-  font-size: 12px;
+  font-size: var(--text-caption);
   letter-spacing: 1px;
-  color: var(--rose);
+  color: var(--rose-deep);
 }
 
 .gallery-info p {

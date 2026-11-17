@@ -1,3 +1,4 @@
+import "../styles/order-tracking.css";
 import { ORDER_STATUSES } from '../lib/order-tracking';
 import { formatVnd, PAYMENT_LABELS } from '../lib/commerce';
 import {trackingCopy,trackingStyle} from '../lib/order-tracking-copy';

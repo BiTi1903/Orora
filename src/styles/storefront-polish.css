@@ -36,7 +36,7 @@
   #root > main .about-stats { gap: 20px; }
   #root > main .collection { padding-block: 64px; }
   #root > main .collection-header { margin-bottom: 28px; gap: 12px; }
-  #root > main .collection-header h2 { font-size: clamp(36px, 10vw, 52px); letter-spacing: -1px; line-height: 1.05; }
+  #root > main .collection-header h2 { font-size: var(--text-section-title); letter-spacing: -1px; line-height: var(--text-section-leading); }
   #root > main .collection-categories { margin-bottom: 16px; }
   #root > main .scroll-text, #root > main .ex-section { padding: 64px 20px; }
   #root > main .scroll-text-label { margin-bottom: 24px; letter-spacing: 2px; }

@@ -248,7 +248,7 @@ export default function ProductsAdmin() {
           </div>
           <div className="admin-field"><label htmlFor="product-description">Mô tả ngắn</label><textarea id="product-description" name="description" rows={3} value={form.description || ""} onChange={change} disabled={busy} /></div>
           <label className="admin-check">
-            <input type="checkbox" disabled={busy} checked={form.active !== false} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
+            <input type="checkbox" role="switch" disabled={busy} checked={form.active !== false} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
             Hiển thị trên website
           </label>
       </div>

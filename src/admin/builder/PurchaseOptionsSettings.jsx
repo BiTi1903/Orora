@@ -8,7 +8,7 @@ export default function PurchaseOptionsSettings({ value = {}, onChange, initialG
   const labels = purchaseChannelLabels(value);
   return <>
     <InspectorGroup title="Giá và tạm tính" open={initialGroup==="subtotal"}><SettingGroup title="Giá theo dung tích và số lượng">
-     <label><input type="checkbox" checked={value.subtotalEnabled!==false} onChange={e=>onChange({subtotalEnabled:e.target.checked})}/>Hiện tạm tính sau khi chọn dung tích</label>
+     <label><input type="checkbox" role="switch" checked={value.subtotalEnabled!==false} onChange={e=>onChange({subtotalEnabled:e.target.checked})}/>Hiện tạm tính sau khi chọn dung tích</label>
      <details><summary>Nội dung và kiểu chữ tạm tính</summary>
      {[['subtotalLabel','Tiêu đề','Tạm tính'],['subtotalNote','Ghi chú','Chưa gồm phí giao hàng'],['subtotalQuantityLabel','Khi số lượng chưa hợp lệ','Chọn số lượng hợp lệ'],['subtotalContactLabel','Khi chưa có giá','Liên hệ để báo giá']].map(([key,label,fallback])=><label key={key}>{label}<input value={value[key]??''} placeholder={fallback} onChange={e=>onChange({[key]:e.target.value})}/></label>)}
      {[['subtotalPadding','Đệm khung tạm tính (px)',10,6,24],['subtotalRadius','Bo góc khung tạm tính (px)',12,0,28]].map(([key,label,fallback,min,max])=><label key={key}>{label}<input type="number" min={min} max={max} value={value[key]??fallback} onChange={event=>onChange({[key]:Number(event.target.value)})}/></label>)}

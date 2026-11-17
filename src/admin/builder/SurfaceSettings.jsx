@@ -15,7 +15,7 @@ export default function SurfaceSettings({value={},onChange}){
   </SettingGroup>
   <SettingGroup title="Hiệu ứng kính — chỉ mobile">
    <details><summary>Thành phần áp dụng và chất liệu</summary>
-    {TOGGLES.map(([key,label])=><label className="admin-check" key={key}><input type="checkbox" checked={value[key]!==false} onChange={e=>onChange({[key]:e.target.checked})}/>{label}</label>)}
+    {TOGGLES.map(([key,label])=><label className="admin-check" key={key}><input type="checkbox" role="switch" checked={value[key]!==false} onChange={e=>onChange({[key]:e.target.checked})}/>{label}</label>)}
     {fields(GLASS_FIELDS)}
     <small className="builder-help">Chọn Mobile trên Preview để kiểm tra. Nền hội thoại AI luôn giữ đặc để dễ đọc.</small>
    </details>

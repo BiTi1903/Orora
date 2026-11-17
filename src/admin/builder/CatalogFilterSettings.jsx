@@ -3,9 +3,9 @@ import {CATALOG_FILTER_TEXT} from '../../lib/catalog-filters';
 const labels={filterLabel:'Nút bộ lọc',sortLabel:'Nhãn sắp xếp',priceAsc:'Nút giá thấp',priceDesc:'Nút giá cao',gridLabel:'Nút dạng lưới',carouselLabel:'Nút dạng trượt',viewLabel:'Nhãn kiểu danh sách',emptyLabel:'Khi không có kết quả',previousLabel:'Trang trước',nextLabel:'Trang sau',pageLabel:'Số trang — giữ {page}, {pages}',contactPriceLabel:'Khi chưa niêm yết giá'};
 export default function CatalogFilterSettings({value={},onChange}){
  return <SettingGroup title="Hai nút sắp xếp giá">
-  <label className="admin-check"><input type="checkbox" checked={value.enabled!==false} onChange={event=>onChange({enabled:event.target.checked})}/>Hiện nút Bộ lọc</label>
+  <label className="admin-check"><input type="checkbox" role="switch" checked={value.enabled!==false} onChange={event=>onChange({enabled:event.target.checked})}/>Hiện nút Bộ lọc</label>
   <details><summary>Tiêu chí, bố cục và chữ hiển thị</summary>
-   {[['showViewToggle','Cho khách đổi lưới / trượt']].map(([key,label])=><label className="admin-check" key={key}><input type="checkbox" checked={value[key]!==false} onChange={event=>onChange({[key]:event.target.checked})}/>{label}</label>)}
+   {[['showViewToggle','Cho khách đổi lưới / trượt']].map(([key,label])=><label className="admin-check" key={key}><input type="checkbox" role="switch" checked={value[key]!==false} onChange={event=>onChange({[key]:event.target.checked})}/>{label}</label>)}
    <div className="builder-field"><label>Kiểu danh sách mặc định<select value={value.layout||'auto'} onChange={event=>onChange({layout:event.target.value})}><option value="auto">Tự động — lưới khi lọc hoặc nhiều hơn 12 sản phẩm</option><option value="grid">Dạng lưới</option><option value="carousel">Dạng trượt</option></select></label></div>
    <div className="builder-field"><label>Số sản phẩm mỗi trang lưới<input type="number" min="4" max="48" value={value.pageSize??12} onChange={event=>onChange({pageSize:Number(event.target.value)})}/></label></div>
    {Object.entries(CATALOG_FILTER_TEXT).filter(([key])=>key in labels).map(([key,fallback])=><div className="builder-field" key={key}><label>{labels[key]}<input value={value[key]??''} maxLength={300} placeholder={fallback} onChange={event=>onChange({[key]:event.target.value})}/></label></div>)}

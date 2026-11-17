@@ -5,6 +5,7 @@ import HeroGlassSettings from "./HeroGlassSettings";
 import InformationTabsSettings from "./InformationTabsSettings";
 import MobileDetailSettings from "./MobileDetailSettings";
 import DesktopCardSettings from './DesktopCardSettings';
+import MobileCardSettings from './MobileCardSettings';
 import ReviewCardSettings from './ReviewCardSettings';
 import CatalogFilterSettings from "./CatalogFilterSettings";
 import ProductLoadErrorSettings from "./ProductLoadErrorSettings";
@@ -89,7 +90,7 @@ export function StylePanel({
       ? `${statMatch[1] === "statValue" ? "Chữ lớn (đồng bộ)" : "Chữ nhỏ (đồng bộ)"} #${Number(statMatch[2]) + 1}`
       : aboutTitleMap[selected] || selected;
 
-  const settings=section==='navbar'?<NavbarSectionSettings navbar={navbar} onChange={onChange} includeCart={selected!=="navCart"}/>:section==='hero'?<HeroGlassSettings hero={hero} onChange={onChange}/>:section==='collection'?<><InspectorGroup title="Nút và giá thẻ sản phẩm"><DesktopCardSettings value={collection.productCardStyles?.desktopActions} onChange={patch=>onChange({_styleGroup:'productCardStyles',_styleKey:'desktopActions',style:patch})}/></InspectorGroup>
+  const settings=section==='navbar'?<NavbarSectionSettings navbar={navbar} onChange={onChange} includeCart={selected!=="navCart"}/>:section==='hero'?<HeroGlassSettings hero={hero} onChange={onChange}/>:section==='collection'?<><InspectorGroup title="Nút và giá thẻ sản phẩm"><MobileCardSettings priceStyle={collection.productCardStyles?.price} value={collection.productCardStyles?.mobileActions} onChange={patch=>onChange({_styleGroup:'productCardStyles',_styleKey:'mobileActions',style:patch})}/><DesktopCardSettings value={collection.productCardStyles?.desktopActions} onChange={patch=>onChange({_styleGroup:'productCardStyles',_styleKey:'desktopActions',style:patch})}/></InspectorGroup>
 <InspectorGroup title="Bộ lọc sản phẩm"><CatalogFilterSettings value={collection.collectionStyles?.filters} onChange={patch=>onChange({_styleGroup:"collectionStyles",_styleKey:"filters",style:patch})}/></InspectorGroup>
 <InspectorGroup title="Trạng thái tải sản phẩm"><ProductLoadErrorSettings value={collection.collectionStyles?.loadError} onChange={patch=>onChange({_styleGroup:"collectionStyles",_styleKey:"loadError",style:patch})}/></InspectorGroup>
 <InspectorGroup title="Dãy sản phẩm trượt"><CollectionCarouselSettings value={collection.collectionStyles?.carousel} onChange={patch => onChange({ _styleGroup: "collectionStyles", _styleKey: "carousel", style: patch })} /></InspectorGroup></>:section==='productdetail'?<><InspectorGroup title="Trạng thái tải sản phẩm"><ProductLoadErrorSettings value={productDetail.loadError||{}} onChange={patch=>onChange({loadError:{...productDetail.loadError,...patch}})}/></InspectorGroup>

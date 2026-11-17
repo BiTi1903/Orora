@@ -6,10 +6,15 @@
 .gallery-item .card-cart-button { display:flex; align-items:center; justify-content:center; width:44px; height:44px; min-height:44px; min-width:0; padding:0; margin:0; border:1px solid #e9cbd7; border-radius:50%; background:#fffafc; color:var(--rose-deep); cursor:pointer; }
 .gallery-item .card-cart-button svg { display:block; width:22px; height:22px; }
 @media(max-width:768px) {
- .collection .gallery-item .product-bottom { display:grid; grid-template-columns:minmax(0,1fr); align-items:stretch; gap:8px; }
- .collection .gallery-item .product-price { justify-self:end; }
- .collection .gallery-item .product-card-actions { display:grid; grid-template-columns:minmax(0,1fr) 44px; width:100%; min-width:0; }
- .collection .gallery-item .product-card-actions .buy-button { width:100%!important; height:44px!important; min-height:44px; max-height:44px; margin:0!important; padding:8px!important; }
+ .collection .gallery-item .product-bottom { display:grid; grid-template-columns:minmax(0,1fr) 44px; align-items:center; gap:8px; }
+ .collection .gallery-item .product-price { grid-column:1; grid-row:1; justify-self:stretch; text-align:var(--mobile-card-price-align); font-family:var(--font-body); font-size:var(--mobile-card-price-size)!important; white-space:normal; overflow-wrap:anywhere; }
+ .collection .gallery-item .product-card-actions { display:contents; }
+ .collection .gallery-item .card-cart-button { grid-column:2; grid-row:1; }
+ .collection .gallery-item .product-card-actions .buy-button { grid-column:1 / -1; grid-row:2; width:100%!important; height:44px!important; min-height:44px; max-height:44px; margin:0!important; padding:8px!important; }
+ .collection .gallery-item .product-bottom:not(:has(.card-cart-button)) .product-price { grid-column:1 / -1; }
+ .collection .gallery-item[data-mobile-actions="stacked"] .product-price { grid-column:1 / -1; }
+ .collection .gallery-item[data-mobile-actions="stacked"] .buy-button { grid-column:1; }
+ .collection .gallery-item[data-mobile-actions="stacked"] .card-cart-button { grid-row:2; }
 }
 .gallery-item .product-view-arrow { width:12px; height:12px; flex-shrink:0; }
 @media(min-width:769px) {
