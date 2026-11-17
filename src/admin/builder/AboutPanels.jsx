@@ -1,6 +1,7 @@
 import ImageUploadControl from "./ImageUploadControl";
 import {
   SettingGroup,
+  SpacingControls,
   SelectField,
   StyleTypographyBlock,
   TypographyControls,
@@ -23,25 +24,7 @@ export function SectionSettings({ data, onChange }) {
       </SettingGroup>
 
       <SettingGroup title="Khoảng cách">
-        <SelectField
-          label="Padding trên"
-          value={data.paddingTop}
-          options={SPACE_OPTIONS}
-          suffix="px"
-          onChange={(value) =>
-            onChange({ paddingTop: Number(value) })
-          }
-        />
-
-        <SelectField
-          label="Padding dưới"
-          value={data.paddingBottom}
-          options={SPACE_OPTIONS}
-          suffix="px"
-          onChange={(value) =>
-            onChange({ paddingBottom: Number(value) })
-          }
-        />
+        <SpacingControls style={data} onChange={onChange}/>
 
         <SelectField
           label="Khoảng cách cột"
@@ -226,7 +209,8 @@ export function StatsSettings({ stats, about, onChange }) {
       <SettingGroup title="Kiểu mô tả">
         <TypographyControls
           style={{
-            fontFamily: toBareFontFamily(labelStyle.fontFamily),
+            ...labelStyle,
+              fontFamily: toBareFontFamily(labelStyle.fontFamily),
             fontSize: labelStyle.fontSize ?? "",
             fontWeight: labelStyle.fontWeight ?? "",
             color: labelStyle.color || "",

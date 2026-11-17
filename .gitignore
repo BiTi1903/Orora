@@ -30,3 +30,6 @@ dist-ssr
 # Browser test artifacts
 playwright-report/
 test-results/
+
+# Archived source copies
+/Orora.zip

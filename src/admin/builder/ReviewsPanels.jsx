@@ -121,6 +121,7 @@ export function ReviewsSettings({
         <SettingGroup title="Typography — Tên khách">
           <TypographyControls
             style={{
+              ...styles.reviewName,
               fontFamily: toBareFontFamily(styles.reviewName?.fontFamily),
               fontSize: styles.reviewName?.fontSize ?? "",
               fontWeight: styles.reviewName?.fontWeight ?? "",

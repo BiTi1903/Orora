@@ -379,15 +379,7 @@ function About({
     background:
       section.background || "#fffafc",
 
-    paddingTop:
-      section.paddingTop != null
-        ? `${Number(section.paddingTop)}px`
-        : undefined,
-
-    paddingBottom:
-      section.paddingBottom != null
-        ? `${Number(section.paddingBottom)}px`
-        : undefined,
+    ...Object.fromEntries(['margin','padding'].flatMap(kind=>['Top','Right','Bottom','Left'].filter(side=>section[kind+side]!=null&&section[kind+side]!=='').map(side=>[kind+side,`${Number(section[kind+side])}px`]))),
 
     gap:
       section.gap != null

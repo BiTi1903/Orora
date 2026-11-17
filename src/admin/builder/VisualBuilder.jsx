@@ -745,7 +745,7 @@ export default function VisualBuilder({workspace="home",requestedStoreSection="c
                   <span className="builder-dot" />
                 )}
               </button>
-              <button type="button" role="switch" className="builder-section-visibility" aria-label={`Hiển thị ${section.label} trên website`} aria-checked={isEnabled(section.key)} disabled={loading || loadError || saving || section.disabled} onClick={() => toggleSection(section.key)}><span aria-hidden="true" /></button>
+              <button type="button" role="switch" className="builder-section-visibility" aria-label={`Hiển thị ${section.label} trên website`} aria-checked={isEnabled(section.key)} disabled={loading || loadError || saving || section.disabled} onClick={() => toggleSection(section.key)}><span className="builder-visibility-dot" aria-hidden="true" /><span className="builder-visibility-label">{isEnabled(section.key)?"Đang hiện":"Đang ẩn"}</span></button>
               </div>
             ))}
           </div>

@@ -2,12 +2,24 @@ import { useLayoutEffect,useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 
 export default function ScrollToTop(){
- const {pathname,hash,search}=useLocation(),lastPath=useRef(null);
+ const {pathname,hash,search,key}=useLocation(),lastPath=useRef(null);
+ useLayoutEffect(()=>{
+  const previous=window.history.scrollRestoration;
+  window.history.scrollRestoration='manual';
+  return()=>{window.history.scrollRestoration=previous;};
+ },[]);
  useLayoutEffect(()=>{
   const pathChanged=lastPath.current!==pathname;lastPath.current=pathname;
   let id=(hash||'').slice(1);
   try{id=decodeURIComponent(id);}catch{/* An invalid fragment must not crash the page. */}
-  if(!id){if(pathChanged)window.scrollTo(0,0);return;}
+  if(!id){
+   if(!pathChanged&&pathname!=='/tra-cuu-don-hang')return;
+   const top=()=>window.scrollTo({top:0,left:0,behavior:'instant'});
+   top();
+   // Safari may finish unlocking the drawer / restoring layout after this effect.
+   const frame=requestAnimationFrame(()=>{if(window.scrollY!==0)top();});
+   return()=>cancelAnimationFrame(frame);
+  }
   const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const behavior=pathChanged||reduced?'instant':'smooth';
   const go=()=>{const target=document.getElementById(id);if(!target)return false;target.scrollIntoView({behavior,block:'start'});return true;};
@@ -21,6 +33,6 @@ export default function ScrollToTop(){
   observer.observe(document.body,{childList:true,subtree:true});
   window.addEventListener('wheel',interrupt,{passive:true});window.addEventListener('touchstart',interrupt,{passive:true});window.addEventListener('keydown',interrupt);
   return stop;
- },[pathname,hash,search]);
+ },[pathname,hash,search,key]);
  return null;
 }

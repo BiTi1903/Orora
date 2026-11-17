@@ -98,6 +98,7 @@ export function FeaturesSettings({
         <SettingGroup title="Typography — Nội dung ô">
           <TypographyControls
             style={{
+              ...styles.cardText,
               fontFamily: toBareFontFamily(styles.cardText?.fontFamily),
               fontSize: styles.cardText?.fontSize ?? "",
               fontWeight: styles.cardText?.fontWeight ?? "",
@@ -127,16 +128,17 @@ export function FeaturesSettings({
         <SettingGroup title="Typography — Icon">
           <TypographyControls
             style={{
+              ...styles.icon,
               fontFamily: toBareFontFamily(styles.icon?.fontFamily),
               fontSize: styles.icon?.fontSize ?? "",
               fontWeight: styles.icon?.fontWeight ?? "",
               color: styles.icon?.color || "",
               letterSpacing: styles.icon?.letterSpacing ?? "",
               lineHeight: styles.icon?.lineHeight ?? "",
-              italic: false,
-              textAlign: "center",
-              marginTop: 0,
-              marginBottom: 0,
+              italic: styles.icon?.italic || false,
+              textAlign: styles.icon?.textAlign || "center",
+              marginTop: styles.icon?.marginTop ?? "",
+              marginBottom: styles.icon?.marginBottom ?? "",
             }}
             onChange={(patch) => {
               const next = { ...patch, _styleKey: "icon" };

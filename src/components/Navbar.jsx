@@ -97,7 +97,7 @@ function Navbar({
       body.style.overflow = previous;
       ownerDocument.removeEventListener("keydown", onEscape);
       desktop.removeEventListener("change", onDesktop);
-      if (nav.isConnected) nav.querySelector(".menu")?.focus();
+      if (nav.isConnected) nav.querySelector(".menu")?.focus({preventScroll:true});
     };
   }, [menuOpen]);
 

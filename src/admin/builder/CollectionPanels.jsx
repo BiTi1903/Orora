@@ -1,6 +1,5 @@
 import MobileImageSettings from "./MobileImageSettings";
-import { SettingGroup, SelectField, StyleTypographyBlock } from "./ui";
-import { SPACE_OPTIONS } from "./options";
+import { SettingGroup, SelectField, StyleTypographyBlock, SpacingControls } from "./ui";
 
 export function CollectionSettings({
   selected,
@@ -23,15 +22,6 @@ export function CollectionSettings({
   if (meta.type === "cardImage" || selected === "cardImage") {
     const layout =
       collection.productCardStyles?.imageLayout || {};
-    const space = (label, key) => (
-      <SelectField
-        label={label}
-        value={layout[key] ?? 0}
-        options={SPACE_OPTIONS}
-        suffix="px"
-        onChange={(value) => onStyleChange({ [key]: Number(value) })}
-      />
-    );
     return (
       <>
         <SettingGroup title="Thẻ sản phẩm (ảnh + thông tin)">
@@ -112,27 +102,8 @@ export function CollectionSettings({
           </div>
         </SettingGroup>
 
-        <SettingGroup title="Padding (trên · phải · dưới · trái)">
-          <div className="builder-field-row">
-            {space("Trên", "paddingTop")}
-            {space("Phải", "paddingRight")}
-          </div>
-          <div className="builder-field-row">
-            {space("Dưới", "paddingBottom")}
-            {space("Trái", "paddingLeft")}
-          </div>
-        </SettingGroup>
+        <SpacingControls style={layout} onChange={onStyleChange} kinds={["padding","margin"]}/>
 
-        <SettingGroup title="Margin (trên · phải · dưới · trái)">
-          <div className="builder-field-row">
-            {space("Trên", "marginTop")}
-            {space("Phải", "marginRight")}
-          </div>
-          <div className="builder-field-row">
-            {space("Dưới", "marginBottom")}
-            {space("Trái", "marginLeft")}
-          </div>
-        </SettingGroup>
       </>
     );
   }

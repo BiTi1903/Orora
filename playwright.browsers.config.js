@@ -8,7 +8,7 @@ export default defineConfig({
   '**/browser-adaptation.spec.js','**/mobile-nav-reveal.spec.js',
   '**/popup-motion.spec.js','**/cart-toggle.spec.js','**/tracking-layout.spec.js',
   '**/ui-efficiency.spec.js','**/responsive-cleanup.spec.js',
-  '**/shopping.spec.js','**/editor-simplification.spec.js','**/admin-appearance.spec.js',
+  '**/shopping.spec.js','**/editor-simplification.spec.js','**/admin-appearance.spec.js','**/builder-spacing.spec.js','**/tracking-navigation.spec.js',
  ],
  projects:[
   {name:'chromium-android',use:{...devices['Pixel 7'],browserName:'chromium',launchOptions:base.use.launchOptions}},

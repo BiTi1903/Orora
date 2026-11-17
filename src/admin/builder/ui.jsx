@@ -28,10 +28,14 @@ export function StyleTypographyBlock({ style = {}, onStyleChange, title = "Kiể
           italic: style.italic || style.fontStyle === "italic",
           textAlign: style.textAlign || "left",
           textTransform: style.textTransform || "",
-          marginTop: style.marginTop ?? 0,
-          marginBottom: style.marginBottom ?? 0,
-          paddingTop: style.paddingTop ?? 0,
-          paddingBottom: style.paddingBottom ?? 0,
+          marginTop: style.marginTop ?? "",
+          marginRight: style.marginRight ?? "",
+          marginBottom: style.marginBottom ?? "",
+          marginLeft: style.marginLeft ?? "",
+          paddingTop: style.paddingTop ?? "",
+          paddingRight: style.paddingRight ?? "",
+          paddingBottom: style.paddingBottom ?? "",
+          paddingLeft: style.paddingLeft ?? "",
           maxWidth: style.maxWidth ?? 100,
         }}
         onChange={(patch) => {
@@ -173,57 +177,7 @@ export function TypographyControls({ style, onChange }) {
       </div>
 
       <details className="builder-advanced-controls"><summary>Khoảng cách và độ rộng</summary><SettingGroup title="Khoảng cách" collapsible={false}>
-        <div className="builder-field-row">
-          <SelectField
-            label="Margin trên"
-            value={s.marginTop}
-            options={SPACE_OPTIONS}
-            suffix="px"
-            onChange={(value) =>
-              onChange({
-                marginTop: Number(value),
-              })
-            }
-          />
-
-          <SelectField
-            label="Margin dưới"
-            value={s.marginBottom}
-            options={SPACE_OPTIONS}
-            suffix="px"
-            onChange={(value) =>
-              onChange({
-                marginBottom: Number(value),
-              })
-            }
-          />
-        </div>
-
-        <div className="builder-field-row">
-          <SelectField
-            label="Padding trên"
-            value={s.paddingTop}
-            options={SPACE_OPTIONS}
-            suffix="px"
-            onChange={(value) =>
-              onChange({
-                paddingTop: Number(value),
-              })
-            }
-          />
-
-          <SelectField
-            label="Padding dưới"
-            value={s.paddingBottom}
-            options={SPACE_OPTIONS}
-            suffix="px"
-            onChange={(value) =>
-              onChange({
-                paddingBottom: Number(value),
-              })
-            }
-          />
-        </div>
+        <SpacingControls style={s} onChange={onChange}/>
 
         <SelectField
           label="Chiều rộng tối đa"
@@ -304,8 +258,7 @@ export function SelectField({
         {extra}
         {list.map((option) => (
           <option key={String(option)} value={option}>
-            {option === "" ? "Mặc định" : option}
-            {suffix}
+            {option === "" ? "Mặc định" : `${option}${suffix || ""}`}
           </option>
         ))}
       </select>
@@ -316,6 +269,10 @@ export function SelectField({
 
 
 
+
+export function SpacingControls({style={},onChange,kinds=['margin','padding']}) {
+  return kinds.map(kind=><fieldset className="builder-spacing" key={kind}><legend>{kind==='margin'?'Margin · Khoảng cách ngoài':'Padding · Khoảng đệm trong'}</legend><div className="builder-field-row">{[['Top','trên'],['Right','phải'],['Bottom','dưới'],['Left','trái']].map(([side,label])=><SelectField key={side} label={`${kind==='margin'?'Margin':'Padding'} ${label}`} value={style[kind+side]??''} options={['',...(kind==='margin'?[-80,-64,-48,-32,-24,-16,-12,-8,-4]:[]),...SPACE_OPTIONS]} suffix="px" onChange={value=>onChange({[kind+side]:value===''?'':Number(value)})}/>)}</div></fieldset>);
+}
 
 export function ColorField({ label, value, onChange }) {
   const id = useId();
