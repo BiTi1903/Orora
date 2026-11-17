@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {mount,render} from './fixtures';
 const modules={
- 'hooks/useHomeContent.js':`export default function home(){return {loading:false,navLogo:'ORORA',navLinks:[{label:'Tra cứu đơn hàng',href:'/tra-cuu-don-hang',kind:'order-tracking'}],navStyles:{mobile:{afterTicker:false}}}}`,
+ 'hooks/useHomeContent.js':`export default function home(){return {loading:false,navLogo:'ORORA',navLinks:[{label:'Tra cứu đơn hàng',href:'/tra-cuu-don-hang',kind:'order-tracking'}],navStyles:{mobile:{safariLayout:"bar",afterTicker:false}}}}`,
  'hooks/useCategories.js':'export default function categories(){return {categories:[]}}',
 };
 async function fixture(page){
@@ -14,7 +14,7 @@ test('tracking from the bottom nav reaches the top immediately and works again o
  test.skip(page.viewportSize().width>768,'Mobile navigation');await fixture(page);
  const link=page.locator('.mobile-shop-nav').getByRole('link',{name:'Tra cứu',exact:true});await link.click();await expect(page.getByTestId('path')).toHaveText('/tra-cuu-don-hang');
  await expect.poll(()=>page.evaluate(()=>scrollY)).toBe(0);expect(await page.evaluate(()=>window.__topCalls)).toContain('instant');expect(await page.evaluate(()=>history.scrollRestoration)).toBe('manual');
- await page.evaluate(()=>window.scrollTo({top:2200,behavior:'instant'}));await link.click();await expect.poll(()=>page.evaluate(()=>scrollY)).toBe(0);
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));await page.evaluate(()=>window.scrollTo({top:2200,behavior:'instant'}));await expect.poll(()=>page.evaluate(()=>scrollY)).toBeGreaterThan(1500);await expect(link).toBeVisible();await link.click();await expect.poll(()=>page.evaluate(()=>scrollY)).toBe(0);
 });
 test('tracking from the open mobile menu releases the page lock without restoring the old scroll',async({page})=>{
  test.skip(page.viewportSize().width>768,'Mobile menu');await fixture(page);

@@ -62,3 +62,23 @@
 @media(prefers-reduced-motion:reduce) { .mobile-nav-lens,.mobile-shop-nav.is-sliding .mobile-nav-lens { top:5px; height:calc(100% - 10px - env(safe-area-inset-bottom,0px)); transform:translateX(var(--lens-x,0px)); border-radius:26px; transition:none; } }
 
 @media(max-width:768px) { body:has(.shop-cart.is-modeless[open]) .mobile-shop-nav { z-index:1301; } }
+
+/* Safari side dock reuses the same items instead of stacking above browser chrome. */
+.safari-side-nav { position:fixed; z-index:1050; right:max(10px,env(safe-area-inset-right,0px)); top:calc(50vh + var(--safari-side-offset,0px)); top:clamp(48px,calc(50dvh + var(--safari-side-offset,0px)),calc(100dvh - 96px)); transform:translateY(-50%); display:flex; flex-direction:row-reverse; align-items:center; gap:8px; pointer-events:none; }
+.safari-nav-toggle { position:relative; isolation:isolate; display:grid; place-items:center; flex:0 0 var(--safari-drop-size,52px); width:var(--safari-drop-size,52px); height:var(--safari-drop-size,52px); padding:0; border:1px solid var(--shop-nav-border); border-radius:58% 42% 54% 46% / 56% 45% 55% 44%; color:var(--shop-nav-accent); background:var(--shop-nav-bg); background:color-mix(in srgb,var(--shop-nav-bg) var(--shop-nav-opacity),transparent); backdrop-filter:blur(var(--shop-nav-blur)); -webkit-backdrop-filter:blur(var(--shop-nav-blur)); box-shadow:inset 0 1px 0 #fff9,0 6px 20px #68243e24; pointer-events:auto; cursor:pointer; }
+.safari-nav-toggle:focus-visible { outline:2px solid var(--shop-nav-accent); outline-offset:3px; }
+.safari-side-nav .mobile-shop-nav.is-side { position:relative; inset:auto; display:grid; width:min(calc(100vw - var(--safari-drop-size,52px) - 32px - env(safe-area-inset-right,0px) - env(safe-area-inset-left,0px)),420px); min-width:0; flex:0 1 auto; min-height:var(--shop-nav-height,64px); max-height:120px; padding:5px; border:1px solid var(--shop-nav-border); border-radius:24px; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; touch-action:pan-x pan-y; opacity:0; visibility:hidden; pointer-events:none; transform:translateX(20px) scale(.08,.8); transform-origin:right center; transition:transform var(--safari-expand-duration,340ms) cubic-bezier(.16,1,.3,1),opacity .2s ease,visibility .2s; }
+.safari-side-nav.is-expanded .mobile-shop-nav.is-side { opacity:1; visibility:visible; pointer-events:auto; transform:none; }
+.safari-side-nav.is-waiting { visibility:hidden; pointer-events:none; }
+.safari-side-nav.is-waiting .safari-nav-toggle { pointer-events:none; }
+.safari-side-nav.is-preview { position:relative; inset:auto; transform:none; margin:16px 0; max-width:100%; }
+.safari-side-nav.is-preview .mobile-shop-nav.is-side { width:min(calc(100vw - var(--safari-drop-size,52px) - 72px),360px); }
+.safari-side-nav .mobile-shop-nav.is-side > a { min-height:48px; }
+body:has(dialog[open]:not(.shop-cart),.orora-chat-panel,.orora-chat-channel-chooser) .safari-side-nav:not(.is-preview) { visibility:hidden; pointer-events:none; }
+body:has(dialog[open]:not(.shop-cart),.orora-chat-panel,.orora-chat-channel-chooser) .safari-side-nav:not(.is-preview) .safari-nav-toggle { pointer-events:none; }
+body:has(.shop-cart.is-modeless[open]) .safari-side-nav { z-index:1302; }
+@media(prefers-reduced-motion:reduce) { .safari-side-nav .mobile-shop-nav.is-side { transition:none; } }
+
+.safari-nav-toggle > svg { width:calc(var(--safari-drop-size,52px) * .48); height:calc(var(--safari-drop-size,52px) * .48); }
+
+.safari-side-nav .mobile-nav-lens { height:calc(100% - 10px); }

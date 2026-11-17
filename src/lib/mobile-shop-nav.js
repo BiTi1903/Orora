@@ -1,5 +1,5 @@
 import {toCss} from './typography.js';
-export const MOBILE_NAV_TEXT={homeLabel:'Trang chủ',storyLabel:'Story',productsLabel:'Sản phẩm',trackingLabel:'Tra cứu',title:'Điều hướng mobile',allLabel:'Xem tất cả sản phẩm',emptyLabel:'Danh mục đang được cập nhật.',errorLabel:'Chưa tải được danh mục. Bạn có thể thử lại hoặc xem tất cả sản phẩm.',retryLabel:'Thử tải lại',closeLabel:'Đóng danh mục'};
+export const MOBILE_NAV_TEXT={homeLabel:'Trang chủ',storyLabel:'Story',productsLabel:'Sản phẩm',trackingLabel:'Tra cứu',title:'Điều hướng mobile',allLabel:'Xem tất cả sản phẩm',emptyLabel:'Danh mục đang được cập nhật.',errorLabel:'Chưa tải được danh mục. Bạn có thể thử lại hoặc xem tất cả sản phẩm.',retryLabel:'Thử tải lại',closeLabel:'Đóng danh mục',safariOpenLabel:'Mở điều hướng',safariCloseLabel:'Thu gọn điều hướng'};
 export function mobileNavSettings(value={}){value=value&&typeof value==='object'?value:{};
  const result={...value,height:Math.max(56,Math.min(88,Number(value.height)||64)),iconSize:Math.max(16,Math.min(28,Number(value.iconSize)||22))};
  for(const [key,fallback] of Object.entries(MOBILE_NAV_TEXT))result[key]=typeof value[key]==='string'&&value[key].trim()?value[key]:fallback;

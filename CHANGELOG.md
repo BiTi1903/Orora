@@ -2,6 +2,15 @@
 
 Ghi mọi lần sửa vào file này, mục mới nhất ở trên. Ngày ghi theo giờ Việt Nam; giữ lại lịch sử cũ. Mỗi mục nêu lý do, thay đổi, file liên quan, kiểm tra và ảnh hưởng đến database. Không ghi mật khẩu, token, khóa API hoặc dữ liệu khách hàng.
 
+## 17/11/2026 — Safari iPhone dùng giọt nước cạnh màn hình, bung menu ngang
+
+- **Yêu cầu:** Thử thay thanh dưới trên Safari mobile bằng một giọt nước nhỏ ở cạnh màn hình, bấm bung các mục theo hàng ngang để tránh thanh công cụ Safari.
+- **Điều hướng:** Safari iOS ở viewport mobile mặc định dùng giọt nước cạnh phải/giữa chiều cao, mở menu ngang bằng transform/opacity. Dùng đúng một danh sách và các link, số giỏ, sự kiện mở giỏ đang có; không nhân đôi nội dung. Bấm lại/bấm ngoài/Escape để thu gọn, link điều hướng đóng menu; giữ menu khi bấm giỏ để còn nút đóng giỏ. Menu đóng có inert/aria-hidden, nút có aria-expanded/controls và trả focus preventScroll khi Escape. Danh sách dài cuộn ngang native, không dùng cử chỉ liquid-swipe của thanh dưới.
+- **Safari và viewport:** Chế độ cạnh không phụ thuộc ẩn/hiện thanh công cụ trình duyệt và không chờ dải chữ; vẫn ẩn khi gõ, bàn phím hoặc zoom, trở lại ở trạng thái thu gọn. Không dành khoảng đệm footer/thanh dưới khi dùng giọt nước. Android, Chrome iOS, Safari desktop và standalone giữ cơ chế cũ; có tùy chọn quay lại thanh dưới trên Safari. Có vị trí theo dvh, fallback vh, safe area cạnh phải và giới hạn vị trí; reduced-motion bỏ chuyển động bung/thu.
+- **Admin:** Navbar → Thiết lập mục → Thanh điều hướng dưới — mobile có nhóm Safari iPhone: chọn kiểu, lệch cao/thấp, cỡ giọt 44–64px, thời gian bung 200–600ms, nhãn mở/thu gọn và xem thử kiểu Safari. Màu/kính/icon/font của menu dùng cùng cấu hình mobile hiện có. Preview và trang thật dùng MobileShopNav; lưu leaf patch trong navStyles.mobile, giữ height và trường không sửa.
+- **Kiểm tra:** 232 bài Node, lint/build/bundle đạt (entry/static JS gzip 137.788 byte, dưới 330.000). 14 bài mới ở 320/390px và 6 bài hồi quy admin đạt. Lượt trình duyệt cart/tra cứu/giọt nước có 26 bài đạt, 7 bài bỏ qua đúng viewport; kiểm tra lại trên mã cuối có 16 bài giọt nước đạt, 5 bài mobile bỏ qua trên desktop. Bao gồm toolbar hiện vẫn thấy giọt, keyboard/zoom ẩn, route cuộn đầu trang, Escape/focus, bấm ngoài, giỏ đóng một lần, admin preview/cỡ/tốc độ và leaf patch. Đã xem ảnh bung menu WebKit iOS; đây là giả lập trình duyệt, chưa xác nhận trên iPhone thật. Các fixture kiểm tra thanh dưới cũ chọn rõ safariLayout=bar để tiếp tục kiểm tra nhánh này, tách với mặc định giọt nước mới. Test tra cứu chờ hoàn tất frame cuộn của route trước khi mô phỏng cuộn tiếp, tránh bấm trong lúc Safari đang thu thanh dưới.
+- **Database:** Không đổi API, schema, rules hoặc dữ liệu/config production. Không tự ghi kiểu mới vào database; mặc định áp dụng ở lớp hiển thị và admin chỉ ghi khi chủ động lưu. UI dùng dữ liệu mẫu/chặn API, không tạo đơn/gửi email hoặc chat thật.
+
 ## 17/11/2026 — Chỉnh hoa rơi và icon cạnh nút trong admin
 
 - **Yêu cầu:** Thêm chỉnh số lượng/tốc độ hoa rơi và mở chỉnh các icon cạnh nút đang bị cố định trong code.

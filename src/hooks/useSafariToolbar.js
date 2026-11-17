@@ -8,7 +8,7 @@ function acceptsKeyboard(element){
 
 // All mobile browsers need keyboard/zoom protection; only Safari's browser
 // toolbar additionally controls when the shopping navigation is revealed.
-export default function useSafariToolbar(preview=false){
+export default function useSafariToolbar(preview=false,ignoreToolbar=false){
  const [hidden,setHidden]=useState(false);
  useLayoutEffect(()=>{
   if(preview)return;
@@ -19,7 +19,7 @@ export default function useSafariToolbar(preview=false){
    if(!media.matches){setHidden(false);disconnect=()=>{};return;}
    const ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1;
    const safari=ios&&/Safari/.test(navigator.userAgent)&&!/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
-   const toolbar=safari&&!navigator.standalone&&!window.matchMedia('(display-mode: standalone)').matches;
+   const toolbar=!ignoreToolbar&&safari&&!navigator.standalone&&!window.matchMedia('(display-mode: standalone)').matches;
    const viewport=window.visualViewport;
    const probe=toolbar&&window.CSS?.supports('height','100lvh')?document.createElement('div'):null;
    if(probe){
@@ -49,6 +49,6 @@ export default function useSafariToolbar(preview=false){
   };
   connect();media.addEventListener('change',connect);
   return()=>{disconnect();media.removeEventListener('change',connect);};
- },[preview]);
+ },[preview,ignoreToolbar]);
  return preview?false:hidden;
 }

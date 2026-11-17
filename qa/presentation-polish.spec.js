@@ -27,7 +27,7 @@ test('mobile save bar stays reachable, section chips scroll, and a save preserve
 
 test('footer links remain above the real bottom navigation at the end of the page',async({page},testInfo)=>{
  await mount(page,`import Footer from '/src/components/Footer.jsx';import Nav from '/src/components/MobileShopNav.jsx';${render("R.createElement(R.Fragment,null,R.createElement('main',null,R.createElement('div',{style:{height:1600}}),R.createElement(Footer)),R.createElement(Nav))")}`,{
-  'hooks/useHomeContent.js':`export default function home(){return {loading:false,navStyles:{mobile:{afterTicker:false,height:88}},footerInfoTitle:'INFORMATION',footerAboutText:'About us',footerShopText:'Shop',footerTermsText:'Terms & Conditions',footerPrivacyText:'Privacy Policy',footerCompanyNumber:'Liên kết cuối trang',footerCopyright:'Nội dung tùy chỉnh'}}`,
+  'hooks/useHomeContent.js':`export default function home(){return {loading:false,navStyles:{mobile:{safariLayout:"bar",afterTicker:false,height:88}},footerInfoTitle:'INFORMATION',footerAboutText:'About us',footerShopText:'Shop',footerTermsText:'Terms & Conditions',footerPrivacyText:'Privacy Policy',footerCompanyNumber:'Liên kết cuối trang',footerCopyright:'Nội dung tùy chỉnh'}}`,
  });
  await page.evaluate(()=>document.fonts.ready);
  await page.evaluate(()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'}));

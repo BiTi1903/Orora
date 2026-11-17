@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 import {mount,render} from './fixtures';
 
 const modules={
- 'hooks/useHomeContent.js':'export default function home(){return {loading:false,navStyles:{mobile:{afterTicker:false}}}}',
+ 'hooks/useHomeContent.js':'export default function home(){return {loading:false,navStyles:{mobile:{safariLayout:"bar",afterTicker:false}}}}',
  'hooks/useProducts.js':'export default function products(){return {products:[],loading:false}}',
 };
 const fixture=`import {flushSync} from '/qa/runtime.js';window.__flushSync=flushSync;import Cart from '/src/components/ShopCart.jsx';import Nav from '/src/components/MobileShopNav.jsx';${render("R.createElement(R.Fragment,null,R.createElement('main',{style:{height:2400}},'Nội dung'),R.createElement(Cart),R.createElement(Nav))")}`;
