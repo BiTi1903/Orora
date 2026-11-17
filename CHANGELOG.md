@@ -2,6 +2,14 @@
 
 Ghi mọi lần sửa vào file này, mục mới nhất ở trên. Ngày ghi theo giờ Việt Nam; giữ lại lịch sử cũ. Mỗi mục nêu lý do, thay đổi, file liên quan, kiểm tra và ảnh hưởng đến database. Không ghi mật khẩu, token, khóa API hoặc dữ liệu khách hàng.
 
+## 17/11/2026 — Giọt nước Safari bung menu dọc
+
+- **Yêu cầu:** Đính chính hướng bung: danh sách phải dọc, thay cho bản ngang vừa làm.
+- **Giao diện:** Safari droplet dùng một cột, mỗi mục một hàng có icon cạnh chữ, cuộn dọc native khi dài. Đổi chuyển động bung/thu sang trục dọc và vùng sáng theo từng hàng. Giữ một danh sách/sự kiện giỏ/route, thao tác Escape/bấm ngoài, bàn phím/zoom và các điều khiển admin đang có. Nhãn lựa chọn và hướng dẫn trong admin đổi thành Bung dọc, giữ nguyên giá trị config droplet để không phải lưu lại dữ liệu.
+- **Khung:** Danh sách tách khỏi nút neo, giới hạn trong viewport theo safe area/dvh (có vh fallback). Dùng ResizeObserver hiện có đo chiều cao nội dung cả viền, nên tên dài/chữ lớn hoặc vị trí neo thấp không đẩy menu khỏi màn hình; không thêm vòng RAF liên tục. CSS ẩn rõ cả danh sách khi một form khác mở.
+- **Kiểm tra:** 232 bài Node, lint/build/bundle đạt (entry/static JS gzip 137.878 byte, dưới giới hạn 330.000). 14 bài UI ở 320/390px đạt; ma trận cuối trên Chromium Android, WebKit iOS và WebKit desktop có 18 bài đạt, 6 bài mobile bỏ qua trên desktop. Bổ sung xác nhận từng hàng cùng tọa độ ngang/tăng tọa độ dọc, và khung không tràn viewport với 7 mục tên dài/chữ lớn/neo thấp; vẫn mở/đóng giỏ, điều hướng tra cứu, keyboard/zoom và lưu preview đúng leaf patch. Đã xem ảnh menu dọc. Đây là giả lập trình duyệt, không phải iPhone thật.
+- **Database:** Không đổi API, schema, rules hay dữ liệu/config production. Không migration hoặc tự ghi cấu hình; dùng cấu hình hiện tại và luồng lưu admin cũ. Tests dùng fixture/chặn API.
+
 ## 17/11/2026 — Safari iPhone dùng giọt nước cạnh màn hình, bung menu ngang
 
 - **Yêu cầu:** Thử thay thanh dưới trên Safari mobile bằng một giọt nước nhỏ ở cạnh màn hình, bấm bung các mục theo hàng ngang để tránh thanh công cụ Safari.

@@ -14,13 +14,13 @@ export default function MobileNavSettings({navbar,onChange}){
   <label>Khoảng hở với dải chữ chạy (px)<input type="number" min="0" max="48" value={value.revealGap??12} onChange={e=>patch({revealGap:Number(e.target.value)})}/></label>
   <label className="admin-check"><input type="checkbox" role="switch" checked={value.spin!==false} onChange={e=>patch({spin:e.target.checked})}/>Xoay icon khi nhấn mục trên thanh dưới</label>
   <details><summary>Safari iPhone — giọt nước bên cạnh màn hình</summary>
-   <label>Kiểu điều hướng trên Safari<select value={value.safariLayout||'droplet'} onChange={e=>patch({safariLayout:e.target.value})}><option value="droplet">Giọt nước bung ngang</option><option value="bar">Thanh dưới theo trạng thái Safari</option></select></label>
+   <label>Kiểu điều hướng trên Safari<select value={value.safariLayout||'droplet'} onChange={e=>patch({safariLayout:e.target.value})}><option value="droplet">Giọt nước bung dọc</option><option value="bar">Thanh dưới theo trạng thái Safari</option></select></label>
    <label>Độ lệch so với giữa màn hình (px)<input type="number" min="-180" max="180" value={value.safariOffset??0} onChange={e=>patch({safariOffset:Number(e.target.value)})}/></label>
    <label>Kích thước giọt nước (px)<input type="number" min="44" max="64" value={value.safariSize??52} onChange={e=>patch({safariSize:Number(e.target.value)})}/></label>
    <label>Thời gian bung menu (ms)<input type="number" min="200" max="600" step="20" value={value.safariDuration??340} onChange={e=>patch({safariDuration:Number(e.target.value)})}/></label>
    <label>Nhãn mở điều hướng<input value={value.safariOpenLabel??'Mở điều hướng'} onChange={e=>patch({safariOpenLabel:e.target.value})}/></label>
    <label>Nhãn thu gọn<input value={value.safariCloseLabel??'Thu gọn điều hướng'} onChange={e=>patch({safariCloseLabel:e.target.value})}/></label>
-   <small className="builder-help">Safari dùng nút nhỏ cạnh phải để tránh thanh công cụ đáy. Bấm để bung ngang, bấm ngoài hoặc Escape để thu gọn; ẩn khi mở bàn phím/zoom. Android giữ thanh dưới. Chờ dải chữ và vuốt chọn mục chỉ áp dụng kiểu thanh dưới. Màu, kính, icon và chữ dùng thiết lập chung bên dưới.</small>
+   <small className="builder-help">Safari dùng nút nhỏ cạnh phải để tránh thanh công cụ đáy. Bấm để bung menu dọc, bấm ngoài hoặc Escape để thu gọn; ẩn khi mở bàn phím/zoom. Android giữ thanh dưới. Chờ dải chữ và vuốt chọn mục chỉ áp dụng kiểu thanh dưới. Màu, kính, icon và chữ dùng thiết lập chung bên dưới.</small>
   </details>
   <div className="builder-field">
    {items.map((item,index)=><fieldset key={index} style={{margin:'12px 0',padding:12,border:'1px solid #efd7e1',borderRadius:12}}><legend>Mục {index+1}</legend>

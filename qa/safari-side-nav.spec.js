@@ -8,17 +8,17 @@ async function fixture(page,{safari=true,settings={}}={}){
   'hooks/useProducts.js':'export default function products(){return {products:[],loading:false}}',
  });
 }
-test('Safari droplet opens one horizontal navigation, closes outside/Escape and keeps the viewport clear',async({page},testInfo)=>{
+test('Safari droplet opens one vertical navigation, closes outside/Escape and keeps the viewport clear',async({page},testInfo)=>{
  await fixture(page);const toggle=page.getByRole('button',{name:'Mở điều hướng',exact:true});
  if(page.viewportSize().width>768){await expect(toggle).toHaveCount(0);return;}
  await expect(toggle).toBeVisible();await page.screenshot({path:testInfo.outputPath('safari-collapsed.png')});await expect(page.getByRole('navigation',{name:'Điều hướng mobile',exact:true})).toHaveCount(0);expect(await page.evaluate(()=>document.documentElement.classList.contains('has-mobile-shop-nav'))).toBe(false);
  const droplet=await toggle.boundingBox();expect(droplet.width).toBeGreaterThanOrEqual(44);expect(droplet.y).toBeGreaterThan(100);expect(droplet.y+droplet.height).toBeLessThan(page.viewportSize().height-100);
- await toggle.click();const nav=page.getByRole('navigation',{name:'Điều hướng mobile',exact:true});await expect(nav).toBeVisible();await expect(nav.locator('a')).toHaveCount(5);await expect(page.locator('.mobile-shop-nav')).toHaveCount(1);await fit(page);
+ await toggle.click();const nav=page.getByRole('navigation',{name:'Điều hướng mobile',exact:true});await expect(nav).toBeVisible();await expect(nav.locator('a')).toHaveCount(5);await expect(nav).toHaveCSS('transform','none');const rows=await nav.locator('a').evaluateAll(nodes=>nodes.map(n=>{const b=n.getBoundingClientRect();return {x:b.x,y:b.y};}));await expect(nav).toHaveCSS('transform','none');for(let i=1;i<rows.length;i++){expect(rows[i].y).toBeGreaterThan(rows[i-1].y);expect(Math.abs(rows[i].x-rows[0].x)).toBeLessThan(1);}await expect(page.locator('.mobile-shop-nav')).toHaveCount(1);await fit(page);
  await expect(nav).toHaveCSS('transform','none');await page.screenshot({path:testInfo.outputPath('safari-expanded.png')});await page.keyboard.press('Escape');await expect(toggle).toHaveAttribute('aria-expanded','false');await expect(toggle).toBeFocused();
  await toggle.click();await page.locator('#outside').click();await expect(toggle).toHaveAttribute('aria-expanded','false');
  await page.evaluate(()=>window.scrollTo(0,300));await expect(toggle).toBeVisible();await page.evaluate(()=>window.scrollTo(0,200));await expect(toggle).toBeVisible();
 });
-test('Safari cart opens from the horizontal menu and toggle stays usable without reopening the cart',async({page})=>{
+test('Safari cart opens from the vertical menu and toggle stays usable without reopening the cart',async({page})=>{
  test.skip(page.viewportSize().width>768,'Mobile only');await fixture(page);await page.getByRole('button',{name:'Mở điều hướng',exact:true}).click();const link=page.getByRole('link',{name:'Giỏ hàng',exact:true});await link.click();await expect(page.locator('.shop-cart[open]')).toBeVisible();await expect(page.getByRole('button',{name:'Thu gọn điều hướng',exact:true})).toBeVisible();await expect(link).toBeVisible();await link.click();await expect(page.locator('.shop-cart[open]')).toHaveCount(0);await expect(link).toBeVisible();
 });
 test('keyboard hides the droplet and restores it collapsed; non-Safari retains the bottom bar',async({page})=>{
@@ -39,3 +39,5 @@ test('Safari browser chrome does not hide the side dock, while viewport keyboard
 });
 
 test('Safari side links navigate and collapse without breaking scroll-to-top',async({page})=>{test.skip(page.viewportSize().width>768,'Mobile only');await fixture(page);await page.evaluate(()=>window.scrollTo({top:1000,behavior:'instant'}));await page.getByRole('button',{name:'Mở điều hướng',exact:true}).click();await page.getByRole('link',{name:'Tra cứu',exact:true}).click();await expect(page.getByTestId('route')).toHaveText('/tra-cuu-don-hang');await expect.poll(()=>page.evaluate(()=>scrollY)).toBe(0);await expect(page.getByRole('button',{name:'Mở điều hướng',exact:true})).toHaveAttribute('aria-expanded','false');});
+
+test('vertical menu stays within the viewport with long labels, large text and a low dock position',async({page})=>{test.skip(page.viewportSize().width>768,'Mobile only');await fixture(page,{settings:{safariOffset:180,textStyle:{fontSize:32},items:Array.from({length:6},(_,i)=>({label:'Danh mục có tên dài '+i,target:'products',icon:'products'}))}});await page.getByRole('button',{name:'Mở điều hướng',exact:true}).click();const nav=page.getByRole('navigation',{name:'Điều hướng mobile',exact:true});await expect(nav).toHaveCSS('transform','none');const box=await nav.boundingBox();expect(box.y).toBeGreaterThanOrEqual(23);expect(box.y+box.height).toBeLessThanOrEqual(page.viewportSize().height-23);await expect(nav).toHaveCSS('overflow-y','auto');await nav.getByRole('link',{name:'Giỏ hàng',exact:true}).scrollIntoViewIfNeeded();await expect(nav.getByRole('link',{name:'Giỏ hàng',exact:true})).toBeVisible();await fit(page);});
