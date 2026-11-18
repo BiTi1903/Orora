@@ -178,3 +178,14 @@ test("retry is bounded and a fresh sending claim cannot be overridden",async()=>
  const second=await setup();await second.db.collection("orders").doc(second.orderId).set({confirmationMail:{state:"sending",eventId:"confirmation-auto",updatedAt:new Date()}},{merge:true});
  await assert.rejects(sendOrderConfirmation({...second,sendMail,manual:true,requestId:randomUUID(),confirmResend:true}),{status:409});assert.equal(calls,2);
 });
+test("sending without a valid timestamp expires to unknown and is never auto-resent", async () => {
+  const { effectiveMailState } = await import("../src/lib/mail-state.js");
+  assert.equal(effectiveMailState({ state: "sending" }, 1000), "stuck");
+  assert.equal(effectiveMailState({ state: "sending", updatedAt: 1000 }, 1000 + 60_000), "sending");
+  assert.equal(effectiveMailState({ state: "sending", updatedAt: 1000 }, 1000 + 300_001), "stuck");
+  const { db, orderId } = await setup(); const ref = db.collection("orders").doc(orderId);
+  await ref.set({ confirmationMail: { state: "sending", eventId: "confirmation-auto" } }, { merge: true });
+  let calls = 0; const sendMail = async () => { calls++; };
+  assert.equal((await sendOrderConfirmation({ db, orderId, sendMail })).state, "unknown");
+  assert.equal(calls, 0);
+});

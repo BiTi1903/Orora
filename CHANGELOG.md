@@ -1,3 +1,11 @@
+## 18/11/2026 — Siết ngưỡng retry mail đơn hàng và hiển thị đơn kẹt quá 5 phút trong admin
+
+- **Lý do:** Đơn có `confirmationMail.state === "sending"` thiếu `updatedAt` có thể kẹt vĩnh viễn; ngưỡng retry 16 giây sát giới hạn 60 giây của Vercel Function; admin chưa có nhãn riêng cho trạng thái `sending` bị kẹt.
+- **Xử lý mail máy chủ (`server/order-mail.js`, `docs/EMAIL-SETUP.md`, `tests/order-mail.test.js`):** Coi bản ghi `sending` thiếu `updatedAt` hoặc quá 5 phút là quá hạn và chuyển sang `unknown` (không tự gửi lại); làm rõ dấu ngoặc điều kiện chặn gửi lại khi chưa xác nhận; giảm ngưỡng retry lỗi kết nối SMTP từ 16 giây xuống 10 giây và chờ 750ms trước lượt thử lại; thêm bài test đơn `sending` không có timestamp.
+- **Hiển thị trong admin (`src/lib/mail-state.js`, `src/admin/order-api.js`, `src/admin/OrdersAdmin.jsx`, `src/admin/MailWriter.jsx`, `src/admin/OrderMailHistory.jsx`):** Thêm `effectiveMailState` nhận diện trạng thái `stuck` (`Kẹt quá 5 phút, cần kiểm tra Outlook rồi gửi lại`), hiển thị trong bảng đơn hàng, chi tiết email đơn, bộ lọc/lịch sử email đơn và màn hình gửi thư, đồng thời mở khóa nút gửi lại trong `MailWriter` khi đơn bị kẹt.
+- **Kiểm tra:** `npm run check` đạt: 236/236 bài test Node đạt, `eslint` 0 lỗi, `vite build` và `check-bundles` đạt (JS đầu trang + static imports gzip 137.262 byte, giới hạn 330.000 byte).
+- **Database:** Không thay đổi schema, rules hoặc dữ liệu production; đơn `sending` thiếu timestamp hoặc quá 5 phút chỉ chuyển sang `unknown` khi có yêu cầu gửi mới.
+
 ## 18/11/2026 — Đồng bộ điều khiển admin, gộp CSS trường nhập và tách các file giao diện dài
 
 - **Lý do:** Nhiều màn hình cài đặt và Visual Builder dùng riêng ô chọn màu, ô số, bộ chỉnh chữ và hai hệ class trường nhập (`admin-field`/`builder-field`), kèm nhiều file JSX viết dồn trên một dòng và file lớn khó sửa.

@@ -35,7 +35,7 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
     let previous = data.confirmationMail?.state;
     const stamp = data.confirmationMail?.updatedAt;
     const timestamp = stamp?.toMillis?.() ?? (stamp ? new Date(stamp).getTime() : NaN);
-    const stale = previous === "sending" && Number.isFinite(timestamp) && Date.now() - timestamp > 5 * 60 * 1000;
+    const stale = previous === "sending" && (!Number.isFinite(timestamp) || Date.now() - timestamp > 5 * 60 * 1000);
     if (stale) {
       const updatedAt = new Date();
       const oldId = data.confirmationMail?.eventId;
@@ -44,7 +44,7 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
       return { expired: true };
     }
     if (event.exists) return null;
-    if ((previous === "sending" || previous === "unknown" && !(manual && confirmResend))) throw Object.assign(new Error("Kết quả gửi trước chưa rõ hoặc đang xử lý. Kiểm tra thư đã gửi trên Microsoft trước khi gửi lại."), { status: 409 });
+    if (previous === "sending" || (previous === "unknown" && !(manual && confirmResend))) throw Object.assign(new Error("Kết quả gửi trước chưa rõ hoặc đang xử lý. Kiểm tra thư đã gửi trên Microsoft trước khi gửi lại."), { status: 409 });
     if (manual && previous === "accepted" && !confirmResend) throw Object.assign(new Error("Thư đã được Microsoft nhận. Cần xác nhận gửi lại để tránh gửi trùng."), { status: 409 });
     let message; let sourceTemplate; let templateError = false;
     try { sourceTemplate = manual && customMessage ? validateOrderTemplate(customMessage) : template.exists ? validateOrderTemplate(template.data()) : DEFAULT_ORDER_MESSAGE; message = renderOrderMessage(sourceTemplate, data); }
@@ -64,8 +64,9 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
     const started = Date.now();
     try { tracking = safeMailTracking(await sendMail(claimed.recipient, claimed.message)); }
     catch (error) {
-      if (error.message !== "mail_smtp_connection_failed" || Date.now() - started > 16000) throw error;
+      if (error.message !== "mail_smtp_connection_failed" || Date.now() - started > 10000) throw error;
       // A single proven pre-submission retry, leaving time for the final write.
+      await new Promise((resolve) => setTimeout(resolve, 750));
       tracking = safeMailTracking(await sendMail(claimed.recipient, claimed.message));
     }
   } catch (error) {

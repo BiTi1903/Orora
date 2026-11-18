@@ -235,4 +235,4 @@ Việc xác nhận thanh toán hiện do admin thực hiện, chưa có cổng t
 **Xuất Excel** là mục riêng ở sidebar admin, bên dưới Phí vận chuyển. Không còn tab xuất trong Email. Ba lựa chọn và quyền truy cập giữ nguyên: email đăng ký, thư đã gửi, thư đơn hàng đã gửi; tải đủ phân trang trước khi tạo file. Việc mở mục Xuất Excel không cần tải hoặc tạo mẫu trong Email trước.
 
 
-Email đơn hàng thử lại tối đa một lần với lỗi kết nối SMTP chắc chắn trước khi gửi, nếu lượt đầu không quá 16 giây. Không retry kết quả không rõ. Khi admin/luồng gửi gọi lại, trạng thái sending quá 5 phút được chuyển sang unknown, không gửi ngay; tải lại đơn, kiểm tra thư đã gửi trên Microsoft rồi xác nhận gửi lại bằng một yêu cầu mới. Không có worker/cron quét các bản ghi này.
+Email đơn hàng thử lại tối đa một lần với lỗi kết nối SMTP chắc chắn trước khi gửi, nếu lượt đầu không quá 10 giây. Không retry kết quả không rõ. Khi admin/luồng gửi gọi lại, trạng thái sending quá 5 phút được chuyển sang unknown, không gửi ngay; tải lại đơn, kiểm tra thư đã gửi trên Microsoft rồi xác nhận gửi lại bằng một yêu cầu mới. Không có worker/cron quét các bản ghi này.

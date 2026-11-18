@@ -1,12 +1,8 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { auth } from "../lib/firebaseAuth";
+import { effectiveMailState } from "../lib/mail-state";
 import { orderRequest, MAIL_STATES } from "./order-api";
 
-function mailTime(value) {
-  if (!value) return NaN;
-  if (typeof value === "object" && (value._seconds ?? value.seconds) != null) return Number(value._seconds ?? value.seconds) * 1000;
-  return new Date(value).getTime();
-}
 export default function MailWriter({ mode, onModeChange, value, onChange, onChooseTemplate, request, onApply, onSendPrivate, privateRecipients, privateSendLabel, privateSendDisabled, disabled, allowedModes = ["welcome_auto", "order_auto", "private"], title = "Viết Thư", initialOrderId = "", purpose = "combined", onSent }) {
   const fieldId = useId();
   const canSendOrder = mode === "order_auto" && purpose !== "automation";
@@ -47,7 +43,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
       {canSendOrder && <div className="admin-form">
         {orderError && <p className="admin-error" role="alert">{orderError}</p>}
         {!lockedOrder && <div className="admin-field"><label htmlFor={`${fieldId}-writer-order`}>Chọn đơn hàng</label><select id={`${fieldId}-writer-order`} className="mail-template-select" value={orderId} onChange={(event) => { setOrderId(event.target.value); attempt.current = null; }}><option value="">Chưa chọn đơn</option>{orders.map((order) => <option key={order.id} value={order.id}>{order.code} · {order.customer.name} · {order.customer.email || "Chưa có email"}</option>)}</select></div>}
-        {selectedOrder && !lockedOrder && <p>Người nhận của đơn: <strong>{selectedOrder.customer.email || "Chưa có email"}</strong> · {MAIL_STATES[selectedOrder.confirmationMail?.state] || "Chưa có lịch sử"}</p>}
+        {selectedOrder && !lockedOrder && <p>Người nhận của đơn: <strong>{selectedOrder.customer.email || "Chưa có email"}</strong> · {MAIL_STATES[effectiveMailState(selectedOrder.confirmationMail, checkedAt)] || "Chưa có lịch sử"}</p>}
       </div>}
       <div className="admin-actions"><button type="button" className="admin-btn" onClick={onChooseTemplate}>Chọn mẫu từ Mẫu Thư</button></div>
       <div className="admin-field"><label htmlFor={`${fieldId}-writer-subject`}>Tiêu đề thư</label><input id={`${fieldId}-writer-subject`} required maxLength={200} value={value.subject} onChange={(event) => onChange({ subject: event.target.value, text: value.text })} /></div>
@@ -56,7 +52,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
       {mode !== "private" && purpose !== "send" && <div><button type="button" className="admin-btn primary" aria-busy={localBusy && busyAction === "save"} disabled={!valid} onClick={() => perform(() => onApply(mode, value),"save")}>Lưu làm thư {mode === "order_auto" ? "đơn hàng" : "đăng ký"} tự động</button><p className="admin-muted">Lưu chỉ áp dụng cho các lần gửi tự động mới. Gửi thử hoặc gửi cho một đơn không thay đổi cấu hình tự động.</p></div>}
       {mode === "private" && <div className="admin-form"><button type="button" className="admin-btn primary" aria-busy={localBusy && busyAction === "private"} disabled={!valid || privateSendDisabled} onClick={() => perform(() => onSendPrivate(value),"private")}>{privateSendLabel}</button></div>}
       {canSendOrder && <div className="writer-block admin-form">
-        <div className="admin-actions"><button type="button" className="admin-btn primary" aria-busy={localBusy && busyAction === "order"} disabled={!valid || !selectedOrder?.customer.email || (selectedOrder?.confirmationMail?.state === "sending" && !(mailTime(selectedOrder.confirmationMail.updatedAt) > 0 && checkedAt - mailTime(selectedOrder.confirmationMail.updatedAt) > 300000))} onClick={() => {
+        <div className="admin-actions"><button type="button" className="admin-btn primary" aria-busy={localBusy && busyAction === "order"} disabled={!valid || !selectedOrder?.customer.email || effectiveMailState(selectedOrder?.confirmationMail, checkedAt) === "sending"} onClick={() => {
           const confirmResend = ["accepted", "unknown"].includes(selectedOrder.confirmationMail?.state);
           if (!window.confirm(`Gửi nội dung đang soạn cho ${selectedOrder.customer.email}, đơn ${selectedOrder.code}?${confirmResend ? " Có thể đã gửi thư trước đó. Chỉ tiếp tục sau khi kiểm tra thư đã gửi trên Microsoft; gửi lại có thể tạo thư trùng." : ""}`)) return;
           perform(async () => {

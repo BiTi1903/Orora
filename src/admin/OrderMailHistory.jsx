@@ -1,5 +1,6 @@
 import OutlookCheck from "./OutlookCheck";
 import MailPreviewDialog from "./MailPreviewDialog";
+import { effectiveMailState } from "../lib/mail-state";
 import { groupMailTemplates, mailActorLabel } from "../lib/mail-templates";
 import { useEffect, useState } from "react";
 import { orderRequest, MAIL_STATES } from "./order-api";
@@ -39,7 +40,7 @@ export default function OrderMailHistory({ onReuse, refreshKey = 0 }) {
   }, [version, refreshKey]);
   const { templates, byMail } = groupMailTemplates(mails);
   const query = search.trim().toLowerCase();
-  const filtered = mails.filter((mail) => (templateFilter === "all" || byMail.get(mail.id)?.id === templateFilter) && (kind === "all" || (kind === "manual" ? mail.manual : !mail.manual)) && (state === "all" || mail.state === state) && [mail.recipient, mail.orderId, mail.orderCode, mail.subject, mail.templateName, mail.customerName, mail.actorName, mail.actorEmail, mail.actor].some((value) => String(value || "").toLowerCase().includes(query)));
+  const filtered = mails.filter((mail) => (templateFilter === "all" || byMail.get(mail.id)?.id === templateFilter) && (kind === "all" || (kind === "manual" ? mail.manual : !mail.manual)) && (state === "all" || effectiveMailState(mail) === state) && [mail.recipient, mail.orderId, mail.orderCode, mail.subject, mail.templateName, mail.customerName, mail.actorName, mail.actorEmail, mail.actor].some((value) => String(value || "").toLowerCase().includes(query)));
   return <div>
     <div className="admin-top"><div><h2>Lịch sử email đơn hàng</h2><p className="admin-muted">Thư xác nhận mua hàng tự động và thư gửi riêng từ tài khoản đăng nhập, tách khỏi thư gửi danh sách đăng ký.</p></div><button className="admin-btn" aria-busy={busy} disabled={busy} onClick={() => { setVisibleCount(30); setVersion((value) => value + 1); }}>Tải lại lịch sử thư</button></div>
     <div className="admin-form-grid order-mail-history-filters">
@@ -54,7 +55,7 @@ export default function OrderMailHistory({ onReuse, refreshKey = 0 }) {
     <>
 
       <div>
-      <div className="admin-card mail-history-table-scroll"><table className="admin-table"><thead><tr><th>Thời gian / Mã đơn</th><th>Người nhận</th><th>Tài khoản thao tác</th><th>Mẫu lúc gửi</th><th>Kết quả gửi</th><th /></tr></thead><tbody>{filtered.slice(0, visibleCount).map((mail) => <tr key={mail.id}><td>{date(mail.createdAt)}<br /><small>{mail.orderCode}</small></td><td>{mail.recipient}</td><td>{mailActorLabel(mail)}{mail.actorName && mail.actorEmail && <small className="order-summary-note">{mail.actorEmail}</small>}</td><td><button className="admin-template-link" onClick={() => setSelected({ template: byMail.get(mail.id) })}>{byMail.get(mail.id)?.label}</button></td><td>{MAIL_STATES[mail.state] || mail.state}{mail.outlook?.state === "bounced" && <small className="mail-result-error">Trả lại{mail.outlook.diagnosticCode ? ` · ${mail.outlook.diagnosticCode}` : ""}</small>}</td><td><button className="admin-btn" onClick={() => setSelected({ mail, template: byMail.get(mail.id) })}>Xem thư</button></td></tr>)}</tbody></table></div>
+      <div className="admin-card mail-history-table-scroll"><table className="admin-table"><thead><tr><th>Thời gian / Mã đơn</th><th>Người nhận</th><th>Tài khoản thao tác</th><th>Mẫu lúc gửi</th><th>Kết quả gửi</th><th /></tr></thead><tbody>{filtered.slice(0, visibleCount).map((mail) => <tr key={mail.id}><td>{date(mail.createdAt)}<br /><small>{mail.orderCode}</small></td><td>{mail.recipient}</td><td>{mailActorLabel(mail)}{mail.actorName && mail.actorEmail && <small className="order-summary-note">{mail.actorEmail}</small>}</td><td><button className="admin-template-link" onClick={() => setSelected({ template: byMail.get(mail.id) })}>{byMail.get(mail.id)?.label}</button></td><td>{MAIL_STATES[effectiveMailState(mail)] || mail.state}{mail.outlook?.state === "bounced" && <small className="mail-result-error">Trả lại{mail.outlook.diagnosticCode ? ` · ${mail.outlook.diagnosticCode}` : ""}</small>}</td><td><button className="admin-btn" onClick={() => setSelected({ mail, template: byMail.get(mail.id) })}>Xem thư</button></td></tr>)}</tbody></table></div>
 
       </div>
     </>
