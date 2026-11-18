@@ -39,8 +39,8 @@ function ChatButton() {
   const chatDockGap=home.navStyles?.surfaces?.chatDockGap;
   const dock=useCallback(()=>{
     const node=button.current;if(!node)return null;
-    const back=document.querySelector('.back-to-top'),reserved=document.documentElement.classList.contains('has-mobile-shop-nav')?(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-shop-nav-height'))||64):0;
-    const size=back?.offsetHeight||(window.innerWidth<=600?46:52),bottom=back?(parseFloat(getComputedStyle(back).bottom)||0):reserved?reserved+24:window.innerWidth<=600?82:96;
+    const reserved=document.documentElement.classList.contains('has-mobile-shop-nav')?(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-shop-nav-height'))||64):0;
+    const size=window.innerWidth<=600?46:52,bottom=reserved?reserved+16:window.innerWidth<=600?20:24;
     const top=window.innerHeight-bottom-size,gap=Math.max(8,Math.min(32,Number(chatDockGap??14)));
     const buyBar = document.querySelector('.product-mobile-buy');
     const buyRect = buyBar?.getBoundingClientRect();
@@ -48,7 +48,7 @@ function ChatButton() {
       ? Math.min(buyRect.top, window.innerHeight - reserved - buyRect.height)
       : Infinity;
     const aboveBuy = buyTop - node.offsetHeight - gap;
-    const dockTop = dockSide.current === 'left' ? top + (size - node.offsetHeight) / 2 : top - node.offsetHeight - gap;
+    const dockTop = top + (size - node.offsetHeight) / 2;
     return clamp({x:dockSide.current==='left'?-10000:10000,y:Math.min(dockTop, aboveBuy)});
   }, [clamp,chatDockGap]);
   useEffect(() => {

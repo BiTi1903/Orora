@@ -38,25 +38,28 @@ export default function OrderForm({ product, home, onClose, selection, initialVa
   const unitPrice = parseVndPrice(priceText);
   const shipping = shippingFeeFor(home.shippingSettings, provinceCode, wardCode);
   const total = unitPrice === null || shipping.fee === null ? null : unitPrice * (Number(quantity) || 0) + shipping.fee;
-  if (result?.code) return <ModalDialog key="success" title="Đã nhận đơn hàng" onClose={onClose} className="order-success-modal" style={{...checkoutStyle(appearance),'--receipt-size':`${Math.max(12,Math.min(16,Number(appearance.receiptFontSize)||13))}px`}}><section className="order-received" aria-label="Thông tin đơn đã nhận"><p>Mã đơn: <strong>{result.code}</strong></p>
-    <p>{result.message}</p>
-    <div className="order-received-details"><h3>Thông tin đơn hàng</h3><dl>
-      <div><dt>Sản phẩm</dt><dd>{result.productName}</dd></div>
-      {result.variantLabel && <div><dt>Dung tích</dt><dd>{result.variantLabel}</dd></div>}
-      <div><dt>Số lượng</dt><dd>{result.quantity}</dd></div>
+  if (result?.code) return <ModalDialog key="success" title="Đã nhận đơn hàng" onClose={onClose} className="order-success-modal" style={{...checkoutStyle(appearance),'--receipt-size':`${Math.max(12,Math.min(16,Number(appearance.receiptFontSize)||13))}px`}}><section className="order-received" aria-label="Thông tin đơn đã nhận">
+    <div className="order-received-banner">
+      <span className="order-received-code-label">Mã đơn hàng</span>
+      <strong className="order-received-code">{result.code}</strong>
+      <p className="order-received-msg">{result.message}</p>
+    </div>
+    <OrderReceiptActions order={result} home={home} appearance={appearance}/>
+    <div className="order-received-details checkout-card"><h3>Chi tiết đơn hàng</h3><dl>
+      <div><dt>Sản phẩm</dt><dd>{result.productName}{result.variantLabel ? ` (${result.variantLabel})` : ""} × {result.quantity}</dd></div>
       <div><dt>Thanh toán</dt><dd>{PAYMENT_LABELS[result.paymentMethod] || result.paymentMethod}</dd></div>
       <div><dt>Tiền sản phẩm</dt><dd>{result.subtotal == null ? "ORORA sẽ báo giá khi xác nhận" : formatVnd(result.subtotal)}</dd></div>
       <div><dt>Phí giao hàng</dt><dd>{result.shippingFee == null ? "Xác nhận sau" : formatVnd(result.shippingFee)}</dd></div>
-      <div><dt>Tổng tiền</dt><dd>{result.totalAmount == null ? "ORORA sẽ xác nhận tổng tiền" : formatVnd(result.totalAmount)}</dd></div>
+      <div className="order-received-total"><dt>Tổng thanh toán</dt><dd>{result.totalAmount == null ? "ORORA sẽ xác nhận tổng tiền" : formatVnd(result.totalAmount)}</dd></div>
     </dl></div>
-    <OrderReceiptActions order={result} home={home} appearance={appearance}/>
-    <details className="order-received-details"><summary>Thông tin người nhận</summary><dl>
+    <details className="order-received-details checkout-card"><summary>Thông tin người nhận</summary><dl>
       {[["Họ và tên", result.recipient.name], ["Số điện thoại", result.recipient.phone], ["Email", result.recipient.email], ["Địa chỉ nhận hàng", result.recipient.address], ["Ghi chú", result.recipient.note]].filter(([, value]) => value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
     </dl></details>
-
-    <p><Link to="/tra-cuu-don-hang" state={{ code: result.code }} onClick={onClose}>Tra cứu trạng thái đơn hàng</Link></p>
-    <p className="order-help">Nếu thông tin chưa đúng, vui lòng liên hệ ORORA và cung cấp mã đơn để được hỗ trợ.</p>
-    <p>{result.mailStatus === "accepted" ? "Vui lòng kiểm tra email xác nhận và mục thư rác." : result.mailStatus === "failed" ? "Đơn đã được nhận nhưng chưa gửi được email xác nhận. Bạn có thể liên hệ ORORA với mã đơn bên trên." : "Email xác nhận đang được xử lý."}</p><button type="button" onClick={onClose}>Đóng</button>
+    <p className="order-help">{result.mailStatus === "accepted" ? "Vui lòng kiểm tra email xác nhận và mục thư rác." : result.mailStatus === "failed" ? "Đơn đã được nhận nhưng chưa gửi được email xác nhận. Bạn có thể liên hệ ORORA với mã đơn bên trên." : "Email xác nhận đang được xử lý."}</p>
+    <div className="order-received-footer">
+      <Link className="order-tracking-link" to="/tra-cuu-don-hang" state={{ code: result.code }} onClick={onClose}>Tra cứu trạng thái đơn</Link>
+      <button type="button" onClick={onClose}>Đóng</button>
+    </div>
   </section></ModalDialog>;
   return <ModalDialog key="form" title={appearance.formLabels?.title?.trim()||CHECKOUT_COPY.title} onClose={onClose} closeDisabled={busy} className="order-form-modal" style={{...checkoutStyle(appearance),background:appearance.formBackground,borderColor:appearance.formBorderColor}} headingStyle={toCss(appearance.formHeadingStyle)}><OrderFormFields product={product} options={options} variantId={variantId} quantity={quantity} onVariantChange={changeVariant} onQuantityChange={changeQuantity} addresses={addresses} provinceCode={provinceCode} wardCode={wardCode} onProvinceChange={changeProvince} onWardChange={setWardCode} methods={methods} unitPrice={unitPrice} shipping={{...shipping,blocked:home.shippingSettings?.enabled===true&&shipping.fee===null}} total={total} appearance={appearance} busy={busy} error={result?.error} onSubmit={async (event) => {
     event.preventDefault();

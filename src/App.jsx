@@ -18,7 +18,6 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
-import BackToTop from "./components/BackToTop";
 import ChatButton from "./components/ChatButton";
 
 import Navbar from "./components/Navbar";
@@ -140,7 +139,7 @@ function App() {
 
 
       </Routes>
-      {!location.pathname.startsWith("/admin") && <><ShopCart/><BackToTop/><ChatButton /><MobileGlass/><MobileShopNav /></>}
+      {!location.pathname.startsWith("/admin") && <><ShopCart/><ChatButton /><MobileGlass/><MobileShopNav /></>}
 
     </ButtonIconProvider>
   );

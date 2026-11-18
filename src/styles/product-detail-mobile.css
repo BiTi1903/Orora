@@ -21,7 +21,7 @@
  #root .product-detail .purchase-subtotal.is-pending strong { font-size:var(--pd-mobile-labelSize)!important; }
  #root .product-detail .purchase-options { margin:14px 0 0; }
  #root .product-detail .purchase-options > h2 { font-size:var(--pd-mobile-labelSize)!important; margin-bottom:8px; }
- #root .product-detail .purchase-options :is(.purchase-website,.purchase-social a) { min-height:44px; padding:9px 12px!important; font-size:var(--pd-mobile-buttonSize)!important; line-height:1.4!important; }
+ #root .product-detail .purchase-options :is(.purchase-website:not(.product-mobile-buy-cta),.purchase-social a) { min-height:44px; padding:9px 12px!important; font-size:var(--pd-mobile-buttonSize)!important; line-height:1.4!important; }
  #root .product-detail .purchase-options > .product-consultation { margin-bottom:8px!important; }
  #root .product-detail .purchase-divider { margin:10px 0; font-size:var(--pd-mobile-labelSize)!important; }
  #root .product-detail .purchase-social { max-width:none; }

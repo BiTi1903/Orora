@@ -9,74 +9,51 @@ export default function PurchaseOptionsSettings({ value = {}, onChange, initialG
   const labels = purchaseChannelLabels(value);
   return (
     <>
-      <InspectorGroup title="Giá và tạm tính" open={initialGroup === "subtotal"}>
-        <SettingGroup title="Giá theo dung tích và số lượng">
-          <label>
-            <input
-              type="checkbox"
-              role="switch"
-              checked={value.subtotalEnabled !== false}
-              onChange={(e) => onChange({ subtotalEnabled: e.target.checked })}
-            />
-            Hiện tạm tính sau khi chọn dung tích
-          </label>
-          <details>
-            <summary>Nội dung và kiểu chữ tạm tính</summary>
-            {[
-              ["subtotalLabel", "Tiêu đề", "Tạm tính"],
-              ["subtotalNote", "Ghi chú", "Chưa gồm phí giao hàng"],
-              ["subtotalQuantityLabel", "Khi số lượng chưa hợp lệ", "Chọn số lượng hợp lệ"],
-              ["subtotalContactLabel", "Khi chưa có giá", "Liên hệ để báo giá"],
-            ].map(([key, label, fallback]) => (
-              <label key={key}>
-                {label}
-                <input
-                  value={value[key] ?? ""}
-                  placeholder={fallback}
-                  onChange={(e) => onChange({ [key]: e.target.value })}
-                />
-              </label>
-            ))}
-            {[
-              ["subtotalPadding", "Đệm khung tạm tính (px)", 10, 6, 24],
-              ["subtotalRadius", "Bo góc khung tạm tính (px)", 12, 0, 28],
-            ].map(([key, label, fallback, min, max]) => (
-              <label key={key}>
-                {label}
-                <input
-                  type="number"
-                  min={min}
-                  max={max}
-                  value={value[key] ?? fallback}
-                  onChange={(event) => onChange({ [key]: Number(event.target.value) })}
-                />
-              </label>
-            ))}
-            <ColorField
-              label="Nền khung tạm tính"
-              value={value.subtotalBackground || "#fff7fa"}
-              onChange={(color) => onChange({ subtotalBackground: color })}
-            />
-            <ColorField
-              label="Viền khung tạm tính"
-              value={value.subtotalBorderColor || "#efd7e1"}
-              onChange={(color) => onChange({ subtotalBorderColor: color })}
-            />
-            <StyleTypographyBlock
-              title="Nhãn và ghi chú"
-              style={value.subtotalLabelStyle || {}}
-              onStyleChange={(patch) =>
-                onChange({ subtotalLabelStyle: { ...value.subtotalLabelStyle, ...patch } })
-              }
-            />
-            <StyleTypographyBlock
-              title="Số tiền tạm tính"
-              style={value.subtotalValueStyle || {}}
-              onStyleChange={(patch) =>
-                onChange({ subtotalValueStyle: { ...value.subtotalValueStyle, ...patch } })
-              }
-            />
-          </details>
+      <InspectorGroup title="Khối Mua ngay kính lỏng" open={initialGroup === "subtotal"}>
+        <SettingGroup title="Hiệu ứng kính lỏng và hiển thị giá">
+          <small className="builder-help">
+            Mặc định đồng bộ chất liệu kính lỏng với thanh điều hướng dưới (MobileShopNav). Có thể tùy chỉnh riêng độ trong suốt, độ mờ nền, bo góc và màu khung bên dưới.
+          </small>
+          {[
+            ["quickBuyOpacity", "Độ đục nền kính (%)", 74, 45, 95],
+            ["quickBuyBlur", "Độ mờ kính sau nền (px)", 20, 6, 32],
+            ["subtotalRadius", "Bo góc khung kính (px)", 22, 12, 32],
+          ].map(([key, label, fallback, min, max]) => (
+            <label className="builder-field" key={key}>
+              {label}
+              <input
+                type="number"
+                min={min}
+                max={max}
+                value={value[key] ?? fallback}
+                onChange={(event) => onChange({ [key]: Number(event.target.value) })}
+              />
+            </label>
+          ))}
+          <ColorField
+            label="Màu nền kính Mua ngay"
+            value={value.subtotalBackground || "#fffafc"}
+            onChange={(color) => onChange({ subtotalBackground: color })}
+          />
+          <ColorField
+            label="Màu ánh viền kính"
+            value={value.subtotalBorderColor || "#ffffff"}
+            onChange={(color) => onChange({ subtotalBorderColor: color })}
+          />
+          <StyleTypographyBlock
+            title="Kiểu chữ dòng dung tích & số lượng"
+            style={value.subtotalLabelStyle || {}}
+            onStyleChange={(patch) =>
+              onChange({ subtotalLabelStyle: { ...value.subtotalLabelStyle, ...patch } })
+            }
+          />
+          <StyleTypographyBlock
+            title="Kiểu chữ tổng giá trên thanh Mua ngay"
+            style={value.subtotalValueStyle || {}}
+            onStyleChange={(patch) =>
+              onChange({ subtotalValueStyle: { ...value.subtotalValueStyle, ...patch } })
+            }
+          />
         </SettingGroup>
       </InspectorGroup>
       <InspectorGroup title="Nội dung các kênh mua hàng">
@@ -86,8 +63,7 @@ export default function PurchaseOptionsSettings({ value = {}, onChange, initialG
           </small>
           {[
             ["heading", "Tiêu đề", "Chọn cách mua hàng"],
-            ["websiteLabel", "Nút đặt trên web", "Đặt hàng ngay"],
-            ["dividerLabel", "Dòng phân cách", "hoặc đặt hàng tại"],
+            ["mobileBuyLabel", "Nút Mua ngay (kính lỏng)", "Mua ngay"],
             ["tiktokLabel", "Nút TikTok", "Tiktok"],
             ["facebookLabel", "Nút Facebook", "Fb"],
           ].map(([key, label, placeholder]) => (
@@ -101,6 +77,7 @@ export default function PurchaseOptionsSettings({ value = {}, onChange, initialG
                 onChange={(event) =>
                   onChange({
                     [key]: event.target.value,
+                    ...(key === "mobileBuyLabel" ? { websiteLabel: event.target.value } : {}),
                     ...(["facebookLabel", "tiktokLabel"].includes(key)
                       ? { [key === "facebookLabel" ? "customFacebookLabel" : "customTiktokLabel"]: true }
                       : {}),
@@ -116,7 +93,6 @@ export default function PurchaseOptionsSettings({ value = {}, onChange, initialG
           <label className="builder-field">Thời gian giao dự kiến<input value={value.deliveryEstimateLabel || ""} onChange={event => onChange({ deliveryEstimateLabel: event.target.value })} /></label>
           <label className="builder-field">Chính sách đổi trả<textarea value={value.returnPolicyLabel || ""} onChange={event => onChange({ returnPolicyLabel: event.target.value })} /></label>
         </SettingGroup>
-        <label className="builder-field">Nhãn nút mua dính đáy trên mobile<input value={value.mobileBuyLabel || ""} placeholder="Mua ngay" onChange={event => onChange({ mobileBuyLabel: event.target.value })} /></label>
         <CheckoutSettings value={value} onChange={onChange} />
         <SettingGroup title="Nút xác nhận trong form đặt hàng">
           {[

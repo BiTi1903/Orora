@@ -17,20 +17,20 @@ export function ProductDetailSettings({ selected, data, productDetail, onChange,
     const value = productDetail.purchaseOptions || {},
       channel =
         selected === "pdWebsiteText" ? "website" : selected === "pdFacebookText" ? "facebook" : "tiktok",
-      label = channel === "website" ? "Website" : channel === "facebook" ? "Facebook" : "TikTok";
+      label = channel === "website" ? "Mua ngay" : channel === "facebook" ? "Facebook" : "TikTok";
     return (
       <>
         <SettingGroup title={`Nội dung nút ${label}`}>
           <label className="builder-field">
             {`Chữ nút ${label}`}
             <input
-              value={value[`${channel}Label`] || ""}
-              placeholder={channel === "website" ? "Đặt hàng ngay" : label}
+              value={(channel === "website" ? value.mobileBuyLabel || value.websiteLabel : value[`${channel}Label`]) || ""}
+              placeholder={channel === "website" ? "Mua ngay" : label}
               onChange={(e) =>
                 onStyleChange({
                   [`${channel}Label`]: e.target.value,
                   ...(channel === "website"
-                    ? {}
+                    ? { mobileBuyLabel: e.target.value }
                     : { [channel === "facebook" ? "customFacebookLabel" : "customTiktokLabel"]: true }),
                 })
               }
@@ -42,6 +42,30 @@ export function ProductDetailSettings({ selected, data, productDetail, onChange,
             fallback={PRODUCT_DETAIL_COLOR_DEFAULTS.buttonBackground}
             onChange={(color) => onStyleChange({ [`${channel}Background`]: color })}
           />
+          {channel === "website" && (
+            <>
+              <label className="builder-field">
+                Độ đục kính lỏng (%)
+                <input
+                  type="number"
+                  min={45}
+                  max={95}
+                  value={value.quickBuyOpacity ?? 74}
+                  onChange={(e) => onStyleChange({ quickBuyOpacity: Number(e.target.value) })}
+                />
+              </label>
+              <label className="builder-field">
+                Độ mờ nền kính (px)
+                <input
+                  type="number"
+                  min={6}
+                  max={32}
+                  value={value.quickBuyBlur ?? 20}
+                  onChange={(e) => onStyleChange({ quickBuyBlur: Number(e.target.value) })}
+                />
+              </label>
+            </>
+          )}
         </SettingGroup>
         <StyleTypographyBlock
           title={`Kiểu chữ nút ${label}`}

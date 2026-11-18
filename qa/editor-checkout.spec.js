@@ -9,16 +9,17 @@ const base={
  'hooks/useAddressOptions.js':`const provinces=[{code:'01',name:'Đồng Nai'}],wards=[{code:'001',name:'Phường Tân Mai'}];export default function useAddress(){return {provinces,wards,loadingProvinces:false,loadingWards:false}}`,
 };
 async function detail(page,state,overrides={},withMobileControls=false){
- await mount(page,`import Detail from '/src/components/ProductDetail.jsx';import Chat from '/src/components/ChatButton.jsx';import BackToTop from '/src/components/BackToTop.jsx';import MobileNav from '/src/components/MobileShopNav.jsx';import {Routes,Route} from '/qa/runtime.js';D.createRoot(document.getElementById('root')).render(R.createElement(MemoryRouter,{initialEntries:[{pathname:'/product/gel',state:${JSON.stringify(state||null)}}]},R.createElement(Routes,null,R.createElement(Route,{path:'/product/:id',element:R.createElement(R.Fragment,null,R.createElement(Detail),${withMobileControls ? "R.createElement(Chat),R.createElement(MobileNav),R.createElement(BackToTop)" : "null"})}))));`,{...base,...overrides});
+ await mount(page,`import Detail from '/src/components/ProductDetail.jsx';import Chat from '/src/components/ChatButton.jsx';import MobileNav from '/src/components/MobileShopNav.jsx';import {Routes,Route} from '/qa/runtime.js';D.createRoot(document.getElementById('root')).render(R.createElement(MemoryRouter,{initialEntries:[{pathname:'/product/gel',state:${JSON.stringify(state||null)}}]},R.createElement(Routes,null,R.createElement(Route,{path:'/product/:id',element:R.createElement(R.Fragment,null,R.createElement(Detail),${withMobileControls ? "R.createElement(Chat),R.createElement(MobileNav)" : "null"})}))));`,{...base,...overrides});
  await expect(page.locator('.product-detail-info h1')).toHaveText(product.name);
 }
 test('detail selects the catalog price by default, keeps totals compact and isolates checkout edits',async({page},testInfo)=>{
  await detail(page);
  await expect(page.getByLabel('180ml',{exact:true})).toBeChecked();await expect(page.locator('.product-detail-price')).toContainText('450.000');
  await expect(page.locator('.product-price-variant')).toContainText('180ml');
- const subtotal=page.locator('.purchase-subtotal');await expect(subtotal.locator('div > small')).toHaveCount(0);expect((await subtotal.boundingBox()).height).toBeLessThan(110);
+ await expect(page.locator('.purchase-subtotal')).toHaveCount(0);
+ const buyBar=page.locator('.product-mobile-buy');await expect(buyBar).toBeVisible();expect((await buyBar.boundingBox()).height).toBeLessThan(95);
  await page.locator('.product-volume-choice').filter({hasText:'220ml'}).click();await expect(page.getByLabel('220ml',{exact:true})).toBeChecked();await expect(page.locator('.product-detail-price')).toContainText('600.000');
- const purchase = page.viewportSize().width <= 768 ? page.getByRole('button',{name:'Mua ngay',exact:true}) : page.getByRole('button',{name:'Đặt hàng ngay',exact:true});
+ const purchase = page.getByRole('button',{name:'Mua ngay',exact:true});
  if (page.viewportSize().width <= 768) await expect(purchase).toBeInViewport();
  await purchase.click();const dialog=page.getByRole('dialog',{name:'Đặt hàng trên website',exact:true});await expect(dialog).toBeVisible();
  if(page.viewportSize().width<=600){const labels=dialog.locator('.order-field-row').first().locator('label');const first=await labels.nth(0).boundingBox(),second=await labels.nth(1).boundingBox();expect(second.y).toBeGreaterThan(first.y+20);expect(first.width).toBeGreaterThan(230);}
@@ -27,7 +28,6 @@ test('detail selects the catalog price by default, keeps totals compact and isol
  await dialog.getByLabel('Họ và tên',{exact:true}).fill('Nguyễn Khách Thử');
  await dialog.getByLabel('Số điện thoại',{exact:true}).fill('0901234567');
  await dialog.getByLabel('Email nhận xác nhận đơn',{exact:true}).fill('qa@example.com');
- await dialog.getByRole('button',{name:'Tiếp tục',exact:true}).click();
  const province=dialog.getByRole('combobox',{name:'Tỉnh / Thành phố',exact:true});await province.fill('dong nai');await dialog.getByRole('option',{name:'Đồng Nai',exact:true}).click();
  if (page.viewportSize().width <= 768) {
   await dialog.getByLabel('Số nhà, tên đường',{exact:true}).focus();
@@ -40,8 +40,8 @@ test('detail selects the catalog price by default, keeps totals compact and isol
  await page.screenshot({path:testInfo.outputPath('product-price.png')});
 });
 test('explicit cart volume and quantity take priority over the default catalog choice',async({page})=>{
- await detail(page,{cartSelection:{productId:'gel',variantId:'large',quantity:3}});await expect(page.getByLabel('220ml',{exact:true})).toBeChecked();await expect(page.getByRole('spinbutton')).toHaveValue('3');await expect(page.locator('.purchase-subtotal strong')).toContainText('1.800.000');
- await page.getByRole('button',{name:'Đặt hàng ngay',exact:true}).click();const dialog=page.getByRole('dialog');await expect(dialog.getByRole('spinbutton')).toHaveValue('3');await expect(dialog.getByLabel('220ml',{exact:true})).toBeChecked();
+ await detail(page,{cartSelection:{productId:'gel',variantId:'large',quantity:3}});await expect(page.getByLabel('220ml',{exact:true})).toBeChecked();await expect(page.getByRole('spinbutton')).toHaveValue('3');await expect(page.locator('.product-mobile-buy-total strong')).toContainText('1.800.000');
+ await page.getByRole('button',{name:'Mua ngay',exact:true}).click();const dialog=page.getByRole('dialog');await expect(dialog.getByRole('spinbutton')).toHaveValue('3');await expect(dialog.getByLabel('220ml',{exact:true})).toBeChecked();
 });
 test('inspector separates selected fields and section settings and keeps drafts while switching tabs',async({page},testInfo)=>{
  await mount(page,`import Builder from '/src/admin/builder/VisualBuilder.jsx';${render("R.createElement('main',{className:'admin-main'},R.createElement(Builder))")}`,{...base,'lib/api.js':`export const getProduct=async()=>null;export const getHomeContent=async()=>({navLogo:'ORORA',navStyles:{surfaces:{chatPanelWidth:310}}});export const saveHomeContent=async value=>window.__saved=value;`});
@@ -70,8 +70,7 @@ test('known stock blocks orders', async ({ page }) => {
  await page.route('**/api/storefront/stock?**', route => route.fulfill({ json: { availability: { gel: 'out' } } }));
  await detail(page);
  await expect(page.locator('.product-stock-badge')).toHaveText('Hết hàng');
- await expect(page.getByRole('button', { name: 'Đặt hàng ngay' })).toBeDisabled();
- if (page.viewportSize().width <= 768) await expect(page.locator('.product-mobile-buy button')).toBeDisabled();
+ await expect(page.locator('.product-mobile-buy button')).toBeDisabled();
 });
 
 test('product image dialog opens the source and zoom controls enlarge it', async ({ page }) => {
@@ -110,9 +109,9 @@ test('mobile buy bar shares purchase settings and leaves room for chat and navig
   'hooks/useChatConversation.js': 'export default function chat(){return {metadata:{}}}',
  }, true);
  const sticky = page.getByRole('button', { name: 'Mua ngay', exact: true });
- const main = page.getByRole('button', { name: 'Đặt hàng ngay', exact: true });
  await expect(sticky).toHaveCSS('background-color', 'rgb(101, 67, 33)');
- await expect(sticky).toHaveCSS('font-size', await main.evaluate(el => getComputedStyle(el).fontSize));
+ await expect(sticky).toHaveCSS('font-size', '18px');
+ await expect(page.locator('.product-mobile-buy')).toHaveCSS('backdrop-filter', /blur/);
  await page.getByRole('button',{name:'Tăng số lượng'}).click();
  await page.getByRole('button',{name:'Tăng số lượng'}).click();
  await expect(page.locator('.product-mobile-buy-total')).toContainText('1.350.000');
@@ -124,8 +123,7 @@ test('mobile buy bar shares purchase settings and leaves room for chat and navig
   const bar = document.querySelector('.product-mobile-buy').getBoundingClientRect();
   const chat = document.querySelector('.orora-chat-launcher').getBoundingClientRect();
   const navbar = document.querySelector('.mobile-shop-nav').getBoundingClientRect();
-  const top = document.querySelector('.back-to-top').getBoundingClientRect();
-  return Math.min(bar.top - chat.bottom, navbar.top - bar.bottom, bar.top - top.bottom);
+  return Math.min(bar.top - chat.bottom, navbar.top - bar.bottom);
  })).toBeGreaterThanOrEqual(-1);
  await expect.poll(() => page.evaluate(() => document.querySelector('.product-mobile-buy').getBoundingClientRect().top - document.querySelector('.orora-chat-launcher').getBoundingClientRect().bottom)).toBeGreaterThanOrEqual(8);
  await sticky.click();
@@ -136,6 +134,6 @@ test('website order buttons stay hidden when payment methods are disabled', asyn
  await detail(page, null, {
   'hooks/useHomeContent.js': 'export default function home(){return {loading:false,shopLinks:{paymentMethods:[]}}}',
  });
- await expect(page.getByRole('button', { name: 'Đặt hàng ngay', exact: true })).toHaveCount(0);
+ await expect(page.getByRole('button', { name: 'Mua ngay', exact: true })).toHaveCount(0);
  await expect(page.locator('.product-mobile-buy')).toHaveCount(0);
 });
