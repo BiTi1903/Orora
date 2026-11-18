@@ -17,6 +17,7 @@ test('detail selects the catalog price by default, keeps totals compact and isol
  await expect(page.getByLabel('180ml',{exact:true})).toBeChecked();await expect(page.locator('.product-detail-price')).toContainText('450.000');
  await expect(page.locator('.product-price-variant')).toContainText('180ml');
  await expect(page.locator('.purchase-subtotal')).toHaveCount(0);
+ if (page.viewportSize().width > 768) await expect(page.locator('.purchase-options .product-mobile-buy')).toBeVisible();
  const buyBar=page.locator('.product-mobile-buy');await expect(buyBar).toBeVisible();expect((await buyBar.boundingBox()).height).toBeLessThan(95);
  await page.locator('.product-volume-choice').filter({hasText:'220ml'}).click();await expect(page.getByLabel('220ml',{exact:true})).toBeChecked();await expect(page.locator('.product-detail-price')).toContainText('600.000');
  const purchase = page.getByRole('button',{name:'Mua ngay',exact:true});
@@ -126,6 +127,18 @@ test('mobile buy bar shares purchase settings and leaves room for chat and navig
   return Math.min(bar.top - chat.bottom, navbar.top - bar.bottom);
  })).toBeGreaterThanOrEqual(-1);
  await expect.poll(() => page.evaluate(() => document.querySelector('.product-mobile-buy').getBoundingClientRect().top - document.querySelector('.orora-chat-launcher').getBoundingClientRect().bottom)).toBeGreaterThanOrEqual(8);
+ // Recreate a composited product shell with its sticky tabs under the CTA.
+ await page.locator('.product-detail-shell').evaluate(node => {
+  node.style.transform = 'translateZ(0)';
+ });
+ await page.locator('.product-information-nav').evaluate(node => {
+  const bar = document.querySelector('.product-mobile-buy').getBoundingClientRect();
+  window.scrollBy(0, node.getBoundingClientRect().top - bar.top);
+ });
+ await expect.poll(() => sticky.evaluate(node => {
+  const bounds = node.getBoundingClientRect();
+  return node.contains(document.elementFromPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2));
+ })).toBe(true);
  await sticky.click();
  await expect(page.getByRole('dialog').getByRole('spinbutton')).toHaveValue('3');
 });

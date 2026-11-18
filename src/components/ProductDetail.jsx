@@ -27,7 +27,7 @@ import ConsultationDialog from "./ConsultationDialog";
 import OrderForm from "./OrderForm";
 import { availablePaymentMethods, formatProductPrice, formatVnd, parseVndPrice, purchaseChannelLabels, socialShopUrl } from "../lib/commerce";
 import { mobileImageVars } from "../lib/image-layout";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { getProduct } from "../lib/api";
 import useHomeContent from "../hooks/useHomeContent";
@@ -42,6 +42,14 @@ const renderLines = (text) =>
   String(text ?? "")
     .split(/\r?\n/)
     .flatMap((line, i) => (i === 0 ? [line] : [<br key={i} />, line]));
+
+const mobileBuyQuery = "(max-width: 768px)";
+const readMobileBuy = () => window.matchMedia(mobileBuyQuery).matches;
+function subscribeMobileBuy(update) {
+  const media = window.matchMedia(mobileBuyQuery);
+  media.addEventListener("change", update);
+  return () => media.removeEventListener("change", update);
+}
 
 function ProductDetail({
   preview = false,
@@ -83,8 +91,10 @@ function ProductDetail({
   const soldOut = stock === "out";
   const acceptsWebsiteOrders = availablePaymentMethods(home).length > 0;
   const showMobileBuy = Boolean(product) && (preview || acceptsWebsiteOrders);
+  const mobileViewport = useSyncExternalStore(subscribeMobileBuy, readMobileBuy, () => false);
+  const pinBuyBar = !preview && mobileViewport;
   useLayoutEffect(() => {
-    if (!showMobileBuy || preview) return;
+    if (!showMobileBuy || !pinBuyBar) return;
     const bar = mobileBuyRef.current;
     if (!bar) return;
     const root = document.documentElement;
@@ -96,7 +106,7 @@ function ProductDetail({
       observer.disconnect();
       root.style.removeProperty("--product-mobile-buy-height");
     };
-  }, [showMobileBuy, preview]);
+  }, [showMobileBuy, pinBuyBar]);
 
   useEffect(() => {
     if (!preview && product?.canonicalSlug && id !== product.canonicalSlug) navigate(productPath(product), { replace: true, state: cartLocation.state });
@@ -353,6 +363,37 @@ function ProductDetail({
   };
 
   const websiteButtonStyle = { ...css("purchaseOptions"), background: purchase.websiteBackground };
+  // Keep the live fixed bar outside the product content stacking contexts.
+  const mobileBuyBar = showMobileBuy && (
+    <div ref={mobileBuyRef} className={`product-mobile-buy ${preview ? "is-preview " : ""}${selectedClass("pdWebsiteText")}`} data-builder-key={preview ? "pdWebsiteText" : undefined} onClick={preview ? select("pdWebsiteText") : undefined} style={{
+      ...mobileNavTheme(mobileNavSettings(home.navStyles?.mobile)),
+      ...(purchase.subtotalBackground ? { "--quick-buy-bg": purchase.subtotalBackground } : {}),
+      ...(purchase.subtotalBorderColor ? { "--quick-buy-border": purchase.subtotalBorderColor } : {}),
+      ...(purchase.quickBuyOpacity != null ? { "--quick-buy-opacity": `${Math.max(45, Math.min(95, Number(purchase.quickBuyOpacity)))}%` } : {}),
+      ...(purchase.quickBuyBlur != null ? { "--quick-buy-blur": `${Math.max(6, Math.min(32, Number(purchase.quickBuyBlur)))}px` } : {}),
+      ...(purchase.subtotalRadius != null ? { "--quick-buy-radius": `${Math.max(12, Math.min(32, Number(purchase.subtotalRadius)))}px` } : {}),
+    }}>
+      <span className="product-mobile-buy-lens" aria-hidden="true" />
+      <div className="product-mobile-buy-total" aria-live="polite">
+        <strong style={toCss(purchase.subtotalValueStyle)}>{mobileSubtotal}</strong>
+        {choice.quantity !== "" && <small style={toCss(purchase.subtotalLabelStyle)}>{variant ? `${variant.label} · ` : ""}{choice.quantity} sản phẩm</small>}
+      </div>
+      <button type="button" className="purchase-website product-mobile-buy-cta" style={websiteButtonStyle} aria-haspopup="dialog" aria-expanded={!preview && acceptsWebsiteOrders && !soldOut && orderProductId === (product.id || product.slug)} disabled={soldOut}
+        onPointerEnter={() => { if (!preview) getAddressOptions().catch(() => {}); }}
+        onFocus={() => { if (!preview) getAddressOptions().catch(() => {}); }}
+        onClick={(event) => {
+          if (preview) { select("pdWebsiteText")(event); return; }
+          const btn = event.currentTarget;
+          animateButtonPress(btn, true, home.navStyles?.surfaces);
+          btn.animate?.([
+            { boxShadow: "0 6px 18px rgba(184, 68, 109, .28), 0 0 0 0 rgba(184, 68, 109, .45)" },
+            { boxShadow: "0 10px 26px rgba(184, 68, 109, .38), 0 0 0 12px rgba(184, 68, 109, 0)" },
+          ], { duration: 420, easing: "cubic-bezier(0.22, 1, 0.36, 1)" });
+          setOrderProductId(product.id || product.slug);
+        }}><ButtonIcon name="orderNow" defaultSize={16}/><span>{soldOut ? "Hết hàng" : (purchase.mobileBuyLabel?.trim() || (purchase.websiteLabel?.trim() && !["Đặt hàng trên website", "Đặt hàng ngay"].includes(purchase.websiteLabel.trim()) ? purchase.websiteLabel.trim() : "Mua ngay"))}</span><ButtonIcon name="orderArrow" defaultSize={15}/></button>
+    </div>
+  );
+
   return (
     <article
       className={`product-detail ${preview ? "product-detail--preview" : ""}`}
@@ -549,33 +590,7 @@ function ProductDetail({
               </div>
             )}
             {!preview && acceptsWebsiteOrders && !soldOut && orderProductId === (product.id || product.slug) && createPortal(<OrderForm key={product.id || product.slug} product={product} home={home} selection={{ variantId, quantity: choice.quantity }} onSelectionChange={changeSelection} onClose={() => setOrderProductId(null)} />, document.body)}
-            {showMobileBuy && <div ref={mobileBuyRef} className={`product-mobile-buy ${preview ? "is-preview " : ""}${selectedClass("pdWebsiteText")}`} data-builder-key={preview ? "pdWebsiteText" : undefined} onClick={preview ? select("pdWebsiteText") : undefined} style={{
-              ...mobileNavTheme(mobileNavSettings(home.navStyles?.mobile)),
-              ...(purchase.subtotalBackground ? { "--quick-buy-bg": purchase.subtotalBackground } : {}),
-              ...(purchase.subtotalBorderColor ? { "--quick-buy-border": purchase.subtotalBorderColor } : {}),
-              ...(purchase.quickBuyOpacity != null ? { "--quick-buy-opacity": `${Math.max(45, Math.min(95, Number(purchase.quickBuyOpacity)))}%` } : {}),
-              ...(purchase.quickBuyBlur != null ? { "--quick-buy-blur": `${Math.max(6, Math.min(32, Number(purchase.quickBuyBlur)))}px` } : {}),
-              ...(purchase.subtotalRadius != null ? { "--quick-buy-radius": `${Math.max(12, Math.min(32, Number(purchase.subtotalRadius)))}px` } : {}),
-            }}>
-              <span className="product-mobile-buy-lens" aria-hidden="true" />
-              <div className="product-mobile-buy-total" aria-live="polite">
-                <strong style={toCss(purchase.subtotalValueStyle)}>{mobileSubtotal}</strong>
-                {choice.quantity !== "" && <small style={toCss(purchase.subtotalLabelStyle)}>{variant ? `${variant.label} · ` : ""}{choice.quantity} sản phẩm</small>}
-              </div>
-              <button type="button" className="purchase-website product-mobile-buy-cta" style={websiteButtonStyle} aria-haspopup="dialog" aria-expanded={!preview && acceptsWebsiteOrders && !soldOut && orderProductId === (product.id || product.slug)} disabled={soldOut}
-                onPointerEnter={() => { if (!preview) getAddressOptions().catch(() => {}); }}
-                onFocus={() => { if (!preview) getAddressOptions().catch(() => {}); }}
-                onClick={(event) => {
-                  if (preview) { select("pdWebsiteText")(event); return; }
-                  const btn = event.currentTarget;
-                  animateButtonPress(btn, true, home.navStyles?.surfaces);
-                  btn.animate?.([
-                    { boxShadow: "0 6px 18px rgba(184, 68, 109, .28), 0 0 0 0 rgba(184, 68, 109, .45)" },
-                    { boxShadow: "0 10px 26px rgba(184, 68, 109, .38), 0 0 0 12px rgba(184, 68, 109, 0)" },
-                  ], { duration: 420, easing: "cubic-bezier(0.22, 1, 0.36, 1)" });
-                  setOrderProductId(product.id || product.slug);
-                }}><ButtonIcon name="orderNow" defaultSize={16}/><span>{soldOut ? "Hết hàng" : (purchase.mobileBuyLabel?.trim() || (purchase.websiteLabel?.trim() && !["Đặt hàng trên website", "Đặt hàng ngay"].includes(purchase.websiteLabel.trim()) ? purchase.websiteLabel.trim() : "Mua ngay"))}</span><ButtonIcon name="orderArrow" defaultSize={15}/></button>
-            </div>}
+            {!pinBuyBar && mobileBuyBar}
             <PurchaseTrust home={home} copy={purchase} preview={preview} />
           </section>
 
@@ -596,6 +611,7 @@ function ProductDetail({
       </div>
 
 
+      {pinBuyBar && mobileBuyBar && createPortal(mobileBuyBar, document.body)}
     </article>
   );
 }

@@ -1,3 +1,10 @@
+## 18/11/2026 — Đưa thanh Mua ngay lên trên nội dung chi tiết
+
+- Thanh mua kính lỏng trên mobile được render trực tiếp dưới body, tránh bị ngữ cảnh xếp lớp nội dung và tab thông tin che khi cuộn. Desktop và preview giữ thanh mua trong khung sản phẩm.
+- Giữ thiết kế, kiểu chữ, số lượng và hành vi mở checkout từ bản mới trên main.
+- Kiểm tra: 241 test Node, lint/build đạt. Chromium Android và WebKit iOS giả lập kiểm tra nút nhận thao tác khi cuộn qua tab và mở checkout đúng số lượng. WebKit desktop kiểm tra thanh mua vẫn trong khung sản phẩm.
+- Database: không đổi dữ liệu, schema hoặc rules.
+
 ## 18/11/2026 — Bỏ nút lên đầu, đồng bộ kính lỏng khối Mua ngay, tự lưu ảnh đơn khi qua Zalo và thiết kế lại form đặt hàng
 
 - **Lý do**: Theo yêu cầu chủ website cần bỏ nút đẩy lên đầu trang (`BackToTop`), bỏ khung tạm tính và nút đặt hàng ngay rời rạc ở trang chi tiết sản phẩm, chuyển khối Mua ngay sang hiệu ứng kính lỏng trong suốt nhìn xuyên nền đằng sau và đồng bộ với thanh điều hướng dưới (`MobileShopNav`), thêm hiệu ứng phản hồi khi nhấn Mua ngay, tự động tải ảnh đơn hàng khi nhấn xác nhận qua Zalo để Zalo gợi ý gửi ảnh ngay, đồng thời thiết kế lại form nhận hàng gọn rõ và hợp lý hơn.
