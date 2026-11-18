@@ -1,4 +1,7 @@
-export function createStorefrontStockHandler({ getDb }) {
+import { LOW_STOCK_THRESHOLD } from '../src/lib/stock.js';
+import { reserveRequestBudget } from './request-limits.js';
+
+export function createStorefrontStockHandler({ getDb, clock = Date.now, env = process.env }) {
   return async (req, res) => {
     if (req.method !== 'GET') {
       res.setHeader('Allow', 'GET');
@@ -10,13 +13,22 @@ export function createStorefrontStockHandler({ getDb }) {
     }
     try {
       const db = await getDb();
+      const retryAfter = await reserveRequestBudget(db, req, {
+        scope: 'storefront-stock', cost: 1 + ids.length * 2, budget: 600,
+        now: clock(), salt: env.CHAT_RATE_LIMIT_SALT || 'orora-stock',
+      });
+      if (retryAfter) {
+        res.setHeader('Cache-Control', 'no-store');
+        res.setHeader('Retry-After', String(retryAfter));
+        return res.status(429).json({ message: 'Bạn đang kiểm tra tồn kho quá nhanh. Vui lòng thử lại sau.' });
+      }
       const products = await db.getAll(...ids.map(id => db.collection('products').doc(id)));
       const visible = products.filter(doc => doc.exists && doc.data().active !== false);
       const stock = visible.length ? await db.getAll(...visible.map(doc => db.collection('inventory').doc(doc.id))) : [];
       const availability = Object.fromEntries(stock.flatMap(doc => {
         const quantity = doc.data()?.quantity;
         if (!Number.isSafeInteger(quantity) || quantity < 0) return [];
-        return [[doc.id, quantity === 0 ? 'out' : quantity <= 5 ? 'low' : 'available']];
+        return [[doc.id, quantity === 0 ? 'out' : quantity <= LOW_STOCK_THRESHOLD ? 'low' : 'available']];
       }));
       res.setHeader('Cache-Control', 'public, max-age=15, s-maxage=30');
       return res.status(200).json({ availability });

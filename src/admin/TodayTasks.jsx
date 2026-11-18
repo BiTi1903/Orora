@@ -1,3 +1,4 @@
+import { LOW_STOCK_THRESHOLD } from '../lib/stock';
 import { useEffect, useState } from 'react';
 import { auth } from '../lib/firebaseAuth';
 import { effectiveMailState } from '../lib/mail-state';
@@ -17,7 +18,7 @@ export default function TodayTasks({ onOpenOrder, onOpenInventory, revision }) {
     }
     Promise.allSettled([
       orderRequest(null, {}, { signal: controller.signal }),
-      orderRequest(null, { mailHistory: '1' }, { signal: controller.signal }),
+      orderRequest(null, { mailBounceSummary: '1' }, { signal: controller.signal }),
       inventory(),
     ]).then(([orders, history, inventory]) => {
       if (!active) return;
@@ -33,15 +34,15 @@ export default function TodayTasks({ onOpenOrder, onOpenInventory, revision }) {
         if (reasons.length) items.set(order.id, { id: order.id, code: order.code, phone: order.customer?.phone, reasons });
       }
       const bounceOrders = new Set();
-      for (const event of history.value?.mails || []) {
-        if (event.outlook?.state !== 'bounced' || bounceOrders.has(event.orderId)) continue;
+      for (const event of history.value?.bounced || []) {
+        if (bounceOrders.has(event.orderId)) continue;
         bounceOrders.add(event.orderId);
         const task = items.get(event.orderId) || { id: event.orderId, code: event.orderCode, phone: byId.get(event.orderId)?.customer?.phone, reasons: [] };
         items.set(event.orderId, { ...task, reasons: [...task.reasons, 'Mail bị trả lại'] });
       }
       setTasks({
         orders: [...items.values()].slice(0, 8),
-        stock: (inventory.value?.items || []).filter(item => Number.isInteger(item.quantity) && item.quantity >= 0 && item.quantity <= 5).slice(0, 6),
+        stock: (inventory.value?.items || []).filter(item => Number.isInteger(item.quantity) && item.quantity >= 0 && item.quantity <= LOW_STOCK_THRESHOLD).slice(0, 6),
         partial: [orders, history, inventory].some(result => result.status === 'rejected'),
       });
     });
@@ -50,7 +51,7 @@ export default function TodayTasks({ onOpenOrder, onOpenInventory, revision }) {
 
   return <section className="admin-card admin-today" aria-labelledby="admin-today-title">
     <h2 id="admin-today-title">Cần xử lý hôm nay</h2>
-    <p className="admin-muted">Đơn và email gần đây · Tồn kho đã kiểm đếm trong trang đầu</p>
+    <p className="admin-muted">Đơn gần đây và tồn kho đã kiểm đếm trong trang đầu. Mail bị trả lại chỉ hiện sau khi kiểm tra Outlook. Danh sách chưa tự quét Outlook.</p>
     {!tasks && <p role="status">Đang tải công việc…</p>}
     {tasks?.partial && <p className="admin-muted">Một phần dữ liệu chưa tải được.</p>}
     {tasks && !tasks.orders.length && !tasks.stock.length && <p>Chưa thấy việc cần xử lý trong dữ liệu đã tải.</p>}

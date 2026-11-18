@@ -902,3 +902,14 @@
 .product-purchase-trust p { margin:0; }
 .product-purchase-trust select { display:block; width:100%; min-height:44px; font-size:16px; }
 .purchase-website:disabled { opacity:.55; cursor:not-allowed; }
+
+.product-lightbox-view[data-zoomed="true"] { cursor:grab; }
+.product-lightbox-view[data-zoomed="true"]:active { cursor:grabbing; }
+.product-mobile-buy { display:none; }
+@media (max-width:768px) {
+  .product-detail:not(.product-detail--preview) { padding-bottom:calc(76px + env(safe-area-inset-bottom,0px)); }
+  .product-mobile-buy { position:fixed; inset:auto 0 env(safe-area-inset-bottom,0px); z-index:1045; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 16px; border-top:1px solid var(--line); background:#fffafb; }
+  html.has-mobile-shop-nav:has(.mobile-shop-nav:not(.is-preview,.is-waiting)) .product-mobile-buy { bottom:var(--mobile-shop-nav-height,64px); }
+  .product-mobile-buy .purchase-website { width:auto; min-width:112px; min-height:44px; justify-content:center; margin:0; }
+  body:has(dialog[open],.orora-chat-panel,.orora-chat-channel-chooser) .product-mobile-buy { visibility:hidden; pointer-events:none; }
+}

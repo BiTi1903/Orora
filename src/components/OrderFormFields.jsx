@@ -8,22 +8,32 @@ import '../styles/checkout.css';
 
 export default function OrderFormFields({product,options,variantId,quantity,onVariantChange,onQuantityChange,addresses,provinceCode,wardCode,onProvinceChange,onWardChange,methods,unitPrice,shipping,total,appearance={},busy=false,error,onSubmit,preview=false}){
  const [step,setStep]=useState(0);
+ const [addressError,setAddressError]=useState(false);
  const formRef=useRef(null);
  const copy={...CHECKOUT_COPY,...appearance.formLabels},headingStyle=toCss(appearance.formHeadingStyle);
+ for (const key of ["recipientHeading","addressHeading","confirmHeading","continueLabel","backLabel"]) {
+  if (typeof copy[key] !== "string" || !copy[key].trim()) copy[key]=CHECKOUT_COPY[key];
+ }
  const stepLabels=[copy.recipientHeading,copy.addressHeading,copy.confirmHeading];
  function goTo(next){
   setStep(next);
   requestAnimationFrame(()=>formRef.current?.querySelector('[data-checkout-current]')?.focus({preventScroll:true}));
  }
  function advance(){
+  if(step===1&&(!provinceCode||!wardCode||shipping.blocked)){
+   setAddressError(true);
+   return;
+  }
   const panel=formRef.current?.querySelector('[data-checkout-step]:not([hidden])');
   const invalid=[...panel.querySelectorAll('input, select, textarea')].find(field=>field.willValidate&&!field.validity.valid);
   if(invalid){invalid.reportValidity();return;}
-  if(step===1&&(!provinceCode||!wardCode||shipping.blocked))return;
+  setAddressError(false);
   goTo(step+1);
  }
  const hidden=index=>!preview&&step!==index;
- return <form ref={formRef} className="website-order checkout-form" aria-busy={busy} aria-label={copy.title?.trim()||CHECKOUT_COPY.title} style={toCss(appearance.formTextStyle)} onSubmit={event=>{
+ return <form ref={formRef} className="website-order checkout-form" aria-busy={busy} aria-label={copy.title?.trim()||CHECKOUT_COPY.title} style={toCss(appearance.formTextStyle)} onKeyDown={event=>{
+  if(!preview&&step===1&&event.key==="Enter"&&event.target.tagName==="INPUT"&&!(event.target.getAttribute("aria-expanded")==="true"&&event.target.getAttribute("aria-activedescendant"))&&(!provinceCode||!wardCode||shipping.blocked)){event.preventDefault();advance();}
+ }} onSubmit={event=>{
   if(!preview&&step===2&&onSubmit){onSubmit(event);return;}
   event.preventDefault();
   if(!preview)advance();
@@ -47,7 +57,8 @@ export default function OrderFormFields({product,options,variantId,quantity,onVa
     {addresses.error&&<p className="order-error" role="alert">{addresses.error} <button type="button" onClick={addresses.retry}>Tải lại địa chỉ</button></p>}
     <label>Số nhà, tên đường<textarea name="addressDetail" rows={2} required minLength={5} maxLength={350} autoComplete="street-address" placeholder="Số nhà, tên đường, tòa nhà…"/></label>
    </section>
-   {shipping.reason&&<p className="order-help">{shipping.reason}</p>}
+   {addressError&&(!provinceCode||!wardCode||shipping.blocked)&&<p className="order-error" role="alert">{!provinceCode||!wardCode?"Vui lòng chọn tỉnh/thành và phường/xã để tiếp tục.":shipping.reason||"Chưa tính được phí giao hàng cho địa chỉ này."}</p>}
+   {shipping.reason&&!addressError&&<p className="order-help">{shipping.reason}</p>}
    </div>
    <div data-checkout-step hidden={hidden(2)}>
    <section className="checkout-section"><h3 style={headingStyle}>{copy.paymentHeading}</h3>

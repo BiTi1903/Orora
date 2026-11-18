@@ -1,3 +1,4 @@
+import { requestClientIp } from './request-limits.js';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { normalizeTrackingPhone, ORDER_STATUSES } from '../src/lib/order-tracking.js';
 const failure = (status, message) => Object.assign(new Error(message), { status, publicError:true });
@@ -8,7 +9,7 @@ const timestamp = value => {
 };
 async function reserveLookup(db, req, phone, time, env) {
   const day = Math.floor(time / 86400000);
-  const ip = String(req.headers['x-vercel-forwarded-for'] || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim().slice(0,160);
+  const ip = requestClientIp(req);
   const hash = value => createHash('sha256').update(`${env.ORDER_TRACKING_RATE_SALT || env.CHAT_RATE_LIMIT_SALT || 'orora-tracking'}:${day}:${value}`).digest('hex');
   const refs = [db.collection('orderLookupLimits').doc(`ip-${day}-${hash(ip)}`),db.collection('orderLookupLimits').doc(`phone-${day}-${hash(phone)}`)];
   await db.runTransaction(async tx => {

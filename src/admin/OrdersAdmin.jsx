@@ -111,8 +111,8 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
   useEffect(() => {
     if (mailFilter !== "error") return;
     const controller = new AbortController();
-    orderRequest(null, { mailHistory: "1" }, { signal: controller.signal }).then(result => {
-      if (!controller.signal.aborted) setBouncedIds((result.mails || []).filter(mail => mail.outlook?.state === "bounced").map(mail => mail.orderId));
+    orderRequest(null, { mailBounceSummary: "1" }, { signal: controller.signal }).then(result => {
+      if (!controller.signal.aborted) setBouncedIds((result.bounced || []).map(mail => mail.orderId));
     }).catch(() => {});
     return () => controller.abort();
   }, [mailFilter, mailRevision, refreshKey]);
@@ -146,6 +146,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
       <div className="admin-actions order-mail-quick-filters" role="group" aria-label="Lọc nhanh email">
         {[["all","Mọi trạng thái email"],["error","Mail lỗi"],["unsent","Chưa gửi mail"]].map(([id,label])=><button key={id} type="button" className={`admin-btn ${mailFilter===id?"primary":""}`} aria-pressed={mailFilter===id} onClick={()=>setMailFilter(id)}>{label}</button>)}
       </div>
+      {mailFilter === "error" && <p className="admin-muted">Mail bị trả lại chỉ hiện với các đơn gần đây đã kiểm tra Outlook. Danh sách chưa tự quét Outlook.</p>}
       <details className="admin-filter-panel"><summary>Bộ lọc nâng cao{Object.keys(EMPTY_ORDER_FILTERS).some((key) => filters[key] !== EMPTY_ORDER_FILTERS[key]) ? " · Đang áp dụng" : ""}</summary>
         <div className="admin-form-grid">
           {[["min", "Từ số tiền (đ)"], ["max", "Đến số tiền (đ)"]].map(([key, label]) => <div className="admin-field" key={key}><label htmlFor={`order-filter-${key}`}>{label}</label><input id={`order-filter-${key}`} type="number" min="0" step="1" value={filters[key]} onChange={(event) => setFilters({ ...filters, [key]: event.target.value })} /></div>)}

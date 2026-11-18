@@ -18,7 +18,9 @@ test('detail selects the catalog price by default, keeps totals compact and isol
  await expect(page.locator('.product-price-variant')).toContainText('180ml');
  const subtotal=page.locator('.purchase-subtotal');await expect(subtotal.locator('div > small')).toHaveCount(0);expect((await subtotal.boundingBox()).height).toBeLessThan(110);
  await page.locator('.product-volume-choice').filter({hasText:'220ml'}).click();await expect(page.getByLabel('220ml',{exact:true})).toBeChecked();await expect(page.locator('.product-detail-price')).toContainText('600.000');
- await page.getByRole('button',{name:'Đặt hàng ngay',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Đặt hàng trên website',exact:true});await expect(dialog).toBeVisible();
+ const purchase = page.viewportSize().width <= 768 ? page.getByRole('button',{name:'Mua ngay',exact:true}) : page.getByRole('button',{name:'Đặt hàng ngay',exact:true});
+ if (page.viewportSize().width <= 768) await expect(purchase).toBeInViewport();
+ await purchase.click();const dialog=page.getByRole('dialog',{name:'Đặt hàng trên website',exact:true});await expect(dialog).toBeVisible();
  if(page.viewportSize().width<=600){const labels=dialog.locator('.order-field-row').first().locator('label');const first=await labels.nth(0).boundingBox(),second=await labels.nth(1).boundingBox();expect(second.y).toBeGreaterThan(first.y+20);expect(first.width).toBeGreaterThan(230);}
  await expect(dialog.getByLabel('220ml',{exact:true})).toBeChecked();await expect(page.locator('.product-detail dialog')).toHaveCount(0);
  await page.evaluate(()=>{window.__detailMutations=0;new MutationObserver(()=>window.__detailMutations++).observe(document.querySelector('.product-detail'),{childList:true,subtree:true});});
@@ -40,6 +42,7 @@ test('explicit cart volume and quantity take priority over the default catalog c
 test('inspector separates selected fields and section settings and keeps drafts while switching tabs',async({page},testInfo)=>{
  await mount(page,`import Builder from '/src/admin/builder/VisualBuilder.jsx';${render("R.createElement('main',{className:'admin-main'},R.createElement(Builder))")}`,{...base,'lib/api.js':`export const getProduct=async()=>null;export const getHomeContent=async()=>({navLogo:'ORORA',navStyles:{surfaces:{chatPanelWidth:310}}});export const saveHomeContent=async value=>window.__saved=value;`});
  await page.getByLabel('Tìm mục chỉnh sửa',{exact:true}).fill('navbar');await expect(page.locator('.builder-section-row')).toHaveCount(1);await page.locator('.builder-sections').getByRole('button',{name:/Navbar/}).click();
+ await page.getByLabel('Chữ logo',{exact:true}).fill('ORORA M');
  await page.getByLabel('Chữ logo',{exact:true}).fill('ORORA MỚI');
  await page.getByRole('button',{name:'Hoàn tác',exact:true}).click();
  await expect(page.getByLabel('Chữ logo',{exact:true})).toHaveValue('ORORA');
@@ -62,8 +65,9 @@ test('checkout appearance and content preview share the live presentation and pr
 test('known stock blocks orders', async ({ page }) => {
  await page.route('**/api/storefront/stock?**', route => route.fulfill({ json: { availability: { gel: 'out' } } }));
  await detail(page);
- await expect(page.getByText('Hết hàng', { exact: true })).toBeVisible();
+ await expect(page.locator('.product-stock-badge')).toHaveText('Hết hàng');
  await expect(page.getByRole('button', { name: 'Đặt hàng ngay' })).toBeDisabled();
+ if (page.viewportSize().width <= 768) await expect(page.locator('.product-mobile-buy button')).toBeDisabled();
 });
 
 test('product image dialog opens the source and zoom controls enlarge it', async ({ page }) => {
@@ -75,6 +79,15 @@ test('product image dialog opens the source and zoom controls enlarge it', async
  const dialog = page.getByRole('dialog', { name: product.name });
  await dialog.getByRole('button', { name: 'Phóng to', exact: true }).click();
  await expect(dialog.getByRole('img')).toHaveAttribute('style', /width: 150%/);
+ const view = dialog.getByRole('region', { name: 'Ảnh sản phẩm phóng to' });
+ await view.focus();
+ await expect(view).toBeFocused();
+ const box = await view.boundingBox();
+ await page.mouse.move(box.x + box.width * .75, box.y + 30);
+ await page.mouse.down();
+ await page.mouse.move(box.x + box.width * .25, box.y + 30, { steps: 4 });
+ await page.mouse.up();
+ await expect.poll(() => view.evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
  await page.keyboard.press('Escape');
  await expect(dialog).toHaveCount(0);
 });

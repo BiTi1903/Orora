@@ -286,3 +286,21 @@ test("order creation batches stock reads and skips historical-order scans only f
   assert.equal(historyReads, 1, "finite stock still checks prior pending orders before accepting");
   assert.equal((await db.collection("orders").get()).docs.length, 1);
 });
+
+test("recent bounce summary returns a single entry per checked order and history caps events", async () => {
+  const db = memoryDb();
+  const id = randomUUID();
+  const ref = db.collection("orders").doc(id);
+  await ref.set({ code: "OW_TEST", createdAt: new Date() });
+  for (let i = 0; i < 55; i++) {
+    await ref.collection("mailEvents").doc(`event-${i}`).set({
+      text: "Private content", createdAt: new Date(1000 + i),
+      outlook: i < 2 ? { state: "bounced" } : { state: "submitted" },
+    });
+  }
+  const summary = await admin(db)(null, { query: { mailBounceSummary: "1" } });
+  assert.deepEqual(summary.body, { bounced: [{ orderId: id, orderCode: "OW_TEST" }], scannedOrders: 1 });
+  const history = await admin(db)(null, { query: { mailHistory: "1" } });
+  assert.equal(history.body.mails.length, 50);
+  assert.equal(history.body.mails[0].id, `${id}/event-54`);
+});

@@ -1,3 +1,13 @@
+## 18/11/2026 — Gom lịch sử chỉnh sửa, giảm lượt đọc mail và thêm nút Mua ngay trên mobile
+
+- Visual Builder gộp lần chỉnh liên tiếp trên cùng đường dẫn trường chữ trong khoảng 500ms. Đổi trường, chờ lâu hơn, hoàn tác, làm lại hoặc reset sẽ bắt đầu nhóm mới. Giữ tối đa 40 bước.
+- Tổng quan và bộ lọc Mail lỗi dùng API tóm tắt bounce cho 20 đơn gần nhất, tối đa một kết quả đã đánh dấu bounced mỗi đơn và không tải nội dung thư. Lịch sử mail tải tối đa 50 lượt gửi mới nhất mỗi đơn. UI nói rõ chưa tự quét Outlook và bounce chỉ hiện sau khi kiểm tra.
+- API tồn kho dùng ngân sách theo IP qua Firestore và HTTP 429 với Retry-After. Tối đa 600 đơn vị mỗi phút, mỗi truy vấn tính 1 cộng 2 cho từng ID duy nhất. Đổi tổ hợp hoặc thứ tự ID không đổi ngân sách. Tái dùng cách nhận diện IP của chat/tra cứu và gom ngưỡng Còn ít vào LOW_STOCK_THRESHOLD.
+- Checkout báo rõ khi Enter ở bước địa chỉ mà chưa chọn đủ tỉnh/phường, giữ cách chọn bằng Enter của combobox. Các nhãn bước có mặc định cho cấu hình cũ hoặc nhãn trống.
+- Lightbox tải biến thể nét hơn tối đa 2400px từ Cloudinary, hỗ trợ kéo chuột và focus bàn phím. Chi tiết có thanh Mua ngay trên mobile, canh trên navbar khi navbar hiện, ẩn khi mở dialog/chat và khóa khi hết hàng. Chạy lại riêng bài lightbox có kéo chuột và focus bàn phím, kết quả đạt. Admin chỉnh được tên nút.
+- Database: không đổi schema/rules và không cập nhật dữ liệu đơn hoặc kho. Hạn mức ghi bộ đếm và mốc hết hạn vào collection chatRateLimits hiện có dưới khóa riêng của tồn kho. Chưa bật tích hợp Graph hoặc quét Outlook tự động.
+- Kiểm tra: 240 test Node, lint, build và bundle đạt. Playwright 390px đạt 7 bài admin và 10 bài checkout/tra cứu/builder, gồm gom thao tác nhập, Enter, mở checkout từ thanh mua và khóa khi hết hàng. Chạy lại riêng bài lightbox có kéo chuột và focus bàn phím, kết quả đạt.
+
 ## 18/11/2026 — Cải thiện mua hàng trên di động và các việc cần xử lý trong admin
 
 - Danh sách, chi tiết và giỏ dùng trạng thái tồn kho từ API chỉ đọc theo lô. Chỉ trả trạng thái cho sản phẩm đang bán, không trả số tồn hoặc dữ liệu nội bộ. Hết hàng khi kho kiểm đếm bằng 0, Còn ít từ 1 đến 5, chưa kiểm đếm không gắn nhãn. Máy chủ vẫn kiểm tra hàng đang giữ khi đặt đơn. API cache ngắn để giảm lượt đọc.

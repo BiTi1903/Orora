@@ -116,6 +116,7 @@ export default function PurchaseOptionsSettings({ value = {}, onChange, initialG
           <label className="builder-field">Thời gian giao dự kiến<input value={value.deliveryEstimateLabel || ""} onChange={event => onChange({ deliveryEstimateLabel: event.target.value })} /></label>
           <label className="builder-field">Chính sách đổi trả<textarea value={value.returnPolicyLabel || ""} onChange={event => onChange({ returnPolicyLabel: event.target.value })} /></label>
         </SettingGroup>
+        <label className="builder-field">Nhãn nút mua dính đáy trên mobile<input value={value.mobileBuyLabel || ""} placeholder="Mua ngay" onChange={event => onChange({ mobileBuyLabel: event.target.value })} /></label>
         <CheckoutSettings value={value} onChange={onChange} />
         <SettingGroup title="Nút xác nhận trong form đặt hàng">
           {[

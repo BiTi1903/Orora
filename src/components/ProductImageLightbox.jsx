@@ -19,8 +19,8 @@ export default function ProductImageLightbox({ src, name, onClose }) {
       <button type="button" disabled={zoom >= 4} onClick={() => setZoom(value => clampZoom(value + .5))}>Phóng to</button>
       <button type="button" disabled={zoom === 1} onClick={() => setZoom(1)}>Về 100%</button>
     </div>
-    <div className="product-lightbox-view" onPointerDown={event => {
-      if (event.pointerType !== 'touch') return;
+    <div className="product-lightbox-view" tabIndex={0} role="region" aria-label="Ảnh sản phẩm phóng to" data-zoomed={zoom > 1} onPointerDown={event => {
+      if (event.pointerType !== 'touch' && (event.button !== 0 || zoom <= 1)) return;
       event.currentTarget.setPointerCapture(event.pointerId);
       pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
       if (pointers.current.size === 2) pinch.current = { length: distance([...pointers.current.values()]), zoom };

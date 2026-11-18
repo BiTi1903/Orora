@@ -19,3 +19,22 @@ test('storefront stock exposes only availability for active products with counte
   await handler({ method: 'GET', query: { ids: '../private' } }, invalid);
   assert.equal(invalid.statusCode, 400);
 });
+
+test('stock quota covers different ID combinations before inventory reads', async () => {
+  const db = memoryDb();
+  let reads = 0;
+  db.getAll = (...refs) => { reads++; return Promise.all(refs.map(ref => ref.get())); };
+  let now = 1000;
+  const handler = createStorefrontStockHandler({ getDb: () => db, clock: () => now });
+  for (let i = 0; i < 7; i++) {
+    const res = response();
+    await handler({ method: 'GET', query: { ids: Array.from({ length: 48 }, (_, index) => `${i}-${index}`).join(',') } }, res);
+    assert.equal(res.statusCode, i < 6 ? 200 : 429);
+    if (i === 6) assert.equal(res.headers['Retry-After'], '59');
+  }
+  assert.equal(reads, 6);
+  now += 60000;
+  const res = response();
+  await handler({ method: 'GET', query: { ids: 'new' } }, res);
+  assert.equal(res.statusCode, 200);
+});

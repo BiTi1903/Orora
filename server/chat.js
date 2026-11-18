@@ -1,3 +1,4 @@
+import { requestClientIp } from './request-limits.js';
 import { createHash } from "node:crypto";
 import { CHAT_HISTORY_LIMIT, CHAT_MESSAGE_LIMIT } from "../src/lib/chat.js";
 import { buildChatKnowledge, chatReply, guidedChatReply, rankedChatProducts } from "./chat-knowledge.js";
@@ -33,7 +34,7 @@ export function readChatMessages(body) {
 
 async function reserveRequest(db, req, env, useAI, now) {
   const day = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(now)).replace(/\D/g, "");
-  const rawIP = String(req.headers["x-vercel-forwarded-for"] || req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").split(",")[0].trim().slice(0, 160);
+  const rawIP = requestClientIp(req);
   const hash = createHash("sha256").update(`${env.CHAT_RATE_LIMIT_SALT || env.OPENAI_API_KEY || "orora-chat"}:${day}:${rawIP}`).digest("hex");
   const client = db.collection("chatRateLimits").doc(`client-${day}-${hash}`);
   const global = db.collection("chatRateLimits").doc(`daily-${day}`);

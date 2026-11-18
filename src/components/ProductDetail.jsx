@@ -385,7 +385,7 @@ function ProductDetail({
             )}
           </div>
 
-          {!preview && displaySrc && <button type="button" className="product-image-zoom" onClick={() => setLightbox(displaySrc)}>Phóng to ảnh</button>}
+          {!preview && displaySrc && <button type="button" className="product-image-zoom" onClick={() => setLightbox(cdnSrc(displaySrc, { w: 2400, q: "auto:best" }))}>Phóng to ảnh</button>}
           {!preview && lightbox && <ProductImageLightbox src={lightbox} name={product.name} onClose={() => setLightbox(null)} />}
           {secondaryImages.length > 0 && (
             <div
@@ -531,6 +531,11 @@ function ProductDetail({
               </div>
             </>}
             {!preview && !soldOut && orderProductId === (product.id || product.slug) && createPortal(<OrderForm key={product.id || product.slug} product={product} home={home} selection={{ variantId, quantity: choice.quantity }} onSelectionChange={changeSelection} onClose={() => setOrderProductId(null)} />, document.body)}
+            {!preview && <div className="product-mobile-buy">
+              <strong>{formatProductPrice(displayedPrice)}</strong>
+              <button type="button" className="purchase-website" aria-haspopup="dialog" disabled={soldOut}
+                onClick={() => setOrderProductId(product.id || product.slug)}>{soldOut ? "Hết hàng" : purchase.mobileBuyLabel?.trim() || "Mua ngay"}</button>
+            </div>}
             <PurchaseTrust home={home} copy={purchase} preview={preview} />
           </section>
 
