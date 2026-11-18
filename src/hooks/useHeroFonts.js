@@ -8,7 +8,7 @@ export default function useHeroFonts(){
   if(state!=='pending')return;
   let alive=true;
   // A failed font request must not leave the hero hidden indefinitely.
-  const timer=setTimeout(()=>{if(alive)setState('fallback');},2000);
+  const timer=setTimeout(()=>{if(alive)setState('fallback');},1000);
   Promise.all(faces.map(face=>document.fonts.load(face,sample))).then(()=>{if(alive){clearTimeout(timer);setState(loaded()?'ready':'fallback');}}).catch(()=>{if(alive){clearTimeout(timer);setState('fallback');}});
   return()=>{alive=false;clearTimeout(timer);};
  },[state]);

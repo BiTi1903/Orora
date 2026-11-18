@@ -1,8 +1,10 @@
+import { useConfirm } from "./confirm-context";
 import { TEMPLATE_KINDS, templateUsageLabel } from "../lib/mail-templates";
 import { useEffect, useRef, useState } from "react";
 import MailPreviewDialog from "./MailPreviewDialog";
 const empty = { categoryId: "", name: "", kind: "private", subject: "", text: "" };
 export default function MailTemplateLibrary({ request, onUse, active = true }) {
+  const confirm = useConfirm();
   const pendingId = useRef(null);
   const [draft, setDraft] = useState(empty);
   const [id, setId] = useState(null);
@@ -40,7 +42,7 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
   }, [request, version, active]);
   const edit = (item) => { pendingId.current = null; setId(item.id); setDraft({ name: item.name, kind: item.kind, categoryId: item.categoryId || "", subject: item.subject, text: item.text }); setPreview(null); setNotice({ text: "Đang chỉnh mẫu đã lưu." }); };
   const remove = async (item) => {
-    if (busy || !window.confirm(`Xóa mẫu “${item.name}” khỏi kho? Mẫu tự động và lịch sử thư đã gửi vẫn được giữ.`)) return;
+    if (busy || !await confirm(`Xóa mẫu “${item.name}” khỏi kho? Mẫu tự động và lịch sử thư đã gửi vẫn được giữ.`)) return;
     setBusy(true);setBusyAction(`delete:${item.id}`);setNotice(null);
     try {
       const result = await request({ action: "deleteLibraryTemplate", id: item.id });

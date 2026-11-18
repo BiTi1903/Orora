@@ -171,7 +171,7 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
       }
       if (body.action === "sendOrderEmail") {
         if (!uuid(body.id) || !uuid(body.requestId)) return res.status(400).json({ message: "Yêu cầu gửi thư không hợp lệ." });
-        const result = await sendOrderConfirmation({ db, orderId: body.id, sendMail, manual: true, requestId: body.requestId, confirmResend: body.confirmResend === true, ...mailActor(user), message: body.message, templateRef: body.templateRef });
+        const result = await sendOrderConfirmation({ db, orderId: body.id, sendMail, manual: true, requestId: body.requestId, confirmResend: body.confirmResend === true, recoverOnly: body.recoverOnly === true, ...mailActor(user), message: body.message, templateRef: body.templateRef });
         return res.status(200).json({ ...result, message: result.errorMessage || (result.state === "failed" ? "Gửi thư bị lỗi. Xem lịch sử của đơn hàng." : result.state === "unknown" ? "Chưa rõ kết quả gửi. Kiểm tra Microsoft trước khi gửi lại." : "Đã xử lý yêu cầu gửi thư cho đơn hàng.") });
       }
       if (body.action === "restockOrder") {

@@ -1,9 +1,11 @@
+import { useConfirm } from "./confirm-context";
 import { useEffect, useId, useRef, useState } from "react";
 import { auth } from "../lib/firebaseAuth";
 import { effectiveMailState } from "../lib/mail-state";
 import { orderRequest, MAIL_STATES } from "./order-api";
 
 export default function MailWriter({ mode, onModeChange, value, onChange, onChooseTemplate, request, onApply, onSendPrivate, privateRecipients, privateSendLabel, privateSendDisabled, disabled, allowedModes = ["welcome_auto", "order_auto", "private"], title = "Viết Thư", initialOrderId = "", purpose = "combined", onSent }) {
+  const confirm = useConfirm();
   const fieldId = useId();
   const canSendOrder = mode === "order_auto" && purpose !== "automation";
   const lockedOrder = canSendOrder && Boolean(initialOrderId);
@@ -21,6 +23,8 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
   const working = disabled || localBusy;
   const valid = Boolean(value.subject.trim() && value.text.trim());
   const selectedOrder = orders.find((order) => order.id === orderId);
+  const mailState = effectiveMailState(selectedOrder?.confirmationMail, checkedAt);
+  const recovering = mailState === "stuck";
   useEffect(() => {
     if (!canSendOrder) return;
     let alive = true;
@@ -43,7 +47,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
       {canSendOrder && <div className="admin-form">
         {orderError && <p className="admin-error" role="alert">{orderError}</p>}
         {!lockedOrder && <div className="admin-field"><label htmlFor={`${fieldId}-writer-order`}>Chọn đơn hàng</label><select id={`${fieldId}-writer-order`} className="mail-template-select" value={orderId} onChange={(event) => { setOrderId(event.target.value); attempt.current = null; }}><option value="">Chưa chọn đơn</option>{orders.map((order) => <option key={order.id} value={order.id}>{order.code} · {order.customer.name} · {order.customer.email || "Chưa có email"}</option>)}</select></div>}
-        {selectedOrder && !lockedOrder && <p>Người nhận của đơn: <strong>{selectedOrder.customer.email || "Chưa có email"}</strong> · {MAIL_STATES[effectiveMailState(selectedOrder.confirmationMail, checkedAt)] || "Chưa có lịch sử"}</p>}
+        {selectedOrder && !lockedOrder && <p>Người nhận của đơn: <strong>{selectedOrder.customer.email || "Chưa có email"}</strong> · {MAIL_STATES[mailState] || "Chưa có lịch sử"}</p>}
       </div>}
       <div className="admin-actions"><button type="button" className="admin-btn" onClick={onChooseTemplate}>Chọn mẫu từ Mẫu Thư</button></div>
       <div className="admin-field"><label htmlFor={`${fieldId}-writer-subject`}>Tiêu đề thư</label><input id={`${fieldId}-writer-subject`} required maxLength={200} value={value.subject} onChange={(event) => onChange({ subject: event.target.value, text: value.text })} /></div>
@@ -52,19 +56,22 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
       {mode !== "private" && purpose !== "send" && <div><button type="button" className="admin-btn primary" aria-busy={localBusy && busyAction === "save"} disabled={!valid} onClick={() => perform(() => onApply(mode, value),"save")}>Lưu làm thư {mode === "order_auto" ? "đơn hàng" : "đăng ký"} tự động</button><p className="admin-muted">Lưu chỉ áp dụng cho các lần gửi tự động mới. Gửi thử hoặc gửi cho một đơn không thay đổi cấu hình tự động.</p></div>}
       {mode === "private" && <div className="admin-form"><button type="button" className="admin-btn primary" aria-busy={localBusy && busyAction === "private"} disabled={!valid || privateSendDisabled} onClick={() => perform(() => onSendPrivate(value),"private")}>{privateSendLabel}</button></div>}
       {canSendOrder && <div className="writer-block admin-form">
-        <div className="admin-actions"><button type="button" className="admin-btn primary" aria-busy={localBusy && busyAction === "order"} disabled={!valid || !selectedOrder?.customer.email || effectiveMailState(selectedOrder?.confirmationMail, checkedAt) === "sending"} onClick={() => {
+        <div className="admin-actions"><button type="button" className="admin-btn primary" aria-busy={localBusy && busyAction === "order"} disabled={localBusy || (!recovering && !valid) || !selectedOrder?.customer.email || mailState === "sending"} onClick={async () => {
           const confirmResend = ["accepted", "unknown"].includes(selectedOrder.confirmationMail?.state);
-          if (!window.confirm(`Gửi nội dung đang soạn cho ${selectedOrder.customer.email}, đơn ${selectedOrder.code}?${confirmResend ? " Có thể đã gửi thư trước đó. Chỉ tiếp tục sau khi kiểm tra thư đã gửi trên Microsoft; gửi lại có thể tạo thư trùng." : ""}`)) return;
+          const prompt = recovering
+            ? `Kiểm tra trạng thái email của đơn ${selectedOrder.code}? Bước này cập nhật kết quả của lần gửi bị gián đoạn. Hãy kiểm tra Outlook trước khi chọn gửi lại.`
+            : `Gửi nội dung đang soạn cho ${selectedOrder.customer.email}, đơn ${selectedOrder.code}?${confirmResend ? " Có thể đã gửi thư trước đó. Chỉ tiếp tục sau khi kiểm tra thư đã gửi trên Microsoft; gửi lại có thể tạo thư trùng." : ""}`;
+          if (!await confirm(prompt)) return;
           perform(async () => {
             const signature = JSON.stringify({ orderId, value });
             if (attempt.current?.signature !== signature) attempt.current = { signature, id: crypto.randomUUID() };
-            const result = await orderRequest({ action: "sendOrderEmail", id: orderId, requestId: attempt.current.id, confirmResend, message: { subject: value.subject, text: value.text }, ...(value.templateRef ? { templateRef: value.templateRef } : {}) });
+            const result = await orderRequest({ action: "sendOrderEmail", id: orderId, requestId: attempt.current.id, confirmResend, recoverOnly: recovering, message: { subject: value.subject, text: value.text }, ...(value.templateRef ? { templateRef: value.templateRef } : {}) });
             attempt.current = null;
             const current = await orderRequest(null, { id: orderId }); setOrders((items) => items.map((item) => item.id === orderId ? current.order : item));
             onSent?.(current.order);
             return result;
           },"order");
-        }}>{lockedOrder ? "Gửi email cho khách" : "Gửi cho đơn đã chọn"}</button>{!lockedOrder && <><button type="button" className="admin-btn" onClick={() => perform(async () => { const page = await orderRequest(); setOrders(page.orders); setCursor(page.nextCursor); setOrderError(""); })}>Tải lại đơn</button>{cursor && <button type="button" className="admin-btn" onClick={() => perform(async () => { const page = await orderRequest(null, { cursor }); setOrders((items) => [...new Map([...items, ...page.orders].map((item) => [item.id, item])).values()]); setCursor(page.nextCursor); })}>Tải thêm đơn</button>}</>}</div>
+        }}>{recovering ? "Cập nhật trạng thái gửi" : lockedOrder ? "Gửi email cho khách" : "Gửi cho đơn đã chọn"}</button>{!lockedOrder && <><button type="button" className="admin-btn" onClick={() => perform(async () => { const page = await orderRequest(); setOrders(page.orders); setCursor(page.nextCursor); setOrderError(""); })}>Tải lại đơn</button>{cursor && <button type="button" className="admin-btn" onClick={() => perform(async () => { const page = await orderRequest(null, { cursor }); setOrders((items) => [...new Map([...items, ...page.orders].map((item) => [item.id, item])).values()]); setCursor(page.nextCursor); })}>Tải thêm đơn</button>}</>}</div>
       </div>}
       <details className="writer-test"><summary>Gửi thử tới email của bạn</summary><form className="writer-block admin-form" aria-busy={localBusy && busyAction === "test"} onSubmit={(event) => {
         event.preventDefault();

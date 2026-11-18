@@ -23,7 +23,7 @@ export function renderOrderMessage(template, order) {
   const fill = (text, subject = false) => text.replace(/\{\{(\w+)\}\}/g, (_, key) => subject ? String(values[key] ?? "").replace(/[\r\n]/g, " ") : String(values[key] ?? ""));
   return validateMessage({ subject: fill(template.subject, true), text: fill(template.text) });
 }
-export async function sendOrderConfirmation({ db, orderId, sendMail, manual = false, requestId, confirmResend = false, actor = "automatic", actorName = "", actorEmail = "", message: customMessage, templateRef }) {
+export async function sendOrderConfirmation({ db, orderId, sendMail, manual = false, requestId, confirmResend = false, recoverOnly = false, actor = "automatic", actorName = "", actorEmail = "", message: customMessage, templateRef }) {
   const orderRef = db.collection("orders").doc(orderId);
   const eventRef = orderRef.collection("mailEvents").doc(manual ? `manual-${requestId || randomUUID()}` : "confirmation-auto");
   const claimed = await db.runTransaction(async (tx) => {
@@ -43,6 +43,7 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
       tx.set(orderRef, { confirmationMail: { ...data.confirmationMail, state: "unknown", updatedAt } }, { merge: true });
       return { expired: true };
     }
+    if (recoverOnly) return { recoverySkipped: true };
     if (event.exists) return null;
     if (previous === "sending" || (previous === "unknown" && !(manual && confirmResend))) throw Object.assign(new Error("Kết quả gửi trước chưa rõ hoặc đang xử lý. Kiểm tra thư đã gửi trên Microsoft trước khi gửi lại."), { status: 409 });
     if (manual && previous === "accepted" && !confirmResend) throw Object.assign(new Error("Thư đã được Microsoft nhận. Cần xác nhận gửi lại để tránh gửi trùng."), { status: 409 });
@@ -56,7 +57,11 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
     return { recipient: data.customer.email, message, templateError, snapshot };
   });
   if (!claimed) return { duplicate: true };
-  if (claimed.expired) return { state: "unknown" };
+  if (claimed.recoverySkipped) return { state: "unchanged", errorMessage: "Trạng thái đã thay đổi. Hãy xem lại kết quả trước khi gửi." };
+  if (claimed.expired) return {
+    state: "unknown",
+    errorMessage: "Đã chuyển lần gửi bị gián đoạn sang Chưa rõ kết quả. Chưa gửi thêm email. Hãy kiểm tra Outlook trước khi xác nhận gửi lại.",
+  };
   if (claimed.templateError) return { state: "failed" };
   let state = "accepted"; let errorCode = ""; let errorMessage = ""; let tracking = {};
   try {

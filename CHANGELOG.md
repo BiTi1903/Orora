@@ -1,3 +1,12 @@
+## 18/11/2026 — Focus rõ hơn, xác nhận admin dùng chung và phản hồi khi mail bị kẹt
+
+- Chat trên màn hình đến 600px giữ ô nhập từ 16px kể cả khi cấu hình đặt nhỏ hơn, còn cỡ lớn hơn vẫn được áp dụng. Viền focus bàn phím rộng 2px. Chuyển kiểu chữ ô nhập và placeholder sang biến CSS có giá trị dự phòng, giảm 21 khai báo `!important` trong CSS chat.
+- Nâng các nhãn và ghi chú nhỏ trong chat, admin, Hero và chi tiết sản phẩm lên 12px. Nút hành động admin có chiều cao tối thiểu 44px. Xác minh menu đã đánh dấu mục hiện tại bằng `aria-current="page"`. Thời gian chờ font Hero trước khi hiện chữ dự phòng giảm còn 1 giây.
+- Thay cả 12 lời gọi `window.confirm` trong admin bằng hộp thoại dùng chung dựa trên ModalDialog. Hỗ trợ bàn phím, hủy bằng Escape và trả focus về nút đã mở.
+- MailWriter hiển thị thao tác cập nhật trạng thái cho đơn gửi bị kẹt. Lượt này báo rõ khi đã chuyển sang Chưa rõ kết quả và chưa gửi email. Máy chủ chặn gửi ở lượt cập nhật dù trạng thái đơn đã đổi ở phiên khác.
+- Database: giữ nguyên schema và rules. Luồng cập nhật mail dùng trường hiện có. Kiểm thử dùng dữ liệu giả, không gửi email thật.
+- Kiểm tra: 237 test Node, lint, build và giới hạn bundle đạt. 9 test UI admin và focus ở 390px đạt, thêm 4 test trên Chromium Android và WebKit iOS đạt.
+
 ## 18/11/2026 — Siết ngưỡng retry mail đơn hàng và hiển thị đơn kẹt quá 5 phút trong admin
 
 - **Lý do:** Đơn có `confirmationMail.state === "sending"` thiếu `updatedAt` có thể kẹt vĩnh viễn; ngưỡng retry 16 giây sát giới hạn 60 giây của Vercel Function; admin chưa có nhãn riêng cho trạng thái `sending` bị kẹt.

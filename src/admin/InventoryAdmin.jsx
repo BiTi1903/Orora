@@ -1,3 +1,4 @@
+import { useConfirm } from "./confirm-context";
 import useDraftGuard from "../hooks/useDraftGuard";
 import { productNumber, withProductIdentity } from "../lib/product-identity";
 import { useEffect, useState } from "react";
@@ -11,6 +12,7 @@ async function inventoryRequest(body, cursor, pending = false) {
   return result;
 }
 export default function InventoryAdmin() {
+  const confirm = useConfirm();
   const [pendingQuantities, setPendingQuantities] = useState({});
   const [items, setItems] = useState([]); const [drafts, setDrafts] = useState({}); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(""); const [notice, setNotice] = useState(null); const [search, setSearch] = useState(""); const [version, setVersion] = useState(0);
   const guard=useDraftGuard(null,{enabled:!loading,busy:Boolean(saving),dirty:Object.values(drafts).some(value=>String(value).trim()!=="")});
@@ -38,7 +40,7 @@ export default function InventoryAdmin() {
     load(); return () => { alive = false; };
   }, [version]);
   const visible = items.filter((item) => `${item.name} ${productNumber(item)} ${item.id}`.toLocaleLowerCase("vi").includes(search.trim().toLocaleLowerCase("vi")));
-  return <section><div className="admin-top"><div><h1>Kiểm Hàng</h1><p className="admin-muted">Nhập số lượng tồn thực tế cho sản phẩm đã tạo.</p></div><button className="admin-btn" disabled={loading || Boolean(saving)} onClick={() => {if(!guard.hasChanges()||window.confirm("Bạn có số lượng chưa lưu. Tải lại và bỏ các thay đổi này?"))setVersion((value) => value + 1);}}>Tải lại tồn kho</button></div>
+  return <section><div className="admin-top"><div><h1>Kiểm Hàng</h1><p className="admin-muted">Nhập số lượng tồn thực tế cho sản phẩm đã tạo.</p></div><button className="admin-btn" disabled={loading || Boolean(saving)} onClick={async () => {if(!guard.hasChanges()||await confirm("Bạn có số lượng chưa lưu. Tải lại và bỏ các thay đổi này?"))setVersion((value) => value + 1);}}>Tải lại tồn kho</button></div>
     <p className="admin-muted">Đơn mới đặt giữ số lượng ở Chờ xác nhận, chưa trừ tồn thực tế. Tồn được trừ một lần khi ghi nhận thanh toán, bắt đầu giao hoặc hoàn tất đơn. Hủy đơn chờ sẽ giải phóng số lượng; hàng đã xuất chỉ hoàn kho khi xác nhận đã nhận hàng trả. Số còn có thể bán = tồn thực tế − hàng chờ.</p>
     <div className="admin-field inventory-search"><label htmlFor="inventory-search">Tìm sản phẩm</label><input id="inventory-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tên hoặc mã sản phẩm" /></div>
     {notice && <p role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}

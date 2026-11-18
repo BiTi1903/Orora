@@ -1,3 +1,4 @@
+import { useConfirm } from "./confirm-context";
 import StoreSettingsLink from "./StoreSettingsLink";
 import { ORDER_STATUSES as STATUSES } from "../lib/order-tracking";
 import { orderProductName } from "../lib/product-options";
@@ -17,6 +18,7 @@ import { effectiveMailState } from "../lib/mail-state";
 import { orderRequest, MAIL_STATES } from "./order-api";
 const date = (value) => value ? new Date(value).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "—";
 export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, refreshKey = 0, pendingRequest, onOrderChanged }) {
+  const confirm = useConfirm();
   const [mailPreview, setMailPreview] = useState(null);
   const [filters, setFilters] = useState(EMPTY_ORDER_FILTERS);
   const [customerEmail, setCustomerEmail] = useState("");
@@ -151,8 +153,8 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
       <fieldset className="order-status-options" aria-busy={busy} disabled={busy || detail.loading || selected.status === "cancelled"}><legend>Trạng thái xử lý đơn</legend>{Object.entries(STATUSES).map(([key, label]) => <label key={key}><input type="radio" name={`status-${selected.id}`} checked={selected.status === key} onChange={() => update(selected, { status: key })} />{label}</label>)}</fieldset>
       <p className="admin-muted">Chọn Hoàn tất sẽ ghi nhận đã thanh toán. Đổi sang trạng thái khác không tự xóa ghi nhận tiền; dùng ô Đã thanh toán để điều chỉnh.</p>
       <details className="admin-filter-panel"><summary>Quy tắc tồn kho & mã lưu trữ</summary><p className="admin-muted">ID: {selected.id}</p><p className="admin-muted">Đơn chờ giữ số lượng, chưa trừ tồn thực tế. Xác nhận thanh toán, bắt đầu giao hoặc Hoàn tất sẽ trừ kho một lần. Hủy đơn chưa xuất giải phóng hàng chờ; đơn đã xuất chỉ hoàn kho khi xác nhận nhận lại hàng.</p></details>
-      {selected.status === "cancelled" && selected.inventory?.state === "deducted" && <button type="button" className="admin-btn" disabled={busy} onClick={() => {
-        if (!window.confirm("Bạn đã thực tế nhận lại đủ hàng của đơn này? Xác nhận sẽ cộng lại số lượng vào kho một lần.")) return;
+      {selected.status === "cancelled" && selected.inventory?.state === "deducted" && <button type="button" className="admin-btn" disabled={busy} onClick={async () => {
+        if (!await confirm("Bạn đã thực tế nhận lại đủ hàng của đơn này? Xác nhận sẽ cộng lại số lượng vào kho một lần.")) return;
         perform(async () => { const result = await orderRequest({ action: "restockOrder", id: selected.id }); await showDetail(selected); onOrderChanged?.(); setNotice({ text: result.message }); });
       }}>Đã nhận hàng trả — Hoàn kho</button>}
       {selected.inventory?.state === "restocked" && <p className="admin-muted">Đã nhận hàng trả và hoàn kho.</p>}

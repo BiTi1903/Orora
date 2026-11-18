@@ -1,3 +1,5 @@
+import ConfirmProvider from "./ConfirmDialog";
+import { useConfirm } from "./confirm-context";
 import "../styles/product-detail.css";
 import {dirtyRegistry} from "../lib/dirty-registry";
 import useOrderNotifications from "./useOrderNotifications";
@@ -33,7 +35,7 @@ export default function AdminApp() {
 
   if (user === undefined) return <div className="admin-login"><p className="admin-muted">Đang tải...</p></div>;
   if (!user) return <AdminLogin />;
-  return <AdminWorkspace key={user.uid} user={user} />;
+  return <ConfirmProvider key={user.uid}><AdminWorkspace user={user} /></ConfirmProvider>;
 }
 
 function OrderBadge({ notifications }) {
@@ -44,6 +46,7 @@ function OrderBadge({ notifications }) {
 }
 
 function AdminWorkspace({ user }) {
+  const confirm = useConfirm();
   const notifications = useOrderNotifications();
   const [pendingRequest, setPendingRequest] = useState(null);
   const [visited, setVisited] = useState([]);
@@ -91,7 +94,7 @@ function AdminWorkspace({ user }) {
           <span className="admin-muted">{user.email}</span>
           <details className="admin-muted admin-uid"><summary>Mã tài khoản (UID)</summary><span>{user.uid}</span></details>
           <a href="/" target="_blank" rel="noopener noreferrer" className="admin-btn">Xem website</a>
-          <button className="admin-btn" onClick={() => {if(!dirtyRegistry.hasChanges()||window.confirm("Bạn có thay đổi chưa lưu. Đăng xuất và bỏ những thay đổi này?"))signOut(auth);}}>Đăng xuất</button>
+          <button className="admin-btn" onClick={async () => {if(!dirtyRegistry.hasChanges()||await confirm("Bạn có thay đổi chưa lưu. Đăng xuất và bỏ những thay đổi này?"))signOut(auth);}}>Đăng xuất</button>
         </div>
       </aside>
 

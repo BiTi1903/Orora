@@ -189,3 +189,15 @@ test("sending without a valid timestamp expires to unknown and is never auto-res
   assert.equal((await sendOrderConfirmation({ db, orderId, sendMail })).state, "unknown");
   assert.equal(calls, 0);
 });
+
+test("recovery-only requests never submit mail if the state changed in another session", async () => {
+  const { db, orderId } = await setup();
+  const result = await sendOrderConfirmation({
+    db, orderId, manual: true, recoverOnly: true,
+    sendMail: async () => assert.fail("Recovery must not send mail"),
+  });
+  assert.equal(result.state, "unchanged");
+  assert.match(result.errorMessage, /Trạng thái đã thay đổi/);
+  const events = await db.collection("orders").doc(orderId).collection("mailEvents").get();
+  assert.equal(events.docs.length, 0);
+});

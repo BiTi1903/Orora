@@ -420,7 +420,7 @@
   gap: 10px;
 }
 
-.scroll span { font-size: 9px; letter-spacing: 4px; color: var(--rose-deep); opacity: 0.85; }
+.scroll span { font-size: 12px; letter-spacing: 4px; color: var(--rose-deep); opacity: 0.85; }
 
 .scroll div {
   width: 1px;
@@ -461,7 +461,7 @@
   }
 
   .hero-title { letter-spacing: -2px; }
-  .small-text { font-size: 10px; letter-spacing: 4px; }
+  .small-text { font-size: 12px; letter-spacing: 4px; }
   .description { font-size: 15px; }
   .hero-rotator { font-size: 21px; }
   .rotator-box { min-width: 100px; }

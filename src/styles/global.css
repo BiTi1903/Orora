@@ -50,8 +50,8 @@ img { max-width: 100%; }
 ::selection { background: var(--rose-soft); color: var(--plum); }
 
 :focus-visible {
-  outline: 2px solid var(--rose);
-  outline-offset: 3px;
+  outline: 2px solid var(--rose-deep);
+  outline-offset: 2px;
   border-radius: 6px;
 }
 
@@ -70,7 +70,7 @@ img { max-width: 100%; }
 .address-select > label { margin: 0 !important; font-size: 13px; line-height: 1.5; }
 .address-select-control { position: relative; min-width: 0; }
 .address-select-control input, .website-order .address-select-control input { width: 100%; min-width: 0; min-height: 46px; padding: 11px 38px 11px 13px; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--plum); font: inherit; font-size: 14px; text-overflow: ellipsis; transition: border-color .15s, box-shadow .15s; }
-.address-select-control input:focus { outline: none; border-color: var(--rose-deep); box-shadow: 0 0 0 3px #b8446d12; }
+.address-select-control input:focus { border-color: var(--rose-deep); box-shadow: 0 0 0 3px #b8446d12; }
 .address-select-control input:disabled { background: #faf5f7; color: #9c8a92; cursor: not-allowed; }
 .address-select-control > svg { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--rose-deep); pointer-events: none; }
 .address-select-options { position: absolute; top: 100%; left: 0; right: 0; z-index: 30; max-height: min(260px, 40vh); overflow-y: auto; overscroll-behavior: contain; padding: 6px; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 12px 32px #74354e1a; }
