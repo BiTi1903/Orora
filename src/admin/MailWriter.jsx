@@ -61,7 +61,11 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
           const prompt = recovering
             ? `Kiểm tra trạng thái email của đơn ${selectedOrder.code}? Bước này cập nhật kết quả của lần gửi bị gián đoạn. Hãy kiểm tra Outlook trước khi chọn gửi lại.`
             : `Gửi nội dung đang soạn cho ${selectedOrder.customer.email}, đơn ${selectedOrder.code}?${confirmResend ? " Có thể đã gửi thư trước đó. Chỉ tiếp tục sau khi kiểm tra thư đã gửi trên Microsoft; gửi lại có thể tạo thư trùng." : ""}`;
-          if (!await confirm(prompt)) return;
+          if (!await confirm(prompt, {
+            title: recovering ? "Kiểm tra trạng thái email" : "Gửi email đơn hàng",
+            confirmLabel: recovering ? "Cập nhật trạng thái" : confirmResend ? "Gửi lại" : "Gửi email",
+            danger: confirmResend,
+          })) return;
           perform(async () => {
             const signature = JSON.stringify({ orderId, value });
             if (attempt.current?.signature !== signature) attempt.current = { signature, id: crypto.randomUUID() };

@@ -42,7 +42,9 @@ async function audit(page){
 async function shot(page,testInfo,name){if([390,1440].includes(page.viewportSize().width))await page.screenshot({path:testInfo.outputPath(`${name}.png`),fullPage:true});}
 
 test('all ten real admin pages use styled controls and fit the viewport',async({page},testInfo)=>{
- test.setTimeout(90000);const errors=await admin(page);const nav=page.getByRole('navigation',{name:'Menu quản trị'});
+ test.setTimeout(90000);const errors=await admin(page);
+ await expect(page.getByRole('button',{name:'Đăng xuất'})).toHaveCSS('min-height','44px');
+ const nav=page.getByRole('navigation',{name:'Menu quản trị'});
  for(const name of ['Tổng quan','Đơn hàng','Kiểm kho','Phí vận chuyển','Trang chủ','Sản phẩm','Cửa hàng','Email','Chat AI','Xuất danh sách email']){
   await nav.getByRole('button',{name,exact:true}).click();
   await expect(nav.getByRole('button',{name,exact:true})).toHaveAttribute('aria-current','page');

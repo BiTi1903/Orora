@@ -42,7 +42,7 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
   }, [request, version, active]);
   const edit = (item) => { pendingId.current = null; setId(item.id); setDraft({ name: item.name, kind: item.kind, categoryId: item.categoryId || "", subject: item.subject, text: item.text }); setPreview(null); setNotice({ text: "Đang chỉnh mẫu đã lưu." }); };
   const remove = async (item) => {
-    if (busy || !await confirm(`Xóa mẫu “${item.name}” khỏi kho? Mẫu tự động và lịch sử thư đã gửi vẫn được giữ.`)) return;
+    if (busy || !await confirm(`Xóa mẫu “${item.name}” khỏi kho? Mẫu tự động và lịch sử thư đã gửi vẫn được giữ.`, { title: "Xóa mẫu thư", confirmLabel: "Xóa", danger: true })) return;
     setBusy(true);setBusyAction(`delete:${item.id}`);setNotice(null);
     try {
       const result = await request({ action: "deleteLibraryTemplate", id: item.id });

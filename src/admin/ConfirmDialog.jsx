@@ -3,7 +3,8 @@ import ModalDialog from "../components/ModalDialog";
 import { ConfirmContext } from "./confirm-context";
 
 export default function ConfirmProvider({ children }) {
-  const [message, setMessage] = useState(null);
+  const [request, setRequest] = useState(null);
+  const cancelRef = useRef(null);
   const pending = useRef(null);
 
   useEffect(() => () => {
@@ -11,11 +12,11 @@ export default function ConfirmProvider({ children }) {
     pending.current = null;
   }, []);
 
-  function confirm(text) {
+  function confirm(text, { title = "Xác nhận thao tác", confirmLabel = "Xác nhận", danger = false } = {}) {
     if (pending.current) return Promise.resolve(false);
     return new Promise((resolve) => {
       pending.current = resolve;
-      setMessage(text);
+      setRequest({ text, title, confirmLabel, danger });
     });
   }
 
@@ -23,19 +24,19 @@ export default function ConfirmProvider({ children }) {
     const resolve = pending.current;
     if (!resolve) return;
     pending.current = null;
-    setMessage(null);
+    setRequest(null);
     resolve(accepted);
   }
 
   return (
     <ConfirmContext.Provider value={confirm}>
       {children}
-      {message !== null && (
-        <ModalDialog title="Xác nhận thao tác" className="admin-mail-dialog admin-confirm-dialog" onClose={() => finish(false)}>
-          <p className="admin-confirm-message">{message}</p>
+      {request !== null && (
+        <ModalDialog title={request.title} initialFocusRef={request.danger ? cancelRef : undefined} className="admin-mail-dialog admin-confirm-dialog" onClose={() => finish(false)}>
+          <p className="admin-confirm-message">{request.text}</p>
           <div className="admin-actions">
-            <button type="button" className="admin-btn" onClick={() => finish(false)}>Hủy</button>
-            <button type="button" className="admin-btn primary" onClick={() => finish(true)}>Xác nhận</button>
+            <button ref={cancelRef} type="button" className="admin-btn" onClick={() => finish(false)}>Hủy</button>
+            <button type="button" className={`admin-btn ${request.danger ? "danger" : "primary"}`} onClick={() => finish(true)}>{request.confirmLabel}</button>
           </div>
         </ModalDialog>
       )}

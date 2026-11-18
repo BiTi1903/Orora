@@ -94,7 +94,7 @@ function AdminWorkspace({ user }) {
           <span className="admin-muted">{user.email}</span>
           <details className="admin-muted admin-uid"><summary>Mã tài khoản (UID)</summary><span>{user.uid}</span></details>
           <a href="/" target="_blank" rel="noopener noreferrer" className="admin-btn">Xem website</a>
-          <button className="admin-btn" onClick={async () => {if(!dirtyRegistry.hasChanges()||await confirm("Bạn có thay đổi chưa lưu. Đăng xuất và bỏ những thay đổi này?"))signOut(auth);}}>Đăng xuất</button>
+          <button className="admin-btn" onClick={async () => {if(!dirtyRegistry.hasChanges()||await confirm("Bạn có thay đổi chưa lưu. Đăng xuất và bỏ những thay đổi này?", { title: "Đăng xuất", confirmLabel: "Đăng xuất", danger: true }))signOut(auth);}}>Đăng xuất</button>
         </div>
       </aside>
 

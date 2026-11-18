@@ -239,19 +239,26 @@
 .orora-chat-panel[style*="--chat-choices-margin-bottom:"] .orora-chat-starters button { margin-bottom: var(--chat-choices-margin-bottom) !important; }
 .orora-chat-panel[style*="--chat-choices-text-decoration:"] .orora-chat-starters button { text-decoration: var(--chat-choices-text-decoration) !important; }
 @media(max-width:600px) { .orora-chat-panel[style*="--chat-choices-mobile-size:"] .orora-chat-starters button { font-size:var(--chat-choices-mobile-size) !important; } }
-.orora-chat-panel[style*="--chat-followups-font-family:"] .orora-chat-followups button { font-family: var(--chat-followups-font-family) !important; }
-.orora-chat-panel[style*="--chat-followups-font-size:"] .orora-chat-followups button { font-size: var(--chat-followups-font-size) !important; }
-.orora-chat-panel[style*="--chat-followups-font-weight:"] .orora-chat-followups button { font-weight: var(--chat-followups-font-weight) !important; }
-.orora-chat-panel[style*="--chat-followups-color:"] .orora-chat-followups button { color: var(--chat-followups-color) !important; }
-.orora-chat-panel[style*="--chat-followups-letter-spacing:"] .orora-chat-followups button { letter-spacing: var(--chat-followups-letter-spacing) !important; }
-.orora-chat-panel[style*="--chat-followups-line-height:"] .orora-chat-followups button { line-height: var(--chat-followups-line-height) !important; }
-.orora-chat-panel[style*="--chat-followups-font-style:"] .orora-chat-followups button { font-style: var(--chat-followups-font-style) !important; }
-.orora-chat-panel[style*="--chat-followups-text-transform:"] .orora-chat-followups button { text-transform: var(--chat-followups-text-transform) !important; }
-.orora-chat-panel[style*="--chat-followups-text-align:"] .orora-chat-followups button { text-align: var(--chat-followups-text-align) !important; }
-.orora-chat-panel[style*="--chat-followups-margin-top:"] .orora-chat-followups button { margin-top: var(--chat-followups-margin-top) !important; }
-.orora-chat-panel[style*="--chat-followups-margin-bottom:"] .orora-chat-followups button { margin-bottom: var(--chat-followups-margin-bottom) !important; }
-.orora-chat-panel[style*="--chat-followups-text-decoration:"] .orora-chat-followups button { text-decoration: var(--chat-followups-text-decoration) !important; }
-@media(max-width:600px) { .orora-chat-panel[style*="--chat-followups-mobile-size:"] .orora-chat-followups button { font-size:var(--chat-followups-mobile-size) !important; } }
+/* The per-part variables override shared chat typography through specificity. */
+.orora-chat-panel .orora-chat-followups button {
+  font-family: var(--chat-followups-font-family, var(--chat-font, var(--font-body)));
+  font-size: var(--chat-followups-font-size, 12px);
+  font-weight: var(--chat-followups-font-weight, 400);
+  color: var(--chat-followups-color, var(--rose-deep));
+  letter-spacing: var(--chat-followups-letter-spacing, normal);
+  line-height: var(--chat-followups-line-height, 1.45);
+  font-style: var(--chat-followups-font-style, normal);
+  text-transform: var(--chat-followups-text-transform, none);
+  text-align: var(--chat-followups-text-align, left);
+  margin-top: var(--chat-followups-margin-top, 0);
+  margin-bottom: var(--chat-followups-margin-bottom, 0);
+  text-decoration: var(--chat-followups-text-decoration, none);
+}
+@media (max-width: 600px) {
+  .orora-chat-panel .orora-chat-followups button {
+    font-size: var(--chat-followups-mobile-size, var(--chat-followups-font-size, 12px));
+  }
+}
 .orora-chat-panel[style*="--chat-input-margin-top:"] .orora-chat-composer textarea { margin-top: var(--chat-input-margin-top) !important; }
 .orora-chat-panel[style*="--chat-input-margin-bottom:"] .orora-chat-composer textarea { margin-bottom: var(--chat-input-margin-bottom) !important; }
 .orora-chat-panel[style*="--chat-placeholder-margin-top:"] .orora-chat-composer textarea::placeholder { margin-top: var(--chat-placeholder-margin-top) !important; }

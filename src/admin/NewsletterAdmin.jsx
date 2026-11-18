@@ -115,7 +115,7 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
       setNotice({ error: true, text: "Chọn tối đa 100 email cho mỗi lần thao tác." });
       return;
     }
-    if (operation === "delete" && !await confirm(`Xóa ${ids.length} email khỏi danh sách? Không thể hoàn tác thao tác này. Lịch sử thư đã gửi vẫn được giữ.`)) return;
+    if (operation === "delete" && !await confirm(`Xóa ${ids.length} email khỏi danh sách? Không thể hoàn tác thao tác này. Lịch sử thư đã gửi vẫn được giữ.`, { title: "Xóa email", confirmLabel: "Xóa", danger: true })) return;
     perform(async () => {
       const result = await request({ action: "manageContacts", operation, ids });
       if (!alive.current) return;
@@ -173,7 +173,7 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
   };
   const sendCampaign = async (draft) => {
     if (recipientMode === "selected" && !eligibleIds.length) return;
-    if (!await confirm(`Gửi “${draft.subject}” đến ${recipientMode === "selected" ? `${eligibleIds.length} email đã chọn:\n${eligibleIds.map((id) => activeContacts.find((item) => item.id === id)?.email).join("\n")}\n` : "toàn bộ email đang hoạt động trước thời điểm tạo thư"}? Mỗi khách nhận một thư riêng.`)) return;
+    if (!await confirm(`Gửi “${draft.subject}” đến ${recipientMode === "selected" ? `${eligibleIds.length} email đã chọn:\n${eligibleIds.map((id) => activeContacts.find((item) => item.id === id)?.email).join("\n")}\n` : "toàn bộ email đang hoạt động trước thời điểm tạo thư"}? Mỗi khách nhận một thư riêng.`, { title: "Gửi chiến dịch", confirmLabel: "Gửi email" })) return;
     return perform(async () => {
       const id = crypto.randomUUID();
       await request({ action: "createCampaign", id, ...draft, ...(recipientMode === "selected" ? { recipientIds: eligibleIds } : {}) });
@@ -229,7 +229,7 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
               <tbody>{!campaigns.length && <tr><td colSpan={7}>Chưa có thư gửi đến danh sách đăng ký.</td></tr>}{campaigns.map((item) => <tr key={item.id}>
                 <td className="mail-history-subject" title={item.subject}>{item.subject}</td><td><button type="button" className="admin-template-link" onClick={() => setPreview({ title: campaignTemplates.byMail.get(item.id)?.label || "Mẫu thư đã gửi", message: { subject: item.subject, text: item.text }, kind: "private" })}>{campaignTemplates.byMail.get(item.id)?.label || "Xem mẫu"}</button></td><td>{mailActorLabel(item)}</td><td>{item.recipientIds ? <details className="newsletter-history-recipients"><summary>{item.recipientIds.length} email đã chọn</summary><ul>{item.recipientIds.map((id, index) => <li key={id}>{item.recipientEmails?.[index] || `Email cũ không còn trong danh sách (${id.slice(0, 8)}…)`}</li>)}</ul></details> : "Toàn bộ email hoạt động"}</td><td>{STATUS[item.status] || item.status}</td><td><span className="mail-result-count">{item.accepted || 0} đã nhận</span>{item.failed > 0 && <small className="mail-result-error">{item.failed} lỗi</small>}{item.unknown > 0 && <small className="order-summary-note">{item.unknown} chưa rõ</small>}</td>
                 <td><button type="button" className="admin-btn" onClick={() => setOutlookCampaign(item)}>Check</button>{item.status !== "completed" && <button className="admin-btn" disabled={busy} onClick={async () => {
-                  if (await confirm(`Tiếp tục gửi thư “${item.subject}”?`)) perform(() => run(item.id));
+                  if (await confirm(`Tiếp tục gửi thư “${item.subject}”?`, { title: "Tiếp tục chiến dịch", confirmLabel: "Tiếp tục gửi" })) perform(() => run(item.id));
                 }}>Tiếp tục gửi</button>}</td>
               </tr>)}</tbody></table></div>
             <p className="admin-muted">Thư bị lỗi hoặc chưa rõ kết quả không được tự gửi lại. “Hoàn tất” nghĩa là đã quét xong danh sách, không bảo đảm mọi thư gửi thành công.</p>

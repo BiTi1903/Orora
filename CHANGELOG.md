@@ -1,3 +1,11 @@
+## 18/11/2026 — Nhãn xác nhận theo thao tác và kiểm tra cập nhật mail trong admin
+
+- Hộp xác nhận nhận tiêu đề, nhãn nút và mức nguy hiểm. Các bước xóa, bỏ bản nháp và gửi lại thư có nút đỏ, mở với focus ở Hủy. Ngoài provider, useConfirm trả về yêu cầu đã hủy.
+- Playwright xác minh MailWriter tải lại đúng đơn sau phản hồi recoverOnly có trạng thái unchanged. Mô phỏng đơn chuyển từ Kẹt sang Đã nhận, kiểm tra thông báo và nhãn mới. Xác minh nút admin 44px, aria-current cho mục đang mở và viền focus ô chat.
+- Kiểu chữ nút gợi ý chat dùng biến CSS, giữ cấu hình riêng trên mobile và giảm số khai báo !important trong chat-button.css từ 215 xuống 202.
+- Kiểm tra: npm run check đạt với 237 test Node, lint, build và giới hạn bundle. 11 test UI tại 390px đạt và 8 test trên Chromium Android/WebKit iOS đạt.
+- Database: giữ nguyên schema, rules và dữ liệu production. Các test dùng dữ liệu giả.
+
 ## 18/11/2026 — Focus rõ hơn, xác nhận admin dùng chung và phản hồi khi mail bị kẹt
 
 - Chat trên màn hình đến 600px giữ ô nhập từ 16px kể cả khi cấu hình đặt nhỏ hơn, còn cỡ lớn hơn vẫn được áp dụng. Viền focus bàn phím rộng 2px. Chuyển kiểu chữ ô nhập và placeholder sang biến CSS có giá trị dự phòng, giảm 21 khai báo `!important` trong CSS chat.

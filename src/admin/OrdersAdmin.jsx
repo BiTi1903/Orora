@@ -154,7 +154,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
       <p className="admin-muted">Chọn Hoàn tất sẽ ghi nhận đã thanh toán. Đổi sang trạng thái khác không tự xóa ghi nhận tiền; dùng ô Đã thanh toán để điều chỉnh.</p>
       <details className="admin-filter-panel"><summary>Quy tắc tồn kho & mã lưu trữ</summary><p className="admin-muted">ID: {selected.id}</p><p className="admin-muted">Đơn chờ giữ số lượng, chưa trừ tồn thực tế. Xác nhận thanh toán, bắt đầu giao hoặc Hoàn tất sẽ trừ kho một lần. Hủy đơn chưa xuất giải phóng hàng chờ; đơn đã xuất chỉ hoàn kho khi xác nhận nhận lại hàng.</p></details>
       {selected.status === "cancelled" && selected.inventory?.state === "deducted" && <button type="button" className="admin-btn" disabled={busy} onClick={async () => {
-        if (!await confirm("Bạn đã thực tế nhận lại đủ hàng của đơn này? Xác nhận sẽ cộng lại số lượng vào kho một lần.")) return;
+        if (!await confirm("Bạn đã thực tế nhận lại đủ hàng của đơn này? Xác nhận sẽ cộng lại số lượng vào kho một lần.", { title: "Hoàn kho", confirmLabel: "Hoàn kho" })) return;
         perform(async () => { const result = await orderRequest({ action: "restockOrder", id: selected.id }); await showDetail(selected); onOrderChanged?.(); setNotice({ text: result.message }); });
       }}>Đã nhận hàng trả — Hoàn kho</button>}
       {selected.inventory?.state === "restocked" && <p className="admin-muted">Đã nhận hàng trả và hoàn kho.</p>}
