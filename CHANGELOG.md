@@ -1,3 +1,10 @@
+## 18/11/2026 — Đồng bộ nút hồng trên website
+
+- Dùng chung bảng màu nút hồng cho Hero, thẻ sản phẩm, đặt hàng, giỏ hàng, chat, đăng ký và tra cứu đơn trên desktop và mobile. Giữ lớp bóng kính và các màu tùy chỉnh trong Visual Builder.
+- Ổn định kiểm tra Playwright cho nút chat bằng cách giữ hiệu ứng nhấn ở thời điểm kích hoạt, trước khi chờ hộp thoại đóng.
+- Kiểm tra: npm run check đạt (241 bài test, lint, build và giới hạn bundle) và 16 bài Playwright checkout/chat ở 390 px đạt.
+- Database: giữ nguyên dữ liệu, schema và rules.
+
 ## 18/11/2026 — Đổi nút đỏ sang hồng đồng bộ với kính lỏng
 
 - Nút thao tác nguy hiểm và nút xác nhận admin dùng màu hồng của theme, hồng nhạt khi rê chuột trên nút viền và hồng đậm cho nút nền. Thông báo lỗi giữ biến riêng.

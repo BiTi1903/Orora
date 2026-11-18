@@ -283,7 +283,7 @@
 
 .hero-btn-primary {
   color: #fff;
-  background: linear-gradient(135deg, #ee8eae, var(--rose-deep));
+  background: linear-gradient(135deg, var(--store-button-pink), var(--store-button-pink-dark));
   box-shadow: 0 14px 34px rgba(184, 68, 109, 0.32);
 }
 

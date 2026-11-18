@@ -12,6 +12,11 @@ test('chat taps and keyboard activation bounce once without changing the drag tr
  const button=await chat(page);await button.click();await expect(page.getByRole('dialog')).toBeVisible();
  const sample=await button.evaluate(node=>{const a=node.getAnimations().find(a=>a.id==='orora-chat-press');if(!a)return null;a.pause();a.currentTime=a.effect.getTiming().duration*.65;return {count:node.getAnimations().filter(a=>a.id==='orora-chat-press').length,scale:parseFloat(getComputedStyle(node).scale),frames:a.effect.getKeyframes().map(f=>Object.keys(f))};});
  expect(sample.count).toBe(1);expect(sample.scale).toBeGreaterThan(1);expect(sample.frames.flat()).not.toContain('transform');
+ await button.evaluate(node=>{
+   document.addEventListener('click',()=>{
+     node.getAnimations().find(animation=>animation.id==='orora-chat-press')?.pause();
+   },{once:true});
+ });
  await button.focus();await page.keyboard.press('Enter');await expect(page.getByRole('dialog')).toHaveCount(0);expect(await animations(button)).toBe(1);
  await button.evaluate(node=>node.getAnimations().filter(a=>a.id==='orora-chat-press').forEach(a=>a.finish()));expect(await animations(button)).toBe(0);await expect(button).toHaveCSS('scale','none');
 });

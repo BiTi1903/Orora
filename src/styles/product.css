@@ -34,7 +34,7 @@
   padding: 11px 22px;
   border: 0;
   border-radius: 30px;
-  background: linear-gradient(135deg, #ee7fa2, var(--rose-deep));
+  background: linear-gradient(135deg, var(--store-button-pink), var(--store-button-pink-dark));
   color: #fff;
   font-size: var(--text-caption);
   font-weight: 500;

@@ -31,7 +31,7 @@ export const PRODUCT_CONTACT_COLOR_DEFAULTS = {
 };
 
 export const PURCHASE_BUTTON_COLOR_DEFAULTS = {
-  websiteBackground: ADMIN_COLOR_DEFAULTS.primary,
+  websiteBackground: "#b53c77",
   tiktokBackground: ADMIN_COLOR_DEFAULTS.dark,
   facebookBackground: "#0866ff",
 };

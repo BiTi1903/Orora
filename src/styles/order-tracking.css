@@ -1,5 +1,5 @@
 /* Order lookup: one base layout, one form breakpoint, one compact receipt breakpoint. */
-.order-tracking-page { --tracking-accent:#b8446d; --tracking-card:#fff; --tracking-border:#efd7e1; --tracking-radius:24px; width:min(860px,calc(100% - 32px)); margin:0 auto; padding:100px 0 72px; color:var(--plum); }
+.order-tracking-page { --tracking-accent:var(--store-button-pink); --tracking-card:#fff; --tracking-border:#efd7e1; --tracking-radius:24px; width:min(860px,calc(100% - 32px)); margin:0 auto; padding:100px 0 72px; color:var(--plum); }
 .order-tracking-heading { max-width:740px; margin:4px 0 14px; }
 .order-tracking-heading .product-eyebrow { color:var(--tracking-accent); margin:0 0 8px; font-size:12px; letter-spacing:.14em; }
 .order-tracking-heading h1 { font:500 clamp(30px,4vw,40px)/1.12 var(--font-display); letter-spacing:-.02em; margin:0 0 10px; }
