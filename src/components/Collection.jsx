@@ -1,3 +1,4 @@
+import useStorefrontStock from '../hooks/useStorefrontStock';
 import CatalogFilters from "./CatalogFilters";
 import {catalogFilters,readCatalogFilters,writeCatalogFilters,filterCatalog,catalogPriceLabel,catalogFilterSettings,activeCatalogFilters} from "../lib/catalog-filters";
 import CatalogLoadError from "./CatalogLoadError";
@@ -53,6 +54,9 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
   const seconds=Number(carouselSettings.intervalSeconds);
   const interval=Number.isFinite(seconds)&&seconds>=1&&seconds<=30?seconds*1000:3000;
   const pad = Math.max(perView, 1);
+  const stockIndex = looping ? index % Math.max(1, count) : 0;
+  const stockStart = Math.floor(stockIndex / 40) * 40;
+  const carouselStock = useStorefrontStock(products.slice(stockStart, stockStart + 48).map(product => product.id), !preview);
   const clones = [];
   if (looping) {
     while (clones.length < pad) clones.push(...products);
@@ -218,7 +222,7 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
             inert={i < index || i >= index + perView}
             key={`${product.id}-${i}`}
           >
-            <ProductCard productId={product.id}
+            <ProductCard productId={product.id} stock={carouselStock[product.id]}
               image={product.image}
               number={productNumber(product, products)}
               name={product.name}
@@ -306,13 +310,14 @@ function Collection({
   const rawProducts=preview?sampleProducts||[]:liveProducts;
   const availableProducts=excludeId?rawProducts.filter(product=>product.id!==excludeId&&product.slug!==excludeId):rawProducts;
   const catalog=withProductIdentity(availableProducts);
-  const effectiveFilters=filtering?catalogFilters({...savedFilters,category:'',q:'',min:'',max:'',volume:'',price:'all',...(filterSettings.showSearch===false?{q:''}:{}),...(filterSettings.showPrice===false?{min:'',max:'',price:'all'}:{}),...(filterSettings.showVolume===false?{volume:''}:{})}):catalogFilters({category:categoryId});
+  const effectiveFilters=filtering?catalogFilters({...savedFilters,...(filterSettings.showSearch===false?{q:''}:{}),...(filterSettings.showPrice===false?{min:'',max:'',price:'all'}:{}),...(filterSettings.showVolume===false?{volume:''}:{})}):catalogFilters({category:categoryId});
   const products=filterCatalog(catalog,effectiveFilters);
   const requestedView=savedFilters.view==='auto'?(filterSettings.layout||'auto'):savedFilters.view;
   const grid=filtering&&(requestedView==='grid'||(requestedView==='auto'&&(activeCatalogFilters(effectiveFilters)>0||availableProducts.length>12)));
   const pageSize=Math.max(4,Math.min(48,Number.parseInt(filterSettings.pageSize,10)||12));
   const pageCount=Math.max(1,Math.ceil(products.length/pageSize)),page=Math.min(savedFilters.page,pageCount);
   const pageProducts=products.slice((page-1)*pageSize,page*pageSize);
+  const stock=useStorefrontStock(pageProducts.map(product=>product.id),!preview&&grid);
   const displayProducts=products.map(product=>({...product,price:catalogPriceLabel(product,filterSettings)}));
 
   // Không có chữ mặc định: chờ dữ liệu Firebase tải xong rồi mới hiện (tránh nháy dữ liệu cũ)
@@ -371,7 +376,7 @@ function Collection({
     ? toCss(headStyles.header, { responsive: true })
     : undefined;
 
-  const card=product=><ProductCard productId={product.id} image={product.image} number={productNumber(product,catalog)} name={product.name} description={product.description} price={catalogPriceLabel(product,filterSettings)} slug={productSlug(product,catalog)} styles={cardStyles} preview={preview} selectedElement={selectedElement} onSelect={onSelect} keyMap={keyMap} groupLayout/>;
+  const card=product=><ProductCard productId={product.id} image={product.image} number={productNumber(product,catalog)} name={product.name} description={product.description} price={catalogPriceLabel(product,filterSettings)} slug={productSlug(product,catalog)} styles={cardStyles} preview={preview} selectedElement={selectedElement} onSelect={onSelect} keyMap={keyMap} groupLayout stock={stock[product.id]}/>;
   return (
     <section
       className={`collection ${preview ? "collection--preview" : ""} ${className} ${selectedClass(k("colSection"))}`.trim()}

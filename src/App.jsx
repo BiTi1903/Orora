@@ -115,7 +115,7 @@ function App() {
 
 
         <Route path="/tra-cuu-don-hang" element={<main>{visible("navbar") && <Navbar />}<Suspense fallback={<RouteLoading/>}><OrderTracking /></Suspense>{visible("footer") && <Footer />}</main>} />
-        <Route path="/san-pham" element={<Navigate to="/#shop" replace />} />
+        <Route path="/san-pham" element={<Navigate to={{ pathname: "/", search: location.search, hash: "#shop" }} replace />} />
         <Route path="/ve-orora" element={<Navigate to="/#about" replace />} />
         <Route path="/lien-he" element={<Navigate to="/#contact" replace />} />
         <Route path="*" element={<main>{visible("navbar") && <Navbar />}<h1 className="page-heading">Trang không tồn tại</h1>{visible("footer") && <Footer />}</main>} />

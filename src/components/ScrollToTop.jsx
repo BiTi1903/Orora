@@ -1,8 +1,19 @@
 import { useLayoutEffect,useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigationType } from 'react-router-dom';
 
 export default function ScrollToTop(){
  const {pathname,hash,search,key}=useLocation(),lastPath=useRef(null);
+ const navigationType = useNavigationType();
+ const positions = useRef(new Map());
+ useLayoutEffect(() => {
+  if (pathname !== '/') return;
+  const record = () => {
+   if (positions.current.size > 40) positions.current.delete(positions.current.keys().next().value);
+   positions.current.set(key, window.scrollY);
+  };
+  window.addEventListener('scroll', record, { passive: true });
+  return () => window.removeEventListener('scroll', record);
+ }, [key, pathname]);
  useLayoutEffect(()=>{
   const previous=window.history.scrollRestoration;
   window.history.scrollRestoration='manual';
@@ -10,6 +21,27 @@ export default function ScrollToTop(){
  },[]);
  useLayoutEffect(()=>{
   const pathChanged=lastPath.current!==pathname;lastPath.current=pathname;
+  const saved = pathname === '/' && navigationType === 'POP' ? positions.current.get(key) : undefined;
+  if (saved !== undefined) {
+   const restore = () => window.scrollTo({ top: saved, behavior: 'instant' });
+   const observer = new ResizeObserver(() => {
+    restore();
+    if (Math.abs(window.scrollY - saved) < 2) stop();
+   });
+   const stop = () => {
+    observer.disconnect();
+    clearTimeout(timer);
+    window.removeEventListener('wheel', stop);
+    window.removeEventListener('touchstart', stop);
+   };
+   const timer = setTimeout(stop, 2500);
+   window.addEventListener('wheel', stop, { passive: true });
+   window.addEventListener('touchstart', stop, { passive: true });
+   observer.observe(document.body);
+   restore();
+   if (Math.abs(window.scrollY - saved) < 2) stop();
+   return stop;
+  }
   let id=(hash||'').slice(1);
   try{id=decodeURIComponent(id);}catch{/* An invalid fragment must not crash the page. */}
   if(!id){
@@ -33,6 +65,6 @@ export default function ScrollToTop(){
   observer.observe(document.body,{childList:true,subtree:true});
   window.addEventListener('wheel',interrupt,{passive:true});window.addEventListener('touchstart',interrupt,{passive:true});window.addEventListener('keydown',interrupt);
   return stop;
- },[pathname,hash,search,key]);
+ },[pathname,hash,search,key,navigationType]);
  return null;
 }

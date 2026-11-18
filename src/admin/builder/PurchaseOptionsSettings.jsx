@@ -112,6 +112,10 @@ export default function PurchaseOptionsSettings({ value = {}, onChange, initialG
         </SettingGroup>
       </InspectorGroup>
       <InspectorGroup title="Form đặt hàng trên website" open={initialGroup === "checkout"}>
+        <SettingGroup title="Thanh toán và giao hàng cạnh nút mua">
+          <label className="builder-field">Thời gian giao dự kiến<input value={value.deliveryEstimateLabel || ""} onChange={event => onChange({ deliveryEstimateLabel: event.target.value })} /></label>
+          <label className="builder-field">Chính sách đổi trả<textarea value={value.returnPolicyLabel || ""} onChange={event => onChange({ returnPolicyLabel: event.target.value })} /></label>
+        </SettingGroup>
         <CheckoutSettings value={value} onChange={onChange} />
         <SettingGroup title="Nút xác nhận trong form đặt hàng">
           {[

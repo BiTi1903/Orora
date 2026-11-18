@@ -29,3 +29,7 @@
  .collection .gallery-item .gallery-info { flex-direction:column; align-items:stretch; justify-content:flex-start; gap:6px; text-align:var(--desktop-card-title-align); }
  .collection .gallery-item .gallery-info p { text-align:var(--desktop-card-title-align)!important; }
 }
+
+.product-stock-badge { display:inline-block; width:fit-content; padding:4px 9px; border-radius:999px; font-size:12px; font-weight:600; background:#fff0d3; color:#70450a; }
+.product-stock-badge.is-out { background:#f8e4eb; color:#842743; }
+.card-cart-button:disabled { opacity:.5; cursor:not-allowed; }

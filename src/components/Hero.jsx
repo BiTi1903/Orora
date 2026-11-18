@@ -251,7 +251,7 @@ function Hero({
           data-builder-key={preview ? "btnSecondary" : undefined}
             onClick={select("btnSecondary")}
           >
-            {c.shopButtonText}
+            {c.shopButtonText || "Xem sản phẩm"}
           </a>
         </div>
       </div>

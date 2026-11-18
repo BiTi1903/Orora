@@ -101,7 +101,7 @@ function AdminWorkspace({ user }) {
       <main className="admin-main">
         {notifications.incoming && <div className="admin-order-notification" role="status"><div><strong>Có đơn hàng mới · {notifications.incoming.code}</strong><p>{notifications.snapshot?.pendingCount ?? ""} đơn đang chờ xác nhận.</p></div><button type="button" className="admin-btn" onClick={() => { setPendingRequest({ id: notifications.incoming.id }); navigate("orders"); notifications.dismiss(); }}>Xem đơn chờ</button><button type="button" className="notification-dismiss" aria-label="Đóng thông báo đơn mới" onClick={notifications.dismiss}>×</button></div>}
 
-        {tab === "dashboard" && <Dashboard pendingCount={notifications.snapshot?.pendingCount} />}
+        {tab === "dashboard" && <Dashboard pendingCount={notifications.snapshot?.pendingCount} revision={notifications.revision} onOpenOrder={id => { setPendingRequest({ id, allStatuses: true }); navigate("orders"); }} onOpenInventory={() => navigate("inventory")} />}
         {Object.entries(panels).filter(([key]) => visited.includes(key)).map(([key, panel]) => <div key={key} className="admin-workspace-panel" hidden={key==='home'? !['home','store'].includes(tab):tab!==key}>{panel}</div>)}
         {tab === "export" && <EmailExport key={user.uid} request={newsletterRequest} />}
       </main>

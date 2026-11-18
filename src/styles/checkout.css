@@ -70,3 +70,16 @@
 .order-receipt-actions .receipt-download-note { margin-top:12px; font-size:10px; }
 .receipt-download:disabled { opacity:.5; cursor:wait; }
 .receipt-social:focus-visible,.receipt-download:focus-visible { outline:2px solid var(--receipt-accent,#b8446d); outline-offset:3px; }
+
+.order-receipt-actions .receipt-zalo-primary { display:flex; width:auto; gap:6px; padding:8px 12px; background:#0754bb; color:#fff; font-weight:600; }
+.order-receipt-contact { flex-wrap:wrap; }
+.order-receipt-socials { max-width:100%; flex-wrap:wrap; }
+
+.checkout-steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin:0 0 16px; padding:0; list-style:none; }
+.checkout-steps li { padding:7px; border-radius:8px; font-size:12px; color:var(--plum-soft); background:#f8eff3; }
+.checkout-steps li[aria-current] { color:var(--rose-deep); font-weight:700; background:#fbe3ed; }
+.checkout-sticky { position:sticky; bottom:0; z-index:2; background:var(--checkout-bg,#fffafb); }
+.checkout-sticky .checkout-submit { position:static; display:flex; gap:8px; }
+.checkout-step-back { min-height:44px; padding:8px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--rose-deep); flex-shrink:0; }
+.checkout-sticky .order-summary { padding-block:5px; }
+.checkout-preview .checkout-sticky { position:static; }

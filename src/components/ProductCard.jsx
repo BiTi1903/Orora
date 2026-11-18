@@ -4,7 +4,7 @@ import useHomeContent from '../hooks/useHomeContent';
 import { formatProductPrice } from "../lib/commerce";
 import { mobileImageVars } from "../lib/image-layout";
 import { useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { splitColor, toCss } from "../lib/typography";
 import ProductSlideshow from "./ProductSlideshow";
 import { cdnSrc, CARD } from "../lib/image-cdn";
@@ -12,6 +12,7 @@ import { prepareProductDetail } from "../lib/product-navigation";
 
 function ProductCard({
   productId,
+  stock,
   image,
   number,
   name,
@@ -27,6 +28,8 @@ function ProductCard({
     /* true = ngang/margin áp dụng cả thẻ (ảnh + tên + mô tả + giá đi cùng) */
   groupLayout = false,
 }) {
+  const location = useLocation();
+  const catalogState = location.pathname === "/" ? { catalogSearch: location.search } : undefined;
   const cartSettings=useHomeContent().navStyles?.cart||{};
   const mobile=styles.mobileActions||{};
   const desktop=styles.desktopActions||{},desktopPrice=desktop.price||{};
@@ -77,12 +80,12 @@ function ProductCard({
   const ImageWrap = preview ? "div" : Link;
   const imageProps = preview
     ? {}
-    : { to: `/product/${slug}`, ...intentProps };
+    : { to: `/product/${slug}`, state: catalogState, ...intentProps };
 
   const ButtonWrap = preview ? "span" : Link;
   const buttonProps = preview
     ? {}
-    : { to: `/product/${slug}`, ...intentProps };
+    : { to: `/product/${slug}`, state: catalogState, ...intentProps };
 
   const imageLayout = styles.imageLayout || {};
   const n = (v) => {
@@ -234,6 +237,7 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
           {description}
         </p>
 
+        {(stock === "out" || stock === "low") && <span className={`product-stock-badge is-${stock}`}>{stock === "out" ? "Hết hàng" : "Còn ít"}</span>}
         <div className="product-bottom">
           <span
             className={`product-price ${selectedClass(k("cardPrice"))}`}
@@ -255,7 +259,7 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
             {(!styles.button?.text||styles.button.text.trim().toLocaleLowerCase('vi')==='xem chi tiết')?'Xem':styles.button.text}
             <ButtonIcon name="productView" defaultSize={12}/>
           </ButtonWrap>
-          {productId&&cartSettings.enabled!==false&&styles.cartEnabled!==false&&<button type="button" className="card-cart-button" aria-label={cartSettings.copy?.add||styles.cartLabel||'Thêm vào giỏ'} onClick={e=>{if(preview)return;e.stopPropagation();const r=e.currentTarget.getBoundingClientRect();window.dispatchEvent(new CustomEvent('orora-cart-add',{detail:{id:productId,source:{x:r.x,y:r.y,width:r.width,height:r.height}}}));}}><ButtonIcon name="productCart" defaultSize={22} allowHidden={false}/></button>}
+          {productId&&cartSettings.enabled!==false&&styles.cartEnabled!==false&&<button type="button" className="card-cart-button" disabled={stock === "out"} aria-label={cartSettings.copy?.add||styles.cartLabel||'Thêm vào giỏ'} onClick={e=>{if(preview)return;e.stopPropagation();const r=e.currentTarget.getBoundingClientRect();window.dispatchEvent(new CustomEvent('orora-cart-add',{detail:{id:productId,source:{x:r.x,y:r.y,width:r.width,height:r.height}}}));}}><ButtonIcon name="productCart" defaultSize={22} allowHidden={false}/></button>}
           </div>
         </div>
       </div>

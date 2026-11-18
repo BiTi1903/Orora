@@ -1,5 +1,9 @@
 import { toCss } from './typography.js';
 export const ORDER_TRACKING_FIELDS = [
+  ['nextNew','Bước tiếp theo — mới nhận','ORORA sẽ kiểm tra và liên hệ xác nhận đơn.'],
+  ['nextConfirmed','Bước tiếp theo — đã xác nhận','ORORA sẽ chuẩn bị đơn và bàn giao cho đơn vị giao hàng.'],
+  ['nextShipping','Bước tiếp theo — đang giao','Giữ điện thoại để đơn vị giao hàng có thể liên hệ.'],
+  ['nextCompleted','Bước tiếp theo — hoàn tất','Liên hệ ORORA nếu bạn cần hỗ trợ sau khi nhận hàng.'],
   ['progressTitle','Chi tiết — tiến trình','Tình trạng đơn hàng'],
   ['createdLabel','Chi tiết — ngày đặt','Đặt lúc'],['updatedLabel','Chi tiết — ngày cập nhật','Cập nhật'],
   ['productSectionTitle','Chi tiết — nhóm sản phẩm','Sản phẩm đã đặt'],['productLabel','Chi tiết — nhãn sản phẩm','Sản phẩm'],['volumeLabel','Chi tiết — dung tích','Dung tích'],
@@ -34,7 +38,7 @@ export const ORDER_TRACKING_FIELDS = [
   ['moreHelp','Hướng dẫn tải thêm','Số lượng theo tình trạng tính trên các đơn đã tải. Xem thêm để kiểm tra đơn cũ hơn.'],
   ['statusHelp','Ghi chú dưới kết quả','Trạng thái do ORORA cập nhật khi xử lý đơn. Đây chưa phải hành trình vận chuyển trực tiếp từ đơn vị giao hàng.'],
 ];
-export const TRACKING_RESULT_KEYS=['progressTitle','createdLabel','updatedLabel','productSectionTitle','productLabel','volumeLabel','paymentSectionTitle','methodLabel','costSectionTitle','subtotalLabel','shippingLabel','totalLabel','cancelledHelp','paidLabel','unpaidLabel','refundedLabel','paymentLabel','resultTitle','resultSummary','allLabel','detailLabel','quantityLabel','pendingTotalLabel','emptyFilterLabel','previousLabel','nextLabel','pageLabel','moreLabel','moreLoadingLabel','moreHelp','statusHelp'];
+export const TRACKING_RESULT_KEYS=['nextNew','nextConfirmed','nextShipping','nextCompleted','progressTitle','createdLabel','updatedLabel','productSectionTitle','productLabel','volumeLabel','paymentSectionTitle','methodLabel','costSectionTitle','subtotalLabel','shippingLabel','totalLabel','cancelledHelp','paidLabel','unpaidLabel','refundedLabel','paymentLabel','resultTitle','resultSummary','allLabel','detailLabel','quantityLabel','pendingTotalLabel','emptyFilterLabel','previousLabel','nextLabel','pageLabel','moreLabel','moreLoadingLabel','moreHelp','statusHelp'];
 export const TRACKING_STYLE_GROUPS=[['detailHeading','Chi tiết — tiêu đề nhóm'],['detailProduct','Chi tiết — tên sản phẩm'],['detailTotal','Chi tiết — tổng tiền'],['eyebrow','Dòng chữ nhỏ'],['title','Tiêu đề trang'],['intro','Lời giới thiệu'],['formTitle','Tiêu đề khung nhập'],['modeTitle','Tên cách tra cứu'],['modeBody','Mô tả cách tra cứu'],['label','Nhãn ô nhập'],['input','Chữ trong ô nhập'],['button','Nút tra cứu'],['guideTitle','Tiêu đề hướng dẫn'],['guideBody','Nội dung hướng dẫn'],['help','Ghi chú và liên hệ'],['resultTitle','Tiêu đề kết quả'],['resultBody','Nội dung kết quả']];
 export function trackingCopy(value = {}) {
   return Object.fromEntries(ORDER_TRACKING_FIELDS.map(([key,,fallback]) => [key,typeof value?.[key] === 'string' && value[key].trim() ? value[key] : fallback]));

@@ -40,9 +40,6 @@ export default function OrderForm({ product, home, onClose, selection, initialVa
   const total = unitPrice === null || shipping.fee === null ? null : unitPrice * (Number(quantity) || 0) + shipping.fee;
   if (result?.code) return <ModalDialog key="success" title="Đã nhận đơn hàng" onClose={onClose} className="order-success-modal" style={{...checkoutStyle(appearance),'--receipt-size':`${Math.max(12,Math.min(16,Number(appearance.receiptFontSize)||13))}px`}}><section className="order-received" aria-label="Thông tin đơn đã nhận"><p>Mã đơn: <strong>{result.code}</strong></p>
     <p>{result.message}</p>
-    <div className="order-received-details"><h3>Thông tin người nhận</h3><dl>
-      {[["Họ và tên", result.recipient.name], ["Số điện thoại", result.recipient.phone], ["Email", result.recipient.email], ["Địa chỉ nhận hàng", result.recipient.address], ["Ghi chú", result.recipient.note]].filter(([, value]) => value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
-    </dl></div>
     <div className="order-received-details"><h3>Thông tin đơn hàng</h3><dl>
       <div><dt>Sản phẩm</dt><dd>{result.productName}</dd></div>
       {result.variantLabel && <div><dt>Dung tích</dt><dd>{result.variantLabel}</dd></div>}
@@ -53,6 +50,10 @@ export default function OrderForm({ product, home, onClose, selection, initialVa
       <div><dt>Tổng tiền</dt><dd>{result.totalAmount == null ? "ORORA sẽ xác nhận tổng tiền" : formatVnd(result.totalAmount)}</dd></div>
     </dl></div>
     <OrderReceiptActions order={result} home={home} appearance={appearance}/>
+    <details className="order-received-details"><summary>Thông tin người nhận</summary><dl>
+      {[["Họ và tên", result.recipient.name], ["Số điện thoại", result.recipient.phone], ["Email", result.recipient.email], ["Địa chỉ nhận hàng", result.recipient.address], ["Ghi chú", result.recipient.note]].filter(([, value]) => value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+    </dl></details>
+
     <p><Link to="/tra-cuu-don-hang" state={{ code: result.code }} onClick={onClose}>Tra cứu trạng thái đơn hàng</Link></p>
     <p className="order-help">Nếu thông tin chưa đúng, vui lòng liên hệ ORORA và cung cấp mã đơn để được hỗ trợ.</p>
     <p>{result.mailStatus === "accepted" ? "Vui lòng kiểm tra email xác nhận và mục thư rác." : result.mailStatus === "failed" ? "Đơn đã được nhận nhưng chưa gửi được email xác nhận. Bạn có thể liên hệ ORORA với mã đơn bên trên." : "Email xác nhận đang được xử lý."}</p><button type="button" onClick={onClose}>Đóng</button>

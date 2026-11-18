@@ -1,3 +1,14 @@
+## 18/11/2026 — Cải thiện mua hàng trên di động và các việc cần xử lý trong admin
+
+- Danh sách, chi tiết và giỏ dùng trạng thái tồn kho từ API chỉ đọc theo lô. Chỉ trả trạng thái cho sản phẩm đang bán, không trả số tồn hoặc dữ liệu nội bộ. Hết hàng khi kho kiểm đếm bằng 0, Còn ít từ 1 đến 5, chưa kiểm đếm không gắn nhãn. Máy chủ vẫn kiểm tra hàng đang giữ khi đặt đơn. API cache ngắn để giảm lượt đọc.
+- Chi tiết có đường dẫn trang, ảnh lớn với điều khiển phóng, chụm ngón và kéo ảnh; giữ truy vấn bộ lọc và vị trí cuộn khi quay lại danh sách. Khối cạnh nút mua hiển thị phương thức thanh toán, thông tin giao và đổi trả cấu hình trong admin, ước tính phí theo tỉnh khi bật bảng phí.
+- Checkout chia 3 bước, giữ lại ô đã nhập khi đi tới/lùi hoặc gửi lỗi, tóm tắt dính dưới. Đã nhận đơn ưu tiên mã và tóm tắt, nút Zalo nổi bật và thông tin người nhận có thể thu gọn. Tra cứu giữ tiến trình cũ và thêm câu hướng dẫn bước tiếp theo theo trạng thái, có thể chỉnh trong admin.
+- Hoa rơi mặc định 0 cánh trên mobile, vẫn áp dụng số lượng đã cài. Tắt hiệu ứng con trỏ dưới 768px và tắt cả hai hiệu ứng khi trình duyệt báo tiết kiệm dữ liệu. Thu khoảng đệm Hero trên điện thoại để đưa CTA vào màn hình đầu với nội dung mẫu.
+- Tổng quan có Cần xử lý hôm nay dựa trên trang đầu đơn, lịch sử email và tồn kho, có liên kết mở đơn/kiểm kho. Danh sách thêm lọc mail lỗi hoặc chưa gửi, Gọi/Sao chép số, tiêu đề dính trên desktop và chi tiết toàn màn hình với hành động dính dưới trên mobile.
+- Visual Builder giữ lựa chọn thiết bị, thêm hoàn tác/làm lại bản nháp tối đa 40 thao tác và khôi phục những giá trị có mặc định theo mục sau xác nhận. Dùng nhãn Cơ bản/Nâng cao trong bộ chỉnh. Lịch sử hoàn tác được xóa sau khi lưu thành công.
+- Kiểm tra: 238 test Node, lint, build và bundle đạt. 23 test UI tại 390px đạt, kiểm tra thêm khôi phục vị trí cuộn, undo/redo và CTA Hero đạt. 10 test checkout/tra cứu/lưu ảnh trên Chromium Android và WebKit iOS giả lập đạt. Chưa kiểm tra chụm ảnh trên điện thoại vật lý.
+- Database: giữ nguyên schema, rules và dữ liệu production. API tồn kho chỉ đọc. Các kiểm thử dùng dữ liệu giả.
+
 ## 18/11/2026 — Đồng bộ nút nguy hiểm và cảnh báo thiếu ConfirmProvider
 
 - Màu chữ và màu hover nút nguy hiểm lấy từ biến màu admin. Xác nhận Hoàn kho dùng nút đỏ và đặt focus vào Hủy.

@@ -5,7 +5,7 @@ function CursorSparkle() {
   useEffect(() => {
     const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!canHover || reduce) return;
+    if (!canHover || reduce || navigator.connection?.saveData || window.matchMedia("(max-width: 768px)").matches) return;
 
     let last = 0;
 

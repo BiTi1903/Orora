@@ -230,7 +230,7 @@ export function SettingGroup({ title, children, collapsible = true }) {
         data-compact-setting
       >
         <summary>
-          <h3>{advanced ? `Nâng cao · ${title}` : title}</h3>
+          <h3>{advanced ? `Nâng cao · ${title}` : `Cơ bản · ${title}`}</h3>
         </summary>
         <div className="builder-setting-content">{content}</div>
       </details>

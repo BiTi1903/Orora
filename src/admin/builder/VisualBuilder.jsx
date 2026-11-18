@@ -1,3 +1,4 @@
+import { useConfirm } from "../confirm-context";
 import useBuilderDraft from "./useBuilderDraft";
 import { inspectorElements, matchesInspectorSearch } from "./element-options";
 import StoreWorkspace from "./StoreWorkspace";
@@ -60,6 +61,7 @@ export default function VisualBuilder({
   requestedStoreSection = "cart",
   requestedStoreVersion = 0,
 }) {
+  const confirm = useConfirm();
   const [storeTab, setStoreTab] = useState(requestedStoreSection);
   const [previousStoreRequest, setPreviousStoreRequest] = useState(
     `${requestedStoreSection}:${requestedStoreVersion}`,
@@ -101,6 +103,7 @@ export default function VisualBuilder({
     setPhilosophy,
     setSectionVisibility,
     setDiscovery,
+    undo, redo, clearHistory, resetField, canUndo, canRedo,
   } = useBuilderDraft();
   const sampleProducts = PREVIEW_PRODUCTS,
     detailProduct = PREVIEW_PRODUCTS[0];
@@ -194,13 +197,14 @@ export default function VisualBuilder({
         }
       })
       .finally(() => {
-        if (alive) setLoading(false);
+        if (alive) { clearHistory(); setLoading(false); }
       });
 
     return () => {
       alive = false;
     };
   }, [
+    clearHistory,
     setAbout,
     setHero,
     setCollection,
@@ -322,6 +326,25 @@ export default function VisualBuilder({
     if (!loading && !loadError && baseline.current === null) baseline.current = payload;
   }, [loading, loadError, payload]);
 
+  const replayEdit = action => {
+    action();
+    SECTION_LIST.forEach(({ key }) => dirtySections.current.add(key));
+    dirtySections.current.add("visibility");
+    setEditVersion(value => value + 1);
+  };
+  const resetActive = async () => {
+    if (!await confirm("Khôi phục các giá trị mặc định của mục hiện tại? Thay đổi áp dụng khi bạn lưu.", {
+      title: "Khôi phục mặc định", confirmLabel: "Khôi phục", danger: true,
+    })) return;
+    const discoveryKey = activeSection === "productneeds" ? "productNeeds" : activeSection === "productfaq" ? "productFaq" : null;
+    const field = discoveryKey ? "discovery" : activeSection === "productdetail" ? "productDetail" : activeSection;
+    resetField(field, (current, fallback) => discoveryKey
+      ? { ...current, [discoveryKey]: mergeSavedValues(current[discoveryKey], fallback[discoveryKey]) }
+      : mergeSavedValues(current, fallback));
+    dirtySections.current.add(activeSection);
+    setEditVersion(value => value + 1);
+  };
+
   const save = async () => {
     if (loading || loadError || saving) return;
     if (!dirtySections.current.size) return setMessage({ type: "success", text: "Chưa có thay đổi để lưu." });
@@ -339,6 +362,7 @@ export default function VisualBuilder({
       await saveHomeContent(patch);
       baseline.current = mergeSavedValues(baseline.current || {}, patch);
       markDraftSaved();
+      clearHistory();
       setSavedVersion(editVersion);
 
       setMessage({
@@ -402,6 +426,9 @@ export default function VisualBuilder({
             </span>
           )}
 
+          <button type="button" className="admin-btn" disabled={!canUndo || saving || loadError} onClick={() => replayEdit(undo)}>Hoàn tác</button>
+          <button type="button" className="admin-btn" disabled={!canRedo || saving || loadError} onClick={() => replayEdit(redo)}>Làm lại</button>
+          {workspace !== "store" && <button type="button" className="admin-btn" disabled={saving || loadError} onClick={resetActive}>Khôi phục mặc định mục này</button>}
           <button
             type="button"
             className="admin-btn primary"

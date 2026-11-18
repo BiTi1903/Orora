@@ -1,3 +1,4 @@
+import {createStorefrontStockHandler} from "./storefront-stock.js";
 import {createStorefrontShellHandler} from './storefront-shell.js';
 import {createShareImageHandler} from './share-image.js';
 import {createSitemapHandler} from './sitemap.js';
@@ -6,6 +7,7 @@ import {createSitemapHandler} from './sitemap.js';
 export function createStorefrontHandler(dependencies) {
  const handlers={
   shell:createStorefrontShellHandler(dependencies),
+  stock:createStorefrontStockHandler(dependencies),
   'share-image':createShareImageHandler(dependencies),
   sitemap:createSitemapHandler(dependencies),
  };

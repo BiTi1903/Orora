@@ -649,3 +649,16 @@
 
 .admin-confirm-dialog .admin-btn.danger { background: var(--ad-danger); color: var(--ad-on-danger); border-color: var(--ad-danger); }
 .admin-confirm-dialog .admin-btn.danger:hover:not(:disabled) { background: var(--ad-danger-hover); border-color: var(--ad-danger-hover); }
+
+.admin-today ul { padding-left:0; list-style:none; display:grid; gap:8px; }
+.admin-today li,.admin-order-phone { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.order-mail-quick-filters { margin-bottom:12px; }
+.admin-order-detail-actions { display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; margin-top:12px; }
+@media (min-width:769px) {
+  .admin-order-list-scroll { max-height:65vh; overflow:auto; }
+  .admin-order-list-scroll thead th { position:sticky; top:0; z-index:1; background:var(--ad-surface); }
+}
+@media (max-width:768px) {
+  .admin-order-fullscreen.orora-modal[open] { width:100%; max-width:none; height:var(--modal-viewport-height,100dvh); max-height:var(--modal-viewport-height,100dvh); margin:0; border-radius:0; }
+  .admin-order-fullscreen .admin-order-detail-actions { position:sticky; bottom:0; padding:8px 0 max(8px,env(safe-area-inset-bottom)); background:var(--ad-surface,#fff); }
+}

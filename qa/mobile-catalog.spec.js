@@ -35,3 +35,42 @@ test('admin can rename, style and disable the mobile bar with a live preview',as
  await page.getByRole('combobox',{name:'Đi đến',exact:true}).nth(1).selectOption('email');await page.getByRole('combobox',{name:'Biểu tượng',exact:true}).nth(1).selectOption('heart');await expect(page.locator('.mobile-shop-nav.is-preview a').nth(1)).toBeVisible();
  await page.getByRole('switch',{name:'Hiện điều hướng trên điện thoại',exact:true}).uncheck();await expect(page.locator('.mobile-shop-nav.is-preview')).toHaveCount(0);await fit(page);
 });
+
+test('returning from a product preserves catalog query and scroll position', async ({ page }) => {
+ await mount(page, `
+  import Collection from '/src/components/Collection.jsx';
+  import ScrollToTop from '/src/components/ScrollToTop.jsx';
+  import { Routes, Route, useLocation, useNavigate } from '/qa/runtime.js';
+  function Detail() {
+   const navigate = useNavigate();
+   return R.createElement('button', { onClick: () => navigate(-1) }, 'Quay lại danh sách');
+  }
+  function Catalog() {
+   const location = useLocation();
+   return R.createElement(R.Fragment, null, R.createElement('div', { style: { height: 1200 } }),
+    R.createElement('output', { 'data-testid': 'catalog-url' }, location.search),
+    R.createElement(Collection), R.createElement('div', { style: { height: 1200 } }));
+  }
+  D.createRoot(document.getElementById('root')).render(
+   R.createElement(MemoryRouter, { initialEntries: ['/?q=D%C6%B0%E1%BB%A1ng+s%C3%A1ng'] },
+    R.createElement(ScrollToTop), R.createElement(Routes, null,
+     R.createElement(Route, { path: '/', element: R.createElement(Catalog) }),
+     R.createElement(Route, { path: '/product/:id', element: R.createElement(Detail) }))));
+ `, {
+  'hooks/useHomeContent.js':'export default function home(){return {loading:false,collectionTitle:"Sản phẩm",collectionStyles:{filters:{layout:"grid"}}}}',
+  'hooks/useCategories.js':categoryMock,
+  'hooks/useProducts.js':`export default function products(){return {products:${JSON.stringify(products)},loading:false}}`,
+ });
+ const cards = page.locator('.catalog-product-grid > div');
+ await expect(cards).toHaveCount(1);
+ await expect(cards.first()).toContainText('Dưỡng sáng');
+ const productLink = cards.first().getByRole('link', { name: 'Xem', exact: true });
+ await productLink.scrollIntoViewIfNeeded();
+ const y = await page.evaluate(() => window.scrollY);
+ expect(y).toBeGreaterThan(0);
+ await productLink.click();
+ await page.getByRole('button', { name: 'Quay lại danh sách' }).click();
+ await expect(page.getByTestId('catalog-url')).toHaveText('?q=D%C6%B0%E1%BB%A1ng+s%C3%A1ng');
+ await expect(cards).toHaveCount(1);
+ await expect.poll(() => page.evaluate(target => Math.abs(window.scrollY - target), y)).toBeLessThan(3);
+});

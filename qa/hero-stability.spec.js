@@ -9,6 +9,8 @@ test('cold and warm font loads keep the same hero geometry and real italic weigh
  expect(requested).toBeGreaterThan(0);
  const measure=()=>page.evaluate(()=>{const hero=document.querySelector('.hero'),rotator=document.querySelector('.hero-rotator'),word=document.querySelector('.rotator-box em');return {height:hero.getBoundingClientRect().height,rotatorTop:rotator.getBoundingClientRect().top,weight:getComputedStyle(word).fontWeight,width:document.querySelector('.rotator-box').getBoundingClientRect().width};});
  const first=await measure();expect(first.weight).toBe('500');
+ const shopButton=page.locator('.hero-actions').getByRole('link',{name:'Xem sản phẩm'});
+ await expect(shopButton).toBeInViewport({ ratio:1 });
  await expect(page.locator('.rotator-box em')).toHaveText('được làm sạch');const rotated=await measure();
  expect(rotated.height).toBeCloseTo(first.height,0);expect(rotated.rotatorTop).toBeCloseTo(first.rotatorTop,0);expect(rotated.width).toBeCloseTo(first.width,0);
  await page.reload();await expect(page.locator('.hero')).toHaveAttribute('data-font-state','ready');const warm=await measure();
