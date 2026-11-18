@@ -1,3 +1,11 @@
+## 18/11/2026 — Sửa lớp giao diện mobile, tạm tính thanh mua và hiệu ứng đóng chat
+
+- Thanh Mua ngay hiện tạm tính bằng giá dung tích đang chọn nhân số lượng, kèm số sản phẩm. Form nhận đúng lựa chọn đang hiển thị và vẫn giữ quy trình tính phí giao hàng.
+- Nút Lên đầu trang nằm trên thanh mua, có tính chiều cao thực của thanh và navbar khi hiện. Bước địa chỉ trên mobile cho tóm tắt cuộn cùng form, danh sách tỉnh/phường mở trong luồng để tránh che ô nhập. Focus tiêu đề đặt ngay sau khi chuyển bước để tránh đóng picker do focus đến trễ.
+- Hộp chọn kênh và chat AI thu về nút mở khi đóng. Nếu đóng trong lúc đang mở, hiệu ứng bắt đầu từ khung hiện tại. Trả focus về nút mở sau khi chạy và đóng ngay khi đã tắt animation hoặc bật giảm chuyển động.
+- Database: không đổi dữ liệu, schema hoặc rules.
+- Kiểm tra: 241 test Node, lint, build và giới hạn bundle đạt. 8 bài Playwright đạt. Kiểm tra tạm tính 3 sản phẩm, vị trí nút lên đầu trang, thao tác chọn địa chỉ và đóng chat trên Chromium Android/WebKit iOS giả lập.
+
 ## 18/11/2026 — Đồng bộ nút mua mobile, chừa chỗ cho chat và tải ảnh theo mức zoom
 
 - Nút mua dính đáy và nút chính dùng chung kiểu chữ và nền từ Visual Builder. Cả hai chỉ xuất hiện trên trang thật khi website có phương thức thanh toán đang bật. Trạng thái hết hàng khóa cả hai.

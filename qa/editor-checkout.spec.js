@@ -9,7 +9,7 @@ const base={
  'hooks/useAddressOptions.js':`const provinces=[{code:'01',name:'Đồng Nai'}],wards=[{code:'001',name:'Phường Tân Mai'}];export default function useAddress(){return {provinces,wards,loadingProvinces:false,loadingWards:false}}`,
 };
 async function detail(page,state,overrides={},withMobileControls=false){
- await mount(page,`import Detail from '/src/components/ProductDetail.jsx';import Chat from '/src/components/ChatButton.jsx';import MobileNav from '/src/components/MobileShopNav.jsx';import {Routes,Route} from '/qa/runtime.js';D.createRoot(document.getElementById('root')).render(R.createElement(MemoryRouter,{initialEntries:[{pathname:'/product/gel',state:${JSON.stringify(state||null)}}]},R.createElement(Routes,null,R.createElement(Route,{path:'/product/:id',element:R.createElement(R.Fragment,null,R.createElement(Detail),${withMobileControls ? "R.createElement(Chat),R.createElement(MobileNav)" : "null"})}))));`,{...base,...overrides});
+ await mount(page,`import Detail from '/src/components/ProductDetail.jsx';import Chat from '/src/components/ChatButton.jsx';import BackToTop from '/src/components/BackToTop.jsx';import MobileNav from '/src/components/MobileShopNav.jsx';import {Routes,Route} from '/qa/runtime.js';D.createRoot(document.getElementById('root')).render(R.createElement(MemoryRouter,{initialEntries:[{pathname:'/product/gel',state:${JSON.stringify(state||null)}}]},R.createElement(Routes,null,R.createElement(Route,{path:'/product/:id',element:R.createElement(R.Fragment,null,R.createElement(Detail),${withMobileControls ? "R.createElement(Chat),R.createElement(MobileNav),R.createElement(BackToTop)" : "null"})}))));`,{...base,...overrides});
  await expect(page.locator('.product-detail-info h1')).toHaveText(product.name);
 }
 test('detail selects the catalog price by default, keeps totals compact and isolates checkout edits',async({page},testInfo)=>{
@@ -29,6 +29,10 @@ test('detail selects the catalog price by default, keeps totals compact and isol
  await dialog.getByLabel('Email nhận xác nhận đơn',{exact:true}).fill('qa@example.com');
  await dialog.getByRole('button',{name:'Tiếp tục',exact:true}).click();
  const province=dialog.getByRole('combobox',{name:'Tỉnh / Thành phố',exact:true});await province.fill('dong nai');await dialog.getByRole('option',{name:'Đồng Nai',exact:true}).click();
+ if (page.viewportSize().width <= 768) {
+  await dialog.getByLabel('Số nhà, tên đường',{exact:true}).focus();
+  await expect(dialog.locator('.checkout-sticky')).toHaveCSS('position','static');
+ }
  await dialog.getByRole('combobox',{name:'Phường / Xã',exact:true}).fill('tan mai');await dialog.getByRole('option',{name:'Phường Tân Mai',exact:true}).click();
  expect(await page.evaluate(()=>window.__detailMutations)).toBe(0);
  await expect(dialog.locator('input[name=name]')).toHaveValue('Nguyễn Khách Thử');await fit(page);
@@ -109,16 +113,23 @@ test('mobile buy bar shares purchase settings and leaves room for chat and navig
  const main = page.getByRole('button', { name: 'Đặt hàng ngay', exact: true });
  await expect(sticky).toHaveCSS('background-color', 'rgb(101, 67, 33)');
  await expect(sticky).toHaveCSS('font-size', await main.evaluate(el => getComputedStyle(el).fontSize));
- await page.evaluate(() => window.scrollTo(0, 110));
+ await page.getByRole('button',{name:'Tăng số lượng'}).click();
+ await page.getByRole('button',{name:'Tăng số lượng'}).click();
+ await expect(page.locator('.product-mobile-buy-total')).toContainText('1.350.000');
+ await expect(page.locator('.product-mobile-buy-total')).toContainText('3 sản phẩm');
+ await page.evaluate(() => window.scrollTo(0, 440));
  const nav = page.locator('.mobile-shop-nav');
  await expect(nav).toBeVisible();
  await expect.poll(() => page.evaluate(() => {
   const bar = document.querySelector('.product-mobile-buy').getBoundingClientRect();
   const chat = document.querySelector('.orora-chat-launcher').getBoundingClientRect();
   const navbar = document.querySelector('.mobile-shop-nav').getBoundingClientRect();
-  return Math.min(bar.top - chat.bottom, navbar.top - bar.bottom);
+  const top = document.querySelector('.back-to-top').getBoundingClientRect();
+  return Math.min(bar.top - chat.bottom, navbar.top - bar.bottom, bar.top - top.bottom);
  })).toBeGreaterThanOrEqual(-1);
  await expect.poll(() => page.evaluate(() => document.querySelector('.product-mobile-buy').getBoundingClientRect().top - document.querySelector('.orora-chat-launcher').getBoundingClientRect().bottom)).toBeGreaterThanOrEqual(8);
+ await sticky.click();
+ await expect(page.getByRole('dialog').getByRole('spinbutton')).toHaveValue('3');
 });
 
 test('website order buttons stay hidden when payment methods are disabled', async ({ page }) => {

@@ -1,3 +1,4 @@
+import { animateChatExit } from "../hooks/useChatEntrance";
 import {animateButtonPress, cancelButtonPress} from "../lib/button-press";
 import ChatChannelChooser from "./ChatChannelChooser";
 import ChatHint from "./ChatHint";
@@ -16,6 +17,8 @@ function ChatButton() {
   const { zalo } = contactLinks(home, "", home.productDetailStyles?.contactActions || {});
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  const exitAnimation = useRef(null);
+  const motion = home.navStyles?.surfaces;
   const [hintEpoch,setHintEpoch]=useState(()=>window.__ororaEnteredAt || Date.now());
   const [channel,setChannel] = useState("choose");
   const panelId = useId();
@@ -63,7 +66,28 @@ function ChatButton() {
     setDragging(false);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
-  const close = useCallback(() => { setHintEpoch(Date.now());setOpen(false); requestAnimationFrame(() => button.current?.focus({ preventScroll: true })); }, []);
+  useEffect(() => () => {
+    exitAnimation.current?.cancel();
+    exitAnimation.current = null;
+  }, [settings.enabled]);
+  const close = useCallback(() => {
+    if (exitAnimation.current) return;
+    const finish = () => {
+      setHintEpoch(Date.now());
+      setOpen(false);
+      requestAnimationFrame(() => button.current?.focus({ preventScroll: true }));
+    };
+    const panel = document.getElementById(panelId);
+    const animation = animateChatExit(panel, button.current, motion);
+    if (!animation) { finish(); return; }
+    exitAnimation.current = animation;
+    panel.inert = true;
+    animation.finished.then(() => {
+      if (exitAnimation.current !== animation) return;
+      exitAnimation.current = null;
+      finish();
+    }).catch(() => { panel.inert = false; });
+  }, [panelId, motion]);
   if (home.loading || !settings.enabled) return null;
   return (
     <><div className={`orora-chat-launcher${dragging?' is-dragging':''}`} style={position ? { left: position.x, top: position.y, right: "auto", bottom: "auto" } : {visibility:"hidden"}}><button type="button"
@@ -97,9 +121,9 @@ function ChatButton() {
           event.preventDefault(); event.stopPropagation(); suppressClick.current = false; return;
         }
         animateButtonPress(event.currentTarget,true);
-        if (open) setHintEpoch(Date.now());
-        if (!open) setChannel("choose");
-        setOpen((current) => !current);
+        if (open) { close(); return; }
+        setChannel("choose");
+        setOpen(true);
       }}
       aria-label={open ? "Đóng chat với ORORA" : "Chat với ORORA"}
       aria-expanded={open}

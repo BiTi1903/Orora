@@ -58,3 +58,19 @@ test('chat entrance respects reduced motion and an explicit disabled setting',as
  await mount(page,`import Chat from '/src/components/ChatButton.jsx';${render('R.createElement(Chat)')}`,{'hooks/useHomeContent.js':'export default function home(){return {loading:false,navStyles:{surfaces:{chatPopupAnimation:false}},chatSettings:{hintEnabled:false}}}','hooks/useChatConversation.js':'export default function conversation(){return {metadata:{}}}'});
  button=page.locator('.chat-button');await expect(button).toBeVisible();await button.click();await expect(page.getByRole('dialog')).toBeVisible();expect(await page.evaluate(()=>document.getAnimations().filter(a=>a.id==='orora-chat-entrance').length)).toBe(0);
 });
+
+test('closing AI chat plays the exit and restores launcher focus',async({page})=>{
+ const button=await chat(page);
+ await button.click();
+ await page.locator('.orora-chat-channel-options button').click();
+ const panel=page.locator('.orora-chat-panel');
+ await expect(panel).toBeVisible();
+ const exitStarted=await panel.evaluate(node=>{
+  node.querySelector('[aria-label="Đóng chat"]').click();
+  const exit=node.getAnimations().find(animation=>animation.id==='orora-chat-exit');
+  return Boolean(exit)&&node.inert;
+ });
+ expect(exitStarted).toBe(true);
+ await expect(panel).toHaveCount(0);
+ await expect(button).toBeFocused();
+});

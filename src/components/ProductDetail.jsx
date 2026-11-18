@@ -24,7 +24,7 @@ import ProductReviews from "./ProductReviews";
 import { productImages, productSections, secondaryProductImages } from "../lib/product-content";
 import ConsultationDialog from "./ConsultationDialog";
 import OrderForm from "./OrderForm";
-import { availablePaymentMethods, formatProductPrice, parseVndPrice, purchaseChannelLabels, socialShopUrl } from "../lib/commerce";
+import { availablePaymentMethods, formatProductPrice, formatVnd, parseVndPrice, purchaseChannelLabels, socialShopUrl } from "../lib/commerce";
 import { mobileImageVars } from "../lib/image-layout";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
@@ -182,6 +182,8 @@ function ProductDetail({
   const variantId = variant?.id || "";
   const changeSelection = (patch) => setPurchaseSelection((previous) => ({ key: selectionKey, variantId, quantity: choice.quantity, ...(previous?.key === selectionKey ? previous : {}), ...patch }));
   const displayedPrice = volumePriceText(product, variant);
+  const unitPrice = parseVndPrice(displayedPrice);
+  const mobileSubtotal = choice.quantity === "" ? "Chọn số lượng" : unitPrice === null ? formatProductPrice(displayedPrice) : formatVnd(unitPrice * choice.quantity);
   const purchase = ps.purchaseOptions || {};
   const channelLabels = purchaseChannelLabels(purchase);
   const tiktokShop = socialShopUrl(home.shopLinks?.tiktokUrl, "tiktok");
@@ -549,7 +551,7 @@ function ProductDetail({
             </>}
             {!preview && acceptsWebsiteOrders && !soldOut && orderProductId === (product.id || product.slug) && createPortal(<OrderForm key={product.id || product.slug} product={product} home={home} selection={{ variantId, quantity: choice.quantity }} onSelectionChange={changeSelection} onClose={() => setOrderProductId(null)} />, document.body)}
             {showMobileBuy && <div ref={mobileBuyRef} className="product-mobile-buy">
-              <strong>{formatProductPrice(displayedPrice)}</strong>
+              <div className="product-mobile-buy-total" aria-live="polite"><strong>{mobileSubtotal}</strong>{choice.quantity !== "" && <small>{choice.quantity} sản phẩm</small>}</div>
               <button type="button" className="purchase-website" style={websiteButtonStyle} aria-haspopup="dialog" disabled={soldOut}
                 onClick={() => setOrderProductId(product.id || product.slug)}>{soldOut ? "Hết hàng" : purchase.mobileBuyLabel?.trim() || "Mua ngay"}</button>
             </div>}

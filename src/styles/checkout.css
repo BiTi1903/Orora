@@ -83,3 +83,12 @@
 .checkout-step-back { min-height:44px; padding:8px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--rose-deep); flex-shrink:0; }
 .checkout-sticky .order-summary { padding-block:5px; }
 .checkout-preview .checkout-sticky { position:static; }
+
+/* Keep the address picker and focused text fields clear of the summary. */
+@media (max-width:768px) {
+  .checkout-form[data-checkout-address] .address-select-options { position:relative; top:auto; margin-top:4px; }
+  .checkout-form[data-checkout-address] .checkout-sticky,
+  .order-form-modal:has(.checkout-form :is(input:not([type="checkbox"]):not([type="radio"]),textarea):focus) .checkout-sticky {
+    position:static;
+  }
+}

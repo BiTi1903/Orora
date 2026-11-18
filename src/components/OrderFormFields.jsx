@@ -1,4 +1,4 @@
-import {useRef,useState} from 'react';
+import {useLayoutEffect,useRef,useState} from 'react';
 import ProductPurchaseSelection from './ProductPurchaseSelection';
 import AddressSelect from './AddressSelect';
 import {PAYMENT_LABELS,formatVnd} from '../lib/commerce';
@@ -10,14 +10,20 @@ export default function OrderFormFields({product,options,variantId,quantity,onVa
  const [step,setStep]=useState(0);
  const [addressError,setAddressError]=useState(false);
  const formRef=useRef(null);
+ const focusStep=useRef(false);
+ useLayoutEffect(()=>{
+  if(!focusStep.current)return;
+  focusStep.current=false;
+  formRef.current?.querySelector('[data-checkout-current]')?.focus({preventScroll:true});
+ },[step]);
  const copy={...CHECKOUT_COPY,...appearance.formLabels},headingStyle=toCss(appearance.formHeadingStyle);
  for (const key of ["recipientHeading","addressHeading","confirmHeading","continueLabel","backLabel"]) {
   if (typeof copy[key] !== "string" || !copy[key].trim()) copy[key]=CHECKOUT_COPY[key];
  }
  const stepLabels=[copy.recipientHeading,copy.addressHeading,copy.confirmHeading];
  function goTo(next){
+  focusStep.current=true;
   setStep(next);
-  requestAnimationFrame(()=>formRef.current?.querySelector('[data-checkout-current]')?.focus({preventScroll:true}));
  }
  function advance(){
   if(step===1&&(!provinceCode||!wardCode||shipping.blocked)){
@@ -31,7 +37,7 @@ export default function OrderFormFields({product,options,variantId,quantity,onVa
   goTo(step+1);
  }
  const hidden=index=>!preview&&step!==index;
- return <form ref={formRef} className="website-order checkout-form" aria-busy={busy} aria-label={copy.title?.trim()||CHECKOUT_COPY.title} style={toCss(appearance.formTextStyle)} onKeyDown={event=>{
+ return <form ref={formRef} className="website-order checkout-form" data-checkout-address={!preview&&step===1?"":undefined} aria-busy={busy} aria-label={copy.title?.trim()||CHECKOUT_COPY.title} style={toCss(appearance.formTextStyle)} onKeyDown={event=>{
   if(!preview&&step===1&&event.key==="Enter"&&event.target.tagName==="INPUT"&&!(event.target.getAttribute("aria-expanded")==="true"&&event.target.getAttribute("aria-activedescendant"))&&(!provinceCode||!wardCode||shipping.blocked)){event.preventDefault();advance();}
  }} onSubmit={event=>{
   if(!preview&&step===2&&onSubmit){onSubmit(event);return;}
