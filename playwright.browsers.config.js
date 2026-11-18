@@ -6,7 +6,7 @@ export default defineConfig({
  ...base,
  testMatch:[
   "**/admin-confirm.spec.js",
-  '**/order-receipt.spec.js',
+  '**/order-receipt.spec.js','**/editor-checkout.spec.js',
   '**/petals-icons.spec.js','**/button-press.spec.js','**/presentation-polish.spec.js','**/card-actions.spec.js','**/browser-adaptation.spec.js','**/mobile-nav-reveal.spec.js',
   '**/popup-motion.spec.js','**/cart-toggle.spec.js','**/tracking-layout.spec.js',
   '**/ui-efficiency.spec.js','**/responsive-cleanup.spec.js',

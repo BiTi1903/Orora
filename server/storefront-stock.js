@@ -12,10 +12,15 @@ export function createStorefrontStockHandler({ getDb, clock = Date.now, env = pr
       return res.status(400).json({});
     }
     try {
+      const salt = env.CHAT_RATE_LIMIT_SALT?.trim() || env.FIREBASE_SERVICE_ACCOUNT_JSON;
+      if (!salt) {
+        res.setHeader('Cache-Control', 'no-store');
+        return res.status(503).json({ message: 'Chưa cấu hình kiểm tra tồn kho.' });
+      }
       const db = await getDb();
       const retryAfter = await reserveRequestBudget(db, req, {
         scope: 'storefront-stock', cost: 1 + ids.length * 2, budget: 600,
-        now: clock(), salt: env.CHAT_RATE_LIMIT_SALT || 'orora-stock',
+        now: clock(), salt,
       });
       if (retryAfter) {
         res.setHeader('Cache-Control', 'no-store');

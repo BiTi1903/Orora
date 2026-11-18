@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHmac } from 'node:crypto';
 
 export function requestClientIp(req) {
   return String(req.headers?.['x-vercel-forwarded-for'] || req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown')
@@ -8,7 +8,7 @@ export function requestClientIp(req) {
 // Persistent per-client budgets shared by all instances of the public endpoint.
 export async function reserveRequestBudget(db, req, { scope, cost, budget, now, salt }) {
   const minute = Math.floor(now / 60000);
-  const hash = createHash('sha256').update(`${salt}:${scope}:${requestClientIp(req)}`).digest('hex');
+  const hash = createHmac('sha256', salt).update(`${scope}:${requestClientIp(req)}`).digest('hex');
   const ref = db.collection('chatRateLimits').doc(`${scope}-${hash}`);
   return db.runTransaction(async tx => {
     const prior = (await tx.get(ref)).data();

@@ -1,3 +1,12 @@
+## 18/11/2026 — Đồng bộ nút mua mobile, chừa chỗ cho chat và tải ảnh theo mức zoom
+
+- Nút mua dính đáy và nút chính dùng chung kiểu chữ và nền từ Visual Builder. Cả hai chỉ xuất hiện trên trang thật khi website có phương thức thanh toán đang bật. Trạng thái hết hàng khóa cả hai.
+- Đo chiều cao thanh mua và chừa khoảng trống cho chat dựa trên khung thực tế. Tính cả phần dành cho thanh điều hướng mobile khi Safari hiện thanh trở lại.
+- Lightbox dùng biến thể Cloudinary 1600px lúc mở, nâng lên 2400px khi zoom từ 2× để giảm lượt tải ảnh lớn.
+- Khóa bộ đếm tồn kho dùng HMAC với CHAT_RATE_LIMIT_SALT hoặc bí mật Firebase máy chủ. Thiếu cả hai trả 503 trước khi đọc kho. Giữ ngân sách 600/phút cho IP dùng chung và kiểm tra tồn ở bước đặt đơn.
+- Vercel/Firestore: tài liệu ghi thao tác cấu hình biến và TTL expiresAt. Workspace không có phiên quản trị để cập nhật production. Không đổi schema, rules hoặc dữ liệu đơn/kho.
+- Kiểm tra: 241 test Node, lint, build và bundle đạt. 6 bài trên Chromium Android/WebKit iOS giả lập đạt, gồm đo khoảng hở chat, so sánh style và ẩn nút khi tắt đặt đơn. Chạy thêm 2 bài xác nhận ảnh 1600/2400px đạt. Chưa thử điện thoại vật lý.
+
 ## 18/11/2026 — Gom lịch sử chỉnh sửa, giảm lượt đọc mail và thêm nút Mua ngay trên mobile
 
 - Visual Builder gộp lần chỉnh liên tiếp trên cùng đường dẫn trường chữ trong khoảng 500ms. Đổi trường, chờ lâu hơn, hoàn tác, làm lại hoặc reset sẽ bắt đầu nhóm mới. Giữ tối đa 40 bước.

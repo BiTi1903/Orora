@@ -10,7 +10,7 @@ test('storefront stock exposes only availability for active products with counte
     await db.collection('products').doc(id).set({ active });
     await db.collection('inventory').doc(id).set({ quantity, updatedBy: 'internal-account' });
   }
-  const handler = createStorefrontStockHandler({ getDb: () => db });
+  const handler = createStorefrontStockHandler({ getDb: () => db, env: { CHAT_RATE_LIMIT_SALT: "test-salt" } });
   const res = response();
   await handler({ method: 'GET', query: { ids: 'empty,low,ready,draft,uncounted,missing,low' } }, res);
   assert.equal(res.statusCode, 200);
@@ -25,7 +25,7 @@ test('stock quota covers different ID combinations before inventory reads', asyn
   let reads = 0;
   db.getAll = (...refs) => { reads++; return Promise.all(refs.map(ref => ref.get())); };
   let now = 1000;
-  const handler = createStorefrontStockHandler({ getDb: () => db, clock: () => now });
+  const handler = createStorefrontStockHandler({ getDb: () => db, env: { CHAT_RATE_LIMIT_SALT: "test-salt" }, clock: () => now });
   for (let i = 0; i < 7; i++) {
     const res = response();
     await handler({ method: 'GET', query: { ids: Array.from({ length: 48 }, (_, index) => `${i}-${index}`).join(',') } }, res);
@@ -37,4 +37,11 @@ test('stock quota covers different ID combinations before inventory reads', asyn
   const res = response();
   await handler({ method: 'GET', query: { ids: 'new' } }, res);
   assert.equal(res.statusCode, 200);
+});
+
+test('stock never uses a public salt when server secrets are missing', async () => {
+  const handler = createStorefrontStockHandler({ env: {}, getDb: () => assert.fail('No reads expected') });
+  const res = response();
+  await handler({ method: 'GET', query: { ids: 'sample' } }, res);
+  assert.equal(res.statusCode, 503);
 });

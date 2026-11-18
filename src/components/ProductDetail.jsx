@@ -24,7 +24,7 @@ import ProductReviews from "./ProductReviews";
 import { productImages, productSections, secondaryProductImages } from "../lib/product-content";
 import ConsultationDialog from "./ConsultationDialog";
 import OrderForm from "./OrderForm";
-import { formatProductPrice, parseVndPrice, purchaseChannelLabels, socialShopUrl } from "../lib/commerce";
+import { availablePaymentMethods, formatProductPrice, parseVndPrice, purchaseChannelLabels, socialShopUrl } from "../lib/commerce";
 import { mobileImageVars } from "../lib/image-layout";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
@@ -54,6 +54,7 @@ function ProductDetail({
   const { id } = useParams();
   const navigate = useNavigate();
   const pageRef = useRef(null);
+  const mobileBuyRef = useRef(null);
   const [orderProductId, setOrderProductId] = useState(null);
   const [purchaseSelection, setPurchaseSelection] = useState(null);
   const [lightbox, setLightbox] = useState(null);
@@ -79,6 +80,21 @@ function ProductDetail({
 
   const stock = useStorefrontStock([product?.id], !preview)[product?.id];
   const soldOut = stock === "out";
+  const acceptsWebsiteOrders = availablePaymentMethods(home).length > 0;
+  const showMobileBuy = !preview && Boolean(product) && acceptsWebsiteOrders;
+  useLayoutEffect(() => {
+    if (!showMobileBuy) return;
+    const bar = mobileBuyRef.current;
+    const root = document.documentElement;
+    const reserve = () => root.style.setProperty("--product-mobile-buy-height", `${bar.offsetHeight}px`);
+    const observer = new ResizeObserver(reserve);
+    observer.observe(bar);
+    reserve();
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty("--product-mobile-buy-height");
+    };
+  }, [showMobileBuy]);
 
   useEffect(() => {
     if (!preview && product?.canonicalSlug && id !== product.canonicalSlug) navigate(productPath(product), { replace: true, state: cartLocation.state });
@@ -332,6 +348,7 @@ function ProductDetail({
     setThumbStart((s) => (s + 1) % thumbPool.length);
   };
 
+  const websiteButtonStyle = { ...css("purchaseOptions"), background: purchase.websiteBackground };
   return (
     <article
       className={`product-detail ${preview ? "product-detail--preview" : ""}`}
@@ -385,7 +402,7 @@ function ProductDetail({
             )}
           </div>
 
-          {!preview && displaySrc && <button type="button" className="product-image-zoom" onClick={() => setLightbox(cdnSrc(displaySrc, { w: 2400, q: "auto:best" }))}>Phóng to ảnh</button>}
+          {!preview && displaySrc && <button type="button" className="product-image-zoom" onClick={() => setLightbox(displaySrc)}>Phóng to ảnh</button>}
           {!preview && lightbox && <ProductImageLightbox src={lightbox} name={product.name} onClose={() => setLightbox(null)} />}
           {secondaryImages.length > 0 && (
             <div
@@ -522,7 +539,7 @@ function ProductDetail({
               </ConsultationDialog>}
             </div>
           )}
-            <button type="button" className={`purchase-website ${selectedClass("pdWebsiteText")}`} disabled={soldOut} style={{ ...css("purchaseOptions"), background: purchase.websiteBackground }} data-builder-key={preview?"pdWebsiteText":undefined} onClick={preview ? select("pdWebsiteText") : () => setOrderProductId(product.id || product.slug)} onPointerEnter={()=>{if(!preview)getAddressOptions().catch(()=>{});}} onFocus={()=>{if(!preview)getAddressOptions().catch(()=>{});}} aria-haspopup="dialog" aria-expanded={!preview && !soldOut && orderProductId === (product.id || product.slug)}><ButtonIcon name="orderNow" defaultSize={17}/><span>{(purchase.websiteLabel?.trim() && purchase.websiteLabel.trim() !== "Đặt hàng trên website" ? purchase.websiteLabel.trim() : "Đặt hàng ngay")}</span><ButtonIcon name="orderArrow" defaultSize={16}/></button>
+            {(preview || acceptsWebsiteOrders) && <button type="button" className={`purchase-website ${selectedClass("pdWebsiteText")}`} disabled={soldOut} style={websiteButtonStyle} data-builder-key={preview?"pdWebsiteText":undefined} onClick={preview ? select("pdWebsiteText") : () => setOrderProductId(product.id || product.slug)} onPointerEnter={()=>{if(!preview)getAddressOptions().catch(()=>{});}} onFocus={()=>{if(!preview)getAddressOptions().catch(()=>{});}} aria-haspopup="dialog" aria-expanded={!preview && acceptsWebsiteOrders && !soldOut && orderProductId === (product.id || product.slug)}><ButtonIcon name="orderNow" defaultSize={17}/><span>{(purchase.websiteLabel?.trim() && purchase.websiteLabel.trim() !== "Đặt hàng trên website" ? purchase.websiteLabel.trim() : "Đặt hàng ngay")}</span><ButtonIcon name="orderArrow" defaultSize={16}/></button>}
             {!soldOut && (preview || tiktokShop || facebookShop) && <>
               <div className="purchase-divider"><span>{channelLabels.dividerLabel}</span></div>
               <div className="purchase-social" aria-label="Đặt hàng trên mạng xã hội">
@@ -530,10 +547,10 @@ function ProductDetail({
                 {(preview || tiktokShop) && <a className="purchase-tiktok" href={preview ? undefined : tiktokShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.tiktokBackground, ...(purchase.tiktokBackground ? { color: "#fff" } : {}), ...toCss(purchase.tiktokStyle) }}><ButtonIcon name="tiktok" defaultSize={17}/><span className={selectedClass("pdTiktokText")} data-builder-key={preview ? "pdTiktokText" : undefined} onClick={preview ? select("pdTiktokText") : undefined}>{channelLabels.tiktokLabel}</span><svg className="purchase-external" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8" /></svg></a>}
               </div>
             </>}
-            {!preview && !soldOut && orderProductId === (product.id || product.slug) && createPortal(<OrderForm key={product.id || product.slug} product={product} home={home} selection={{ variantId, quantity: choice.quantity }} onSelectionChange={changeSelection} onClose={() => setOrderProductId(null)} />, document.body)}
-            {!preview && <div className="product-mobile-buy">
+            {!preview && acceptsWebsiteOrders && !soldOut && orderProductId === (product.id || product.slug) && createPortal(<OrderForm key={product.id || product.slug} product={product} home={home} selection={{ variantId, quantity: choice.quantity }} onSelectionChange={changeSelection} onClose={() => setOrderProductId(null)} />, document.body)}
+            {showMobileBuy && <div ref={mobileBuyRef} className="product-mobile-buy">
               <strong>{formatProductPrice(displayedPrice)}</strong>
-              <button type="button" className="purchase-website" aria-haspopup="dialog" disabled={soldOut}
+              <button type="button" className="purchase-website" style={websiteButtonStyle} aria-haspopup="dialog" disabled={soldOut}
                 onClick={() => setOrderProductId(product.id || product.slug)}>{soldOut ? "Hết hàng" : purchase.mobileBuyLabel?.trim() || "Mua ngay"}</button>
             </div>}
             <PurchaseTrust home={home} copy={purchase} preview={preview} />

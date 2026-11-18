@@ -8,8 +8,8 @@ const base={
  'lib/api.js':`export const getProduct=async()=>(${JSON.stringify(product)});`,
  'hooks/useAddressOptions.js':`const provinces=[{code:'01',name:'Đồng Nai'}],wards=[{code:'001',name:'Phường Tân Mai'}];export default function useAddress(){return {provinces,wards,loadingProvinces:false,loadingWards:false}}`,
 };
-async function detail(page,state){
- await mount(page,`import Detail from '/src/components/ProductDetail.jsx';import {Routes,Route} from '/qa/runtime.js';D.createRoot(document.getElementById('root')).render(R.createElement(MemoryRouter,{initialEntries:[{pathname:'/product/gel',state:${JSON.stringify(state||null)}}]},R.createElement(Routes,null,R.createElement(Route,{path:'/product/:id',element:R.createElement(Detail)}))));`,base);
+async function detail(page,state,overrides={},withMobileControls=false){
+ await mount(page,`import Detail from '/src/components/ProductDetail.jsx';import Chat from '/src/components/ChatButton.jsx';import MobileNav from '/src/components/MobileShopNav.jsx';import {Routes,Route} from '/qa/runtime.js';D.createRoot(document.getElementById('root')).render(R.createElement(MemoryRouter,{initialEntries:[{pathname:'/product/gel',state:${JSON.stringify(state||null)}}]},R.createElement(Routes,null,R.createElement(Route,{path:'/product/:id',element:R.createElement(R.Fragment,null,R.createElement(Detail),${withMobileControls ? "R.createElement(Chat),R.createElement(MobileNav)" : "null"})}))));`,{...base,...overrides});
  await expect(page.locator('.product-detail-info h1')).toHaveText(product.name);
 }
 test('detail selects the catalog price by default, keeps totals compact and isolates checkout edits',async({page},testInfo)=>{
@@ -71,12 +71,17 @@ test('known stock blocks orders', async ({ page }) => {
 });
 
 test('product image dialog opens the source and zoom controls enlarge it', async ({ page }) => {
+ await page.route('https://res.cloudinary.com/**', route => route.fulfill({
+  contentType: 'image/svg+xml',
+  body: '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600"><rect width="600" height="600" fill="pink"/></svg>',
+ }));
  await mount(page, `import Detail from '/src/components/ProductDetail.jsx';import {Routes,Route} from '/qa/runtime.js';D.createRoot(document.getElementById('root')).render(R.createElement(MemoryRouter,{initialEntries:['/product/gel']},R.createElement(Routes,null,R.createElement(Route,{path:'/product/:id',element:R.createElement(Detail)}))));`, {
   ...base,
-  'lib/api.js': `export const getProduct=async()=>(${JSON.stringify({ ...product, image: '/preview/product.svg' })});`,
+  'lib/api.js': `export const getProduct=async()=>(${JSON.stringify({ ...product, image: 'https://res.cloudinary.com/demo/image/upload/product.svg' })});`,
  });
  await page.getByRole('button', { name: 'Phóng to ảnh' }).click();
  const dialog = page.getByRole('dialog', { name: product.name });
+ await expect(dialog.getByRole('img')).toHaveAttribute('src', /w_1600/);
  await dialog.getByRole('button', { name: 'Phóng to', exact: true }).click();
  await expect(dialog.getByRole('img')).toHaveAttribute('style', /width: 150%/);
  const view = dialog.getByRole('region', { name: 'Ảnh sản phẩm phóng to' });
@@ -88,6 +93,38 @@ test('product image dialog opens the source and zoom controls enlarge it', async
  await page.mouse.move(box.x + box.width * .25, box.y + 30, { steps: 4 });
  await page.mouse.up();
  await expect.poll(() => view.evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
+ await dialog.getByRole('button', { name: 'Phóng to', exact: true }).click();
+ await expect(dialog.getByRole('img')).toHaveAttribute('src', /w_2400/);
  await page.keyboard.press('Escape');
  await expect(dialog).toHaveCount(0);
+});
+
+test('mobile buy bar shares purchase settings and leaves room for chat and navigation', async ({ page }) => {
+ test.skip(page.viewportSize().width > 768, 'Mobile layout');
+ await detail(page, null, {
+  'hooks/useHomeContent.js': 'export default function home(){return {loading:false,productDetailStyles:{purchaseOptions:{websiteBackground:"#654321",fontSize:18}},navStyles:{mobile:{afterTicker:false}},chatSettings:{hintEnabled:false}}}',
+  'hooks/useChatConversation.js': 'export default function chat(){return {metadata:{}}}',
+ }, true);
+ const sticky = page.getByRole('button', { name: 'Mua ngay', exact: true });
+ const main = page.getByRole('button', { name: 'Đặt hàng ngay', exact: true });
+ await expect(sticky).toHaveCSS('background-color', 'rgb(101, 67, 33)');
+ await expect(sticky).toHaveCSS('font-size', await main.evaluate(el => getComputedStyle(el).fontSize));
+ await page.evaluate(() => window.scrollTo(0, 110));
+ const nav = page.locator('.mobile-shop-nav');
+ await expect(nav).toBeVisible();
+ await expect.poll(() => page.evaluate(() => {
+  const bar = document.querySelector('.product-mobile-buy').getBoundingClientRect();
+  const chat = document.querySelector('.orora-chat-launcher').getBoundingClientRect();
+  const navbar = document.querySelector('.mobile-shop-nav').getBoundingClientRect();
+  return Math.min(bar.top - chat.bottom, navbar.top - bar.bottom);
+ })).toBeGreaterThanOrEqual(-1);
+ await expect.poll(() => page.evaluate(() => document.querySelector('.product-mobile-buy').getBoundingClientRect().top - document.querySelector('.orora-chat-launcher').getBoundingClientRect().bottom)).toBeGreaterThanOrEqual(8);
+});
+
+test('website order buttons stay hidden when payment methods are disabled', async ({ page }) => {
+ await detail(page, null, {
+  'hooks/useHomeContent.js': 'export default function home(){return {loading:false,shopLinks:{paymentMethods:[]}}}',
+ });
+ await expect(page.getByRole('button', { name: 'Đặt hàng ngay', exact: true })).toHaveCount(0);
+ await expect(page.locator('.product-mobile-buy')).toHaveCount(0);
 });

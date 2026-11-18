@@ -12,7 +12,7 @@ Trong **Vercel → Project → Settings → Environment Variables**, đặt:
 | `OPENAI_CHAT_MODEL` | Mặc định `gpt-4.1-mini`; model cần hỗ trợ Responses API và JSON schema |
 | `CHAT_SITE_ORIGIN` | `https://ororavn.com` hoặc origin chính xác đang triển khai |
 | `CHAT_AI_DAILY_LIMIT` | Tối đa lượt gọi AI/ngày cho toàn website, mặc định `250` |
-| `CHAT_RATE_LIMIT_SALT` | Chuỗi ngẫu nhiên riêng để băm địa chỉ mạng trong bộ đếm |
+| `CHAT_RATE_LIMIT_SALT` | Chuỗi ngẫu nhiên riêng để tạo khóa bộ đếm từ địa chỉ mạng. Nên dùng 32 byte ngẫu nhiên; API tồn kho dùng bí mật Firebase máy chủ làm khóa dự phòng. |
 
 API dùng lại `FIREBASE_SERVICE_ACCOUNT_JSON` của các chức năng máy chủ hiện có. Sau khi thêm hoặc đổi biến môi trường, redeploy. Không đặt khóa OpenAI trong biến `VITE_`, cấu hình Firebase công khai, mã nguồn hoặc nội dung chat. Gói ChatGPT và hạn mức API là hai dịch vụ riêng; tài khoản API cần còn hạn mức sử dụng.
 
@@ -38,7 +38,14 @@ Chỉ khi có thông tin nguồn mới trả lời các chi tiết về công d�
 
 Mỗi địa chỉ mạng có tối đa 15 yêu cầu trong 10 phút và 60 yêu cầu/ngày. Bộ đếm ngày dùng giờ Việt Nam. Bộ đếm toàn website mặc định cho phép 250 lượt OpenAI/ngày; có thể chỉnh bằng biến máy chủ (tối đa 2.000). Hết hạn mức AI chung thì chuyển sang hỗ trợ theo thông tin cửa hàng. Đổi biến môi trường cần redeploy.
 
-Collection `chatRateLimits` chỉ lưu số lượt, thời điểm và ID đã băm, không lưu địa chỉ IP thô hoặc nội dung trò chuyện. Các collection không được cấp quyền trong Firestore Rules hiện tại bị từ chối truy cập từ client. Có trường `expiresAt` sau 48 giờ; có thể bật Firestore TTL cho trường này để dọn bộ đếm cũ.
+Collection `chatRateLimits` chỉ lưu số lượt, thời điểm và ID đã băm, không lưu địa chỉ IP thô hoặc nội dung trò chuyện. Các collection không được cấp quyền trong Firestore Rules hiện tại bị từ chối truy cập từ client. Bộ đếm chat có `expiresAt` sau 48 giờ và bộ đếm tồn kho sau 1 giờ. Bật Firestore TTL cho collection group `chatRateLimits`, field `expiresAt`. TTL xóa bất đồng bộ, còn ứng dụng áp dụng cửa sổ hạn mức riêng.
+
+Từ thư mục đã liên kết dự án Vercel, dùng các lệnh sau với quyền quản trị phù hợp. Đặt biến lần đầu bằng lệnh Vercel bên dưới hoặc nhập giá trị ngẫu nhiên trong Vercel Dashboard, sau đó redeploy Production.
+
+```sh
+openssl rand -hex 32 | vercel env add CHAT_RATE_LIMIT_SALT production
+gcloud firestore fields ttls update expiresAt --collection-group=chatRateLimits --enable-ttl --database='(default)' --project=ororavn-e6b49
+```
 
 Website không ghi hội thoại vào Firestore/localStorage; tin nhắn chỉ nằm trong bộ nhớ của tab và mất khi tải lại hoặc bấm bắt đầu cuộc trò chuyện mới. Khi dùng AI, phần hội thoại gần nhất và thông tin cửa hàng được gửi đến OpenAI qua máy chủ, với Responses API `store: false`. Việc xử lý/lưu giữ ở nhà cung cấp vẫn theo chính sách và thiết lập tài khoản OpenAI; `store: false` không đồng nghĩa với cam kết không lưu dữ liệu ở mọi tầng dịch vụ.
 
