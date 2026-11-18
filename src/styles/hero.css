@@ -282,8 +282,8 @@
 .hero-btn span { display: inline-block; transition: transform 0.4s ease; }
 
 .hero-btn-primary {
-  color: var(--store-button-ink);
-  background: linear-gradient(135deg, var(--store-button-pink), var(--store-button-pink-edge));
+  color: #fff;
+  background: linear-gradient(135deg, var(--store-button-pink), var(--store-button-pink-dark));
   box-shadow: 0 14px 34px rgba(184, 68, 109, 0.32);
 }
 

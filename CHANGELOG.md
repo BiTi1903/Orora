@@ -1,3 +1,9 @@
+## 18/11/2026 — Khôi phục màu nút trước bản hồng phấn
+
+- Khôi phục màu nút website, admin và giá trị màu mặc định trong Visual Builder theo bản 0035938.
+- Kiểm tra: đối chiếu mã nguồn với bản 0035938, chỉ khác nhật ký. npm run check và 12 bài Playwright ở 390 px đều đạt.
+- Database: giữ nguyên dữ liệu, schema và rules.
+
 ## 18/11/2026 — Làm nhạt màu nút cho giao diện kính lỏng
 
 - Dùng nền hồng phấn và chữ hồng đậm cho các nút mặc định trên website, nút chính và nút xác nhận nguy hiểm trong admin. Giữ lớp bóng kính và các tùy chỉnh màu đã lưu.

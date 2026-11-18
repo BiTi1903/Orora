@@ -4,7 +4,7 @@
 .product-discovery p { margin:0; font-size:var(--text-section-subtitle); line-height:1.8; white-space:pre-wrap; overflow-wrap:anywhere; }
 .product-need-options { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:22px 0; }
 .product-need-options button { max-width:100%; padding:12px 22px; min-height:44px; border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--plum); font:inherit; cursor:pointer; overflow-wrap:anywhere; }
-.product-need-options button[aria-pressed="true"] { background:var(--store-button-pink); color:var(--store-button-ink); border-color:var(--store-button-pink); }
+.product-need-options button[aria-pressed="true"] { background:var(--store-button-pink); color:#fff; border-color:var(--store-button-pink); }
 .product-need-options button:focus-visible, .product-faq summary:focus-visible { outline:2px solid var(--rose-deep); outline-offset:4px; }
 .product-need-results { display:grid; gap:18px; }
 .product-need-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
