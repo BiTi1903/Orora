@@ -647,5 +647,5 @@
 .admin-confirm-message { margin: 0 0 18px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .admin-confirm-dialog .admin-actions { justify-content: flex-end; }
 
-.admin-confirm-dialog .admin-btn.danger { background: var(--ad-danger); color: #fff; border-color: var(--ad-danger); }
-.admin-confirm-dialog .admin-btn.danger:hover:not(:disabled) { background: #922018; border-color: #922018; }
+.admin-confirm-dialog .admin-btn.danger { background: var(--ad-danger); color: var(--ad-on-danger); border-color: var(--ad-danger); }
+.admin-confirm-dialog .admin-btn.danger:hover:not(:disabled) { background: var(--ad-danger-hover); border-color: var(--ad-danger-hover); }

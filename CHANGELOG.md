@@ -1,3 +1,10 @@
+## 18/11/2026 — Đồng bộ nút nguy hiểm và cảnh báo thiếu ConfirmProvider
+
+- Màu chữ và màu hover nút nguy hiểm lấy từ biến màu admin. Xác nhận Hoàn kho dùng nút đỏ và đặt focus vào Hủy.
+- Khi gọi useConfirm ngoài provider, yêu cầu được hủy an toàn và console ghi cảnh báo trong môi trường phát triển.
+- Kiểm tra: cả 4 bài trong qa/admin-confirm.spec.js đạt qua npm run test:ui tại 390px, gồm kiểm tra cảnh báo ngoài provider và cập nhật trạng thái mail.
+- Database: giữ nguyên schema, rules và dữ liệu production.
+
 ## 18/11/2026 — Nhãn xác nhận theo thao tác và kiểm tra cập nhật mail trong admin
 
 - Hộp xác nhận nhận tiêu đề, nhãn nút và mức nguy hiểm. Các bước xóa, bỏ bản nháp và gửi lại thư có nút đỏ, mở với focus ở Hủy. Ngoài provider, useConfirm trả về yêu cầu đã hủy.

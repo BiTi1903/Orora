@@ -17,6 +17,8 @@
   --ad-ok: #1f7a4d;
   --ad-ok-soft: #e6f5ed;
   --ad-danger: #b42318;
+  --ad-danger-hover: #922018;
+  --ad-on-danger: #fff;
   --ad-danger-soft: #fdecea;
   --ad-danger-line: #efc0ba;
   --ad-r-sm: 8px;

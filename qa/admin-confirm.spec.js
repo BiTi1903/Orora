@@ -44,7 +44,10 @@ test('custom chat typography keeps a 16px minimum on mobile and a visible keyboa
   await expect(input).toHaveCSS('outline-style', 'solid');
 });
 
-test('confirmation outside a provider resolves as cancelled', async ({ page }) => {
+test('confirmation outside a provider warns in development and resolves as cancelled', async ({ page }) => {
+  const warning = page.waitForEvent('console', {
+    predicate: (message) => message.type() === 'warning' && message.text().includes('missing ConfirmProvider'),
+  });
   await mount(page, `
     import {useConfirm} from '/src/admin/confirm-context.js';
     function Example() {
@@ -57,6 +60,7 @@ test('confirmation outside a provider resolves as cancelled', async ({ page }) =
     ${render('R.createElement(Example)')}`);
   await page.getByRole('button', { name: 'Mở xác nhận' }).click();
   await expect(page.getByRole('button', { name: 'Đã hủy' })).toBeVisible();
+  await warning;
 });
 
 test('recoverOnly refreshes the selected order when the server returns unchanged', async ({ page }) => {
