@@ -2,6 +2,8 @@
 // Chỉ là giá trị dự phòng của giao diện chỉnh — không ghi vào cấu hình nếu admin không đổi.
 export const ADMIN_COLOR_DEFAULTS = {
   primary: "#b8446d",
+  buttonPink: "#fde8f0",
+  buttonInk: "#792449",
   ink: "#3a1526",
   white: "#ffffff",
   surfaceTint: "#fffafc",
@@ -18,20 +20,20 @@ export const CHAT_CHANNEL_COLOR_DEFAULTS = {
 };
 
 export const ORDER_TRACKING_COLOR_DEFAULTS = {
-  accent: ADMIN_COLOR_DEFAULTS.primary,
+  accent: ADMIN_COLOR_DEFAULTS.buttonInk,
   background: ADMIN_COLOR_DEFAULTS.white,
   border: ADMIN_COLOR_DEFAULTS.softBorder,
 };
 
 export const PRODUCT_CONTACT_COLOR_DEFAULTS = {
-  primaryBackground: ADMIN_COLOR_DEFAULTS.primary,
-  primaryColor: ADMIN_COLOR_DEFAULTS.white,
+  primaryBackground: ADMIN_COLOR_DEFAULTS.buttonPink,
+  primaryColor: ADMIN_COLOR_DEFAULTS.buttonInk,
   secondaryBackground: ADMIN_COLOR_DEFAULTS.white,
   secondaryColor: ADMIN_COLOR_DEFAULTS.primary,
 };
 
 export const PURCHASE_BUTTON_COLOR_DEFAULTS = {
-  websiteBackground: "#b53c77",
+  websiteBackground: ADMIN_COLOR_DEFAULTS.buttonPink,
   tiktokBackground: ADMIN_COLOR_DEFAULTS.dark,
   facebookBackground: "#0866ff",
 };

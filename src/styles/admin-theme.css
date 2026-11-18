@@ -3,6 +3,7 @@
   --ad-primary: #b8446d;
   --ad-primary-strong: #9a3358;
   --ad-primary-soft: #fdecf2;
+  --ad-primary-hover-tint: #f6cedf;
   --ad-primary-line: #f0c2d3;
   --ad-ink: #3a1526;
   --ad-ink-soft: #5c4150;
@@ -18,10 +19,10 @@
   --ad-ok-soft: #e6f5ed;
   --ad-danger: #b42318;
   --ad-danger-action: var(--ad-primary-strong);
-  --ad-danger-action-hover: #7d2445;
+  --ad-danger-action-bg: var(--ad-primary-soft);
+  --ad-danger-action-hover: var(--ad-primary-hover-tint);
   --ad-danger-action-tint: var(--ad-primary-soft);
   --ad-danger-action-border: var(--ad-line-rose);
-  --ad-on-danger: #fff;
   --ad-danger-soft: #fdecea;
   --ad-r-sm: 8px;
   --ad-r-md: 12px;

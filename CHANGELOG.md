@@ -1,3 +1,9 @@
+## 18/11/2026 — Làm nhạt màu nút cho giao diện kính lỏng
+
+- Dùng nền hồng phấn và chữ hồng đậm cho các nút mặc định trên website, nút chính và nút xác nhận nguy hiểm trong admin. Giữ lớp bóng kính và các tùy chỉnh màu đã lưu.
+- Kiểm tra: npm run check đạt và 45 bài Playwright đạt ở 390 px và 1440 px (một bài chỉ chạy mobile). Cặp màu chữ/nền đậm nhất của bảng màu mới có độ tương phản 6,85:1 trên website và 4,96:1 trong admin.
+- Database: giữ nguyên dữ liệu, schema và rules.
+
 ## 18/11/2026 — Đồng bộ nút hồng trên website
 
 - Dùng chung bảng màu nút hồng cho Hero, thẻ sản phẩm, đặt hàng, giỏ hàng, chat, đăng ký và tra cứu đơn trên desktop và mobile. Giữ lớp bóng kính và các màu tùy chỉnh trong Visual Builder.
