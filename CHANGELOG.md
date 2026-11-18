@@ -1,3 +1,10 @@
+## 18/11/2026 — Bỏ khung thông tin cạnh nút mua
+
+- Bỏ khung thanh toán, giao hàng, ước tính phí theo tỉnh và đổi trả cạnh nút mua trên trang chi tiết. Xóa component, CSS và hai trường chỉnh riêng của khung trong Visual Builder.
+- Khách vẫn xem phí ở form đặt hàng và chính sách ở phần Cam kết.
+- Kiểm tra: npm run check đạt và 8 bài Playwright checkout/builder tại 390px đạt.
+- Database: giữ nguyên dữ liệu, schema và rules.
+
 ## 18/11/2026 — Đưa thanh Mua ngay lên trên nội dung chi tiết
 
 - Thanh mua kính lỏng trên mobile được render trực tiếp dưới body, tránh bị ngữ cảnh xếp lớp nội dung và tab thông tin che khi cuộn. Desktop và preview giữ thanh mua trong khung sản phẩm.

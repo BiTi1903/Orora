@@ -1,5 +1,4 @@
 import ProductImageLightbox from "./ProductImageLightbox";
-import PurchaseTrust from "./PurchaseTrust";
 import useStorefrontStock from "../hooks/useStorefrontStock";
 import ButtonIcon from "./ButtonIcon";
 import {createPortal} from "react-dom";
@@ -591,7 +590,6 @@ function ProductDetail({
             )}
             {!preview && acceptsWebsiteOrders && !soldOut && orderProductId === (product.id || product.slug) && createPortal(<OrderForm key={product.id || product.slug} product={product} home={home} selection={{ variantId, quantity: choice.quantity }} onSelectionChange={changeSelection} onClose={() => setOrderProductId(null)} />, document.body)}
             {!pinBuyBar && mobileBuyBar}
-            <PurchaseTrust home={home} copy={purchase} preview={preview} />
           </section>
 
         </div></div>
