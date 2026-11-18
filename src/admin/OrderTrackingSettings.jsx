@@ -1,26 +1,272 @@
 import useDraftGuard from "../hooks/useDraftGuard";
-import { useEffect,useRef,useState } from 'react';
-import { getHomeContent,saveHomeContent,explainError } from '../lib/api';
-import { ORDER_TRACKING_FIELDS,TRACKING_RESULT_KEYS,TRACKING_STYLE_GROUPS,trackingCopy,trackingStyle,trackingTheme } from '../lib/order-tracking-copy';
-import { changedValues } from './builder/save-sections';
-import { SloganTypographyEditor } from './ProductSloganDesign';
-import OrderTrackingDetails from '../components/OrderTrackingDetails';
-import OrderTrackingSearch from '../components/OrderTrackingSearch';
-export default function OrderTrackingSettings(){
- const [form,setForm]=useState({}),[ready,setReady]=useState(false),[busy,setBusy]=useState(false),[notice,setNotice]=useState('');
- const [tab,setTab]=useState('page'),[group,setGroup]=useState('title'),[mode,setMode]=useState('phone');
- const baseline=useRef({});
- const markSaved=useDraftGuard(form,{enabled:ready,busy});
- useEffect(()=>{let alive=true;getHomeContent().then(home=>{if(alive){const saved=home?.orderTrackingText||{};setForm(saved);baseline.current=saved;setReady(true);}}).catch(error=>{if(alive)setNotice(explainError(error));});return()=>{alive=false;};},[]);
- const set=(key,value)=>{setForm(current=>({...current,[key]:value}));setNotice('');};
- const styles=form.styles||{},copy=trackingCopy(form),patchStyle=patch=>set('styles',{...styles,...patch});
- const textKeys=ORDER_TRACKING_FIELDS.filter(([key])=>tab==='results'?TRACKING_RESULT_KEYS.includes(key):!TRACKING_RESULT_KEYS.includes(key));
- return <form aria-busy={busy} className="admin-card admin-form tracking-settings-form" onSubmit={async event=>{event.preventDefault();if(!ready||busy)return;setBusy(true);setNotice('');try{const patch=changedValues(baseline.current,form);if(Object.keys(patch).length)await saveHomeContent({orderTrackingText:patch});baseline.current=form;markSaved();setNotice('Đã lưu nội dung và giao diện tra cứu.');}catch(error){setNotice(explainError(error));}finally{setBusy(false);}}}>
- <div className="slogan-settings-toolbar"><div><h2>Trang tra cứu đơn hàng</h2><p className="admin-muted">Chỉnh nội dung, từng kiểu chữ và màu khung. Chữ trên navbar chỉnh tại Visual Builder → Navbar.</p></div><button className="admin-btn primary" aria-busy={busy} disabled={!ready||busy}>{busy?'Đang lưu…':'Lưu tra cứu'}</button></div>
- {notice&&<p role="status">{notice}</p>}
- <fieldset className="writer-fields" disabled={!ready||busy}><nav className="admin-section-tabs" aria-label="Thiết lập trang tra cứu">{[['page','Nội dung trang'],['results','Nội dung kết quả'],['styles','Kiểu chữ & khung'],['preview','Xem trước']].map(([key,title])=><button type="button" key={key} aria-current={tab===key?'page':undefined} onClick={()=>setTab(key)}>{title}</button>)}</nav>
- {['page','results'].includes(tab)&&<><p className="admin-muted">Để trống để dùng chữ mặc định. Giữ các biến {'{count}'}, {'{page}'}, {'{pages}'} trong nội dung tương ứng để tự điền số liệu.</p><div className="admin-form-grid">{textKeys.map(([key,label,fallback])=><div className="admin-field" key={key}><label>{label}{['intro','help','statusHelp','resultSummary','moreHelp','guideFirstBody','guideSecondBody','guideThirdBody'].includes(key)?<textarea rows={3} value={form[key]||''} placeholder={fallback} maxLength={2000} onChange={event=>set(key,event.target.value)}/>:<input value={form[key]||''} placeholder={fallback} maxLength={240} onChange={event=>set(key,event.target.value)}/>}</label></div>)}</div></>}
- {tab==='styles'&&<><div className="admin-field"><label htmlFor="tracking-style-group">Phần chữ cần chỉnh</label><select id="tracking-style-group" value={group} onChange={event=>setGroup(event.target.value)}>{TRACKING_STYLE_GROUPS.map(([key,title])=><option key={key} value={key}>{title}</option>)}</select></div><SloganTypographyEditor title={TRACKING_STYLE_GROUPS.find(([key])=>key===group)[1]} body value={styles.text?.[group]||{}} onChange={patch=>patchStyle({text:{...styles.text,[group]:{...styles.text?.[group],...patch}}})}/><fieldset className="slogan-design-editor"><legend>Kích thước form</legend><div className="admin-form-grid">{[['formPadding','Khoảng đệm form (px)',14,8,32],['fieldHeight','Chiều cao ô nhập / nút (px)',44,44,60]].map(([key,label,fallback,min,max])=><label className="admin-field" key={key}>{label}<input type="number" min={min} max={max} value={styles[key]??fallback} onChange={event=>patchStyle({[key]:Number(event.target.value)})}/></label>)}</div></fieldset><fieldset className="slogan-design-editor"><legend>Màu và khung thẻ</legend><div className="admin-form-grid">{[['accent','Màu nhấn / nút','#b8446d'],['background','Màu nền thẻ','#ffffff'],['border','Màu viền','#efd7e1']].map(([key,label,fallback])=><div className="admin-field" key={key}><label>{label}<input type="color" value={styles[key]||fallback} onChange={event=>patchStyle({[key]:event.target.value})}/></label></div>)}<div className="admin-field"><label>Bo góc thẻ (px)<input type="number" min={0} max={40} value={styles.radius??''} placeholder="24" onChange={event=>patchStyle({radius:event.target.value===''?'':Number(event.target.value)})}/></label></div></div></fieldset></>}
- {tab==='preview'&&<div data-admin-preview className="tracking-settings-preview"><p className="admin-muted">Xem trước nội dung đang chỉnh; không gửi yêu cầu tra cứu. Bấm Lưu tra cứu để áp dụng.</p><div className="order-tracking-page" style={trackingTheme(styles)}><header className="order-tracking-heading"><p className="product-eyebrow" style={trackingStyle(styles,'eyebrow')}>{copy.eyebrow}</p><h1 style={trackingStyle(styles,'title')}>{copy.title}</h1><p style={trackingStyle(styles,'intro')}>{copy.intro}</p></header><OrderTrackingSearch copy={copy} styles={styles} mode={mode} code="" phone="" busy={false} preview onMode={setMode} onCode={()=>{}} onPhone={()=>{}}/><p className="admin-muted">Chi tiết đơn minh họa — không phải dữ liệu khách hàng.</p><div className="order-tracking-result-preview" style={trackingStyle(styles,'resultBody')}><OrderTrackingDetails copy={copy} styles={styles} order={{code:'OW_DEMO',status:'confirmed',productName:'Sản phẩm minh họa',variantLabel:'180ml',quantity:1,paymentMethod:'cod',paymentStatus:'unpaid',subtotal:300000,shippingFee:20000,totalAmount:320000}}/></div></div><a href="/tra-cuu-don-hang" target="_blank" rel="noreferrer">Mở trang tra cứu</a></div>}
- </fieldset></form>;
+import { useEffect, useRef, useState } from "react";
+import { getHomeContent, saveHomeContent, explainError } from "../lib/api";
+import {
+  ORDER_TRACKING_FIELDS,
+  TRACKING_RESULT_KEYS,
+  TRACKING_STYLE_GROUPS,
+  trackingCopy,
+  trackingStyle,
+  trackingTheme,
+} from "../lib/order-tracking-copy";
+import { changedValues } from "./builder/save-sections";
+import { ColorField, NumberField, TypographyEditor as SloganTypographyEditor } from "./controls";
+import { ORDER_TRACKING_COLOR_DEFAULTS } from "./controls/color-defaults";
+import OrderTrackingDetails from "../components/OrderTrackingDetails";
+import OrderTrackingSearch from "../components/OrderTrackingSearch";
+export default function OrderTrackingSettings() {
+  const [form, setForm] = useState({}),
+    [ready, setReady] = useState(false),
+    [busy, setBusy] = useState(false),
+    [notice, setNotice] = useState("");
+  const [tab, setTab] = useState("page"),
+    [group, setGroup] = useState("title"),
+    [mode, setMode] = useState("phone");
+  const baseline = useRef({});
+  const markSaved = useDraftGuard(form, { enabled: ready, busy });
+  useEffect(() => {
+    let alive = true;
+    getHomeContent()
+      .then((home) => {
+        if (alive) {
+          const saved = home?.orderTrackingText || {};
+          setForm(saved);
+          baseline.current = saved;
+          setReady(true);
+        }
+      })
+      .catch((error) => {
+        if (alive) setNotice(explainError(error));
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+  const set = (key, value) => {
+    setForm((current) => ({ ...current, [key]: value }));
+    setNotice("");
+  };
+  const styles = form.styles || {},
+    copy = trackingCopy(form),
+    patchStyle = (patch) => set("styles", { ...styles, ...patch });
+  const textKeys = ORDER_TRACKING_FIELDS.filter(([key]) =>
+    tab === "results" ? TRACKING_RESULT_KEYS.includes(key) : !TRACKING_RESULT_KEYS.includes(key),
+  );
+  return (
+    <form
+      aria-busy={busy}
+      className="admin-card admin-form tracking-settings-form"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        if (!ready || busy) return;
+        setBusy(true);
+        setNotice("");
+        try {
+          const patch = changedValues(baseline.current, form);
+          if (Object.keys(patch).length) await saveHomeContent({ orderTrackingText: patch });
+          baseline.current = form;
+          markSaved();
+          setNotice("Đã lưu nội dung và giao diện tra cứu.");
+        } catch (error) {
+          setNotice(explainError(error));
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      <div className="slogan-settings-toolbar">
+        <div>
+          <h2>Trang tra cứu đơn hàng</h2>
+          <p className="admin-muted">
+            Chỉnh nội dung, từng kiểu chữ và màu khung. Chữ trên navbar chỉnh tại Visual Builder → Navbar.
+          </p>
+        </div>
+        <button className="admin-btn primary" aria-busy={busy} disabled={!ready || busy}>
+          {busy ? "Đang lưu…" : "Lưu tra cứu"}
+        </button>
+      </div>
+      {notice && <p role="status">{notice}</p>}
+      <fieldset className="writer-fields" disabled={!ready || busy}>
+        <nav className="admin-section-tabs" aria-label="Thiết lập trang tra cứu">
+          {[
+            ["page", "Nội dung trang"],
+            ["results", "Nội dung kết quả"],
+            ["styles", "Kiểu chữ & khung"],
+            ["preview", "Xem trước"],
+          ].map(([key, title]) => (
+            <button
+              type="button"
+              key={key}
+              aria-current={tab === key ? "page" : undefined}
+              onClick={() => setTab(key)}
+            >
+              {title}
+            </button>
+          ))}
+        </nav>
+        {["page", "results"].includes(tab) && (
+          <>
+            <p className="admin-muted">
+              Để trống để dùng chữ mặc định. Giữ các biến {"{count}"}, {"{page}"}, {"{pages}"} trong nội dung
+              tương ứng để tự điền số liệu.
+            </p>
+            <div className="admin-form-grid">
+              {textKeys.map(([key, label, fallback]) => (
+                <div className="admin-field" key={key}>
+                  <label>
+                    {label}
+                    {[
+                      "intro",
+                      "help",
+                      "statusHelp",
+                      "resultSummary",
+                      "moreHelp",
+                      "guideFirstBody",
+                      "guideSecondBody",
+                      "guideThirdBody",
+                    ].includes(key) ? (
+                      <textarea
+                        rows={3}
+                        value={form[key] || ""}
+                        placeholder={fallback}
+                        maxLength={2000}
+                        onChange={(event) => set(key, event.target.value)}
+                      />
+                    ) : (
+                      <input
+                        value={form[key] || ""}
+                        placeholder={fallback}
+                        maxLength={240}
+                        onChange={(event) => set(key, event.target.value)}
+                      />
+                    )}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+        {tab === "styles" && (
+          <>
+            <div className="admin-field">
+              <label htmlFor="tracking-style-group">Phần chữ cần chỉnh</label>
+              <select
+                id="tracking-style-group"
+                value={group}
+                onChange={(event) => setGroup(event.target.value)}
+              >
+                {TRACKING_STYLE_GROUPS.map(([key, title]) => (
+                  <option key={key} value={key}>
+                    {title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <SloganTypographyEditor
+              title={TRACKING_STYLE_GROUPS.find(([key]) => key === group)[1]}
+              body
+              value={styles.text?.[group] || {}}
+              onChange={(patch) =>
+                patchStyle({ text: { ...styles.text, [group]: { ...styles.text?.[group], ...patch } } })
+              }
+            />
+            <fieldset className="slogan-design-editor">
+              <legend>Kích thước form</legend>
+              <div className="admin-form-grid">
+                {[
+                  ["formPadding", "Khoảng đệm form (px)", 14, 8, 32],
+                  ["fieldHeight", "Chiều cao ô nhập / nút (px)", 44, 44, 60],
+                ].map(([key, label, fallback, min, max]) => (
+                  <NumberField
+                    key={key}
+                    label={label}
+                    min={min}
+                    max={max}
+                    fallback={fallback}
+                    value={styles[key] ?? fallback}
+                    onChange={(next) => patchStyle({ [key]: next === "" ? 0 : next })}
+                  />
+                ))}
+              </div>
+            </fieldset>
+            <fieldset className="slogan-design-editor">
+              <legend>Màu và khung thẻ</legend>
+              <div className="admin-form-grid">
+                {[
+                  ["accent", "Màu nhấn / nút"],
+                  ["background", "Màu nền thẻ"],
+                  ["border", "Màu viền"],
+                ].map(([key, label]) => (
+                  <ColorField
+                    key={key}
+                    label={label}
+                    value={styles[key]}
+                    fallback={ORDER_TRACKING_COLOR_DEFAULTS[key]}
+                    onChange={(next) => patchStyle({ [key]: next })}
+                  />
+                ))}
+                <NumberField
+                  label="Bo góc thẻ (px)"
+                  max={40}
+                  fallback={24}
+                  value={styles.radius}
+                  onChange={(next) => patchStyle({ radius: next })}
+                />
+              </div>
+            </fieldset>
+          </>
+        )}
+        {tab === "preview" && (
+          <div data-admin-preview className="tracking-settings-preview">
+            <p className="admin-muted">
+              Xem trước nội dung đang chỉnh; không gửi yêu cầu tra cứu. Bấm Lưu tra cứu để áp dụng.
+            </p>
+            <div className="order-tracking-page" style={trackingTheme(styles)}>
+              <header className="order-tracking-heading">
+                <p className="product-eyebrow" style={trackingStyle(styles, "eyebrow")}>
+                  {copy.eyebrow}
+                </p>
+                <h1 style={trackingStyle(styles, "title")}>{copy.title}</h1>
+                <p style={trackingStyle(styles, "intro")}>{copy.intro}</p>
+              </header>
+              <OrderTrackingSearch
+                copy={copy}
+                styles={styles}
+                mode={mode}
+                code=""
+                phone=""
+                busy={false}
+                preview
+                onMode={setMode}
+                onCode={() => {}}
+                onPhone={() => {}}
+              />
+              <p className="admin-muted">Chi tiết đơn minh họa — không phải dữ liệu khách hàng.</p>
+              <div className="order-tracking-result-preview" style={trackingStyle(styles, "resultBody")}>
+                <OrderTrackingDetails
+                  copy={copy}
+                  styles={styles}
+                  order={{
+                    code: "OW_DEMO",
+                    status: "confirmed",
+                    productName: "Sản phẩm minh họa",
+                    variantLabel: "180ml",
+                    quantity: 1,
+                    paymentMethod: "cod",
+                    paymentStatus: "unpaid",
+                    subtotal: 300000,
+                    shippingFee: 20000,
+                    totalAmount: 320000,
+                  }}
+                />
+              </div>
+            </div>
+            <a href="/tra-cuu-don-hang" target="_blank" rel="noreferrer">
+              Mở trang tra cứu
+            </a>
+          </div>
+        )}
+      </fieldset>
+    </form>
+  );
 }

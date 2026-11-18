@@ -1,7 +1,8 @@
-import {TRANSFORM_OPTIONS} from "../../lib/typography";
-import {useContext,useId,useLayoutEffect,useMemo,useRef} from "react";
-import {CompactInspectorContext} from "./inspector-context";
+import { TRANSFORM_OPTIONS } from "../../lib/typography";
+import { useContext, useId, useLayoutEffect, useMemo, useRef } from "react";
+import { CompactInspectorContext } from "./inspector-context";
 import { toSafeHexColor } from "./ui.helpers";
+import { ColorField as SharedColorField } from "../controls/fields";
 import {
   FONT_OPTIONS,
   SIZE_OPTIONS,
@@ -53,183 +54,196 @@ export function StyleTypographyBlock({ style = {}, onStyleChange, title = "Kiể
   );
 }
 
-
 export function TypographyControls({ style, onChange }) {
   const s = style || {};
   return (
     <>
-      <ColorField label="Màu chữ" value={s.color} onChange={color=>onChange({color})}/>
-      <details className="builder-advanced-controls"><summary>Nâng cao · Kiểu chữ và khoảng cách</summary>
-      <label className="builder-field">Chữ hoa / thường<select value={s.textTransform||''} onChange={e=>onChange({textTransform:e.target.value})}>{TRANSFORM_OPTIONS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
-      <SelectField
-        label="Font"
-        value={s.fontFamily}
-        options={FONT_OPTIONS}
-        onChange={(value) =>
-          onChange({ fontFamily: value })
-        }
-      />
-
-      <SelectField label="Cỡ chữ mobile (0 = tự động)" value={s.mobileFontSize ?? 0} options={[0, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 28, 32, 36, 40, 44, 48, 56, 64]} suffix="px" onChange={(value) => onChange({ mobileFontSize: Number(value) })} />
-      <div className="builder-field-row">
+      <ColorField label="Màu chữ" value={s.color} onChange={(color) => onChange({ color })} />
+      <details className="builder-advanced-controls">
+        <summary>Nâng cao · Kiểu chữ và khoảng cách</summary>
+        <label className="builder-field">
+          Chữ hoa / thường
+          <select value={s.textTransform || ""} onChange={(e) => onChange({ textTransform: e.target.value })}>
+            {TRANSFORM_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <SelectField
-          label="Cỡ chữ desktop"
-          value={s.fontSize}
-          options={SIZE_OPTIONS}
+          label="Font"
+          value={s.fontFamily}
+          options={FONT_OPTIONS}
+          onChange={(value) => onChange({ fontFamily: value })}
+        />
+
+        <SelectField
+          label="Cỡ chữ mobile (0 = tự động)"
+          value={s.mobileFontSize ?? 0}
+          options={[0, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 28, 32, 36, 40, 44, 48, 56, 64]}
           suffix="px"
-          onChange={(value) =>
-            onChange({
-              fontSize: Number(value),
-            })
-          }
+          onChange={(value) => onChange({ mobileFontSize: Number(value) })}
         />
+        <div className="builder-field-row">
+          <SelectField
+            label="Cỡ chữ desktop"
+            value={s.fontSize}
+            options={SIZE_OPTIONS}
+            suffix="px"
+            onChange={(value) =>
+              onChange({
+                fontSize: Number(value),
+              })
+            }
+          />
 
-        <SelectField
-          label="Độ đậm"
-          value={s.fontWeight}
-          options={WEIGHT_OPTIONS}
-          onChange={(value) =>
-            onChange({
-              fontWeight: Number(value),
-            })
-          }
-        />
-      </div>
+          <SelectField
+            label="Độ đậm"
+            value={s.fontWeight}
+            options={WEIGHT_OPTIONS}
+            onChange={(value) =>
+              onChange({
+                fontWeight: Number(value),
+              })
+            }
+          />
+        </div>
 
-      <details className="builder-advanced-controls"><summary>Giãn chữ và giãn dòng</summary>
-      <div className="builder-field-row">
-        <SelectField
-          label="Giãn chữ"
-          value={s.letterSpacing}
-          options={LETTER_OPTIONS}
-          suffix="px"
-          onChange={(value) =>
-            onChange({
-              letterSpacing: Number(value),
-            })
-          }
-        />
-
-        <SelectField
-          label="Giãn dòng"
-          value={s.lineHeight}
-          options={LINE_OPTIONS}
-          onChange={(value) =>
-            onChange({
-              lineHeight: Number(value),
-            })
-          }
-        />
-      </div>
-
-      </details>
-
-      <div className="builder-field">
-        <label>Căn lề</label>
-
-        <div className="builder-align">
-          {[
-            ["left", "≡", "Căn trái"],
-            ["center", "≡", "Căn giữa"],
-            ["right", "≡", "Căn phải"],
-            ["justify", "☰", "Căn đều"],
-          ].map(([value, icon, label]) => (
-            <button
-              key={value}
-              type="button"
-              className={
-                s.textAlign === value
-                  ? "active"
-                  : ""
-              }
-              onClick={() =>
+        <details className="builder-advanced-controls">
+          <summary>Giãn chữ và giãn dòng</summary>
+          <div className="builder-field-row">
+            <SelectField
+              label="Giãn chữ"
+              value={s.letterSpacing}
+              options={LETTER_OPTIONS}
+              suffix="px"
+              onChange={(value) =>
                 onChange({
-                  textAlign: value,
+                  letterSpacing: Number(value),
                 })
               }
-              title={label}
-              aria-label={label}
-              aria-pressed={s.textAlign === value}
-            >
-              {icon}
-            </button>
-          ))}
+            />
+
+            <SelectField
+              label="Giãn dòng"
+              value={s.lineHeight}
+              options={LINE_OPTIONS}
+              onChange={(value) =>
+                onChange({
+                  lineHeight: Number(value),
+                })
+              }
+            />
+          </div>
+        </details>
+
+        <div className="builder-field">
+          <label>Căn lề</label>
+
+          <div className="builder-align">
+            {[
+              ["left", "≡", "Căn trái"],
+              ["center", "≡", "Căn giữa"],
+              ["right", "≡", "Căn phải"],
+              ["justify", "☰", "Căn đều"],
+            ].map(([value, icon, label]) => (
+              <button
+                key={value}
+                type="button"
+                className={s.textAlign === value ? "active" : ""}
+                onClick={() =>
+                  onChange({
+                    textAlign: value,
+                  })
+                }
+                title={label}
+                aria-label={label}
+                aria-pressed={s.textAlign === value}
+              >
+                {icon}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div className="builder-field">
-        <label>Kiểu chữ</label>
+        <div className="builder-field">
+          <label>Kiểu chữ</label>
 
-        <button
-          type="button"
-          aria-pressed={Boolean(s.italic)}
-          className={`builder-toggle ${
-            s.italic ? "active" : ""
-          }`}
-          onClick={() =>
-            onChange({
-              italic: !s.italic,
-            })
-          }
-        >
-          <i>I</i> In nghiêng
-        </button>
-      </div>
+          <button
+            type="button"
+            aria-pressed={Boolean(s.italic)}
+            className={`builder-toggle ${s.italic ? "active" : ""}`}
+            onClick={() =>
+              onChange({
+                italic: !s.italic,
+              })
+            }
+          >
+            <i>I</i> In nghiêng
+          </button>
+        </div>
 
-      <details className="builder-advanced-controls"><summary>Khoảng cách và độ rộng</summary><SettingGroup title="Khoảng cách" collapsible={false}>
-        <SpacingControls style={s} onChange={onChange}/>
+        <details className="builder-advanced-controls">
+          <summary>Khoảng cách và độ rộng</summary>
+          <SettingGroup title="Khoảng cách" collapsible={false}>
+            <SpacingControls style={s} onChange={onChange} />
 
-        <SelectField
-          label="Chiều rộng tối đa"
-          value={s.maxWidth}
-          options={[
-            30,
-            40,
-            50,
-            60,
-            70,
-            80,
-            90,
-            100,
-          ]}
-          suffix="%"
-          onChange={(value) =>
-            onChange({
-              maxWidth: Number(value),
-            })
-          }
-        />
-      </SettingGroup></details>
+            <SelectField
+              label="Chiều rộng tối đa"
+              value={s.maxWidth}
+              options={[30, 40, 50, 60, 70, 80, 90, 100]}
+              suffix="%"
+              onChange={(value) =>
+                onChange({
+                  maxWidth: Number(value),
+                })
+              }
+            />
+          </SettingGroup>
+        </details>
       </details>
     </>
   );
 }
 
-
-export function SettingGroup({title,children,collapsible=true}){
-  const scope=useContext(CompactInspectorContext),ref=useRef(null);
-  const compact=Boolean(scope&&!scope.nested&&collapsible);
-  const advanced=/khung|padding|margin|khoảng cách|bố cục|tỷ lệ|hiệu ứng/i.test(title);
-  const nestedScope=useMemo(()=>scope?{...scope,nested:true}:null,[scope]);
-  const content=<CompactInspectorContext.Provider value={nestedScope}>{children}</CompactInspectorContext.Provider>;
-  useLayoutEffect(()=>{
-    if(!compact||!ref.current)return;
-    ref.current.open=!advanced&&scope.root.current?.querySelector('[data-compact-setting]')===ref.current;
-  },[scope,title,compact,advanced]);
-  if(compact)return <details name={scope.groupName} ref={ref} className="builder-setting-group compact-setting-group" data-compact-setting>
-    <summary><h3>{advanced?`Nâng cao · ${title}`:title}</h3></summary><div className="builder-setting-content">{content}</div>
-  </details>;
-  return <div className="builder-setting-group"><h3>{title}</h3><div className="builder-setting-content">{content}</div></div>;
+export function SettingGroup({ title, children, collapsible = true }) {
+  const scope = useContext(CompactInspectorContext),
+    ref = useRef(null);
+  const compact = Boolean(scope && !scope.nested && collapsible);
+  const advanced = /khung|padding|margin|khoảng cách|bố cục|tỷ lệ|hiệu ứng/i.test(title);
+  const nestedScope = useMemo(() => (scope ? { ...scope, nested: true } : null), [scope]);
+  const content = (
+    <CompactInspectorContext.Provider value={nestedScope}>{children}</CompactInspectorContext.Provider>
+  );
+  useLayoutEffect(() => {
+    if (!compact || !ref.current) return;
+    ref.current.open =
+      !advanced && scope.root.current?.querySelector("[data-compact-setting]") === ref.current;
+  }, [scope, title, compact, advanced]);
+  if (compact)
+    return (
+      <details
+        name={scope.groupName}
+        ref={ref}
+        className="builder-setting-group compact-setting-group"
+        data-compact-setting
+      >
+        <summary>
+          <h3>{advanced ? `Nâng cao · ${title}` : title}</h3>
+        </summary>
+        <div className="builder-setting-content">{content}</div>
+      </details>
+    );
+  return (
+    <div className="builder-setting-group">
+      <h3>{title}</h3>
+      <div className="builder-setting-content">{content}</div>
+    </div>
+  );
 }
 
-
-export function SelectField({
-  label,
-  value,
-  options,
-  suffix = "",
-  onChange,
-}) {
+export function SelectField({ label, value, options, suffix = "", onChange }) {
   const id = useId();
   const list = Array.isArray(options) ? options : [];
   const raw = value ?? "";
@@ -247,14 +261,8 @@ export function SelectField({
     <div className="builder-field">
       <label htmlFor={id}>{label}</label>
 
-      <select
-        id={id}
-        value={selectValue}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        {raw === "" && !hasValue && (
-          <option value="">—</option>
-        )}
+      <select id={id} value={selectValue} onChange={(e) => onChange(e.target.value)}>
+        {raw === "" && !hasValue && <option value="">—</option>}
         {extra}
         {list.map((option) => (
           <option key={String(option)} value={option}>
@@ -266,30 +274,36 @@ export function SelectField({
   );
 }
 
-
-
-
-
-export function SpacingControls({style={},onChange,kinds=['margin','padding']}) {
-  return kinds.map(kind=><fieldset className="builder-spacing" key={kind}><legend>{kind==='margin'?'Margin · Khoảng cách ngoài':'Padding · Khoảng đệm trong'}</legend><div className="builder-field-row">{[['Top','trên'],['Right','phải'],['Bottom','dưới'],['Left','trái']].map(([side,label])=><SelectField key={side} label={`${kind==='margin'?'Margin':'Padding'} ${label}`} value={style[kind+side]??''} options={['',...(kind==='margin'?[-80,-64,-48,-32,-24,-16,-12,-8,-4]:[]),...SPACE_OPTIONS]} suffix="px" onChange={value=>onChange({[kind+side]:value===''?'':Number(value)})}/>)}</div></fieldset>);
+export function SpacingControls({ style = {}, onChange, kinds = ["margin", "padding"] }) {
+  return kinds.map((kind) => (
+    <fieldset className="builder-spacing" key={kind}>
+      <legend>{kind === "margin" ? "Margin · Khoảng cách ngoài" : "Padding · Khoảng đệm trong"}</legend>
+      <div className="builder-field-row">
+        {[
+          ["Top", "trên"],
+          ["Right", "phải"],
+          ["Bottom", "dưới"],
+          ["Left", "trái"],
+        ].map(([side, label]) => (
+          <SelectField
+            key={side}
+            label={`${kind === "margin" ? "Margin" : "Padding"} ${label}`}
+            value={style[kind + side] ?? ""}
+            options={[
+              "",
+              ...(kind === "margin" ? [-80, -64, -48, -32, -24, -16, -12, -8, -4] : []),
+              ...SPACE_OPTIONS,
+            ]}
+            suffix="px"
+            onChange={(value) => onChange({ [kind + side]: value === "" ? "" : Number(value) })}
+          />
+        ))}
+      </div>
+    </fieldset>
+  ));
 }
 
-export function ColorField({ label, value, onChange }) {
-  const id = useId();
-  const hex = toSafeHexColor(value);
-  return (
-    <div className="builder-color-field">
-      <div>
-        <label htmlFor={id}>{label}</label>
-        <span>{value || hex}</span>
-      </div>
-
-      <input
-        id={id}
-        type="color"
-        value={hex}
-        onChange={(e) => onChange(e.target.value)}
-      />
-    </div>
-  );
+/** Visual Builder dùng chung ColorField của admin (bảng màu + mã màu + nút mặc định). */
+export function ColorField({ label, value, onChange, fallback }) {
+  return <SharedColorField label={label} value={value} onChange={onChange} fallback={fallback || toSafeHexColor(value)} />;
 }

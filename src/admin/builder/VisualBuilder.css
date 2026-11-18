@@ -65,7 +65,7 @@
 
 .builder-message.error {
   color: var(--ad-danger);
-  background: #fdecea;
+  background: var(--ad-danger-soft);
 }
 
 /* MAIN — cho preview chiếm nhiều không gian ngang hơn (gần kích thước thật) */
@@ -174,7 +174,7 @@
 .builder-section-text small {
   font-size: 12px;
   line-height: 1.6;
-  color: #765e69;
+  color: var(--ad-muted);
 }
 
 .builder-dot {
@@ -332,7 +332,7 @@
 /* ========== PRODUCT DETAIL (Chi tiết) ========== */
 .builder-preview--productdetail {
   padding: 0;
-  background: #fffafc;
+  background: var(--ad-surface-tint);
 }
 
 .builder-preview--productdetail > .product-detail,
@@ -476,20 +476,6 @@
 
 /* FIELDS */
 
-.builder-field {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.builder-field label,
-.builder-color-field label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ad-ink-soft);
-}
-
 /* Field visuals come from admin-theme.css, including standalone builder mounts. */
 .builder-field textarea { min-height: 88px; }
 
@@ -502,39 +488,7 @@
 .builder-help {
   font-size: 12px;
   line-height: 1.6;
-  color: #765e69;
-}
-
-/* COLOR */
-
-.builder-color-field {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.builder-color-field > div {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.builder-color-field span {
-  font-family: monospace;
-  font-size: 10px;
-  color: #967381;
-}
-
-.builder-color-field input[type="color"] {
-  width: 42px;
-  height: 32px;
-  padding: 3px;
-  border: 1px solid var(--ad-line);
-  border-radius:var(--ad-r-sm);
-  background: white;
-  cursor: pointer;
+  color: var(--ad-muted);
 }
 
 /* ALIGN */
@@ -549,8 +503,8 @@
   height: 34px;
   border: 1px solid var(--ad-line);
   border-radius:var(--ad-r-sm);
-  background: #fffafc;
-  color: #765464;
+  background: var(--ad-surface-tint);
+  color: var(--ad-muted);
   cursor: pointer;
   font-size: 14px;
 }
@@ -575,8 +529,8 @@
   gap: 8px;
   border: 1px solid var(--ad-line);
   border-radius: var(--ad-r-sm);
-  background: #fffafc;
-  color: #765464;
+  background: var(--ad-surface-tint);
+  color: var(--ad-muted);
   cursor: pointer;
   font-family: inherit;
   font-size: 12px;
@@ -594,7 +548,7 @@
   padding: 12px;
   border: 1px solid #f0e2e7;
   border-radius:var(--ad-r-md);
-  background: #fffafc;
+  background: var(--ad-surface-tint);
   display: flex;
   flex-direction: column;
   gap: 9px;
@@ -691,7 +645,7 @@
 .builder-preview--mobile [style*="--mobile-font-size"] { font-size: var(--mobile-font-size) !important; }
 
 .builder-frame-host { width: 100%; min-width: 0; overflow: auto; padding: 8px 0 16px; }
-.builder-preview-frame { display: block; border: 0; background: #fffafc; border-radius: 0; }
+.builder-preview-frame { display: block; border: 0; background: var(--ad-surface-tint); border-radius: 0; }
 
 /* Keep controls readable when the canvas is narrow. */
 .builder-canvas-head { height: auto; min-height: 46px; padding: 10px 12px; gap: 10px; flex-wrap: wrap; flex-shrink: 0; }
@@ -736,7 +690,7 @@
 .inspector-group .inspector-group { margin-inline:4px; }
 .inspector-group .builder-help { padding:0 12px; }
 .builder-section-search { display:grid; gap:6px; padding:12px; font-size:11px; color:#806371; }
-.builder-section-search input { width:100%; min-width:0; min-height:44px; border:1px solid var(--ad-line-strong); border-radius:var(--ad-r-md); padding:10px 12px; background:#fffafb; font:inherit; font-size:12px; }
+.builder-section-search input { width:100%; min-width:0; min-height:44px; border:1px solid var(--ad-line-strong); border-radius:var(--ad-r-md); padding:10px 12px; background:var(--ad-surface-tint); font:inherit; font-size:12px; }
 @media(min-width:1001px) and (max-width:1199px){ .builder-layout { grid-template-columns:220px minmax(0,1fr) 310px; } }
 @media(max-width:1000px){
  .visual-builder { height:auto; min-height:0; max-height:none; }
@@ -774,7 +728,7 @@
 .compact-setting-group > summary h3 { margin:0; color:#4a2f3d; font-size:13px; font-weight:600; letter-spacing:0; text-transform:none; }
 .compact-setting-group > .builder-setting-content { padding:14px 12px; gap:14px; }
 .compact-setting-group .builder-setting-group { margin:0; padding:10px 0; border:0; }
-.compact-setting-group .builder-field label,.compact-setting-group .builder-color-field label { font-size:13px; font-weight:600; color:var(--ad-ink-soft); }
+.compact-setting-group .builder-field label,.compact-setting-group .admin-field label { font-size:13px; font-weight:600; color:var(--ad-ink-soft); }
 .compact-setting-group .builder-field input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),.compact-setting-group .builder-field textarea,.compact-setting-group .builder-field select { font-size:14px; min-height:40px; background-color: var(--ad-surface); }
 .compact-setting-group .builder-help { font-size:11px; line-height:1.5; color:#806b76; }
 .compact-setting-group > summary:focus-visible,.inspector-element-picker select:focus-visible { outline:2px solid var(--ad-primary); outline-offset:-3px; }
@@ -810,7 +764,7 @@
 /* Keep the same editor rhythm in the inspector and the store workspace. */
 .builder-setting-content > label { font-size: 13px; line-height: 1.5; }
 .builder-setting-content > label:has(> :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea)) { display: grid; gap: 7px; }
-.builder-toolbar span { color: #765e69; }
+.builder-toolbar span { color: var(--ad-muted); }
 .builder-advanced-controls { padding: 0; }
 .builder-advanced-controls > summary { min-height: 42px; color: #67535e; }
 .builder-advanced-controls[open] { display: grid; gap: 12px; padding: 0 12px 12px; }
@@ -861,3 +815,10 @@
 }
 
 .petal-settings-preview { position:relative; height:240px; overflow:hidden; border:1px solid var(--ad-line); border-radius:var(--ad-r-md); background:var(--ad-page); }
+
+/* Khoảng cách chữ hướng dẫn (thay inline style trong bộ chỉnh trang chi tiết). */
+.builder-help[data-spacing] { display: block; }
+.builder-help[data-spacing="after"] { margin-bottom: 10px; }
+.builder-help[data-spacing="tight"] { margin-top: -6px; }
+.builder-help[data-spacing="flush"] { margin: 0; }
+.builder-field textarea { width: 100%; resize: vertical; font: inherit; }

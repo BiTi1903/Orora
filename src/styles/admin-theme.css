@@ -12,6 +12,8 @@
   --ad-surface-2: #f8eff3;
   --ad-line: #ead9e1;
   --ad-line-strong: #d6bcc9;
+  --ad-line-rose: #edcfdd;
+  --ad-surface-tint: #fffafc;
   --ad-ok: #1f7a4d;
   --ad-ok-soft: #e6f5ed;
   --ad-danger: #b42318;
@@ -161,3 +163,12 @@
 :is(.admin-shell,.admin-main,.visual-builder) input[role="switch"]:checked:not(:where([data-admin-preview] *)) { background-color:var(--ad-primary); border-color:var(--ad-primary); background-image:radial-gradient(circle,var(--ad-surface) 70%,transparent 72%); background-size:18px 18px; background-position:21px center; }
 @media(prefers-reduced-motion:reduce) { :is(.admin-shell,.admin-main,.visual-builder) input[role="switch"] { transition:none; } }
 @media(forced-colors:active) { :is(.admin-shell,.admin-main,.visual-builder) input[role="switch"] { appearance:auto; -webkit-appearance:auto; background-image:none!important; } }
+
+/* Unified field pattern: .admin-field (settings pages) and .builder-field (Visual Builder) share one look. */
+:where(.admin-shell, .admin-main, .admin-login, .visual-builder) :is(.admin-field, .builder-field) { min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+:where(.admin-shell, .admin-main, .admin-login, .visual-builder) :is(.admin-field, .builder-field) label { font-size: 13px; font-weight: 600; color: var(--ad-ink-soft); }
+:where(.admin-shell, .admin-main, .admin-login, .visual-builder) .admin-color-control { display: flex; align-items: center; gap: 5px; min-width: 0; }
+:where(.admin-shell, .admin-main, .admin-login, .visual-builder) .admin-color-control input[type="color"] { flex: 0 0 38px; width: 38px; height: 38px; min-height: 0; padding: 3px; border: 1px solid var(--ad-line); border-radius: var(--ad-r-sm); background: var(--ad-surface); cursor: pointer; }
+:where(.admin-shell, .admin-main, .admin-login, .visual-builder) .admin-color-control input:not([type="color"]) { flex: 1; min-width: 0; padding-inline: 8px; font-size: 13px; font-family: ui-monospace, monospace; }
+:where(.admin-shell, .admin-main, .admin-login, .visual-builder) .admin-color-reset { flex: 0 0 34px; height: 34px; border: 1px solid var(--ad-line); border-radius: var(--ad-r-sm); background: var(--ad-surface); color: var(--ad-muted); cursor: pointer; }
+:where(.admin-shell, .admin-main, .admin-login, .visual-builder) .admin-color-reset:hover { color: var(--ad-primary); border-color: var(--ad-primary-line); }

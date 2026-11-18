@@ -1,52 +1,553 @@
 import { chartDisplaySeries } from "../lib/analytics-demo";
 import { validAnalyticsReport } from "../lib/analytics";
-import { useEffect,useId,useState } from 'react';
-import { auth } from '../lib/firebaseAuth';
-import { formatVnd } from '../lib/commerce';
-const shortDay=day=>`${day.slice(8)}/${day.slice(5,7)}`;
-const compact=n=>new Intl.NumberFormat('vi-VN',{notation:'compact',maximumFractionDigits:1}).format(n);
-function DailyChart({series,fields,money=false,title}){
-  const [activeField,setActiveField]=useState(null);
-  const [guide,setGuide]=useState(()=>{try{return {enabled:true,color:"#b8446d",dash:"5 5",...JSON.parse(localStorage.getItem(`analytics-guide-${money?"money":"traffic"}`)||"{}")};}catch{return {enabled:true,color:"#b8446d",dash:"5 5"};}});
-  useEffect(()=>{try{localStorage.setItem(`analytics-guide-${money?"money":"traffic"}`,JSON.stringify(guide));}catch{/* Optional appearance preference. */}},[guide,money]);
-  const [activeDay,setActiveDay]=useState(null),[spacing,setSpacing]=useState(0),tooltipId=useId(),spacingId=useId();
-  const activeIndex=series.findIndex(day=>day.day===activeDay),active=series[activeIndex];
-  if(!series.some(day=>fields.some(field=>Number.isFinite(day[field.key]))))return <p className="analytics-empty">Chưa có dữ liệu trong khoảng này.</p>;
-  const peak=Math.max(1,...series.flatMap(day=>fields.map(field=>day[field.key]||0)));
-  const max=money?Math.max(1000,peak):Math.max(2,Math.ceil(peak/2)*2);
-  const plotWidth=spacing===0?600:Math.max(600,76+(series.length-1)*spacing);
-  const x=i=>54+i*((plotWidth-76)/Math.max(1,series.length-1)),y=n=>190-n/max*160;
-  const activeValue=active?.[activeField||fields[0].key];
-  const inspect=event=>{
-    const svg=event.currentTarget,matrix=svg.getScreenCTM();if(!matrix)return;
-    const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse());
-    if(point.x<54||point.x>plotWidth-22||point.y<30||point.y>190){setActiveDay(null);return;}
-    const index=Math.max(0,Math.min(series.length-1,Math.round((point.x-54)/(plotWidth-76)*Math.max(1,series.length-1))));
-    const day=series[index],available=fields.filter(field=>Number.isFinite(day[field.key]));
-    if(!available.length){setActiveDay(null);return;}
-    const nearest=available.reduce((best,field)=>Math.abs(y(day[field.key])-point.y)<Math.abs(y(day[best.key])-point.y)?field:best);
-    setActiveDay(day.day);setActiveField(nearest.key);
+import { useEffect, useId, useState } from "react";
+import { auth } from "../lib/firebaseAuth";
+import { formatVnd } from "../lib/commerce";
+const shortDay = (day) => `${day.slice(8)}/${day.slice(5, 7)}`;
+const compact = (n) =>
+  new Intl.NumberFormat("vi-VN", { notation: "compact", maximumFractionDigits: 1 }).format(n);
+function DailyChart({ series, fields, money = false, title }) {
+  const [activeField, setActiveField] = useState(null);
+  const [guide, setGuide] = useState(() => {
+    try {
+      return {
+        enabled: true,
+        color: "#b8446d",
+        dash: "5 5",
+        ...JSON.parse(localStorage.getItem(`analytics-guide-${money ? "money" : "traffic"}`) || "{}"),
+      };
+    } catch {
+      return { enabled: true, color: "#b8446d", dash: "5 5" };
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(`analytics-guide-${money ? "money" : "traffic"}`, JSON.stringify(guide));
+    } catch {
+      /* Optional appearance preference. */
+    }
+  }, [guide, money]);
+  const [activeDay, setActiveDay] = useState(null),
+    [spacing, setSpacing] = useState(0),
+    tooltipId = useId(),
+    spacingId = useId();
+  const activeIndex = series.findIndex((day) => day.day === activeDay),
+    active = series[activeIndex];
+  if (!series.some((day) => fields.some((field) => Number.isFinite(day[field.key]))))
+    return <p className="analytics-empty">Chưa có dữ liệu trong khoảng này.</p>;
+  const peak = Math.max(1, ...series.flatMap((day) => fields.map((field) => day[field.key] || 0)));
+  const max = money ? Math.max(1000, peak) : Math.max(2, Math.ceil(peak / 2) * 2);
+  const plotWidth = spacing === 0 ? 600 : Math.max(600, 76 + (series.length - 1) * spacing);
+  const x = (i) => 54 + i * ((plotWidth - 76) / Math.max(1, series.length - 1)),
+    y = (n) => 190 - (n / max) * 160;
+  const activeValue = active?.[activeField || fields[0].key];
+  const inspect = (event) => {
+    const svg = event.currentTarget,
+      matrix = svg.getScreenCTM();
+    if (!matrix) return;
+    const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse());
+    if (point.x < 54 || point.x > plotWidth - 22 || point.y < 30 || point.y > 190) {
+      setActiveDay(null);
+      return;
+    }
+    const index = Math.max(
+      0,
+      Math.min(
+        series.length - 1,
+        Math.round(((point.x - 54) / (plotWidth - 76)) * Math.max(1, series.length - 1)),
+      ),
+    );
+    const day = series[index],
+      available = fields.filter((field) => Number.isFinite(day[field.key]));
+    if (!available.length) {
+      setActiveDay(null);
+      return;
+    }
+    const nearest = available.reduce((best, field) =>
+      Math.abs(y(day[field.key]) - point.y) < Math.abs(y(day[best.key]) - point.y) ? field : best,
+    );
+    setActiveDay(day.day);
+    setActiveField(nearest.key);
   };
-  return <><details className="analytics-guide-controls"><summary>Kiểu đường X–Y</summary><label><input type="checkbox" role="switch" checked={guide.enabled} onChange={event=>setGuide({...guide,enabled:event.target.checked})}/>Hiện đường X–Y khi xem mốc</label><label>Màu đường<input aria-label={`Màu đường X–Y: ${title}`} type="color" value={guide.color} onChange={event=>setGuide({...guide,color:event.target.value})}/></label><label>Kiểu nét<select aria-label={`Kiểu nét X–Y: ${title}`} value={guide.dash} onChange={event=>setGuide({...guide,dash:event.target.value})}><option value="5 5">Nét đứt</option><option value="2 4">Chấm nhỏ</option><option value="">Nét liền</option></select></label></details><div className="analytics-zoom"><label htmlFor={spacingId}>Khoảng cách mốc</label><span>Sát</span><input id={spacingId} type="range" min="8" max="80" step="4" value={spacing||8} aria-label={`Khoảng cách mốc: ${title}`} onChange={event=>{setSpacing(Number(event.target.value));setActiveDay(null);}}/><span>Rộng</span><button type="button" className="admin-btn" onClick={()=>{setSpacing(0);setActiveDay(null);}}>Vừa khung</button></div><div className="analytics-chart-scroll" tabIndex="0" role="region" aria-label={`Cuộn ngang: ${title}`}><div className="analytics-plot" style={{width:spacing===0?'100%':`max(100%, ${plotWidth}px)`}} onMouseLeave={()=>setActiveDay(null)} onKeyDown={event=>{if(event.key==='Escape')setActiveDay(null);}}><svg className="analytics-chart" viewBox={`0 0 ${plotWidth} 230`} role="group" aria-label={title} onMouseMove={inspect}><title>{title}</title>{[0,.5,1].map(ratio=><g key={ratio}><line x1="54" x2={plotWidth-22} y1={y(max*ratio)} y2={y(max*ratio)} stroke="#ecdce3"/><text x="46" y={y(max*ratio)+4} textAnchor="end">{compact(max*ratio)}</text></g>)}{active&&guide.enabled&&Number.isFinite(activeValue)&&<g className="analytics-crosshair" pointerEvents="none" aria-hidden="true"><line x1={x(activeIndex)} x2={x(activeIndex)} y1="30" y2="190" stroke={guide.color} strokeDasharray={guide.dash}/><line x1="54" x2={plotWidth-22} y1={y(activeValue)} y2={y(activeValue)} stroke={guide.color} strokeDasharray={guide.dash}/><rect x={x(activeIndex)-28} y="200" width="56" height="22" rx="5" fill={guide.color}/><text className="analytics-crosshair-label" x={x(activeIndex)} y="215" textAnchor="middle">{shortDay(active.day)}</text></g>}{fields.map(field=><g key={field.key}>{series.reduce((segments,day,i)=>{
-    if(!Number.isFinite(day[field.key])){if(segments.at(-1)?.length)segments.push([]);return segments;}
-    if(!segments.length)segments.push([]);segments.at(-1).push(`${x(i)},${y(day[field.key])}`);return segments;
-  },[]).filter(segment=>segment.length).map((segment,i)=><polyline key={i} fill="none" stroke={field.color} strokeWidth="3" points={segment.join(' ')}/>)}{series.map((day,i)=>Number.isFinite(day[field.key])&&<g key={day.day}><circle cx={x(i)} cy={y(day[field.key])} r={activeDay===day.day?6:4} fill={field.color} pointerEvents="none"/><circle className="analytics-point-target" cx={x(i)} cy={y(day[field.key])} r="12" fill="transparent" tabIndex="0" role="button" aria-describedby={activeDay===day.day?tooltipId:undefined} aria-label={`${day.day}: ${field.label} ${money?formatVnd(day[field.key]):day[field.key]}`} onMouseEnter={()=>{setActiveDay(day.day);setActiveField(field.key);}} onFocus={()=>{setActiveDay(day.day);setActiveField(field.key);}} onBlur={()=>setActiveDay(null)} onClick={()=>{setActiveDay(day.day);setActiveField(field.key);}} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();setActiveDay(day.day);}}}/></g>)}</g>)}{series.map((_,i)=>i).filter(i=>i===0||i===series.length-1||i%Math.max(1,Math.ceil(series.length/Math.max(2,Math.floor(plotWidth/85))))===0) .map(i=><text style={guide.enabled&&activeDay===series[i].day?{visibility:"hidden"}:undefined} key={i} x={x(i)} y="216" textAnchor="middle">{shortDay(series[i].day)}</text>)}</svg>{active&&<div id={tooltipId} className="analytics-tooltip" role="tooltip" style={{left:`clamp(110px, ${x(activeIndex)/plotWidth*100}%, calc(100% - 110px))`}}><strong>{active.day.split('-').reverse().join('/')}</strong>{fields.map(field=><span key={field.key}><i style={{background:field.color}}/>{field.label}<b>{Number.isFinite(active[field.key])?(money?formatVnd(active[field.key]):active[field.key].toLocaleString('vi-VN')):'—'}</b></span>)}</div>}</div></div><div className="analytics-legend">{fields.map(field=><span key={field.key}><i style={{background:field.color}}/>{field.label}</span>)}</div></>;
+  return (
+    <>
+      <details className="analytics-guide-controls">
+        <summary>Kiểu đường X–Y</summary>
+        <label>
+          <input
+            type="checkbox"
+            role="switch"
+            checked={guide.enabled}
+            onChange={(event) => setGuide({ ...guide, enabled: event.target.checked })}
+          />
+          Hiện đường X–Y khi xem mốc
+        </label>
+        <label>
+          Màu đường
+          <input
+            aria-label={`Màu đường X–Y: ${title}`}
+            type="color"
+            value={guide.color}
+            onChange={(event) => setGuide({ ...guide, color: event.target.value })}
+          />
+        </label>
+        <label>
+          Kiểu nét
+          <select
+            aria-label={`Kiểu nét X–Y: ${title}`}
+            value={guide.dash}
+            onChange={(event) => setGuide({ ...guide, dash: event.target.value })}
+          >
+            <option value="5 5">Nét đứt</option>
+            <option value="2 4">Chấm nhỏ</option>
+            <option value="">Nét liền</option>
+          </select>
+        </label>
+      </details>
+      <div className="analytics-zoom">
+        <label htmlFor={spacingId}>Khoảng cách mốc</label>
+        <span>Sát</span>
+        <input
+          id={spacingId}
+          type="range"
+          min="8"
+          max="80"
+          step="4"
+          value={spacing || 8}
+          aria-label={`Khoảng cách mốc: ${title}`}
+          onChange={(event) => {
+            setSpacing(Number(event.target.value));
+            setActiveDay(null);
+          }}
+        />
+        <span>Rộng</span>
+        <button
+          type="button"
+          className="admin-btn"
+          onClick={() => {
+            setSpacing(0);
+            setActiveDay(null);
+          }}
+        >
+          Vừa khung
+        </button>
+      </div>
+      <div className="analytics-chart-scroll" tabIndex="0" role="region" aria-label={`Cuộn ngang: ${title}`}>
+        <div
+          className="analytics-plot"
+          style={{ width: spacing === 0 ? "100%" : `max(100%, ${plotWidth}px)` }}
+          onMouseLeave={() => setActiveDay(null)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") setActiveDay(null);
+          }}
+        >
+          <svg
+            className="analytics-chart"
+            viewBox={`0 0 ${plotWidth} 230`}
+            role="group"
+            aria-label={title}
+            onMouseMove={inspect}
+          >
+            <title>{title}</title>
+            {[0, 0.5, 1].map((ratio) => (
+              <g key={ratio}>
+                <line x1="54" x2={plotWidth - 22} y1={y(max * ratio)} y2={y(max * ratio)} stroke="#ecdce3" />
+                <text x="46" y={y(max * ratio) + 4} textAnchor="end">
+                  {compact(max * ratio)}
+                </text>
+              </g>
+            ))}
+            {active && guide.enabled && Number.isFinite(activeValue) && (
+              <g className="analytics-crosshair" pointerEvents="none" aria-hidden="true">
+                <line
+                  x1={x(activeIndex)}
+                  x2={x(activeIndex)}
+                  y1="30"
+                  y2="190"
+                  stroke={guide.color}
+                  strokeDasharray={guide.dash}
+                />
+                <line
+                  x1="54"
+                  x2={plotWidth - 22}
+                  y1={y(activeValue)}
+                  y2={y(activeValue)}
+                  stroke={guide.color}
+                  strokeDasharray={guide.dash}
+                />
+                <rect x={x(activeIndex) - 28} y="200" width="56" height="22" rx="5" fill={guide.color} />
+                <text className="analytics-crosshair-label" x={x(activeIndex)} y="215" textAnchor="middle">
+                  {shortDay(active.day)}
+                </text>
+              </g>
+            )}
+            {fields.map((field) => (
+              <g key={field.key}>
+                {series
+                  .reduce((segments, day, i) => {
+                    if (!Number.isFinite(day[field.key])) {
+                      if (segments.at(-1)?.length) segments.push([]);
+                      return segments;
+                    }
+                    if (!segments.length) segments.push([]);
+                    segments.at(-1).push(`${x(i)},${y(day[field.key])}`);
+                    return segments;
+                  }, [])
+                  .filter((segment) => segment.length)
+                  .map((segment, i) => (
+                    <polyline
+                      key={i}
+                      fill="none"
+                      stroke={field.color}
+                      strokeWidth="3"
+                      points={segment.join(" ")}
+                    />
+                  ))}
+                {series.map(
+                  (day, i) =>
+                    Number.isFinite(day[field.key]) && (
+                      <g key={day.day}>
+                        <circle
+                          cx={x(i)}
+                          cy={y(day[field.key])}
+                          r={activeDay === day.day ? 6 : 4}
+                          fill={field.color}
+                          pointerEvents="none"
+                        />
+                        <circle
+                          className="analytics-point-target"
+                          cx={x(i)}
+                          cy={y(day[field.key])}
+                          r="12"
+                          fill="transparent"
+                          tabIndex="0"
+                          role="button"
+                          aria-describedby={activeDay === day.day ? tooltipId : undefined}
+                          aria-label={`${day.day}: ${field.label} ${money ? formatVnd(day[field.key]) : day[field.key]}`}
+                          onMouseEnter={() => {
+                            setActiveDay(day.day);
+                            setActiveField(field.key);
+                          }}
+                          onFocus={() => {
+                            setActiveDay(day.day);
+                            setActiveField(field.key);
+                          }}
+                          onBlur={() => setActiveDay(null)}
+                          onClick={() => {
+                            setActiveDay(day.day);
+                            setActiveField(field.key);
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              setActiveDay(day.day);
+                            }
+                          }}
+                        />
+                      </g>
+                    ),
+                )}
+              </g>
+            ))}
+            {series
+              .map((_, i) => i)
+              .filter(
+                (i) =>
+                  i === 0 ||
+                  i === series.length - 1 ||
+                  i % Math.max(1, Math.ceil(series.length / Math.max(2, Math.floor(plotWidth / 85)))) === 0,
+              )
+              .map((i) => (
+                <text
+                  style={guide.enabled && activeDay === series[i].day ? { visibility: "hidden" } : undefined}
+                  key={i}
+                  x={x(i)}
+                  y="216"
+                  textAnchor="middle"
+                >
+                  {shortDay(series[i].day)}
+                </text>
+              ))}
+          </svg>
+          {active && (
+            <div
+              id={tooltipId}
+              className="analytics-tooltip"
+              role="tooltip"
+              style={{ left: `clamp(110px, ${(x(activeIndex) / plotWidth) * 100}%, calc(100% - 110px))` }}
+            >
+              <strong>{active.day.split("-").reverse().join("/")}</strong>
+              {fields.map((field) => (
+                <span key={field.key}>
+                  <i style={{ background: field.color }} />
+                  {field.label}
+                  <b>
+                    {Number.isFinite(active[field.key])
+                      ? money
+                        ? formatVnd(active[field.key])
+                        : active[field.key].toLocaleString("vi-VN")
+                      : "—"}
+                  </b>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="analytics-legend">
+        {fields.map((field) => (
+          <span key={field.key}>
+            <i style={{ background: field.color }} />
+            {field.label}
+          </span>
+        ))}
+      </div>
+    </>
+  );
 }
-export default function AnalyticsDashboard(){
-  const rangeId=useId();
-  const [days,setDays]=useState(7),[revision,setRevision]=useState(0),[liveData,setData]=useState(null),[busy,setBusy]=useState(true),[error,setError]=useState('');
-  useEffect(()=>{let alive=true;const controller=new AbortController();const timer=setTimeout(()=>{(async()=>{try{const token=await auth?.currentUser?.getIdToken();if(!token)throw Error('Vui lòng đăng nhập lại.');const response=await fetch(`/api/analytics?days=${days}`,{headers:{Authorization:`Bearer ${token}`},signal:controller.signal,cache:'no-store'});const result=await response.json().catch(()=>{throw Error("Chưa kết nối được API thống kê. Vui lòng thử lại sau.");});if(!response.ok)throw Error(result.message||'Chưa tải được thống kê.');if(!validAnalyticsReport(result,days))throw Error('Dữ liệu thống kê chưa đầy đủ hoặc không hợp lệ. Vui lòng tải lại.');if(alive)setData(result);}catch(cause){if(alive&&cause.name!=='AbortError')setError(cause.message);}finally{if(alive)setBusy(false);}})();},200);return()=>{alive=false;clearTimeout(timer);controller.abort();};},[days,revision]);
-  const data=liveData;
-  const series=data?.series||[],hasTraffic=series.some(day=>day.pageViews!=null),total=key=>series.reduce((sum,day)=>sum+(day[key]||0),0),maxClicks=Math.max(1,...(data?.products||[]).map(p=>p.clicks));
-  const chartSeries=chartDisplaySeries(series);
-  return <section className="analytics-dashboard"><div className="analytics-toolbar"><div><h2>Thống kê website & thanh toán</h2><p className="admin-muted">Theo ngày Việt Nam · Hôm nay chưa kết thúc.</p></div><div className="admin-actions"><div className="analytics-range"><label htmlFor={rangeId}>Khoảng thời gian</label><select id={rangeId} value={days} onChange={e=>{setBusy(true);setError('');setDays(Number(e.target.value));}}>{[...new Set([7,30,90,days])].sort((a,b)=>a-b).map(n=><option key={n} value={n}>{n} ngày gần nhất</option>)}</select></div><button type="button" className="admin-btn" aria-busy={busy} disabled={busy} onClick={()=>{setBusy(true);setError('');setData(null);setRevision(n=>n+1);}}>Làm mới</button></div></div>
-    <div className="analytics-period-zoom"><label htmlFor={`${rangeId}-zoom`}>Thu/phóng thời gian: <strong>{days} ngày gần nhất</strong></label><div><span>1 ngày</span><input id={`${rangeId}-zoom`} type="range" min="1" max="90" step="1" value={days} onChange={event=>{setBusy(true);setError('');setDays(Number(event.target.value));}}/><span>90 ngày</span><button type="button" className="admin-btn" onClick={()=>{if(days!==7){setBusy(true);setError('');setDays(7);}}}>Về 1 tuần</button></div></div>
-    {busy&&<p role="status">Đang tổng hợp thống kê…</p>}{error&&<p className="admin-error" role="alert">{error}</p>}
-    {data&&<><p className="admin-muted">Cập nhật lúc {new Date(data.updatedAt).toLocaleString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh"})}</p><div className="analytics-kpis">{[['Lượt xem trang',hasTraffic?total('pageViews').toLocaleString('vi-VN'):'—'],['Lượt bấm sản phẩm',hasTraffic?total('productClicks').toLocaleString('vi-VN'):'—'],['Giá trị đã thanh toán',formatVnd(total('paidAmount'))],['Đơn đã thanh toán',total('paidOrders').toLocaleString('vi-VN')]].map(([label,value])=><div className="admin-card" key={label}><span className="admin-muted">{label}</span><strong>{value}</strong></div>)}</div>
-    <div className="analytics-charts"><div className="admin-card"><h3>Lượt truy cập theo ngày</h3><DailyChart series={chartSeries} title="Lượt xem và khách theo ngày" fields={[{key:'pageViews',label:'Lượt xem trang',color:'#b8446d'},{key:'visitors',label:'Khách/ngày (ước tính)',color:'#6a89ae'}]}/></div><div className="admin-card"><h3>Giá trị đơn đã thanh toán (đ)</h3><DailyChart series={chartSeries} title="Giá trị đơn đã thanh toán theo ngày đặt" money fields={[{key:'paidAmount',label:'Giá trị đã thanh toán',color:'#b8446d'}]}/><p className="admin-muted">Theo ngày đặt đơn, trạng thái thanh toán hiện tại; gồm phí giao hàng, loại đơn đã hủy. Không phải sao kê tiền nhận trong ngày.</p></div></div>
-    {total('unpricedPaid')>0&&<p className="admin-context-note">Có {total('unpricedPaid')} đơn đã đánh dấu thanh toán nhưng chưa chốt tổng tiền; chưa cộng vào biểu đồ tiền.</p>}
-    <div className="admin-card"><h3>Sản phẩm được quan tâm</h3><p className="admin-muted">Tối đa 20 sản phẩm, xếp theo lượt bấm trong khoảng đã chọn.</p>{!data.products.length?<p className="admin-muted">Chưa ghi nhận lượt bấm hoặc xem sản phẩm trong khoảng này.</p>:<div className="analytics-products">{data.products.map((product,index)=><div key={product.id||product.path}><div className="analytics-product-title"><span>{index+1}. {product.name}</span><strong>{product.clicks} lượt bấm · {product.views} lượt xem</strong></div><div className="analytics-bar"><i style={{width:`${product.clicks/maxClicks*100}%`}}/></div></div>)}</div>}</div>
-    <p className="admin-muted">Dấu “—” là chưa có dữ liệu thu thập. Khách/ngày ước tính theo trình duyệt, không phải số người chính xác. Không tính trang admin và yêu cầu tự động được nhận diện; khách chặn thống kê có thể không được ghi nhận. {data.recordedSince?`Dữ liệu truy cập bắt đầu từ ${data.recordedSince.split("-").reverse().join("/")}.`:'Chưa có dữ liệu truy cập; website sẽ tự ghi nhận khi khách ghé thăm.'}</p>
-    <details className="admin-filter-panel"><summary>Xem số liệu từng ngày</summary><div className="analytics-data-scroll"><table className="admin-table"><thead><tr><th>Ngày</th><th>Lượt xem</th><th>Khách ước tính</th><th>Bấm sản phẩm</th><th>Đã thanh toán</th></tr></thead><tbody>{[...series].reverse().map(day=><tr key={day.day}><td>{day.day}</td><td>{day.pageViews ?? '—'}</td><td>{day.visitors ?? '—'}</td><td>{day.productClicks ?? '—'}</td><td>{formatVnd(day.paidAmount)}</td></tr>)}</tbody></table></div></details></>}
-  </section>;
+export default function AnalyticsDashboard() {
+  const rangeId = useId();
+  const [days, setDays] = useState(7),
+    [revision, setRevision] = useState(0),
+    [liveData, setData] = useState(null),
+    [busy, setBusy] = useState(true),
+    [error, setError] = useState("");
+  useEffect(() => {
+    let alive = true;
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      (async () => {
+        try {
+          const token = await auth?.currentUser?.getIdToken();
+          if (!token) throw Error("Vui lòng đăng nhập lại.");
+          const response = await fetch(`/api/analytics?days=${days}`, {
+            headers: { Authorization: `Bearer ${token}` },
+            signal: controller.signal,
+            cache: "no-store",
+          });
+          const result = await response.json().catch(() => {
+            throw Error("Chưa kết nối được API thống kê. Vui lòng thử lại sau.");
+          });
+          if (!response.ok) throw Error(result.message || "Chưa tải được thống kê.");
+          if (!validAnalyticsReport(result, days))
+            throw Error("Dữ liệu thống kê chưa đầy đủ hoặc không hợp lệ. Vui lòng tải lại.");
+          if (alive) setData(result);
+        } catch (cause) {
+          if (alive && cause.name !== "AbortError") setError(cause.message);
+        } finally {
+          if (alive) setBusy(false);
+        }
+      })();
+    }, 200);
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [days, revision]);
+  const data = liveData;
+  const series = data?.series || [],
+    hasTraffic = series.some((day) => day.pageViews != null),
+    total = (key) => series.reduce((sum, day) => sum + (day[key] || 0), 0),
+    maxClicks = Math.max(1, ...(data?.products || []).map((p) => p.clicks));
+  const chartSeries = chartDisplaySeries(series);
+  return (
+    <section className="analytics-dashboard">
+      <div className="analytics-toolbar">
+        <div>
+          <h2>Thống kê website & thanh toán</h2>
+          <p className="admin-muted">Theo ngày Việt Nam · Hôm nay chưa kết thúc.</p>
+        </div>
+        <div className="admin-actions">
+          <div className="analytics-range">
+            <label htmlFor={rangeId}>Khoảng thời gian</label>
+            <select
+              id={rangeId}
+              value={days}
+              onChange={(e) => {
+                setBusy(true);
+                setError("");
+                setDays(Number(e.target.value));
+              }}
+            >
+              {[...new Set([7, 30, 90, days])]
+                .sort((a, b) => a - b)
+                .map((n) => (
+                  <option key={n} value={n}>
+                    {n} ngày gần nhất
+                  </option>
+                ))}
+            </select>
+          </div>
+          <button
+            type="button"
+            className="admin-btn"
+            aria-busy={busy}
+            disabled={busy}
+            onClick={() => {
+              setBusy(true);
+              setError("");
+              setData(null);
+              setRevision((n) => n + 1);
+            }}
+          >
+            Làm mới
+          </button>
+        </div>
+      </div>
+      <div className="analytics-period-zoom">
+        <label htmlFor={`${rangeId}-zoom`}>
+          Thu/phóng thời gian: <strong>{days} ngày gần nhất</strong>
+        </label>
+        <div>
+          <span>1 ngày</span>
+          <input
+            id={`${rangeId}-zoom`}
+            type="range"
+            min="1"
+            max="90"
+            step="1"
+            value={days}
+            onChange={(event) => {
+              setBusy(true);
+              setError("");
+              setDays(Number(event.target.value));
+            }}
+          />
+          <span>90 ngày</span>
+          <button
+            type="button"
+            className="admin-btn"
+            onClick={() => {
+              if (days !== 7) {
+                setBusy(true);
+                setError("");
+                setDays(7);
+              }
+            }}
+          >
+            Về 1 tuần
+          </button>
+        </div>
+      </div>
+      {busy && <p role="status">Đang tổng hợp thống kê…</p>}
+      {error && (
+        <p className="admin-error" role="alert">
+          {error}
+        </p>
+      )}
+      {data && (
+        <>
+          <p className="admin-muted">
+            Cập nhật lúc {new Date(data.updatedAt).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}
+          </p>
+          <div className="analytics-kpis">
+            {[
+              ["Lượt xem trang", hasTraffic ? total("pageViews").toLocaleString("vi-VN") : "—"],
+              ["Lượt bấm sản phẩm", hasTraffic ? total("productClicks").toLocaleString("vi-VN") : "—"],
+              ["Giá trị đã thanh toán", formatVnd(total("paidAmount"))],
+              ["Đơn đã thanh toán", total("paidOrders").toLocaleString("vi-VN")],
+            ].map(([label, value]) => (
+              <div className="admin-card" key={label}>
+                <span className="admin-muted">{label}</span>
+                <strong>{value}</strong>
+              </div>
+            ))}
+          </div>
+          <div className="analytics-charts">
+            <div className="admin-card">
+              <h3>Lượt truy cập theo ngày</h3>
+              <DailyChart
+                series={chartSeries}
+                title="Lượt xem và khách theo ngày"
+                fields={[
+                  { key: "pageViews", label: "Lượt xem trang", color: "#b8446d" },
+                  { key: "visitors", label: "Khách/ngày (ước tính)", color: "#6a89ae" },
+                ]}
+              />
+            </div>
+            <div className="admin-card">
+              <h3>Giá trị đơn đã thanh toán (đ)</h3>
+              <DailyChart
+                series={chartSeries}
+                title="Giá trị đơn đã thanh toán theo ngày đặt"
+                money
+                fields={[{ key: "paidAmount", label: "Giá trị đã thanh toán", color: "#b8446d" }]}
+              />
+              <p className="admin-muted">
+                Theo ngày đặt đơn, trạng thái thanh toán hiện tại; gồm phí giao hàng, loại đơn đã hủy. Không
+                phải sao kê tiền nhận trong ngày.
+              </p>
+            </div>
+          </div>
+          {total("unpricedPaid") > 0 && (
+            <p className="admin-context-note">
+              Có {total("unpricedPaid")} đơn đã đánh dấu thanh toán nhưng chưa chốt tổng tiền; chưa cộng vào
+              biểu đồ tiền.
+            </p>
+          )}
+          <div className="admin-card">
+            <h3>Sản phẩm được quan tâm</h3>
+            <p className="admin-muted">Tối đa 20 sản phẩm, xếp theo lượt bấm trong khoảng đã chọn.</p>
+            {!data.products.length ? (
+              <p className="admin-muted">Chưa ghi nhận lượt bấm hoặc xem sản phẩm trong khoảng này.</p>
+            ) : (
+              <div className="analytics-products">
+                {data.products.map((product, index) => (
+                  <div key={product.id || product.path}>
+                    <div className="analytics-product-title">
+                      <span>
+                        {index + 1}. {product.name}
+                      </span>
+                      <strong>
+                        {product.clicks} lượt bấm · {product.views} lượt xem
+                      </strong>
+                    </div>
+                    <div className="analytics-bar">
+                      <i style={{ width: `${(product.clicks / maxClicks) * 100}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <p className="admin-muted">
+            Dấu “—” là chưa có dữ liệu thu thập. Khách/ngày ước tính theo trình duyệt, không phải số người
+            chính xác. Không tính trang admin và yêu cầu tự động được nhận diện; khách chặn thống kê có thể
+            không được ghi nhận.{" "}
+            {data.recordedSince
+              ? `Dữ liệu truy cập bắt đầu từ ${data.recordedSince.split("-").reverse().join("/")}.`
+              : "Chưa có dữ liệu truy cập; website sẽ tự ghi nhận khi khách ghé thăm."}
+          </p>
+          <details className="admin-filter-panel">
+            <summary>Xem số liệu từng ngày</summary>
+            <div className="analytics-data-scroll">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Ngày</th>
+                    <th>Lượt xem</th>
+                    <th>Khách ước tính</th>
+                    <th>Bấm sản phẩm</th>
+                    <th>Đã thanh toán</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...series].reverse().map((day) => (
+                    <tr key={day.day}>
+                      <td>{day.day}</td>
+                      <td>{day.pageViews ?? "—"}</td>
+                      <td>{day.visitors ?? "—"}</td>
+                      <td>{day.productClicks ?? "—"}</td>
+                      <td>{formatVnd(day.paidAmount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
+        </>
+      )}
+    </section>
+  );
 }

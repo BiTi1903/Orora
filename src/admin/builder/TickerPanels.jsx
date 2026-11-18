@@ -1,6 +1,7 @@
 import { DEFAULT_TICKER } from "./defaults";
 import { toCss } from "../../lib/typography";
-import { SettingGroup, StyleTypographyBlock } from "./ui";
+import { SettingGroup, StyleTypographyBlock, ColorField } from "./ui";
+import { BUILDER_COLOR_DEFAULTS } from "../controls/color-defaults";
 
 export function TickerPreview({ ticker, selected, onSelect }) {
   const words = ticker.marqueeWords?.length ? ticker.marqueeWords : DEFAULT_TICKER.marqueeWords;
@@ -57,14 +58,12 @@ export function TickerSettings({ selected, data, ticker, onChange, onStyleChange
   if (selected === "band" || data.type === "tickerBand") {
     return (
       <SettingGroup title="Nền dải">
-        <div className="builder-field">
-          <label>Màu nền</label>
-          <input
-            type="color"
-            value={styles.band?.color || "#fffafc"}
-            onChange={(e) => onChange({ bandColor: e.target.value })}
-          />
-        </div>
+        <ColorField
+          label="Màu nền"
+          value={styles.band?.color}
+          fallback={BUILDER_COLOR_DEFAULTS.tickerBand}
+          onChange={(bandColor) => onChange({ bandColor })}
+        />
       </SettingGroup>
     );
   }

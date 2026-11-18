@@ -1,5 +1,6 @@
 import MobileImageSettings from "./MobileImageSettings";
-import { SettingGroup, SelectField, StyleTypographyBlock, SpacingControls } from "./ui";
+import { SettingGroup, SelectField, StyleTypographyBlock, SpacingControls, ColorField } from "./ui";
+import { BUILDER_COLOR_DEFAULTS } from "../controls/color-defaults";
 
 export function CollectionSettings({
   selected,
@@ -83,23 +84,12 @@ export function CollectionSettings({
               onStyleChange({ borderWidth: Number(value) })
             }
           />
-          <div className="builder-field">
-            <label>Màu viền</label>
-            <input
-              type="color"
-              value={layout.borderColor || "#ffffff"}
-              onChange={(e) =>
-                onStyleChange({ borderColor: e.target.value })
-              }
-              style={{
-                width: 48,
-                height: 32,
-                padding: 0,
-                border: "none",
-                cursor: "pointer",
-              }}
-            />
-          </div>
+          <ColorField
+            label="Màu viền"
+            value={layout.borderColor}
+            fallback={BUILDER_COLOR_DEFAULTS.collectionBorder}
+            onChange={(borderColor) => onStyleChange({ borderColor })}
+          />
         </SettingGroup>
 
         <SpacingControls style={layout} onChange={onStyleChange} kinds={["padding","margin"]}/>
