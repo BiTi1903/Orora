@@ -17,10 +17,12 @@
   --ad-ok: #1f7a4d;
   --ad-ok-soft: #e6f5ed;
   --ad-danger: #b42318;
-  --ad-danger-hover: #922018;
+  --ad-danger-action: var(--ad-primary-strong);
+  --ad-danger-action-hover: #7d2445;
+  --ad-danger-action-tint: var(--ad-primary-soft);
+  --ad-danger-action-border: var(--ad-line-rose);
   --ad-on-danger: #fff;
   --ad-danger-soft: #fdecea;
-  --ad-danger-line: #efc0ba;
   --ad-r-sm: 8px;
   --ad-r-md: 12px;
   --ad-r-lg: 16px;

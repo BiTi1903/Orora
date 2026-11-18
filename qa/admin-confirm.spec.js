@@ -20,7 +20,7 @@ test('admin confirmation cancels with Escape and returns focus before allowing a
   await page.keyboard.press("Enter");
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole('button', { name: 'Hủy' })).toBeFocused();
-  await expect(dialog.getByRole('button', { name: 'Xóa', exact: true })).toHaveCSS('background-color', 'rgb(180, 35, 24)');
+  await expect(dialog.getByRole('button', { name: 'Xóa', exact: true })).toHaveCSS('background-color', 'rgb(154, 51, 88)');
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
   await expect(page.getByRole('status')).toHaveText('Đã hủy');

@@ -91,8 +91,8 @@
 .admin-btn:disabled { opacity: 0.6; cursor: default; }
 .admin-btn.primary { color: var(--ad-surface); border-color: transparent; background: var(--ad-primary); box-shadow: none; }
 .admin-btn.primary:hover:not(:disabled) { background: var(--ad-primary-strong); }
-.admin-btn.danger { color: var(--ad-danger); border-color: var(--ad-danger-line); }
-.admin-btn.danger:hover:not(:disabled) { background: var(--ad-danger-soft); }
+.admin-btn.danger { color: var(--ad-danger-action); border-color: var(--ad-danger-action-border); }
+.admin-btn.danger:hover:not(:disabled) { background: var(--ad-danger-action-tint); }
 .admin-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* ---- bảng ---- */
@@ -647,8 +647,8 @@
 .admin-confirm-message { margin: 0 0 18px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .admin-confirm-dialog .admin-actions { justify-content: flex-end; }
 
-.admin-confirm-dialog .admin-btn.danger { background: var(--ad-danger); color: var(--ad-on-danger); border-color: var(--ad-danger); }
-.admin-confirm-dialog .admin-btn.danger:hover:not(:disabled) { background: var(--ad-danger-hover); border-color: var(--ad-danger-hover); }
+.admin-confirm-dialog .admin-btn.danger { background: var(--ad-danger-action); color: var(--ad-on-danger); border-color: var(--ad-danger-action); }
+.admin-confirm-dialog .admin-btn.danger:hover:not(:disabled) { background: var(--ad-danger-action-hover); border-color: var(--ad-danger-action-hover); }
 
 .admin-today ul { padding-left:0; list-style:none; display:grid; gap:8px; }
 .admin-today li,.admin-order-phone { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }

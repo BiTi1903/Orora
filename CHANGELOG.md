@@ -1,3 +1,9 @@
+## 18/11/2026 — Đổi nút đỏ sang hồng đồng bộ với kính lỏng
+
+- Nút thao tác nguy hiểm và nút xác nhận admin dùng màu hồng của theme, hồng nhạt khi rê chuột trên nút viền và hồng đậm cho nút nền. Thông báo lỗi giữ biến riêng.
+- Kiểm tra: 4 bài Playwright xác nhận admin tại 390px đạt.
+- Database: giữ nguyên dữ liệu, schema và rules.
+
 ## 18/11/2026 — Bỏ khung thông tin cạnh nút mua
 
 - Bỏ khung thanh toán, giao hàng, ước tính phí theo tỉnh và đổi trả cạnh nút mua trên trang chi tiết. Xóa component, CSS và hai trường chỉnh riêng của khung trong Visual Builder.
