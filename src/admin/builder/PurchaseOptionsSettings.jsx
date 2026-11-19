@@ -131,7 +131,9 @@ export default function PurchaseOptionsSettings({ value = {}, onChange, initialG
       <InspectorGroup title="Màu và kiểu chữ các nút">
         <SettingGroup title="Màu nền nút mua hàng">
           {[
-            ["websiteBackground", "Website"],
+            ["websiteBackground", "Nút Mua ngay (Website)"],
+            ["addToCartBackground", "Nút Thêm vào giỏ"],
+            ["addToCartBorderColor", "Viền nút Thêm vào giỏ"],
             ["tiktokBackground", "TikTok"],
             ["facebookBackground", "Facebook"],
           ].map(([key, label]) => (
@@ -139,12 +141,17 @@ export default function PurchaseOptionsSettings({ value = {}, onChange, initialG
               key={key}
               label={label}
               value={value[key]}
-              fallback={PURCHASE_BUTTON_COLOR_DEFAULTS[key]}
+              fallback={key === "addToCartBackground" ? "#fff0f5" : key === "addToCartBorderColor" ? "#efd7e1" : PURCHASE_BUTTON_COLOR_DEFAULTS[key]}
               onChange={(next) => onChange({ [key]: next })}
             />
           ))}
         </SettingGroup>
         <StyleTypographyBlock style={value} onStyleChange={onChange} title="Kiểu chữ chung nút mua hàng" />
+        <StyleTypographyBlock
+          style={value.addToCartStyle || {}}
+          onStyleChange={(patch) => onChange({ addToCartStyle: { ...value.addToCartStyle, ...patch } })}
+          title="Chữ riêng nút Thêm vào giỏ"
+        />
         <StyleTypographyBlock
           style={value.facebookStyle || {}}
           onStyleChange={(patch) => onChange({ facebookStyle: { ...value.facebookStyle, ...patch } })}
