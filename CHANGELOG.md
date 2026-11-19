@@ -1,3 +1,15 @@
+## 19/11/2026 — Chuyển sang màn hình Thử lại khi phản hồi kiểm tra quyền admin thiếu danh sách quyền
+
+- **Lý do**: Khi frontend và API lệch phiên bản dẫn tới phản hồi kiểm tra quyền thiếu trường danh sách quyền, giao diện admin trước đó tự mặc định quyền đầy đủ khiến nhân viên chỉ quản lý đơn có thể mở màn hình chỉnh sửa nội dung rồi mới gặp lỗi lúc lưu.
+- **Thay đổi chính**:
+  - **Fail-closed tại cổng vào quản trị (`src/admin/AdminApp.jsx`)**: Bỏ mặc định quyền đầy đủ; nếu phản hồi kiểm tra quyền thiếu thông tin quyền thì hiển thị màn hình "Thử lại" hiện có thay vì mở khung quản trị.
+  - **Cập nhật kiểm thử giao diện (`qa/admin-navigation.spec.js`, `qa/admin-appearance.spec.js`)**: Cập nhật dữ liệu giả lập trả đầy đủ quyền và bổ sung kịch bản kiểm tra màn hình "Thử lại" khi thiếu quyền.
+- **File / khu vực liên quan**: `src/admin/AdminApp.jsx`, `qa/admin-navigation.spec.js`, `qa/admin-appearance.spec.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **247/247** test Node đạt, `eslint .` 0 lỗi, `vite build` 0 cảnh báo, giới hạn bundle đạt (`425.767` bytes / `138.214` gzip bytes).
+  - Playwright (`width-390`): **9/9** test đạt trên `qa/admin-appearance.spec.js` (7/7) và `qa/admin-navigation.spec.js` (2/2).
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu.
+
 ## 19/11/2026 — Chặn hiển thị mục ghi Firestore cho tài khoản thiếu quyền đầy đủ, đồng bộ quyền gửi thử email đơn và tắt vòng sáng khi tắt hiệu ứng nhấn
 
 - **Lý do**: Khắc phục 3 điểm phát hiện sau đợt review: (1) tài khoản chỉ có quyền đơn hàng vẫn thấy các mục ghi trực tiếp Firestore (Sản phẩm, Trang chủ, Cửa hàng, Phí vận chuyển, Chat AI) rồi mới lỗi khi lưu; (2) admin đầy đủ được cấp quyền qua Firebase claim hoặc `adminUsers.enabled` bị từ chối 403 khi bấm Gửi thử email từ đơn hàng thật; (3) tắt hiệu ứng nhấn trong Visual Builder vẫn còn vòng sáng 420ms ở nút "Mua ngay".

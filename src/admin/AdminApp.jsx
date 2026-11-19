@@ -27,21 +27,21 @@ const GROUPS = [
   { title: "Khách hàng", items: [["newsletter", "Email"], ["chat", "Chat AI"], ["export", "Xuất danh sách email"]] },
 ];
 
-const FULL_PERMISSIONS = { orders: true, newsletter: true, full: true };
+const EMPTY_PERMISSIONS = { orders: false, newsletter: false, full: false };
 const tabAllowed = (key, permissions) => {
-  if (key === "newsletter" || key === "export") return Boolean(permissions.newsletter);
-  if (key === "orders" || key === "inventory" || key === "dashboard") return Boolean(permissions.orders);
-  return Boolean(permissions.full);
+  if (key === "newsletter" || key === "export") return Boolean(permissions?.newsletter);
+  if (key === "orders" || key === "inventory" || key === "dashboard") return Boolean(permissions?.orders);
+  return Boolean(permissions?.full);
 };
 
 export default function AdminApp() {
   const [user, setUser] = useState(() => auth ? undefined : null);
-  const [access, setAccess] = useState({ status: "idle", error: "", check: 0, permissions: FULL_PERMISSIONS });
+  const [access, setAccess] = useState({ status: "idle", error: "", check: 0, permissions: null });
   useEffect(() => {
     if (!auth) return;
     return onAuthStateChanged(auth, (nextUser) => {
       setUser(nextUser);
-      setAccess((prev) => ({ status: nextUser ? "checking" : "idle", error: "", check: prev.check + 1, permissions: FULL_PERMISSIONS }));
+      setAccess((prev) => ({ status: nextUser ? "checking" : "idle", error: "", check: prev.check + 1, permissions: null }));
     });
   }, []);
   useEffect(() => {
@@ -49,28 +49,36 @@ export default function AdminApp() {
     const controller = new AbortController();
     orderRequest(null, { whoami: "1" }, { signal: controller.signal })
       .then((data) => {
-        if (!controller.signal.aborted) {
-          const permissions = data?.permissions ? { orders: Boolean(data.permissions.orders), newsletter: Boolean(data.permissions.newsletter), full: Boolean(data.permissions.full) } : FULL_PERMISSIONS;
-          setAccess((prev) => ({ ...prev, status: "ok", error: "", permissions }));
+        if (controller.signal.aborted) return;
+        const raw = data?.permissions;
+        if (!raw || typeof raw !== "object") {
+          setAccess((prev) => ({ ...prev, status: "error", error: "Phản hồi kiểm tra quyền chưa đầy đủ. Vui lòng thử lại hoặc tải lại trang.", permissions: null }));
+          return;
         }
+        const permissions = { orders: raw.orders === true, newsletter: raw.newsletter === true, full: raw.full === true };
+        if (!permissions.orders && !permissions.newsletter && !permissions.full) {
+          setAccess((prev) => ({ ...prev, status: "denied", error: "Tài khoản này chưa được cấp quyền quản trị.", permissions: null }));
+          return;
+        }
+        setAccess((prev) => ({ ...prev, status: "ok", error: "", permissions }));
       })
       .catch((error) => {
         if (controller.signal.aborted) return;
-        setAccess((prev) => ({ ...prev, status: error.status === 403 || error.status === 401 ? "denied" : "error", error: error.message || "Không xác minh được quyền quản trị." }));
+        setAccess((prev) => ({ ...prev, status: error.status === 403 || error.status === 401 ? "denied" : "error", error: error.message || "Không xác minh được quyền quản trị.", permissions: null }));
       });
     return () => controller.abort();
   }, [user, access.check]);
 
   if (user === undefined || (user && access.status === "checking")) return <div className="admin-login"><p className="admin-muted">Đang kiểm tra quyền quản trị...</p></div>;
   if (!user) return <AdminLogin />;
-  if (access.status === "denied" || access.status === "error") {
+  if (access.status !== "ok" || !access.permissions) {
     return <div className="admin-login"><div className="admin-login-card admin-form">
       <div className="admin-brand">ORORA</div>
       <p className="admin-error" role="alert">{access.error || "Tài khoản này chưa được cấp quyền quản trị."}</p>
       <p className="admin-muted">Email: {user.email || "—"}</p>
       <p className="admin-muted">UID: <code>{user.uid}</code></p>
       <div className="admin-actions">
-        <button type="button" className="admin-btn" onClick={() => setAccess((prev) => ({ status: "checking", error: "", check: prev.check + 1, permissions: FULL_PERMISSIONS }))}>Thử lại</button>
+        <button type="button" className="admin-btn" onClick={() => setAccess((prev) => ({ status: "checking", error: "", check: prev.check + 1, permissions: null }))}>Thử lại</button>
         <button type="button" className="admin-btn primary" onClick={() => signOut(auth)}>Đăng xuất</button>
       </div>
     </div></div>;
@@ -91,7 +99,7 @@ const initialAdminTab = (allowedTabs) => {
   return allowedTabs[0] || "dashboard";
 };
 
-function AdminWorkspace({ user, permissions = FULL_PERMISSIONS }) {
+function AdminWorkspace({ user, permissions = EMPTY_PERMISSIONS }) {
   const confirm = useConfirm();
   const visibleGroups = GROUPS.map((group) => ({ ...group, items: group.items.filter(([key]) => tabAllowed(key, permissions)) })).filter((group) => group.items.length > 0);
   const allowedTabs = visibleGroups.flatMap((group) => group.items.map(([key]) => key));

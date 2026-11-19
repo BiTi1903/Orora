@@ -9,7 +9,7 @@ async function admin(page){
   if(url.pathname==='/api/analytics')data={updatedAt:1794800000000,recordedSince:null,products:[],series:Array.from({length:Number(url.searchParams.get('days')||7)},(_,i)=>({day:`2026-10-${String(i+1).padStart(2,'0')}`,pageViews:10+i,visitors:5,productClicks:2,paidAmount:250000,paidOrders:1,unpricedPaid:0}))};
   if(url.pathname==='/api/inventory')data=url.searchParams.has('pending')?{pending:{},nextCursor:null}:{items:products.map(p=>({...p,quantity:25})),nextCursor:null};
   if(url.pathname==='/api/addresses')data={items:[{code:'01',name:'Hà Nội'}]};
-  if(url.pathname==='/api/admin-orders')data=url.searchParams.has('mailHistory')?{mails:[],scannedOrders:1,nextCursor:null}:url.searchParams.has('id')?{order,mails:[],activities:[]}:{orders:[order],nextCursor:null};
+  if(url.pathname==='/api/admin-orders')data=url.searchParams.has('whoami')?{ok:true,uid:'appearance-admin',permissions:{orders:true,newsletter:true,full:true}}:url.searchParams.has('mailHistory')?{mails:[],scannedOrders:1,nextCursor:null}:url.searchParams.has('id')?{order,mails:[],activities:[]}:{orders:[order],nextCursor:null};
   if(url.pathname==='/api/chat')data={configured:true};
   return route.fulfill({json:data});
  });
