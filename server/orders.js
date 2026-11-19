@@ -10,7 +10,7 @@ import { mailActor, resolveMailActors } from "./mail-actor.js";
 import { sendOrderConfirmation, validOrderEmail } from "./order-mail.js";
 import { createHash } from "node:crypto";
 import { parseVndPrice, sameVndPrice, availablePaymentMethods, PAYMENT_LABELS } from "../src/lib/commerce.js";
-import { firebaseAuthFailure } from "./firebase-auth-error.js";
+import { requireAdmin } from "./admin-auth.js";
 import { rateLimitSalt, reserveBudgetOrAllow } from "./request-limits.js";
 
 const uuid = (value) => typeof value === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value);
@@ -26,6 +26,26 @@ function readBody(req, env, maxBytes = 8000) {
   if (!body || Buffer.byteLength(JSON.stringify(body)) > maxBytes) throw Object.assign(new Error("Dữ liệu không hợp lệ."), { status: 400 });
   return body;
 }
+const NEXT_ORDER_STATUSES = {
+  new: ["confirmed", "cancelled"],
+  confirmed: ["shipping", "completed", "cancelled"],
+  shipping: ["completed", "cancelled"],
+  completed: [],
+  cancelled: [],
+};
+const orderCreatedPayload = (result, mailStatus) => ({
+  code: result.code,
+  productName: result.product.name,
+  quantity: result.quantity,
+  variantLabel: result.product.variantLabel || "",
+  variantId: result.product.variantId || "",
+  mailStatus,
+  subtotal: result.subtotal,
+  shippingFee: result.shippingFee ?? null,
+  totalAmount: result.totalAmount ?? null,
+  paymentMethod: result.paymentMethod,
+  message: result.shippingFee == null ? "Đã nhận đơn hàng. ORORA sẽ liên hệ xác nhận sản phẩm, phí giao hàng và cách thanh toán." : "Đã nhận đơn hàng. ORORA sẽ liên hệ xác nhận và hỗ trợ thanh toán.",
+});
 export function createOrderHandler({ getDb, sendMail, schedule, env = process.env, now = () => Date.now(), chooseCodeIndex }) {
   return async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
@@ -43,6 +63,13 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
       if (body.variantId !== undefined && (typeof body.variantId !== "string" || (body.variantId && !/^[a-zA-Z0-9_-]{1,100}$/.test(body.variantId)))) return res.status(400).json({ message: "Chọn dung tích hợp lệ." });
       const digest = hash(JSON.stringify({ ...(body.variantId ? { variantId: body.variantId } : {}), productId: body.productId, quantity: body.quantity, paymentMethod: body.paymentMethod, customer }));
       const db = await getDb();
+      const order = db.collection("orders").doc(body.requestId);
+      const priorOrder = await order.get();
+      if (priorOrder.exists) {
+        const saved = priorOrder.data();
+        if (saved.requestHash !== digest) return res.status(409).json({ message: "Đơn này đã được tiếp nhận. Vui lòng liên hệ ORORA nếu muốn thay đổi thông tin." });
+        return res.status(201).json(orderCreatedPayload(saved, saved.confirmationMail?.state || "pending"));
+      }
       const salt = rateLimitSalt(env);
       if (salt) {
         const clock = now();
@@ -50,7 +77,6 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
           || await reserveBudgetOrAllow(db, req, { scope: "orders-email", cost: 1, budget: 5, windowMs: 86400000, now: clock, salt, key: customer.email });
         if (wait) { res.setHeader("Retry-After", String(wait)); return res.status(429).json({ message: "Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút hoặc liên hệ ORORA." }); }
       }
-      const order = db.collection("orders").doc(body.requestId);
       const createdAt = new Date(now());
       const parts = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(createdAt).map(({ type, value }) => [type, value]));
       const orderDate = `${parts.year}-${parts.month}-${parts.day}`;
@@ -99,7 +125,7 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
       if (schedule) {
         try { schedule(task); } catch { await task; }
       } else await task;
-      return res.status(201).json({ code: result.code, productName: result.product.name, quantity: result.quantity, variantLabel: result.product.variantLabel || "", variantId: result.product.variantId || "", mailStatus, subtotal: result.subtotal, shippingFee: result.shippingFee ?? null, totalAmount: result.totalAmount ?? null, paymentMethod: result.paymentMethod, message: result.shippingFee == null ? "Đã nhận đơn hàng. ORORA sẽ liên hệ xác nhận sản phẩm, phí giao hàng và cách thanh toán." : "Đã nhận đơn hàng. ORORA sẽ liên hệ xác nhận và hỗ trợ thanh toán." });
+      return res.status(201).json(orderCreatedPayload(result, mailStatus));
     } catch (error) {
       return res.status(error.status || 503).json({ message: error.status ? error.message : "Chưa xác nhận được đơn. Vui lòng thử gửi lại hoặc liên hệ ORORA." });
     }
@@ -109,25 +135,28 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
   return async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
     if (!["GET", "POST"].includes(req.method)) { res.setHeader("Allow", "GET, POST"); return res.status(405).json({ message: "Phương thức không được hỗ trợ." }); }
-    const admins = String(env.ORDER_ADMIN_UIDS || env.NEWSLETTER_ADMIN_UIDS || "").split(",").map((value) => value.trim()).filter(Boolean);
-    if (!admins.length) return res.status(503).json({ message: "Chưa cấu hình tài khoản quản lý đơn hàng trên máy chủ." });
     let user;
     try {
-      const token = /^Bearer (.+)$/.exec(req.headers.authorization || "")?.[1];
-      user = token ? await verifyToken(token) : null;
-    } catch (error) { const failure = firebaseAuthFailure(error); return res.status(failure.status).json({ message: failure.message }); }
-    if (!user) return res.status(401).json({ message: "Vui lòng đăng nhập lại." });
-    if (!admins.includes(user.uid)) return res.status(403).json({ message: "Tài khoản này chưa được cấp quyền quản lý đơn hàng." });
+      user = await requireAdmin(req, { verifyToken, getDb, env, primaryEnvKey: "ORDER_ADMIN_UIDS", deniedMessage: "Tài khoản này chưa được cấp quyền quản lý đơn hàng." });
+    } catch (error) {
+      return res.status(error.status || 403).json({ message: error.message });
+    }
+    if (req.method === "GET" && req.query?.whoami === "1") {
+      return res.status(200).json({ ok: true, uid: user.uid, email: user.email || "" });
+    }
     try {
       const db = await getDb();
       const orders = db.collection("orders");
       if (req.method === "GET" && req.query?.summary === "1") {
-        const [count, latest] = await Promise.all([
-          orders.where("status", "==", "new").count().get(),
+        const statuses = ["new", "confirmed", "shipping", "completed", "cancelled"];
+        const [statusCounts, latest] = await Promise.all([
+          Promise.all(statuses.map((status) => orders.where("status", "==", status).count().get())),
           orders.orderBy("createdAt", "desc").limit(1).get(),
         ]);
+        const counts = Object.fromEntries(statuses.map((status, index) => [status, statusCounts[index].data().count]));
+        counts.all = statuses.reduce((sum, status) => sum + counts[status], 0);
         const doc = latest.docs[0];
-        return res.status(200).json({ pendingCount: count.data().count, latestOrder: doc ? { id: doc.id, code: doc.data().code || "", status: doc.data().status, createdAt: millis(doc.data().createdAt) } : null, checkedAt: clock() });
+        return res.status(200).json({ pendingCount: counts.new, counts, latestOrder: doc ? { id: doc.id, code: doc.data().code || "", status: doc.data().status, createdAt: millis(doc.data().createdAt) } : null, checkedAt: clock() });
       }
       if (req.method === "GET" && req.query?.id) {
         if (!uuid(req.query.id) || (req.query.activityCursor && !uuid(req.query.activityCursor))) return res.status(400).json({ message: "Đơn hàng hoặc trang nhật ký không hợp lệ." });
@@ -213,13 +242,21 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
       const result = await db.runTransaction(async (tx) => {
         const ref = orders.doc(body.id); const current = await tx.get(ref);
         if (!current.exists) throw Object.assign(new Error("Không tìm thấy đơn hàng."), { status: 404 });
-        if (current.data().status === "cancelled" && body.status && body.status !== "cancelled") throw Object.assign(new Error("Đơn đã hủy không mở lại. Tạo đơn mới để số lượng và lịch sử kho được ghi nhận đúng."), { status: 409 });
-        const nextPaymentStatus = body.status === "completed" ? "paid" : body.status !== undefined ? current.data().paymentStatus : body.paymentStatus;
-        const stockPatch = await settleOrderInventory(tx, db, current.data(), nextPaymentStatus, body.id, user.uid, body.status ?? current.data().status);
+        const cur = current.data();
+        if (body.status !== undefined && body.status !== cur.status) {
+          if (cur.status === "cancelled") throw Object.assign(new Error("Đơn đã hủy không mở lại. Tạo đơn mới để số lượng và lịch sử kho được ghi nhận đúng."), { status: 409 });
+          if (!NEXT_ORDER_STATUSES[cur.status]?.includes(body.status)) throw Object.assign(new Error("Không thể chuyển sang trạng thái này từ trạng thái hiện tại."), { status: 409 });
+        }
+        if (body.status === undefined && body.paymentStatus === "unpaid") {
+          if (cur.status === "completed") throw Object.assign(new Error("Đơn đã hoàn tất không thể bỏ đánh dấu đã thanh toán."), { status: 409 });
+          if (cur.inventory?.state === "deducted") throw Object.assign(new Error("Đơn đã trừ kho không thể bỏ đánh dấu đã thanh toán. Nếu khách trả hàng, hãy hủy đơn và hoàn kho."), { status: 409 });
+        }
+        const nextPaymentStatus = body.status === "completed" ? "paid" : body.status !== undefined ? cur.paymentStatus : body.paymentStatus;
+        const stockPatch = await settleOrderInventory(tx, db, cur, nextPaymentStatus, body.id, user.uid, body.status ?? cur.status);
         const patch = { ...stockPatch, ...(body.status !== undefined ? { status: body.status, ...(body.status === "completed" ? { paymentStatus: "paid" } : {}) } : { paymentStatus: body.paymentStatus }), updatedAt: new Date(clock()), updatedBy: user.uid };
-        const activity = recordOrderActivity(tx, ref, { before: current.data(), after: { ...current.data(), ...patch }, user, createdAt: patch.updatedAt, quantity: stockPatch.inventory?.state === "deducted" ? stockPatch.inventory.quantity : undefined });
+        const activity = recordOrderActivity(tx, ref, { before: cur, after: { ...cur, ...patch }, user, createdAt: patch.updatedAt, quantity: stockPatch.inventory?.state === "deducted" ? stockPatch.inventory.quantity : undefined });
         tx.set(ref, patch, { merge: true });
-        return { inventory: stockPatch.inventory || current.data().inventory || null, activity };
+        return { inventory: stockPatch.inventory || cur.inventory || null, activity };
       });
       return res.status(200).json({ ...result, message: body.status === "completed" ? "Đã hoàn tất đơn hàng và ghi nhận đã thanh toán." : "Đã cập nhật trạng thái đơn hàng." });
     } catch (error) { if (OUTLOOK_ERROR_MESSAGES[error.message]) return res.status(503).json({ code: error.message, message: OUTLOOK_ERROR_MESSAGES[error.message] }); return res.status(error.status || 503).json({ message: error.message === "template_changed" ? "Mẫu đã được sửa hoặc xóa. Chọn lại mẫu hiện tại hoặc soạn nội dung riêng." : error.status ? error.message : "Không tải hoặc cập nhật được đơn hàng." }); }

@@ -5,6 +5,7 @@ import useSafariToolbar from '../hooks/useSafariToolbar';
 import useHomeContent from '../hooks/useHomeContent';
 import {sectionIsEnabled} from '../lib/page-sections';
 import {mobileNavSettings,mobileNavTheme,mobileNavItems} from '../lib/mobile-shop-nav';
+import {CART_STORAGE_KEY,readCartRows} from '../lib/cart-copy';
 import {toCss} from '../lib/typography';
 import '../styles/mobile-shop-nav.css';
 function Icon({kind}){
@@ -15,8 +16,13 @@ export default function MobileShopNav({preview=false,previewData}){
  const live=useHomeContent(),home=preview&&previewData?previewData:live;
  const s=mobileNavSettings(home.navStyles?.mobile),location=useLocation();
  const safari=useMobileSafari(),navId=useId();
- const [cartCount,setCartCount]=useState(()=>{try{const rows=JSON.parse(localStorage.getItem('orora-cart-v1'));return Array.isArray(rows)?rows.reduce((n,r)=>n+(Number.isInteger(r?.quantity)&&r.quantity>0&&r.quantity<=20?r.quantity:0),0):0;}catch{return 0;}});
- useEffect(()=>{const update=e=>setCartCount(Number(e.detail)||0);window.addEventListener('orora-cart-count',update);return()=>window.removeEventListener('orora-cart-count',update);},[]);
+ const [cartCount,setCartCount]=useState(()=>readCartRows().reduce((n,r)=>n+r.quantity,0));
+ useEffect(()=>{
+  const update=e=>setCartCount(Number(e.detail)||0);
+  const sync=e=>{if(e.key===CART_STORAGE_KEY)setCartCount(readCartRows().reduce((n,r)=>n+r.quantity,0));};
+  window.addEventListener('orora-cart-count',update);window.addEventListener('storage',sync);
+  return()=>{window.removeEventListener('orora-cart-count',update);window.removeEventListener('storage',sync);};
+ },[]);
  const nav=useRef(null),gesture=useRef(null),suppressClick=useRef(0);
  const items=mobileNavItems(s);
  if(home.navStyles?.cart?.enabled!==false)items.push({id:'cart',icon:'products',to:'/#cart',label:home.navStyles?.cart?.copy?.label||'Giỏ hàng'});
@@ -27,10 +33,18 @@ export default function MobileShopNav({preview=false,previewData}){
  useEffect(()=>{
   if(!gated)return;
   let frame;const observed=new WeakSet();const sizes=new ResizeObserver(()=>schedule());
-  const measure=()=>{const boundary=document.querySelector('.marquee')||document.querySelector('.hero');for(const target of [boundary,document.querySelector('.hero'),nav.current])if(target&&!observed.has(target)){observed.add(target);sizes.observe(target);}const room=window.innerHeight-(nav.current?.offsetHeight||s.height)-Math.max(0,Math.min(48,Number(s.revealGap??12)));setPassedTicker(window.scrollY>8&&(boundary?boundary.getBoundingClientRect().bottom<=room:!home.loading));};
+  let content=null;
+  const measure=()=>{
+   const boundary=document.querySelector('.marquee')||document.querySelector('.hero');
+   if(boundary&&content){content.disconnect();content=null;}
+   for(const target of [boundary,document.querySelector('.hero'),nav.current])if(target&&!observed.has(target)){observed.add(target);sizes.observe(target);}
+   const room=window.innerHeight-(nav.current?.offsetHeight||s.height)-Math.max(0,Math.min(48,Number(s.revealGap??12)));
+   setPassedTicker(window.scrollY>8&&(boundary?boundary.getBoundingClientRect().bottom<=room:!home.loading));
+  };
   const schedule=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(measure);};
-  schedule();window.addEventListener('scroll',schedule,{passive:true});window.addEventListener('resize',schedule);const content=new MutationObserver(schedule);content.observe(document.getElementById('root')||document.body,{subtree:true,childList:true});
-  return()=>{cancelAnimationFrame(frame);sizes.disconnect();content.disconnect();window.removeEventListener('scroll',schedule);window.removeEventListener('resize',schedule);};
+  schedule();window.addEventListener('scroll',schedule,{passive:true});window.addEventListener('resize',schedule);
+  if(!document.querySelector('.marquee')&&!document.querySelector('.hero')){content=new MutationObserver(schedule);content.observe(document.querySelector('main')||document.getElementById('root')||document.body,{subtree:true,childList:true});}
+  return()=>{cancelAnimationFrame(frame);sizes.disconnect();content?.disconnect();window.removeEventListener('scroll',schedule);window.removeEventListener('resize',schedule);};
  },[gated,home.loading,s.height,s.revealGap]);
  const enabled=s.enabled!==false&&sectionIsEnabled(home,'navbar')&&!location.pathname.startsWith('/admin')&&(!home.loading||home.shellReady)&&items.length>0;
  useLayoutEffect(()=>{

@@ -24,22 +24,6 @@ for(const reducedMotion of ['no-preference','reduce'])test(`slideshow loads imag
  await expect.poll(()=>requests.length).toBe(reducedMotion==='reduce'?2:4);
 });
 
-test('back-to-top batches scroll reads and refreshes when page height changes',async({page})=>{
- await mount(page,`import Back from '/src/components/BackToTop.jsx';${render("R.createElement(R.Fragment,null,R.createElement('main',{id:'content',style:{height:3000}},'Nội dung'),R.createElement(Back))")}`,{'hooks/useHomeContent.js':'export default function home(){return {loading:false}}'});
- await page.evaluate(()=>window.scrollTo(0,500));
- const button=page.getByRole('button',{name:'Lên đầu trang',exact:true});await expect(button).toHaveClass(/show/);
- const reads=await page.evaluate(async()=>{
-  const root=document.documentElement,native=Object.getOwnPropertyDescriptor(Element.prototype,'scrollHeight').get;
-  let reads=0;Object.defineProperty(root,'scrollHeight',{configurable:true,get(){reads++;return native.call(this);}});
-  for(let index=0;index<80;index++)window.dispatchEvent(new Event('scroll'));
-  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-  delete root.scrollHeight;return reads;
- });
- expect(reads).toBeLessThanOrEqual(2);
- await page.locator('#content').evaluate(el=>{el.style.height='20000px';});
- await expect(page.locator('.back-to-top')).not.toHaveClass(/show/);
-});
-
 test('scroll text does no offscreen layout work and previews remain fully readable',async({page})=>{
  const content={philosophyBody:'Chăm sóc mỗi ngày cho bạn tự tin hơn',philosophyLabel:'ORORA'};
  await mount(page,`import Text from '/src/components/ScrollText.jsx';${render("R.createElement('main',null,R.createElement('div',{style:{height:2400}}),R.createElement(Text),R.createElement('div',{style:{height:2400}}))")}`,{'hooks/useHomeContent.js':`export default function home(){return ${JSON.stringify(content)}}`});

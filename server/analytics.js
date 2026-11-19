@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { analyticsDay,analyticsWindow,analyticsPath,paidOrderSummary } from '../src/lib/analytics.js';
 import { withProductIdentity } from '../src/lib/product-identity.js';
-import { firebaseAuthFailure } from './firebase-auth-error.js';
+import { requireAdmin } from './admin-auth.js';
 const fail=(status,message)=>Object.assign(new Error(message),{publicError:true,status});
 const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value);
 const digest=value=>createHash('sha256').update(value).digest('hex');
@@ -71,11 +71,7 @@ export function createAnalyticsHandler({getDb,verifyToken,env=process.env,now=()
         await collect(getDb(),req,body,now(),env);return res.status(200).json({accepted:true});
       }
       if(req.method!=='GET'){res.setHeader('Allow','GET, POST');throw fail(405,'Phương thức không được hỗ trợ.');}
-      const admins=String(env.ORDER_ADMIN_UIDS||env.NEWSLETTER_ADMIN_UIDS||'').split(',').map(x=>x.trim()).filter(Boolean);
-      if(!admins.length)throw fail(503,'Chưa cấu hình tài khoản quản trị trên máy chủ.');
-      const token=/^Bearer (.+)$/.exec(req.headers.authorization||'')?.[1];
-      let user;try{user=token?await verifyToken(token):null;}catch(error){const denied=firebaseAuthFailure(error);throw fail(denied.status,denied.message);}
-      if(!user)throw fail(401,'Vui lòng đăng nhập lại.');if(!admins.includes(user.uid))throw fail(403,'Tài khoản chưa được cấp quyền xem thống kê.');
+      await requireAdmin(req,{verifyToken,getDb,env,primaryEnvKey:'ORDER_ADMIN_UIDS',deniedMessage:'Tài khoản chưa được cấp quyền xem thống kê.'});
       const days=Number(req.query?.days||7);if(!Number.isInteger(days)||days<1||days>90)throw fail(400,'Chọn khoảng từ 1 đến 90 ngày.');
       return res.status(200).json(await report(getDb(),now(),days));
     }catch(error){return res.status(error.publicError?error.status:503).json({message:error.publicError?error.message:'Chưa tải được thống kê. Vui lòng thử lại sau.'});}

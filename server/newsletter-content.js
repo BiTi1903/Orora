@@ -34,10 +34,19 @@ export function validUnsubscribe(id, token, env = process.env) {
   return timingSafeEqual(Buffer.from(signature(id, env), "hex"), Buffer.from(token, "hex"));
 }
 
-export async function sendWelcomeMessage(email, { getDb, sendMail }) {
+export function withUnsubscribe(message, id, env = process.env) {
+  if (!id || !env?.NEWSLETTER_UNSUBSCRIBE_SECRET || env.NEWSLETTER_UNSUBSCRIBE_SECRET.length < 32 || !env?.NEWSLETTER_SITE_ORIGIN) return message;
+  let link;
+  try { link = unsubscribeLink(id, env); } catch { return message; }
+  const text = message.text.includes(link) ? message.text : `${message.text.trimEnd()}\n\n---\nHủy đăng ký nhận tin từ ORORA: ${link}`;
+  return { ...message, text, unsubscribeUrl: link };
+}
+
+export async function sendWelcomeMessage(email, { getDb, sendMail, env = process.env }) {
   const db = await getDb();
   const saved = await db.collection("newsletterSettings").doc("welcome").get();
-  const message = saved.exists ? validateMessage(saved.data()) : DEFAULT_WELCOME;
+  const base = saved.exists ? validateMessage(saved.data()) : DEFAULT_WELCOME;
+  const message = withUnsubscribe(base, subscriberId(String(email || "").trim().toLowerCase()), env);
   const result = await sendMail(email, message);
   if (saved.data()?.templateId) {
     try { await db.runTransaction((tx) => recordTemplateUse(tx, db, saved.data())); }

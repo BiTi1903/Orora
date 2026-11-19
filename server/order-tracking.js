@@ -38,20 +38,26 @@ export function createOrderTrackingHandler({ getDb, env = process.env, now = () 
       if (!body || Buffer.byteLength(JSON.stringify(body)) > 2000) throw failure(400,'Thông tin tra cứu không hợp lệ.');
       if ((body.code != null && typeof body.code !== 'string') || (body.phone != null && typeof body.phone !== 'string')) throw failure(400,'Thông tin tra cứu không hợp lệ.');
       const code = typeof body.code === 'string' ? body.code.trim().toUpperCase() : '';
-      const phone = normalizeTrackingPhone(body.phone);
-      const suppliedPhone = typeof body.phone === 'string' && body.phone.trim();
+      const rawPhone = typeof body.phone === 'string' ? body.phone.trim() : '';
+      const compactDigits = rawPhone.replace(/[\s().-]/g, '');
+      const last4 = code && /^\d{4}$/.test(compactDigits) ? compactDigits : '';
+      const phone = last4 ? '' : normalizeTrackingPhone(rawPhone);
       const validCode = value => typeof value === 'string' && /^[A-Z0-9_-]{4,40}$/.test(value);
-      if ((!code && !phone) || (code && !validCode(code)) || (suppliedPhone && !phone) || (body.cursor && (code || !validCode(body.cursor)))) throw failure(400,'Vui lòng nhập ít nhất mã đơn hoặc số điện thoại hợp lệ.');
+      if ((!code && !phone) || (code && !validCode(code)) || (rawPhone && !phone && !last4) || (body.cursor && (code || !validCode(body.cursor)))) throw failure(400,'Vui lòng nhập thông tin tra cứu hợp lệ.');
+      if (code && !phone && !last4) throw failure(400,'Vui lòng nhập kèm số điện thoại hoặc 4 số cuối số điện thoại đặt hàng.');
       const db = getDb();
       await reserveLookup(db,req,phone || `code:${code}`,now(),env);
       const matchesPhone = order => {
         const stored = normalizeTrackingPhone(order.customer?.phone);
-        return stored && stored.length === phone.length && timingSafeEqual(Buffer.from(stored),Buffer.from(phone));
+        if (!stored) return false;
+        if (phone) return stored.length === phone.length && timingSafeEqual(Buffer.from(stored),Buffer.from(phone));
+        if (last4) return stored.length >= 4 && timingSafeEqual(Buffer.from(stored.slice(-4)),Buffer.from(last4));
+        return false;
       };
       let documents;
       if (code) {
         const snapshot = await db.collection('orders').where('code','==',code).limit(5).get();
-        documents = snapshot.docs.filter(doc => !phone || matchesPhone(doc.data())).slice(0,1);
+        documents = snapshot.docs.filter(doc => matchesPhone(doc.data())).slice(0,1);
       } else {
         const variants = [phone, `+${phone}`];
         if (phone.startsWith('0') && [10,11].includes(phone.length)) variants.push(`84${phone.slice(1)}`,`+84${phone.slice(1)}`);
@@ -66,16 +72,20 @@ export function createOrderTrackingHandler({ getDb, env = process.env, now = () 
       }
       if (!documents.length && !body.cursor) return res.status(404).json({message:missing});
       const amount = value => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
-      const project = order => ({
+      const summaryProjection = order => ({
         code:order.code,status:Object.hasOwn(ORDER_STATUSES,order.status) ? order.status : 'unknown',
         createdAt:timestamp(order.createdAt),updatedAt:timestamp(order.updatedAt || order.createdAt),
-        productName:String(order.product?.name || '').slice(0,300),variantLabel:String(order.product?.variantLabel || '').slice(0,150),
         quantity:Number.isInteger(order.quantity) ? order.quantity : null,
-        subtotal:amount(order.subtotal),shippingFee:amount(order.shippingFee),totalAmount:amount(order.totalAmount),
+        totalAmount:amount(order.totalAmount),
         paymentMethod:['cod','bank_transfer'].includes(order.paymentMethod) ? order.paymentMethod : 'unknown',
         paymentStatus:['paid','refunded'].includes(order.paymentStatus) ? order.paymentStatus : 'unpaid',
       });
-      const orders = documents.slice(0,20).map(doc => project(doc.data()));
+      const fullProjection = order => ({
+        ...summaryProjection(order),
+        productName:String(order.product?.name || '').slice(0,300),variantLabel:String(order.product?.variantLabel || '').slice(0,150),
+        subtotal:amount(order.subtotal),shippingFee:amount(order.shippingFee),
+      });
+      const orders = documents.slice(0,20).map(doc => (code ? fullProjection : summaryProjection)(doc.data()));
       return res.status(200).json({ orders, ...(code && orders[0] ? { order:orders[0] } : {}), nextCursor:!code && documents.length > 20 ? documents[19].data().code : null });
     } catch (error) {
       const status = error.publicError === true ? error.status : 503;

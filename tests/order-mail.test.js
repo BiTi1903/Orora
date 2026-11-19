@@ -62,6 +62,8 @@ test("template validation rejects unknown variables and rendering cannot inject 
   const message = renderOrderMessage({ subject: "Chào {{customerName}}", text: "{{orderCode}}" }, order);
   assert.ok(!/[\r\n]/.test(message.subject)); assert.equal(message.text, "OR-TEST");
   assert.ok(DEFAULT_ORDER_MESSAGE.text.includes("chưa xác nhận thanh toán"));
+  assert.ok(DEFAULT_ORDER_MESSAGE.text.includes("{{shippingFee}}"));
+  assert.ok(DEFAULT_ORDER_MESSAGE.text.includes("{{totalAmount}}"));
 });
 
 test("receipt template is managed through Email marketing and history remains private", async () => {

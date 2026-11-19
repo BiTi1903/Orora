@@ -73,7 +73,7 @@ function App() {
 
       <Routes>
 <Route
-          path="/admin"
+          path="/admin/*"
           element={
             <Suspense fallback={<RouteLoading/>}>
               <AdminApp />

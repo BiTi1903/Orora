@@ -104,18 +104,20 @@ test("admin order pagination returns the next older page without duplicates", as
   assert.equal(new Set([...first.body.orders, ...second.body.orders].map((item) => item.id)).size, 52);
 });
 
-test("completing an order records payment atomically without changing method, amount or buyer", async () => {
+test("completing an order records payment atomically and locks backward status or unpaid reversal", async () => {
   for (const paymentMethod of ["cod", "bank_transfer"]) {
     const { db, call } = await setup(); const data = { ...body(), paymentMethod }; await call(data);
     const authorized = admin(db);
+    assert.equal((await authorized({ id: data.requestId, status: "completed" })).statusCode, 409);
+    assert.equal((await authorized({ id: data.requestId, status: "confirmed" })).statusCode, 200);
     assert.equal((await authorized({ id: data.requestId, status: "completed", paymentStatus: "unpaid" })).statusCode, 200);
     const record = (await db.collection("orders").doc(data.requestId).get()).data();
     assert.equal(record.status, "completed"); assert.equal(record.paymentStatus, "paid");
     assert.equal(record.paymentMethod, paymentMethod); assert.equal(record.subtotal, 500000); assert.equal(record.customer.email, data.email);
-    await authorized({ id: data.requestId, status: "shipping" });
+    assert.equal((await authorized({ id: data.requestId, status: "shipping" })).statusCode, 409);
+    assert.equal((await authorized({ id: data.requestId, status: "new" })).statusCode, 409);
+    assert.equal((await authorized({ id: data.requestId, paymentStatus: "unpaid" })).statusCode, 409);
     assert.equal((await db.collection("orders").doc(data.requestId).get()).data().paymentStatus, "paid");
-    await authorized({ id: data.requestId, paymentStatus: "unpaid" });
-    assert.equal((await db.collection("orders").doc(data.requestId).get()).data().paymentStatus, "unpaid");
   }
 });
 
@@ -327,4 +329,72 @@ test("order creation rate limits by IP (8/min) and recipient email (5/day) with 
   assert.equal(emailBlocked.statusCode, 429);
   assert.ok(Number(emailBlocked.headers["Retry-After"]) > 0);
 });
+
+test("replaying the same requestId after timeout returns 201 without consuming rate-limit budget", async () => {
+  const { db } = await setup();
+  const handler = createOrderHandler({
+    getDb: () => db,
+    env: { ...env, CHAT_RATE_LIMIT_SALT: "test-salt" },
+    now: () => 1700000000000,
+    schedule: () => {},
+  });
+  const payload = body();
+  let code;
+  for (let i = 0; i < 10; i++) {
+    const res = response();
+    await handler({ method: "POST", headers: { ...headers, "x-forwarded-for": "198.51.100.77" }, body: payload }, res);
+    assert.equal(res.statusCode, 201);
+    if (!code) code = res.body.code;
+    else assert.equal(res.body.code, code);
+  }
+  assert.equal((await db.collection("orders").get()).docs.length, 1);
+});
+
+test("inventory reserved counter avoids historical order scans on subsequent orders and decrements on cancel", async () => {
+  const { db } = await setup();
+  const transactions = db.runTransaction.bind(db);
+  let historyReads = 0;
+  db.runTransaction = work => transactions(tx => work({
+    ...tx,
+    get: ref => { if (!ref.path) historyReads++; return tx.get(ref); },
+  }));
+  await db.collection("inventory").doc("serum").set({ quantity: 10, reserved: 0, version: 1 });
+  const handler = createOrderHandler({ getDb: () => db, env, schedule: () => {} });
+  const place = async () => { const payload = body(); const res = response(); await handler({ method: "POST", headers, body: payload }, res); return { res, id: payload.requestId }; };
+  const first = await place();
+  assert.equal(first.res.statusCode, 201);
+  assert.equal(historyReads, 0, "counter already initialized so no historical orders scan needed");
+  assert.equal((await db.collection("inventory").doc("serum").get()).data().reserved, 2);
+  const second = await place();
+  assert.equal(second.res.statusCode, 201);
+  assert.equal(historyReads, 0);
+  assert.equal((await db.collection("inventory").doc("serum").get()).data().reserved, 4);
+  const cancelRes = await admin(db)({ id: first.id, status: "cancelled" });
+  assert.equal(cancelRes.statusCode, 200);
+  assert.equal((await db.collection("inventory").doc("serum").get()).data().reserved, 2);
+});
+
+test("admin summary returns per-status counts and whoami accepts adminUsers collection without env UIDs", async () => {
+  const { db, call } = await setup();
+  const o1 = body(), o2 = body();
+  assert.equal((await call(o1)).statusCode, 201);
+  assert.equal((await call(o2)).statusCode, 201);
+  assert.equal((await admin(db)({ id: o2.requestId, status: "cancelled" })).statusCode, 200);
+  const summary = await admin(db)(null, { query: { summary: "1" } });
+  assert.equal(summary.statusCode, 200);
+  assert.deepEqual(summary.body.counts, { all: 2, new: 1, confirmed: 0, shipping: 0, completed: 0, cancelled: 1 });
+
+  await db.collection("adminUsers").doc("fs-admin").set({ active: true });
+  const fsAdminHandler = createAdminOrdersHandler({
+    getDb: () => db,
+    verifyToken: async () => ({ uid: "fs-admin", email: "fs@orora.example" }),
+    env: { NEWSLETTER_SITE_ORIGIN: env.NEWSLETTER_SITE_ORIGIN },
+  });
+  const whoami = response();
+  await fsAdminHandler({ method: "GET", headers: { ...headers, authorization: "Bearer token" }, query: { whoami: "1" } }, whoami);
+  assert.equal(whoami.statusCode, 200);
+  assert.equal(whoami.body.ok, true);
+  assert.equal(whoami.body.uid, "fs-admin");
+});
+
 

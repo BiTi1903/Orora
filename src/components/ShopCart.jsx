@@ -14,8 +14,7 @@ import CartSelectionDialog from './CartSelectionDialog';
 import {toCss} from '../lib/typography';
 import '../styles/shop-cart.css';
 import {cdnSrc,THUMB} from '../lib/image-cdn';
-const key='orora-cart-v1';
-import {CART_COPY} from '../lib/cart-copy';
+import {CART_COPY,CART_STORAGE_KEY,readCartRows} from '../lib/cart-copy';
 export default function ShopCart(){
  const navigate=useNavigate();
  const [closing,setClosing]=useState(false);
@@ -27,9 +26,15 @@ export default function ShopCart(){
  const popupDuration=Math.max(650,Math.min(1200,Number(settings.popupDuration)||650));
  const popupMotion=settings.popupAnimation!==false;
  if(copy.order==='Đặt sản phẩm này')copy.order='Chi tiết';
- const [rows,setRows]=useState(()=>{try{const saved=JSON.parse(localStorage.getItem(key));return Array.isArray(saved)?saved.filter(r=>r&&typeof r.id==='string'&&typeof r.variantId==='string'&&Number.isInteger(r.quantity)&&r.quantity>0&&r.quantity<=20).slice(0,100):[];}catch{return [];}}),[open,setOpen]=useState(false),[pending,setPending]=useState(null),[notice,setNotice]=useState('');
+ const [rows,setRows]=useState(readCartRows),[open,setOpen]=useState(false),[pending,setPending]=useState(null),[notice,setNotice]=useState('');
  const closeCart=useCallback(()=>{if(!popupMotion||window.matchMedia('(prefers-reduced-motion: reduce)').matches){setOpen(false);setClosing(false);}else setClosing(true);},[popupMotion]);
- useEffect(()=>{try{localStorage.setItem(key,JSON.stringify(rows));}catch{/* Cart remains usable without storage. */}window.dispatchEvent(new CustomEvent('orora-cart-count',{detail:rows.reduce((n,r)=>n+r.quantity,0)}));},[rows]);
+ useEffect(()=>{try{localStorage.setItem(CART_STORAGE_KEY,JSON.stringify(rows));}catch{/* Cart remains usable without storage. */}window.dispatchEvent(new CustomEvent('orora-cart-count',{detail:rows.reduce((n,r)=>n+r.quantity,0)}));},[rows]);
+ useEffect(()=>{
+  const sync=e=>{if(e.key===CART_STORAGE_KEY)setRows(readCartRows());};
+  const remove=e=>{const id=e.detail?.id,variantId=e.detail?.variantId||'';if(!id)return;setRows(old=>old.filter(r=>!(r.id===id&&r.variantId===variantId)));};
+  window.addEventListener('storage',sync);window.addEventListener('orora-cart-remove',remove);
+  return()=>{window.removeEventListener('storage',sync);window.removeEventListener('orora-cart-remove',remove);};
+ },[]);
  useEffect(()=>{const show=e=>{if(e.detail?.toggle&&open){closeCart();return;}setOpenSource(sourceFor(e.detail?.source));setClosing(false);setOpen(true);},add=e=>{if(settings.enabled===false)return;const product=products.find(p=>p.id===e.detail.id);if(!product)return;const options=productVolumeOptions(product);if(options.length>1){setPending({product,source:e.detail.source});}else addRow(product,options[0]?.id||'',1,e.detail.source);};
  function addRow(product,variantId,amount,source){setRows(old=>{const found=old.find(r=>r.id===product.id&&r.variantId===variantId);return found?old.map(r=>r===found?{...r,quantity:Math.min(20,r.quantity+amount)}:r):old.length<100?[...old,{id:product.id,variantId,quantity:amount}]:old;});setNotice(copy.added);if(settings.animation!==false)fly(source,cdnSrc(product.image,THUMB));}
  const confirm=e=>addRow(e.detail.product,e.detail.variantId,e.detail.quantity,e.detail.source);

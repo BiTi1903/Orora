@@ -7,9 +7,9 @@ import { TEMPLATE_KINDS, normalizeTemplateKind, hasOrderTokens } from "../src/li
 import { captureTemplate, recordTemplateUse, templateIdentity } from "./template-snapshot.js";
 import { mailActor, resolveMailActors } from "./mail-actor.js";
 import { DEFAULT_ORDER_MESSAGE, validateOrderTemplate, renderOrderMessage } from "./order-mail.js";
-import { firebaseAuthFailure } from "./firebase-auth-error.js";
+import { requireAdmin } from "./admin-auth.js";
 import { randomUUID, createHash } from "node:crypto";
-import { DEFAULT_WELCOME, validateMessage } from "./newsletter-content.js";
+import { DEFAULT_WELCOME, validateMessage, withUnsubscribe } from "./newsletter-content.js";
 
 const millis = (value) => value?.toMillis?.() ?? (value ? new Date(value).getTime() : 0);
 const publicContact = (doc) => ({
@@ -26,20 +26,22 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
       res.setHeader("Allow", "GET, POST");
       return reply(405, { message: "Phương thức không được hỗ trợ." });
     }
-    const admins = (env.NEWSLETTER_ADMIN_UIDS || "").split(",").map((s) => s.trim()).filter(Boolean);
-    if (!admins.length) return reply(503, { message: "Chưa cấu hình NEWSLETTER_ADMIN_UIDS trên máy chủ." });
-    const token = /^Bearer (.+)$/.exec(req.headers.authorization || "")?.[1];
     let user;
     try {
-      user = token ? await verifyToken(token) : null;
+      user = await requireAdmin(req, {
+        verifyToken,
+        getDb,
+        env,
+        envKeys: ["NEWSLETTER_ADMIN_UIDS", "ORDER_ADMIN_UIDS"],
+        deniedMessage: "Tài khoản này chưa được cấp quyền gửi email.",
+        logAuthError: (failure, error) => {
+          const sdkCode = /^(auth|app)\/[a-z0-9-]+$/.test(error.code || "") ? error.code : undefined;
+          console.error("Newsletter authentication failed", { code: failure.code, sdkCode });
+        },
+      });
     } catch (error) {
-      const failure = firebaseAuthFailure(error);
-      const sdkCode = /^(auth|app)\/[a-z0-9-]+$/.test(error.code || "") ? error.code : undefined;
-      console.error("Newsletter authentication failed", { code: failure.code, sdkCode });
-      return reply(failure.status, { code: failure.code, message: failure.message });
+      return reply(error.status || 403, { ...(error.code ? { code: error.code } : {}), message: error.message });
     }
-    if (!user) return reply(401, { message: "Vui lòng đăng nhập lại." });
-    if (!admins.includes(user.uid)) return reply(403, { message: "Tài khoản này chưa được cấp quyền gửi email." });
     if (req.method === "POST") {
       let origin;
       try { origin = new URL(env.NEWSLETTER_SITE_ORIGIN).origin; } catch { return reply(503, { message: "Thiếu NEWSLETTER_SITE_ORIGIN." }); }
@@ -303,7 +305,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
           if (claim) {
             let result = "accepted"; let tracking = {}; let diagnostic = {};
             try {
-              tracking = safeMailTracking(await sendMail(claim.email, validateMessage(state)));
+              tracking = safeMailTracking(await sendMail(claim.email, withUnsubscribe(validateMessage(state), doc.id, env)));
             } catch (error) {
               tracking = safeMailTracking(error.mailTracking);
               diagnostic = describeMailError(error); lastError = diagnostic;

@@ -7,7 +7,7 @@ import { validateMessage } from "./newsletter-content.js";
 import { PAYMENT_LABELS, formatProductPrice, formatVnd } from "../src/lib/commerce.js";
 export const DEFAULT_ORDER_MESSAGE = {
   subject: "ORORA xác nhận đã nhận đơn {{orderCode}}",
-  text: "Chào {{customerName}},\n\nORORA đã nhận đơn hàng {{orderCode}} của bạn.\n\nSản phẩm: {{productName}}\nSố lượng: {{quantity}}\nTạm tính: {{subtotal}}\nPhương thức thanh toán: {{paymentMethod}}\nĐịa chỉ nhận hàng: {{address}}\nSố điện thoại: {{phone}}\n\nORORA sẽ liên hệ để xác nhận đơn, phí giao hàng và thông tin thanh toán. Thư này xác nhận đã nhận yêu cầu đặt hàng, chưa xác nhận thanh toán.\n\nCảm ơn bạn đã chọn ORORA!",
+  text: "Chào {{customerName}},\n\nORORA đã nhận đơn hàng {{orderCode}} của bạn.\n\nSản phẩm: {{productName}}\nSố lượng: {{quantity}}\nTạm tính: {{subtotal}}\nPhí giao hàng: {{shippingFee}}\nTổng thanh toán: {{totalAmount}}\nPhương thức thanh toán: {{paymentMethod}}\nĐịa chỉ nhận hàng: {{address}}\nSố điện thoại: {{phone}}\n\nORORA sẽ liên hệ để xác nhận đơn, phí giao hàng và thông tin thanh toán. Thư này xác nhận đã nhận yêu cầu đặt hàng, chưa xác nhận thanh toán.\n\nCảm ơn bạn đã chọn ORORA!",
 };
 export const ORDER_TOKENS = ["customerName", "orderCode", "productName", "variantLabel", "quantity", "subtotal", "shippingFee", "totalAmount", "paymentMethod", "address", "phone", "email", "note", "unitPrice", "createdAt", "paymentStatus"];
 export const validOrderEmail = (value) => typeof value === "string" && value.length <= 254 && /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/.test(value);

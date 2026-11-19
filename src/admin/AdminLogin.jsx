@@ -15,8 +15,13 @@ export default function AdminLogin({ onLoggedIn }) {
     try {
       await signInWithEmailAndPassword(auth,email,password);
       onLoggedIn?.();
-    } catch {
-      setError("Email hoặc mật khẩu không đúng.");
+    } catch (err) {
+      const code = err?.code || "";
+      if (code === "auth/network-request-failed") setError("Không thể kết nối mạng. Vui lòng kiểm tra Internet và thử lại.");
+      else if (code === "auth/too-many-requests") setError("Bạn đã thử đăng nhập quá nhiều lần. Vui lòng đợi vài phút rồi thử lại.");
+      else if (code === "auth/user-disabled") setError("Tài khoản này đã bị tạm khóa.");
+      else if (["auth/invalid-credential", "auth/wrong-password", "auth/user-not-found", "auth/invalid-email"].includes(code)) setError("Email hoặc mật khẩu không đúng.");
+      else setError("Đăng nhập chưa thành công. Vui lòng thử lại sau.");
     } finally {setBusy(false);}
   };
 

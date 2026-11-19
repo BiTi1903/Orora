@@ -55,9 +55,9 @@ export default function OrderForm({ product, home, onClose, selection, initialVa
     <details className="order-received-details checkout-card"><summary>Thông tin người nhận</summary><dl>
       {[["Họ và tên", result.recipient.name], ["Số điện thoại", result.recipient.phone], ["Email", result.recipient.email], ["Địa chỉ nhận hàng", result.recipient.address], ["Ghi chú", result.recipient.note]].filter(([, value]) => value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
     </dl></details>
-    <p className="order-help">{result.mailStatus === "accepted" ? "Vui lòng kiểm tra email xác nhận và mục thư rác." : result.mailStatus === "failed" ? "Đơn đã được nhận nhưng chưa gửi được email xác nhận. Bạn có thể liên hệ ORORA với mã đơn bên trên." : "Email xác nhận đang được xử lý."}</p>
+    <p className="order-help">{result.mailStatus === "accepted" ? "Vui lòng kiểm tra email xác nhận và mục thư rác." : result.mailStatus === "failed" ? "Đơn đã được nhận nhưng chưa gửi được email xác nhận. Bạn có thể liên hệ ORORA với mã đơn bên trên." : "ORORA sẽ gửi email xác nhận trong ít phút; nếu không thấy hãy kiểm tra thư rác hoặc tra cứu đơn."}</p>
     <div className="order-received-footer">
-      <Link className="order-tracking-link" to="/tra-cuu-don-hang" state={{ code: result.code }} onClick={onClose}>Tra cứu trạng thái đơn</Link>
+      <Link className="order-tracking-link" to="/tra-cuu-don-hang" state={{ code: result.code, phone: result.recipient.phone }} onClick={onClose}>Tra cứu trạng thái đơn</Link>
       <button type="button" onClick={onClose}>Đóng</button>
     </div>
   </section></ModalDialog>;
@@ -83,6 +83,7 @@ export default function OrderForm({ product, home, onClose, selection, initialVa
       const json = await response.json();
       if (!response.ok) throw new Error(json.message || "Chưa gửi được đơn hàng.");
       if (!json.code) throw new Error("Chưa xác nhận được mã đơn. Vui lòng thử gửi lại.");
+      window.dispatchEvent(new CustomEvent("orora-cart-remove", { detail: { id: product.id || product.slug, variantId } }));
       setResult({ ...orderedProduct, ...json, recipient });
     } catch (error) { setResult({ error: error.name === "AbortError" ? appearance.orderTimeoutLabel?.trim() || "Chưa nhận được phản hồi. Bạn có thể thử gửi lại với cùng thông tin hoặc tra cứu đơn hàng để kiểm tra." : error instanceof TypeError || error instanceof SyntaxError ? "Kết nối bị gián đoạn. Hãy thử gửi lại hoặc liên hệ ORORA." : error.message || "Chưa gửi được đơn. Vui lòng thử lại." }); }
     finally { window.clearTimeout(timeout);submitting.current=false;setBusy(false); }

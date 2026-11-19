@@ -15,7 +15,10 @@ export async function renderOrderReceiptBlob(order){
  const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');if(!ctx)throw new Error('Không tạo được ảnh.');
  ctx.font='24px Arial';const lines=[];
  for(const text of receiptLines(order)){let line='';for(const char of text){if(ctx.measureText(line+char).width>656){lines.push(line);line='';}line+=char;}if(line)lines.push(line);lines.push('');}
- canvas.width=760;canvas.height=220+lines.length*34;ctx.fillStyle='#fffafb';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#3a1526';ctx.font='bold 32px Arial';ctx.fillText('ORORA · Đã nhận đơn hàng',52,66);ctx.font='24px Arial';lines.forEach((line,i)=>ctx.fillText(line,52,122+i*34));ctx.font='20px Arial';ctx.fillText('Đơn chờ xác nhận · Chưa xác nhận thanh toán',52,canvas.height-36);
+ const width=760,height=220+lines.length*34;
+ const dpr=Math.max(2,Math.min(3,Math.ceil((typeof window!=='undefined'&&window.devicePixelRatio)||2)));
+ canvas.width=width*dpr;canvas.height=height*dpr;ctx.scale(dpr,dpr);
+ ctx.fillStyle='#fffafb';ctx.fillRect(0,0,width,height);ctx.fillStyle='#3a1526';ctx.font='bold 32px Arial';ctx.fillText('ORORA · Đã nhận đơn hàng',52,66);ctx.font='24px Arial';lines.forEach((line,i)=>ctx.fillText(line,52,122+i*34));ctx.font='20px Arial';ctx.fillText('Đơn chờ xác nhận · Chưa xác nhận thanh toán',52,height-36);
  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob)throw new Error('Không tạo được ảnh.');
  return blob;
 }

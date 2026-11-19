@@ -16,6 +16,7 @@ import HomeAdmin from "./HomeAdmin";
 import ProductsAdmin from "./ProductsAdmin";
 import OrdersAdmin from "./OrdersAdmin";
 import NewsletterAdmin from "./NewsletterAdmin";
+import { orderRequest } from "./order-api";
 import "../styles/admin.css";
 
 /* Menu chia nhóm theo công việc; mỗi mục là [khóa, nhãn]. */
@@ -28,13 +29,40 @@ const GROUPS = [
 
 export default function AdminApp() {
   const [user, setUser] = useState(() => auth ? undefined : null);
+  const [access, setAccess] = useState({ status: "idle", error: "", check: 0 });
   useEffect(() => {
     if (!auth) return;
-    return onAuthStateChanged(auth, setUser);
+    return onAuthStateChanged(auth, (nextUser) => {
+      setUser(nextUser);
+      setAccess((prev) => ({ status: nextUser ? "checking" : "idle", error: "", check: prev.check + 1 }));
+    });
   }, []);
+  useEffect(() => {
+    if (!user) return;
+    const controller = new AbortController();
+    orderRequest(null, { whoami: "1" }, { signal: controller.signal })
+      .then(() => { if (!controller.signal.aborted) setAccess((prev) => ({ ...prev, status: "ok", error: "" })); })
+      .catch((error) => {
+        if (controller.signal.aborted) return;
+        setAccess((prev) => ({ ...prev, status: error.status === 403 || error.status === 401 ? "denied" : "error", error: error.message || "Không xác minh được quyền quản trị." }));
+      });
+    return () => controller.abort();
+  }, [user, access.check]);
 
-  if (user === undefined) return <div className="admin-login"><p className="admin-muted">Đang tải...</p></div>;
+  if (user === undefined || (user && access.status === "checking")) return <div className="admin-login"><p className="admin-muted">Đang kiểm tra quyền quản trị...</p></div>;
   if (!user) return <AdminLogin />;
+  if (access.status === "denied" || access.status === "error") {
+    return <div className="admin-login"><div className="admin-login-card admin-form">
+      <div className="admin-brand">ORORA</div>
+      <p className="admin-error" role="alert">{access.error || "Tài khoản này chưa được cấp quyền quản trị."}</p>
+      <p className="admin-muted">Email: {user.email || "—"}</p>
+      <p className="admin-muted">UID: <code>{user.uid}</code></p>
+      <div className="admin-actions">
+        <button type="button" className="admin-btn" onClick={() => setAccess((prev) => ({ status: "checking", error: "", check: prev.check + 1 }))}>Thử lại</button>
+        <button type="button" className="admin-btn primary" onClick={() => signOut(auth)}>Đăng xuất</button>
+      </div>
+    </div></div>;
+  }
   return <ConfirmProvider key={user.uid}><AdminWorkspace user={user} /></ConfirmProvider>;
 }
 
@@ -45,20 +73,43 @@ function OrderBadge({ notifications }) {
   return null;
 }
 
+const ADMIN_TABS = new Set(GROUPS.flatMap((g) => g.items.map(([k]) => k)));
+const initialAdminTab = () => {
+  const hash = typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
+  return ADMIN_TABS.has(hash) ? hash : "dashboard";
+};
+
 function AdminWorkspace({ user }) {
   const confirm = useConfirm();
   const notifications = useOrderNotifications();
   const [pendingRequest, setPendingRequest] = useState(null);
-  const [visited, setVisited] = useState([]);
+  const [tab, setTab] = useState(initialAdminTab);
+  const [visited, setVisited] = useState(() => {
+    const start = initialAdminTab();
+    if (start === "dashboard" || start === "export") return [];
+    return [start === "store" ? "home" : start];
+  });
   const [orderMailDraft, setOrderMailDraft] = useState(null);
   const [orderMailVersion, setOrderMailVersion] = useState(0);
   const [emailSection, setEmailSection] = useState({ view: "contacts" });
-  const [tab, setTab] = useState("dashboard");
   const [storeSection,setStoreSection]=useState("cart");
   const [storeVersion,setStoreVersion]=useState(0);
-  const navigate = (key) => { setVisited((items) => items.includes(key==='store'?'home':key) ? items : [...items,key==='store'?'home':key]); setTab(key); };
+  const navigate = (key) => {
+    setVisited((items) => items.includes(key==='store'?'home':key) ? items : [...items,key==='store'?'home':key]);
+    setTab(key);
+    if (typeof window !== "undefined" && window.location.hash !== `#${key}`) window.history.replaceState(null, "", `#${key}`);
+  };
+  useEffect(() => {
+    const onHash = () => {
+      const next = initialAdminTab();
+      setVisited((items) => (next === "dashboard" || next === "export" || items.includes(next === "store" ? "home" : next)) ? items : [...items, next === "store" ? "home" : next]);
+      setTab(next);
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
   useEffect(()=>{
-    const open=event=>{setStoreVersion(v=>v+1);setStoreSection(event.detail?.section||'cart');setVisited(items=>items.includes('home')?items:[...items,'home']);setTab('store');};
+    const open=event=>{setStoreVersion(v=>v+1);setStoreSection(event.detail?.section||'cart');setVisited(items=>items.includes('home')?items:[...items,'home']);setTab('store');if(typeof window!=="undefined")window.history.replaceState(null,"","#store");};
     window.addEventListener('orora-admin-store',open);return()=>window.removeEventListener('orora-admin-store',open);
   },[]);
   const orderBadgeShown = notifications.snapshot?.pendingCount > 0 || notifications.error;
@@ -68,7 +119,7 @@ function AdminWorkspace({ user }) {
     home: <HomeAdmin workspace={tab==='store'?'store':'home'} storeSection={storeSection} storeVersion={storeVersion}/>,
     products: <ProductsAdmin />,
     chat: <ChatSettings />,
-    orders: <OrdersAdmin refreshKey={notifications.revision} pendingRequest={pendingRequest} onOrderChanged={notifications.refresh} key={`${user.uid}:${orderMailVersion}`} initialMailDraft={orderMailDraft} onOpenEmailTemplates={() => { setEmailSection({ view: "templates" }); navigate("newsletter"); }} />,
+    orders: <OrdersAdmin statusCounts={notifications.snapshot?.counts} refreshKey={notifications.revision} pendingRequest={pendingRequest} onOrderChanged={notifications.refresh} key={`${user.uid}:${orderMailVersion}`} initialMailDraft={orderMailDraft} onOpenEmailTemplates={() => { setEmailSection({ view: "templates" }); navigate("newsletter"); }} />,
     shipping: <ShippingAdmin key={user.uid} />,
     inventory: <InventoryAdmin key={user.uid} />,
     newsletter: <NewsletterAdmin initialView={emailSection.view} viewRequest={emailSection} onOpenOrderMail={(draft) => { setOrderMailDraft(draft); setOrderMailVersion((value) => value + 1); navigate("orders"); }} />,

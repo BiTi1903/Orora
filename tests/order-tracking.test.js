@@ -56,14 +56,19 @@ test('daily lookup quota cannot be bypassed by waiting for shorter windows',asyn
   advance(86400000);assert.equal((await call()).statusCode,200);
 });
 
-test('code alone returns its order without requiring a phone',async()=>{
-  const {call}=await setup();const res=await call({code:'OW_1234C'});assert.equal(res.statusCode,200);assert.equal(res.body.orders.length,1);assert.equal(res.body.orders[0].code,'OW_1234C');assert.equal(res.body.nextCursor,null);
+test('code alone is rejected; code with last-4 phone digits returns full order',async()=>{
+  const {call}=await setup();
+  assert.equal((await call({code:'OW_1234C'})).statusCode,400);
+  assert.equal((await call({code:'OW_1234C',phone:'9999'})).statusCode,404);
+  const res=await call({code:'OW_1234C',phone:'4567'});
+  assert.equal(res.statusCode,200);assert.equal(res.body.orders.length,1);assert.equal(res.body.orders[0].code,'OW_1234C');assert.equal(res.body.orders[0].productName,'Sản phẩm A');assert.equal(res.body.nextCursor,null);
 });
-test('phone alone lists only that phone across local and +84 formats with complete pagination',async()=>{
+test('phone alone lists compact summaries across local and +84 formats with complete pagination',async()=>{
   const {db,call}=await setup();
   for(let i=0;i<24;i++)await db.collection('orders').doc(`page-${String(i).padStart(2,'0')}`).set({code:`OW_${String(i).padStart(4,'0')}B`,customer:{phone:i%2?'+84901234567':'0901234567',email:'private@example.com'},product:{name:'Sample'},status:'new'});
   await db.collection('orders').doc('other-phone').set({code:'OW_9999B',customer:{phone:'0909999999'},product:{name:'Other'}});
   const first=await call({phone:'0901234567'});assert.equal(first.statusCode,200);assert.equal(first.body.orders.length,20);assert.ok(first.body.nextCursor);
+  assert.equal(first.body.orders[0].productName,undefined);
   const second=await call({phone:'+84901234567',cursor:first.body.nextCursor});assert.equal(second.statusCode,200);assert.equal(second.body.orders.length,5);assert.equal(second.body.nextCursor,null);
   const codes=[...first.body.orders,...second.body.orders].map(order=>order.code);assert.equal(new Set(codes).size,25);assert.ok(!codes.includes('OW_9999B'));assert.ok(!JSON.stringify(first.body).includes('private@example.com'));
   assert.equal((await call({phone:'0901234567',cursor:'OW_9999B'})).statusCode,400);

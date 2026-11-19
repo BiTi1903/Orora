@@ -23,23 +23,33 @@ test("private order summary counts beyond the first page and returns no customer
   for (const value of ["private@example.com", "Buyer", "PRIVATE-HASH", "quantity", "product"]) assert.ok(!JSON.stringify(summary.body).includes(value));
   assert.equal(summary.headers["Cache-Control"], "no-store");
   assert.equal((await call(null, { summary: "1" }, { headers: {} })).statusCode, 401);
-  let openedDb = false; const outsider = createAdminOrdersHandler({ getDb: () => { openedDb = true; return db; }, verifyToken: async () => ({ uid: "other" }), env });
-  const denied = response(); await outsider({ method: "GET", headers, query: { summary: "1" } }, denied); assert.equal(denied.statusCode, 403); assert.equal(openedDb, false);
+  let readOrders = false;
+  const wrappedDb = { collection: (name) => { if (name === "orders") readOrders = true; return db.collection(name); } };
+  const outsider = createAdminOrdersHandler({ getDb: () => wrappedDb, verifyToken: async () => ({ uid: "other" }), env });
+  const denied = response(); await outsider({ method: "GET", headers, query: { summary: "1" } }, denied); assert.equal(denied.statusCode, 403); assert.equal(readOrders, false);
+  await db.collection("adminUsers").doc("fs-admin").set({ active: true });
+  const fsAdmin = createAdminOrdersHandler({ getDb: () => db, verifyToken: async () => ({ uid: "fs-admin", email: "fs@example.com" }), env: { NEWSLETTER_SITE_ORIGIN: env.NEWSLETTER_SITE_ORIGIN } });
+  const whoami = response(); await fsAdmin({ method: "GET", headers, query: { whoami: "1" } }, whoami);
+  assert.equal(whoami.statusCode, 200); assert.equal(whoami.body.uid, "fs-admin");
+  const claimAdmin = createAdminOrdersHandler({ getDb: () => db, verifyToken: async () => ({ uid: "claim-admin", admin: true, email: "claim@example.com" }), env: { NEWSLETTER_SITE_ORIGIN: env.NEWSLETTER_SITE_ORIGIN } });
+  const claimRes = response(); await claimAdmin({ method: "GET", headers, query: { whoami: "1" } }, claimRes);
+  assert.equal(claimRes.statusCode, 200); assert.equal(claimRes.body.uid, "claim-admin");
 });
 test("audit snapshots the verified actor and real field changes with stock deduction; retries/no-ops add no duplicate event", async () => {
   const { db, user, id, call } = await setup();
-  const changed = await call({ id, status: "completed", actor: "spoof", actorName: "Forged", actorEmail: "evil@example.com" }); assert.equal(changed.statusCode, 200);
-  assert.deepEqual(changed.body.activity.changes, { status: { before: "new", after: "completed" }, paymentStatus: { before: "unpaid", after: "paid" }, inventory: { before: "", after: "deducted" } });
+  assert.equal((await call({ id, status: "confirmed" })).statusCode, 200);
+  const changed = await call({ id, status: "shipping", actor: "spoof", actorName: "Forged", actorEmail: "evil@example.com" }); assert.equal(changed.statusCode, 200);
+  assert.deepEqual(changed.body.activity.changes, { status: { before: "confirmed", after: "shipping" }, inventory: { before: "", after: "deducted" } });
   assert.equal(changed.body.activity.actorName, "Linh"); assert.equal(changed.body.activity.actor, "owner"); assert.equal(changed.body.activity.actorEmail, "linh@example.com");
   assert.equal((await db.collection("inventory").doc("serum").get()).data().quantity, 8);
   user.name = "New profile name";
   const detail = await call(null, { id }); assert.equal(detail.body.activities[0].actorName, "Linh"); assert.equal(detail.body.activities[0].createdAt, 1793404800000); assert.ok(!Object.hasOwn(detail.body.order, "requestHash"));
-  const retry = await call({ id, status: "completed" }); assert.equal(retry.body.activity, null); assert.equal((await call(null, { id })).body.activities.length, 1);
+  const retry = await call({ id, status: "shipping" }); assert.equal(retry.body.activity, null); assert.equal((await call(null, { id })).body.activities.length, 2);
   await call({ id, status: "cancelled" }); const returned = await call({ id, action: "restockOrder" });
   assert.equal(returned.body.activity.action, "stock_returned"); assert.equal(returned.body.activity.quantity, 2); assert.deepEqual(returned.body.activity.changes.inventory, { before: "deducted", after: "restocked" });
   assert.equal((await call({ id, action: "restockOrder" })).body.activity, null);
   assert.equal((await db.collection("inventory").doc("serum").get()).data().quantity, 10);
-  assert.equal((await call({ id, status: "confirmed" })).statusCode, 409); assert.equal((await call(null, { id })).body.activities.length, 3);
+  assert.equal((await call({ id, status: "confirmed" })).statusCode, 409); assert.equal((await call(null, { id })).body.activities.length, 4);
 });
 test("rejected operations and failed audit writes cannot commit payment or stock changes", async () => {
   const { db, id, call } = await setup();
@@ -54,8 +64,9 @@ test("rejected operations and failed audit writes cannot commit payment or stock
   assert.equal((await call(null, { id })).body.activities.length, 0);
 });
 test("old orders have no invented log and activity pagination keeps every event even with equal timestamps", async () => {
-  const { id, call } = await setup(); assert.deepEqual((await call(null, { id })).body.activities, []);
-  for (let i = 0; i < 35; i++) assert.equal((await call({ id, status: i % 2 ? "new" : "confirmed" })).statusCode, 200);
+  const { db, id, call } = await setup(); assert.deepEqual((await call(null, { id })).body.activities, []);
+  const events = db.collection("orders").doc(id).collection("activityEvents");
+  for (let i = 0; i < 35; i++) await events.doc(randomUUID()).set({ action: "status_updated", createdAt: new Date(1793404800000), actor: "owner", actorName: "Linh", changes: { status: { before: "new", after: "confirmed" } } });
   const first = await call(null, { id }); assert.equal(first.body.activities.length, 30);
   const second = await call(null, { id, activityCursor: first.body.nextActivityCursor }); assert.equal(second.body.activities.length, 5); assert.equal(second.body.nextActivityCursor, null);
   assert.equal(new Set([...first.body.activities, ...second.body.activities].map((item) => item.id)).size, 35);

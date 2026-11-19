@@ -7,7 +7,7 @@ Mặc định dùng SMTP OAuth2 theo [SMTP-SETUP.md](SMTP-SETUP.md), kể cả k
 - Form ở website gửi đến `/api/subscribe`: chuẩn hóa email, ghi Firestore cùng thời điểm đồng ý nhận tin, sau đó gửi mẫu thư tự động.
 - Quản trị → **Email marketing**: xem danh sách email, sửa mẫu tự động, gửi thử đến email do quản trị nhập, soạn và gửi chiến dịch.
 - Mỗi khách nhận một thư riêng từ `sales@ororavn.com`, không lộ danh sách khách khác.
-- Thư thử, thư tự động và chiến dịch dùng nguyên nội dung đã nhập; không tự nối website hoặc liên kết hủy đăng ký. Các liên kết đã phát hành trong thư cũ vẫn hoạt động.
+- Thư chào mừng và thư chiến dịch tự động nối liên kết hủy đăng ký đã ký (`/api/unsubscribe`, khi có `NEWSLETTER_SITE_ORIGIN` và `NEWSLETTER_UNSUBSCRIBE_SECRET` hoặc `FIREBASE_SERVICE_ACCOUNT_JSON`) cùng header `List-Unsubscribe` / `List-Unsubscribe-Post` khi gửi qua SMTP. Thư thử giữ nguyên nội dung đã nhập. Các liên kết cũ vẫn hoạt động.
 - Danh sách khách hỗ trợ chọn nhiều (tối đa 100/lần), Hoạt động, Tạm ngưng, Xóa email và lọc trạng thái trong các email đã tải. Chỉ trạng thái `active` được gửi chiến dịch. Xóa khỏi danh sách không xóa lịch sử chiến dịch/deliveries.
 - Chiến dịch lưu tiến độ, gửi tối đa 2 thư/mỗi yêu cầu; giao diện chờ 5 giây giữa các đợt. Giữ trang quản trị mở khi gửi. Tạm dừng/đóng trang chỉ dừng các đợt tiếp theo; đợt đã gọi máy chủ vẫn có thể hoàn tất.
 - Tiếp tục **chiến dịch cũ** khi mất kết nối. Không tạo chiến dịch mới cho cùng nội dung chỉ vì chưa thấy kết quả: chiến dịch mới có thể gửi lại cho toàn bộ khách.
@@ -59,7 +59,7 @@ Vào project → **Settings → Environment Variables**. Những giá trị nh�
 | `FIREBASE_SERVICE_ACCOUNT_JSON` | Toàn bộ JSON khóa Firebase Admin, chỉ server |
 | `NEWSLETTER_SITE_ORIGIN` | Origin chính xác nơi form và admin chạy, ví dụ `https://ororavn.com`; nếu website dùng `www`, đặt đúng origin `https://www.ororavn.com` |
 | `NEWSLETTER_ADMIN_UIDS` | UID Firebase của người được quyền xem danh sách và gửi chiến dịch |
-| `NEWSLETTER_UNSUBSCRIBE_SECRET` | Giữ nguyên khóa cũ nếu đã phát hành liên kết hủy đăng ký; không còn bắt buộc cho việc gửi thư mới |
+| `NEWSLETTER_UNSUBSCRIBE_SECRET` | Khóa ký liên kết hủy đăng ký cho thư chào mừng và chiến dịch (khuyến nghị đặt riêng và giữ ổn định) |
 
 Tạo khóa ngẫu nhiên bằng trình quản lý mật khẩu hoặc `openssl rand -hex 32` **trên máy của bạn**, rồi nhập trực tiếp vào Vercel. Giữ khóa này ổn định: thay khóa sẽ làm các liên kết hủy đăng ký cũ không còn hợp lệ.
 

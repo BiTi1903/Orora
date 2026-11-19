@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { firebaseAuthFailure } from "./firebase-auth-error.js";
+import { requireAdmin } from "./admin-auth.js";
 const validId = (value) => typeof value === "string" && /^[a-zA-Z0-9_-]{1,150}$/.test(value);
 const validQuantity = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 1_000_000_000;
 const fail = (message, status = 409) => Object.assign(new Error(message), { status });
@@ -12,22 +12,37 @@ export async function reserveOrderInventory(tx, db, productId, quantity, stockSn
   // Order creation supplies the stock snapshot from its initial batched reads.
   const stock = stockSnapshot || await tx.get(ref);
   const current = stock.data() || {};
+  let nextReserved = Number.isSafeInteger(current.reserved) && current.reserved >= 0 ? current.reserved : null;
   // Uncounted stock intentionally accepts orders. Scanning historical orders in
   // that case cannot change the decision and only adds a database round trip.
   if (validQuantity(current.quantity)) {
-    const pending = await tx.get(db.collection("orders").where("product.id", "==", productId));
-    const reserved = pending.docs.reduce((sum, doc) => sum + waitingQuantity(doc.data()), 0);
-    if (current.quantity - reserved < quantity) throw fail("Sản phẩm không đủ số lượng còn có thể đặt. Vui lòng giảm số lượng hoặc liên hệ ORORA.");
+    if (nextReserved === null) {
+      const pending = await tx.get(db.collection("orders").where("product.id", "==", productId));
+      nextReserved = pending.docs.reduce((sum, doc) => sum + waitingQuantity(doc.data()), 0);
+    }
+    if (current.quantity - nextReserved < quantity) throw fail("Sản phẩm không đủ số lượng còn có thể đặt. Vui lòng giảm số lượng hoặc liên hệ ORORA.");
   }
   // Serialize reservations against stock adjustments and other orders. Physical
   // quantity stays unchanged until payment or shipping is confirmed.
-  tx.set(ref, { quantity: current.quantity ?? null, version: (current.version || 0) + 1, updatedAt: new Date() }, { merge: true });
+  tx.set(ref, { quantity: current.quantity ?? null, ...(nextReserved !== null ? { reserved: nextReserved + quantity } : {}), version: (current.version || 0) + 1, updatedAt: new Date() }, { merge: true });
 }
 // Called inside the order update transaction, before any writes.
 export async function settleOrderInventory(tx, db, order, nextPaymentStatus, orderId, userId, nextStatus) {
   if (["deducted", "restocked", "legacy_paid"].includes(order.inventory?.state)) return {};
   if (order.paymentStatus === "paid" || order.status === "shipping" || order.status === "completed") return { inventory: { state: "legacy_paid" } };
-  if (nextStatus === "cancelled") return {};
+  const wasWaiting = waitingQuantity(order);
+  if (nextStatus === "cancelled") {
+    const productId = order.product?.id;
+    if (wasWaiting > 0 && validId(productId)) {
+      const stockRef = db.collection("inventory").doc(productId);
+      const stock = await tx.get(stockRef);
+      const current = stock.data();
+      if (stock.exists && Number.isSafeInteger(current?.reserved)) {
+        tx.set(stockRef, { reserved: Math.max(0, current.reserved - wasWaiting), version: (current.version || 0) + 1, updatedAt: new Date(), updatedBy: userId }, { merge: true });
+      }
+    }
+    return {};
+  }
   if (nextPaymentStatus !== "paid" && nextStatus !== "shipping") return {};
   const productId = order.product?.id;
   if (!validId(productId) || !Number.isInteger(order.quantity) || order.quantity < 1) throw fail("Đơn thiếu ID sản phẩm hoặc số lượng hợp lệ. Kiểm tra đơn trước khi xác nhận.");
@@ -37,7 +52,13 @@ export async function settleOrderInventory(tx, db, order, nextPaymentStatus, ord
   if (!stock.exists || !validQuantity(current.quantity)) throw fail("Chưa nhập tồn kho cho sản phẩm này. Vào Kiểm Hàng nhập số lượng trước khi xác nhận thanh toán hoặc giao hàng.");
   if (current.quantity < order.quantity) throw fail(`Tồn kho chỉ còn ${current.quantity}, không đủ ${order.quantity} sản phẩm của đơn. Kiểm tra và cập nhật Kiểm Hàng trước.`);
   const updatedAt = new Date();
-  tx.set(stockRef, { quantity: current.quantity - order.quantity, version: (current.version || 0) + 1, updatedAt, updatedBy: userId }, { merge: true });
+  tx.set(stockRef, {
+    quantity: current.quantity - order.quantity,
+    ...(Number.isSafeInteger(current.reserved) ? { reserved: Math.max(0, current.reserved - wasWaiting) } : {}),
+    version: (current.version || 0) + 1,
+    updatedAt,
+    updatedBy: userId,
+  }, { merge: true });
   tx.set(db.collection("inventoryMovements").doc(`order-${orderId}`), { type: "order_out", productId, orderId, orderCode: order.code || "", change: -order.quantity, before: current.quantity, after: current.quantity - order.quantity, createdAt: updatedAt, actor: userId });
   return { inventory: { state: "deducted", productId, quantity: order.quantity, deductedAt: updatedAt } };
 }
@@ -46,13 +67,12 @@ export function createInventoryHandler({ getDb, verifyToken, env = process.env }
   return async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
     if (!["GET", "POST"].includes(req.method)) { res.setHeader("Allow", "GET, POST"); return res.status(405).json({ message: "Phương thức không được hỗ trợ." }); }
-    const admins = String(env.ORDER_ADMIN_UIDS || env.NEWSLETTER_ADMIN_UIDS || "").split(",").map((value) => value.trim()).filter(Boolean);
-    if (!admins.length) return res.status(503).json({ message: "Chưa cấu hình quyền quản lý Kiểm Hàng." });
     let user;
-    try { const token = /^Bearer (.+)$/.exec(req.headers.authorization || "")?.[1]; user = token ? await verifyToken(token) : null; }
-    catch (error) { const failure = firebaseAuthFailure(error); return res.status(failure.status).json({ message: failure.message }); }
-    if (!user) return res.status(401).json({ message: "Vui lòng đăng nhập lại." });
-    if (!admins.includes(user.uid)) return res.status(403).json({ message: "Tài khoản chưa có quyền quản lý Kiểm Hàng." });
+    try {
+      user = await requireAdmin(req, { verifyToken, getDb, env, primaryEnvKey: "ORDER_ADMIN_UIDS", deniedMessage: "Tài khoản chưa có quyền quản lý Kiểm Hàng." });
+    } catch (error) {
+      return res.status(error.status || 403).json({ message: error.message });
+    }
     try {
       const db = await getDb();
       if (req.method === "GET" && req.query?.pending === "1") {
@@ -70,10 +90,12 @@ export function createInventoryHandler({ getDb, verifyToken, env = process.env }
         const cursor = req.query?.cursor;
         if (cursor) { if (!validId(cursor)) throw fail("Trang không hợp lệ.", 400); query = query.startAfter(cursor); }
         const page = await query.get();
-        const items = await Promise.all(page.docs.map(async (product) => {
-          const stock = (await db.collection("inventory").doc(product.id).get()).data();
+        const refs = page.docs.map((product) => db.collection("inventory").doc(product.id));
+        const stockDocs = !refs.length ? [] : typeof db.getAll === "function" ? await db.getAll(...refs) : await Promise.all(refs.map((ref) => ref.get()));
+        const items = page.docs.map((product, index) => {
+          const stock = stockDocs[index]?.data?.();
           return { id: product.id, name: String(product.data().name || ""), ...(product.data().number ? { number: String(product.data().number) } : {}), quantity: stock?.quantity ?? null, version: stock?.version || 0, updatedAt: stock?.updatedAt?.toMillis?.() ?? (stock?.updatedAt ? new Date(stock.updatedAt).getTime() : null) };
-        }));
+        });
         return res.status(200).json({ items, nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
       }
       if (req.headers.origin !== new URL(env.NEWSLETTER_SITE_ORIGIN || "https://ororavn.com").origin) throw fail("Tên miền không hợp lệ.", 403);

@@ -12,9 +12,18 @@ export default function TodayTasks({ onOpenOrder, onOpenInventory, revision }) {
     async function inventory() {
       const token = await auth?.currentUser?.getIdToken();
       if (!token) throw new Error();
-      const response = await fetch('/api/inventory', { headers: { Authorization: `Bearer ${token}` }, signal: controller.signal });
-      if (!response.ok) throw new Error();
-      return response.json();
+      const all = [];
+      let cursor = null;
+      for (let page = 0; page < 10; page++) {
+        const url = cursor ? `/api/inventory?cursor=${encodeURIComponent(cursor)}` : '/api/inventory';
+        const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, signal: controller.signal });
+        if (!response.ok) throw new Error();
+        const data = await response.json();
+        all.push(...(data.items || []));
+        cursor = data.nextCursor;
+        if (!cursor) break;
+      }
+      return { items: all };
     }
     Promise.allSettled([
       orderRequest(null, {}, { signal: controller.signal }),

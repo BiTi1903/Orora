@@ -56,7 +56,9 @@ test("campaign creation is idempotent; resumes in batches and never resends a co
   assert.equal(result.body.completed, true); assert.equal(result.body.campaign.accepted, 5);
   await call({ action: "sendBatch", id: body.id });
   assert.equal(new Set(sent.map(([email]) => email)).size, 5); assert.equal(sent.length, 5);
-  assert.equal(sent[0][1].text, message.text);
+  assert.ok(sent[0][1].text.startsWith(message.text));
+  assert.ok(sent[0][1].text.includes(unsubscribeLink(subscriberId(sent[0][0]), env)));
+  assert.equal(sent[0][1].unsubscribeUrl, unsubscribeLink(subscriberId(sent[0][0]), env));
 });
 
 test("unsubscribed recipients and contacts who consent after creation are excluded", async () => {
@@ -103,11 +105,15 @@ test("a delivery reserved before a crash is marked unknown and never sent again"
   assert.equal(result.body.campaign.unknown, 1); assert.equal(sent.length, 0);
 });
 
-test("welcome template is sent exactly as saved without appended footer", async () => {
+test("welcome template appends signed unsubscribe link when configured", async () => {
   const db = memoryDb(); const { call } = admin(db); let received;
   assert.equal((await call({ action: "saveWelcome", ...message })).statusCode, 200);
   await sendWelcomeMessage("a@example.com", { getDb: async () => db, env, sendMail: async (email, text) => { received = { email, text }; } });
-  assert.deepEqual(received.text, message);
+  const expectedUrl = unsubscribeLink(subscriberId("a@example.com"), env);
+  assert.equal(received.text.subject, message.subject);
+  assert.equal(received.text.unsubscribeUrl, expectedUrl);
+  assert.ok(received.text.text.startsWith(message.text));
+  assert.ok(received.text.text.includes(expectedUrl));
   assert.equal((await call({ action: "saveWelcome", subject: "\n", text: "" })).statusCode, 400);
 });
 
@@ -380,7 +386,7 @@ test("customer mail records a frozen template snapshot and counts use once per c
   await call({ ...template, name: "Tên mới", text: "Khác nội dung" });
   let result;
   for (let i = 0; i < 5; i++) { result = await call({ action: "sendBatch", id: "frozen" }); if (result.body.completed) break; }
-  assert.equal(sent.length, 4); assert.equal(sent[0][1].text, message.text);
+  assert.equal(sent.length, 4); assert.ok(sent[0][1].text.startsWith(message.text)); assert.ok(sent[0][1].text.includes("/api/unsubscribe?id="));
   const campaign = (await db.collection("newsletterCampaigns").doc("frozen").get()).data();
   assert.equal(campaign.templateName, "Tên cũ"); assert.equal(campaign.templateRevision, 1);
   const current = (await db.collection("newsletterTemplates").doc(template.id).get()).data();

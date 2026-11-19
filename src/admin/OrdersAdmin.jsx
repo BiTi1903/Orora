@@ -17,7 +17,7 @@ import { PAYMENT_LABELS, formatProductPrice, formatVnd } from "../lib/commerce";
 import { effectiveMailState } from "../lib/mail-state";
 import { orderRequest, MAIL_STATES } from "./order-api";
 const date = (value) => value ? new Date(value).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "—";
-export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, refreshKey = 0, pendingRequest, onOrderChanged }) {
+export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, refreshKey = 0, pendingRequest, onOrderChanged, statusCounts }) {
   const confirm = useConfirm();
   const [mailPreview, setMailPreview] = useState(null);
   const [filters, setFilters] = useState(EMPTY_ORDER_FILTERS);
@@ -97,15 +97,52 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
     setOrders((items) => items.map((item) => item.id === id ? { ...item, ...patch } : item));
     setDetail((value) => value?.order.id === id ? { ...value, order: { ...value.order, ...patch } } : value);
   };
-  const update = (order, patch) => perform(async () => {
-    if (patch.status === "completed") patch = { ...patch, paymentStatus: "paid" };
-    const previous = Object.fromEntries(Object.keys(patch).map((key) => [key, order[key]]));
-    patchLocal(order.id, patch);
-    try { const result = await orderRequest({ id: order.id, ...patch }); if (result.inventory) patchLocal(order.id, { inventory: result.inventory });
-      if (result.activity) setDetail((value) => value?.order.id === order.id ? { ...value, activities: [result.activity, ...(value.activities || []).filter((item) => item.id !== result.activity.id)] } : value);
-      onOrderChanged?.(); setNotice({ text: result.message }); }
-    catch (error) { patchLocal(order.id, previous); throw error; }
-  });
+const NEXT_ORDER_STATUSES = {
+  new: ["confirmed", "cancelled"],
+  confirmed: ["shipping", "completed", "cancelled"],
+  shipping: ["completed", "cancelled"],
+  completed: [],
+  cancelled: [],
+};
+const update = async (order, patch) => {
+    if (patch.status === "cancelled" && order.status !== "cancelled") {
+      if (!await confirm(`Hủy đơn ${order.code}? Đơn đã hủy không thể mở lại.`, { title: "Xác nhận hủy đơn", confirmLabel: "Hủy đơn", danger: true })) return;
+    } else if (patch.status === "completed" && order.status !== "completed") {
+      if (!await confirm(`Đánh dấu hoàn tất đơn ${order.code}? Thao tác này sẽ ghi nhận đã thanh toán, trừ kho (nếu chưa trừ) và không thể lùi trạng thái.`, { title: "Xác nhận hoàn tất đơn", confirmLabel: "Hoàn tất" })) return;
+    }
+    return perform(async () => {
+      if (patch.status === "completed") patch = { ...patch, paymentStatus: "paid" };
+      const previous = Object.fromEntries(Object.keys(patch).map((key) => [key, order[key]]));
+      patchLocal(order.id, patch);
+      try { const result = await orderRequest({ id: order.id, ...patch }); if (result.inventory) patchLocal(order.id, { inventory: result.inventory });
+        if (result.activity) setDetail((value) => value?.order.id === order.id ? { ...value, activities: [result.activity, ...(value.activities || []).filter((item) => item.id !== result.activity.id)] } : value);
+        onOrderChanged?.(); setNotice({ text: result.message }); }
+      catch (error) { patchLocal(order.id, previous); throw error; }
+    });
+  };
+  const quickResendMail = async (order) => {
+    const state = effectiveMailState(order.confirmationMail);
+    if (state === "stuck") {
+      if (!await confirm(`Email đơn ${order.code} đang bị kẹt quá 5 phút. Bước này sẽ chuyển sang "Chưa rõ kết quả" (chưa gửi thêm email) để bạn kiểm tra Outlook trước khi bấm gửi lại.`, { title: "Gỡ kẹt email xác nhận", confirmLabel: "Chuyển sang Chưa rõ kết quả" })) return;
+      return perform(async () => {
+        const result = await orderRequest({ action: "sendOrderEmail", id: order.id, requestId: crypto.randomUUID(), recoverOnly: true });
+        if (result.state && result.state !== "unchanged") patchLocal(order.id, { confirmationMail: { ...(order.confirmationMail || {}), state: result.state, updatedAt: Date.now() } });
+        setMailRevision((v) => v + 1);
+        onOrderChanged?.();
+        setNotice({ error: result.state === "failed", text: result.message });
+      });
+    }
+    if (state === "unknown") {
+      if (!await confirm(`Kết quả gửi trước của đơn ${order.code} chưa rõ. Bạn đã kiểm tra thư đã gửi trên Outlook để tránh gửi trùng chưa?`, { title: "Xác nhận gửi lại email", confirmLabel: "Vẫn gửi lại" })) return;
+    }
+    return perform(async () => {
+      const result = await orderRequest({ action: "sendOrderEmail", id: order.id, requestId: crypto.randomUUID(), confirmResend: state === "unknown" });
+      if (result.state) patchLocal(order.id, { confirmationMail: { ...(order.confirmationMail || {}), state: result.state, updatedAt: Date.now() } });
+      setMailRevision((v) => v + 1);
+      onOrderChanged?.();
+      setNotice({ error: result.state === "failed" || result.state === "unknown", text: result.message });
+    });
+  };
   const selected = detail?.order;
   const query = search.trim().toLocaleLowerCase("vi");
   useEffect(() => {
@@ -138,7 +175,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
     <div hidden={view !== "orders"}>
     {notice && !selected && <p role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
     {!ready ? <p className="admin-muted">Đang chờ dữ liệu đơn hàng.</p> : <>
-      <div className="order-status-tabs" role="group" aria-label="Lọc trạng thái đơn hàng">{[["all", "Tất cả"], ...Object.entries(STATUSES)].map(([key, label]) => <button key={key} type="button" aria-pressed={statusFilter === key} onClick={() => setStatusFilter(key)}>{label}<span>{key === "all" ? orders.length : orders.filter((order) => order.status === key).length}</span></button>)}</div>
+      <div className="order-status-tabs" role="group" aria-label="Lọc trạng thái đơn hàng">{[["all", "Tất cả"], ...Object.entries(STATUSES)].map(([key, label]) => <button key={key} type="button" aria-pressed={statusFilter === key} onClick={() => setStatusFilter(key)}>{label}<span>{statusCounts?.[key] ?? (key === "all" ? orders.length : orders.filter((order) => order.status === key).length)}</span></button>)}</div>
       <div className="admin-order-toolbar">
         <div className="admin-field"><label htmlFor="order-search">Tìm đơn hàng</label><input id="order-search" type="search" placeholder="Mã/ID đơn, tên, điện thoại hoặc email" value={search} onChange={(event) => { setSearch(event.target.value); setCustomerEmail(""); }} /></div>
 
@@ -171,13 +208,13 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
       {(invalidMoneyRange(filters.min, filters.max) || (filters.from && filters.to && filters.from > filters.to)) && <p className="admin-error" role="alert">Khoảng tiền hoặc khoảng ngày chưa hợp lệ.</p>}
       <p className="admin-muted">Hiển thị {visibleOrders.length} / {orders.length} đơn đã tải{cursor ? ". Tải thêm để tìm trong các đơn cũ hơn." : "."}</p>
       <div className="admin-card admin-order-list-scroll"><table className="admin-table"><thead><tr><th>Mã đơn / Ngày đặt</th><th>Người mua</th><th>Giá trị đơn</th><th>Trạng thái</th><th>Thanh toán</th><th>Thư xác nhận</th><th /></tr></thead><tbody>
-        {pageOrders.map((order) => <tr key={order.id}><td data-label="Mã đơn"><strong>{order.code}</strong><br /><small>{date(order.createdAt)}</small></td><td data-label="Người mua">{order.customer.name}<small className="order-summary-note">{order.customer.phone}</small>{order.customer.phone&&<div className="admin-order-phone">
+        {pageOrders.map((order) => { const mailState = effectiveMailState(order.confirmationMail); return <tr key={order.id}><td data-label="Mã đơn"><strong>{order.code}</strong><br /><small>{date(order.createdAt)}</small></td><td data-label="Người mua">{order.customer.name}<small className="order-summary-note">{order.customer.phone}</small>{order.customer.phone&&<div className="admin-order-phone">
           <a className="admin-btn" href={`tel:${order.customer.phone}`}>Gọi</a>
           <button type="button" className="admin-btn" aria-label={`Sao chép số điện thoại đơn ${order.code}`} onClick={async ()=>{
             try { await navigator.clipboard.writeText(order.customer.phone); setNotice({text:"Đã sao chép số điện thoại."}); }
             catch { setNotice({error:true,text:"Chưa sao chép được số điện thoại."}); }
           }}>Sao chép số</button>
-        </div>}</td><td data-label="Giá trị đơn">{order.totalAmount != null ? formatVnd(order.totalAmount) : order.subtotal != null ? <>{formatVnd(order.subtotal)}<small className="order-summary-note">Chưa chốt phí ship</small></> : "Cần báo giá"}</td><td data-label="Trạng thái"><span className={`order-state-badge ${order.status}`}>{STATUSES[order.status] || order.status}</span></td><td data-label="Thanh toán">{orderPaymentLabel(order)}</td><td data-label="Thư xác nhận">{MAIL_STATES[effectiveMailState(order.confirmationMail)] || "Chưa có lịch sử"}</td><td><button className="admin-btn" type="button" aria-label={`Xem đơn ${order.code}`} aria-expanded={selected?.id === order.id} onClick={() => { setDetailTab("summary"); showDetail(order); }}>Xem chi tiết</button></td></tr>)}
+        </div>}</td><td data-label="Giá trị đơn">{order.totalAmount != null ? formatVnd(order.totalAmount) : order.subtotal != null ? <>{formatVnd(order.subtotal)}<small className="order-summary-note">Chưa chốt phí ship</small></> : "Cần báo giá"}</td><td data-label="Trạng thái"><span className={`order-state-badge ${order.status}`}>{STATUSES[order.status] || order.status}</span></td><td data-label="Thanh toán">{orderPaymentLabel(order)}</td><td data-label="Thư xác nhận"><span>{MAIL_STATES[mailState] || "Chưa có lịch sử"}</span>{order.customer?.email && ["failed", "unknown", "stuck"].includes(mailState) && <div className="admin-order-phone"><button type="button" className="admin-btn" disabled={busy} onClick={() => quickResendMail(order)}>{mailState === "stuck" ? "Gỡ kẹt mail" : "Gửi lại mail"}</button></div>}</td><td><button className="admin-btn" type="button" aria-label={`Xem đơn ${order.code}`} aria-expanded={selected?.id === order.id} onClick={() => { setDetailTab("summary"); showDetail(order); }}>Xem chi tiết</button></td></tr>; })}
       </tbody></table>{!visibleOrders.length && <p className="admin-muted">{orders.length ? "Không có đơn phù hợp với bộ lọc." : "Chưa có đơn hàng."}</p>}</div>
       {pageCount > 1 && <div className="admin-pagination" aria-label="Phân trang đơn hàng"><span>Trang {activePage} / {pageCount} · {visibleOrders.length} đơn phù hợp</span><div className="admin-actions"><button type="button" className="admin-btn" disabled={activePage <= 1} onClick={() => setPage(activePage - 1)}>Trang trước</button><button type="button" className="admin-btn" disabled={activePage >= pageCount} onClick={() => setPage(activePage + 1)}>Trang sau</button></div></div>}
       {cursor && <button className="admin-btn" disabled={busy} onClick={() => perform(async () => { extended.current = true; const data = await orderRequest(null, { cursor }); setOrders((items) => [...new Map([...items, ...data.orders].map((item) => [item.id, item])).values()]); setCursor(data.nextCursor); })}>Tải thêm đơn</button>}
@@ -188,10 +225,10 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
       <nav className="admin-section-tabs" aria-label="Chi tiết đơn hàng"><button type="button" aria-current={detailTab === "summary" ? "page" : undefined} onClick={() => setDetailTab("summary")}>Thông tin & xử lý</button><button type="button" aria-current={detailTab === "emails" ? "page" : undefined} onClick={() => setDetailTab("emails")}>Email của đơn ({detail.mails.length})</button><button type="button" aria-current={detailTab === "activity" ? "page" : undefined} onClick={() => setDetailTab("activity")}>Nhật ký xử lý</button></nav>
       <div hidden={detailTab !== "summary"}>
       <div className="admin-form-grid order-detail-grid"><div><h3>Thông tin người mua</h3><p>{selected.customer.name}</p><p><a href={`tel:${selected.customer.phone}`}>{selected.customer.phone}</a></p><p>{selected.customer.email ? <a href={`mailto:${selected.customer.email}`}>{selected.customer.email}</a> : "Đơn cũ chưa có email"}</p><p className="order-preserve-text">{selected.customer.address}</p><p className="order-preserve-text">Ghi chú: {selected.customer.note || "—"}</p></div>
-      <div><h3>Sản phẩm và thanh toán</h3><p>{orderProductName(selected.product)} × {selected.quantity}</p><p>Đơn giá: {formatProductPrice(selected.product.priceText) || "Cần báo giá"}</p><p>Tạm tính: {selected.subtotal === null ? "Cần báo giá" : formatVnd(selected.subtotal)}</p><p>Phí giao hàng: {selected.shippingFee == null ? "Xác nhận sau" : formatVnd(selected.shippingFee)}</p><p>Tổng tiền: {selected.totalAmount == null ? "Chưa chốt tổng tiền" : formatVnd(selected.totalAmount)}</p><p>Phương thức: {PAYMENT_LABELS[selected.paymentMethod] || selected.paymentMethod}</p><p>Thanh toán: {orderPaymentLabel(selected)}</p><label className="admin-check"><input type="checkbox" checked={selected.paymentStatus === "paid"} disabled={busy || detail.loading} onChange={(event) => update(selected, { paymentStatus: event.target.checked ? "paid" : "unpaid" })} />Đã thanh toán</label></div></div>
+      <div><h3>Sản phẩm và thanh toán</h3><p>{orderProductName(selected.product)} × {selected.quantity}</p><p>Đơn giá: {formatProductPrice(selected.product.priceText) || "Cần báo giá"}</p><p>Tạm tính: {selected.subtotal === null ? "Cần báo giá" : formatVnd(selected.subtotal)}</p><p>Phí giao hàng: {selected.shippingFee == null ? "Xác nhận sau" : formatVnd(selected.shippingFee)}</p><p>Tổng tiền: {selected.totalAmount == null ? "Chưa chốt tổng tiền" : formatVnd(selected.totalAmount)}</p><p>Phương thức: {PAYMENT_LABELS[selected.paymentMethod] || selected.paymentMethod}</p><p>Thanh toán: {orderPaymentLabel(selected)}</p><label className="admin-check"><input type="checkbox" checked={selected.paymentStatus === "paid"} disabled={busy || detail.loading || selected.status === "completed" || selected.status === "cancelled" || (selected.paymentStatus === "paid" && selected.inventory?.state === "deducted")} onChange={(event) => update(selected, { paymentStatus: event.target.checked ? "paid" : "unpaid" })} />Đã thanh toán</label></div></div>
       <p className="admin-muted">Khách có thể xem trạng thái này tại trang Tra cứu đơn hàng bằng mã đơn hoặc số điện thoại đã đặt.</p>
-      <fieldset className="order-status-options" aria-busy={busy} disabled={busy || detail.loading || selected.status === "cancelled"}><legend>Trạng thái xử lý đơn</legend>{Object.entries(STATUSES).map(([key, label]) => <label key={key}><input type="radio" name={`status-${selected.id}`} checked={selected.status === key} onChange={() => update(selected, { status: key })} />{label}</label>)}</fieldset>
-      <p className="admin-muted">Chọn Hoàn tất sẽ ghi nhận đã thanh toán. Đổi sang trạng thái khác không tự xóa ghi nhận tiền; dùng ô Đã thanh toán để điều chỉnh.</p>
+      <fieldset className="order-status-options" aria-busy={busy} disabled={busy || detail.loading || selected.status === "cancelled" || selected.status === "completed"}><legend>Trạng thái xử lý đơn</legend>{Object.entries(STATUSES).map(([key, label]) => <label key={key}><input type="radio" name={`status-${selected.id}`} checked={selected.status === key} disabled={key !== selected.status && !NEXT_ORDER_STATUSES[selected.status]?.includes(key)} onChange={() => update(selected, { status: key })} />{label}</label>)}</fieldset>
+      <p className="admin-muted">Chọn Hoàn tất sẽ ghi nhận đã thanh toán và không thể lùi trạng thái. Đơn đã trừ kho không thể bỏ đánh dấu đã thanh toán.</p>
       <details className="admin-filter-panel"><summary>Quy tắc tồn kho & mã lưu trữ</summary><p className="admin-muted">ID: {selected.id}</p><p className="admin-muted">Đơn chờ giữ số lượng, chưa trừ tồn thực tế. Xác nhận thanh toán, bắt đầu giao hoặc Hoàn tất sẽ trừ kho một lần. Hủy đơn chưa xuất giải phóng hàng chờ; đơn đã xuất chỉ hoàn kho khi xác nhận nhận lại hàng.</p></details>
       {selected.status === "cancelled" && selected.inventory?.state === "deducted" && <button type="button" className="admin-btn" disabled={busy} onClick={async () => {
         if (!await confirm("Bạn đã thực tế nhận lại đủ hàng của đơn này? Xác nhận sẽ cộng lại số lượng vào kho một lần.", { title: "Hoàn kho", confirmLabel: "Hoàn kho", danger: true })) return;
@@ -199,7 +236,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
       }}>Đã nhận hàng trả — Hoàn kho</button>}
       {selected.inventory?.state === "restocked" && <p className="admin-muted">Đã nhận hàng trả và hoàn kho.</p>}
       </div><div hidden={detailTab !== "emails"}><h3>Lịch sử email của đơn</h3>
-      <div className="admin-actions"><button type="button" className="admin-btn" onClick={() => showDetail(selected)}>Tải lại lịch sử</button></div>
+      <div className="admin-actions"><button type="button" className="admin-btn" onClick={() => showDetail(selected)}>Tải lại lịch sử</button>{selected.customer?.email && ["failed", "unknown", "stuck"].includes(effectiveMailState(selected.confirmationMail)) && <button type="button" className="admin-btn primary" disabled={busy} onClick={() => quickResendMail(selected)}>{effectiveMailState(selected.confirmationMail) === "stuck" ? "Gỡ kẹt mail xác nhận" : "Gửi lại mail xác nhận"}</button>}</div>
       {detail.loading ? <p>Đang tải chi tiết…</p> : !detail.mails.length ? <p className="admin-muted">Chưa có lịch sử gửi thư.</p> : detail.mails.map((mail) => <div className="order-mail-event" key={mail.id}><button type="button" className="admin-template-link" onClick={() => setMailPreview(mail)}>{mail.subject} · {MAIL_STATES[effectiveMailState(mail)] || mail.state}</button><p>{mailActorLabel(mail)} · {date(mail.createdAt)}</p><OutlookCheck outlook={mail.outlook} label={`${selected.code} · ${mail.recipient}`} check={() => orderRequest({ action: "checkOrderOutlook", id: selected.id, eventId: mail.id })} /></div>)}
       <p className="admin-muted">“Đã nhận” là chấp nhận yêu cầu gửi, chưa bảo đảm thư vào hộp thư khách. Chỉ đánh dấu thanh toán sau khi kiểm tra tiền thực nhận.</p>
     </div><div hidden={detailTab !== "activity"}><OrderActivity activities={detail.activities} nextCursor={detail.nextActivityCursor} loading={detail.loading || busy} statuses={STATUSES} onReload={() => showDetail(selected)} onMore={() => {

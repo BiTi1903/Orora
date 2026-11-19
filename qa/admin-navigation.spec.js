@@ -7,6 +7,7 @@ test('grouped admin keeps drafts and all navigation reachable on short screens',
   'lib/api.js':'export const getProducts=async()=>[];export const explainError=()=>"Lỗi thử";',
   'admin/useOrderNotifications.js':'export default function notifications(){return {snapshot:{pendingCount:7},refresh(){},dismiss(){}}}',
   'admin/newsletter-api.js':'export const newsletterRequest=async()=>({});',
+  'admin/order-api.js':'export const orderRequest=async()=>({ok:true});',
  };
  modules['admin/HomeAdmin.jsx']='import {R} from "/qa/runtime.js";const {createElement,useState}=R;export default function Home(){const [value,set]=useState("");return createElement("label",null,"Bản nhập thử",createElement("input",{value,onChange:e=>set(e.target.value)}))}';
  for(const name of ['AdminLogin','ProductsAdmin','OrdersAdmin','NewsletterAdmin','InventoryAdmin','ShippingAdmin','ChatSettings','EmailExport','AnalyticsDashboard'])modules[`admin/${name}.jsx`]='export default function Panel(){return null}';
