@@ -1,3 +1,15 @@
+## 19/11/2026 — Thêm giới hạn 20 giây cho yêu cầu tải chi tiết đơn và tách dòng thông báo lỗi lưu trên thanh đáy mobile
+
+- **Lý do**: (1) Yêu cầu tải chi tiết đơn hàng chưa có thời hạn chờ và cơ chế hủy nên có thể kẹt ở trạng thái đang tải và khóa các nút khác nếu mạng treo; (2) thông báo lỗi lưu trong Visual Builder nằm trong thanh đáy không xuống dòng khiến nút "Lưu tất cả" bị ép chật trên màn hình `320px`.
+- **Thay đổi chính**:
+  - **Giới hạn thời gian và hủy yêu cầu tải chi tiết (`src/components/OrderTracking.jsx`)**: Áp dụng cơ chế hủy yêu cầu và giới hạn chờ 20 giây tương tự form tra cứu; tự hủy khi rời trang, đổi chế độ, sửa ô nhập hoặc tra cứu mới, đồng thời hiển thị thông báo quá thời gian/lỗi mạng ngay tại dòng đơn và mở khóa các nút.
+  - **Đưa thông báo lỗi lưu lên dòng riêng trên thanh đáy mobile (`src/admin/builder/VisualBuilder.css`)**: Cho thanh đáy tách riêng thông báo lỗi lên một hàng phía trên, giữ trạng thái lưu và nút "Lưu tất cả" trên một hàng gọn và dễ bấm ở `320px`.
+- **File / khu vực liên quan**: `src/components/OrderTracking.jsx`, `src/admin/builder/VisualBuilder.css`.
+- **Kiểm tra đã chạy**:
+  - `npm run lint`, `npm run build`: 0 lỗi, 0 cảnh báo.
+  - Playwright (`width-320` và `width-390`): **24/24** test đạt trên `qa/shopping.spec.js` và `qa/editor-checkout.spec.js`.
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu.
+
 ## 19/11/2026 — Tối ưu bố cục Visual Builder trên màn hình hẹp, báo tải/lỗi ngay tại dòng tra cứu đơn và tăng vùng chạm giỏ hàng
 
 - **Lý do**: Khắc phục 3 điểm trải nghiệm mobile phát hiện qua kiểm tra giao diện: (1) Visual Builder ở 320px xếp dọc toàn bộ danh sách mục trước phần xem trước và thanh lưu cố định bị xuống 3 hàng do gộp cả nút Hoàn tác/Làm lại/Khôi phục mặc định; (2) màn hình tra cứu đơn hiển thị trạng thái tải và lỗi của nút "Xem chi tiết" ở form phía trên, dễ nằm ngoài vùng nhìn trên điện thoại; (3) nút tăng/giảm số lượng trong giỏ hàng nhỏ (~30×36px) gây khó chạm trên màn hình hẹp.

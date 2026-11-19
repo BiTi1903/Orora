@@ -17,9 +17,9 @@ export default function OrderTracking() {
   const [code,setCode] = useState(typeof location.state?.code === 'string' ? location.state.code : '');
   const [mode,setMode] = useState(location.state?.code ? 'code' : 'phone');
   const [phone,setPhone] = useState(typeof location.state?.phone === 'string' ? location.state.phone : ''),[busy,setBusy] = useState(false),[orders,setOrders] = useState([]),[nextCursor,setNextCursor] = useState(null),[error,setError] = useState('');
-  const request = useRef(null), sequence = useRef(0), result = useRef(null);
-  useEffect(() => () => { sequence.current++;request.current?.abort(); },[]);
-  const edit = setter => event => { request.current?.abort();sequence.current++;setBusy(false);setLoadingCode('');setDetailErrors({});setOrders([]);setNextCursor(null);setSelectedCode(null);setStatus('all');setPage(1);setError('');setter(event.target.value); };
+  const request = useRef(null), detailRequest = useRef(null), sequence = useRef(0), result = useRef(null);
+  useEffect(() => () => { sequence.current++;request.current?.abort();detailRequest.current?.abort(); },[]);
+  const edit = setter => event => { request.current?.abort();detailRequest.current?.abort();sequence.current++;setBusy(false);setLoadingCode('');setDetailErrors({});setOrders([]);setNextCursor(null);setSelectedCode(null);setStatus('all');setPage(1);setError('');setter(event.target.value); };
   const [status,setStatus] = useState('all'),[page,setPage] = useState(1),[selectedCode,setSelectedCode] = useState(null),[loadingCode,setLoadingCode] = useState(''),[detailErrors,setDetailErrors] = useState({});
   const priority = Object.keys(ORDER_STATUSES);
   const filtered = orders.filter(order => status === 'all' || (ORDER_STATUSES[order.status] ? order.status : 'unknown') === status).sort((a,b) => {
@@ -31,17 +31,21 @@ export default function OrderTracking() {
   const pageOrders = filtered.slice((activePage-1)*5,activePage*5);
   const selected = orders.find(order => order.code === selectedCode);
   const lookup = async (cursor = null) => {
-      if (busy) return;request.current?.abort();const controller = new AbortController();request.current = controller;const id = ++sequence.current;setBusy(true);setLoadingCode('');setDetailErrors({});setError('');if (!cursor) { setOrders([]);setNextCursor(null);setSelectedCode(null);setStatus('all');setPage(1); }const timer = setTimeout(()=>controller.abort(),20000);
+      if (busy) return;request.current?.abort();detailRequest.current?.abort();const controller = new AbortController();request.current = controller;const id = ++sequence.current;setBusy(true);setLoadingCode('');setDetailErrors({});setError('');if (!cursor) { setOrders([]);setNextCursor(null);setSelectedCode(null);setStatus('all');setPage(1); }const timer = setTimeout(()=>controller.abort(),20000);
       try { const response = await fetch('/api/order-tracking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:mode === 'code' ? code.trim() : '',phone:phone.trim(), ...(cursor ? {cursor} : {})}),cache:'no-store',signal:controller.signal});const data = await response.json().catch(()=>({message:"Chưa thể tra cứu lúc này. Vui lòng thử lại sau."}));if (!response.ok || !Array.isArray(data.orders) && !data.order) throw new Error(data.message || 'Chưa thể tra cứu. Vui lòng thử lại.');if (id === sequence.current) {setOrders(previous => cursor ? [...previous,...data.orders] : (data.orders || [data.order]));setNextCursor(data.nextCursor || null);if (!cursor) requestAnimationFrame(()=>result.current?.focus());} } catch (cause) { if (id === sequence.current) setError(cause.name === 'AbortError' ? 'Tra cứu mất quá nhiều thời gian. Vui lòng thử lại.' : cause instanceof TypeError ? 'Chưa thể kết nối. Vui lòng kiểm tra mạng và thử lại.' : cause.message || 'Chưa thể tra cứu. Vui lòng thử lại.'); } finally { clearTimeout(timer);if (id === sequence.current) setBusy(false); }
   };
   const openDetail = async (order) => {
     if (order.productName !== undefined) { setSelectedCode(order.code); return; }
     if (busy || loadingCode) return;
+    detailRequest.current?.abort();
+    const controller = new AbortController();
+    detailRequest.current = controller;
     const id = sequence.current;
     setLoadingCode(order.code);
     setDetailErrors(prev => { if (!prev[order.code]) return prev; const next = { ...prev }; delete next[order.code]; return next; });
+    const timer = setTimeout(() => controller.abort(), 20000);
     try {
-      const response = await fetch('/api/order-tracking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:order.code,phone:phone.trim()}),cache:'no-store'});
+      const response = await fetch('/api/order-tracking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:order.code,phone:phone.trim()}),cache:'no-store',signal:controller.signal});
       const data = await response.json().catch(()=>({}));
       if (id !== sequence.current) return;
       if (response.ok && data.order) {
@@ -50,12 +54,24 @@ export default function OrderTracking() {
       } else {
         setDetailErrors(prev => ({ ...prev, [order.code]: data.message || 'Chưa tải được chi tiết đơn hàng.' }));
       }
-    } catch {
-      if (id === sequence.current) setDetailErrors(prev => ({ ...prev, [order.code]: 'Chưa tải được chi tiết đơn hàng. Vui lòng thử lại.' }));
+    } catch (cause) {
+      if (id === sequence.current) {
+        setDetailErrors(prev => ({
+          ...prev,
+          [order.code]: cause?.name === 'AbortError'
+            ? 'Tải chi tiết mất quá nhiều thời gian. Vui lòng thử lại.'
+            : cause instanceof TypeError
+              ? 'Chưa thể kết nối. Vui lòng kiểm tra mạng và thử lại.'
+              : 'Chưa tải được chi tiết đơn hàng. Vui lòng thử lại.',
+        }));
+      }
+    } finally {
+      clearTimeout(timer);
+      if (detailRequest.current === controller) detailRequest.current = null;
+      if (id === sequence.current) setLoadingCode('');
     }
-    finally { if (id === sequence.current) setLoadingCode(''); }
   };
-  const switchMode=key=>{request.current?.abort();sequence.current++;setBusy(false);setLoadingCode('');setDetailErrors({});setOrders([]);setNextCursor(null);setSelectedCode(null);setStatus('all');setPage(1);setError('');setMode(key);};
+  const switchMode=key=>{request.current?.abort();detailRequest.current?.abort();sequence.current++;setBusy(false);setLoadingCode('');setDetailErrors({});setOrders([]);setNextCursor(null);setSelectedCode(null);setStatus('all');setPage(1);setError('');setMode(key);};
   return <section className={`order-tracking-page${orders.length?" has-results":""}`} style={trackingTheme(styles)}><Link className="order-tracking-back" to="/" style={css('help')}>← {copy.backLabel}</Link>
   <header className="order-tracking-heading"><p className="product-eyebrow" style={css('eyebrow')}>{copy.eyebrow}</p><h1 style={css('title')}>{copy.title}</h1><p style={css('intro')}>{copy.intro}</p></header>
   <OrderTrackingSearch copy={copy} styles={styles} mode={mode} code={code} phone={phone} busy={busy} error={error} onMode={switchMode} onCode={edit(setCode)} onPhone={edit(setPhone)} onSubmit={event=>{event.preventDefault();if(mode==='code'){if(!code.trim()||!phone.trim()){setError('Nhập mã đơn và số điện thoại (hoặc 4 số cuối) để tra cứu.');return;}}else if(!phone.trim()){setError('Nhập số điện thoại để tra cứu.');return;}lookup();}}/>
