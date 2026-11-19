@@ -1,0 +1,66 @@
+import { test, expect } from '@playwright/test';
+import { mount, render, fit } from './fixtures';
+
+const mocks = {
+  'hooks/useHomeContent.js': 'export default function home(){return {loading:false}}',
+  'hooks/useProducts.js': 'export default function products(){return {products:[],loading:false}}',
+  'hooks/useCategories.js': 'export default function categories(){return {categories:[]}}',
+};
+
+test('Visual Builder edits and saves Form giỏ hàng, Form đặt hàng, and Form đã đặt hàng with live preview', async ({ page }) => {
+  await mount(
+    page,
+    `import Builder from '/qa/BuilderHarness.jsx';${render("R.createElement('main',{className:'admin-main'},R.createElement(Builder))")}`,
+    {
+      ...mocks,
+      'lib/api.js': `export const getProduct=async()=>null;export const getHomeContent=async()=>({navLogo:'ORORA',navStyles:{cart:{copy:{title:'Giỏ hàng'}}},productDetailStyles:{purchaseOptions:{orderSubmitLabel:'Đặt hàng ngay'}}});export const saveHomeContent=async value=>{window.__saved=value};`,
+    },
+  );
+
+  // 1. Form giỏ hàng
+  await page.locator('.builder-sections').getByRole('button', { name: /Form giỏ hàng/ }).click();
+  const frame = page.frameLocator('iframe');
+  await expect(frame.getByRole('heading', { name: 'Giỏ hàng' })).toBeVisible();
+  await page.getByLabel('Tiêu đề giỏ hàng', { exact: true }).fill('Túi mua sắm');
+  await expect(frame.getByRole('heading', { name: 'Túi mua sắm' })).toBeVisible();
+  await frame.locator('[data-builder-key="cartBuyNow"]').click();
+  await page.getByLabel('Chữ nút Mua ngay', { exact: true }).fill('Đặt toàn bộ');
+  await expect(frame.getByRole('button', { name: 'Đặt toàn bộ' })).toBeVisible();
+
+  // 2. Form đặt hàng
+  await page.locator('.builder-sections').getByRole('button', { name: /Form đặt hàng/ }).click();
+  await expect(frame.getByRole('heading', { name: 'Đặt hàng trên website' })).toBeVisible();
+  await page.getByLabel('Tiêu đề hộp thoại', { exact: true }).fill('Đặt hàng nhanh');
+  await expect(frame.getByRole('heading', { name: 'Đặt hàng nhanh' })).toBeVisible();
+  await frame.locator('[data-builder-key="ofSubmit"]').click();
+  await page.getByLabel('Chữ nút gửi đơn', { exact: true }).fill('Xác nhận đơn');
+  await expect(frame.getByRole('button', { name: 'Xác nhận đơn' })).toBeVisible();
+
+  // 3. Form đã đặt hàng
+  await page.locator('.builder-sections').getByRole('button', { name: /Form đã đặt hàng/ }).click();
+  await expect(frame.getByRole('heading', { name: 'Đã nhận đơn hàng' })).toBeVisible();
+  await page.getByLabel('Nhãn mã đơn hàng', { exact: true }).fill('Mã đơn của bạn');
+  await expect(frame.getByText('Mã đơn của bạn', { exact: true })).toBeVisible();
+
+  await page.getByRole('button', { name: '💾 Lưu tất cả', exact: true }).click();
+  await expect.poll(() => page.evaluate(() => window.__saved)).toEqual({
+    navStyles: {
+      cart: {
+        copy: {
+          title: 'Túi mua sắm',
+          buyNow: 'Đặt toàn bộ',
+        },
+      },
+    },
+    productDetailStyles: {
+      purchaseOptions: {
+        formLabels: {
+          title: 'Đặt hàng nhanh',
+        },
+        orderSubmitLabel: 'Xác nhận đơn',
+        receiptCodeLabel: 'Mã đơn của bạn',
+      },
+    },
+  });
+  await fit(page);
+});

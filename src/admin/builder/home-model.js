@@ -718,6 +718,9 @@ const SECTION_DEFAULT_SELECTED = {
   newsletter: "nlTitle",
   footer: "ftLogo",
   ticker: "text",
+  cartform: "cartHeader",
+  orderform: "ofHeader",
+  ordersuccess: "osBanner",
 };
 
 function buildHomePayload({ about, hero, collection, productDetail, features, reviews, newsletter, footer, ticker, navbar, philosophy }) {

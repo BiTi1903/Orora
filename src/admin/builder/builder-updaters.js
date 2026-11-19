@@ -33,6 +33,9 @@ export function resolveSelectedData({
   philosophy,
 }) {
   if (activeSection === "navbar") return { type: "navbar", data: navbar };
+  if (activeSection === "cartform") return { type: "cartform", data: navbar };
+  if (activeSection === "orderform") return { type: "orderform", data: productDetail };
+  if (activeSection === "ordersuccess") return { type: "ordersuccess", data: productDetail };
   if (activeSection === "philosophy") return { type: "philosophy", data: philosophy };
   if (activeSection === "hero") return getHeroSelectedData(hero, selected);
   if (activeSection === "collection") return getCollectionSelectedData(collection, selected);
@@ -67,6 +70,14 @@ export function applySelectedPatch(
 
   if (activeSection === "philosophy") {
     setPhilosophy((current) => ({ ...current, ...patch }));
+    return;
+  }
+  if (activeSection === "cartform") {
+    setNavbar((current) => ({ ...current, ...patch }));
+    return;
+  }
+  if (activeSection === "orderform" || activeSection === "ordersuccess") {
+    setProductDetail((current) => ({ ...current, ...patch }));
     return;
   }
   if (activeSection === "navbar") {

@@ -13,6 +13,9 @@ const FIELDS = {
   newsletter: ["newsletterTitle", "newsletterHighlight", "newsletterText", "newsletterPlaceholder", "newsletterButton", "newsletterConsent", "newsletterStyles"],
   footer: ["footerLogo", "footerDescription", "footerInfoTitle", "footerAboutText", "footerShopText", "footerTrackingText", "footerTermsText", "footerPrivacyText", "footerContactTitle", "footerZaloText", "footerPhone", "footerEmail", "footerAddress", "footerSocialTitle", "footerInstagram", "footerFacebook", "footerTikTok", "footerYouTube", "footerCopyright", "footerCompanyNumber", "footerStyles"],
   ticker: ["marqueeWords", "marqueeStyles"],
+  cartform: ["navStyles"],
+  orderform: ["productDetailStyles"],
+  ordersuccess: ["productDetailStyles"],
 };
 
 export function editedSectionPayload(payload, sections) {

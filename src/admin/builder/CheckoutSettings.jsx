@@ -5,7 +5,7 @@ import {ColorField,StyleTypographyBlock} from './ui';
 const LABELS={title:'Tiêu đề form đặt hàng',intro:'Lời hướng dẫn đầu form',productHeading:'Tiêu đề phần sản phẩm',recipientHeading:'Tiêu đề người nhận',addressHeading:'Tiêu đề địa chỉ',paymentHeading:'Tiêu đề thanh toán',noteLabel:'Nhãn mở ghi chú',summaryHeading:'Tiêu đề tóm tắt đơn',confirmHeading:'Nhãn bước xác nhận',continueLabel:'Nhãn nút tiếp tục',backLabel:'Nhãn nút quay lại'};
 export default function CheckoutSettings({value={},onChange}){return <>
  <p className="builder-help">Form được chia theo thông tin người nhận, địa chỉ và thanh toán. Giá, phí và kiểm tra đơn vẫn theo dữ liệu hiện có.</p>
- {Object.entries(CHECKOUT_COPY).map(([key,fallback])=><label className="builder-field" key={key}>{LABELS[key]}<input value={value.formLabels?.[key]??fallback} onChange={event=>onChange({formLabels:{...value.formLabels,[key]:event.target.value}})}/></label>)}
+ {Object.entries(LABELS).map(([key,label])=><label className="builder-field" key={key}>{label}<input value={value.formLabels?.[key]??CHECKOUT_COPY[key]} onChange={event=>onChange({formLabels:{...value.formLabels,[key]:event.target.value}})}/></label>)}
  <details className="inspector-group"><summary>Khung và kiểu chữ form</summary><div className="inspector-group-content">
   {CHECKOUT_FRAME_FIELDS.map(([key,label,fallback,min,max])=><label className="builder-field" key={key}>{label}<input type="number" min={min} max={max} value={value[key]??fallback} onChange={event=>onChange({[key]:Number(event.target.value)})}/></label>)}
   <ColorField label="Màu nền form đặt hàng" value={value.formBackground||'#fffafb'} onChange={formBackground=>onChange({formBackground})}/>

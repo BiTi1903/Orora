@@ -45,6 +45,9 @@ import { Testimonials, Features, Newsletter } from "../../components/Extras";
 import Footer from "../../components/Footer";
 import Navbar from "../../components/Navbar";
 import ScrollText from "../../components/ScrollText";
+import CartFormPreview from "../../components/CartFormPreview";
+import OrderFormPreview from "../../components/OrderFormPreview";
+import OrderSuccessPreview from "../../components/OrderSuccessView";
 import "./VisualBuilder.css";
 
 import { StylePanel } from "./StylePanels";
@@ -342,7 +345,9 @@ export default function VisualBuilder({
     dirtySections.current.add("visibility");
     setEditVersion(value => value + 1);
   };
-  const canResetActive = workspace !== "store" && !["productneeds", "productfaq"].includes(activeSection);
+  const canResetActive =
+    workspace !== "store" &&
+    !["productneeds", "productfaq", "cartform", "orderform", "ordersuccess"].includes(activeSection);
   const resetActive = async () => {
     if (!canResetActive) return;
     if (!await confirm("Khôi phục các giá trị mặc định của mục hiện tại? Thay đổi áp dụng khi bạn lưu.", {
@@ -554,7 +559,7 @@ export default function VisualBuilder({
                     <small>
                       {section.disabled
                         ? "Sắp có"
-                        : !isEnabled(section.key)
+                        : !section.hideVisibilityToggle && !isEnabled(section.key)
                           ? "Đang ẩn trên website"
                           : activeSection === section.key
                             ? "Đang chỉnh sửa"
@@ -564,20 +569,22 @@ export default function VisualBuilder({
 
                   {activeSection === section.key && <span className="builder-dot" />}
                 </button>
-                <button
-                  type="button"
-                  role="switch"
-                  className="builder-section-visibility"
-                  aria-label={`Hiển thị ${section.label} trên website`}
-                  aria-checked={isEnabled(section.key)}
-                  disabled={loading || loadError || saving || section.disabled}
-                  onClick={() => toggleSection(section.key)}
-                >
-                  <span className="builder-visibility-dot" aria-hidden="true" />
-                  <span className="builder-visibility-label">
-                    {isEnabled(section.key) ? "Đang hiện" : "Đang ẩn"}
-                  </span>
-                </button>
+                {!section.hideVisibilityToggle && (
+                  <button
+                    type="button"
+                    role="switch"
+                    className="builder-section-visibility"
+                    aria-label={`Hiển thị ${section.label} trên website`}
+                    aria-checked={isEnabled(section.key)}
+                    disabled={loading || loadError || saving || section.disabled}
+                    onClick={() => toggleSection(section.key)}
+                  >
+                    <span className="builder-visibility-dot" aria-hidden="true" />
+                    <span className="builder-visibility-label">
+                      {isEnabled(section.key) ? "Đang hiện" : "Đang ẩn"}
+                    </span>
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -589,24 +596,27 @@ export default function VisualBuilder({
         <div className="builder-canvas">
           <div className="builder-canvas-head">
             <span>
-              {!isEnabled(activeSection)
+              {!SECTION_LIST.find((section) => section.key === activeSection)?.hideVisibilityToggle &&
+              !isEnabled(activeSection)
                 ? "Mục này đang tắt trên website · Vẫn có thể chỉnh sửa tại đây"
                 : "Sản phẩm mẫu · Xem trước tĩnh · Không thay đổi dữ liệu"}
             </span>
 
             <div className="builder-preview-controls" role="group" aria-label="Điều khiển xem trước">
-              <div className="builder-preview-visibility">
-                <button
-                  type="button"
-                  role="switch"
-                  aria-label="Hiển thị mục đang xem trước trên website"
-                  aria-checked={isEnabled(activeSection)}
-                  disabled={loading || loadError || saving}
-                  onClick={() => toggleSection(activeSection)}
-                >
-                  {!isEnabled(activeSection) ? "Đang tắt · Bật" : "Đang bật · Tắt"}
-                </button>
-              </div>
+              {!SECTION_LIST.find((section) => section.key === activeSection)?.hideVisibilityToggle && (
+                <div className="builder-preview-visibility">
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-label="Hiển thị mục đang xem trước trên website"
+                    aria-checked={isEnabled(activeSection)}
+                    disabled={loading || loadError || saving}
+                    onClick={() => toggleSection(activeSection)}
+                  >
+                    {!isEnabled(activeSection) ? "Đang tắt · Bật" : "Đang bật · Tắt"}
+                  </button>
+                </div>
+              )}
               <div className="builder-device" role="group" aria-label="Thiết bị và tỉ lệ">
                 <button
                   type="button"
@@ -652,6 +662,26 @@ export default function VisualBuilder({
               />
             ) : activeSection === "productfaq" ? (
               <ProductFaq preview value={{ ...discovery.productFaq, enabled: true }} />
+            ) : activeSection === "cartform" ? (
+              <CartFormPreview
+                settings={navbar.navStyles?.cart || {}}
+                products={sampleProducts}
+                selectedElement={selected}
+                onSelect={selectElement}
+              />
+            ) : activeSection === "orderform" ? (
+              <OrderFormPreview
+                canvas
+                appearance={productDetail.purchaseOptions || {}}
+                selectedElement={selected}
+                onSelect={selectElement}
+              />
+            ) : activeSection === "ordersuccess" ? (
+              <OrderSuccessPreview
+                appearance={productDetail.purchaseOptions || {}}
+                selectedElement={selected}
+                onSelect={selectElement}
+              />
             ) : activeSection === "ticker" ? (
               <TickerPreview ticker={ticker} selected={selected} onSelect={selectElement} />
             ) : activeSection === "navbar" ? (

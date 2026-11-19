@@ -22,6 +22,7 @@ import PurchaseOptionsSettings from "./PurchaseOptionsSettings";
 import { CollectionSettings } from "./CollectionPanels";
 import { HeroSettings } from "./HeroPanels";
 import { SectionSettings, ImageSettings, TextSettings, StatsSettings, StatTextSettings } from "./AboutPanels";
+import { CartFormSettings, OrderFormBuilderSettings, OrderSuccessBuilderSettings } from "./FormBuilderPanels";
 import {
   HERO_FIELD_MAP,
   COLLECTION_FIELD_MAP,
@@ -288,6 +289,18 @@ export function StylePanel({
                 onChange={onChange}
                 onStyleChange={onStyleChange}
               />
+            )}
+
+            {section === "cartform" && (
+              <CartFormSettings selected={selected} navbar={navbar} onChange={onChange} />
+            )}
+
+            {section === "orderform" && (
+              <OrderFormBuilderSettings selected={selected} productDetail={productDetail} onChange={onChange} />
+            )}
+
+            {section === "ordersuccess" && (
+              <OrderSuccessBuilderSettings selected={selected} productDetail={productDetail} onChange={onChange} />
             )}
 
             {section === "philosophy" && (

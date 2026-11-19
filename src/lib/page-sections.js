@@ -64,6 +64,24 @@ export const PAGE_SECTIONS = [
     label: "Footer",
     icon: "⌄",
   },
+  {
+    key: "cartform",
+    label: "Form giỏ hàng",
+    icon: "🛒",
+    hideVisibilityToggle: true,
+  },
+  {
+    key: "orderform",
+    label: "Form đặt hàng",
+    icon: "📝",
+    hideVisibilityToggle: true,
+  },
+  {
+    key: "ordersuccess",
+    label: "Form đã đặt hàng",
+    icon: "✓",
+    hideVisibilityToggle: true,
+  },
 ];
 
 export function sectionIsEnabled(settings, key) {

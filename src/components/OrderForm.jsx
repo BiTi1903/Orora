@@ -1,15 +1,14 @@
-import OrderReceiptActions from './OrderReceiptActions';
+import { OrderSuccessContent } from './OrderSuccessView';
 import { toCss } from "../lib/typography";
-import { Link } from "react-router-dom";
 import OrderFormFields from "./OrderFormFields";
-import {checkoutStyle,CHECKOUT_COPY} from "../lib/checkout-presentation";
+import {checkoutStyle,CHECKOUT_COPY,CHECKOUT_RECEIPT_COPY,receiptModalStyle} from "../lib/checkout-presentation";
 import {defaultPurchaseVariant} from "../lib/purchase-defaults";
 import { MAX_ORDER_QUANTITY, productVolumeOptions, selectedVolumeOption, volumePriceText } from "../lib/product-options";
 import ModalDialog from "./ModalDialog";
 import useAddressOptions from "../hooks/useAddressOptions";
 import { shippingFeeFor } from "../lib/shipping";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { availablePaymentMethods, PAYMENT_LABELS, parseVndPrice, formatVnd } from "../lib/commerce";
+import { availablePaymentMethods, parseVndPrice } from "../lib/commerce";
 
 export default function OrderForm({ product, cartItems, home, onClose, selection, initialVariantId = "", initialQuantity = 1, onSelectionChange, fromCart = false }) {
   const isMulti = Array.isArray(cartItems) && cartItems.length > 1;
@@ -63,33 +62,10 @@ export default function OrderForm({ product, cartItems, home, onClose, selection
     : (unitPrice === null ? null : unitPrice * (Number(quantity) || 0));
   const shipping = shippingFeeFor(home.shippingSettings, provinceCode, wardCode);
   const total = subtotal === null || shipping.fee === null ? null : subtotal + shipping.fee;
-  if (result?.code) return <ModalDialog key="success" title="Đã nhận đơn hàng" onClose={onClose} className="order-success-modal" style={{ ...checkoutStyle(appearance), "--receipt-size": `${Math.max(12, Math.min(16, Number(appearance.receiptFontSize) || 13))}px` }}><section className="order-received" aria-label="Thông tin đơn đã nhận">
-    <div className="order-received-banner">
-      <span className="order-received-code-label">Mã đơn hàng</span>
-      <strong className="order-received-code">{result.code}</strong>
-      <p className="order-received-msg">{result.message}</p>
-    </div>
-    <OrderReceiptActions order={result} home={home} appearance={appearance} />
-    <div className="order-received-details checkout-card"><h3>Chi tiết đơn hàng</h3><dl>
-      {Array.isArray(result.items) && result.items.length > 1
-        ? <div className="order-received-items-row"><dt>Sản phẩm ({result.items.length})</dt><dd><ul className="order-received-items">{result.items.map((item, idx) => <li key={`${item.id || item.productId || idx}:${item.variantId || ""}`}>{item.name}{item.variantLabel ? ` (${item.variantLabel})` : ""} × {item.quantity}</li>)}</ul></dd></div>
-        : <div><dt>Sản phẩm</dt><dd>{result.productName}{result.variantLabel ? ` (${result.variantLabel})` : ""} × {result.quantity}</dd></div>}
-      <div><dt>Thanh toán</dt><dd>{PAYMENT_LABELS[result.paymentMethod] || result.paymentMethod}</dd></div>
-      <div><dt>Tiền sản phẩm</dt><dd>{result.subtotal == null ? "ORORA sẽ báo giá khi xác nhận" : formatVnd(result.subtotal)}</dd></div>
-      <div><dt>Phí giao hàng</dt><dd>{result.shippingFee == null ? "Xác nhận sau" : formatVnd(result.shippingFee)}</dd></div>
-      <div className="order-received-total"><dt>Tổng thanh toán</dt><dd>{result.totalAmount == null ? "ORORA sẽ xác nhận tổng tiền" : formatVnd(result.totalAmount)}</dd></div>
-    </dl></div>
-    <details className="order-received-details checkout-card"><summary>Thông tin người nhận</summary><dl>
-      {[["Họ và tên", result.recipient.name], ["Số điện thoại", result.recipient.phone], ["Email", result.recipient.email], ["Địa chỉ nhận hàng", result.recipient.address], ["Ghi chú", result.recipient.note]].filter(([, value]) => value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
-    </dl></details>
-    <p className="order-help">{result.mailStatus === "accepted" ? "Vui lòng kiểm tra email xác nhận và mục thư rác." : result.mailStatus === "failed" ? "Đơn đã được nhận nhưng chưa gửi được email xác nhận. Bạn có thể liên hệ ORORA với mã đơn bên trên." : "ORORA sẽ gửi email xác nhận trong ít phút; nếu không thấy hãy kiểm tra thư rác hoặc tra cứu đơn."}</p>
-    <div className="order-received-footer">
-      <Link className="order-tracking-link" to="/tra-cuu-don-hang" state={{ code: result.code, phone: result.recipient.phone }} onClick={onClose}>Tra cứu trạng thái đơn</Link>
-      <button type="button" onClick={onClose}>Đóng</button>
-    </div>
-  </section></ModalDialog>;
+  if (result?.code) return <ModalDialog key="success" title={appearance.receiptTitle?.trim() || CHECKOUT_RECEIPT_COPY.receiptTitle} onClose={onClose} className="order-success-modal" style={receiptModalStyle(appearance)} headingStyle={toCss(appearance.receiptTitleStyle, { responsive: true })}><OrderSuccessContent order={result} home={home} appearance={appearance} onClose={onClose} /></ModalDialog>;
   if (!activeProduct) return null;
-  return <ModalDialog key="form" title={appearance.formLabels?.title?.trim() || CHECKOUT_COPY.title} onClose={onClose} closeDisabled={busy} className="order-form-modal" style={{ ...checkoutStyle(appearance), background: appearance.formBackground, borderColor: appearance.formBorderColor }} headingStyle={toCss(appearance.formHeadingStyle)}><OrderFormFields product={activeProduct} items={normalizedItems} subtotal={subtotal} options={isMulti ? [] : options} variantId={variantId} quantity={quantity} onVariantChange={changeVariant} onQuantityChange={changeQuantity} addresses={addresses} provinceCode={provinceCode} wardCode={wardCode} onProvinceChange={changeProvince} onWardChange={setWardCode} methods={methods} unitPrice={unitPrice} shipping={{ ...shipping, blocked: home.shippingSettings?.enabled === true && shipping.fee === null }} total={total} appearance={appearance} busy={busy} error={result?.error} onSubmit={async (event) => {
+  const titleStyle = toCss(appearance.formTitleStyle || appearance.formHeadingStyle, { responsive: true });
+  return <ModalDialog key="form" title={appearance.formLabels?.title?.trim() || CHECKOUT_COPY.title} onClose={onClose} closeDisabled={busy} className="order-form-modal" style={{ ...checkoutStyle(appearance), background: appearance.formBackground, borderColor: appearance.formBorderColor }} headingStyle={titleStyle}><OrderFormFields product={activeProduct} items={normalizedItems} subtotal={subtotal} options={isMulti ? [] : options} variantId={variantId} quantity={quantity} onVariantChange={changeVariant} onQuantityChange={changeQuantity} addresses={addresses} provinceCode={provinceCode} wardCode={wardCode} onProvinceChange={changeProvince} onWardChange={setWardCode} methods={methods} unitPrice={unitPrice} shipping={{ ...shipping, blocked: home.shippingSettings?.enabled === true && shipping.fee === null }} total={total} appearance={appearance} busy={busy} error={result?.error} onSubmit={async (event) => {
     event.preventDefault();
     if (submitting.current || busy || !methods.length || !provinceCode || !wardCode || (home.shippingSettings?.enabled === true && shipping.fee === null)) return;
     if (!isMulti && ((options.length > 0 && !variant) || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_ORDER_QUANTITY)) return;

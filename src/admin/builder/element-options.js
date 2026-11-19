@@ -11,10 +11,13 @@ function rawInspectorElements(section,{navbar={},about={},features={},reviews={}
  if(section==='reviews')return [...entries(REVIEWS_TEXT_MAP),...(reviews.reviews||[]).map((item,i)=>({value:`revCard-${i}`,label:`Đánh giá ${i+1} · ${item.name||'Khách hàng'}`}))];
  if(section==='ticker')return options([['text','Nội dung chữ chạy'],['star','Ký hiệu phân cách'],['band','Nền dải chữ']]);
  if(section==='philosophy')return options([['philLabel','Nhãn nhỏ'],['philText','Nội dung câu chữ'],['philAccent','Chữ nổi bật']]);
+ if(section==='cartform')return options([['cartHeader','Tiêu đề & nút đóng'],['cartFrame','Khung & nền giỏ hàng'],['cartRow','Dòng sản phẩm (tên, dung tích, giá)'],['cartActions','Số lượng, nút Xóa & Chi tiết'],['cartFooter','Dòng phí giao hàng & Tạm tính'],['cartBuyNow','Nút Mua ngay'],['cartExtra','Nút giỏ hàng & popup chọn dung tích']]);
+ if(section==='orderform')return options([['ofHeader','Tiêu đề & nút đóng'],['ofFrame','Khung form & các thẻ mục'],['ofProduct','Khối sản phẩm, giá, dung tích & số lượng'],['ofRecipient','Thông tin người nhận'],['ofAddress','Địa chỉ giao hàng'],['ofPayment','Thanh toán & ghi chú'],['ofInputs','Ô nhập liệu & kiểu chữ chung'],['ofSummary','Tóm tắt thanh toán & đồng ý'],['ofSubmit','Nút Đặt hàng ngay']]);
+ if(section==='ordersuccess')return options([['osHeader','Tiêu đề hộp thoại'],['osFrame','Khung & nền hộp thoại'],['osBanner','Khung mã đơn & lời cảm ơn'],['osActions','Xác nhận nhanh (Zalo/FB) & Lưu ảnh'],['osDetails','Chi tiết đơn & thông tin người nhận'],['osFooter','Ghi chú email, tra cứu & nút Đóng']]);
  return [];
 }
 
-export const ELEMENT_SECTIONS={navbar:'Thanh điều hướng',hero:'Hero',about:'Câu chuyện',collection:'Sản phẩm',productdetail:'Chi tiết sản phẩm',features:'Ưu điểm',reviews:'Đánh giá',newsletter:'Nhận tin',footer:'Chân trang',ticker:'Dải chữ chạy',philosophy:'Triết lý'};
+export const ELEMENT_SECTIONS={navbar:'Thanh điều hướng',hero:'Hero',about:'Câu chuyện',collection:'Sản phẩm',productdetail:'Chi tiết sản phẩm',features:'Ưu điểm',reviews:'Đánh giá',newsletter:'Nhận tin',footer:'Chân trang',ticker:'Dải chữ chạy',philosophy:'Triết lý',cartform:'Form giỏ hàng',orderform:'Form đặt hàng',ordersuccess:'Form đã đặt hàng'};
 export function inspectorElements(section,data){
  const prefix=ELEMENT_SECTIONS[section]||section;
  return rawInspectorElements(section,data).map(option=>({...option,label:option.label.startsWith(prefix+' · ')||option.label.startsWith('Thẻ sản phẩm · ')?option.label:`${prefix} · ${option.label}`}));
