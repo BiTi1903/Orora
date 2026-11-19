@@ -7,7 +7,7 @@ import { TEMPLATE_KINDS, normalizeTemplateKind, hasOrderTokens } from "../src/li
 import { captureTemplate, recordTemplateUse, templateIdentity } from "./template-snapshot.js";
 import { mailActor, resolveMailActors } from "./mail-actor.js";
 import { DEFAULT_ORDER_MESSAGE, validateOrderTemplate, renderOrderMessage } from "./order-mail.js";
-import { requireAdmin } from "./admin-auth.js";
+import { requireAdmin, hasOrderAdminAccess } from "./admin-auth.js";
 import { randomUUID, createHash } from "node:crypto";
 import { DEFAULT_WELCOME, validateMessage, withUnsubscribe } from "./newsletter-content.js";
 
@@ -225,8 +225,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         if (body.mailType === "order") {
           let order;
           if (body.orderId) {
-            const orderAdmins = String(env.ORDER_ADMIN_UIDS || env.NEWSLETTER_ADMIN_UIDS || "").split(",").map((value) => value.trim());
-            if (!orderAdmins.includes(user.uid)) return reply(403, { message: "Tài khoản chưa có quyền xem đơn để gửi thử." });
+            if (!(await hasOrderAdminAccess(user, { getDb, env }))) return reply(403, { message: "Tài khoản chưa có quyền xem đơn để gửi thử." });
             if (!validId(body.orderId)) return reply(400, { message: "Đơn gửi thử không hợp lệ." });
             const saved = await db.collection("orders").doc(body.orderId).get();
             if (!saved.exists) return reply(404, { message: "Không tìm thấy đơn gửi thử." });

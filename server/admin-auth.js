@@ -58,6 +58,15 @@ export async function requireAdmin(req, {
   throw Object.assign(new Error(deniedMessage), { status: 403, publicError: true });
 }
 
+export async function hasOrderAdminAccess(user, { getDb, env = process.env } = {}) {
+  if (!user) return false;
+  if (user.admin === true) return true;
+  const orderPrimary = envAdminSet(env, ["ORDER_ADMIN_UIDS"]);
+  const orderSet = orderPrimary.size ? orderPrimary : envAdminSet(env, ["NEWSLETTER_ADMIN_UIDS"]);
+  if (orderSet.has(user.uid)) return true;
+  return isFirestoreAdmin(getDb, user.uid);
+}
+
 export async function resolveAdminPermissions(req, {
   verifyToken,
   getDb,

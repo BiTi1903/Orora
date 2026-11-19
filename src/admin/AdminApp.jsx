@@ -31,7 +31,7 @@ const FULL_PERMISSIONS = { orders: true, newsletter: true, full: true };
 const tabAllowed = (key, permissions) => {
   if (key === "newsletter" || key === "export") return Boolean(permissions.newsletter);
   if (key === "orders" || key === "inventory" || key === "dashboard") return Boolean(permissions.orders);
-  return Boolean(permissions.full || permissions.orders);
+  return Boolean(permissions.full);
 };
 
 export default function AdminApp() {

@@ -557,5 +557,17 @@ test("newsletter admin rejects order-only UIDs and disabled adminUsers records",
   assert.equal((await callAs("order-only")).statusCode, 403);
   assert.equal((await callAs("disabled-mail-admin")).statusCode, 403);
   assert.equal((await callAs("mail-only")).statusCode, 200);
+
+  await db.collection("adminUsers").doc("fs-full").set({ enabled: true });
+  await db.collection("orders").doc("order-1").set({ code: "OW_1111C", customer: { name: "An", email: "an@example.com", phone: "0900000000", address: "HN" }, product: { name: "Serum" }, quantity: 1, subtotal: 200000, paymentMethod: "cod" });
+  const sendOrderTest = async (userObj) => {
+    const handler = createNewsletterAdminHandler({ getDb: async () => db, verifyToken: async () => userObj, sendMail: async () => {}, env: splitEnv });
+    const res = response();
+    await handler({ method: "POST", headers: { ...headers, authorization: "Bearer token" }, body: { action: "sendTest", mailType: "order", orderId: "order-1", testEmail: "qa@example.com", subject: "Đơn {{orderCode}}", text: "Xin chào {{customerName}}" } }, res);
+    return res;
+  };
+  assert.equal((await sendOrderTest({ uid: "fs-full" })).statusCode, 200);
+  assert.equal((await sendOrderTest({ uid: "claim-full", admin: true })).statusCode, 200);
+  assert.equal((await sendOrderTest({ uid: "mail-only" })).statusCode, 403);
 });
 

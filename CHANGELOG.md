@@ -1,3 +1,15 @@
+## 19/11/2026 — Chặn hiển thị mục ghi Firestore cho tài khoản thiếu quyền đầy đủ, đồng bộ quyền gửi thử email đơn và tắt vòng sáng khi tắt hiệu ứng nhấn
+
+- **Lý do**: Khắc phục 3 điểm phát hiện sau đợt review: (1) tài khoản chỉ có quyền đơn hàng vẫn thấy các mục ghi trực tiếp Firestore (Sản phẩm, Trang chủ, Cửa hàng, Phí vận chuyển, Chat AI) rồi mới lỗi khi lưu; (2) admin đầy đủ được cấp quyền qua Firebase claim hoặc `adminUsers.enabled` bị từ chối 403 khi bấm Gửi thử email từ đơn hàng thật; (3) tắt hiệu ứng nhấn trong Visual Builder vẫn còn vòng sáng 420ms ở nút "Mua ngay".
+- **Thay đổi chính**:
+  - **Ẩn các mục ghi trực tiếp Firestore khi không có quyền quản trị đầy đủ (`src/admin/AdminApp.jsx`)**: Chỉ hiển thị Sản phẩm, Trang chủ, Cửa hàng, Phí vận chuyển và Chat AI khi tài khoản có quyền quản trị đầy đủ (`permissions.full`).
+  - **Đồng bộ kiểm tra quyền đơn hàng khi gửi email thử từ đơn thật (`server/admin-auth.js`, `server/newsletter-admin.js`, `tests/newsletter.test.js`)**: Dùng chung phép kiểm tra quyền đơn hàng (chấp nhận cả custom claim, `adminUsers.enabled === true` và biến môi trường) thay vì chỉ kiểm tra danh sách UID trong biến môi trường; bổ sung test xác nhận.
+  - **Tắt vòng sáng nút "Mua ngay" khi tắt hiệu ứng nhấn (`src/components/ProductDetail.jsx`)**: Bỏ qua vòng sáng 420ms khi tùy chọn hiệu ứng nhấn nút đang tắt trong Visual Builder.
+- **File / khu vực liên quan**: `src/admin/AdminApp.jsx`, `server/admin-auth.js`, `server/newsletter-admin.js`, `src/components/ProductDetail.jsx`, `tests/newsletter.test.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **247/247** test Node đạt, `eslint .` 0 lỗi, `vite build` 0 cảnh báo, giới hạn bundle đạt (`425.767` bytes / `138.216` gzip bytes).
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu.
+
 ## 19/11/2026 — Siết điều kiện `adminUsers.enabled`, tách quyền đơn hàng/email, chặn thanh toán đơn hủy và sửa giỏ hàng/Zalo/reduced-motion
 
 - **Lý do**: Khắc phục 6 điểm phát hiện sau đợt review kế tiếp: (1) API chỉ kiểm tra `adminUsers/{uid}` tồn tại thay vì `enabled === true` như `firestore.rules`; (2) gộp quyền `ORDER_ADMIN_UIDS` với `NEWSLETTER_ADMIN_UIDS` và chặn tài khoản chỉ có quyền email ngay tại `whoami`; (3) mua trực tiếp một sản phẩm hoặc mua một phần số lượng từ giỏ làm xóa cả dòng trong giỏ; (4) đơn đã hủy vẫn có thể nhận request đánh dấu `paid` từ tab admin cũ; (5) nhánh Zalo fallback báo đã lưu ảnh trước khi tải thành công; (6) vòng sáng nút "Mua ngay" vẫn chạy khi bật `prefers-reduced-motion: reduce`.

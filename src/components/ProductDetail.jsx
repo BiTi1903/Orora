@@ -385,7 +385,8 @@ function ProductDetail({
           if (preview) { select("pdWebsiteText")(event); return; }
           const btn = event.currentTarget;
           animateButtonPress(btn, true, home.navStyles?.surfaces);
-          if (!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
+          const pressEnabled = home.navStyles?.surfaces?.pressFeedback !== false && document.documentElement.dataset.buttonPress !== "off";
+          if (pressEnabled && !window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
             const pulseColor = purchase.websiteBackground || getComputedStyle(btn).backgroundColor || "var(--rose-deep)";
             btn.animate?.([
               { boxShadow: `0 6px 18px color-mix(in srgb, ${pulseColor} 28%, transparent), 0 0 0 0 color-mix(in srgb, ${pulseColor} 45%, transparent)` },
