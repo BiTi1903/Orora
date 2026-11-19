@@ -1,6 +1,6 @@
 import { useId } from "react";
 import { InspectorGroup } from "./Inspector";
-import StoreSettingsLink from "../StoreSettingsLink";
+import CartSettings from "./CartSettings";
 import MobileNavSettings from "./MobileNavSettings";
 import SurfaceSettings from "./SurfaceSettings";
 import { SettingGroup, SelectField, StyleTypographyBlock, ColorField } from "./ui";
@@ -23,7 +23,7 @@ export function NavbarSettings({ selected, navbar, onChange, onStyleChange }) {
     />
   );
 
-  if (selected === "navCart") return <StoreSettingsLink section="cart" />;
+  if (selected === "navCart") return <CartSettings navbar={navbar} onChange={onChange} />;
 
   return (
     <>
@@ -93,8 +93,8 @@ export function NavbarSectionSettings({ navbar, onChange, includeCart = true }) 
   return (
     <>
       {includeCart && (
-        <InspectorGroup title="Giỏ hàng navbar và popup">
-          <StoreSettingsLink section="cart" />
+        <InspectorGroup title="Form giỏ hàng & nút giỏ hàng">
+          <CartSettings navbar={navbar} onChange={onChange} />
         </InspectorGroup>
       )}
       <InspectorGroup title="Thanh điều hướng dưới — mobile">

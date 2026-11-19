@@ -1,4 +1,4 @@
-import StoreSettingsLink from "../StoreSettingsLink";
+import PurchaseOptionsSettings from "./PurchaseOptionsSettings";
 import { ColorField } from "./ui";
 import ProductContactSettings from "./ProductContactSettings";
 import ProductRelatedSettings from "./ProductRelatedPanels";
@@ -12,7 +12,15 @@ export function ProductDetailSettings({ selected, data, productDetail, onChange,
   if (!data || data.type === "pdEmpty") {
     return <div className="builder-empty">Chọn một thành phần trên preview.</div>;
   }
-  if (selected === "pdPurchaseOptions") return <StoreSettingsLink section="checkout" />;
+  if (selected === "pdPurchaseOptions") {
+    return (
+      <PurchaseOptionsSettings
+        initialGroup="checkout"
+        value={productDetail.purchaseOptions || {}}
+        onChange={onStyleChange}
+      />
+    );
+  }
   if (selected === "pdAddToCart") {
     const value = productDetail.purchaseOptions || {};
     return (

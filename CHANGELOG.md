@@ -1,3 +1,21 @@
+## 19/11/2026 — Chuyển toàn bộ phần chỉnh Form giỏ hàng, Form Mua ngay và Form đặt hàng vào Visual Builder, bỏ ở mục Cửa hàng cũ
+
+- **Lý do**: Chủ website yêu cầu gom phần chỉnh sửa **Form giỏ hàng**, **Form Mua ngay** và **Form đặt hàng** trực tiếp vào **Visual Builder** (mục **Trang chủ**) để xem trước và lưu chung thuận tiện hơn, đồng thời bỏ 2 tab cũ (**Giỏ hàng** và **Form đặt hàng**) khỏi mục **Cửa hàng**.
+- **Thay đổi chính**:
+  - **Visual Builder (`src/admin/builder/NavbarPanels.jsx`, `src/admin/builder/ProductDetailPanels.jsx`, `src/admin/builder/StylePanels.jsx`, `src/admin/builder/CartSettings.jsx`, `src/admin/builder/registry.js`, `src/admin/builder/element-options.js`)**:
+    - Hiển thị trực tiếp trình chỉnh **Form giỏ hàng & nút giỏ hàng** ngay trong mục **Navbar** (khi chọn nút giỏ hàng hoặc mở thiết lập chung của Navbar) thay vì nút chuyển sang Cửa hàng.
+    - Hiển thị trực tiếp trình chỉnh **Form Mua ngay & Form đặt hàng** ngay trong mục **Chi tiết sản phẩm** (khi chọn khung mua hàng hoặc mở thiết lập chung của Chi tiết sản phẩm) thay vì nút chuyển sang Cửa hàng.
+    - Tách rõ tên nhãn chỉnh bo góc và chiều cao cho nút **Mua ngay** trong giỏ hàng để không trùng nhãn với nút giỏ hàng trên thanh điều hướng.
+  - **Cửa hàng (`src/admin/builder/StoreWorkspace.jsx`, `src/admin/builder/VisualBuilder.jsx`, `src/admin/HomeAdmin.jsx`, `src/admin/AdminApp.jsx`, `src/admin/StoreSettingsLink.jsx`, `src/admin/store-navigation.js`)**:
+    - Gỡ bỏ hoàn toàn 2 tab cũ **Giỏ hàng** và **Form đặt hàng** khỏi mục **Cửa hàng**, chỉ giữ lại **Kênh mua và thanh toán** (mặc định) và **Tra cứu đơn**.
+  - **Kiểm thử giao diện (`qa/cart-settings.spec.js`, `qa/editor-simplification.spec.js`, `qa/visual-builder-focus.spec.js`, `qa/admin-appearance.spec.js`)**:
+    - Cập nhật kịch bản kiểm thử chỉnh trực tiếp Giỏ hàng, Form Mua ngay và Form đặt hàng trong Visual Builder và xác minh mục Cửa hàng chỉ còn 2 tab.
+- **File / khu vực liên quan**: `src/admin/builder/NavbarPanels.jsx`, `src/admin/builder/ProductDetailPanels.jsx`, `src/admin/builder/StylePanels.jsx`, `src/admin/builder/CartSettings.jsx`, `src/admin/builder/StoreWorkspace.jsx`, `src/admin/builder/VisualBuilder.jsx`, `src/admin/builder/registry.js`, `src/admin/builder/element-options.js`, `src/admin/HomeAdmin.jsx`, `src/admin/AdminApp.jsx`, `src/admin/StoreSettingsLink.jsx`, `src/admin/store-navigation.js`, `qa/cart-settings.spec.js`, `qa/editor-simplification.spec.js`, `qa/visual-builder-focus.spec.js`, `qa/admin-appearance.spec.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **248/248** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt.
+  - Playwright (`width-390`): **25/25** test đạt trên `qa/cart-settings.spec.js`, `qa/editor-simplification.spec.js`, `qa/visual-builder-focus.spec.js`, `qa/editor-checkout.spec.js` và `qa/admin-appearance.spec.js`.
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu.
+
 ## 19/11/2026 — Bỏ bước chặn phân quyền ở giao diện quản trị để tài khoản đăng nhập vào xem được đầy đủ
 
 - **Lý do**: Bước kiểm tra phân quyền chi tiết ở giao diện quản trị khiến các tài khoản admin đã đăng nhập bị chặn hoặc bị ẩn mất các mục quản lý. Chủ website yêu cầu chỉ cần đăng nhập đúng tài khoản quản trị là vào xem được đầy đủ tất cả các mục.

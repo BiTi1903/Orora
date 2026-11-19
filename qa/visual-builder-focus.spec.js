@@ -13,9 +13,8 @@ test('direct element picker opens one group and keeps edits when switching eleme
  await builder(page);const picker=page.getByLabel('Chọn thành phần cần sửa',{exact:true});
  await expect(picker).toHaveValue('navLogo');await expect(page.locator('[data-compact-setting][open]')).toHaveCount(1);
  await page.getByLabel('Chữ logo',{exact:true}).fill('ORORA MỚI');
- await picker.selectOption('navCart');await page.getByRole('button',{name:'Mở Cửa hàng · Giỏ hàng',exact:true}).click();await page.getByLabel('Tên nút giỏ hàng',{exact:true}).fill('Túi đồ');
+ await picker.selectOption('navCart');await page.getByLabel('Tên nút giỏ hàng',{exact:true}).fill('Túi đồ');
  await expect(page.getByLabel('Bo góc nút (px)',{exact:true})).toBeHidden();await page.getByText('Khung và kiểu chữ nút navbar',{exact:true}).click();await expect(page.getByLabel('Bo góc nút (px)',{exact:true})).toBeVisible();
- await page.getByRole('button',{name:'Về giao diện',exact:true}).click();
  await picker.selectOption('navLogo');await expect(page.getByLabel('Chữ logo',{exact:true})).toHaveValue('ORORA MỚI');
  await page.getByRole('button',{name:'💾 Lưu tất cả',exact:true}).click();await expect.poll(()=>page.evaluate(()=>window.__saved)).toEqual({navLogo:'ORORA MỚI',navStyles:{cart:{copy:{label:'Túi đồ'}}}});
  await fit(page);await page.screenshot({path:testInfo.outputPath('focused-editor.png'),fullPage:true});

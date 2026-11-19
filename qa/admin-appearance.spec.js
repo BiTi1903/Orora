@@ -52,15 +52,23 @@ test('all ten real admin pages use styled controls and fit the viewport',async({
  }
  expect(errors).toEqual([]);
 });
-test('store checkboxes, checkout inputs, payment choices and lookup are usable',async({page},testInfo)=>{
- test.setTimeout(90000);const errors=await admin(page);
- await page.getByRole('navigation',{name:'Menu quản trị'}).getByRole('button',{name:'Cửa hàng',exact:true}).click();
+test('builder cart/checkout controls and store payment/lookup tabs are usable',async({page},testInfo)=>{
+ test.setTimeout(90000);const errors=await admin(page);const nav=page.getByRole('navigation',{name:'Menu quản trị'});
+ await nav.getByRole('button',{name:'Trang chủ',exact:true}).click();
+ await page.locator('.builder-sections').getByRole('button',{name:/Navbar/}).click();
+ await page.getByLabel('Chọn thành phần cần sửa',{exact:true}).selectOption('navCart');
  const choice=page.getByLabel('Hiện giỏ hàng',{exact:true});await expect(choice).toHaveCSS('appearance','none');await expect(choice).toHaveCSS('background-image',/radial-gradient/);await expect(choice).toBeChecked();await choice.uncheck();await expect(choice).not.toBeChecked();await choice.check();await choice.focus();await page.keyboard.press('Space');await expect(choice).not.toBeChecked();await page.keyboard.press('Space');await expect(choice).toBeChecked();
  await expect(page.locator('.cart-selection-preview input[type=number]')).toHaveCSS('border-top-style','none');
  const input=page.getByLabel('Tên nút giỏ hàng',{exact:true});await input.fill('Túi sản phẩm');await input.focus();await expect(input).toBeFocused();await expect(input).toHaveCSS('outline-style','solid');
+ await audit(page);await shot(page,testInfo,'builder-cart');
+ await page.locator('.builder-sections').getByRole('button',{name:/Chi tiết SP/}).click();
+ await page.getByLabel('Chọn thành phần cần sửa',{exact:true}).selectOption('pdPurchaseOptions');
+ await audit(page);await shot(page,testInfo,'builder-checkout');
+ await nav.getByRole('button',{name:'Cửa hàng',exact:true}).click();
  const tabs=page.getByRole('navigation',{name:'Thiết lập cửa hàng'});
- for(const name of ['Giỏ hàng','Form đặt hàng','Kênh mua và thanh toán','Tra cứu đơn']){await tabs.getByRole('button',{name,exact:true}).click();await audit(page);await shot(page,testInfo,`store-${name}`);}
- await tabs.getByRole('button',{name:'Giỏ hàng',exact:true}).click();await expect(input).toHaveValue('Túi sản phẩm');expect(errors).toEqual([]);
+ await expect(tabs.getByRole('button')).toHaveCount(2);
+ for(const name of ['Kênh mua và thanh toán','Tra cứu đơn']){await tabs.getByRole('button',{name,exact:true}).click();await audit(page);await shot(page,testInfo,`store-${name}`);}
+ expect(errors).toEqual([]);
 });
 test('product editor and chat details keep coherent fields and compact choice controls',async({page},testInfo)=>{
  test.setTimeout(90000);const errors=await admin(page);const nav=page.getByRole('navigation',{name:'Menu quản trị'});

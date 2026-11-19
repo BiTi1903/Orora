@@ -40,8 +40,8 @@ export default function CartSettings({navbar,onChange}){
    <details><summary>Màu, khung và kiểu chữ nút Mua ngay</summary>
     <ColorField label="Màu nền nút Mua ngay" value={checkoutBtn.background||'#b8446d'} onChange={background=>patchCheckoutBtn({background})}/>
     <ColorField label="Màu viền nút Mua ngay" value={checkoutBtn.borderColor||'#b8446d'} onChange={borderColor=>patchCheckoutBtn({borderColor})}/>
-    <label className="builder-field">Bo góc nút (px)<input type="number" min={4} max={28} value={checkoutBtn.radius??12} onChange={event=>patchCheckoutBtn({radius:Number(event.target.value)})}/></label>
-    <label className="builder-field">Chiều cao nút (px)<input type="number" min={40} max={64} value={checkoutBtn.height??46} onChange={event=>patchCheckoutBtn({height:Number(event.target.value)})}/></label>
+    <label className="builder-field">Bo góc nút Mua ngay (px)<input type="number" min={4} max={28} value={checkoutBtn.radius??12} onChange={event=>patchCheckoutBtn({radius:Number(event.target.value)})}/></label>
+    <label className="builder-field">Chiều cao nút Mua ngay (px)<input type="number" min={40} max={64} value={checkoutBtn.height??46} onChange={event=>patchCheckoutBtn({height:Number(event.target.value)})}/></label>
     <StyleTypographyBlock title="Kiểu chữ nút Mua ngay" style={checkoutBtn.text||{}} onStyleChange={next=>patchCheckoutBtn({text:{...checkoutBtn.text,...next}})}/>
    </details>
    <div data-admin-preview className="cart-checkout-preview" aria-label="Xem trước chân giỏ hàng và nút Mua ngay">

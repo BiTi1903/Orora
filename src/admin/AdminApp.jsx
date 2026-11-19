@@ -67,7 +67,7 @@ function AdminWorkspace({ user }) {
   const [orderMailDraft, setOrderMailDraft] = useState(null);
   const [orderMailVersion, setOrderMailVersion] = useState(0);
   const [emailSection, setEmailSection] = useState({ view: "contacts" });
-  const [storeSection, setStoreSection] = useState("cart");
+  const [storeSection, setStoreSection] = useState("links");
   const [storeVersion, setStoreVersion] = useState(0);
   const navigate = (key) => {
     if (!ALL_TABS.includes(key)) return;
@@ -87,7 +87,7 @@ function AdminWorkspace({ user }) {
   useEffect(() => {
     const open = (event) => {
       setStoreVersion((v) => v + 1);
-      setStoreSection(event.detail?.section || "cart");
+      setStoreSection(event.detail?.section || "links");
       setVisited((items) => items.includes("home") ? items : [...items, "home"]);
       setTab("store");
       if (typeof window !== "undefined") window.history.replaceState(null, "", "#store");

@@ -122,7 +122,7 @@ const PRODUCT_DETAIL_FIELD_MAP = {
   pdReviewTitle: { styleKey: "reviewTitle", label: "Đánh giá — Tiêu đề", sample: "Đánh giá — Tiêu đề" },
   pdReviewName: { styleKey: "reviewName", label: "Đánh giá — Tên hiển thị", sample: "Đánh giá — Tên hiển thị" },
   pdReviewBody: { styleKey: "reviewBody", label: "Đánh giá — Nội dung", sample: "Đánh giá — Nội dung" },
-  pdPurchaseOptions: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Khung chọn cách mua" },
+  pdPurchaseOptions: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Form Mua ngay & Form đặt hàng" },
   pdContactActions: { type: "pdContactActions", styleKey: "contactActions", label: "Thiết lập liên hệ" },
   pdImage: {
     type: "pdImage",

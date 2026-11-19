@@ -58,7 +58,7 @@ import { DEFAULT_ABOUT } from "./defaults";
 
 export default function VisualBuilder({
   workspace = "home",
-  requestedStoreSection = "cart",
+  requestedStoreSection = "links",
   requestedStoreVersion = 0,
 }) {
   const confirm = useConfirm();
@@ -413,7 +413,7 @@ export default function VisualBuilder({
     return <div className="builder-loading">Đang tải Visual Builder...</div>;
   }
 
-  const hideStoreToolbar = workspace === "store" && ["tracking", "links"].includes(storeTab) && !isDirty && !loadError;
+  const hideStoreToolbar = workspace === "store" && !isDirty && !loadError;
 
   return (
     <div ref={builderRoot} className={`visual-builder${workspace === "store" ? " is-store-workspace" : ""}`}>
@@ -426,7 +426,7 @@ export default function VisualBuilder({
           <strong>{workspace === "store" ? "Cài đặt cửa hàng" : "Chỉnh sửa giao diện"}</strong>
           <span>
             {workspace === "store"
-              ? "Chọn giỏ, form đặt hàng, thanh toán hoặc tra cứu."
+              ? "Chọn kênh mua hàng, thanh toán hoặc tra cứu đơn."
               : "Chọn một phần trên preview để chỉnh sửa."}
           </span>
         </div>
@@ -478,22 +478,7 @@ export default function VisualBuilder({
 
       {storeOpened && (
         <div hidden={workspace !== "store"}>
-          <StoreWorkspace
-            tab={storeTab}
-            onTab={setStoreTab}
-            navbar={navbar}
-            purchaseOptions={productDetail.purchaseOptions || {}}
-            onNavbar={(patch) => {
-              dirtySections.current.add("navbar");
-              setEditVersion((v) => v + 1);
-              setNavbar((c) => ({ ...c, ...patch }));
-            }}
-            onPurchase={(patch) => {
-              dirtySections.current.add("productdetail");
-              setEditVersion((v) => v + 1);
-              setProductDetail((c) => ({ ...c, purchaseOptions: { ...c.purchaseOptions, ...patch } }));
-            }}
-          />
+          <StoreWorkspace tab={storeTab} onTab={setStoreTab} />
         </div>
       )}
       <div

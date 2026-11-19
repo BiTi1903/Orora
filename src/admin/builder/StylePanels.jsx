@@ -18,6 +18,7 @@ import { ReviewsSettings } from "./ReviewsPanels";
 import { FooterSettings } from "./FooterPanels";
 import { NewsletterSettings } from "./NewsletterPanels";
 import { ProductDetailSettings } from "./ProductDetailPanels";
+import PurchaseOptionsSettings from "./PurchaseOptionsSettings";
 import { CollectionSettings } from "./CollectionPanels";
 import { HeroSettings } from "./HeroPanels";
 import { SectionSettings, ImageSettings, TextSettings, StatsSettings, StatTextSettings } from "./AboutPanels";
@@ -139,6 +140,15 @@ export function StylePanel({
       </>
     ) : section === "productdetail" ? (
       <>
+        {selected !== "pdPurchaseOptions" && (
+          <PurchaseOptionsSettings
+            initialGroup="checkout"
+            value={productDetail.purchaseOptions || {}}
+            onChange={(patch) =>
+              onChange({ purchaseOptions: { ...productDetail.purchaseOptions, ...patch } })
+            }
+          />
+        )}
         <InspectorGroup title="Trạng thái tải sản phẩm">
           <ProductLoadErrorSettings
             value={productDetail.loadError || {}}
