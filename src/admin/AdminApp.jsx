@@ -51,11 +51,11 @@ export default function AdminApp() {
       .then((data) => {
         if (controller.signal.aborted) return;
         const raw = data?.permissions;
-        if (!raw || typeof raw !== "object") {
+        if (!raw || typeof raw !== "object" || typeof raw.orders !== "boolean" || typeof raw.newsletter !== "boolean" || typeof raw.full !== "boolean") {
           setAccess((prev) => ({ ...prev, status: "error", error: "Phản hồi kiểm tra quyền chưa đầy đủ. Vui lòng thử lại hoặc tải lại trang.", permissions: null }));
           return;
         }
-        const permissions = { orders: raw.orders === true, newsletter: raw.newsletter === true, full: raw.full === true };
+        const permissions = { orders: raw.orders, newsletter: raw.newsletter, full: raw.full };
         if (!permissions.orders && !permissions.newsletter && !permissions.full) {
           setAccess((prev) => ({ ...prev, status: "denied", error: "Tài khoản này chưa được cấp quyền quản trị.", permissions: null }));
           return;

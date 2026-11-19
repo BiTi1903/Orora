@@ -1,3 +1,15 @@
+## 19/11/2026 — Kiểm tra đủ 3 cờ quyền trong phản hồi đăng nhập admin để phân biệt phản hồi lỗi với tài khoản thiếu quyền
+
+- **Lý do**: Nếu phản hồi kiểm tra quyền trả về đối tượng rỗng hoặc thiếu một trong ba quyền (đơn hàng, email, quản trị đầy đủ), giao diện trước đó có thể hiểu nhầm là tài khoản không có quyền hoặc chỉ hiện một phần menu.
+- **Thay đổi chính**:
+  - **Xác thực đủ 3 cờ quyền boolean (`src/admin/AdminApp.jsx`)**: Yêu cầu phản hồi kiểm tra quyền phải có đủ cả 3 trường boolean; nếu thiếu bất kỳ trường nào sẽ hiển thị màn hình "Thử lại" báo phản hồi chưa đầy đủ.
+  - **Mở rộng kiểm thử (`qa/admin-navigation.spec.js`)**: Kiểm tra cả 3 tình huống phản hồi thiếu quyền, đối tượng quyền rỗng và đối tượng chỉ có một phần quyền.
+- **File / khu vực liên quan**: `src/admin/AdminApp.jsx`, `qa/admin-navigation.spec.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run lint`, `npm run build`: 0 lỗi, 0 cảnh báo.
+  - Playwright (`width-390`): **2/2** test đạt trên `qa/admin-navigation.spec.js`.
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu.
+
 ## 19/11/2026 — Chuyển sang màn hình Thử lại khi phản hồi kiểm tra quyền admin thiếu danh sách quyền
 
 - **Lý do**: Khi frontend và API lệch phiên bản dẫn tới phản hồi kiểm tra quyền thiếu trường danh sách quyền, giao diện admin trước đó tự mặc định quyền đầy đủ khiến nhân viên chỉ quản lý đơn có thể mở màn hình chỉnh sửa nội dung rồi mới gặp lỗi lúc lưu.
