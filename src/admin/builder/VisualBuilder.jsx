@@ -74,8 +74,10 @@ export default function VisualBuilder({
   if (workspace === "store" && !storeOpened) setStoreOpened(true);
   const [previewDevice, setPreviewDevice] = useState("desktop");
   const [previewZoom, setPreviewZoom] = useState("fit");
-  const [editVersion, setEditVersion] = useState(0),
-    [savedVersion, setSavedVersion] = useState(0);
+  const [reloadVersion, setReloadVersion] = useState(0);
+  const [savedSnapshot, setSavedSnapshot] = useState("");
+  const resetSections = useRef(new Set());
+  const [, setEditVersion] = useState(0);
   const {
     about,
     hero,
@@ -154,11 +156,13 @@ export default function VisualBuilder({
 
   useEffect(() => {
     let alive = true;
+    baseline.current = null;
+    resetSections.current = new Set();
 
     getHomeContent()
       .then((data) => {
         if (!alive) return;
-
+        setMessage(null);
         setSectionVisibility(data?.sectionVisibility || {});
         setDiscovery({
           productNeeds: { ...DEFAULT_PRODUCT_NEEDS, ...data?.productNeeds },
@@ -182,7 +186,7 @@ export default function VisualBuilder({
           setLoadError(true);
           setMessage({
             type: "error",
-            text: "Không tải được cấu hình. Chưa thể lưu; hãy tải lại trang để tránh ghi đè dữ liệu.",
+            text: "Không tải được cấu hình. Chưa thể lưu; hãy bấm Thử lại hoặc tải lại trang để tránh ghi đè dữ liệu.",
           });
           setAbout(DEFAULT_ABOUT);
           setHero(DEFAULT_HERO);
@@ -204,6 +208,7 @@ export default function VisualBuilder({
       alive = false;
     };
   }, [
+    reloadVersion,
     clearHistory,
     setAbout,
     setHero,
@@ -321,10 +326,15 @@ export default function VisualBuilder({
       discovery,
     ],
   );
-  const markDraftSaved = useDraftGuard(payload, { enabled: !loading && !loadError, busy: saving });
+  const serializedPayload = useMemo(() => JSON.stringify(payload), [payload]);
+  const isDirty = !loading && !loadError && Boolean(savedSnapshot) && serializedPayload !== savedSnapshot;
+  const markDraftSaved = useDraftGuard(payload, { enabled: !loading && !loadError, busy: saving, dirty: isDirty });
   useEffect(() => {
-    if (!loading && !loadError && baseline.current === null) baseline.current = payload;
-  }, [loading, loadError, payload]);
+    if (!loading && !loadError && baseline.current === null) {
+      baseline.current = payload;
+      setSavedSnapshot(serializedPayload);
+    }
+  }, [loading, loadError, payload, serializedPayload]);
 
   const replayEdit = action => {
     action();
@@ -332,38 +342,51 @@ export default function VisualBuilder({
     dirtySections.current.add("visibility");
     setEditVersion(value => value + 1);
   };
+  const canResetActive = workspace !== "store" && !["productneeds", "productfaq"].includes(activeSection);
   const resetActive = async () => {
+    if (!canResetActive) return;
     if (!await confirm("Khôi phục các giá trị mặc định của mục hiện tại? Thay đổi áp dụng khi bạn lưu.", {
       title: "Khôi phục mặc định", confirmLabel: "Khôi phục", danger: true,
     })) return;
-    const discoveryKey = activeSection === "productneeds" ? "productNeeds" : activeSection === "productfaq" ? "productFaq" : null;
-    const field = discoveryKey ? "discovery" : activeSection === "productdetail" ? "productDetail" : activeSection;
-    resetField(field, (current, fallback) => discoveryKey
-      ? { ...current, [discoveryKey]: mergeSavedValues(current[discoveryKey], fallback[discoveryKey]) }
-      : mergeSavedValues(current, fallback));
+    const field = activeSection === "productdetail" ? "productDetail" : activeSection;
+    resetField(field, (_current, fallback) => fallback);
     dirtySections.current.add(activeSection);
+    resetSections.current.add(activeSection);
     setEditVersion(value => value + 1);
   };
 
   const save = async () => {
     if (loading || loadError || saving) return;
-    if (!dirtySections.current.size) return setMessage({ type: "success", text: "Chưa có thay đổi để lưu." });
+    if (!dirtySections.current.size && !resetSections.current.size) return setMessage({ type: "success", text: "Chưa có thay đổi để lưu." });
     const pendingSections = dirtySections.current;
+    const pendingResets = resetSections.current;
     dirtySections.current = new Set();
+    resetSections.current = new Set();
     setSaving(true);
     setMessage(null);
 
     try {
-      const patch = changedValues(baseline.current || {}, editedSectionPayload(payload, pendingSections));
+      const normalSections = new Set([...pendingSections].filter((section) => !pendingResets.has(section)));
+      const normalPatch = normalSections.size
+        ? changedValues(baseline.current || {}, editedSectionPayload(payload, normalSections))
+        : {};
+      const resetPatch = pendingResets.size
+        ? changedValues(
+            editedSectionPayload(baseline.current || {}, pendingResets),
+            editedSectionPayload(payload, pendingResets),
+            { includeRemovals: true },
+          )
+        : {};
+      const patch = mergeSavedValues(normalPatch, resetPatch);
       if (!Object.keys(patch).length) {
-        setSavedVersion(editVersion);
+        setSavedSnapshot(serializedPayload);
         return setMessage({ type: "success", text: "Chưa có thay đổi để lưu." });
       }
       await saveHomeContent(patch);
       baseline.current = mergeSavedValues(baseline.current || {}, patch);
       markDraftSaved();
       clearHistory();
-      setSavedVersion(editVersion);
+      setSavedSnapshot(serializedPayload);
 
       setMessage({
         type: "success",
@@ -371,6 +394,7 @@ export default function VisualBuilder({
       });
     } catch (err) {
       pendingSections.forEach((section) => dirtySections.current.add(section));
+      pendingResets.forEach((section) => resetSections.current.add(section));
       console.error(err);
 
       setMessage({
@@ -389,14 +413,14 @@ export default function VisualBuilder({
     return <div className="builder-loading">Đang tải Visual Builder...</div>;
   }
 
+  const hideStoreToolbar = workspace === "store" && ["tracking", "links"].includes(storeTab) && !isDirty && !loadError;
+
   return (
     <div ref={builderRoot} className={`visual-builder${workspace === "store" ? " is-store-workspace" : ""}`}>
       <div
         className="builder-toolbar"
-        hidden={workspace === "store" && ["tracking", "links"].includes(storeTab)}
-        style={
-          workspace === "store" && ["tracking", "links"].includes(storeTab) ? { display: "none" } : undefined
-        }
+        hidden={hideStoreToolbar}
+        style={hideStoreToolbar ? { display: "none" } : undefined}
       >
         <div>
           <strong>{workspace === "store" ? "Cài đặt cửa hàng" : "Chỉnh sửa giao diện"}</strong>
@@ -410,17 +434,17 @@ export default function VisualBuilder({
         <div className="builder-history-actions" aria-label="Hoàn tác và khôi phục">
           <button type="button" className="admin-btn" disabled={!canUndo || saving || loadError} onClick={() => replayEdit(undo)}>Hoàn tác</button>
           <button type="button" className="admin-btn" disabled={!canRedo || saving || loadError} onClick={() => replayEdit(redo)}>Làm lại</button>
-          {workspace !== "store" && <button type="button" className="admin-btn" disabled={saving || loadError} onClick={resetActive}>Khôi phục mặc định mục này</button>}
+          {canResetActive && <button type="button" className="admin-btn" disabled={saving || loadError} onClick={resetActive}>Khôi phục mặc định mục này</button>}
         </div>
 
         <div ref={saveBar} className="builder-toolbar-actions" aria-label="Lưu thay đổi giao diện">
           <span
-            className={`builder-save-state${editVersion !== savedVersion ? " is-dirty" : ""}`}
+            className={`builder-save-state${isDirty ? " is-dirty" : ""}`}
             role="status"
           >
             {saving
               ? "Đang lưu thay đổi…"
-              : editVersion !== savedVersion
+              : isDirty
                 ? "Có thay đổi chưa lưu"
                 : "Các thay đổi đã được lưu"}
           </span>
@@ -429,6 +453,14 @@ export default function VisualBuilder({
               className={message.type === "success" ? "builder-message success" : "builder-message error"}
             >
               {message.text}
+              {loadError && (
+                <>
+                  {" "}
+                  <button type="button" className="admin-btn" onClick={() => { setLoading(true); setLoadError(false); setSavedSnapshot(""); setReloadVersion((value) => value + 1); }}>
+                    Thử lại
+                  </button>
+                </>
+              )}
             </span>
           )}
 

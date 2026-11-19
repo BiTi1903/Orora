@@ -91,7 +91,7 @@
 .order-tracking-modal .orora-modal-heading h2 { min-width:0; font-size:clamp(18px,4.6vw,24px); overflow-wrap:anywhere; }
 .order-tracking-modal .orora-modal-content { padding:20px; }
 html[data-glass-frames] #root .order-tracking-modal .order-tracking-result,.order-tracking-modal .order-tracking-result { margin:0; border:0; border-radius:0; padding:0; background:transparent; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; }
-@media(min-width:380px) { .order-tracking-search-form { grid-template-columns:minmax(0,1fr) auto; align-items:end; } .order-tracking-modes,.order-tracking-mode-hint { grid-column:1/-1; } }
+@media(min-width:380px) { .order-tracking-search-form[data-mode="phone"] { grid-template-columns:minmax(0,1fr) auto; align-items:end; } .order-tracking-modes,.order-tracking-mode-hint { grid-column:1/-1; } }
 @media(max-width:760px) { .order-tracking-page { padding-top:90px; } .order-tracking-summary-state strong { margin-left:auto; } }
 @media(max-width:768px) { .order-tracking-page [style*="--mobile-font-size"] { font-size:var(--mobile-font-size)!important; overflow-wrap:anywhere; } }
 @media(max-width:600px) {

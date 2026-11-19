@@ -29,7 +29,7 @@ export default function useChatConversation(open, path) {
     try {
       const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, signal: pending.controller.signal, body: JSON.stringify({ messages: history(next), path }) });
       let data;
-      try { data = await response.json(); } catch { throw new Error("Chưa kết nối được trợ lý. Bạn thử lại sau nhé."); }
+      try { data = await response.json(); } catch (cause) { if (cause?.name === "AbortError" || pending.controller.signal.aborted) throw cause; throw new Error("Chưa kết nối được trợ lý. Bạn thử lại sau nhé.", { cause }); }
       if (!response.ok) throw new Error(data.message || "Chưa gửi được tin nhắn.");
       if (typeof data.answer !== "string" || !data.answer.trim()) throw new Error("Trợ lý chưa trả lời được. Bạn thử lại nhé.");
       if (request.current !== pending) return;

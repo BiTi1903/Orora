@@ -3,9 +3,12 @@ import { getAddressOptions } from "../lib/address-api";
 import { useEffect, useState } from "react";
 import { getHomeContent, saveHomeContent } from "../lib/api";
 import useAddressOptions from "../hooks/useAddressOptions";
+import useDraftGuard from "../hooks/useDraftGuard";
+import { useConfirm } from "./confirm-context";
 import { validShippingFee } from "../lib/shipping";
 import { formatVnd } from "../lib/commerce";
 export default function ShippingAdmin() {
+  const confirm = useConfirm();
   const [settings, setSettings] = useState({ enabled: false, provinces: {} }); const [enabled, setEnabled] = useState(false); const [provinceCode, setProvinceCode] = useState(""); const [wardCode, setWardCode] = useState(""); const [drafts, setDrafts] = useState({}); const [loading, setLoading] = useState(true); const [failed, setFailed] = useState(false); const [busy, setBusy] = useState(false); const [notice, setNotice] = useState(null);
   const [savingAction,setSavingAction]=useState("");
   const [version, setVersion] = useState(0);
@@ -30,13 +33,19 @@ export default function ShippingAdmin() {
       setLoading(true); setNotice(null);
       try {
         const home = await getHomeContent();
-        if (alive) { const saved = home?.shippingSettings || { enabled: false, provinces: {} }; setSettings(saved); setEnabled(saved.enabled === true); setFailed(false); }
+        if (alive) { const saved = home?.shippingSettings || { enabled: false, provinces: {} }; setSettings(saved); setEnabled(saved.enabled === true); setDrafts({}); setFailed(false); }
       } catch { if (alive) { setFailed(true); setNotice({ error: true, text: "Không tải được cấu hình phí ship. Chưa thể lưu; hãy bấm Tải lại." }); } }
       finally { if (alive) setLoading(false); }
     }
     load();
     return () => { alive = false; };
   }, [version]);
+  const hasUnsavedChanges = enabled !== (settings.enabled === true) || Object.entries(drafts).some(([code, regionDraft]) => {
+    const savedRegion = settings.provinces?.[code] || {};
+    if (regionDraft.fee !== undefined && regionDraft.fee !== (savedRegion.fee == null ? "" : String(savedRegion.fee))) return true;
+    return Object.entries(regionDraft.wardFees || {}).some(([wCode, wVal]) => wVal !== undefined && wVal !== (savedRegion.wardFees?.[wCode] == null ? "" : String(savedRegion.wardFees[wCode])));
+  });
+  useDraftGuard({ enabled, drafts }, { enabled: !loading && !failed, busy, dirty: hasUnsavedChanges });
   const current = settings.provinces?.[provinceCode] || {};
   const draft = drafts[provinceCode] || {};
   const fee = draft.fee ?? (current.fee == null ? "" : String(current.fee));
@@ -49,7 +58,8 @@ export default function ShippingAdmin() {
     catch { setNotice({ error: true, text: "Chưa lưu được phí ship. Vui lòng thử lại." }); return false; }
     finally { setBusy(false);setSavingAction(""); }
   };
-  return <section className="shipping-settings"><div className="admin-top"><div><h1>Phí vận chuyển</h1><p className="admin-muted">Địa chỉ hai cấp: tỉnh/thành phố và phường/xã theo dữ liệu mới.</p></div><button type="button" className="admin-btn" disabled={loading || busy} onClick={() => setVersion((value) => value + 1)}>Tải lại</button></div>
+  return <section className="shipping-settings"><div className="admin-top"><div><h1>Phí vận chuyển</h1><p className="admin-muted">Địa chỉ hai cấp: tỉnh/thành phố và phường/xã theo dữ liệu mới.</p></div><button type="button" className="admin-btn" disabled={loading || busy} onClick={async () => { if (hasUnsavedChanges && !await confirm("Bạn có thay đổi phí ship chưa lưu. Tải lại và bỏ các thay đổi này?", { title: "Tải lại phí vận chuyển", confirmLabel: "Tải lại", danger: true })) return; setDrafts({}); setVersion((value) => value + 1); }}>Tải lại</button></div>
+    {notice && <p role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
     <div aria-busy={busy && savingAction === "enabled"} className="admin-card admin-form"><h2>Tính ship theo địa chỉ</h2><label className="admin-check"><input type="checkbox" role="switch" checked={enabled} disabled={loading || failed || busy} onChange={(event) => setEnabled(event.target.checked)} />Tự tính phí ship khi khách đặt hàng</label><p className="admin-muted">Nhập phí trước khi bật. Địa chỉ chưa có mức phí sẽ chưa nhận đơn khi đang bật tính ship; số 0 là miễn phí.</p><div><button className="admin-btn" aria-busy={busy && savingAction === "enabled"} disabled={loading || failed || busy} onClick={async () => {
       if (enabled && !Object.values(settings.provinces || {}).some((item) => validShippingFee(item.fee) || Object.values(item.wardFees || {}).some(validShippingFee))) return setNotice({ error: true, text: "Lưu ít nhất một mức phí trước khi bật tính ship." });
       if (await save({ enabled }, "Đã lưu trạng thái tính phí ship.","enabled")) setSettings((value) => ({ ...value, enabled }));
@@ -73,6 +83,5 @@ export default function ShippingAdmin() {
       </>}
     </div>
     <div className="admin-card admin-form shipping-saved-fees"><h2>Phí vận chuyển đã lưu</h2><p className="admin-muted">Đây là các mức phí đã lưu, chưa gồm bản đang sửa. Phí riêng phường/xã được ưu tiên hơn phí chung.</p><div className="admin-field"><label htmlFor="shipping-fee-search">Tìm khu vực đã nhập phí</label><input id="shipping-fee-search" type="search" value={feeSearch} onChange={(event) => setFeeSearch(event.target.value)} placeholder="Tỉnh/thành hoặc phường/xã" /></div><div className="shipping-fee-table"><table className="admin-table"><thead><tr><th>Tỉnh / Thành phố</th><th>Phạm vi</th><th>Phí giao hàng</th><th /></tr></thead><tbody>{savedFees.map((item) => <tr key={`${item.provinceCode}-${item.wardCode}`}><td data-label="Tỉnh / Thành phố">{item.provinceName}</td><td data-label="Phạm vi">{item.wardName}</td><td data-label="Phí giao hàng"><strong>{item.fee === 0 ? "Miễn phí" : formatVnd(item.fee)}</strong></td><td><button type="button" className="admin-btn" disabled={busy} onClick={(event) => { const doc = event.currentTarget.ownerDocument; setProvinceCode(item.provinceCode); setWardCode(item.wardCode); requestAnimationFrame(() => doc.getElementById(item.wardCode ? "shipping-ward-fee" : "shipping-base-fee")?.focus()); }}>Chỉnh phí</button></td></tr>)}</tbody></table></div>{!loading && !savedFees.length && <p className="admin-muted">Chưa có mức phí phù hợp.</p>}</div>
-    {notice && <p role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
   </section>;
 }

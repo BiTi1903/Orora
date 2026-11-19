@@ -4,10 +4,21 @@ export function memoryDb() {
   const records = new Map();
   let queue = Promise.resolve();
   const snap = (ref) => ({ id: ref.id, exists: records.has(ref.path), data: () => structuredClone(records.get(ref.path)) });
+  const applyFields = (existing, incoming, merge) => {
+    const base = merge && existing ? structuredClone(existing) : {};
+    for (const [k, v] of Object.entries(incoming || {})) {
+      if (v && typeof v === "object" && v.constructor?.name === "NumericIncrementTransform" && typeof v.operand === "number") {
+        base[k] = (typeof base[k] === "number" ? base[k] : 0) + v.operand;
+      } else {
+        base[k] = structuredClone(v);
+      }
+    }
+    return base;
+  };
   const ref = (path) => ({
     path, id: path.split("/").at(-1),
     get: async () => snap(ref(path)),
-    set: async (value, options) => { records.set(path, options?.merge ? { ...records.get(path), ...structuredClone(value) } : structuredClone(value)); },
+    set: async (value, options) => { records.set(path, applyFields(records.get(path), value, Boolean(options?.merge))); },
     delete: async () => { records.delete(path); },
     collection: (name) => query(`${path}/${name}`),
   });

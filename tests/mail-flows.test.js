@@ -8,7 +8,7 @@ import { createNewsletterAdminHandler } from "../server/newsletter-admin.js";
 import { createAdminOrdersHandler } from "../server/orders.js";
 import { describeMailError } from "../server/mail-error.js";
 import { memoryDb, response } from "./firestore-memory.js";
-const env = { NEWSLETTER_SITE_ORIGIN: "https://orora.example", NEWSLETTER_ADMIN_UIDS: "owner", MS_TENANT_ID: "tenant", MS_CLIENT_ID: "client", MS_CLIENT_SECRET: "secret", MS_SENDER_EMAIL: "sales@ororavn.com", MS_MAIL_TRANSPORT: "smtp" };
+const env = { NEWSLETTER_SITE_ORIGIN: "https://orora.example", NEWSLETTER_ADMIN_UIDS: "owner", NEWSLETTER_UNSUBSCRIBE_SECRET: "test-only-signing-secret-at-least-32-characters", MS_TENANT_ID: "tenant", MS_CLIENT_ID: "client", MS_CLIENT_SECRET: "secret", MS_SENDER_EMAIL: "sales@ororavn.com", MS_MAIL_TRANSPORT: "smtp" };
 const headers = { origin: env.NEWSLETTER_SITE_ORIGIN, "content-type": "application/json", authorization: "Bearer test" };
 for (const reject of [false, true]) test(`registration, manual order and private mail share SMTP sender and expose rejection safely: ${reject}`, async () => {
   const db = memoryDb(); const submissions = []; const tasks = [];
@@ -25,7 +25,7 @@ for (const reject of [false, true]) test(`registration, manual order and private
   const orderAdmin = createAdminOrdersHandler({ getDb, verifyToken, sendMail, env });
   const call = async (handler, body) => { const res = response(); await handler({ method: "POST", headers, body }, res); return res; };
   const email = "buyer@example.com";
-  const signup = createSubscribeHandler({ getDb, env, schedule: (task) => tasks.push(task), sendWelcome: (email) => sendWelcomeMessage(email, { getDb, sendMail }) });
+  const signup = createSubscribeHandler({ getDb, env, schedule: (task) => tasks.push(task), sendWelcome: (email) => sendWelcomeMessage(email, { getDb, sendMail, env }) });
   assert.equal((await call(signup, { email, consent: true })).statusCode, 200);
   await Promise.all(tasks);
   const id = subscriberId(email);

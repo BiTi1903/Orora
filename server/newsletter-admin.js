@@ -106,8 +106,10 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
           campaigns: await resolveMailActors(campaignHistory, lookupUser),
         });
       }
-      const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-      if (!body || JSON.stringify(body).length > 40000) return reply(400, { message: "Dữ liệu không hợp lệ." });
+      let body;
+      try { body = typeof req.body === "string" ? JSON.parse(req.body) : req.body; }
+      catch { return reply(400, { message: "Dữ liệu không hợp lệ." }); }
+      if (!body || typeof body !== "object" || Buffer.byteLength(JSON.stringify(body)) > 40000) return reply(400, { message: "Dữ liệu không hợp lệ." });
       if (body.action === "campaignDeliveryStatuses") {
         if (!validId(body.id) || (body.cursor && !/^[a-f0-9]{64}$/.test(body.cursor))) return reply(400, { message: "Thư hoặc trang không hợp lệ." });
         let query = campaigns.doc(body.id).collection("deliveries").orderBy("__name__").limit(50);
@@ -263,6 +265,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         });
         return reply(200, { id: body.id, message: "Đã tạo thư. Chưa gửi email." });
       }
+      withUnsubscribe({ subject: "check", text: "check" }, "0".repeat(64), env);
       const lease = randomUUID();
       const state = await db.runTransaction(async (tx) => {
         const saved = await tx.get(campaign);

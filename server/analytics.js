@@ -1,33 +1,52 @@
-import { createHash } from 'node:crypto';
+import { createHash, createHmac } from 'node:crypto';
+import { FieldValue } from 'firebase-admin/firestore';
 import { analyticsDay,analyticsWindow,analyticsPath,paidOrderSummary } from '../src/lib/analytics.js';
 import { withProductIdentity } from '../src/lib/product-identity.js';
 import { requireAdmin } from './admin-auth.js';
+import { rateLimitSalt } from './request-limits.js';
 const fail=(status,message)=>Object.assign(new Error(message),{publicError:true,status});
 const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value);
 const digest=value=>createHash('sha256').update(value).digest('hex');
+const keyed=(salt,value)=>createHmac('sha256',salt).update(value).digest('hex');
 async function collect(db,req,body,time,env){
   const day=analyticsDay(time),expiresAt=new Date(time+3*86400000);
   const path=analyticsPath(body.path);
   if(!path||!uuid(body.visitorId)||!uuid(body.eventId)||!['page_view','product_click'].includes(body.type)||(body.type==='product_click'&&!path.startsWith('/product/')))throw fail(400,'Sự kiện không hợp lệ.');
   const product=path.startsWith('/product/');
   const ip=String(req.headers['x-vercel-forwarded-for']||req.headers['x-forwarded-for']||req.socket?.remoteAddress||'unknown').split(',')[0].trim().slice(0,160);
-  const salt=env.ANALYTICS_RATE_SALT||env.CHAT_RATE_LIMIT_SALT||'orora-analytics';
+  const salt=env.ANALYTICS_RATE_SALT?.trim()||rateLimitSalt(env)||'orora-analytics';
   const daily=db.collection('siteAnalyticsDaily').doc(day);
-  const visitor=db.collection('siteAnalyticsVisitors').doc(digest(`${day}:${salt}:${body.visitorId}`));
+  const visitor=db.collection('siteAnalyticsVisitors').doc(keyed(salt,`${day}:${body.visitorId}`));
   const event=db.collection('siteAnalyticsEvents').doc(digest(`${day}:${body.visitorId}:${body.eventId}`));
-  const limit=db.collection('siteAnalyticsLimits').doc(digest(`${day}:${salt}:${ip}`));
+  const limit=db.collection('siteAnalyticsLimits').doc(keyed(salt,`${day}:${ip}`));
   const metric=product?db.collection('siteAnalyticsProducts').doc(`${day}-${digest(path)}`):null;
-  await db.runTransaction(async tx=>{
-    const [dailyDoc,visitorDoc,eventDoc,limitDoc,metricDoc]=await tx.getAll(daily,visitor,event,limit,...(metric?[metric]:[]));
+  const accepted=await db.runTransaction(async tx=>{
+    const [visitorDoc,eventDoc,limitDoc]=await tx.getAll(visitor,event,limit);
     const prior=limitDoc.data()||{},inWindow=time>=prior.windowStart&&time-prior.windowStart<600000;
     if((inWindow&&prior.windowCount>=150)||prior.count>=2000)throw fail(429,'Vui lòng thử lại sau.');
     tx.set(limit,{count:(prior.count||0)+1,windowStart:inWindow?prior.windowStart:time,windowCount:inWindow?(prior.windowCount||0)+1:1,expiresAt});
-    if(eventDoc.exists)return;
-    const totals=dailyDoc.data()||{};
-    tx.set(daily,{day,pageViews:(totals.pageViews||0)+(body.type==='page_view'?1:0),visitors:(totals.visitors||0)+(visitorDoc.exists?0:1),productClicks:(totals.productClicks||0)+(body.type==='product_click'?1:0)});
+    if(eventDoc.exists)return null;
     tx.set(visitor,{day,expiresAt});tx.set(event,{day,expiresAt});
-    if(metric){const saved=metricDoc?.data()||{};tx.set(metric,{day,path,clicks:(saved.clicks||0)+(body.type==='product_click'?1:0),views:(saved.views||0)+(body.type==='page_view'?1:0)});}
+    return {newVisitor:!visitorDoc.exists};
   });
+  if(!accepted)return;
+  const writes=[
+    daily.set({
+      day,
+      pageViews:FieldValue.increment(body.type==='page_view'?1:0),
+      visitors:FieldValue.increment(accepted.newVisitor?1:0),
+      productClicks:FieldValue.increment(body.type==='product_click'?1:0),
+    },{merge:true}),
+  ];
+  if(metric){
+    writes.push(metric.set({
+      day,
+      path,
+      clicks:FieldValue.increment(body.type==='product_click'?1:0),
+      views:FieldValue.increment(body.type==='page_view'?1:0),
+    },{merge:true}));
+  }
+  await Promise.all(writes);
 }
 async function report(db,time,days){
   const window=analyticsWindow(time,days);

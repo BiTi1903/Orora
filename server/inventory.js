@@ -17,7 +17,12 @@ export async function reserveOrderInventory(tx, db, productId, quantity, stockSn
   // that case cannot change the decision and only adds a database round trip.
   if (validQuantity(current.quantity)) {
     if (nextReserved === null) {
-      const pending = await tx.get(db.collection("orders").where("product.id", "==", productId));
+      const pending = await tx.get(
+        db.collection("orders")
+          .where("product.id", "==", productId)
+          .where("status", "in", ["new", "confirmed"])
+          .select("quantity", "status", "paymentStatus", "inventory"),
+      );
       nextReserved = pending.docs.reduce((sum, doc) => sum + waitingQuantity(doc.data()), 0);
     }
     if (current.quantity - nextReserved < quantity) throw fail("Sản phẩm không đủ số lượng còn có thể đặt. Vui lòng giảm số lượng hoặc liên hệ ORORA.");
@@ -76,7 +81,11 @@ export function createInventoryHandler({ getDb, verifyToken, env = process.env }
     try {
       const db = await getDb();
       if (req.method === "GET" && req.query?.pending === "1") {
-        let query = db.collection("orders").orderBy("__name__").limit(100);
+        let query = db.collection("orders")
+          .where("status", "in", ["new", "confirmed"])
+          .select("product", "quantity", "status", "paymentStatus", "inventory")
+          .orderBy("__name__")
+          .limit(100);
         if (req.query?.cursor) {
           if (!validId(req.query.cursor)) throw fail("Trang không hợp lệ.", 400);
           query = query.startAfter(req.query.cursor);

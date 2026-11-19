@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import ButtonIcon from "./ButtonIcon";
 import "../styles/order-tracking.css";
 import { trackingStyle } from '../lib/order-tracking-copy';
@@ -7,7 +8,7 @@ export default function OrderTrackingSearch({copy,styles={},mode,code,phone,busy
  return <div className="order-tracking-search-layout"><div className="order-tracking-panel">
   <h2 className="tracking-search-title" style={css("formTitle")}>{copy.formTitle}</h2>
 
-  <Form className="order-tracking-search-form" onSubmit={preview?undefined:onSubmit} aria-label="Tra cứu đơn hàng" aria-busy={busy}>
+  <Form className="order-tracking-search-form" data-mode={mode} onSubmit={preview?undefined:onSubmit} aria-label="Tra cứu đơn hàng" aria-busy={busy}>
    <div className="order-tracking-modes" role="group" aria-label="Tra cứu theo">{[['phone',copy.phoneTab],['code',copy.codeTab]].map(([key,label])=><button key={key} type="button" aria-pressed={mode===key} onClick={()=>onMode(key)}><strong style={css('modeTitle')}>{label}</strong></button>)}</div>
    <p className="order-tracking-mode-hint" style={css('modeBody')}>{mode==='phone'?copy.phoneHint:copy.codeHint}</p>
    {mode==='code'?<><label htmlFor={preview?'preview-lookup-code':'lookup-code'} style={css('label')}>{copy.codeLabel}<input id={preview?'preview-lookup-code':'lookup-code'} value={code} onChange={onCode} style={css('input')} required={!preview} minLength={4} maxLength={40} autoCapitalize="characters" autoCorrect="off" spellCheck={false} placeholder={copy.codePlaceholder}/></label><label htmlFor={preview?'preview-lookup-code-phone':'lookup-code-phone'} style={css('label')}>{copy.codePhoneLabel}<input id={preview?'preview-lookup-code-phone':'lookup-code-phone'} type="tel" inputMode="tel" value={phone} onChange={onPhone} style={css('input')} required={!preview} minLength={4} maxLength={32} autoComplete={preview?'off':'tel'} placeholder={copy.codePhonePlaceholder}/></label></>:<label htmlFor={preview?'preview-lookup-phone':'lookup-phone'} style={css('label')}>{copy.phoneLabel}<input id={preview?'preview-lookup-phone':'lookup-phone'} type="tel" inputMode="tel" value={phone} onChange={onPhone} style={css('input')} required={!preview} minLength={7} maxLength={32} autoComplete={preview?'off':'tel'} placeholder={copy.phonePlaceholder}/></label>}
@@ -15,5 +16,5 @@ export default function OrderTrackingSearch({copy,styles={},mode,code,phone,busy
   </Form>
   {error&&<p className="order-tracking-error" role="alert">{error}</p>}
 
- </div><details className="order-tracking-guide"><summary style={css('guideTitle')}>{copy.guideTitle}</summary><ol>{[['guideFirstTitle','guideFirstBody'],['guideSecondTitle','guideSecondBody'],['guideThirdTitle','guideThirdBody']].map(([title,body],index)=><li key={title}><span aria-hidden="true">{String(index+1).padStart(2,'0')}</span><div><strong style={css('guideBody')}>{copy[title]}</strong><p style={css('guideBody')}>{copy[body]}</p></div></li>)}</ol><div className="order-tracking-guide-support"><p style={css('help')}>{copy.scopeNote}</p><a href={preview?undefined:'/#contact'} style={css('help')}>{copy.contactLabel}<ButtonIcon name="trackingContact" defaultSize={16}/></a></div></details></div>;
+ </div><details className="order-tracking-guide"><summary style={css('guideTitle')}>{copy.guideTitle}</summary><ol>{[['guideFirstTitle','guideFirstBody'],['guideSecondTitle','guideSecondBody'],['guideThirdTitle','guideThirdBody']].map(([title,body],index)=><li key={title}><span aria-hidden="true">{String(index+1).padStart(2,'0')}</span><div><strong style={css('guideBody')}>{copy[title]}</strong><p style={css('guideBody')}>{copy[body]}</p></div></li>)}</ol><div className="order-tracking-guide-support"><p style={css('help')}>{copy.scopeNote}</p>{preview?<span style={css('help')}>{copy.contactLabel}<ButtonIcon name="trackingContact" defaultSize={16}/></span>:<Link to="/#contact" style={css('help')}>{copy.contactLabel}<ButtonIcon name="trackingContact" defaultSize={16}/></Link>}</div></details></div>;
 }

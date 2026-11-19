@@ -42,7 +42,7 @@ test("cancelled waiting orders release holds; concurrent orders cannot reserve t
   const { db, call } = await setup(3); const a = orderBody(2); const b = orderBody(2);
   const results = await Promise.all([call("place", a), call("place", b)]); assert.deepEqual(results.map((res) => res.statusCode).sort(), [201, 409]); assert.equal((await stock(db)).quantity, 3);
   const accepted = results[0].statusCode === 201 ? a : b;
-  await call("orders", { id: accepted.requestId, status: "cancelled" }); assert.equal((await call("inventory", null, { pending: "1" })).body.pending.serum, 0);
+  await call("orders", { id: accepted.requestId, status: "cancelled" }); assert.equal((await call("inventory", null, { pending: "1" })).body.pending.serum || 0, 0);
   assert.equal((await call("place", orderBody(3))).statusCode, 201);
 });
 test("COD shipment deducts stock before payment; returns require explicit receipt and are idempotent", async () => {

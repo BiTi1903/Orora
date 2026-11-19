@@ -82,8 +82,15 @@ export default function ModalDialog({ title, children, onClose, className = "", 
     animation.play();
     return()=>{animation.onfinish=null;};
   },[motionClosing,motionSource,motionDuration]);
-  return <>{allowBackgroundScroll&&<div className="orora-modeless-backdrop" aria-hidden="true"/>}<dialog ref={ref} className={`orora-modal ${className}${allowBackgroundScroll?' is-modeless':''}`} aria-labelledby={titleId} style={style} onClose={event=>{event.stopPropagation();if(!ref.current?.open)onClose();}} onCancel={(event) => {event.stopPropagation();event.preventDefault();if(!closeDisabled)onClose();}} onClick={(event) => {
-    if (closeDisabled || event.target !== event.currentTarget) return;
+  const pointerDownOutsideRef=useRef(false);
+  return <>{allowBackgroundScroll&&<div className="orora-modeless-backdrop" aria-hidden="true"/>}<dialog ref={ref} className={`orora-modal ${className}${allowBackgroundScroll?' is-modeless':''}`} aria-labelledby={titleId} style={style} onClose={event=>{event.stopPropagation();if(!ref.current?.open)onClose();}} onCancel={(event) => {event.stopPropagation();event.preventDefault();if(!closeDisabled)onClose();}} onPointerDown={(event) => {
+    if (closeDisabled || event.target !== event.currentTarget) { pointerDownOutsideRef.current = false; return; }
+    const box = event.currentTarget.getBoundingClientRect();
+    pointerDownOutsideRef.current = event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom;
+  }} onClick={(event) => {
+    const startedOutside = pointerDownOutsideRef.current;
+    pointerDownOutsideRef.current = false;
+    if (!startedOutside || closeDisabled || event.target !== event.currentTarget) return;
     const box = event.currentTarget.getBoundingClientRect();
     if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) onClose();
   }}><div className="orora-modal-heading"><h2 id={titleId} style={headingStyle}>{title}</h2><button type="button" aria-label={closeLabel} disabled={closeDisabled} onClick={onClose}>×</button></div><div className="orora-modal-content">{children}</div></dialog></>;

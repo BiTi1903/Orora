@@ -9,6 +9,7 @@ import MailTemplatePicker from "./MailTemplatePicker";
 import { mailActorLabel, groupMailTemplates, templateReference } from "../lib/mail-templates";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { newsletterRequest as request } from "./newsletter-api";
+import useDraftGuard from "../hooks/useDraftGuard";
 
 const EMPTY = { subject: "", text: "" };
 const CONTACT_STATUS = { active: "Hoạt động", paused: "Tạm ngưng", unsubscribed: "Đã hủy đăng ký" };
@@ -50,6 +51,7 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
   const [recipientIds, setRecipientIds] = useState([]);
   const [recipientSearch, setRecipientSearch] = useState("");
   const [welcome, setWelcome] = useState(EMPTY);
+  const [savedWelcome, setSavedWelcome] = useState(EMPTY);
   const [contacts, setContacts] = useState([]);
   const [selectedContacts, setSelectedContacts] = useState([]);
   const [contactFilter, setContactFilter] = useState("all");
@@ -63,6 +65,11 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
   const stop = useRef(false);
   const alive = useRef(true);
 
+  const hasUnsavedDrafts = sending
+    || Object.values(writerDrafts).some((item) => Boolean(item?.subject?.trim() || item?.text?.trim()))
+    || (ready && (welcome.subject !== savedWelcome.subject || welcome.text !== savedWelcome.text));
+  useDraftGuard({ writerDrafts, welcome }, { enabled: ready, busy: sending, dirty: hasUnsavedDrafts });
+
   const load = useCallback(async () => {
     const [data] = await Promise.all([request(), request({ action: "ensureDefaultTemplates" })]);
     if (!alive.current) return;
@@ -71,6 +78,7 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
     setCursor(data.nextCursor);
     setCampaigns(data.campaigns);
     setWelcome(data.welcome);
+    setSavedWelcome(data.welcome);
     setReady(true);
   }, []);
 
@@ -276,7 +284,8 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
             {!visibleContacts.length && <p className="admin-muted">Không có email phù hợp.</p>}
             {cursor && <button className="admin-btn" disabled={busy} onClick={() => perform(async () => {
               const page = await request(null, cursor);
-              setContacts((items) => [...items, ...page.contacts]); setCursor(page.nextCursor);
+              setContacts((items) => [...new Map([...items, ...page.contacts].map((item) => [item.id, item])).values()]);
+              setCursor(page.nextCursor);
             })}>Tải thêm email</button>}
           </div>
         </>

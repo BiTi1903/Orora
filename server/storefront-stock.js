@@ -31,9 +31,12 @@ export function createStorefrontStockHandler({ getDb, clock = Date.now, env = pr
       const visible = products.filter(doc => doc.exists && doc.data().active !== false);
       const stock = visible.length ? await db.getAll(...visible.map(doc => db.collection('inventory').doc(doc.id))) : [];
       const availability = Object.fromEntries(stock.flatMap(doc => {
-        const quantity = doc.data()?.quantity;
+        const data = doc.data();
+        const quantity = data?.quantity;
         if (!Number.isSafeInteger(quantity) || quantity < 0) return [];
-        return [[doc.id, quantity === 0 ? 'out' : quantity <= LOW_STOCK_THRESHOLD ? 'low' : 'available']];
+        const reserved = Number.isSafeInteger(data?.reserved) && data.reserved > 0 ? data.reserved : 0;
+        const available = Math.max(0, quantity - reserved);
+        return [[doc.id, available === 0 ? 'out' : available <= LOW_STOCK_THRESHOLD ? 'low' : 'available']];
       }));
       res.setHeader('Cache-Control', 'public, max-age=15, s-maxage=30');
       return res.status(200).json({ availability });

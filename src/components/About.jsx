@@ -562,9 +562,7 @@ function About({
                     select(`statValue:${index}`);
                   }}
                 >
-                  {item?.value == null || item?.value === ""
-                    ? "test"
-                    : item.value}
+                  {item?.value == null ? "" : item.value}
                   {item?.suffix || ""}
                 </strong>
 

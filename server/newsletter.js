@@ -31,12 +31,15 @@ export function createSubscribeHandler({ getDb, sendWelcome, schedule, env = pro
           || await reserveBudgetOrAllow(db, req, { scope: "subscribe-email", cost: 1, budget: 3, windowMs: 3600000, now, salt, key: email });
         if (wait) { res.setHeader("Retry-After", String(wait)); return reply(429, "Bạn đã thử quá nhiều lần. Vui lòng thử lại sau."); }
       }
+      const STALE_PENDING_MS = 5 * 60 * 1000;
       const action = await db.runTransaction(async (tx) => {
         const saved = await tx.get(subscriber); const prior = saved.data() || {};
+        const updatedMs = prior.updatedAt?.toMillis?.() ?? (prior.updatedAt ? new Date(prior.updatedAt).getTime() : 0);
+        const stalePending = prior.mailStatus === "pending" && Number.isFinite(updatedMs) && clock() - updatedMs > STALE_PENDING_MS;
         // Repeated submissions succeed without duplicating mail already accepted,
-        // in progress or with an uncertain outcome. No IP/site cooldown applies.
-        if (prior.status === "active" && ["accepted", "pending", "unknown"].includes(prior.mailStatus)) return "exists";
-        const now = new Date();
+        // actively in progress (<5 min) or with an uncertain outcome.
+        if (prior.status === "active" && !stalePending && ["accepted", "pending", "unknown"].includes(prior.mailStatus)) return "exists";
+        const now = new Date(clock());
         tx.set(subscriber, { email, status: "active", source: "website-newsletter", consentVersion: "newsletter-v1", consentAt: now, createdAt: prior.createdAt || now, updatedAt: now, mailStatus: "pending", attempt }, { merge: true });
         return "send";
       });
@@ -45,18 +48,26 @@ export function createSubscribeHandler({ getDb, sendWelcome, schedule, env = pro
       console.error("Newsletter: database reservation failed");
       return reply(503, "Chưa lưu được đăng ký. Vui lòng thử lại sau.");
     }
+    const writeAttemptResult = async (patch) => {
+      const db = await getDb();
+      await db.runTransaction(async (tx) => {
+        const saved = await tx.get(subscriber);
+        if (!saved.exists || saved.data()?.attempt !== attempt) return;
+        tx.set(subscriber, patch, { merge: true });
+      });
+    };
     const completeWelcome = async () => {
       try {
         const result = await sendWelcome(email);
         const tracking = safeMailTracking(result);
         try {
-          await subscriber.set({ mailStatus: "accepted", ...(tracking.trackingId ? { welcomeTracking: { ...tracking, createdAt: result.createdAt || new Date().toISOString(), ...(result.subject ? { subject: result.subject } : {}) }, outlook: null } : {}), mailAcceptedAt: new Date(), updatedAt: new Date() }, { merge: true });
+          await writeAttemptResult({ mailStatus: "accepted", ...(tracking.trackingId ? { welcomeTracking: { ...tracking, createdAt: result.createdAt || new Date(clock()).toISOString(), ...(result.subject ? { subject: result.subject } : {}) }, outlook: null } : {}), mailAcceptedAt: new Date(clock()), updatedAt: new Date(clock()) });
         } catch { console.error("Newsletter: mail accepted, status update failed"); }
         return { status: 200, message: SUCCESS_MESSAGE };
       } catch (error) {
         const known = ["mail_auth_failed", "mail_send_failed", "mail_configuration_missing", "mail_smtp_auth_failed", "mail_smtp_connection_failed", "mail_transport_invalid", "unsubscribe_configuration_missing", "invalid_message"].includes(error.message);
         const tracking = safeMailTracking(error.mailTracking);
-        try { await subscriber.set({ mailStatus: known ? "failed" : "unknown", ...(tracking.trackingId ? { welcomeTracking: { ...tracking, createdAt: new Date().toISOString() }, outlook: null } : {}), updatedAt: new Date() }, { merge: true }); }
+        try { await writeAttemptResult({ mailStatus: known ? "failed" : "unknown", ...(tracking.trackingId ? { welcomeTracking: { ...tracking, createdAt: new Date(clock()).toISOString() }, outlook: null } : {}), updatedAt: new Date(clock()) }); }
         catch { console.error("Newsletter: could not record mail failure"); }
         console.error("Newsletter: mail request failed");
         return { status: 503, message: "Đã lưu email, nhưng chưa xác nhận được việc gửi thư. Vui lòng kiểm tra hộp thư hoặc liên hệ ORORA." };

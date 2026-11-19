@@ -162,7 +162,7 @@ function Navbar({
           <Link to="/" className="logo" onClick={closeMenu}>
             {logo}<span></span>
           </Link>
-
+          <button type="button" className="drawer-close" aria-label="Đóng menu" onClick={closeMenu}>×</button>
         </div>
 
         <nav key={menuOpen ? "open" : "closed"} className="mobile-drawer-links">

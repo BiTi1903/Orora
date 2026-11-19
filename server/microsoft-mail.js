@@ -22,32 +22,37 @@ function createGraphMailer(
 
     // Lấy access token Microsoft.
     if (!cachedToken || expiresAt <= Date.now()) {
-      const response = await request(
-        `https://login.microsoftonline.com/${encodeURIComponent(
-          tenant
-        )}/oauth2/v2.0/token`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({
-            client_id: client,
-            client_secret: secret,
-            scope: "https://graph.microsoft.com/.default",
-            grant_type: "client_credentials",
-          }),
-          signal: AbortSignal.timeout(10000),
-        }
-      );
+      let token;
+      try {
+        const response = await request(
+          `https://login.microsoftonline.com/${encodeURIComponent(
+            tenant
+          )}/oauth2/v2.0/token`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+              client_id: client,
+              client_secret: secret,
+              scope: "https://graph.microsoft.com/.default",
+              grant_type: "client_credentials",
+            }),
+            signal: AbortSignal.timeout(10000),
+          }
+        );
 
-      if (!response.ok) {
+        if (!response.ok) {
+          throw new Error("mail_auth_failed");
+        }
+
+        token = await response.json();
+      } catch {
         throw new Error("mail_auth_failed");
       }
 
-      const token = await response.json();
-
-      if (!token.access_token) {
+      if (!token?.access_token) {
         throw new Error("mail_auth_failed");
       }
 

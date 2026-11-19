@@ -1,3 +1,33 @@
+## 19/11/2026 — Sửa lỗi toàn diện cho Web bán hàng, Trang quản trị và Hệ thống máy chủ
+
+- **Lý do**: Rà soát và khắc phục các lỗi thao tác, phân quyền, đồng bộ dữ liệu, bảo mật và trải nghiệm người dùng trên cả 3 lớp (Web khách hàng, Trang quản trị và API/Rules).
+- **Thay đổi chính**:
+  - **Web khách hàng**:
+    - Bổ sung nút "Thêm vào giỏ" trên trang chi tiết sản phẩm; khi bấm từ giỏ hàng sang trang sản phẩm sẽ mở sẵn form đặt hàng và ghi rõ ở chân giỏ là đặt theo từng sản phẩm.
+    - Khắc phục lỗi mất chạm chọn Tỉnh/Phường trên iOS Safari; giữ nút "Đặt hàng ngay" bấm được để báo lỗi và cuộn tới trường còn thiếu; làm rõ tổng tiền chưa gồm phí giao hàng trước khi chọn địa chỉ; chỉ đóng hộp thoại khi cả lúc nhấn xuống lẫn thả chuột đều nằm ngoài khung.
+    - Cải thiện giỏ hàng: không nháy thông báo không khả dụng khi danh sách sản phẩm đang tải, cho phép xóa trắng ô số lượng khi đang gõ, vô hiệu hóa chỉnh số lượng và loại sản phẩm hết hàng khỏi tổng tiền, không báo thêm thành công khi đã đạt giới hạn.
+    - Sắp xếp theo giá giữ nguyên danh mục đang lọc và luôn hiển thị thanh chọn danh mục; thêm nút đóng trên menu di động; cho phép cuộn ảnh dọc khi phóng to ở mức 100%; tách bố cục tra cứu theo mã đơn và hiển thị lỗi tải thêm đơn ngay cạnh nút bấm; giữ nguyên thông báo quá thời gian ở trợ lý chat; dùng điều hướng nội bộ cho chân trang, bỏ liên kết rỗng và chữ mẫu thừa, thêm nút quay về trang chủ ở trang không tồn tại.
+  - **Trang quản trị**:
+    - Phân tách đúng quyền trong màn hình Đơn hàng: tài khoản chỉ có quyền đơn hàng không bị gọi API email marketing khi mở khung gửi thư riêng cho khách, đồng thời ẩn tab Thư tự động và tab Chữ trang tra cứu nếu không có quyền tương ứng.
+    - Tự làm mới lịch sử email sau khi gửi lại thư xác nhận; xóa bộ lọc đơn gồm cả bộ lọc email; lọc theo khách hàng tự đặt lại bộ lọc email; hiện thông báo lỗi nếu đăng xuất thất bại.
+    - Bổ sung cảnh báo rời trang khi chưa lưu và xác nhận trước khi tải lại ở Phí vận chuyển và Email; chống bấm xóa sản phẩm nhiều lần khi đang bận; chống trùng dòng khi tải thêm danh sách email.
+    - Visual Builder: khôi phục mặc định xóa sạch giá trị cũ và đẩy được lên máy chủ, ẩn nút khôi phục ở hai mục không hỗ trợ, tính trạng thái chưa lưu chính xác sau khi Hoàn tác, giữ thanh lưu hiện khi có thay đổi ở tab cài đặt cửa hàng, và thêm nút "Thử lại" khi tải dữ liệu lỗi.
+  - **Hệ thống máy chủ và Rules**:
+    - Vô hiệu hóa tài khoản quản trị trong `adminUsers` lập tức chặn quyền ở cả API, Firestore Rules và Storage Rules (ưu tiên ghi đè cả custom claim và biến môi trường).
+    - Khôi phục email chào mừng bị kẹt ở trạng thái đang gửi sau 5 phút và chống ghi đè trạng thái bằng kiểm tra phiên gửi trong giao dịch; chặn gửi email marketing ngay từ đầu nếu thiếu cấu hình hủy đăng ký; không ghi đè thời điểm hủy đăng ký khi gửi lặp lại.
+    - Trừ số lượng giữ chỗ khi tính trạng thái còn/hết hàng; lọc đúng đơn đang chờ xử lý khi kiểm kho; sắp xếp danh sách tra cứu đơn theo thời gian mới nhất; dùng HMAC kèm khóa bí mật cho giới hạn tần suất; tách bộ đếm thống kê khỏi giao dịch để giảm xung đột; xóa cache lỗi ở API địa chỉ; xử lý lỗi parse JSON, giới hạn kích thước nội dung và lỗi xác thực dịch vụ mail gọn gàng.
+- **File / khu vực liên quan**:
+  - Web khách hàng: `src/components/ShopCart.jsx`, `src/components/ProductDetail.jsx`, `src/components/AddressSelect.jsx`, `src/components/OrderFormFields.jsx`, `src/components/ModalDialog.jsx`, `src/components/CatalogFilters.jsx`, `src/components/Collection.jsx`, `src/components/Navbar.jsx`, `src/components/OrderTracking.jsx`, `src/components/OrderTrackingSearch.jsx`, `src/components/Footer.jsx`, `src/components/About.jsx`, `src/hooks/useChatConversation.js`, `src/App.jsx`, `src/styles/product-detail.css`, `src/styles/order-tracking.css`.
+  - Trang quản trị: `src/admin/AdminApp.jsx`, `src/admin/OrdersAdmin.jsx`, `src/admin/OrderEmails.jsx`, `src/admin/ShippingAdmin.jsx`, `src/admin/ProductsAdmin.jsx`, `src/admin/NewsletterAdmin.jsx`, `src/admin/builder/VisualBuilder.jsx`, `src/admin/builder/save-sections.js`.
+  - Máy chủ & Rules: `server/admin-auth.js`, `server/newsletter.js`, `server/newsletter-admin.js`, `server/newsletter-content.js`, `server/microsoft-mail.js`, `server/unsubscribe.js`, `server/storefront-stock.js`, `server/inventory.js`, `server/order-tracking.js`, `server/analytics.js`, `server/addresses.js`, `firestore.rules`, `storage.rules`.
+  - Kiểm thử: `tests/firestore-memory.js`, `tests/inventory.test.js`, `tests/mail-flows.test.js`, `tests/newsletter.test.js`, `qa/shopping.spec.js`, `qa/cart.spec.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **247/247** unit test đạt, `eslint .` 0 lỗi, `vite build` và kiểm tra ngân sách bundle đạt.
+  - Playwright (`width-320` và `width-390`): **30/30** test đạt trên `qa/shopping.spec.js`, `qa/cart.spec.js`, `qa/editor-checkout.spec.js` và `qa/admin-navigation.spec.js`.
+- **Ảnh hưởng database**:
+  - Cập nhật `firestore.rules` và `storage.rules` để tài khoản quản trị có `enabled !== true` trong `adminUsers` bị từ chối quyền ngay cả khi còn claim hoặc cấu hình biến môi trường.
+  - Truy vấn tra cứu đơn theo số điện thoại bổ sung sắp xếp theo `createdAt` giảm dần (cần đảm bảo composite index `phoneHash` + `createdAt desc` trên collection `orders` khi triển khai Firestore).
+
 ## 19/11/2026 — Giữ nguyên thông báo quá thời gian khi nội dung phản hồi tra cứu đơn bị treo
 
 - **Lý do**: Nếu máy chủ đã trả phần đầu phản hồi nhưng nội dung bị treo quá 20 giây, bước đọc JSON trước đó nuốt lỗi hủy yêu cầu khiến người dùng thấy thông báo lỗi chung thay vì thông báo chờ quá lâu.

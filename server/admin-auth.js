@@ -24,15 +24,16 @@ async function verifyAdminUser(req, { verifyToken, logAuthError } = {}) {
   return user;
 }
 
-async function isFirestoreAdmin(getDb, uid) {
-  if (typeof getDb !== "function") return false;
+async function firestoreAdminState(getDb, uid) {
+  if (typeof getDb !== "function") return "none";
   try {
     const db = await getDb();
     const doc = await db.collection("adminUsers").doc(uid).get();
-    return Boolean(doc?.exists && doc.data()?.enabled === true);
+    if (!doc?.exists) return "none";
+    return doc.data()?.enabled === true ? "enabled" : "disabled";
   } catch {
-    // If Firestore check fails, fall through to denied error rather than leaking internal details.
-    return false;
+    // If Firestore check fails, fall through without granting extra privilege.
+    return "none";
   }
 }
 
@@ -46,7 +47,11 @@ export async function requireAdmin(req, {
   logAuthError,
 } = {}) {
   const user = await verifyAdminUser(req, { verifyToken, logAuthError });
-  if (user.admin === true) return user;
+  const dbState = await firestoreAdminState(getDb, user.uid);
+  if (dbState === "disabled") {
+    throw Object.assign(new Error(deniedMessage), { status: 403, publicError: true });
+  }
+  if (user.admin === true || dbState === "enabled") return user;
 
   // If a scoped primary env key (e.g. ORDER_ADMIN_UIDS) is explicitly set, honor it first;
   // otherwise fall back to the shared envKeys list.
@@ -54,17 +59,17 @@ export async function requireAdmin(req, {
   const envAdmins = primarySet.size ? primarySet : envAdminSet(env, envKeys);
   if (envAdmins.has(user.uid)) return user;
 
-  if (await isFirestoreAdmin(getDb, user.uid)) return user;
   throw Object.assign(new Error(deniedMessage), { status: 403, publicError: true });
 }
 
 export async function hasOrderAdminAccess(user, { getDb, env = process.env } = {}) {
   if (!user) return false;
-  if (user.admin === true) return true;
+  const dbState = await firestoreAdminState(getDb, user.uid);
+  if (dbState === "disabled") return false;
+  if (user.admin === true || dbState === "enabled") return true;
   const orderPrimary = envAdminSet(env, ["ORDER_ADMIN_UIDS"]);
   const orderSet = orderPrimary.size ? orderPrimary : envAdminSet(env, ["NEWSLETTER_ADMIN_UIDS"]);
-  if (orderSet.has(user.uid)) return true;
-  return isFirestoreAdmin(getDb, user.uid);
+  return orderSet.has(user.uid);
 }
 
 export async function resolveAdminPermissions(req, {
@@ -75,7 +80,11 @@ export async function resolveAdminPermissions(req, {
   logAuthError,
 } = {}) {
   const user = await verifyAdminUser(req, { verifyToken, logAuthError });
-  const full = user.admin === true || await isFirestoreAdmin(getDb, user.uid);
+  const dbState = await firestoreAdminState(getDb, user.uid);
+  if (dbState === "disabled") {
+    throw Object.assign(new Error(deniedMessage), { status: 403, publicError: true });
+  }
+  const full = user.admin === true || dbState === "enabled";
   const orderPrimary = envAdminSet(env, ["ORDER_ADMIN_UIDS"]);
   const newsletterSet = envAdminSet(env, ["NEWSLETTER_ADMIN_UIDS"]);
   const orderSet = orderPrimary.size ? orderPrimary : newsletterSet;

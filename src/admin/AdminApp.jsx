@@ -69,17 +69,24 @@ export default function AdminApp() {
     return () => controller.abort();
   }, [user, access.check]);
 
+  const [signOutError, setSignOutError] = useState("");
+  const handleSignOut = async () => {
+    setSignOutError("");
+    try { await signOut(auth); }
+    catch { setSignOutError("Chưa thể đăng xuất lúc này. Vui lòng thử lại."); }
+  };
+
   if (user === undefined || (user && access.status === "checking")) return <div className="admin-login"><p className="admin-muted">Đang kiểm tra quyền quản trị...</p></div>;
   if (!user) return <AdminLogin />;
   if (access.status !== "ok" || !access.permissions) {
     return <div className="admin-login"><div className="admin-login-card admin-form">
       <div className="admin-brand">ORORA</div>
-      <p className="admin-error" role="alert">{access.error || "Tài khoản này chưa được cấp quyền quản trị."}</p>
+      <p className="admin-error" role="alert">{signOutError || access.error || "Tài khoản này chưa được cấp quyền quản trị."}</p>
       <p className="admin-muted">Email: {user.email || "—"}</p>
       <p className="admin-muted">UID: <code>{user.uid}</code></p>
       <div className="admin-actions">
         <button type="button" className="admin-btn" onClick={() => setAccess((prev) => ({ status: "checking", error: "", check: prev.check + 1, permissions: null }))}>Thử lại</button>
-        <button type="button" className="admin-btn primary" onClick={() => signOut(auth)}>Đăng xuất</button>
+        <button type="button" className="admin-btn primary" onClick={handleSignOut}>Đăng xuất</button>
       </div>
     </div></div>;
   }
@@ -105,6 +112,7 @@ function AdminWorkspace({ user, permissions = EMPTY_PERMISSIONS }) {
   const allowedTabs = visibleGroups.flatMap((group) => group.items.map(([key]) => key));
   const notifications = useOrderNotifications(permissions.orders);
   const [pendingRequest, setPendingRequest] = useState(null);
+  const [signOutError, setSignOutError] = useState("");
   const [tab, setTab] = useState(() => initialAdminTab(allowedTabs));
   const [visited, setVisited] = useState(() => {
     const start = initialAdminTab(allowedTabs);
@@ -142,10 +150,10 @@ function AdminWorkspace({ user, permissions = EMPTY_PERMISSIONS }) {
     home: <HomeAdmin workspace={tab==='store'?'store':'home'} storeSection={storeSection} storeVersion={storeVersion}/>,
     products: <ProductsAdmin />,
     chat: <ChatSettings />,
-    orders: <OrdersAdmin statusCounts={notifications.snapshot?.counts} refreshKey={notifications.revision} pendingRequest={pendingRequest} onOrderChanged={notifications.refresh} key={`${user.uid}:${orderMailVersion}`} initialMailDraft={orderMailDraft} onOpenEmailTemplates={permissions.newsletter ? () => { setEmailSection({ view: "templates" }); navigate("newsletter"); } : undefined} />,
+    orders: <OrdersAdmin statusCounts={notifications.snapshot?.counts} refreshKey={notifications.revision} pendingRequest={pendingRequest} onOrderChanged={notifications.refresh} key={`${user.uid}:${orderMailVersion}`} initialMailDraft={orderMailDraft} canEditStore={permissions.full} canUseNewsletter={permissions.newsletter} onOpenEmailTemplates={permissions.newsletter ? () => { setEmailSection({ view: "templates" }); navigate("newsletter"); } : undefined} />,
     shipping: <ShippingAdmin key={user.uid} />,
     inventory: <InventoryAdmin key={user.uid} />,
-    newsletter: <NewsletterAdmin initialView={emailSection.view} viewRequest={emailSection} onOpenOrderMail={permissions.orders ? (draft) => { setOrderMailDraft(draft); setOrderMailVersion((value) => value + 1); navigate("orders"); } : undefined} />,
+    newsletter: <NewsletterAdmin initialView={emailSection.view} viewRequest={emailSection} onOpenOrderMail={permissions.orders ? (draft) => { setPendingRequest(null); setOrderMailDraft(draft); setOrderMailVersion((value) => value + 1); navigate("orders"); } : undefined} />,
   };
 
   return (
@@ -168,7 +176,8 @@ function AdminWorkspace({ user, permissions = EMPTY_PERMISSIONS }) {
           <span className="admin-muted">{user.email}</span>
           <details className="admin-muted admin-uid"><summary>Mã tài khoản (UID)</summary><span>{user.uid}</span></details>
           <a href="/" target="_blank" rel="noopener noreferrer" className="admin-btn">Xem website</a>
-          <button className="admin-btn" onClick={async () => {if(!dirtyRegistry.hasChanges()||await confirm("Bạn có thay đổi chưa lưu. Đăng xuất và bỏ những thay đổi này?", { title: "Đăng xuất", confirmLabel: "Đăng xuất", danger: true }))signOut(auth);}}>Đăng xuất</button>
+          {signOutError && <p className="admin-error" role="alert">{signOutError}</p>}
+          <button className="admin-btn" onClick={async () => { if (!dirtyRegistry.hasChanges() || await confirm("Bạn có thay đổi chưa lưu. Đăng xuất và bỏ những thay đổi này?", { title: "Đăng xuất", confirmLabel: "Đăng xuất", danger: true })) { setSignOutError(""); try { await signOut(auth); } catch { setSignOutError("Chưa thể đăng xuất lúc này. Vui lòng thử lại."); } } }}>Đăng xuất</button>
         </div>
       </aside>
 

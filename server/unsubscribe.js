@@ -21,7 +21,9 @@ export function createUnsubscribeHandler({ getDb, env = process.env }) {
       const contact = db.collection("newsletterSubscribers").doc(id);
       await db.runTransaction(async (tx) => {
         const saved = await tx.get(contact);
-        if (saved.exists) tx.set(contact, { status: "unsubscribed", unsubscribedAt: new Date(), updatedAt: new Date() }, { merge: true });
+        if (saved.exists && saved.data()?.status !== "unsubscribed") {
+          tx.set(contact, { status: "unsubscribed", unsubscribedAt: new Date(), updatedAt: new Date() }, { merge: true });
+        }
       });
       res.setHeader("Content-Type", "text/plain; charset=utf-8");
       return res.status(200).send("Đã hủy đăng ký nhận tin ORORA. Cảm ơn bạn!");

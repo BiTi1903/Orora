@@ -436,10 +436,10 @@ function Collection({
       </div>
 
       {filtering && <CatalogFilters value={effectiveFilters} activeView={grid?'grid':'carousel'} settings={filterSettings} onApply={changeFilters}/>}
-      {!filtering && !preview && !isRelated && categories.length > 0 && (
+      {!preview && !isRelated && categories.length > 0 && (
         <nav className="collection-categories" aria-label="Danh mục sản phẩm">
-          <button type="button" aria-pressed={!categoryId} onClick={() => setCategoryId("")}>Tất cả</button>
-          {categories.map((category) => <button type="button" key={category.id} aria-pressed={categoryId === category.id} onClick={() => setCategoryId(category.id)}>{category.name}</button>)}
+          <button type="button" aria-pressed={filtering ? !effectiveFilters.category : !categoryId} onClick={() => filtering ? changeFilters({ ...savedFilters, category: "", page: 1 }) : setCategoryId("")}>Tất cả</button>
+          {categories.map((category) => <button type="button" key={category.id} aria-pressed={filtering ? effectiveFilters.category === category.id : categoryId === category.id} onClick={() => filtering ? changeFilters({ ...savedFilters, category: category.id, page: 1 }) : setCategoryId(category.id)}>{category.name}</button>)}
         </nav>
       )}
       {/* PRODUCTS */}

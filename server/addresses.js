@@ -3,12 +3,23 @@ export const ADDRESS_VERSION = "vietnam-divisions-js@3.0.0/NQ202-2025";
 let provincesPromise;
 const wards = new Map();
 export function addressProvinces() {
-  if (!provincesPromise) provincesPromise = getAllProvinces().then((items) => items.map((item) => ({ code: item.idProvince, name: item.name })).sort((a, b) => a.name.localeCompare(b.name, "vi")));
+  if (!provincesPromise) {
+    provincesPromise = getAllProvinces()
+      .then((items) => items.map((item) => ({ code: item.idProvince, name: item.name })).sort((a, b) => a.name.localeCompare(b.name, "vi")))
+      .catch((error) => { provincesPromise = undefined; throw error; });
+  }
   return provincesPromise;
 }
 export async function addressWards(provinceCode) {
   if (!/^\d{2}$/.test(provinceCode || "") || !(await addressProvinces()).some((item) => item.code === provinceCode)) throw Object.assign(new Error("Tỉnh/thành không hợp lệ."), { status: 400 });
-  if (!wards.has(provinceCode)) wards.set(provinceCode, getCommunesByProvinceId(provinceCode).then((items) => items.map((item) => ({ code: item.idCommune, provinceCode: item.idProvince, name: item.name })).sort((a, b) => a.name.localeCompare(b.name, "vi"))));
+  if (!wards.has(provinceCode)) {
+    wards.set(
+      provinceCode,
+      getCommunesByProvinceId(provinceCode)
+        .then((items) => items.map((item) => ({ code: item.idCommune, provinceCode: item.idProvince, name: item.name })).sort((a, b) => a.name.localeCompare(b.name, "vi")))
+        .catch((error) => { wards.delete(provinceCode); throw error; }),
+    );
+  }
   return wards.get(provinceCode);
 }
 export async function resolveDeliveryAddress(body) {

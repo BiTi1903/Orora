@@ -35,9 +35,11 @@ export function validUnsubscribe(id, token, env = process.env) {
 }
 
 export function withUnsubscribe(message, id, env = process.env) {
-  if (!id || !env?.NEWSLETTER_UNSUBSCRIBE_SECRET || env.NEWSLETTER_UNSUBSCRIBE_SECRET.length < 32 || !env?.NEWSLETTER_SITE_ORIGIN) return message;
+  if (!id || !env?.NEWSLETTER_UNSUBSCRIBE_SECRET || env.NEWSLETTER_UNSUBSCRIBE_SECRET.length < 32 || !env?.NEWSLETTER_SITE_ORIGIN) {
+    throw new Error("unsubscribe_configuration_missing");
+  }
   let link;
-  try { link = unsubscribeLink(id, env); } catch { return message; }
+  try { link = unsubscribeLink(id, env); } catch { throw new Error("unsubscribe_configuration_missing"); }
   const text = message.text.includes(link) ? message.text : `${message.text.trimEnd()}\n\n---\nHủy đăng ký nhận tin từ ORORA: ${link}`;
   return { ...message, text, unsubscribeUrl: link };
 }

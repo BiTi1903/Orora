@@ -8,16 +8,37 @@ import '../styles/checkout.css';
 
 export default function OrderFormFields({product,options,variantId,quantity,onVariantChange,onQuantityChange,addresses,provinceCode,wardCode,onProvinceChange,onWardChange,methods,unitPrice,shipping,total,appearance={},busy=false,error,onSubmit,preview=false}){
  const [addressError,setAddressError]=useState(false);
+ const [variantError,setVariantError]=useState(false);
  const copy={...CHECKOUT_COPY,...appearance.formLabels},headingStyle=toCss(appearance.formHeadingStyle);
  for (const key of ["recipientHeading","addressHeading","paymentHeading","summaryHeading"]) {
   if (typeof copy[key] !== "string" || !copy[key].trim()) copy[key]=CHECKOUT_COPY[key];
  }
  const itemTotal=unitPrice===null?'Shop liên hệ báo giá':formatVnd(unitPrice*(Number(quantity)||0));
+ const focusFirstMissing=form=>{
+  if(!form)return;
+  if(options.length>0&&!variantId){
+   const target=form.querySelector('.checkout-selection-fieldset button, .checkout-selection-fieldset input');
+   target?.scrollIntoView?.({behavior:'smooth',block:'center'});
+   target?.focus?.();
+   return;
+  }
+  if(!provinceCode||!wardCode||shipping.blocked){
+   const comboboxes=form.querySelectorAll('.order-address-row [role="combobox"]');
+   const target=!provinceCode?comboboxes[0]:comboboxes[1]||comboboxes[0];
+   target?.scrollIntoView?.({behavior:'smooth',block:'center'});
+   target?.focus?.();
+  }
+ };
  return <form className="website-order checkout-form" aria-busy={busy} aria-label={copy.title?.trim()||CHECKOUT_COPY.title} style={toCss(appearance.formTextStyle)} onKeyDown={event=>{
-  if(!preview&&event.key==="Enter"&&event.target.tagName==="INPUT"&&!(event.target.getAttribute("aria-expanded")==="true"&&event.target.getAttribute("aria-activedescendant"))&&(!provinceCode||!wardCode||shipping.blocked)){event.preventDefault();setAddressError(true);}
+  if(!preview&&event.key==="Enter"&&event.target.tagName==="INPUT"&&!(event.target.getAttribute("aria-expanded")==="true"&&event.target.getAttribute("aria-activedescendant"))){
+   if(options.length>0&&!variantId){event.preventDefault();setVariantError(true);focusFirstMissing(event.currentTarget);return;}
+   if(!provinceCode||!wardCode||shipping.blocked){event.preventDefault();setAddressError(true);focusFirstMissing(event.currentTarget);}
+  }
  }} onSubmit={event=>{
   if(preview){event.preventDefault();return;}
-  if(!provinceCode||!wardCode||shipping.blocked){event.preventDefault();setAddressError(true);return;}
+  if(options.length>0&&!variantId){event.preventDefault();setVariantError(true);focusFirstMissing(event.currentTarget);return;}
+  if(!provinceCode||!wardCode||shipping.blocked){event.preventDefault();setAddressError(true);focusFirstMissing(event.currentTarget);return;}
+  setVariantError(false);
   setAddressError(false);
   onSubmit?.(event);
  }}>
@@ -30,8 +51,9 @@ export default function OrderFormFields({product,options,variantId,quantity,onVa
     <strong className="checkout-item-price" aria-label="Giá sản phẩm">{itemTotal}</strong>
    </div>
    <fieldset className="checkout-selection-fieldset" disabled={busy||preview}>
-    <ProductPurchaseSelection options={options} variantId={variantId} quantity={quantity} onVariantChange={onVariantChange} onQuantityChange={onQuantityChange} disabled={busy||preview} required/>
+    <ProductPurchaseSelection options={options} variantId={variantId} quantity={quantity} onVariantChange={next=>{setVariantError(false);onVariantChange(next);}} onQuantityChange={onQuantityChange} disabled={busy||preview} required/>
    </fieldset>
+   {variantError&&options.length>0&&!variantId&&<p className="order-error" role="alert">Vui lòng chọn dung tích sản phẩm để tiếp tục.</p>}
   </div>
   <fieldset className="checkout-fields-stack" disabled={busy||preview}>
    <section className="checkout-section checkout-card"><h3 style={headingStyle}>{copy.recipientHeading}</h3>
@@ -54,13 +76,13 @@ export default function OrderFormFields({product,options,variantId,quantity,onVa
    </section>
    <section className="checkout-summary" aria-label={copy.summaryHeading||'Thanh toán'}>
     <div className="order-summary"><span>Phí giao hàng</span><strong>{shipping.fee===null?'Theo khu vực giao':formatVnd(shipping.fee)}</strong></div>
-    <div className="order-summary checkout-total"><span>Tổng thanh toán</span><strong>{total===null?(unitPrice===null?'ORORA sẽ xác nhận':itemTotal):formatVnd(total)}</strong></div>
+    <div className="order-summary checkout-total"><span>Tổng thanh toán</span><strong>{total===null?(unitPrice===null?'ORORA sẽ xác nhận':`${itemTotal} (+ phí giao hàng)`):formatVnd(total)}</strong></div>
     <p className="order-help checkout-payment-hint">Chưa thu tiền tại bước đặt đơn. ORORA sẽ hướng dẫn thanh toán sau khi tiếp nhận.</p>
    </section>
    <label className="order-consent"><input name="consent" type="checkbox" required/><span>Tôi đồng ý để ORORA liên hệ, gửi email xác nhận và xử lý đơn hàng theo thông tin đã cung cấp.</span></label>
    {!methods.length&&<p role="status">Website đang tạm ngưng nhận đơn. Vui lòng liên hệ ORORA hoặc mua qua các kênh bên trên.</p>}
    {error&&<p className="order-error" role="alert">{error}</p>}
-   <div className="checkout-sticky"><div className="checkout-submit"><button className="website-order-submit" aria-busy={busy} style={{...toCss(busy?appearance.loadingStyle:appearance.orderSubmitStyle),textDecoration:(busy?appearance.loadingStyle:appearance.orderSubmitStyle)?.textDecoration}} disabled={preview||busy||(options.length>0&&!variantId)||!methods.length||!provinceCode||!wardCode||shipping.blocked}>{busy?appearance.orderBusyLabel?.trim()||'Đang gửi đơn hàng…':appearance.orderSubmitLabel?.trim()||'Đặt hàng ngay'}</button></div></div>
+   <div className="checkout-sticky"><div className="checkout-submit"><button className="website-order-submit" aria-busy={busy} style={{...toCss(busy?appearance.loadingStyle:appearance.orderSubmitStyle),textDecoration:(busy?appearance.loadingStyle:appearance.orderSubmitStyle)?.textDecoration}} disabled={preview||busy||!methods.length}>{busy?appearance.orderBusyLabel?.trim()||'Đang gửi đơn hàng…':appearance.orderSubmitLabel?.trim()||'Đặt hàng ngay'}</button></div></div>
   </fieldset>
  </form>;
 }

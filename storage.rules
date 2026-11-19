@@ -4,10 +4,9 @@ service firebase.storage {
     // Same claim / enabled admin membership as firestore.rules (default database).
     function isAdmin() {
       return request.auth != null && (
-        request.auth.token.get('admin', false) == true || (
-          firestore.exists(/databases/(default)/documents/adminUsers/$(request.auth.uid)) &&
-          firestore.get(/databases/(default)/documents/adminUsers/$(request.auth.uid)).data.enabled == true
-        )
+        firestore.exists(/databases/(default)/documents/adminUsers/$(request.auth.uid))
+          ? firestore.get(/databases/(default)/documents/adminUsers/$(request.auth.uid)).data.enabled == true
+          : request.auth.token.get('admin', false) == true
       );
     }
     function isProductImage() {

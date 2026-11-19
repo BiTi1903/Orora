@@ -17,13 +17,14 @@ import { PAYMENT_LABELS, formatProductPrice, formatVnd } from "../lib/commerce";
 import { effectiveMailState } from "../lib/mail-state";
 import { orderRequest, MAIL_STATES } from "./order-api";
 const date = (value) => value ? new Date(value).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "—";
-export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, refreshKey = 0, pendingRequest, onOrderChanged, statusCounts }) {
+export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, refreshKey = 0, pendingRequest, onOrderChanged, statusCounts, canEditStore = true, canUseNewsletter = true }) {
   const confirm = useConfirm();
   const [mailPreview, setMailPreview] = useState(null);
   const [filters, setFilters] = useState(EMPTY_ORDER_FILTERS);
   const [customerEmail, setCustomerEmail] = useState("");
-  const [view, setView] = useState(initialMailDraft?.purpose === "automation" ? "automation" : "orders");
-  const [openedViews, setOpenedViews] = useState(initialMailDraft?.purpose === "automation" ? ["orders", "automation"] : ["orders"]);
+  const startAutomation = canUseNewsletter && initialMailDraft?.purpose === "automation";
+  const [view, setView] = useState(startAutomation ? "automation" : "orders");
+  const [openedViews, setOpenedViews] = useState(startAutomation ? ["orders", "automation"] : ["orders"]);
   const navigate = (key) => { setOpenedViews((items) => items.includes(key) ? items : [...items, key]); setView(key); };
   const [mailRevision, setMailRevision] = useState(0);
   const [composer, setComposer] = useState(initialMailDraft && initialMailDraft.purpose !== "automation" ? { draft: initialMailDraft } : null);
@@ -128,6 +129,7 @@ const update = async (order, patch) => {
         const result = await orderRequest({ action: "sendOrderEmail", id: order.id, requestId: crypto.randomUUID(), recoverOnly: true });
         if (result.state && result.state !== "unchanged") patchLocal(order.id, { confirmationMail: { ...(order.confirmationMail || {}), state: result.state, updatedAt: Date.now() } });
         setMailRevision((v) => v + 1);
+        if (detail?.order.id === order.id) await showDetail(order);
         onOrderChanged?.();
         setNotice({ error: result.state === "failed", text: result.message });
       });
@@ -139,6 +141,7 @@ const update = async (order, patch) => {
       const result = await orderRequest({ action: "sendOrderEmail", id: order.id, requestId: crypto.randomUUID(), confirmResend: state === "unknown" });
       if (result.state) patchLocal(order.id, { confirmationMail: { ...(order.confirmationMail || {}), state: result.state, updatedAt: Date.now() } });
       setMailRevision((v) => v + 1);
+      if (detail?.order.id === order.id) await showDetail(order);
       onOrderChanged?.();
       setNotice({ error: result.state === "failed" || result.state === "unknown", text: result.message });
     });
@@ -165,13 +168,20 @@ const update = async (order, patch) => {
   const pageCount = Math.max(1, Math.ceil(visibleOrders.length / 10));
   const activePage = Math.min(page, pageCount);
   const pageOrders = visibleOrders.slice((activePage - 1) * 10, activePage * 10);
+  const sectionTabs = [
+    ["orders", "Danh sách đơn"],
+    ["customers", "Khách hàng"],
+    ["history", "Lịch sử email"],
+    ...(canUseNewsletter ? [["automation", "Thư tự động"]] : []),
+    ...(canEditStore ? [["tracking", "Chữ trang tra cứu"]] : []),
+  ];
   return <section aria-busy={busy}>
     <div className="admin-top"><div><h1>Đơn hàng</h1><p className="admin-muted">Chọn một đơn để xem thông tin người mua, thanh toán và lịch sử gửi thư.</p></div>{view === "orders" && <button className="admin-btn" disabled={busy} onClick={() => perform(async () => { const data = await orderRequest(); extended.current = false; setOrders(data.orders); setCursor(data.nextCursor); setReady(true); onOrderChanged?.(); })}>Tải lại</button>}</div>
-    <nav className="admin-section-tabs" aria-label="Các mục đơn hàng">{[["orders", "Danh sách đơn"], ["customers", "Khách hàng"], ["history", "Lịch sử email"], ["automation", "Thư tự động"], ["tracking", "Chữ trang tra cứu"]].map(([key, label]) => <button key={key} type="button" aria-current={view === key ? "page" : undefined} onClick={() => navigate(key)}>{label}</button>)}</nav>
-    {openedViews.includes("tracking") && <div hidden={view !== "tracking"}><StoreSettingsLink section="tracking"/></div>}
-    {openedViews.includes("automation") && <div hidden={view !== "automation"}><OrderEmails initialDraft={initialMailDraft?.purpose === "automation" ? initialMailDraft : null} onManageTemplates={onOpenEmailTemplates} /></div>}
+    <nav className="admin-section-tabs" aria-label="Các mục đơn hàng">{sectionTabs.map(([key, label]) => <button key={key} type="button" aria-current={view === key ? "page" : undefined} onClick={() => navigate(key)}>{label}</button>)}</nav>
+    {canEditStore && openedViews.includes("tracking") && <div hidden={view !== "tracking"}><StoreSettingsLink section="tracking"/></div>}
+    {canUseNewsletter && openedViews.includes("automation") && <div hidden={view !== "automation"}><OrderEmails canUseNewsletter={canUseNewsletter} initialDraft={initialMailDraft?.purpose === "automation" ? initialMailDraft : null} onManageTemplates={onOpenEmailTemplates} /></div>}
     {openedViews.includes("history") && <div hidden={view !== "history"}><OrderMailHistory refreshKey={mailRevision} onReuse={(draft, original) => setComposer({ draft, reused: true, original })} /></div>}
-    {openedViews.includes("customers") && <div hidden={view !== "customers"}><OrderCustomers onViewOrders={(email, allOrders) => { setOrders(allOrders); setCursor(null); setSearch(email); setFilters(EMPTY_ORDER_FILTERS); setCustomerEmail(email); setStatusFilter("all"); sequence.current.value++; setDetail(null); setReady(true); setView("orders"); }} /></div>}
+    {openedViews.includes("customers") && <div hidden={view !== "customers"}><OrderCustomers onViewOrders={(email, allOrders) => { extended.current = true; setOrders(allOrders); setCursor(null); setSearch(email); setFilters(EMPTY_ORDER_FILTERS); setMailFilter("all"); setCustomerEmail(email); setStatusFilter("all"); sequence.current.value++; setDetail(null); setReady(true); setView("orders"); }} /></div>}
     <div hidden={view !== "orders"}>
     {notice && !selected && <p role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
     {!ready ? <p className="admin-muted">Đang chờ dữ liệu đơn hàng.</p> : <>
@@ -204,7 +214,7 @@ const update = async (order, patch) => {
         }
       })}>Tải toàn bộ đơn để lọc</button>}
       </details>
-      {(search || customerEmail || statusFilter !== "all" || Object.keys(EMPTY_ORDER_FILTERS).some((key) => filters[key] !== EMPTY_ORDER_FILTERS[key])) && <button type="button" className="admin-btn" onClick={() => { setFilters(EMPTY_ORDER_FILTERS); setSearch(""); setCustomerEmail(""); setStatusFilter("all"); }}>Xóa bộ lọc đơn</button>}
+      {(search || customerEmail || statusFilter !== "all" || mailFilter !== "all" || Object.keys(EMPTY_ORDER_FILTERS).some((key) => filters[key] !== EMPTY_ORDER_FILTERS[key])) && <button type="button" className="admin-btn" onClick={() => { setFilters(EMPTY_ORDER_FILTERS); setSearch(""); setCustomerEmail(""); setStatusFilter("all"); setMailFilter("all"); }}>Xóa bộ lọc đơn</button>}
       {(invalidMoneyRange(filters.min, filters.max) || (filters.from && filters.to && filters.from > filters.to)) && <p className="admin-error" role="alert">Khoảng tiền hoặc khoảng ngày chưa hợp lệ.</p>}
       <p className="admin-muted">Hiển thị {visibleOrders.length} / {orders.length} đơn đã tải{cursor ? ". Tải thêm để tìm trong các đơn cũ hơn." : "."}</p>
       <div className="admin-card admin-order-list-scroll"><table className="admin-table"><thead><tr><th>Mã đơn / Ngày đặt</th><th>Người mua</th><th>Giá trị đơn</th><th>Trạng thái</th><th>Thanh toán</th><th>Thư xác nhận</th><th /></tr></thead><tbody>
@@ -250,7 +260,7 @@ const update = async (order, patch) => {
       {selected.customer.phone && <a className="admin-btn" href={`tel:${selected.customer.phone}`}>Gọi khách</a>}
       <button type="button" className="admin-btn primary" disabled={detail.loading || !selected.customer.email} onClick={() => { setComposer({ orderId: selected.id }); sequence.current.value++; setDetail(null); }}>Gửi email cho khách</button></div></article></ModalDialog>}
     </div>
-    {composer && <ModalDialog title="Gửi email đơn hàng" className="admin-order-modal" onClose={() => setComposer(null)}>{composer.reused && <p className="admin-context-note">{composer.original ? "Đã chép mẫu vào thư mới. Chọn đơn và kiểm tra nội dung trước khi gửi." : "Nội dung được chép từ thư cũ. Kiểm tra lại tên khách, mã đơn, địa chỉ và số tiền trước khi gửi."}</p>}<OrderEmails purpose="send" initialDraft={composer.draft} initialOrderId={composer.orderId || ""} onSent={(order) => { patchLocal(order.id, order); setMailRevision((value) => value + 1); }} onManageTemplates={onOpenEmailTemplates ? () => { setComposer(null); onOpenEmailTemplates(); } : undefined} /></ModalDialog>}
+    {composer && <ModalDialog title="Gửi email đơn hàng" className="admin-order-modal" onClose={() => setComposer(null)}>{composer.reused && <p className="admin-context-note">{composer.original ? "Đã chép mẫu vào thư mới. Chọn đơn và kiểm tra nội dung trước khi gửi." : "Nội dung được chép từ thư cũ. Kiểm tra lại tên khách, mã đơn, địa chỉ và số tiền trước khi gửi."}</p>}<OrderEmails purpose="send" canUseNewsletter={canUseNewsletter} initialDraft={composer.draft} initialOrderId={composer.orderId || ""} onSent={(order) => { patchLocal(order.id, order); setMailRevision((value) => value + 1); }} onManageTemplates={onOpenEmailTemplates ? () => { setComposer(null); onOpenEmailTemplates(); } : undefined} /></ModalDialog>}
     {mailPreview && <MailPreviewDialog title="Thư của đơn hàng" message={mailPreview} onClose={() => setMailPreview(null)} metadata={<><p>Gửi tới: {mailPreview.recipient}</p><p>Tài khoản thao tác: {mailActorLabel(mailPreview)}</p>{mailPreview.errorCode && <p className="admin-error">Mã lỗi: {mailPreview.errorCode}{mailPreview.errorMessage ? ` · ${mailPreview.errorMessage}` : ""}</p>}</>} />}
   </section>;
 }

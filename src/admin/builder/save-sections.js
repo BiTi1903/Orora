@@ -21,14 +21,26 @@ export function editedSectionPayload(payload, sections) {
 }
 
 const isMap = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-export function changedValues(before = {}, after = {}) {
+export function changedValues(before = {}, after = {}, { includeRemovals = false } = {}) {
   const patch = {};
   for (const [key, value] of Object.entries(after)) {
     if (value === undefined) continue;
     if (isMap(value) && isMap(before[key])) {
-      const nested = changedValues(before[key], value);
+      const nested = changedValues(before[key], value, { includeRemovals });
       if (Object.keys(nested).length) patch[key] = nested;
     } else if (JSON.stringify(value) !== JSON.stringify(before[key])) patch[key] = value;
+  }
+  if (includeRemovals && isMap(before)) {
+    for (const key of Object.keys(before)) {
+      if (!(key in after) && before[key] !== null && before[key] !== undefined) {
+        if (isMap(before[key])) {
+          const nested = changedValues(before[key], {}, { includeRemovals: true });
+          if (Object.keys(nested).length) patch[key] = nested;
+        } else {
+          patch[key] = null;
+        }
+      }
+    }
   }
   return patch;
 }

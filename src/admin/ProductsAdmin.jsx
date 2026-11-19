@@ -172,13 +172,17 @@ export default function ProductsAdmin() {
   };
 
   const del = async (p) => {
+    if (busy || uploading || categorySaving) return;
     if (!await confirm(`Xóa sản phẩm "${p.name}"?`, { title: "Xóa sản phẩm", confirmLabel: "Xóa", danger: true })) return;
+    setBusy(true);
     try {
       await removeProduct(p.id);
       say("success", "Đã xóa sản phẩm.");
       await load();
     } catch (err) {
       say("error", explainError(err));
+    } finally {
+      setBusy(false);
     }
   };
 

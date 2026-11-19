@@ -1,5 +1,5 @@
-import { requestClientIp } from './request-limits.js';
-import { createHash, timingSafeEqual } from 'node:crypto';
+import { rateLimitSalt, requestClientIp } from './request-limits.js';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { normalizeTrackingPhone, ORDER_STATUSES } from '../src/lib/order-tracking.js';
 const failure = (status, message) => Object.assign(new Error(message), { status, publicError:true });
 const missing = 'Không tìm thấy đơn hàng với thông tin này. Vui lòng kiểm tra mã đơn hoặc số điện thoại đã đặt hàng.';
@@ -10,7 +10,8 @@ const timestamp = value => {
 async function reserveLookup(db, req, phone, time, env) {
   const day = Math.floor(time / 86400000);
   const ip = requestClientIp(req);
-  const hash = value => createHash('sha256').update(`${env.ORDER_TRACKING_RATE_SALT || env.CHAT_RATE_LIMIT_SALT || 'orora-tracking'}:${day}:${value}`).digest('hex');
+  const salt = env.ORDER_TRACKING_RATE_SALT?.trim() || rateLimitSalt(env) || 'orora-tracking';
+  const hash = value => createHmac('sha256', salt).update(`${day}:${value}`).digest('hex');
   const refs = [db.collection('orderLookupLimits').doc(`ip-${day}-${hash(ip)}`),db.collection('orderLookupLimits').doc(`phone-${day}-${hash(phone)}`)];
   await db.runTransaction(async tx => {
     const docs = await tx.getAll(...refs);
@@ -61,7 +62,7 @@ export function createOrderTrackingHandler({ getDb, env = process.env, now = () 
       } else {
         const variants = [phone, `+${phone}`];
         if (phone.startsWith('0') && [10,11].includes(phone.length)) variants.push(`84${phone.slice(1)}`,`+84${phone.slice(1)}`);
-        let query = db.collection('orders').where('customer.phone','in',[...new Set(variants)]).limit(21);
+        let query = db.collection('orders').where('customer.phone','in',[...new Set(variants)]).orderBy('createdAt','desc').limit(21);
         if (body.cursor) {
           const prior = await db.collection('orders').where('code','==',body.cursor).limit(5).get();
           const cursor = prior.docs.find(doc => matchesPhone(doc.data()));

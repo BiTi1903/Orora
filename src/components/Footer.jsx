@@ -1,19 +1,27 @@
+import { Link } from "react-router-dom";
 import {footerCopy} from "../lib/footer-copy";
 import { contactLinks } from "../lib/contact";
 import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
 
 function LinkOrSpan({ href, children, className, sel, preview, selectedClass, select, style, external = false }) {
-  if (preview) {
+  if (preview || !href || href === "#") {
     return (
       <span
-        className={`${className || ""} ${selectedClass(sel)}`}
-        data-builder-key={sel}
-        onClick={select(sel)}
+        className={`${className || ""} ${preview ? selectedClass(sel) : ""}`.trim() || undefined}
+        data-builder-key={preview ? sel : undefined}
+        onClick={preview ? select(sel) : undefined}
         style={style}
       >
         {children}
       </span>
+    );
+  }
+  if (!external && href.startsWith("/")) {
+    return (
+      <Link to={href} className={className} style={style}>
+        {children}
+      </Link>
     );
   }
   return (

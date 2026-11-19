@@ -13,6 +13,7 @@ import { lazy, Suspense, useEffect, useRef } from "react";
 
 import CursorSparkle from "./components/CursorSparkle"; 
 import {
+  Link,
   Routes,
   Navigate,
   Route,
@@ -117,7 +118,7 @@ function App() {
         <Route path="/san-pham" element={<Navigate to={{ pathname: "/", search: location.search, hash: "#shop" }} replace />} />
         <Route path="/ve-orora" element={<Navigate to="/#about" replace />} />
         <Route path="/lien-he" element={<Navigate to="/#contact" replace />} />
-        <Route path="*" element={<main>{visible("navbar") && <Navbar />}<h1 className="page-heading">Trang không tồn tại</h1>{visible("footer") && <Footer />}</main>} />
+        <Route path="*" element={<main>{visible("navbar") && <Navbar />}<section className="product-not-found"><h1 className="page-heading">Trang không tồn tại</h1><Link to="/">← Về trang chủ</Link></section>{visible("footer") && <Footer />}</main>} />
 
         {/* =========================
             PRODUCT DETAIL
@@ -130,7 +131,7 @@ function App() {
 
               {visible("navbar") && <Navbar />}
 
-              {visible("productdetail") ? <Suspense fallback={<RouteLoading/>}><ProductDetail /></Suspense> : !home.loading && <section className="product-not-found"><h1>Trang chi tiết sản phẩm đang tạm ẩn</h1><a href="/">← Về trang chủ</a></section>}
+              {visible("productdetail") ? <Suspense fallback={<RouteLoading/>}><ProductDetail /></Suspense> : !home.loading && <section className="product-not-found"><h1>Trang chi tiết sản phẩm đang tạm ẩn</h1><Link to="/">← Về trang chủ</Link></section>}
 
               {visible("footer") && <Footer />}
             </main>

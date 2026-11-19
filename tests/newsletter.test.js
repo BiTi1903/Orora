@@ -288,17 +288,28 @@ test("contact operations require admin access and reject invalid identifiers and
   assert.equal((await db.collection("newsletterSubscribers").doc(missing).get()).exists, false);
 });
 
-test("welcome, test and campaign messages preserve custom body spacing and add no footer", async () => {
-  const db = memoryDb(); const { call, sent } = admin(db, { env: { ...env, NEWSLETTER_UNSUBSCRIBE_SECRET: "" } });
+test("welcome, test and campaign messages preserve custom body spacing and fail closed when unsubscribe secret is missing", async () => {
+  const db = memoryDb(); const { call, sent } = admin(db);
   const custom = { subject: "My content", text: "\nNội dung riêng của tôi.\n\nGiữ nguyên dòng trống.  \n" };
   await call({ action: "saveWelcome", ...custom });
-  await sendWelcomeMessage("welcome@example.com", { getDb: async () => db, sendMail: async (email, body) => sent.push([email, body]) });
+  await sendWelcomeMessage("welcome@example.com", { getDb: async () => db, sendMail: async (email, body) => sent.push([email, body]), env });
   assert.equal((await call({ action: "sendTest", ...custom })).statusCode, 200);
   await seed(db, 1);
-  assert.equal((await call({ action: "createCampaign", id: "no-footer", ...custom })).statusCode, 200);
-  await call({ action: "sendBatch", id: "no-footer" });
+  assert.equal((await call({ action: "createCampaign", id: "with-footer", ...custom })).statusCode, 200);
+  await call({ action: "sendBatch", id: "with-footer" });
   assert.equal(sent.length, 3);
-  for (const [, body] of sent) assert.deepEqual(body, custom);
+  assert.deepEqual(sent[1][1], custom);
+  assert.ok(sent[0][1].text.startsWith(custom.text.trimEnd()) && sent[0][1].unsubscribeUrl);
+  assert.ok(sent[2][1].text.startsWith(custom.text.trimEnd()) && sent[2][1].unsubscribeUrl);
+
+  const missingEnv = { ...env, NEWSLETTER_UNSUBSCRIBE_SECRET: "" };
+  await assert.rejects(() => sendWelcomeMessage("welcome@example.com", { getDb: async () => db, sendMail: async () => { throw new Error("should_not_send"); }, env: missingEnv }), /unsubscribe_configuration_missing/);
+  const db2 = memoryDb(); await seed(db2, 1);
+  const { call: callMissing, sent: sentMissing } = admin(db2, { env: missingEnv });
+  assert.equal((await callMissing({ action: "createCampaign", id: "no-secret", ...custom })).statusCode, 200);
+  const batchRes = await callMissing({ action: "sendBatch", id: "no-secret" });
+  assert.equal(batchRes.statusCode, 503);
+  assert.equal(sentMissing.length, 0);
 });
 
 test("chosen-recipient campaigns send only to their saved selection and keep that selection on resume", async () => {
@@ -405,8 +416,8 @@ test("unified template types preserve legacy private templates and support a fro
   assert.equal((await call({ action: "saveWelcome", ...welcome, templateRef: { id: welcome.id, revision: 1 } })).statusCode, 200);
   await call({ action: "saveLibraryTemplate", ...welcome, name: "Đã đổi tên", text: "Nội dung mới" });
   const sent = [];
-  await sendWelcomeMessage("new@example.com", { getDb: () => db, sendMail: async (...args) => sent.push(args) });
-  assert.equal(sent[0][1].text, welcome.text);
+  await sendWelcomeMessage("new@example.com", { getDb: () => db, sendMail: async (...args) => sent.push(args), env });
+  assert.ok(sent[0][1].text.startsWith(welcome.text));
   const active = (await db.collection("newsletterSettings").doc("welcome").get()).data();
   assert.equal(active.templateName, welcome.name); assert.equal(active.templateRevision, 1);
   const current = (await db.collection("newsletterTemplates").doc(welcome.id).get()).data();
