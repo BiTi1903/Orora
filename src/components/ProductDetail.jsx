@@ -107,16 +107,6 @@ function ProductDetail({
     };
   }, [showMobileBuy, pinBuyBar]);
 
-  const autoOpenedCartKey = useRef("");
-  useEffect(() => {
-    const incomingCart = cartLocation.state?.cartSelection;
-    if (preview || !product || !acceptsWebsiteOrders || soldOut) return;
-    if (!incomingCart?.openOrder || incomingCart.productId !== product.id) return;
-    if (autoOpenedCartKey.current === cartLocation.key) return;
-    autoOpenedCartKey.current = cartLocation.key;
-    setOrderProductId(product.id || product.slug);
-  }, [preview, product, acceptsWebsiteOrders, soldOut, cartLocation.state, cartLocation.key]);
-
   useEffect(() => {
     if (!preview && product?.canonicalSlug && id !== product.canonicalSlug) navigate(productPath(product), { replace: true, state: cartLocation.state });
   }, [id, product, preview, navigate, cartLocation.state]);
@@ -584,12 +574,28 @@ function ProductDetail({
           <section className={`purchase-options ${selectedClass("pdPurchaseOptions")}`} aria-label="Chọn kênh mua hàng" data-builder-key={preview ? "pdPurchaseOptions" : undefined} onClick={preview ? select("pdPurchaseOptions") : undefined}>
             <h2 {...textProps("pdPurchaseHeading", "purchaseHeading")}>{purchase.heading?.trim() || "Chọn cách mua hàng"}</h2>
             {home.navStyles?.cart?.enabled !== false && (
-              <button type="button" className="product-add-to-cart" disabled={soldOut || choice.quantity === ""} onClick={(event) => {
-                if (preview) { select("pdPurchaseOptions")(event); return; }
-                window.dispatchEvent(new CustomEvent("orora-cart-confirm", {
-                  detail: { product, variantId, quantity: Number(choice.quantity) || 1, source: event.currentTarget.getBoundingClientRect().toJSON() },
-                }));
-              }}><ButtonIcon name="cart" defaultSize={17}/><span>{soldOut ? "Hết hàng" : "Thêm vào giỏ"}</span></button>
+              <button
+                type="button"
+                className={`purchase-website product-add-to-cart ${selectedClass("pdAddToCart")}`}
+                data-builder-key={preview ? "pdAddToCart" : undefined}
+                style={{
+                  ...css("purchaseOptions"),
+                  ...(purchase.addToCartBackground ? { background: purchase.addToCartBackground } : {}),
+                  ...(purchase.addToCartBorderColor ? { borderColor: purchase.addToCartBorderColor } : {}),
+                  ...toCss(purchase.addToCartStyle, { responsive: true }),
+                }}
+                disabled={soldOut || choice.quantity === ""}
+                onClick={(event) => {
+                  if (preview) { select("pdAddToCart")(event); return; }
+                  window.dispatchEvent(new CustomEvent("orora-cart-confirm", {
+                    detail: { product, variantId, quantity: Number(choice.quantity) || 1, source: event.currentTarget.getBoundingClientRect().toJSON() },
+                  }));
+                }}
+              >
+                <ButtonIcon name="cart" defaultSize={17} />
+                <span>{soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ")}</span>
+                <ButtonIcon name="orderArrow" defaultSize={15} />
+              </button>
             )}
           {(preview || showZalo || showCall || (!contact.zalo && contact.email && contactSettings.showZalo !== false)) && (
             <div className={`product-contact-actions product-consultation ${selectedClass("pdContactActions")}`} aria-label="Tư vấn sản phẩm" data-builder-key={preview ? "pdContactActions" : undefined} onClick={preview ? select("pdContactActions") : undefined}>

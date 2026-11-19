@@ -1,3 +1,19 @@
+## 19/11/2026 — Tách riêng nút Chi tiết và Mua ngay trong giỏ hàng, đồng bộ giao diện nút Thêm vào giỏ trên trang sản phẩm
+
+- **Lý do**: Trong giỏ hàng cần giữ nút **Chi tiết** đi tới trang chi tiết sản phẩm và bổ sung nút **Mua ngay** ngay trên từng dòng sản phẩm để đặt hàng trực tiếp; đồng thời nút **Thêm vào giỏ** trên trang chi tiết sản phẩm chưa đồng bộ kích thước, màu sắc và bố cục với nhóm nút mua hàng bên cạnh và cần cho chỉnh sửa trong trang quản trị.
+- **Thay đổi chính**:
+  - **Giỏ hàng (`src/components/ShopCart.jsx`, `src/lib/cart-copy.js`, `src/styles/shop-cart.css`)**:
+    - Nút **Chi tiết** chuyển tới trang chi tiết sản phẩm bình thường, không tự bật form đặt hàng.
+    - Bổ sung nút **Mua ngay** nổi bật trên từng dòng sản phẩm trong giỏ để mở thẳng form đặt hàng tại chỗ (chỉ hiển thị khi website đang bật nhận đơn, tự trừ đúng số lượng trong giỏ sau khi đặt thành công). Cho phép đổi chữ nút **Mua ngay** trong phần cài đặt Giỏ hàng của admin.
+  - **Trang chi tiết sản phẩm và Visual Builder (`src/components/ProductDetail.jsx`, `src/styles/product-detail.css`, `src/admin/builder/registry.js`, `src/admin/builder/ProductDetailPanels.jsx`, `src/admin/builder/PurchaseOptionsSettings.jsx`)**:
+    - Thiết kế lại nút **Thêm vào giỏ** cùng chiều rộng tối đa, chiều cao, bo góc, khoảng cách, sắc thái và bố cục biểu tượng đồng bộ hoàn toàn với nút **Tư vấn** và khối kênh mua hàng bên dưới.
+    - Bổ sung tùy chỉnh trong Visual Builder cho nút **Thêm vào giỏ** (chữ nút, màu nền, màu viền, font chữ, cỡ chữ máy tính/điện thoại, độ đậm, căn chữ) có xem trước và lưu cấu hình.
+- **File / khu vực liên quan**: `src/components/ShopCart.jsx`, `src/lib/cart-copy.js`, `src/styles/shop-cart.css`, `src/components/ProductDetail.jsx`, `src/styles/product-detail.css`, `src/admin/builder/registry.js`, `src/admin/builder/ProductDetailPanels.jsx`, `src/admin/builder/PurchaseOptionsSettings.jsx`, `qa/cart.spec.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **247/247** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt.
+  - Playwright (`width-320` và `width-390`): **18/18** test đạt trên `qa/cart.spec.js` và `qa/editor-checkout.spec.js`.
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu.
+
 ## 19/11/2026 — Sửa lỗi toàn diện cho Web bán hàng, Trang quản trị và Hệ thống máy chủ
 
 - **Lý do**: Rà soát và khắc phục các lỗi thao tác, phân quyền, đồng bộ dữ liệu, bảo mật và trải nghiệm người dùng trên cả 3 lớp (Web khách hàng, Trang quản trị và API/Rules).

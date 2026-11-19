@@ -103,6 +103,7 @@ const COLLECTION_FIELD_MAP = {
 
 const PRODUCT_DETAIL_FIELD_MAP = {
   pdWebsiteText: {type:"pdPurchaseOptions",styleKey:"purchaseOptions",label:"Website · Chữ nút đặt hàng"},
+  pdAddToCart: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Nút Thêm vào giỏ" },
   pdTabDescription: {styleKey:"navigation",label:"Tab Mô tả"},
   pdTabSpecifications: {styleKey:"navigation",label:"Tab Thông số"},
   pdTabUsage: {styleKey:"navigation",label:"Tab Hướng dẫn sử dụng"},

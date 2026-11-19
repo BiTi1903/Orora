@@ -13,6 +13,41 @@ export function ProductDetailSettings({ selected, data, productDetail, onChange,
     return <div className="builder-empty">Chọn một thành phần trên preview.</div>;
   }
   if (selected === "pdPurchaseOptions") return <StoreSettingsLink section="checkout" />;
+  if (selected === "pdAddToCart") {
+    const value = productDetail.purchaseOptions || {};
+    return (
+      <>
+        <SettingGroup title="Nút Thêm vào giỏ">
+          <label className="builder-field">
+            Chữ nút Thêm vào giỏ
+            <input
+              maxLength={80}
+              value={value.addToCartLabel || ""}
+              placeholder="Thêm vào giỏ"
+              onChange={(e) => onStyleChange({ addToCartLabel: e.target.value })}
+            />
+          </label>
+          <ColorField
+            label="Màu nền nút"
+            value={value.addToCartBackground}
+            fallback="#fff0f5"
+            onChange={(color) => onStyleChange({ addToCartBackground: color })}
+          />
+          <ColorField
+            label="Màu viền nút"
+            value={value.addToCartBorderColor}
+            fallback="#efd7e1"
+            onChange={(color) => onStyleChange({ addToCartBorderColor: color })}
+          />
+        </SettingGroup>
+        <StyleTypographyBlock
+          title="Kiểu chữ nút Thêm vào giỏ"
+          style={value.addToCartStyle || {}}
+          onStyleChange={(patch) => onStyleChange({ addToCartStyle: { ...value.addToCartStyle, ...patch } })}
+        />
+      </>
+    );
+  }
   if (["pdWebsiteText", "pdFacebookText", "pdTiktokText"].includes(selected)) {
     const value = productDetail.purchaseOptions || {},
       channel =

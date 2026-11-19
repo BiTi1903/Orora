@@ -63,6 +63,7 @@ export default function PurchaseOptionsSettings({ value = {}, onChange, initialG
           </small>
           {[
             ["heading", "Tiêu đề", "Chọn cách mua hàng"],
+            ["addToCartLabel", "Nút Thêm vào giỏ", "Thêm vào giỏ"],
             ["mobileBuyLabel", "Nút Mua ngay (kính lỏng)", "Mua ngay"],
             ["tiktokLabel", "Nút TikTok", "Tiktok"],
             ["facebookLabel", "Nút Facebook", "Fb"],
