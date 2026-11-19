@@ -1,9 +1,10 @@
 import { createHash, randomUUID } from "node:crypto";
 import { safeMailTracking } from "./mail-tracking.js";
+import { rateLimitSalt, reserveBudgetOrAllow } from "./request-limits.js";
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 const SUCCESS_MESSAGE = "Đăng ký nhận tin thành công. Cảm ơn bạn đã quan tâm ORORA!";
 
-export function createSubscribeHandler({ getDb, sendWelcome, schedule, env = process.env }) {
+export function createSubscribeHandler({ getDb, sendWelcome, schedule, env = process.env, clock = Date.now }) {
   return async function subscribe(req, res) {
     res.setHeader("Cache-Control", "no-store");
     const reply = (status, message) => res.status(status).json({ ok: status === 200, message });
@@ -23,6 +24,13 @@ export function createSubscribeHandler({ getDb, sendWelcome, schedule, env = pro
     const attempt = randomUUID(); let subscriber;
     try {
       const db = await getDb(); subscriber = db.collection("newsletterSubscribers").doc(hash(email));
+      const salt = rateLimitSalt(env);
+      if (salt) {
+        const now = clock();
+        const wait = await reserveBudgetOrAllow(db, req, { scope: "subscribe", cost: 1, budget: 5, now, salt })
+          || await reserveBudgetOrAllow(db, req, { scope: "subscribe-email", cost: 1, budget: 3, windowMs: 3600000, now, salt, key: email });
+        if (wait) { res.setHeader("Retry-After", String(wait)); return reply(429, "Bạn đã thử quá nhiều lần. Vui lòng thử lại sau."); }
+      }
       const action = await db.runTransaction(async (tx) => {
         const saved = await tx.get(subscriber); const prior = saved.data() || {};
         // Repeated submissions succeed without duplicating mail already accepted,

@@ -304,3 +304,27 @@ test("recent bounce summary returns a single entry per checked order and history
   assert.equal(history.body.mails.length, 50);
   assert.equal(history.body.mails[0].id, `${id}/event-54`);
 });
+
+test("order creation rate limits by IP (8/min) and recipient email (5/day) with Retry-After", async () => {
+  const { db } = await setup();
+  const handler = createOrderHandler({
+    getDb: () => db,
+    env: { ...env, CHAT_RATE_LIMIT_SALT: "test-salt" },
+    now: () => 1700000000000,
+    schedule: () => {},
+  });
+  const place = async (ip, email) => {
+    const res = response();
+    await handler({ method: "POST", headers: { ...headers, "x-forwarded-for": ip }, body: { ...body(), email } }, res);
+    return res;
+  };
+  for (let i = 0; i < 8; i++) assert.equal((await place("198.51.100.1", `ip-${i}@example.com`)).statusCode, 201);
+  const ipBlocked = await place("198.51.100.1", "ip-8@example.com");
+  assert.equal(ipBlocked.statusCode, 429);
+  assert.ok(Number(ipBlocked.headers["Retry-After"]) > 0);
+  for (let i = 0; i < 5; i++) assert.equal((await place(`203.0.113.${i + 1}`, "target@example.com")).statusCode, 201);
+  const emailBlocked = await place("203.0.113.6", "target@example.com");
+  assert.equal(emailBlocked.statusCode, 429);
+  assert.ok(Number(emailBlocked.headers["Retry-After"]) > 0);
+});
+

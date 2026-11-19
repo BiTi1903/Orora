@@ -23,18 +23,12 @@ export function canShareOrderReceipt(){
  if(typeof navigator==='undefined'||typeof navigator.share!=='function'||typeof navigator.canShare!=='function'||typeof File!=='function')return false;
  try{return Boolean(navigator.canShare({files:[new File([new Uint8Array([0])],'receipt.png',{type:'image/png'})]}));}catch{return false;}
 }
-export async function shareOrderReceipt(order){
- const blob=await renderOrderReceiptBlob(order);
- if(!canShareOrderReceipt())return {mode:'unsupported',blob};
+export function shareOrderReceiptBlob(order,blob){
+ if(!canShareOrderReceipt())return null;
  const file=new File([blob],receiptFileName(order),{type:'image/png'});
- if(!navigator.canShare({files:[file]}))return {mode:'unsupported',blob};
- try{
-  await navigator.share({files:[file],title:`Đơn hàng ORORA ${order.code}`,text:`Xác nhận đơn hàng ${order.code}`});
-  return {mode:'shared',blob};
- }catch(error){
-  if(error?.name==='AbortError')return {mode:'cancelled',blob};
-  return {mode:'unsupported',blob};
- }
+ try{if(!navigator.canShare({files:[file]}))return null;}catch{return null;}
+ return navigator.share({files:[file],title:`Đơn hàng ORORA ${order.code}`,text:`Xác nhận đơn hàng ${order.code}`})
+  .then(()=>({mode:'shared'}),error=>({mode:error?.name==='AbortError'?'cancelled':'failed'}));
 }
 export async function downloadOrderReceipt(order,existingBlob){
  const blob=existingBlob||await renderOrderReceiptBlob(order);

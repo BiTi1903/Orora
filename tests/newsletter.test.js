@@ -514,3 +514,27 @@ test("old IP/site limits, hidden website field and prior failure cooldown no lon
   }
   assert.equal(sent, 8); assert.deepEqual((await db.collection("newsletterLimits").doc("global").get()).data(), limit);
 });
+
+test("subscribe rate limits by email (3/hour) and IP (5/min) with Retry-After", async () => {
+  const db = memoryDb();
+  const handler = createSubscribeHandler({
+    getDb: () => db,
+    env: { ...env, CHAT_RATE_LIMIT_SALT: "test-salt" },
+    clock: () => 1700000000000,
+    sendWelcome: async () => {},
+  });
+  const call = async (ip, email) => {
+    const res = response();
+    await handler({ method: "POST", headers: { ...headers, "x-forwarded-for": ip }, body: { email, consent: true } }, res);
+    return res;
+  };
+  for (let i = 0; i < 3; i++) assert.equal((await call(`203.0.113.${i + 1}`, "victim@example.com")).statusCode, 200);
+  const emailBlocked = await call("203.0.113.4", "victim@example.com");
+  assert.equal(emailBlocked.statusCode, 429);
+  assert.ok(Number(emailBlocked.headers["Retry-After"]) > 0);
+  for (let i = 0; i < 5; i++) assert.equal((await call("198.51.100.9", `sub-${i}@example.com`)).statusCode, 200);
+  const ipBlocked = await call("198.51.100.9", "sub-5@example.com");
+  assert.equal(ipBlocked.statusCode, 429);
+  assert.ok(Number(ipBlocked.headers["Retry-After"]) > 0);
+});
+

@@ -11,6 +11,7 @@ import { sendOrderConfirmation, validOrderEmail } from "./order-mail.js";
 import { createHash } from "node:crypto";
 import { parseVndPrice, sameVndPrice, availablePaymentMethods, PAYMENT_LABELS } from "../src/lib/commerce.js";
 import { firebaseAuthFailure } from "./firebase-auth-error.js";
+import { rateLimitSalt, reserveBudgetOrAllow } from "./request-limits.js";
 
 const uuid = (value) => typeof value === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value);
 const hash = (value) => createHash("sha256").update(value).digest("hex");
@@ -42,6 +43,13 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
       if (body.variantId !== undefined && (typeof body.variantId !== "string" || (body.variantId && !/^[a-zA-Z0-9_-]{1,100}$/.test(body.variantId)))) return res.status(400).json({ message: "Chọn dung tích hợp lệ." });
       const digest = hash(JSON.stringify({ ...(body.variantId ? { variantId: body.variantId } : {}), productId: body.productId, quantity: body.quantity, paymentMethod: body.paymentMethod, customer }));
       const db = await getDb();
+      const salt = rateLimitSalt(env);
+      if (salt) {
+        const clock = now();
+        const wait = await reserveBudgetOrAllow(db, req, { scope: "orders", cost: 1, budget: 8, now: clock, salt })
+          || await reserveBudgetOrAllow(db, req, { scope: "orders-email", cost: 1, budget: 5, windowMs: 86400000, now: clock, salt, key: customer.email });
+        if (wait) { res.setHeader("Retry-After", String(wait)); return res.status(429).json({ message: "Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút hoặc liên hệ ORORA." }); }
+      }
       const order = db.collection("orders").doc(body.requestId);
       const createdAt = new Date(now());
       const parts = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(createdAt).map(({ type, value }) => [type, value]));
