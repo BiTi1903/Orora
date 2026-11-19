@@ -32,7 +32,7 @@ export default function OrderTracking() {
   const selected = orders.find(order => order.code === selectedCode);
   const lookup = async (cursor = null) => {
       if (busy) return;request.current?.abort();detailRequest.current?.abort();const controller = new AbortController();request.current = controller;const id = ++sequence.current;setBusy(true);setLoadingCode('');setDetailErrors({});setError('');if (!cursor) { setOrders([]);setNextCursor(null);setSelectedCode(null);setStatus('all');setPage(1); }const timer = setTimeout(()=>controller.abort(),20000);
-      try { const response = await fetch('/api/order-tracking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:mode === 'code' ? code.trim() : '',phone:phone.trim(), ...(cursor ? {cursor} : {})}),cache:'no-store',signal:controller.signal});const data = await response.json().catch(()=>({message:"Chưa thể tra cứu lúc này. Vui lòng thử lại sau."}));if (!response.ok || !Array.isArray(data.orders) && !data.order) throw new Error(data.message || 'Chưa thể tra cứu. Vui lòng thử lại.');if (id === sequence.current) {setOrders(previous => cursor ? [...previous,...data.orders] : (data.orders || [data.order]));setNextCursor(data.nextCursor || null);if (!cursor) requestAnimationFrame(()=>result.current?.focus());} } catch (cause) { if (id === sequence.current) setError(cause.name === 'AbortError' ? 'Tra cứu mất quá nhiều thời gian. Vui lòng thử lại.' : cause instanceof TypeError ? 'Chưa thể kết nối. Vui lòng kiểm tra mạng và thử lại.' : cause.message || 'Chưa thể tra cứu. Vui lòng thử lại.'); } finally { clearTimeout(timer);if (id === sequence.current) setBusy(false); }
+      try { const response = await fetch('/api/order-tracking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:mode === 'code' ? code.trim() : '',phone:phone.trim(), ...(cursor ? {cursor} : {})}),cache:'no-store',signal:controller.signal});const data = await response.json().catch((cause)=>{if(cause?.name==='AbortError'||controller.signal.aborted)throw cause;return {message:"Chưa thể tra cứu lúc này. Vui lòng thử lại sau."};});if (!response.ok || !Array.isArray(data.orders) && !data.order) throw new Error(data.message || 'Chưa thể tra cứu. Vui lòng thử lại.');if (id === sequence.current) {setOrders(previous => cursor ? [...previous,...data.orders] : (data.orders || [data.order]));setNextCursor(data.nextCursor || null);if (!cursor) requestAnimationFrame(()=>result.current?.focus());} } catch (cause) { if (id === sequence.current) setError(cause.name === 'AbortError' || controller.signal.aborted ? 'Tra cứu mất quá nhiều thời gian. Vui lòng thử lại.' : cause instanceof TypeError ? 'Chưa thể kết nối. Vui lòng kiểm tra mạng và thử lại.' : cause.message || 'Chưa thể tra cứu. Vui lòng thử lại.'); } finally { clearTimeout(timer);if (id === sequence.current) setBusy(false); }
   };
   const openDetail = async (order) => {
     if (order.productName !== undefined) { setSelectedCode(order.code); return; }
@@ -46,7 +46,7 @@ export default function OrderTracking() {
     const timer = setTimeout(() => controller.abort(), 20000);
     try {
       const response = await fetch('/api/order-tracking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:order.code,phone:phone.trim()}),cache:'no-store',signal:controller.signal});
-      const data = await response.json().catch(()=>({}));
+      const data = await response.json().catch((cause)=>{if(cause?.name==='AbortError'||controller.signal.aborted)throw cause;return {};});
       if (id !== sequence.current) return;
       if (response.ok && data.order) {
         setOrders(prev => prev.map(item => item.code === order.code ? data.order : item));
@@ -58,7 +58,7 @@ export default function OrderTracking() {
       if (id === sequence.current) {
         setDetailErrors(prev => ({
           ...prev,
-          [order.code]: cause?.name === 'AbortError'
+          [order.code]: cause?.name === 'AbortError' || controller.signal.aborted
             ? 'Tải chi tiết mất quá nhiều thời gian. Vui lòng thử lại.'
             : cause instanceof TypeError
               ? 'Chưa thể kết nối. Vui lòng kiểm tra mạng và thử lại.'

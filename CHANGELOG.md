@@ -1,3 +1,14 @@
+## 19/11/2026 — Giữ nguyên thông báo quá thời gian khi nội dung phản hồi tra cứu đơn bị treo
+
+- **Lý do**: Nếu máy chủ đã trả phần đầu phản hồi nhưng nội dung bị treo quá 20 giây, bước đọc JSON trước đó nuốt lỗi hủy yêu cầu khiến người dùng thấy thông báo lỗi chung thay vì thông báo chờ quá lâu.
+- **Thay đổi chính**:
+  - **Chuyển lỗi hủy/quá thời gian về đúng nhánh xử lý (`src/components/OrderTracking.jsx`)**: Không nuốt lỗi hủy yêu cầu khi đọc nội dung phản hồi ở cả bước tra cứu danh sách lẫn bước mở chi tiết đơn, đảm bảo hiển thị đúng thông báo chờ quá lâu.
+- **File / khu vực liên quan**: `src/components/OrderTracking.jsx`.
+- **Kiểm tra đã chạy**:
+  - `npm run lint`, `npm run build`: 0 lỗi, 0 cảnh báo.
+  - Playwright (`width-320` và `width-390`): **8/8** test đạt trên `qa/shopping.spec.js`.
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu.
+
 ## 19/11/2026 — Thêm giới hạn 20 giây cho yêu cầu tải chi tiết đơn và tách dòng thông báo lỗi lưu trên thanh đáy mobile
 
 - **Lý do**: (1) Yêu cầu tải chi tiết đơn hàng chưa có thời hạn chờ và cơ chế hủy nên có thể kẹt ở trạng thái đang tải và khóa các nút khác nếu mạng treo; (2) thông báo lỗi lưu trong Visual Builder nằm trong thanh đáy không xuống dòng khiến nút "Lưu tất cả" bị ép chật trên màn hình `320px`.
