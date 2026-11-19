@@ -407,6 +407,12 @@ export default function VisualBuilder({
           </span>
         </div>
 
+        <div className="builder-history-actions" aria-label="Hoàn tác và khôi phục">
+          <button type="button" className="admin-btn" disabled={!canUndo || saving || loadError} onClick={() => replayEdit(undo)}>Hoàn tác</button>
+          <button type="button" className="admin-btn" disabled={!canRedo || saving || loadError} onClick={() => replayEdit(redo)}>Làm lại</button>
+          {workspace !== "store" && <button type="button" className="admin-btn" disabled={saving || loadError} onClick={resetActive}>Khôi phục mặc định mục này</button>}
+        </div>
+
         <div ref={saveBar} className="builder-toolbar-actions" aria-label="Lưu thay đổi giao diện">
           <span
             className={`builder-save-state${editVersion !== savedVersion ? " is-dirty" : ""}`}
@@ -426,9 +432,6 @@ export default function VisualBuilder({
             </span>
           )}
 
-          <button type="button" className="admin-btn" disabled={!canUndo || saving || loadError} onClick={() => replayEdit(undo)}>Hoàn tác</button>
-          <button type="button" className="admin-btn" disabled={!canRedo || saving || loadError} onClick={() => replayEdit(redo)}>Làm lại</button>
-          {workspace !== "store" && <button type="button" className="admin-btn" disabled={saving || loadError} onClick={resetActive}>Khôi phục mặc định mục này</button>}
           <button
             type="button"
             className="admin-btn primary"

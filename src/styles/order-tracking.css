@@ -52,6 +52,7 @@
 .order-tracking-summary-product > span { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
 .order-tracking-payment { line-height:1.45; }
 .order-tracking-summary button,.order-tracking-pagination button { padding:10px 12px; min-height:42px; border:1px solid var(--tracking-border); border-radius:10px; background:#fff; color:var(--tracking-accent); font:inherit; font-size:13px; cursor:pointer; }
+.order-tracking-row-error { grid-column:1 / -1; margin:2px 0 0; color:#b42318; font-size:13px; line-height:1.45; }
 .order-tracking-pagination { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-top:16px; font-size:13px; }
 .order-tracking-pagination button:disabled { opacity:.4; cursor:default; }
 .order-tracking-more { display:block; margin:24px auto 0; min-height:44px; padding:12px 24px; border:1px solid var(--tracking-border); border-radius:12px; background:var(--tracking-accent); color:#fff; font:inherit; cursor:pointer; }

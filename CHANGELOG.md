@@ -1,3 +1,16 @@
+## 19/11/2026 — Tối ưu bố cục Visual Builder trên màn hình hẹp, báo tải/lỗi ngay tại dòng tra cứu đơn và tăng vùng chạm giỏ hàng
+
+- **Lý do**: Khắc phục 3 điểm trải nghiệm mobile phát hiện qua kiểm tra giao diện: (1) Visual Builder ở 320px xếp dọc toàn bộ danh sách mục trước phần xem trước và thanh lưu cố định bị xuống 3 hàng do gộp cả nút Hoàn tác/Làm lại/Khôi phục mặc định; (2) màn hình tra cứu đơn hiển thị trạng thái tải và lỗi của nút "Xem chi tiết" ở form phía trên, dễ nằm ngoài vùng nhìn trên điện thoại; (3) nút tăng/giảm số lượng trong giỏ hàng nhỏ (~30×36px) gây khó chạm trên màn hình hẹp.
+- **Thay đổi chính**:
+  - **Thu gọn Visual Builder trên mobile (`src/admin/builder/VisualBuilder.jsx`, `src/admin/builder/VisualBuilder.css`)**: Chuyển danh sách mục trên màn hình `<= 800px` thành dải cuộn ngang một hàng gọn nhẹ; tách nhóm Hoàn tác / Làm lại / Khôi phục mặc định lên thanh công cụ trên và chỉ giữ trạng thái lưu cùng nút "Lưu tất cả" trên một hàng ở thanh đáy cố định.
+  - **Phản hồi tải và lỗi ngay tại dòng đơn đang mở (`src/components/OrderTracking.jsx`, `src/styles/order-tracking.css`)**: Hiển thị trạng thái "Đang tải…" trực tiếp trên nút "Xem chi tiết" của dòng đang bấm và đặt thông báo lỗi tải chi tiết ngay trong thẻ dòng đơn tương ứng thay vì đẩy lên form phía trên.
+  - **Tăng vùng chạm nút số lượng giỏ hàng (`src/styles/shop-cart.css`)**: Nâng kích thước nút tăng/giảm lên tối thiểu `44×44px` và cho nhóm điều khiển xuống dòng gọn gàng ở màn hình `<= 480px`.
+- **File / khu vực liên quan**: `src/admin/builder/VisualBuilder.jsx`, `src/admin/builder/VisualBuilder.css`, `src/components/OrderTracking.jsx`, `src/styles/order-tracking.css`, `src/styles/shop-cart.css`.
+- **Kiểm tra đã chạy**:
+  - `npm run lint`, `npm run build`: 0 lỗi, 0 cảnh báo.
+  - Playwright (`width-320` và `width-390`): **26/26** test đạt trên `qa/editor-checkout.spec.js`, `qa/shopping.spec.js` và `qa/cart.spec.js`; đã kiểm tra ảnh chụp Visual Builder ở `320px`.
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu.
+
 ## 19/11/2026 — Kiểm tra đủ 3 cờ quyền trong phản hồi đăng nhập admin để phân biệt phản hồi lỗi với tài khoản thiếu quyền
 
 - **Lý do**: Nếu phản hồi kiểm tra quyền trả về đối tượng rỗng hoặc thiếu một trong ba quyền (đơn hàng, email, quản trị đầy đủ), giao diện trước đó có thể hiểu nhầm là tài khoản không có quyền hoặc chỉ hiện một phần menu.
