@@ -1,9 +1,40 @@
 import {test,expect} from '@playwright/test';
 import {readFile} from 'node:fs/promises';
 import {mount,render,fit} from './fixtures';
-test('receipt downloads a PNG on save or Zalo confirmation and only uses configured safe contact links',async({page})=>{
+test('receipt uses Web Share API with PNG file on Zalo click when supported and respects user cancel without silent download',async({page})=>{
+ const order={code:'OW_TEST',productName:'Sản phẩm mẫu',quantity:1,subtotal:100000,shippingFee:20000,totalAmount:120000,paymentMethod:'cod',recipient:{name:'Người nhận mẫu',phone:'0900000000',address:'Địa chỉ thử nghiệm'}};
+ await mount(page,`
+  window.__shared=[];
+  window.__shareMode='ok';
+  Object.defineProperty(navigator,'canShare',{configurable:true,value:data=>Boolean(data?.files?.length)});
+  Object.defineProperty(navigator,'share',{configurable:true,value:async data=>{
+   window.__shared.push({title:data.title,fileName:data.files?.[0]?.name,type:data.files?.[0]?.type,size:data.files?.[0]?.size});
+   if(window.__shareMode==='cancel'){const e=new Error('cancelled');e.name='AbortError';throw e;}
+  }});
+  import '/src/styles/checkout.css';import Actions from '/src/components/OrderReceiptActions.jsx';${render(`R.createElement(Actions,{order:${JSON.stringify(order)},home:{footerPhone:'0900000000'}})`)}
+ `);
+ let downloaded=false;
+ page.on('download',()=>{downloaded=true;});
+ const zaloLink=page.getByRole('link',{name:'Xác nhận qua Zalo'});
+ await zaloLink.click();
+ await expect(page.locator('.receipt-download-note')).toContainText('Đã mở chia sẻ kèm ảnh đơn hàng');
+ const shared=await page.evaluate(()=>window.__shared);
+ expect(shared).toHaveLength(1);
+ expect(shared[0].fileName).toBe('ORORA-OW_TEST.png');
+ expect(shared[0].type).toBe('image/png');
+ expect(shared[0].size).toBeGreaterThan(500);
+ expect(downloaded).toBe(false);
+ await page.evaluate(()=>{window.__shareMode='cancel';});
+ await zaloLink.click();
+ await expect(page.locator('.receipt-download-note')).toContainText('Đã hủy chia sẻ');
+ expect(downloaded).toBe(false);
+});
+test('receipt downloads a PNG on save or Zalo fallback when Web Share with files is unsupported',async({page})=>{
  const order={code:'OW_TEST',productName:'Sản phẩm mẫu',quantity:1,subtotal:100000,shippingFee:20000,totalAmount:120000,paymentMethod:'cod',recipient:{name:'Người nhận mẫu',phone:'0900000000',address:'Địa chỉ thử nghiệm '.repeat(20)}};
- await mount(page,`import '/src/styles/checkout.css';import Actions from '/src/components/OrderReceiptActions.jsx';${render(`R.createElement(Actions,{order:${JSON.stringify(order)},home:{footerPhone:'0900000000',footerFacebook:'https://www.facebook.com/orora'}})`)}`);
+ await mount(page,`
+  Object.defineProperty(navigator,'canShare',{configurable:true,value:()=>false});
+  import '/src/styles/checkout.css';import Actions from '/src/components/OrderReceiptActions.jsx';${render(`R.createElement(Actions,{order:${JSON.stringify(order)},home:{footerPhone:'0900000000',footerFacebook:'https://www.facebook.com/orora'}})`)}
+ `);
  const zaloLink=page.getByRole('link',{name:'Xác nhận qua Zalo'});
  await expect(zaloLink).toHaveAttribute('href','https://zalo.me/0900000000');
  await expect(page.getByRole('link',{name:'Xác nhận qua Facebook'})).toHaveAttribute('href','https://www.facebook.com/orora');

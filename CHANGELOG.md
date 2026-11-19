@@ -1,3 +1,16 @@
+## 19/11/2026 — Dùng Web Share API gửi ảnh đơn qua Zalo và đồng bộ màu hiệu ứng nút Mua ngay theo cấu hình admin
+
+- **Lý do**: Khắc phục hai điểm phản biện sau đợt cập nhật trước: (1) trên iPhone/trình duyệt trong app, tải ảnh PNG song song với việc mở link Zalo dễ bị chặn hoặc ngắt kết nối và tự lưu thông tin người nhận mà khách chưa chủ động bấm; (2) hiệu ứng xung sáng khi nhấn nút Mua ngay đang dùng màu hồng viết cứng `rgba(184, 68, 109)` thay vì lấy theo màu nền nút admin đã chọn.
+- **Thay đổi chính**:
+  - **Chia sẻ ảnh đơn hàng qua Web Share API (`src/lib/order-receipt.js`, `src/components/OrderReceiptActions.jsx`)**: Tách `renderOrderReceiptBlob`, `canShareOrderReceipt`, `shareOrderReceipt`. Khi trình duyệt hỗ trợ `navigator.canShare({ files })`, bấm **Xác nhận qua Zalo** sẽ chặn chuyển trang tức thì và mở hộp chia sẻ gốc kèm file `ORORA-<mã>.png` để khách chọn Zalo gửi trực tiếp; nếu khách hủy (`AbortError`) sẽ không tự tải ảnh xuống máy. Khi trình duyệt không hỗ trợ chia sẻ file (ví dụ desktop), giữ phương án dự phòng tải ảnh PNG và mở link Zalo.
+  - **Đồng bộ màu hiệu ứng xung & bóng đổ nút Mua ngay (`src/components/ProductDetail.jsx`, `src/styles/product-detail.css`)**: Truyền biến CSS `--quick-buy-cta-bg` và dùng `color-mix(in srgb, ...)` dựa trên `purchase.websiteBackground` (hoặc màu tính toán của nút) cho cả bóng đổ CSS lẫn animation xung sáng khi nhấn, bỏ màu hồng viết cứng.
+  - **Kiểm thử mở rộng (`qa/order-receipt.spec.js`)**: Bổ sung kịch bản kiểm tra cả nhánh Web Share API kèm `File` PNG (xác nhận không tự download kể cả khi hủy `AbortError`) lẫn nhánh tải ảnh dự phòng.
+- **File / khu vực liên quan**: `src/lib/order-receipt.js`, `src/components/OrderReceiptActions.jsx`, `src/components/ProductDetail.jsx`, `src/styles/product-detail.css`, `qa/order-receipt.spec.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **241/241** test Node pass, `eslint .` 0 lỗi, `vite build` và giới hạn bundle đạt.
+  - Playwright (`npx playwright test qa/order-receipt.spec.js qa/editor-checkout.spec.js`): đạt toàn bộ kịch bản active trên 4 viewport (`320px`, `390px`, `768px`, `1440px`). Giới hạn: chưa kiểm thử hộp chia sẻ hệ điều hành trên iPhone vật lý.
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu. Lưu ý vận hành: vẫn nên đặt biến môi trường `CHAT_RATE_LIMIT_SALT` riêng trên Vercel (`openssl rand -hex 32 | vercel env add CHAT_RATE_LIMIT_SALT production`) thay vì dựa vào fallback `FIREBASE_SERVICE_ACCOUNT_JSON`.
+
 ## 18/11/2026 — Khôi phục màu nút trước bản hồng phấn
 
 - Khôi phục màu nút website, admin và giá trị màu mặc định trong Visual Builder theo bản 0035938.

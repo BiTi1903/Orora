@@ -366,6 +366,7 @@ function ProductDetail({
   const mobileBuyBar = showMobileBuy && (
     <div ref={mobileBuyRef} className={`product-mobile-buy ${preview ? "is-preview " : ""}${selectedClass("pdWebsiteText")}`} data-builder-key={preview ? "pdWebsiteText" : undefined} onClick={preview ? select("pdWebsiteText") : undefined} style={{
       ...mobileNavTheme(mobileNavSettings(home.navStyles?.mobile)),
+      ...(purchase.websiteBackground ? { "--quick-buy-cta-bg": purchase.websiteBackground } : {}),
       ...(purchase.subtotalBackground ? { "--quick-buy-bg": purchase.subtotalBackground } : {}),
       ...(purchase.subtotalBorderColor ? { "--quick-buy-border": purchase.subtotalBorderColor } : {}),
       ...(purchase.quickBuyOpacity != null ? { "--quick-buy-opacity": `${Math.max(45, Math.min(95, Number(purchase.quickBuyOpacity)))}%` } : {}),
@@ -384,9 +385,10 @@ function ProductDetail({
           if (preview) { select("pdWebsiteText")(event); return; }
           const btn = event.currentTarget;
           animateButtonPress(btn, true, home.navStyles?.surfaces);
+          const pulseColor = purchase.websiteBackground || getComputedStyle(btn).backgroundColor || "var(--rose-deep)";
           btn.animate?.([
-            { boxShadow: "0 6px 18px rgba(184, 68, 109, .28), 0 0 0 0 rgba(184, 68, 109, .45)" },
-            { boxShadow: "0 10px 26px rgba(184, 68, 109, .38), 0 0 0 12px rgba(184, 68, 109, 0)" },
+            { boxShadow: `0 6px 18px color-mix(in srgb, ${pulseColor} 28%, transparent), 0 0 0 0 color-mix(in srgb, ${pulseColor} 45%, transparent)` },
+            { boxShadow: `0 10px 26px color-mix(in srgb, ${pulseColor} 38%, transparent), 0 0 0 12px color-mix(in srgb, ${pulseColor} 0%, transparent)` },
           ], { duration: 420, easing: "cubic-bezier(0.22, 1, 0.36, 1)" });
           setOrderProductId(product.id || product.slug);
         }}><ButtonIcon name="orderNow" defaultSize={16}/><span>{soldOut ? "Hết hàng" : (purchase.mobileBuyLabel?.trim() || (purchase.websiteLabel?.trim() && !["Đặt hàng trên website", "Đặt hàng ngay"].includes(purchase.websiteLabel.trim()) ? purchase.websiteLabel.trim() : "Mua ngay"))}</span><ButtonIcon name="orderArrow" defaultSize={15}/></button>
