@@ -20,9 +20,18 @@ export default function OrderTrackingDetails({ order, copy: suppliedCopy, styles
    {order.status==='cancelled'&&<p className="order-tracking-error">{copy.cancelledHelp}</p>}
   </section>
   <section className="tracking-detail-section tracking-product-section"><h3 style={css("detailHeading")}>{copy.productSectionTitle}</h3><dl>
-   {row(copy.productLabel,order.productName,'is-wide tracking-product-name')}
-   {order.variantLabel&&row(copy.volumeLabel,order.variantLabel)}
-   {row(copy.quantityLabel,order.quantity??'Chưa cập nhật')}
+   {Array.isArray(order.items)&&order.items.length>1 ? (
+    <>
+     <div className="is-wide tracking-product-name"><dt>{copy.productLabel}</dt><dd style={css('detailProduct')}><ul className="tracking-items-list">{order.items.map((item,idx)=><li key={`${item.id||idx}:${item.variantId||''}`}>{item.name}{item.variantLabel?` (${item.variantLabel})`:''} × {item.quantity}</li>)}</ul></dd></div>
+     {row(copy.quantityLabel,order.quantity??'Chưa cập nhật')}
+    </>
+   ) : (
+    <>
+     {row(copy.productLabel,order.productName,'is-wide tracking-product-name')}
+     {order.variantLabel&&row(copy.volumeLabel,order.variantLabel)}
+     {row(copy.quantityLabel,order.quantity??'Chưa cập nhật')}
+    </>
+   )}
   </dl></section>
   <section className="tracking-detail-section"><h3 style={css("detailHeading")}>{copy.paymentSectionTitle}</h3><dl>
    {row(copy.methodLabel,PAYMENT_LABELS[order.paymentMethod]||'Chưa cập nhật','is-wide')}

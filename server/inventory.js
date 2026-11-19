@@ -7,6 +7,21 @@ const fail = (message, status = 409) => Object.assign(new Error(message), { stat
 export function waitingQuantity(order) {
   return order.paymentStatus !== "paid" && !["cancelled", "shipping", "completed"].includes(order.status) && !["deducted", "restocked", "legacy_paid"].includes(order.inventory?.state) && Number.isInteger(order.quantity) && order.quantity > 0 ? order.quantity : 0;
 }
+function orderProductQuantities(order) {
+  const counts = new Map();
+  if (Array.isArray(order.items) && order.items.length) {
+    for (const item of order.items) {
+      if (validId(item?.id) && Number.isInteger(item.quantity) && item.quantity > 0) {
+        counts.set(item.id, (counts.get(item.id) || 0) + item.quantity);
+      }
+    }
+    return counts;
+  }
+  if (validId(order.product?.id) && Number.isInteger(order.quantity) && order.quantity > 0) {
+    counts.set(order.product.id, order.quantity);
+  }
+  return counts;
+}
 export async function reserveOrderInventory(tx, db, productId, quantity, stockSnapshot) {
   const ref = db.collection("inventory").doc(productId);
   // Order creation supplies the stock snapshot from its initial batched reads.
@@ -35,37 +50,53 @@ export async function reserveOrderInventory(tx, db, productId, quantity, stockSn
 export async function settleOrderInventory(tx, db, order, nextPaymentStatus, orderId, userId, nextStatus) {
   if (["deducted", "restocked", "legacy_paid"].includes(order.inventory?.state)) return {};
   if (order.paymentStatus === "paid" || order.status === "shipping" || order.status === "completed") return { inventory: { state: "legacy_paid" } };
-  const wasWaiting = waitingQuantity(order);
+  const wasWaiting = waitingQuantity(order) > 0;
+  const qtyByProduct = orderProductQuantities(order);
   if (nextStatus === "cancelled") {
-    const productId = order.product?.id;
-    if (wasWaiting > 0 && validId(productId)) {
-      const stockRef = db.collection("inventory").doc(productId);
-      const stock = await tx.get(stockRef);
-      const current = stock.data();
-      if (stock.exists && Number.isSafeInteger(current?.reserved)) {
-        tx.set(stockRef, { reserved: Math.max(0, current.reserved - wasWaiting), version: (current.version || 0) + 1, updatedAt: new Date(), updatedBy: userId }, { merge: true });
-      }
+    if (wasWaiting && qtyByProduct.size) {
+      const entries = [...qtyByProduct.entries()];
+      const refs = entries.map(([productId]) => db.collection("inventory").doc(productId));
+      const stocks = await tx.getAll(...refs);
+      const updatedAt = new Date();
+      entries.forEach(([, qty], index) => {
+        const stock = stocks[index];
+        const current = stock.data();
+        if (stock.exists && Number.isSafeInteger(current?.reserved)) {
+          tx.set(refs[index], { reserved: Math.max(0, current.reserved - qty), version: (current.version || 0) + 1, updatedAt, updatedBy: userId }, { merge: true });
+        }
+      });
     }
     return {};
   }
   if (nextPaymentStatus !== "paid" && nextStatus !== "shipping") return {};
-  const productId = order.product?.id;
-  if (!validId(productId) || !Number.isInteger(order.quantity) || order.quantity < 1) throw fail("Đơn thiếu ID sản phẩm hoặc số lượng hợp lệ. Kiểm tra đơn trước khi xác nhận.");
-  const stockRef = db.collection("inventory").doc(productId);
-  const stock = await tx.get(stockRef);
-  const current = stock.data();
-  if (!stock.exists || !validQuantity(current.quantity)) throw fail("Chưa nhập tồn kho cho sản phẩm này. Vào Kiểm Hàng nhập số lượng trước khi xác nhận thanh toán hoặc giao hàng.");
-  if (current.quantity < order.quantity) throw fail(`Tồn kho chỉ còn ${current.quantity}, không đủ ${order.quantity} sản phẩm của đơn. Kiểm tra và cập nhật Kiểm Hàng trước.`);
+  if (!qtyByProduct.size) throw fail("Đơn thiếu ID sản phẩm hoặc số lượng hợp lệ. Kiểm tra đơn trước khi xác nhận.");
+  const entries = [...qtyByProduct.entries()];
+  const refs = entries.map(([productId]) => db.collection("inventory").doc(productId));
+  const stocks = await tx.getAll(...refs);
+  entries.forEach(([, qty], index) => {
+    const stock = stocks[index];
+    const current = stock.data();
+    if (!stock.exists || !validQuantity(current.quantity)) throw fail("Chưa nhập tồn kho cho sản phẩm này. Vào Kiểm Hàng nhập số lượng trước khi xác nhận thanh toán hoặc giao hàng.");
+    if (current.quantity < qty) throw fail(`Tồn kho chỉ còn ${current.quantity}, không đủ ${qty} sản phẩm của đơn. Kiểm tra và cập nhật Kiểm Hàng trước.`);
+  });
   const updatedAt = new Date();
-  tx.set(stockRef, {
-    quantity: current.quantity - order.quantity,
-    ...(Number.isSafeInteger(current.reserved) ? { reserved: Math.max(0, current.reserved - wasWaiting) } : {}),
-    version: (current.version || 0) + 1,
-    updatedAt,
-    updatedBy: userId,
-  }, { merge: true });
-  tx.set(db.collection("inventoryMovements").doc(`order-${orderId}`), { type: "order_out", productId, orderId, orderCode: order.code || "", change: -order.quantity, before: current.quantity, after: current.quantity - order.quantity, createdAt: updatedAt, actor: userId });
-  return { inventory: { state: "deducted", productId, quantity: order.quantity, deductedAt: updatedAt } };
+  entries.forEach(([productId, qty], index) => {
+    const current = stocks[index].data();
+    tx.set(refs[index], {
+      quantity: current.quantity - qty,
+      ...(wasWaiting && Number.isSafeInteger(current.reserved) ? { reserved: Math.max(0, current.reserved - qty) } : {}),
+      version: (current.version || 0) + 1,
+      updatedAt,
+      updatedBy: userId,
+    }, { merge: true });
+    const movementId = entries.length === 1 ? `order-${orderId}` : `order-${orderId}-${productId}`;
+    tx.set(db.collection("inventoryMovements").doc(movementId), { type: "order_out", productId, orderId, orderCode: order.code || "", change: -qty, before: current.quantity, after: current.quantity - qty, createdAt: updatedAt, actor: userId });
+  });
+  return {
+    inventory: entries.length === 1
+      ? { state: "deducted", productId: entries[0][0], quantity: entries[0][1], deductedAt: updatedAt }
+      : { state: "deducted", items: entries.map(([productId, quantity]) => ({ productId, quantity })), deductedAt: updatedAt },
+  };
 }
 
 export function createInventoryHandler({ getDb, verifyToken, env = process.env }) {
@@ -83,7 +114,7 @@ export function createInventoryHandler({ getDb, verifyToken, env = process.env }
       if (req.method === "GET" && req.query?.pending === "1") {
         let query = db.collection("orders")
           .where("status", "in", ["new", "confirmed"])
-          .select("product", "quantity", "status", "paymentStatus", "inventory")
+          .select("product", "items", "quantity", "status", "paymentStatus", "inventory")
           .orderBy("__name__")
           .limit(100);
         if (req.query?.cursor) {
@@ -91,7 +122,13 @@ export function createInventoryHandler({ getDb, verifyToken, env = process.env }
           query = query.startAfter(req.query.cursor);
         }
         const page = await query.get(); const pending = Object.create(null);
-        for (const doc of page.docs) { const order = doc.data(); if (validId(order.product?.id)) pending[order.product.id] = (pending[order.product.id] || 0) + waitingQuantity(order); }
+        for (const doc of page.docs) {
+          const order = doc.data();
+          const isWaiting = waitingQuantity(order) > 0;
+          for (const [productId, qty] of orderProductQuantities(order)) {
+            pending[productId] = (pending[productId] || 0) + (isWaiting ? qty : 0);
+          }
+        }
         return res.status(200).json({ pending, nextCursor: page.docs.length === 100 ? page.docs.at(-1).id : null });
       }
       if (req.method === "GET") {

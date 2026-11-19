@@ -1,3 +1,23 @@
+## 19/11/2026 — Gộp đặt nhiều sản phẩm chung trong giỏ hàng, chỉnh giao diện nút Mua ngay trên máy tính và tối ưu mượt form đặt hàng
+
+- **Lý do**: Trong giỏ hàng cần bỏ nút mua riêng trên từng dòng và chỉ giữ một nút **Mua ngay** chung ở chân giỏ để đặt nhiều sản phẩm trong cùng một đơn; trên màn hình máy tính, thanh giá kèm nút **Mua ngay** ở trang chi tiết sản phẩm bị kéo giãn rộng và lệch màu so với cột nút phía trên, đồng thời nút **Thêm vào giỏ** bị thiếu biểu tượng giỏ hàng; form đặt hàng có độ trễ khi cuộn và chọn địa chỉ.
+- **Thay đổi chính**:
+  - **Đặt chung nhiều sản phẩm trong giỏ hàng (Frontend & Backend)**:
+    - Bỏ nút mua riêng trên từng dòng trong giỏ hàng (`src/components/ShopCart.jsx`, `src/styles/shop-cart.css`), giữ lại chỉnh số lượng, **Xóa** và **Chi tiết**; đặt một nút **Mua ngay** duy nhất ở chân giỏ để mở form đặt chung toàn bộ sản phẩm hợp lệ và còn hàng.
+    - Mở rộng form đặt hàng, biên nhận, trang tra cứu đơn và trang quản trị đơn (`src/components/OrderForm.jsx`, `src/components/OrderFormFields.jsx`, `src/components/OrderTrackingDetails.jsx`, `src/admin/OrdersAdmin.jsx`) để hiển thị danh sách đầy đủ các sản phẩm trong đơn gộp và tự động xóa đúng các món đã đặt khỏi giỏ sau khi gửi thành công.
+    - Mở rộng API tạo đơn, tồn kho, email đơn hàng và tra cứu đơn (`server/orders.js`, `server/inventory.js`, `server/order-mail.js`, `server/order-tracking.js`) để hỗ trợ đơn nhiều sản phẩm (kiểm tra giá/dung tích, giữ chỗ, trừ kho và hoàn giữ chỗ theo từng sản phẩm) đồng thời tương thích hoàn toàn với đơn một sản phẩm cũ.
+  - **Giao diện trang chi tiết sản phẩm trên máy tính (`src/components/ProductDetail.jsx`, `src/styles/product-detail.css`)**:
+    - Sửa tên biểu tượng để nút **Thêm vào giỏ** hiển thị đúng biểu tượng giỏ hàng bên trái.
+    - Căn khung giá và nút **Mua ngay** trên màn hình máy tính gọn đúng chiều rộng cột nút phía trên, bỏ hiệu ứng kính mờ thừa và khôi phục màu hồng nổi bật cho nút **Mua ngay**.
+  - **Tối ưu độ mượt cho form đặt hàng (`src/styles/checkout.css`, `src/components/AddressSelect.jsx`, `src/components/ModalDialog.jsx`)**:
+    - Bỏ hiệu ứng làm mờ nền liên tục trên thanh tiêu đề và thanh nút bấm dính bên trong hộp thoại đặt hàng, đồng thời cô lập phạm vi bố cục của hộp thoại để giảm tải vẽ lại khi cuộn và nhập liệu.
+    - Giới hạn số dòng địa chỉ hiển thị cùng lúc trong danh sách xổ xuống (tối đa 60 dòng kèm gợi ý gõ tên lọc nhanh) và tránh cập nhật lại kích thước khung nhìn khi giá trị không đổi.
+- **File / khu vực liên quan**: `src/components/ShopCart.jsx`, `src/styles/shop-cart.css`, `src/components/OrderForm.jsx`, `src/components/OrderFormFields.jsx`, `src/components/OrderTrackingDetails.jsx`, `src/styles/order-tracking.css`, `src/admin/OrdersAdmin.jsx`, `src/components/ProductDetail.jsx`, `src/styles/product-detail.css`, `src/styles/checkout.css`, `src/components/AddressSelect.jsx`, `src/components/ModalDialog.jsx`, `server/orders.js`, `server/inventory.js`, `server/order-mail.js`, `server/order-tracking.js`, `tests/orders.test.js`, `qa/cart.spec.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **248/248** unit test đạt (bao gồm test mới cho đơn nhiều sản phẩm và kiểm kho), `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt.
+  - Playwright (`width-320` và `width-390`): **26/26** test đạt trên `qa/cart.spec.js`, `qa/shopping.spec.js` và `qa/editor-checkout.spec.js`.
+- **Ảnh hưởng database**: Bổ sung tùy chọn trường mảng `items` trên tài liệu đơn hàng trong collection `orders` khi khách đặt từ 2 sản phẩm trở lên; vẫn giữ trường `product` tóm tắt để tương thích ngược với các đơn và truy vấn cũ, không thay đổi rules hay index.
+
 ## 19/11/2026 — Tách riêng nút Chi tiết và Mua ngay trong giỏ hàng, đồng bộ giao diện nút Thêm vào giỏ trên trang sản phẩm
 
 - **Lý do**: Trong giỏ hàng cần giữ nút **Chi tiết** đi tới trang chi tiết sản phẩm và bổ sung nút **Mua ngay** ngay trên từng dòng sản phẩm để đặt hàng trực tiếp; đồng thời nút **Thêm vào giỏ** trên trang chi tiết sản phẩm chưa đồng bộ kích thước, màu sắc và bố cục với nhóm nút mua hàng bên cạnh và cần cho chỉnh sửa trong trang quản trị.

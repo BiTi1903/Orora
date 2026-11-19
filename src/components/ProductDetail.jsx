@@ -592,7 +592,7 @@ function ProductDetail({
                   }));
                 }}
               >
-                <ButtonIcon name="cart" defaultSize={17} />
+                <ButtonIcon name="productCart" defaultSize={17} />
                 <span>{soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ")}</span>
                 <ButtonIcon name="orderArrow" defaultSize={15} />
               </button>

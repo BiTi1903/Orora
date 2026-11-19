@@ -420,4 +420,44 @@ test("admin summary returns per-status counts, adminUsers requires enabled===tru
   assert.deepEqual(orderWho.body.permissions, { orders: true, newsletter: false, full: false });
 });
 
-
+test("multi-item cart orders combine totals, reserve/deduct/release inventory per product, and support retries", async () => {
+  const { db, call } = await setup();
+  await db.collection("products").doc("cream").set({ name: "Kem dưỡng", price: "320.000đ", active: true });
+  await db.collection("inventory").doc("cream").set({ tracked: true, quantity: 10, reserved: 0, lowStockThreshold: 2 });
+  const multiReq = {
+    ...body(),
+    items: [
+      { productId: "serum", quantity: 2, expectedPriceText: "250.000đ" },
+      { productId: "cream", quantity: 3, expectedPriceText: "320.000đ" },
+    ],
+  };
+  delete multiReq.productId;
+  delete multiReq.quantity;
+  const created = await call(multiReq);
+  assert.equal(created.statusCode, 201);
+  assert.equal(created.body.subtotal, 2 * 250000 + 3 * 320000);
+  assert.equal(created.body.quantity, 5);
+  assert.equal(created.body.items.length, 2);
+  assert.equal((await db.collection("inventory").doc("serum").get()).data().reserved, 2);
+  assert.equal((await db.collection("inventory").doc("cream").get()).data().reserved, 3);
+  // Idempotent retry returns the same order without double-reserving stock
+  const retry = await call(multiReq);
+  assert.equal(retry.statusCode, 201);
+  assert.equal(retry.body.code, created.body.code);
+  assert.equal((await db.collection("inventory").doc("serum").get()).data().reserved, 2);
+  assert.equal((await db.collection("inventory").doc("cream").get()).data().reserved, 3);
+  // Marking order paid deducts both products
+  assert.equal((await admin(db)({ id: multiReq.requestId, paymentStatus: "paid" })).statusCode, 200);
+  assert.equal((await db.collection("inventory").doc("serum").get()).data().quantity, 98);
+  assert.equal((await db.collection("inventory").doc("serum").get()).data().reserved, 0);
+  assert.equal((await db.collection("inventory").doc("cream").get()).data().quantity, 7);
+  assert.equal((await db.collection("inventory").doc("cream").get()).data().reserved, 0);
+  // Cancellation of a new multi-item order releases both reservations
+  const cancelReq = { ...multiReq, requestId: crypto.randomUUID() };
+  assert.equal((await call(cancelReq)).statusCode, 201);
+  assert.equal((await db.collection("inventory").doc("serum").get()).data().reserved, 2);
+  assert.equal((await db.collection("inventory").doc("cream").get()).data().reserved, 3);
+  assert.equal((await admin(db)({ id: cancelReq.requestId, status: "cancelled" })).statusCode, 200);
+  assert.equal((await db.collection("inventory").doc("serum").get()).data().reserved, 0);
+  assert.equal((await db.collection("inventory").doc("cream").get()).data().reserved, 0);
+});

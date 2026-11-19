@@ -16,11 +16,13 @@ export default function ModalDialog({ title, children, onClose, className = "", 
   }, [allowBackgroundScroll,outsideClickIgnoreSelector,initialFocusRef]);
   useLayoutEffect(() => {
     const dialog = ref.current, viewport = window.visualViewport;
-    let frame = null;
+    let frame = null, lastHeight = null, lastTop = null;
     const measure = () => {
       const zoomed = viewport && Math.abs(viewport.scale - 1) > .01;
-      dialog.style.setProperty('--modal-viewport-height', `${zoomed ? window.innerHeight : viewport?.height || window.innerHeight}px`);
-      dialog.style.setProperty('--modal-viewport-top', `${zoomed ? 0 : viewport?.offsetTop || 0}px`);
+      const nextHeight = zoomed ? window.innerHeight : viewport?.height || window.innerHeight;
+      const nextTop = zoomed ? 0 : viewport?.offsetTop || 0;
+      if (nextHeight !== lastHeight) { lastHeight = nextHeight; dialog.style.setProperty('--modal-viewport-height', `${nextHeight}px`); }
+      if (nextTop !== lastTop) { lastTop = nextTop; dialog.style.setProperty('--modal-viewport-top', `${nextTop}px`); }
     };
     const schedule = () => {
       if (frame === null) frame = requestAnimationFrame(() => { frame = null; measure(); });

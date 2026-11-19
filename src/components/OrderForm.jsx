@@ -11,9 +11,13 @@ import { shippingFeeFor } from "../lib/shipping";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { availablePaymentMethods, PAYMENT_LABELS, parseVndPrice, formatVnd } from "../lib/commerce";
 
-export default function OrderForm({ product, home, onClose, selection, initialVariantId = "", initialQuantity = 1, onSelectionChange, fromCart = false }) {
-  const options = useMemo(()=>productVolumeOptions(product),[product]);
-  const [localSelection, setLocalSelection] = useState(() => ({ variantId: selectedVolumeOption(options,initialVariantId)?.id||defaultPurchaseVariant(product,options)?.id||"", quantity: Number.isInteger(initialQuantity) && initialQuantity >= 1 && initialQuantity <= MAX_ORDER_QUANTITY ? initialQuantity : 1 }));
+export default function OrderForm({ product, cartItems, home, onClose, selection, initialVariantId = "", initialQuantity = 1, onSelectionChange, fromCart = false }) {
+  const isMulti = Array.isArray(cartItems) && cartItems.length > 1;
+  const activeProduct = product || cartItems?.[0]?.product;
+  const startVariantId = initialVariantId || (!isMulti && cartItems?.[0]?.variantId) || "";
+  const startQuantity = !isMulti && cartItems?.[0]?.quantity ? cartItems[0].quantity : initialQuantity;
+  const options = useMemo(() => (activeProduct ? productVolumeOptions(activeProduct) : []), [activeProduct]);
+  const [localSelection, setLocalSelection] = useState(() => ({ variantId: selectedVolumeOption(options, startVariantId)?.id || defaultPurchaseVariant(activeProduct, options)?.id || "", quantity: Number.isInteger(startQuantity) && startQuantity >= 1 && startQuantity <= MAX_ORDER_QUANTITY ? startQuantity : 1 }));
   const currentSelection = selection || localSelection;
   const variant = selectedVolumeOption(options, currentSelection.variantId);
   const variantId = variant?.id || "";
@@ -22,31 +26,54 @@ export default function OrderForm({ product, home, onClose, selection, initialVa
     if (!selection) setLocalSelection((previous) => ({ ...previous, ...patch }));
     onSelectionChange?.(patch);
   };
-  const changeVariant = (variantId) => updateSelection({ variantId });
-  const changeQuantity = (quantity) => updateSelection({ quantity });
-  const priceText = volumePriceText(product, variant);
+  const changeVariant = (nextVariantId) => updateSelection({ variantId: nextVariantId });
+  const changeQuantity = (nextQuantity) => updateSelection({ quantity: nextQuantity });
+  const priceText = activeProduct ? volumePriceText(activeProduct, variant) : "";
+  const normalizedItems = useMemo(() => {
+    if (!isMulti) return null;
+    return cartItems.map((entry) => {
+      const p = entry.product;
+      const opts = productVolumeOptions(p);
+      const opt = selectedVolumeOption(opts, entry.variantId);
+      const pText = volumePriceText(p, opt);
+      return {
+        productId: p.id || p.slug,
+        name: p.name,
+        variantId: opt?.id || "",
+        variantLabel: opt?.label || "",
+        priceText: pText,
+        unitPrice: parseVndPrice(pText),
+        quantity: entry.quantity,
+      };
+    });
+  }, [isMulti, cartItems]);
   const [provinceCode, setProvinceCode] = useState("");
   const [wardCode, setWardCode] = useState("");
   const addresses = useAddressOptions(provinceCode);
-  const changeProvince=useCallback(code=>{setProvinceCode(code);setWardCode("");},[setProvinceCode,setWardCode]);
+  const changeProvince = useCallback((code) => { setProvinceCode(code); setWardCode(""); }, [setProvinceCode, setWardCode]);
   const [busy, setBusy] = useState(false);
-  const submitting=useRef(false);
-  const appearance=home.productDetailStyles?.purchaseOptions||{};
+  const submitting = useRef(false);
+  const appearance = home.productDetailStyles?.purchaseOptions || {};
   const [result, setResult] = useState(null);
   const requestId = useRef(crypto.randomUUID());
   const methods = availablePaymentMethods(home);
-  const unitPrice = parseVndPrice(priceText);
+  const unitPrice = isMulti ? null : parseVndPrice(priceText);
+  const subtotal = isMulti
+    ? (normalizedItems.some((item) => item.unitPrice === null) ? null : normalizedItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0))
+    : (unitPrice === null ? null : unitPrice * (Number(quantity) || 0));
   const shipping = shippingFeeFor(home.shippingSettings, provinceCode, wardCode);
-  const total = unitPrice === null || shipping.fee === null ? null : unitPrice * (Number(quantity) || 0) + shipping.fee;
-  if (result?.code) return <ModalDialog key="success" title="Đã nhận đơn hàng" onClose={onClose} className="order-success-modal" style={{...checkoutStyle(appearance),'--receipt-size':`${Math.max(12,Math.min(16,Number(appearance.receiptFontSize)||13))}px`}}><section className="order-received" aria-label="Thông tin đơn đã nhận">
+  const total = subtotal === null || shipping.fee === null ? null : subtotal + shipping.fee;
+  if (result?.code) return <ModalDialog key="success" title="Đã nhận đơn hàng" onClose={onClose} className="order-success-modal" style={{ ...checkoutStyle(appearance), "--receipt-size": `${Math.max(12, Math.min(16, Number(appearance.receiptFontSize) || 13))}px` }}><section className="order-received" aria-label="Thông tin đơn đã nhận">
     <div className="order-received-banner">
       <span className="order-received-code-label">Mã đơn hàng</span>
       <strong className="order-received-code">{result.code}</strong>
       <p className="order-received-msg">{result.message}</p>
     </div>
-    <OrderReceiptActions order={result} home={home} appearance={appearance}/>
+    <OrderReceiptActions order={result} home={home} appearance={appearance} />
     <div className="order-received-details checkout-card"><h3>Chi tiết đơn hàng</h3><dl>
-      <div><dt>Sản phẩm</dt><dd>{result.productName}{result.variantLabel ? ` (${result.variantLabel})` : ""} × {result.quantity}</dd></div>
+      {Array.isArray(result.items) && result.items.length > 1
+        ? <div className="order-received-items-row"><dt>Sản phẩm ({result.items.length})</dt><dd><ul className="order-received-items">{result.items.map((item, idx) => <li key={`${item.id || item.productId || idx}:${item.variantId || ""}`}>{item.name}{item.variantLabel ? ` (${item.variantLabel})` : ""} × {item.quantity}</li>)}</ul></dd></div>
+        : <div><dt>Sản phẩm</dt><dd>{result.productName}{result.variantLabel ? ` (${result.variantLabel})` : ""} × {result.quantity}</dd></div>}
       <div><dt>Thanh toán</dt><dd>{PAYMENT_LABELS[result.paymentMethod] || result.paymentMethod}</dd></div>
       <div><dt>Tiền sản phẩm</dt><dd>{result.subtotal == null ? "ORORA sẽ báo giá khi xác nhận" : formatVnd(result.subtotal)}</dd></div>
       <div><dt>Phí giao hàng</dt><dd>{result.shippingFee == null ? "Xác nhận sau" : formatVnd(result.shippingFee)}</dd></div>
@@ -61,9 +88,11 @@ export default function OrderForm({ product, home, onClose, selection, initialVa
       <button type="button" onClick={onClose}>Đóng</button>
     </div>
   </section></ModalDialog>;
-  return <ModalDialog key="form" title={appearance.formLabels?.title?.trim()||CHECKOUT_COPY.title} onClose={onClose} closeDisabled={busy} className="order-form-modal" style={{...checkoutStyle(appearance),background:appearance.formBackground,borderColor:appearance.formBorderColor}} headingStyle={toCss(appearance.formHeadingStyle)}><OrderFormFields product={product} options={options} variantId={variantId} quantity={quantity} onVariantChange={changeVariant} onQuantityChange={changeQuantity} addresses={addresses} provinceCode={provinceCode} wardCode={wardCode} onProvinceChange={changeProvince} onWardChange={setWardCode} methods={methods} unitPrice={unitPrice} shipping={{...shipping,blocked:home.shippingSettings?.enabled===true&&shipping.fee===null}} total={total} appearance={appearance} busy={busy} error={result?.error} onSubmit={async (event) => {
+  if (!activeProduct) return null;
+  return <ModalDialog key="form" title={appearance.formLabels?.title?.trim() || CHECKOUT_COPY.title} onClose={onClose} closeDisabled={busy} className="order-form-modal" style={{ ...checkoutStyle(appearance), background: appearance.formBackground, borderColor: appearance.formBorderColor }} headingStyle={toCss(appearance.formHeadingStyle)}><OrderFormFields product={activeProduct} items={normalizedItems} subtotal={subtotal} options={isMulti ? [] : options} variantId={variantId} quantity={quantity} onVariantChange={changeVariant} onQuantityChange={changeQuantity} addresses={addresses} provinceCode={provinceCode} wardCode={wardCode} onProvinceChange={changeProvince} onWardChange={setWardCode} methods={methods} unitPrice={unitPrice} shipping={{ ...shipping, blocked: home.shippingSettings?.enabled === true && shipping.fee === null }} total={total} appearance={appearance} busy={busy} error={result?.error} onSubmit={async (event) => {
     event.preventDefault();
-    if (submitting.current || busy || (options.length > 0 && !variant) || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_ORDER_QUANTITY || !methods.length || !provinceCode || !wardCode || (home.shippingSettings?.enabled === true && shipping.fee === null)) return;
+    if (submitting.current || busy || !methods.length || !provinceCode || !wardCode || (home.shippingSettings?.enabled === true && shipping.fee === null)) return;
+    if (!isMulti && ((options.length > 0 && !variant) || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_ORDER_QUANTITY)) return;
     const data = new FormData(event.currentTarget);
     const recipient = Object.fromEntries(["name", "phone", "email", "address", "note"].map((key) => [key, String(data.get(key) || "").trim()]));
     const province = addresses.provinces.find((item) => item.code === provinceCode);
@@ -71,21 +100,45 @@ export default function OrderForm({ product, home, onClose, selection, initialVa
     recipient.address = `${String(data.get("addressDetail") || "").trim()}, ${ward?.name || ""}, ${province?.name || ""}`;
     recipient.email = recipient.email.toLowerCase();
     recipient.phone = recipient.phone.replace(/[\s().-]/g, "");
-    const orderedProduct = { productName: product.name, variantLabel: variant?.label || "", quantity };
-    submitting.current=true;setBusy(true); setResult(null);
-    const controller=new AbortController(),timeout=window.setTimeout(()=>controller.abort(),20_000);
-    try {
-      const response = await fetch("/api/orders", { signal:controller.signal, method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
-        requestId: requestId.current, productId: product.id || product.slug, quantity, variantId, expectedVariantLabel: variant?.label || "", expectedPriceText: priceText,
+    const orderedProduct = isMulti
+      ? { productName: `${normalizedItems[0].name} (+${normalizedItems.length - 1} sản phẩm khác)`, variantLabel: "", quantity: normalizedItems.reduce((sum, i) => sum + i.quantity, 0), items: normalizedItems }
+      : { productName: activeProduct.name, variantLabel: variant?.label || "", quantity };
+    const payload = isMulti
+      ? {
+        requestId: requestId.current,
+        items: normalizedItems.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          variantId: item.variantId,
+          expectedVariantLabel: item.variantLabel,
+          expectedPriceText: item.priceText,
+        })),
         name: data.get("name"), phone: data.get("phone"), email: data.get("email"), provinceCode, wardCode, addressDetail: data.get("addressDetail"), expectedShippingFee: shipping.fee, note: data.get("note"),
         paymentMethod: data.get("paymentMethod"), consent: data.get("consent") === "on",
-      }) });
+      }
+      : {
+        requestId: requestId.current, productId: activeProduct.id || activeProduct.slug, quantity, variantId, expectedVariantLabel: variant?.label || "", expectedPriceText: priceText,
+        name: data.get("name"), phone: data.get("phone"), email: data.get("email"), provinceCode, wardCode, addressDetail: data.get("addressDetail"), expectedShippingFee: shipping.fee, note: data.get("note"),
+        paymentMethod: data.get("paymentMethod"), consent: data.get("consent") === "on",
+      };
+    submitting.current = true; setBusy(true); setResult(null);
+    const controller = new AbortController(), timeout = window.setTimeout(() => controller.abort(), 20_000);
+    try {
+      const response = await fetch("/api/orders", { signal: controller.signal, method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const json = await response.json();
       if (!response.ok) throw new Error(json.message || "Chưa gửi được đơn hàng.");
       if (!json.code) throw new Error("Chưa xác nhận được mã đơn. Vui lòng thử gửi lại.");
-      if (fromCart) window.dispatchEvent(new CustomEvent("orora-cart-remove", { detail: { id: product.id || product.slug, variantId, quantity } }));
+      if (fromCart) {
+        if (isMulti) {
+          for (const item of normalizedItems) {
+            window.dispatchEvent(new CustomEvent("orora-cart-remove", { detail: { id: item.productId, variantId: item.variantId, quantity: item.quantity } }));
+          }
+        } else {
+          window.dispatchEvent(new CustomEvent("orora-cart-remove", { detail: { id: activeProduct.id || activeProduct.slug, variantId, quantity } }));
+        }
+      }
       setResult({ ...orderedProduct, ...json, recipient });
     } catch (error) { setResult({ error: error.name === "AbortError" ? appearance.orderTimeoutLabel?.trim() || "Chưa nhận được phản hồi. Bạn có thể thử gửi lại với cùng thông tin hoặc tra cứu đơn hàng để kiểm tra." : error instanceof TypeError || error instanceof SyntaxError ? "Kết nối bị gián đoạn. Hãy thử gửi lại hoặc liên hệ ORORA." : error.message || "Chưa gửi được đơn. Vui lòng thử lại." }); }
-    finally { window.clearTimeout(timeout);submitting.current=false;setBusy(false); }
-  }}/></ModalDialog>;
+    finally { window.clearTimeout(timeout); submitting.current = false; setBusy(false); }
+  }} /></ModalDialog>;
 }

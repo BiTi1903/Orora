@@ -23,10 +23,12 @@ body:has(dialog[open]:not(.shop-cart)) .desktop-cart { visibility:hidden; }
 .cart-row-body > p:last-of-type { grid-column:2; grid-row:1/3; text-align:right; color:var(--rose-deep); font-weight:600; }
 .cart-row-actions { grid-column:1/-1; display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:7px; }
 .cart-row-actions button { margin:0; }
-.cart-row-actions .cart-row-buy { margin-left:auto; padding:8px 14px; background:var(--store-button-pink); color:#fff; border-color:var(--rose-deep); font-weight:600; }
-.cart-row-actions .cart-row-buy:disabled { opacity:.55; cursor:not-allowed; }
+.cart-row-actions .cart-row-detail { margin-left:auto; }
 .cart-row-actions input { width:54px; text-align:center; }
-.shop-cart .orora-modal-content > div > p:last-child { text-align:right; line-height:1.8; font-size:13px; }
+.cart-footer { display:grid; gap:10px; margin-top:12px; }
+.cart-footer-summary { margin:0; text-align:right; line-height:1.7; font-size:13px; }
+.shop-cart .cart-checkout-btn { width:100%; min-height:46px; padding:11px 16px; border:1px solid var(--rose-deep); border-radius:12px; background:var(--store-button-pink); color:#fff; font:600 15px/1.3 var(--font-body); cursor:pointer; }
+.shop-cart .cart-checkout-btn:disabled { opacity:.55; cursor:not-allowed; }
 .orora-modeless-backdrop { position:fixed; inset:0; z-index:1290; background:#35112418; pointer-events:none; }
 .orora-modal.is-modeless { z-index:1300; }
 @media(max-width:768px) { .shop-cart.is-modeless { background:linear-gradient(135deg,#fffafcbb,#fffafc80); backdrop-filter:blur(22px) saturate(150%); -webkit-backdrop-filter:blur(22px) saturate(150%); }
@@ -39,7 +41,6 @@ body:has(dialog[open]:not(.shop-cart)) .desktop-cart { visibility:hidden; }
 @media(max-width:480px) {
  .cart-row-actions { gap:8px; }
  .cart-row-actions > button { min-height:44px; }
- .cart-row-actions > .cart-row-buy { margin-left:0; flex:1 1 120px; }
 }
 
 @media(min-width:769px) { .desktop-cart { background:#fffafc; backdrop-filter:none; } .shop-cart.is-modeless { background:#fffafb; backdrop-filter:none; -webkit-backdrop-filter:none; } }

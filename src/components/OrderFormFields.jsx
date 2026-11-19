@@ -6,17 +6,19 @@ import {toCss} from '../lib/typography';
 import {CHECKOUT_COPY} from '../lib/checkout-presentation';
 import '../styles/checkout.css';
 
-export default function OrderFormFields({product,options,variantId,quantity,onVariantChange,onQuantityChange,addresses,provinceCode,wardCode,onProvinceChange,onWardChange,methods,unitPrice,shipping,total,appearance={},busy=false,error,onSubmit,preview=false}){
+export default function OrderFormFields({product,items=null,subtotal,options,variantId,quantity,onVariantChange,onQuantityChange,addresses,provinceCode,wardCode,onProvinceChange,onWardChange,methods,unitPrice,shipping,total,appearance={},busy=false,error,onSubmit,preview=false}){
  const [addressError,setAddressError]=useState(false);
  const [variantError,setVariantError]=useState(false);
+ const isMulti=Array.isArray(items)&&items.length>1;
  const copy={...CHECKOUT_COPY,...appearance.formLabels},headingStyle=toCss(appearance.formHeadingStyle);
  for (const key of ["recipientHeading","addressHeading","paymentHeading","summaryHeading"]) {
   if (typeof copy[key] !== "string" || !copy[key].trim()) copy[key]=CHECKOUT_COPY[key];
  }
- const itemTotal=unitPrice===null?'Shop liên hệ báo giá':formatVnd(unitPrice*(Number(quantity)||0));
+ const effectiveSubtotal=subtotal!==undefined?subtotal:(unitPrice===null?null:unitPrice*(Number(quantity)||0));
+ const itemTotal=effectiveSubtotal===null?'Shop liên hệ báo giá':formatVnd(effectiveSubtotal);
  const focusFirstMissing=form=>{
   if(!form)return;
-  if(options.length>0&&!variantId){
+  if(!isMulti&&options.length>0&&!variantId){
    const target=form.querySelector('.checkout-selection-fieldset button, .checkout-selection-fieldset input');
    target?.scrollIntoView?.({behavior:'smooth',block:'center'});
    target?.focus?.();
@@ -31,12 +33,12 @@ export default function OrderFormFields({product,options,variantId,quantity,onVa
  };
  return <form className="website-order checkout-form" aria-busy={busy} aria-label={copy.title?.trim()||CHECKOUT_COPY.title} style={toCss(appearance.formTextStyle)} onKeyDown={event=>{
   if(!preview&&event.key==="Enter"&&event.target.tagName==="INPUT"&&!(event.target.getAttribute("aria-expanded")==="true"&&event.target.getAttribute("aria-activedescendant"))){
-   if(options.length>0&&!variantId){event.preventDefault();setVariantError(true);focusFirstMissing(event.currentTarget);return;}
+   if(!isMulti&&options.length>0&&!variantId){event.preventDefault();setVariantError(true);focusFirstMissing(event.currentTarget);return;}
    if(!provinceCode||!wardCode||shipping.blocked){event.preventDefault();setAddressError(true);focusFirstMissing(event.currentTarget);}
   }
  }} onSubmit={event=>{
   if(preview){event.preventDefault();return;}
-  if(options.length>0&&!variantId){event.preventDefault();setVariantError(true);focusFirstMissing(event.currentTarget);return;}
+  if(!isMulti&&options.length>0&&!variantId){event.preventDefault();setVariantError(true);focusFirstMissing(event.currentTarget);return;}
   if(!provinceCode||!wardCode||shipping.blocked){event.preventDefault();setAddressError(true);focusFirstMissing(event.currentTarget);return;}
   setVariantError(false);
   setAddressError(false);
@@ -45,15 +47,26 @@ export default function OrderFormFields({product,options,variantId,quantity,onVa
   <div className="checkout-product-card">
    <div className="checkout-product-header">
     <div>
-     <p className="order-product-name">{product.name}</p>
+     <p className="order-product-name">{isMulti?`Giỏ hàng (${items.length} sản phẩm)`:product.name}</p>
      {copy.intro&&<p className="order-help">{copy.intro}</p>}
     </div>
     <strong className="checkout-item-price" aria-label="Giá sản phẩm">{itemTotal}</strong>
    </div>
-   <fieldset className="checkout-selection-fieldset" disabled={busy||preview}>
-    <ProductPurchaseSelection options={options} variantId={variantId} quantity={quantity} onVariantChange={next=>{setVariantError(false);onVariantChange(next);}} onQuantityChange={onQuantityChange} disabled={busy||preview} required/>
-   </fieldset>
-   {variantError&&options.length>0&&!variantId&&<p className="order-error" role="alert">Vui lòng chọn dung tích sản phẩm để tiếp tục.</p>}
+   {isMulti ? (
+    <ul className="checkout-items-list" aria-label="Danh sách sản phẩm đặt mua">
+     {items.map((item,idx)=><li key={`${item.productId}:${item.variantId}:${idx}`}>
+      <span>{item.name}{item.variantLabel?` (${item.variantLabel})`:''} <small>× {item.quantity}</small></span>
+      <strong>{item.unitPrice===null?'Liên hệ':formatVnd(item.unitPrice*item.quantity)}</strong>
+     </li>)}
+    </ul>
+   ) : (
+    <>
+     <fieldset className="checkout-selection-fieldset" disabled={busy||preview}>
+      <ProductPurchaseSelection options={options} variantId={variantId} quantity={quantity} onVariantChange={next=>{setVariantError(false);onVariantChange(next);}} onQuantityChange={onQuantityChange} disabled={busy||preview} required/>
+     </fieldset>
+     {variantError&&options.length>0&&!variantId&&<p className="order-error" role="alert">Vui lòng chọn dung tích sản phẩm để tiếp tục.</p>}
+    </>
+   )}
   </div>
   <fieldset className="checkout-fields-stack" disabled={busy||preview}>
    <section className="checkout-section checkout-card"><h3 style={headingStyle}>{copy.recipientHeading}</h3>
@@ -76,7 +89,7 @@ export default function OrderFormFields({product,options,variantId,quantity,onVa
    </section>
    <section className="checkout-summary" aria-label={copy.summaryHeading||'Thanh toán'}>
     <div className="order-summary"><span>Phí giao hàng</span><strong>{shipping.fee===null?'Theo khu vực giao':formatVnd(shipping.fee)}</strong></div>
-    <div className="order-summary checkout-total"><span>Tổng thanh toán</span><strong>{total===null?(unitPrice===null?'ORORA sẽ xác nhận':`${itemTotal} (+ phí giao hàng)`):formatVnd(total)}</strong></div>
+    <div className="order-summary checkout-total"><span>Tổng thanh toán</span><strong>{total===null?(effectiveSubtotal===null?'ORORA sẽ xác nhận':`${itemTotal} (+ phí giao hàng)`):formatVnd(total)}</strong></div>
     <p className="order-help checkout-payment-hint">Chưa thu tiền tại bước đặt đơn. ORORA sẽ hướng dẫn thanh toán sau khi tiếp nhận.</p>
    </section>
    <label className="order-consent"><input name="consent" type="checkbox" required/><span>Tôi đồng ý để ORORA liên hệ, gửi email xác nhận và xử lý đơn hàng theo thông tin đã cung cấp.</span></label>

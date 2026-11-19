@@ -84,6 +84,7 @@ export function createOrderTrackingHandler({ getDb, env = process.env, now = () 
       const fullProjection = order => ({
         ...summaryProjection(order),
         productName:String(order.product?.name || '').slice(0,300),variantLabel:String(order.product?.variantLabel || '').slice(0,150),
+        ...(Array.isArray(order.items) && order.items.length > 1 ? { items: order.items.slice(0, 50).map(item => ({ name: String(item?.name || '').slice(0, 200), variantLabel: String(item?.variantLabel || '').slice(0, 100), quantity: Number.isInteger(item?.quantity) ? item.quantity : 1, unitPrice: amount(item?.unitPrice) })) } : {}),
         subtotal:amount(order.subtotal),shippingFee:amount(order.shippingFee),
       });
       const orders = documents.slice(0,20).map(doc => (code ? fullProjection : summaryProjection)(doc.data()));

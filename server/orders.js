@@ -39,6 +39,7 @@ const orderCreatedPayload = (result, mailStatus) => ({
   quantity: result.quantity,
   variantLabel: result.product.variantLabel || "",
   variantId: result.product.variantId || "",
+  ...(Array.isArray(result.items) && result.items.length ? { items: result.items } : {}),
   mailStatus,
   subtotal: result.subtotal,
   shippingFee: result.shippingFee ?? null,
@@ -51,17 +52,30 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
     res.setHeader("Cache-Control", "no-store");
     if (req.method !== "POST") { res.setHeader("Allow", "POST"); return res.status(405).json({ message: "Chỉ nhận đơn bằng POST." }); }
     try {
-      const body = readBody(req, env);
+      const body = readBody(req, env, 24000);
       const customer = Object.fromEntries(["name", "phone", "email", "address", "note"].map((key) => [key, typeof body[key] === "string" ? body[key].trim() : ""]));
       const delivery = await resolveDeliveryAddress(body);
       if (delivery) Object.assign(customer, delivery);
       customer.email = customer.email.toLowerCase();
       customer.phone = customer.phone.replace(/[\s().-]/g, "");
-      if (!uuid(body.requestId) || typeof body.productId !== "string" || !/^[a-zA-Z0-9_-]{1,150}$/.test(body.productId) || !Number.isInteger(body.quantity) || body.quantity < 1 || body.quantity > MAX_ORDER_QUANTITY || customer.name.length < 2 || customer.name.length > 100 || !/^\+?\d{7,15}$/.test(customer.phone) || !validOrderEmail(customer.email) || customer.address.length < 10 || customer.address.length > 500 || customer.note.length > 1000 || body.consent !== true || !Object.hasOwn(PAYMENT_LABELS, body.paymentMethod)) {
+      const isMulti = Array.isArray(body.items);
+      const rawItems = isMulti
+        ? body.items
+        : [{ productId: body.productId, quantity: body.quantity, variantId: body.variantId, expectedVariantLabel: body.expectedVariantLabel, expectedPriceText: body.expectedPriceText }];
+      if (!uuid(body.requestId) || !rawItems.length || rawItems.length > 50 || customer.name.length < 2 || customer.name.length > 100 || !/^\+?\d{7,15}$/.test(customer.phone) || !validOrderEmail(customer.email) || customer.address.length < 10 || customer.address.length > 500 || customer.note.length > 1000 || body.consent !== true || !Object.hasOwn(PAYMENT_LABELS, body.paymentMethod)) {
         return res.status(400).json({ message: "Kiểm tra họ tên, số điện thoại, email, địa chỉ, số lượng và xác nhận đồng ý." });
       }
-      if (body.variantId !== undefined && (typeof body.variantId !== "string" || (body.variantId && !/^[a-zA-Z0-9_-]{1,100}$/.test(body.variantId)))) return res.status(400).json({ message: "Chọn dung tích hợp lệ." });
-      const digest = hash(JSON.stringify({ ...(body.variantId ? { variantId: body.variantId } : {}), productId: body.productId, quantity: body.quantity, paymentMethod: body.paymentMethod, customer }));
+      for (const item of rawItems) {
+        if (!item || typeof item.productId !== "string" || !/^[a-zA-Z0-9_-]{1,150}$/.test(item.productId) || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > MAX_ORDER_QUANTITY) {
+          return res.status(400).json({ message: "Kiểm tra họ tên, số điện thoại, email, địa chỉ, số lượng và xác nhận đồng ý." });
+        }
+        if (item.variantId !== undefined && (typeof item.variantId !== "string" || (item.variantId && !/^[a-zA-Z0-9_-]{1,100}$/.test(item.variantId)))) {
+          return res.status(400).json({ message: "Chọn dung tích hợp lệ." });
+        }
+      }
+      const digest = isMulti
+        ? hash(JSON.stringify({ items: rawItems.map((item) => ({ productId: item.productId, quantity: item.quantity, ...(item.variantId ? { variantId: item.variantId } : {}) })), paymentMethod: body.paymentMethod, customer }))
+        : hash(JSON.stringify({ ...(body.variantId ? { variantId: body.variantId } : {}), productId: body.productId, quantity: body.quantity, paymentMethod: body.paymentMethod, customer }));
       const db = await getDb();
       const order = db.collection("orders").doc(body.requestId);
       const priorOrder = await order.get();
@@ -81,38 +95,74 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
       const parts = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(createdAt).map(({ type, value }) => [type, value]));
       const orderDate = `${parts.year}-${parts.month}-${parts.day}`;
       const codePool = db.collection("orderCodePools").doc(body.paymentMethod === "cod" ? "C" : "B");
+      const uniqueProductIds = [...new Set(rawItems.map((item) => item.productId))];
       const result = await db.runTransaction(async (tx) => {
-        const [existing, product, settings, pool, stock] = await tx.getAll(order, db.collection("products").doc(body.productId), db.collection("settings").doc("home"), codePool, db.collection("inventory").doc(body.productId));
+        const productRefs = uniqueProductIds.map((pid) => db.collection("products").doc(pid));
+        const stockRefs = uniqueProductIds.map((pid) => db.collection("inventory").doc(pid));
+        const snaps = await tx.getAll(order, db.collection("settings").doc("home"), codePool, ...productRefs, ...stockRefs);
+        const [existing, settings, pool] = snaps;
+        const productSnaps = new Map(uniqueProductIds.map((pid, idx) => [pid, snaps[3 + idx]]));
+        const stockSnaps = new Map(uniqueProductIds.map((pid, idx) => [pid, snaps[3 + uniqueProductIds.length + idx]]));
         if (existing.exists) {
           if (existing.data().requestHash !== digest) throw Object.assign(new Error("Đơn này đã được tiếp nhận. Vui lòng liên hệ ORORA nếu muốn thay đổi thông tin."), { status: 409 });
           return existing.data();
         }
-        if (!product.exists || product.data().active === false) throw Object.assign(new Error("Sản phẩm hiện không nhận đặt hàng."), { status: 404 });
+        const resolvedItems = [];
+        const qtyByProduct = new Map();
+        for (const item of rawItems) {
+          const product = productSnaps.get(item.productId);
+          if (!product?.exists || product.data().active === false) throw Object.assign(new Error("Sản phẩm hiện không nhận đặt hàng."), { status: 404 });
+        }
         if (!availablePaymentMethods(settings.data() || {}).includes(body.paymentMethod)) throw Object.assign(new Error("Phương thức thanh toán đã thay đổi. Hãy tải lại trang và chọn lại."), { status: 400 });
-        const data = product.data();
-        if (data.volumeOptions !== undefined && validateVolumeOptions(data.volumeOptions)) throw Object.assign(new Error("Dung tích sản phẩm chưa được cấu hình hợp lệ. Vui lòng liên hệ ORORA."), { status: 409 });
-        const options = productVolumeOptions(data);
-        const variant = selectedVolumeOption(options, body.variantId);
-        if ((body.variantId && variant?.id !== body.variantId) || (options.length && !variant)) throw Object.assign(new Error("Chọn dung tích hợp lệ trước khi đặt hàng."), { status: 400 });
-        if (body.expectedVariantLabel !== undefined && body.expectedVariantLabel !== (variant?.label || "")) throw Object.assign(new Error("Dung tích vừa thay đổi. Hãy tải lại trang và chọn lại."), { status: 409 });
-        const priceText = volumePriceText(data, variant);
-        const unitPrice = parseVndPrice(priceText);
-        if (body.expectedPriceText !== undefined && !sameVndPrice(body.expectedPriceText, priceText)) throw Object.assign(new Error("Giá sản phẩm vừa thay đổi. Hãy tải lại trang để xem giá mới trước khi đặt."), { status: 409 });
+        for (const item of rawItems) {
+          const product = productSnaps.get(item.productId);
+          const data = product.data();
+          if (data.volumeOptions !== undefined && validateVolumeOptions(data.volumeOptions)) throw Object.assign(new Error("Dung tích sản phẩm chưa được cấu hình hợp lệ. Vui lòng liên hệ ORORA."), { status: 409 });
+          const options = productVolumeOptions(data);
+          const variant = selectedVolumeOption(options, item.variantId);
+          if ((item.variantId && variant?.id !== item.variantId) || (options.length && !variant)) throw Object.assign(new Error("Chọn dung tích hợp lệ trước khi đặt hàng."), { status: 400 });
+          if (item.expectedVariantLabel !== undefined && item.expectedVariantLabel !== (variant?.label || "")) throw Object.assign(new Error("Dung tích vừa thay đổi. Hãy tải lại trang và chọn lại."), { status: 409 });
+          const priceText = volumePriceText(data, variant);
+          const unitPrice = parseVndPrice(priceText);
+          if (item.expectedPriceText !== undefined && !sameVndPrice(item.expectedPriceText, priceText)) throw Object.assign(new Error("Giá sản phẩm vừa thay đổi. Hãy tải lại trang để xem giá mới trước khi đặt."), { status: 409 });
+          resolvedItems.push({
+            id: product.id,
+            name: String(data.name || ""),
+            image: String(data.image || ""),
+            priceText,
+            unitPrice,
+            quantity: item.quantity,
+            ...(variant ? { variantId: variant.id, variantLabel: variant.label } : {}),
+          });
+          qtyByProduct.set(product.id, (qtyByProduct.get(product.id) || 0) + item.quantity);
+        }
         const shipping = shippingFeeFor(settings.data()?.shippingSettings, delivery?.provinceCode, delivery?.wardCode);
         if (settings.data()?.shippingSettings?.enabled === true && shipping.fee === null) throw Object.assign(new Error(shipping.reason), { status: 400 });
         if (body.expectedShippingFee !== undefined && body.expectedShippingFee !== shipping.fee) throw Object.assign(new Error("Phí giao hàng vừa thay đổi. Hãy tải lại trang để kiểm tra tổng tiền trước khi đặt."), { status: 409 });
-        const subtotal = unitPrice === null ? null : unitPrice * body.quantity;
+        const subtotal = resolvedItems.some((item) => item.unitPrice === null)
+          ? null
+          : resolvedItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+        const totalQuantity = resolvedItems.reduce((sum, item) => sum + item.quantity, 0);
         const totalAmount = subtotal === null || shipping.fee === null ? null : subtotal + shipping.fee;
         const allocated = allocateOrderCode(pool.data(), body.paymentMethod, chooseCodeIndex);
+        const first = resolvedItems[0];
+        const summaryProduct = resolvedItems.length === 1
+          ? { id: first.id, name: first.name, image: first.image, priceText: first.priceText, unitPrice: first.unitPrice, ...(first.variantId ? { variantId: first.variantId, variantLabel: first.variantLabel } : {}) }
+          : { id: first.id, name: `${first.name} (+${resolvedItems.length - 1} sản phẩm khác)`, image: first.image, priceText: subtotal === null ? "" : String(subtotal), unitPrice: null };
         const record = {
           code: allocated.code,
           orderDate,
-          customer, quantity: body.quantity, product: { id: product.id, name: String(data.name || ""), image: String(data.image || ""), priceText, unitPrice, ...(variant ? { variantId: variant.id, variantLabel: variant.label } : {}) },
+          customer,
+          quantity: totalQuantity,
+          product: summaryProduct,
+          ...(resolvedItems.length > 1 ? { items: resolvedItems } : {}),
           subtotal, totalAmount,
           paymentMethod: body.paymentMethod,
           confirmationMail: { state: "pending", updatedAt: createdAt }, paymentStatus: "unpaid", shippingFee: shipping.fee, status: "new", channel: "website", createdAt, requestHash: digest,
         };
-        await reserveOrderInventory(tx, db, product.id, body.quantity, stock);
+        for (const [pid, qty] of qtyByProduct) {
+          await reserveOrderInventory(tx, db, pid, qty, stockSnaps.get(pid));
+        }
         tx.set(order, record); tx.set(codePool, { ...allocated.pool, updatedAt: createdAt });
         return record;
       });
