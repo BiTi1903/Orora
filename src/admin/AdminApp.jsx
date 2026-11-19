@@ -27,21 +27,33 @@ const GROUPS = [
   { title: "Khách hàng", items: [["newsletter", "Email"], ["chat", "Chat AI"], ["export", "Xuất danh sách email"]] },
 ];
 
+const FULL_PERMISSIONS = { orders: true, newsletter: true, full: true };
+const tabAllowed = (key, permissions) => {
+  if (key === "newsletter" || key === "export") return Boolean(permissions.newsletter);
+  if (key === "orders" || key === "inventory" || key === "dashboard") return Boolean(permissions.orders);
+  return Boolean(permissions.full || permissions.orders);
+};
+
 export default function AdminApp() {
   const [user, setUser] = useState(() => auth ? undefined : null);
-  const [access, setAccess] = useState({ status: "idle", error: "", check: 0 });
+  const [access, setAccess] = useState({ status: "idle", error: "", check: 0, permissions: FULL_PERMISSIONS });
   useEffect(() => {
     if (!auth) return;
     return onAuthStateChanged(auth, (nextUser) => {
       setUser(nextUser);
-      setAccess((prev) => ({ status: nextUser ? "checking" : "idle", error: "", check: prev.check + 1 }));
+      setAccess((prev) => ({ status: nextUser ? "checking" : "idle", error: "", check: prev.check + 1, permissions: FULL_PERMISSIONS }));
     });
   }, []);
   useEffect(() => {
     if (!user) return;
     const controller = new AbortController();
     orderRequest(null, { whoami: "1" }, { signal: controller.signal })
-      .then(() => { if (!controller.signal.aborted) setAccess((prev) => ({ ...prev, status: "ok", error: "" })); })
+      .then((data) => {
+        if (!controller.signal.aborted) {
+          const permissions = data?.permissions ? { orders: Boolean(data.permissions.orders), newsletter: Boolean(data.permissions.newsletter), full: Boolean(data.permissions.full) } : FULL_PERMISSIONS;
+          setAccess((prev) => ({ ...prev, status: "ok", error: "", permissions }));
+        }
+      })
       .catch((error) => {
         if (controller.signal.aborted) return;
         setAccess((prev) => ({ ...prev, status: error.status === 403 || error.status === 401 ? "denied" : "error", error: error.message || "Không xác minh được quyền quản trị." }));
@@ -58,12 +70,12 @@ export default function AdminApp() {
       <p className="admin-muted">Email: {user.email || "—"}</p>
       <p className="admin-muted">UID: <code>{user.uid}</code></p>
       <div className="admin-actions">
-        <button type="button" className="admin-btn" onClick={() => setAccess((prev) => ({ status: "checking", error: "", check: prev.check + 1 }))}>Thử lại</button>
+        <button type="button" className="admin-btn" onClick={() => setAccess((prev) => ({ status: "checking", error: "", check: prev.check + 1, permissions: FULL_PERMISSIONS }))}>Thử lại</button>
         <button type="button" className="admin-btn primary" onClick={() => signOut(auth)}>Đăng xuất</button>
       </div>
     </div></div>;
   }
-  return <ConfirmProvider key={user.uid}><AdminWorkspace user={user} /></ConfirmProvider>;
+  return <ConfirmProvider key={user.uid}><AdminWorkspace user={user} permissions={access.permissions} /></ConfirmProvider>;
 }
 
 function OrderBadge({ notifications }) {
@@ -73,19 +85,21 @@ function OrderBadge({ notifications }) {
   return null;
 }
 
-const ADMIN_TABS = new Set(GROUPS.flatMap((g) => g.items.map(([k]) => k)));
-const initialAdminTab = () => {
+const initialAdminTab = (allowedTabs) => {
   const hash = typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
-  return ADMIN_TABS.has(hash) ? hash : "dashboard";
+  if (allowedTabs.includes(hash)) return hash;
+  return allowedTabs[0] || "dashboard";
 };
 
-function AdminWorkspace({ user }) {
+function AdminWorkspace({ user, permissions = FULL_PERMISSIONS }) {
   const confirm = useConfirm();
-  const notifications = useOrderNotifications();
+  const visibleGroups = GROUPS.map((group) => ({ ...group, items: group.items.filter(([key]) => tabAllowed(key, permissions)) })).filter((group) => group.items.length > 0);
+  const allowedTabs = visibleGroups.flatMap((group) => group.items.map(([key]) => key));
+  const notifications = useOrderNotifications(permissions.orders);
   const [pendingRequest, setPendingRequest] = useState(null);
-  const [tab, setTab] = useState(initialAdminTab);
+  const [tab, setTab] = useState(() => initialAdminTab(allowedTabs));
   const [visited, setVisited] = useState(() => {
-    const start = initialAdminTab();
+    const start = initialAdminTab(allowedTabs);
     if (start === "dashboard" || start === "export") return [];
     return [start === "store" ? "home" : start];
   });
@@ -95,34 +109,35 @@ function AdminWorkspace({ user }) {
   const [storeSection,setStoreSection]=useState("cart");
   const [storeVersion,setStoreVersion]=useState(0);
   const navigate = (key) => {
+    if (!tabAllowed(key, permissions)) return;
     setVisited((items) => items.includes(key==='store'?'home':key) ? items : [...items,key==='store'?'home':key]);
     setTab(key);
     if (typeof window !== "undefined" && window.location.hash !== `#${key}`) window.history.replaceState(null, "", `#${key}`);
   };
   useEffect(() => {
     const onHash = () => {
-      const next = initialAdminTab();
+      const next = initialAdminTab(allowedTabs);
       setVisited((items) => (next === "dashboard" || next === "export" || items.includes(next === "store" ? "home" : next)) ? items : [...items, next === "store" ? "home" : next]);
       setTab(next);
     };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
-  }, []);
+  }, [allowedTabs.join(",")]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(()=>{
-    const open=event=>{setStoreVersion(v=>v+1);setStoreSection(event.detail?.section||'cart');setVisited(items=>items.includes('home')?items:[...items,'home']);setTab('store');if(typeof window!=="undefined")window.history.replaceState(null,"","#store");};
+    const open=event=>{if(!tabAllowed('store',permissions))return;setStoreVersion(v=>v+1);setStoreSection(event.detail?.section||'cart');setVisited(items=>items.includes('home')?items:[...items,'home']);setTab('store');if(typeof window!=="undefined")window.history.replaceState(null,"","#store");};
     window.addEventListener('orora-admin-store',open);return()=>window.removeEventListener('orora-admin-store',open);
-  },[]);
-  const orderBadgeShown = notifications.snapshot?.pendingCount > 0 || notifications.error;
+  },[permissions]);
+  const orderBadgeShown = permissions.orders && (notifications.snapshot?.pendingCount > 0 || notifications.error);
 
   /* Các mục giữ trạng thái sau lần mở đầu (ẩn bằng `hidden`, không gỡ khỏi trang). */
   const panels = {
     home: <HomeAdmin workspace={tab==='store'?'store':'home'} storeSection={storeSection} storeVersion={storeVersion}/>,
     products: <ProductsAdmin />,
     chat: <ChatSettings />,
-    orders: <OrdersAdmin statusCounts={notifications.snapshot?.counts} refreshKey={notifications.revision} pendingRequest={pendingRequest} onOrderChanged={notifications.refresh} key={`${user.uid}:${orderMailVersion}`} initialMailDraft={orderMailDraft} onOpenEmailTemplates={() => { setEmailSection({ view: "templates" }); navigate("newsletter"); }} />,
+    orders: <OrdersAdmin statusCounts={notifications.snapshot?.counts} refreshKey={notifications.revision} pendingRequest={pendingRequest} onOrderChanged={notifications.refresh} key={`${user.uid}:${orderMailVersion}`} initialMailDraft={orderMailDraft} onOpenEmailTemplates={permissions.newsletter ? () => { setEmailSection({ view: "templates" }); navigate("newsletter"); } : undefined} />,
     shipping: <ShippingAdmin key={user.uid} />,
     inventory: <InventoryAdmin key={user.uid} />,
-    newsletter: <NewsletterAdmin initialView={emailSection.view} viewRequest={emailSection} onOpenOrderMail={(draft) => { setOrderMailDraft(draft); setOrderMailVersion((value) => value + 1); navigate("orders"); }} />,
+    newsletter: <NewsletterAdmin initialView={emailSection.view} viewRequest={emailSection} onOpenOrderMail={permissions.orders ? (draft) => { setOrderMailDraft(draft); setOrderMailVersion((value) => value + 1); navigate("orders"); } : undefined} />,
   };
 
   return (
@@ -130,7 +145,7 @@ function AdminWorkspace({ user }) {
       <aside className="admin-side">
         <div className="admin-brand">ORORA</div>
         <nav className="admin-nav" aria-label="Menu quản trị">
-          {GROUPS.map(({ title, items }) => (
+          {visibleGroups.map(({ title, items }) => (
             <div className="admin-nav-group" key={title || "main"} role="group" aria-label={title || undefined}>
               {title && <span className="admin-nav-title" aria-hidden="true">{title}</span>}
               {items.map(([key, label]) => (
@@ -150,11 +165,11 @@ function AdminWorkspace({ user }) {
       </aside>
 
       <main className="admin-main">
-        {notifications.incoming && <div className="admin-order-notification" role="status"><div><strong>Có đơn hàng mới · {notifications.incoming.code}</strong><p>{notifications.snapshot?.pendingCount ?? ""} đơn đang chờ xác nhận.</p></div><button type="button" className="admin-btn" onClick={() => { setPendingRequest({ id: notifications.incoming.id }); navigate("orders"); notifications.dismiss(); }}>Xem đơn chờ</button><button type="button" className="notification-dismiss" aria-label="Đóng thông báo đơn mới" onClick={notifications.dismiss}>×</button></div>}
+        {permissions.orders && notifications.incoming && <div className="admin-order-notification" role="status"><div><strong>Có đơn hàng mới · {notifications.incoming.code}</strong><p>{notifications.snapshot?.pendingCount ?? ""} đơn đang chờ xác nhận.</p></div><button type="button" className="admin-btn" onClick={() => { setPendingRequest({ id: notifications.incoming.id }); navigate("orders"); notifications.dismiss(); }}>Xem đơn chờ</button><button type="button" className="notification-dismiss" aria-label="Đóng thông báo đơn mới" onClick={notifications.dismiss}>×</button></div>}
 
-        {tab === "dashboard" && <Dashboard pendingCount={notifications.snapshot?.pendingCount} revision={notifications.revision} onOpenOrder={id => { setPendingRequest({ id, allStatuses: true }); navigate("orders"); }} onOpenInventory={() => navigate("inventory")} />}
+        {tab === "dashboard" && permissions.orders && <Dashboard pendingCount={notifications.snapshot?.pendingCount} revision={notifications.revision} onOpenOrder={id => { setPendingRequest({ id, allStatuses: true }); navigate("orders"); }} onOpenInventory={() => navigate("inventory")} />}
         {Object.entries(panels).filter(([key]) => visited.includes(key)).map(([key, panel]) => <div key={key} className="admin-workspace-panel" hidden={key==='home'? !['home','store'].includes(tab):tab!==key}>{panel}</div>)}
-        {tab === "export" && <EmailExport key={user.uid} request={newsletterRequest} />}
+        {tab === "export" && permissions.newsletter && <EmailExport key={user.uid} request={newsletterRequest} />}
       </main>
     </div>
   );

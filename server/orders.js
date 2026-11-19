@@ -10,7 +10,7 @@ import { mailActor, resolveMailActors } from "./mail-actor.js";
 import { sendOrderConfirmation, validOrderEmail } from "./order-mail.js";
 import { createHash } from "node:crypto";
 import { parseVndPrice, sameVndPrice, availablePaymentMethods, PAYMENT_LABELS } from "../src/lib/commerce.js";
-import { requireAdmin } from "./admin-auth.js";
+import { requireAdmin, resolveAdminPermissions } from "./admin-auth.js";
 import { rateLimitSalt, reserveBudgetOrAllow } from "./request-limits.js";
 
 const uuid = (value) => typeof value === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value);
@@ -135,14 +135,19 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
   return async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
     if (!["GET", "POST"].includes(req.method)) { res.setHeader("Allow", "GET, POST"); return res.status(405).json({ message: "Phương thức không được hỗ trợ." }); }
+    if (req.method === "GET" && req.query?.whoami === "1") {
+      try {
+        const { user: who, permissions } = await resolveAdminPermissions(req, { verifyToken, getDb, env });
+        return res.status(200).json({ ok: true, uid: who.uid, email: who.email || "", permissions });
+      } catch (error) {
+        return res.status(error.status || 403).json({ message: error.message });
+      }
+    }
     let user;
     try {
       user = await requireAdmin(req, { verifyToken, getDb, env, primaryEnvKey: "ORDER_ADMIN_UIDS", deniedMessage: "Tài khoản này chưa được cấp quyền quản lý đơn hàng." });
     } catch (error) {
       return res.status(error.status || 403).json({ message: error.message });
-    }
-    if (req.method === "GET" && req.query?.whoami === "1") {
-      return res.status(200).json({ ok: true, uid: user.uid, email: user.email || "" });
     }
     try {
       const db = await getDb();
@@ -247,9 +252,12 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
           if (cur.status === "cancelled") throw Object.assign(new Error("Đơn đã hủy không mở lại. Tạo đơn mới để số lượng và lịch sử kho được ghi nhận đúng."), { status: 409 });
           if (!NEXT_ORDER_STATUSES[cur.status]?.includes(body.status)) throw Object.assign(new Error("Không thể chuyển sang trạng thái này từ trạng thái hiện tại."), { status: 409 });
         }
-        if (body.status === undefined && body.paymentStatus === "unpaid") {
-          if (cur.status === "completed") throw Object.assign(new Error("Đơn đã hoàn tất không thể bỏ đánh dấu đã thanh toán."), { status: 409 });
-          if (cur.inventory?.state === "deducted") throw Object.assign(new Error("Đơn đã trừ kho không thể bỏ đánh dấu đã thanh toán. Nếu khách trả hàng, hãy hủy đơn và hoàn kho."), { status: 409 });
+        if (body.status === undefined) {
+          if (cur.status === "cancelled") throw Object.assign(new Error("Đơn đã hủy không thể cập nhật trạng thái thanh toán."), { status: 409 });
+          if (body.paymentStatus === "unpaid") {
+            if (cur.status === "completed") throw Object.assign(new Error("Đơn đã hoàn tất không thể bỏ đánh dấu đã thanh toán."), { status: 409 });
+            if (cur.inventory?.state === "deducted") throw Object.assign(new Error("Đơn đã trừ kho không thể bỏ đánh dấu đã thanh toán. Nếu khách trả hàng, hãy hủy đơn và hoàn kho."), { status: 409 });
+          }
         }
         const nextPaymentStatus = body.status === "completed" ? "paid" : body.status !== undefined ? cur.paymentStatus : body.paymentStatus;
         const stockPatch = await settleOrderInventory(tx, db, cur, nextPaymentStatus, body.id, user.uid, body.status ?? cur.status);

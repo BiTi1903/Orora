@@ -958,6 +958,10 @@
   transform: translateY(-1px);
   box-shadow: 0 12px 24px color-mix(in srgb, var(--quick-buy-cta-bg, var(--rose-deep)) 34%, transparent), inset 0 1px 0 rgba(255, 255, 255, .52);
 }
+@media (prefers-reduced-motion: reduce) {
+  .product-mobile-buy .product-mobile-buy-cta { transition: none; }
+  .product-mobile-buy .product-mobile-buy-cta:hover:not(:disabled) { transform: none; }
+}
 @media (max-width:768px) {
   .product-detail:not(.product-detail--preview) { padding-bottom: calc(var(--product-mobile-buy-height, 0px) + 18px + env(safe-area-inset-bottom, 0px)); }
   .product-mobile-buy:not(.is-preview) {

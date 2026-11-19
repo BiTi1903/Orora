@@ -27,7 +27,7 @@ test("private order summary counts beyond the first page and returns no customer
   const wrappedDb = { collection: (name) => { if (name === "orders") readOrders = true; return db.collection(name); } };
   const outsider = createAdminOrdersHandler({ getDb: () => wrappedDb, verifyToken: async () => ({ uid: "other" }), env });
   const denied = response(); await outsider({ method: "GET", headers, query: { summary: "1" } }, denied); assert.equal(denied.statusCode, 403); assert.equal(readOrders, false);
-  await db.collection("adminUsers").doc("fs-admin").set({ active: true });
+  await db.collection("adminUsers").doc("fs-admin").set({ enabled: true });
   const fsAdmin = createAdminOrdersHandler({ getDb: () => db, verifyToken: async () => ({ uid: "fs-admin", email: "fs@example.com" }), env: { NEWSLETTER_SITE_ORIGIN: env.NEWSLETTER_SITE_ORIGIN } });
   const whoami = response(); await fsAdmin({ method: "GET", headers, query: { whoami: "1" } }, whoami);
   assert.equal(whoami.statusCode, 200); assert.equal(whoami.body.uid, "fs-admin");

@@ -31,7 +31,7 @@ export default function ShopCart(){
  useEffect(()=>{try{localStorage.setItem(CART_STORAGE_KEY,JSON.stringify(rows));}catch{/* Cart remains usable without storage. */}window.dispatchEvent(new CustomEvent('orora-cart-count',{detail:rows.reduce((n,r)=>n+r.quantity,0)}));},[rows]);
  useEffect(()=>{
   const sync=e=>{if(e.key===CART_STORAGE_KEY)setRows(readCartRows());};
-  const remove=e=>{const id=e.detail?.id,variantId=e.detail?.variantId||'';if(!id)return;setRows(old=>old.filter(r=>!(r.id===id&&r.variantId===variantId)));};
+  const remove=e=>{const id=e.detail?.id,variantId=e.detail?.variantId||'',qty=Number(e.detail?.quantity);if(!id)return;setRows(old=>old.flatMap(r=>{if(!(r.id===id&&r.variantId===variantId))return [r];if(!Number.isInteger(qty)||qty<=0)return [];const remaining=r.quantity-qty;return remaining>0?[{...r,quantity:remaining}]:[];}));};
   window.addEventListener('storage',sync);window.addEventListener('orora-cart-remove',remove);
   return()=>{window.removeEventListener('storage',sync);window.removeEventListener('orora-cart-remove',remove);};
  },[]);

@@ -66,3 +66,15 @@ test('receipt downloads a PNG on save or Zalo fallback when Web Share with files
  const download=page.waitForEvent('download');await page.getByRole('button',{name:'Lưu ảnh đơn hàng'}).click();const file=await download;expect(file.suggestedFilename()).toBe('ORORA-OW_TEST.png');
  const png=await readFile(await file.path());expect(png.subarray(0,8).toString('hex')).toBe('89504e470d0a1a0a');expect(png.readUInt32BE(20)).toBeGreaterThan(500);expect(await page.getByRole('button',{name:'Lưu ảnh đơn hàng'}).locator('svg').count()).toBe(1);await fit(page);
 });
+test('receipt Zalo fallback reports an error instead of saved when download fails',async({page})=>{
+ const order={code:'OW_FAIL',productName:'Sản phẩm mẫu',quantity:1,subtotal:100000,shippingFee:20000,totalAmount:120000,paymentMethod:'cod',recipient:{name:'Người nhận mẫu',phone:'0900000000',address:'Địa chỉ thử nghiệm'}};
+ await mount(page,`
+  Object.defineProperty(navigator,'canShare',{configurable:true,value:()=>false});
+  import '/src/styles/checkout.css';import Actions from '/src/components/OrderReceiptActions.jsx';${render(`R.createElement(Actions,{order:${JSON.stringify(order)},home:{footerPhone:'0900000000'}})`)}
+ `,{'lib/order-receipt.js':'export const renderOrderReceiptBlob=async()=>{throw Error("canvas failed")};export const shareOrderReceiptBlob=()=>null;export const downloadOrderReceipt=async()=>{throw Error("download failed")};'});
+ const zaloLink=page.getByRole('link',{name:'Xác nhận qua Zalo'});
+ await zaloLink.evaluate(node=>node.addEventListener('click',e=>e.preventDefault(),{once:true}));
+ await zaloLink.click();
+ await expect(page.getByRole('alert')).toContainText('Chưa lưu được ảnh đơn hàng');
+ await expect(page.locator('.receipt-download-note')).not.toContainText('Đã lưu ảnh đơn hàng');
+});

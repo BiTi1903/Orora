@@ -544,3 +544,18 @@ test("subscribe rate limits by email (3/hour) and IP (5/min) with Retry-After", 
   assert.ok(Number(ipBlocked.headers["Retry-After"]) > 0);
 });
 
+test("newsletter admin rejects order-only UIDs and disabled adminUsers records", async () => {
+  const db = memoryDb();
+  await db.collection("adminUsers").doc("disabled-mail-admin").set({ enabled: false });
+  const splitEnv = { ...env, ORDER_ADMIN_UIDS: "order-only", NEWSLETTER_ADMIN_UIDS: "mail-only" };
+  const callAs = async (uid) => {
+    const handler = createNewsletterAdminHandler({ getDb: async () => db, verifyToken: async () => ({ uid }), sendMail: async () => {}, env: splitEnv });
+    const res = response();
+    await handler({ method: "GET", headers: { authorization: "Bearer token" }, query: {} }, res);
+    return res;
+  };
+  assert.equal((await callAs("order-only")).statusCode, 403);
+  assert.equal((await callAs("disabled-mail-admin")).statusCode, 403);
+  assert.equal((await callAs("mail-only")).statusCode, 200);
+});
+

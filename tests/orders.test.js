@@ -374,27 +374,50 @@ test("inventory reserved counter avoids historical order scans on subsequent ord
   assert.equal((await db.collection("inventory").doc("serum").get()).data().reserved, 2);
 });
 
-test("admin summary returns per-status counts and whoami accepts adminUsers collection without env UIDs", async () => {
+test("admin summary returns per-status counts, adminUsers requires enabled===true, and whoami scopes permissions", async () => {
   const { db, call } = await setup();
   const o1 = body(), o2 = body();
   assert.equal((await call(o1)).statusCode, 201);
   assert.equal((await call(o2)).statusCode, 201);
   assert.equal((await admin(db)({ id: o2.requestId, status: "cancelled" })).statusCode, 200);
+  // Cancelled order cannot be marked paid later (e.g. from another stale admin tab).
+  const latePaid = await admin(db)({ id: o2.requestId, paymentStatus: "paid" });
+  assert.equal(latePaid.statusCode, 409);
+  assert.equal((await db.collection("orders").doc(o2.requestId).get()).data().paymentStatus, "unpaid");
+
   const summary = await admin(db)(null, { query: { summary: "1" } });
   assert.equal(summary.statusCode, 200);
   assert.deepEqual(summary.body.counts, { all: 2, new: 1, confirmed: 0, shipping: 0, completed: 0, cancelled: 1 });
 
-  await db.collection("adminUsers").doc("fs-admin").set({ active: true });
-  const fsAdminHandler = createAdminOrdersHandler({
+  await db.collection("adminUsers").doc("fs-admin").set({ enabled: true });
+  await db.collection("adminUsers").doc("disabled-admin").set({ enabled: false });
+  await db.collection("adminUsers").doc("legacy-active").set({ active: true });
+  const makeHandler = (uid, customEnv = { NEWSLETTER_SITE_ORIGIN: env.NEWSLETTER_SITE_ORIGIN }) => createAdminOrdersHandler({
     getDb: () => db,
-    verifyToken: async () => ({ uid: "fs-admin", email: "fs@orora.example" }),
-    env: { NEWSLETTER_SITE_ORIGIN: env.NEWSLETTER_SITE_ORIGIN },
+    verifyToken: async () => ({ uid, email: `${uid}@orora.example` }),
+    env: customEnv,
   });
-  const whoami = response();
-  await fsAdminHandler({ method: "GET", headers: { ...headers, authorization: "Bearer token" }, query: { whoami: "1" } }, whoami);
-  assert.equal(whoami.statusCode, 200);
-  assert.equal(whoami.body.ok, true);
-  assert.equal(whoami.body.uid, "fs-admin");
+  const callGet = async (handler, query) => {
+    const res = response();
+    await handler({ method: "GET", headers: { ...headers, authorization: "Bearer token" }, query }, res);
+    return res;
+  };
+  const enabledRes = await callGet(makeHandler("fs-admin"), { whoami: "1" });
+  assert.equal(enabledRes.statusCode, 200);
+  assert.deepEqual(enabledRes.body.permissions, { orders: true, newsletter: true, full: true });
+  assert.equal((await callGet(makeHandler("disabled-admin"), { whoami: "1" })).statusCode, 403);
+  assert.equal((await callGet(makeHandler("disabled-admin"), {})).statusCode, 403);
+  assert.equal((await callGet(makeHandler("legacy-active"), { whoami: "1" })).statusCode, 403);
+
+  // Scoped env UIDs: newsletter-only admin passes whoami with newsletter permission but is blocked from orders API.
+  const splitEnv = { NEWSLETTER_SITE_ORIGIN: env.NEWSLETTER_SITE_ORIGIN, ORDER_ADMIN_UIDS: "orders-only", NEWSLETTER_ADMIN_UIDS: "mail-only" };
+  const mailWho = await callGet(makeHandler("mail-only", splitEnv), { whoami: "1" });
+  assert.equal(mailWho.statusCode, 200);
+  assert.deepEqual(mailWho.body.permissions, { orders: false, newsletter: true, full: false });
+  assert.equal((await callGet(makeHandler("mail-only", splitEnv), {})).statusCode, 403);
+  const orderWho = await callGet(makeHandler("orders-only", splitEnv), { whoami: "1" });
+  assert.equal(orderWho.statusCode, 200);
+  assert.deepEqual(orderWho.body.permissions, { orders: true, newsletter: false, full: false });
 });
 
 

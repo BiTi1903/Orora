@@ -11,7 +11,7 @@ import { shippingFeeFor } from "../lib/shipping";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { availablePaymentMethods, PAYMENT_LABELS, parseVndPrice, formatVnd } from "../lib/commerce";
 
-export default function OrderForm({ product, home, onClose, selection, initialVariantId = "", initialQuantity = 1, onSelectionChange }) {
+export default function OrderForm({ product, home, onClose, selection, initialVariantId = "", initialQuantity = 1, onSelectionChange, fromCart = false }) {
   const options = useMemo(()=>productVolumeOptions(product),[product]);
   const [localSelection, setLocalSelection] = useState(() => ({ variantId: selectedVolumeOption(options,initialVariantId)?.id||defaultPurchaseVariant(product,options)?.id||"", quantity: Number.isInteger(initialQuantity) && initialQuantity >= 1 && initialQuantity <= MAX_ORDER_QUANTITY ? initialQuantity : 1 }));
   const currentSelection = selection || localSelection;
@@ -83,7 +83,7 @@ export default function OrderForm({ product, home, onClose, selection, initialVa
       const json = await response.json();
       if (!response.ok) throw new Error(json.message || "Chưa gửi được đơn hàng.");
       if (!json.code) throw new Error("Chưa xác nhận được mã đơn. Vui lòng thử gửi lại.");
-      window.dispatchEvent(new CustomEvent("orora-cart-remove", { detail: { id: product.id || product.slug, variantId } }));
+      if (fromCart) window.dispatchEvent(new CustomEvent("orora-cart-remove", { detail: { id: product.id || product.slug, variantId, quantity } }));
       setResult({ ...orderedProduct, ...json, recipient });
     } catch (error) { setResult({ error: error.name === "AbortError" ? appearance.orderTimeoutLabel?.trim() || "Chưa nhận được phản hồi. Bạn có thể thử gửi lại với cùng thông tin hoặc tra cứu đơn hàng để kiểm tra." : error instanceof TypeError || error instanceof SyntaxError ? "Kết nối bị gián đoạn. Hãy thử gửi lại hoặc liên hệ ORORA." : error.message || "Chưa gửi được đơn. Vui lòng thử lại." }); }
     finally { window.clearTimeout(timeout);submitting.current=false;setBusy(false); }

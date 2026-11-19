@@ -26,8 +26,11 @@ export default function OrderReceiptActions({order,home={},appearance={},preview
   if(!blob&&!renderFailed){event.preventDefault();setStatusNote('Đang chuẩn bị ảnh đơn hàng… vui lòng bấm lại sau giây lát.');return;}
   const sharing=blob&&!shareBroken.current?shareOrderReceiptBlob(order,blob):null;
   if(!sharing){
-   downloadOrderReceipt(order,blob||undefined).catch(()=>{});
-   setStatusNote('Đã lưu ảnh đơn hàng — khi qua Zalo bạn có thể chọn ảnh vừa lưu để gửi ngay.');
+   setError('');
+   setStatusNote('Đang lưu ảnh đơn hàng và mở Zalo…');
+   downloadOrderReceipt(order,blob||undefined)
+    .then(()=>setStatusNote('Đã lưu ảnh đơn hàng — khi qua Zalo bạn có thể chọn ảnh vừa lưu để gửi ngay.'))
+    .catch(()=>{setStatusNote('');setError('Chưa lưu được ảnh đơn hàng. Bạn có thể bấm nút Lưu ảnh đơn hàng bên dưới.');});
    return;
   }
   event.preventDefault();

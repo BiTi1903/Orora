@@ -32,7 +32,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         verifyToken,
         getDb,
         env,
-        envKeys: ["NEWSLETTER_ADMIN_UIDS", "ORDER_ADMIN_UIDS"],
+        envKeys: ["NEWSLETTER_ADMIN_UIDS"],
         deniedMessage: "Tài khoản này chưa được cấp quyền gửi email.",
         logAuthError: (failure, error) => {
           const sdkCode = /^(auth|app)\/[a-z0-9-]+$/.test(error.code || "") ? error.code : undefined;

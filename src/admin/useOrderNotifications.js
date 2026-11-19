@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { orderRequest } from "./order-api";
 
-export default function useOrderNotifications() {
+export default function useOrderNotifications(enabled = true) {
   const [snapshot, setSnapshot] = useState(null);
   const [incoming, setIncoming] = useState(null);
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
   const refreshRef = useRef(null);
   useEffect(() => {
+    if (!enabled) return;
     let alive = true; let timer; let controller; let active = false; let queued = false;
     let terminal = false; let baseline = false; let previous = null; let lastStarted = -Infinity;
     const schedule = () => {
@@ -52,7 +53,7 @@ export default function useOrderNotifications() {
       alive = false; refreshRef.current = null; window.clearTimeout(timer); controller?.abort();
       window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, []);
+  }, [enabled]);
   const refresh = useCallback(() => refreshRef.current?.(), []);
   const dismiss = useCallback(() => setIncoming(null), []);
   return { snapshot, incoming, error, revision, refresh, dismiss };
