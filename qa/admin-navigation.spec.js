@@ -22,18 +22,3 @@ test('grouped admin keeps drafts and all navigation reachable on short screens',
  await page.getByRole('button',{name:'Đăng xuất',exact:true}).click();await expect.poll(()=>page.evaluate(()=>window.__signedOut)).toBe(true);
  await fit(page);
 });
-test('admin shows retry screen when whoami response omits or partially returns permissions',async({page})=>{
- const base={
-  'lib/firebaseAuth.js':'export const auth={};export function onAuthStateChanged(auth,callback){callback({uid:"test-admin-uid",email:"admin@example.test"});return ()=>{}}export function signOut(){}',
-  'lib/api.js':'export const getProducts=async()=>[];export const explainError=()=>"Lỗi thử";',
-  'admin/useOrderNotifications.js':'export default function notifications(){return {snapshot:null,refresh(){},dismiss(){}}}',
-  'admin/newsletter-api.js':'export const newsletterRequest=async()=>({});',
- };
- for(const name of ['AdminLogin','HomeAdmin','ProductsAdmin','OrdersAdmin','NewsletterAdmin','InventoryAdmin','ShippingAdmin','ChatSettings','EmailExport','AnalyticsDashboard'])base[`admin/${name}.jsx`]='export default function Panel(){return null}';
- for(const payload of [{ok:true},{ok:true,permissions:{}},{ok:true,permissions:{orders:true}}]){
-  await mount(page,`import Admin from '/src/admin/AdminApp.jsx';${render('R.createElement(Admin)')}`,{...base,'admin/order-api.js':`export const orderRequest=async()=>(${JSON.stringify(payload)});`});
-  await expect(page.getByRole('alert')).toContainText('chưa đầy đủ');
-  await expect(page.getByRole('button',{name:'Thử lại',exact:true})).toBeVisible();
-  await expect(page.getByRole('navigation',{name:'Menu quản trị'})).toHaveCount(0);
- }
-});

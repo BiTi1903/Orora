@@ -1,3 +1,15 @@
+## 19/11/2026 — Bỏ bước chặn phân quyền ở giao diện quản trị để tài khoản đăng nhập vào xem được đầy đủ
+
+- **Lý do**: Bước kiểm tra phân quyền chi tiết ở giao diện quản trị khiến các tài khoản admin đã đăng nhập bị chặn hoặc bị ẩn mất các mục quản lý. Chủ website yêu cầu chỉ cần đăng nhập đúng tài khoản quản trị là vào xem được đầy đủ tất cả các mục.
+- **Thay đổi chính**:
+  - **Giao diện quản trị (`src/admin/AdminApp.jsx`)**: Bỏ bước chặn theo phản hồi kiểm tra quyền và bỏ cơ chế ẩn từng mục menu ở giao diện; ngay khi đăng nhập Firebase Auth thành công sẽ mở thẳng trang quản trị với đầy đủ toàn bộ 10 mục và các tab con trong màn hình Đơn hàng.
+  - **Kiểm thử giao diện (`qa/admin-navigation.spec.js`)**: Cập nhật bỏ bài kiểm tra màn hình chặn phân quyền không còn sử dụng.
+- **File / khu vực liên quan**: `src/admin/AdminApp.jsx`, `qa/admin-navigation.spec.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **248/248** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt.
+  - Playwright (`width-320` và `width-390`): **2/2** test đạt trên `qa/admin-navigation.spec.js`.
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu.
+
 ## 19/11/2026 — Gộp đặt nhiều sản phẩm chung trong giỏ hàng, chỉnh giao diện nút Mua ngay trên máy tính và tối ưu mượt form đặt hàng
 
 - **Lý do**: Trong giỏ hàng cần bỏ nút mua riêng trên từng dòng và chỉ giữ một nút **Mua ngay** chung ở chân giỏ để đặt nhiều sản phẩm trong cùng một đơn; trên màn hình máy tính, thanh giá kèm nút **Mua ngay** ở trang chi tiết sản phẩm bị kéo giãn rộng và lệch màu so với cột nút phía trên, đồng thời nút **Thêm vào giỏ** bị thiếu biểu tượng giỏ hàng; form đặt hàng có độ trễ khi cuộn và chọn địa chỉ.
