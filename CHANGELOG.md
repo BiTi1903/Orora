@@ -1,3 +1,16 @@
+## 20/11/2026 — Bổ sung chức năng Kiểm tra toàn bộ mail 1 lần để phát hiện thư lỗi / trả lại
+
+- **Lý do**: Quản trị viên cần kiểm tra 1 lần toàn bộ email đơn hàng gần đây thay vì phải mở từng đơn để kiểm tra Outlook thủ công.
+- **Thay đổi chính**:
+  - **Backend (`server/orders.js`)**: Thêm action `checkAllOrderOutlook` trên `POST /api/admin-orders` để quét song song có giới hạn (4 luồng đồng thời, tối đa 30 thư từ tối đa 30 đơn gần nhất) qua `syncOutlookStatus`, đồng thời tổng hợp cả thư lỗi gửi cục bộ (`failed`, `stuck`, `unknown`), thư bị trả lại (`bounced` / NDR) và thư gửi chậm (`delayed`).
+  - **Giao diện Admin (`src/admin/OrdersAdmin.jsx`, `src/admin/OrderMailHistory.jsx`)**:
+    - Thêm nút **Kiểm tra toàn bộ mail** ở đầu trang `Đơn hàng` (kèm nút **Lọc xem thư lỗi** ngay trên thông báo nếu phát hiện lỗi) và đầu mục `Lịch sử email` (cập nhật trạng thái Outlook trực tiếp trên danh sách).
+  - **Kiểm thử (`tests/order-flow-and-stock.test.js`)**: Thêm unit test cho `checkAllOrderOutlook` xác minh tổng hợp thư bình thường, thư trả lại (NDR) và thư lỗi gửi.
+- **File / khu vực liên quan**: `server/orders.js`, `src/admin/OrdersAdmin.jsx`, `src/admin/OrderMailHistory.jsx`, `tests/order-flow-and-stock.test.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **264/264** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt (`136.84 kB` gzip).
+- **Ảnh hưởng database**: Chỉ cập nhật trường `outlook` trên các tài liệu `orders/{id}/mailEvents/{eventId}` đã tồn tại giống luồng kiểm tra đơn lẻ, không thay đổi schema hay rules.
+
 ## 20/11/2026 — Sắp xếp trực tiếp trên tiêu đề cột Đơn hàng và tải tức thì tab Đơn hàng, Kiểm kho, Email
 
 - **Lý do**: Quản trị viên muốn bấm trực tiếp vào từng tiêu đề cột trong bảng Đơn hàng để sắp xếp (bỏ hộp chọn `Sắp xếp đơn` thừa ở trên) và khắc phục tình trạng phải chờ tải lại từ đầu mỗi lần bấm vào các mục `Đơn hàng`, `Kiểm kho`, `Email`.

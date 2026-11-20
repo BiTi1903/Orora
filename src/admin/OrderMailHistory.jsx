@@ -45,11 +45,30 @@ export default function OrderMailHistory({ onReuse, refreshKey = 0 }) {
     } catch (cause) { setError(cause.message); }
     finally { setBusy(false); }
   };
+  const [checkingAll, setCheckingAll] = useState(false);
+  const [scanNotice, setScanNotice] = useState(null);
+  const checkAllMails = async () => {
+    if (checkingAll || busy) return;
+    setCheckingAll(true); setScanNotice(null); setError("");
+    try {
+      const result = await orderRequest({ action: "checkAllOrderOutlook", limit: 20 });
+      if (result.results) {
+        setMails((current) => current.map((mail) => (result.results[mail.id] ? { ...mail, outlook: result.results[mail.id] } : mail)));
+      }
+      const hasIssues = (result.bounced?.length || 0) + (result.failed?.length || 0) + (result.delayed?.length || 0) > 0;
+      setScanNotice({ error: hasIssues, text: result.message });
+    } catch (cause) {
+      setScanNotice({ error: true, text: cause.message });
+    } finally {
+      setCheckingAll(false);
+    }
+  };
   const { templates, byMail } = groupMailTemplates(mails);
   const query = search.trim().toLowerCase();
   const filtered = mails.filter((mail) => (templateFilter === "all" || byMail.get(mail.id)?.id === templateFilter) && (kind === "all" || (kind === "manual" ? mail.manual : !mail.manual)) && (state === "all" || effectiveMailState(mail) === state) && [mail.recipient, mail.orderId, mail.orderCode, mail.subject, mail.templateName, mail.customerName, mail.actorName, mail.actorEmail, mail.actor].some((value) => String(value || "").toLowerCase().includes(query)));
   return <div>
-    <div className="admin-top"><div><h2>Lịch sử email đơn hàng</h2><p className="admin-muted">Mặc định tải 20 đơn gần nhất để tránh chậm máy; bấm Tải thêm nếu cần tra các đơn cũ hơn.</p></div><button className="admin-btn" aria-busy={busy} disabled={busy} onClick={() => { setVisibleCount(30); setVersion((value) => value + 1); }}>Tải lại lịch sử thư</button></div>
+    <div className="admin-top"><div><h2>Lịch sử email đơn hàng</h2><p className="admin-muted">Mặc định tải 20 đơn gần nhất để tránh chậm máy; bấm Kiểm tra toàn bộ mail để quét lỗi trên Outlook 1 lần.</p></div><div className="admin-actions"><button type="button" className="admin-btn primary" aria-busy={checkingAll} disabled={busy || checkingAll} onClick={checkAllMails}>{checkingAll ? "Đang kiểm tra mail…" : "Kiểm tra toàn bộ mail"}</button><button className="admin-btn" aria-busy={busy} disabled={busy || checkingAll} onClick={() => { setVisibleCount(30); setVersion((value) => value + 1); }}>Tải lại lịch sử thư</button></div></div>
+    {scanNotice && <p role="status" className={scanNotice.error ? "admin-error" : "admin-success"}>{scanNotice.text}</p>}
     <div className="admin-form-grid order-mail-history-filters">
       <div className="admin-field"><label htmlFor="order-mail-history-search">Tìm thư đơn hàng</label><input id="order-mail-history-search" type="search" placeholder="Email, mã/ID đơn, tên khách hoặc tiêu đề" value={search} onChange={(event) => { setSearch(event.target.value); setVisibleCount(30); }} /></div>
       <div className="admin-field"><label htmlFor="order-mail-history-kind">Cách gửi</label><select id="order-mail-history-kind" value={kind} onChange={(event) => { setKind(event.target.value); setVisibleCount(30); }}><option value="all">Tất cả cách gửi</option><option value="manual">Gửi bởi tài khoản</option><option value="automatic">Tự động khi đặt hàng</option></select></div>

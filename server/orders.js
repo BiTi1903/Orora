@@ -354,6 +354,61 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
         const outlook = await syncOutlookStatus(orders.doc(body.id).collection("mailEvents").doc(body.eventId), checkOutlook);
         return res.status(200).json({ outlook });
       }
+      if (body.action === "checkAllOrderOutlook") {
+        const limit = Math.max(1, Math.min(30, Number.isInteger(body.limit) ? body.limit : 20));
+        const recent = await orders.orderBy("createdAt", "desc").limit(limit).get();
+        const tasks = [];
+        const failed = [];
+        const eventsByOrder = await Promise.all(
+          recent.docs.map(async (orderDoc) => {
+            const orderData = orderDoc.data();
+            const evSnap = await orders.doc(orderDoc.id).collection("mailEvents").orderBy("createdAt", "desc").limit(3).get();
+            return { orderDoc, orderData, events: evSnap.docs };
+          }),
+        );
+        for (const { orderDoc, orderData, events } of eventsByOrder) {
+          for (const evDoc of events) {
+            const ev = evDoc.data();
+            if (["failed", "stuck", "unknown"].includes(ev.state)) {
+              failed.push({ orderId: orderDoc.id, orderCode: orderData.code || "", eventId: evDoc.id, recipient: ev.recipient || orderData.customer?.email || "", state: ev.state, errorMessage: ev.errorMessage || "" });
+              continue;
+            }
+            if (ev.state === "sent" || ev.trackingId || ev.internetMessageId) {
+              tasks.push({ orderId: orderDoc.id, orderCode: orderData.code || "", eventId: evDoc.id, recipient: ev.recipient || orderData.customer?.email || "", ref: orders.doc(orderDoc.id).collection("mailEvents").doc(evDoc.id) });
+            }
+          }
+        }
+        const bounced = [];
+        const delayed = [];
+        const results = {};
+        let ok = 0;
+        let untracked = 0;
+        const maxTasks = tasks.slice(0, 30);
+        for (let i = 0; i < maxTasks.length; i += 4) {
+          const chunk = maxTasks.slice(i, i + 4);
+          const outcomes = await Promise.all(chunk.map(async (task) => ({ task, outlook: await syncOutlookStatus(task.ref, checkOutlook) })));
+          for (const { task, outlook } of outcomes) {
+            results[`${task.orderId}/${task.eventId}`] = outlook;
+            if (outlook.state === "bounced") {
+              bounced.push({ orderId: task.orderId, orderCode: task.orderCode, eventId: task.eventId, recipient: task.recipient, diagnosticCode: outlook.diagnosticCode || "", webLink: outlook.webLink || "" });
+            } else if (outlook.state === "delayed") {
+              delayed.push({ orderId: task.orderId, orderCode: task.orderCode, eventId: task.eventId, recipient: task.recipient, diagnosticCode: outlook.diagnosticCode || "" });
+            } else if (outlook.state === "untracked" || outlook.state === "not_found") {
+              untracked += 1;
+            } else {
+              ok += 1;
+            }
+          }
+        }
+        const issueCount = bounced.length + delayed.length + failed.length;
+        const checked = maxTasks.length + failed.length;
+        const message = !checked
+          ? `Chưa có thư nào trong ${recent.docs.length} đơn gần nhất để kiểm tra.`
+          : issueCount > 0
+            ? `Đã kiểm tra ${checked} thư (${recent.docs.length} đơn gần nhất): phát hiện ${bounced.length} thư trả lại, ${failed.length} thư lỗi gửi${delayed.length ? `, ${delayed.length} thư gửi chậm` : ""}.`
+            : `Đã kiểm tra ${checked} thư (${recent.docs.length} đơn gần nhất): không phát hiện thư lỗi hay bị trả lại.`;
+        return res.status(200).json({ checked, scannedOrders: recent.docs.length, ok, untracked, bounced, delayed, failed, results, checkedAt: new Date(clock()).toISOString(), message });
+      }
       if (body.action === "sendOrderEmail") {
         if (!uuid(body.id) || !uuid(body.requestId)) return res.status(400).json({ message: "Yêu cầu gửi thư không hợp lệ." });
         const result = await sendOrderConfirmation({ db, orderId: body.id, sendMail, manual: true, requestId: body.requestId, confirmResend: body.confirmResend === true, recoverOnly: body.recoverOnly === true, ...mailActor(user), message: body.message, templateRef: body.templateRef });

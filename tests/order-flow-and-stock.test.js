@@ -472,5 +472,44 @@ test("order payment updates maintain pre-aggregated siteAnalyticsDaily revenue a
   assert.equal(afterCancel.paidAmount, 0);
 });
 
+test("POST /api/admin-orders action=checkAllOrderOutlook scans recent order mails and reports bounced and failed items", async () => {
+  const { db } = await seedOrderEnv();
+  const idOk = crypto.randomUUID();
+  const idBounce = crypto.randomUUID();
+  const idFail = crypto.randomUUID();
+  const now = Date.now();
+  await db.collection("orders").doc(idOk).set({ code: "OW_OK1", createdAt: new Date(now - 3000), customer: { email: "ok@example.com" } });
+  await db.collection("orders").doc(idOk).collection("mailEvents").doc("confirmation-auto").set({ state: "sent", trackingId: "trk-ok", recipient: "ok@example.com", createdAt: new Date(now - 3000) });
+  await db.collection("orders").doc(idBounce).set({ code: "OW_BN1", createdAt: new Date(now - 2000), customer: { email: "bad@example.com" } });
+  await db.collection("orders").doc(idBounce).collection("mailEvents").doc("confirmation-auto").set({ state: "sent", trackingId: "trk-bad", recipient: "bad@example.com", createdAt: new Date(now - 2000) });
+  await db.collection("orders").doc(idFail).set({ code: "OW_FL1", createdAt: new Date(now - 1000), customer: { email: "fail@example.com" } });
+  await db.collection("orders").doc(idFail).collection("mailEvents").doc("confirmation-auto").set({ state: "failed", recipient: "fail@example.com", errorMessage: "SMTP rejected", createdAt: new Date(now - 1000) });
+
+  const adminHandler = createAdminOrdersHandler({
+    getDb: async () => db,
+    verifyToken,
+    sendMail: async () => ({ trackingId: "t1", transport: "smtp" }),
+    checkOutlook: async (record) => (
+      record.trackingId === "trk-bad"
+        ? { state: "bounced", diagnosticCode: "5.1.1", checkedAt: new Date().toISOString() }
+        : { state: "sent_item", checkedAt: new Date().toISOString() }
+    ),
+    env: ENV,
+  });
+
+  const res = makeRes();
+  await adminHandler(makeReq({ method: "POST", body: { action: "checkAllOrderOutlook", limit: 10 } }), res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.checked, 3);
+  assert.equal(res.body.ok, 1);
+  assert.equal(res.body.bounced.length, 1);
+  assert.equal(res.body.bounced[0].orderCode, "OW_BN1");
+  assert.equal(res.body.failed.length, 1);
+  assert.equal(res.body.failed[0].orderCode, "OW_FL1");
+  assert.ok(res.body.message.includes("1 thư trả lại"));
+  assert.ok(res.body.message.includes("1 thư lỗi gửi"));
+});
+
+
 
 

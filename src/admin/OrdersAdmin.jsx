@@ -76,7 +76,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
         const merged = new Map(items.map((item) => [item.id, item]));
         data.orders.forEach((item) => { if (!protectLoaded || !merged.has(item.id)) merged.set(item.id, item); });
         const next = [...merged.values()].sort((a, b) => b.createdAt - a.createdAt || a.id.localeCompare(b.id));
-        setAdminCache("orders", { orders: next, nextCursor: extended.current ? cursor : data.nextCursor });
+        setAdminCache("orders", { orders: next, nextCursor: extended.current ? (getAdminCache("orders")?.nextCursor ?? null) : data.nextCursor });
         return next;
       });
       if (!extended.current) setCursor(data.nextCursor);
@@ -234,14 +234,35 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
     ["history", "Lịch sử email"],
     ...(canUseNewsletter ? [["automation", "Thư tự động"]] : []),
   ];
-  return <section aria-busy={busy}>
-    <div className="admin-top"><div><h1>Đơn hàng</h1><p className="admin-muted">Tìm đơn theo mã, SĐT hoặc email; bấm vào tiêu đề cột để sắp xếp nhanh.</p></div>{view === "orders" && <button className="admin-btn" disabled={busy} onClick={() => perform(async () => { const data = await fetchOrdersCached({ force: true }); extended.current = false; setOrders(data.orders); setCursor(data.nextCursor); setReady(true); onOrderChanged?.(); })}>Tải lại</button>}</div>
+  const [checkingAllMails, setCheckingAllMails] = useState(false);
+  const [mailScanSummary, setMailScanSummary] = useState(null);
+  const checkAllMails = async () => {
+    if (checkingAllMails || busy) return;
+    setCheckingAllMails(true);
+    setNotice(null);
+    setMailScanSummary(null);
+    try {
+      const result = await orderRequest({ action: "checkAllOrderOutlook", limit: 20 });
+      const newBouncedIds = [...new Set([...(bouncedIds || []), ...(result.bounced || []).map((item) => item.orderId)])];
+      setBouncedIds(newBouncedIds);
+      setMailScanSummary(result);
+      setMailRevision((v) => v + 1);
+      const hasIssues = (result.bounced?.length || 0) + (result.failed?.length || 0) + (result.delayed?.length || 0) > 0;
+      setNotice({ error: hasIssues, text: result.message });
+    } catch (error) {
+      setNotice({ error: true, text: error.message });
+    } finally {
+      setCheckingAllMails(false);
+    }
+  };
+  return <section aria-busy={busy || checkingAllMails}>
+    <div className="admin-top"><div><h1>Đơn hàng</h1><p className="admin-muted">Tìm đơn theo mã, SĐT hoặc email; bấm vào tiêu đề cột để sắp xếp nhanh.</p></div>{view === "orders" && <div className="admin-actions"><button type="button" className="admin-btn" aria-busy={checkingAllMails} disabled={busy || checkingAllMails} onClick={checkAllMails}>{checkingAllMails ? "Đang kiểm tra mail…" : "Kiểm tra toàn bộ mail"}</button><button className="admin-btn" disabled={busy || checkingAllMails} onClick={() => perform(async () => { const data = await fetchOrdersCached({ force: true }); extended.current = false; setOrders(data.orders); setCursor(data.nextCursor); setReady(true); onOrderChanged?.(); })}>Tải lại</button></div>}</div>
     <nav className="admin-section-tabs" aria-label="Các mục đơn hàng">{sectionTabs.map(([key, label]) => <button key={key} type="button" aria-current={view === key ? "page" : undefined} onClick={() => navigate(key)}>{label}</button>)}</nav>
     {view === "automation" && canUseNewsletter && <OrderEmails canUseNewsletter={canUseNewsletter} initialDraft={initialMailDraft?.purpose === "automation" ? initialMailDraft : null} onManageTemplates={onOpenEmailTemplates} />}
     {view === "history" && <OrderMailHistory refreshKey={mailRevision} onReuse={(draft, original) => setComposer({ draft, reused: true, original })} />}
     {view === "customers" && <OrderCustomers onViewOrders={(email, allOrders) => { extended.current = true; setOrders(allOrders); setCursor(null); setSearch(email); setFilters(EMPTY_ORDER_FILTERS); setMailFilter("all"); setCustomerEmail(email); setStatusFilter("all"); sequence.current.value++; setDetail(null); setReady(true); setView("orders"); }} />}
     {view === "orders" && <>
-    {notice && !selected && <p role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
+    {notice && !selected && <p role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}{mailScanSummary && ((mailScanSummary.bounced?.length || 0) + (mailScanSummary.failed?.length || 0) > 0) && mailFilter !== "error" && <>{" "}<button type="button" className="admin-btn" style={{ marginLeft: 8, minHeight: 28, padding: "2px 10px", fontSize: 12 }} onClick={() => setMailFilter("error")}>Lọc xem thư lỗi</button></>}</p>}
     {!ready ? <p className="admin-muted">Đang tải dữ liệu đơn hàng…</p> : <>
       <div className="order-status-tabs" role="group" aria-label="Lọc trạng thái đơn hàng">{[["all", "Tất cả"], ...Object.entries(STATUSES)].map(([key, label]) => <button key={key} type="button" aria-pressed={statusFilter === key} onClick={() => setStatusFilter(key)}>{label}<span>{statusCounts?.[key] ?? (key === "all" ? orders.length : orders.filter((order) => order.status === key).length)}</span></button>)}</div>
       <div className="admin-order-filter-bar">
