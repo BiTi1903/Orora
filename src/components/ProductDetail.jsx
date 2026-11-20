@@ -378,24 +378,56 @@ function ProductDetail({
         <strong style={toCss(purchase.subtotalValueStyle)}>{mobileSubtotal}</strong>
         {choice.quantity !== "" && <small style={toCss(purchase.subtotalLabelStyle)}>{variant ? `${variant.label} · ` : ""}{choice.quantity} sản phẩm</small>}
       </div>
-      <button type="button" className="purchase-website product-mobile-buy-cta" style={websiteButtonStyle} aria-haspopup="dialog" aria-expanded={!preview && acceptsWebsiteOrders && !soldOut && orderProductId === (product.id || product.slug)} disabled={soldOut}
-        onPointerEnter={() => { if (!preview) getAddressOptions().catch(() => {}); }}
-        onFocus={() => { if (!preview) getAddressOptions().catch(() => {}); }}
-        onClick={(event) => {
-          if (preview) { select("pdWebsiteText")(event); return; }
-          const btn = event.currentTarget;
-          animateButtonPress(btn, true, home.navStyles?.surfaces);
-          const pressEnabled = home.navStyles?.surfaces?.pressFeedback !== false && document.documentElement.dataset.buttonPress !== "off";
-          if (pressEnabled && !window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
-            const pulseColor = purchase.websiteBackground || getComputedStyle(btn).backgroundColor || "var(--rose-deep)";
-            btn.animate?.([
-              { boxShadow: `0 6px 18px color-mix(in srgb, ${pulseColor} 28%, transparent), 0 0 0 0 color-mix(in srgb, ${pulseColor} 45%, transparent)` },
-              { boxShadow: `0 10px 26px color-mix(in srgb, ${pulseColor} 38%, transparent), 0 0 0 12px color-mix(in srgb, ${pulseColor} 0%, transparent)` },
-            ], { duration: 420, easing: "cubic-bezier(0.22, 1, 0.36, 1)" });
-          }
-          setOrderSource(btn.getBoundingClientRect().toJSON());
-          setOrderProductId(product.id || product.slug);
-        }}><ButtonIcon name="orderNow" defaultSize={16}/><span>{soldOut ? "Hết hàng" : (purchase.mobileBuyLabel?.trim() || (purchase.websiteLabel?.trim() && !["Đặt hàng trên website", "Đặt hàng ngay"].includes(purchase.websiteLabel.trim()) ? purchase.websiteLabel.trim() : "Mua ngay"))}</span><ButtonIcon name="orderArrow" defaultSize={15}/></button>
+      <div className="product-mobile-buy-actions">
+        {home.navStyles?.cart?.enabled !== false && (
+          <button
+            type="button"
+            className={`product-buy-cart-btn ${selectedClass("pdAddToCart")}`}
+            data-builder-key={preview ? "pdAddToCart" : undefined}
+            aria-label={soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ")}
+            title={soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ")}
+            style={{
+              ...(purchase.addToCartBackground ? { background: purchase.addToCartBackground } : {}),
+              ...(purchase.addToCartBorderColor ? { borderColor: purchase.addToCartBorderColor } : {}),
+              ...toCss(purchase.addToCartStyle, { responsive: true }),
+            }}
+            disabled={soldOut || choice.quantity === ""}
+            onClick={(event) => {
+              event.stopPropagation();
+              if (preview) { select("pdAddToCart")(event); return; }
+              window.dispatchEvent(new CustomEvent("orora-cart-confirm", {
+                detail: { product, variantId, quantity: Number(choice.quantity) || 1, source: event.currentTarget.getBoundingClientRect().toJSON() },
+              }));
+            }}
+          >
+            <ButtonIcon name="productCart" defaultSize={18} allowHidden={false}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="9" cy="20" r="1.5" />
+                <circle cx="18" cy="20" r="1.5" />
+                <path d="M2.5 3.5h2.6l2.2 11.2a1.6 1.6 0 0 0 1.6 1.3h9.8a1.6 1.6 0 0 0 1.6-1.2L22 7.5H6.2" />
+              </svg>
+            </ButtonIcon>
+          </button>
+        )}
+        <button type="button" className="purchase-website product-mobile-buy-cta" style={websiteButtonStyle} aria-haspopup="dialog" aria-expanded={!preview && acceptsWebsiteOrders && !soldOut && orderProductId === (product.id || product.slug)} disabled={soldOut}
+          onPointerEnter={() => { if (!preview) getAddressOptions().catch(() => {}); }}
+          onFocus={() => { if (!preview) getAddressOptions().catch(() => {}); }}
+          onClick={(event) => {
+            if (preview) { select("pdWebsiteText")(event); return; }
+            const btn = event.currentTarget;
+            animateButtonPress(btn, true, home.navStyles?.surfaces);
+            const pressEnabled = home.navStyles?.surfaces?.pressFeedback !== false && document.documentElement.dataset.buttonPress !== "off";
+            if (pressEnabled && !window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
+              const pulseColor = purchase.websiteBackground || getComputedStyle(btn).backgroundColor || "var(--rose-deep)";
+              btn.animate?.([
+                { boxShadow: `0 6px 18px color-mix(in srgb, ${pulseColor} 28%, transparent), 0 0 0 0 color-mix(in srgb, ${pulseColor} 45%, transparent)` },
+                { boxShadow: `0 10px 26px color-mix(in srgb, ${pulseColor} 38%, transparent), 0 0 0 12px color-mix(in srgb, ${pulseColor} 0%, transparent)` },
+              ], { duration: 420, easing: "cubic-bezier(0.22, 1, 0.36, 1)" });
+            }
+            setOrderSource(btn.getBoundingClientRect().toJSON());
+            setOrderProductId(product.id || product.slug);
+          }}><ButtonIcon name="orderNow" defaultSize={16}/><span>{soldOut ? "Hết hàng" : (purchase.mobileBuyLabel?.trim() || (purchase.websiteLabel?.trim() && !["Đặt hàng trên website", "Đặt hàng ngay"].includes(purchase.websiteLabel.trim()) ? purchase.websiteLabel.trim() : "Mua ngay"))}</span><ButtonIcon name="orderArrow" defaultSize={15}/></button>
+      </div>
     </div>
   );
 
@@ -564,40 +596,15 @@ function ProductDetail({
             {product.name}
           </h1>
 
-          <div className="product-price-row">
-            <p
-              className={`product-detail-price${parseVndPrice(displayedPrice) !== null ? " is-numeric" : ""} ${selectedClass("pdPrice")}`}
-              data-builder-key={preview ? "pdPrice" : undefined}
-              onClick={select("pdPrice")}
-              style={css("price")}
-            >
-              {formatProductPrice(displayedPrice)}
-              {variant && <small className="product-price-variant" style={toCss(ps.selectionValue)}> / {variant.label}</small>}
-            </p>
-            {home.navStyles?.cart?.enabled !== false && (
-              <button
-                type="button"
-                className={`product-price-cart-btn ${selectedClass("pdAddToCart")}`}
-                data-builder-key={preview ? "pdAddToCart" : undefined}
-                aria-label={soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ")}
-                title={soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ")}
-                style={{
-                  ...(purchase.addToCartBackground ? { background: purchase.addToCartBackground } : {}),
-                  ...(purchase.addToCartBorderColor ? { borderColor: purchase.addToCartBorderColor } : {}),
-                  ...toCss(purchase.addToCartStyle, { responsive: true }),
-                }}
-                disabled={soldOut || choice.quantity === ""}
-                onClick={(event) => {
-                  if (preview) { select("pdAddToCart")(event); return; }
-                  window.dispatchEvent(new CustomEvent("orora-cart-confirm", {
-                    detail: { product, variantId, quantity: Number(choice.quantity) || 1, source: event.currentTarget.getBoundingClientRect().toJSON() },
-                  }));
-                }}
-              >
-                <ButtonIcon name="productCart" defaultSize={18} />
-              </button>
-            )}
-          </div>
+          <p
+            className={`product-detail-price${parseVndPrice(displayedPrice) !== null ? " is-numeric" : ""} ${selectedClass("pdPrice")}`}
+            data-builder-key={preview ? "pdPrice" : undefined}
+            onClick={select("pdPrice")}
+            style={css("price")}
+          >
+            {formatProductPrice(displayedPrice)}
+            {variant && <small className="product-price-variant" style={toCss(ps.selectionValue)}> / {variant.label}</small>}
+          </p>
 
           <p
             className={`product-detail-description ${selectedClass("pdDescription")}`}
@@ -615,8 +622,8 @@ function ProductDetail({
           <section className={`purchase-options ${selectedClass("pdPurchaseOptions")}`} aria-label="Chọn kênh mua hàng" data-builder-key={preview ? "pdPurchaseOptions" : undefined} onClick={preview ? select("pdPurchaseOptions") : undefined}>
             <h2 {...textProps("pdPurchaseHeading", "purchaseHeading")}>{purchase.heading?.trim() || "Chọn cách mua hàng"}</h2>
             <div className="purchase-channels-row">
-              {(preview || showZalo || showCall || home.chatSettings?.enabled !== false || (!contact.zalo && contact.email && contactSettings.showZalo !== false)) && (
-                <div className={`product-contact-actions product-consultation ${selectedClass("pdContactActions")}`} aria-label="Tư vấn sản phẩm" data-builder-key={preview ? "pdContactActions" : undefined} onClick={preview ? select("pdContactActions") : undefined}>
+              {(preview || (contactSettings.showTrigger === true && (showZalo || showCall || home.chatSettings?.enabled !== false || (!contact.zalo && contact.email && contactSettings.showZalo !== false)))) && (
+                <div className={`product-contact-actions product-consultation ${selectedClass("pdContactActions")}`} aria-label="Tư vấn sản phẩm" data-builder-key={preview ? "pdContactActions" : undefined} onClick={preview ? select("pdContactActions") : undefined} style={preview && contactSettings.showTrigger !== true ? { opacity: 0.42 } : undefined}>
                   <button type="button" className="product-consultation-toggle" style={css("contactActions")} aria-haspopup="dialog" onClick={preview ? select("pdContactActions") : (event) => { setConsultationSource(event.currentTarget.getBoundingClientRect().toJSON()); setConsultationOpen(true); }}>
                     <ButtonIcon name="consultation" defaultSize={15}/>
                     <span>{contactSettings.triggerLabel?.trim() || "Tư vấn"}</span>

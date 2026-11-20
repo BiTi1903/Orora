@@ -1,3 +1,19 @@
+## 20/11/2026 — Đưa nút Giỏ hàng (kèm biểu tượng SVG) vào thanh Mua ngay và thêm tùy chọn ẩn nút Tư vấn
+
+- **Lý do**: Nút giỏ hàng đặt cạnh giá trên cùng chưa hợp lý và bị trống biểu tượng do `productCart` chưa có mặc định trong `ButtonIcon`; chủ website muốn đặt nút giỏ hàng ngay bên cạnh giá tạm tính & nút **Mua ngay** ở thanh dưới và tạm ẩn nút **Tư vấn** theo tùy chọn quản trị.
+- **Thay đổi chính**:
+  - **Thanh Mua ngay (`src/components/ProductDetail.jsx`, `src/styles/product-detail.css`)**:
+    - Đưa giá sản phẩm phía trên về dạng sạch gọn ban đầu.
+    - Chuyển nút biểu tượng giỏ hàng (`.product-buy-cart-btn`, kèm SVG giỏ hàng mặc định qua `ButtonIcon allowHidden={false}`) vào trong thanh `.product-mobile-buy` ngay giữa giá tạm tính và nút **Mua ngay** (đồng bộ trên cả desktop và mobile, vẫn giữ tùy chỉnh `pdAddToCart`).
+  - **Tùy chọn bật/tắt nút Tư vấn (`src/admin/builder/ProductContactSettings.jsx`, `src/components/ProductDetail.jsx`)**:
+    - Thêm công tắc `Hiện nút Tư vấn trên trang sản phẩm` (`showTrigger`, mặc định tắt) trong Visual Builder; trang thật ẩn nút Tư vấn khi tắt và Visual Builder hiển thị mờ để quản trị viên vẫn bấm bật lại được bất kỳ lúc nào.
+  - **Kiểm thử (`qa/editor-checkout.spec.js`)**: Chỉ định rõ selector `.product-mobile-buy .product-mobile-buy-cta` khi kiểm tra trạng thái hết hàng.
+- **File / khu vực liên quan**: `src/components/ProductDetail.jsx`, `src/styles/product-detail.css`, `src/admin/builder/ProductContactSettings.jsx`, `qa/editor-checkout.spec.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **264/264** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt (`136.84 kB` gzip).
+  - Playwright (`width-1440` & `width-390`): **15/15** test đạt trên `qa/editor-checkout.spec.js` (1 test mobile-only bỏ qua trên desktop).
+- **Ảnh hưởng database**: Không thay đổi schema hay dữ liệu; bổ sung trường tùy chọn `productDetailStyles.contactActions.showTrigger` (mặc định `false`).
+
 ## 20/11/2026 — Bổ sung chức năng Kiểm tra toàn bộ mail 1 lần để phát hiện thư lỗi / trả lại
 
 - **Lý do**: Quản trị viên cần kiểm tra 1 lần toàn bộ email đơn hàng gần đây thay vì phải mở từng đơn để kiểm tra Outlook thủ công.

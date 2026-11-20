@@ -72,7 +72,7 @@ test('known stock blocks orders', async ({ page }) => {
  await page.route('**/api/storefront/stock?**', route => route.fulfill({ json: { availability: { gel: 'out' } } }));
  await detail(page);
  await expect(page.locator('.product-stock-badge')).toHaveText('Hết hàng');
- await expect(page.locator('.product-mobile-buy button')).toBeDisabled();
+ await expect(page.locator('.product-mobile-buy .product-mobile-buy-cta')).toBeDisabled();
 });
 
 test('product image dialog opens the source and zoom controls enlarge it', async ({ page }) => {

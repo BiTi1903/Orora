@@ -6,6 +6,15 @@ export default function ProductContactSettings({ value = {}, onChange }) {
   return (
     <>
       <SettingGroup title="Nút tư vấn sản phẩm">
+        <label className="builder-field">
+          <input
+            type="checkbox"
+            role="switch"
+            checked={value.showTrigger === true}
+            onChange={(event) => onChange({ showTrigger: event.target.checked })}
+          />{" "}
+          Hiện nút Tư vấn trên trang sản phẩm
+        </label>
         <div className="builder-field">
           <label>Tên nút tư vấn</label>
           <input
