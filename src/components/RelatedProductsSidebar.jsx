@@ -4,7 +4,7 @@ import { productNumber, productPath } from "../lib/product-identity";
 import { Link } from "react-router-dom";
 import useProducts from "../hooks/useProducts";
 import { compactRelatedProducts } from "../lib/product-content";
-import { cdnSrc, THUMB } from "../lib/cloudinary";
+import { cdnSrc, THUMB } from "../lib/image-cdn";
 import { toCss } from "../lib/typography";
 
 const compactStyle = (style, maximum) => {

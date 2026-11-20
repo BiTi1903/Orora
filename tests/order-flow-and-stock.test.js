@@ -324,4 +324,153 @@ test("Chat AI knowledge exposes tracking and policy quick links in guided replie
   assert.ok(policyReply.links.some((l) => l.href === "/chinh-sach"));
 });
 
+test("per-variant inventory isolates stock by productId__variantId across reserve, oversell block, deduct, and storefront-stock", async () => {
+  const { db, placeHandler, adminOrdersHandler, inventoryHandler } = await seedOrderEnv();
+  const { createStorefrontStockHandler } = await import("../server/storefront-stock.js");
+  await db.collection("products").doc("pv").set({
+    name: "Serum Variant",
+    active: true,
+    price: "250.000đ",
+    volumeOptions: [
+      { id: "v40", label: "40ml", price: "250.000đ" },
+      { id: "v100", label: "100ml", price: "450.000đ" },
+    ],
+  });
+
+  // Admin sets stock per variant
+  const set40 = makeRes();
+  await inventoryHandler(makeReq({ method: "POST", body: { id: "pv__v40", quantity: 2, version: 0 } }), set40);
+  assert.equal(set40.statusCode, 200);
+  const set100 = makeRes();
+  await inventoryHandler(makeReq({ method: "POST", body: { id: "pv__v100", quantity: 5, version: 0 } }), set100);
+  assert.equal(set100.statusCode, 200);
+
+  // GET /api/inventory lists separate variant rows
+  const listRes = makeRes();
+  await inventoryHandler(makeReq({ method: "GET" }), listRes);
+  assert.equal(listRes.statusCode, 200);
+  assert.ok(listRes.body.items.some((i) => i.id === "pv__v40" && i.quantity === 2));
+  assert.ok(listRes.body.items.some((i) => i.id === "pv__v100" && i.quantity === 5));
+
+  // Order 2 of v40 -> succeeds and reserves pv__v40 only
+  const ord40 = crypto.randomUUID();
+  const res40 = makeRes();
+  await placeHandler(makeReq({
+    auth: false,
+    body: {
+      requestId: ord40, productId: "pv", variantId: "v40", quantity: 2,
+      name: "Khach V", phone: "0901112233", email: "kv@example.com",
+      address: "10 Nguyen Hue, Quan 1, TP.HCM", paymentMethod: "cod", consent: true,
+    },
+  }), res40);
+  assert.equal(res40.statusCode, 201);
+  assert.equal((await db.collection("inventory").doc("pv__v40").get()).data().reserved, 2);
+  assert.equal((await db.collection("inventory").doc("pv__v100").get()).data().reserved, 0);
+
+  // Ordering 1 more of v40 fails (409), while ordering 3 of v100 succeeds (201)
+  const res40Over = makeRes();
+  await placeHandler(makeReq({
+    auth: false,
+    body: {
+      requestId: crypto.randomUUID(), productId: "pv", variantId: "v40", quantity: 1,
+      name: "Khach V2", phone: "0901112244", email: "kv2@example.com",
+      address: "11 Nguyen Hue, Quan 1, TP.HCM", paymentMethod: "cod", consent: true,
+    },
+  }), res40Over);
+  assert.equal(res40Over.statusCode, 409);
+
+  const ord100 = crypto.randomUUID();
+  const res100 = makeRes();
+  await placeHandler(makeReq({
+    auth: false,
+    body: {
+      requestId: ord100, productId: "pv", variantId: "v100", quantity: 3,
+      name: "Khach V3", phone: "0901112255", email: "kv3@example.com",
+      address: "12 Nguyen Hue, Quan 1, TP.HCM", paymentMethod: "cod", consent: true,
+    },
+  }), res100);
+  assert.equal(res100.statusCode, 201);
+
+  // Storefront stock reflects v40 out, v100 low (5 - 3 = 2), product pv low
+  db.getAll = (...refs) => Promise.all(refs.map((ref) => ref.get()));
+  const stockHandler = createStorefrontStockHandler({ getDb: () => db, env: { CHAT_RATE_LIMIT_SALT: "test-salt" } });
+  const stockRes = makeRes();
+  await stockHandler({ method: "GET", query: { ids: "pv" }, headers: { "x-forwarded-for": "127.0.0.1" } }, stockRes);
+  assert.equal(stockRes.statusCode, 200);
+  assert.equal(stockRes.body.availability.pv__v40, "out");
+  assert.equal(stockRes.body.availability.pv__v100, "low");
+  assert.equal(stockRes.body.availability.pv, "low");
+
+  // Shipping ord40 deducts pv__v40 to 0 without touching pv__v100
+  const ship40 = makeRes();
+  await adminOrdersHandler(makeReq({ method: "POST", body: { id: ord40, status: "shipping" } }), ship40);
+  assert.equal(ship40.statusCode, 200);
+  assert.equal((await db.collection("inventory").doc("pv__v40").get()).data().quantity, 0);
+  assert.equal((await db.collection("inventory").doc("pv__v100").get()).data().quantity, 5);
+});
+
+test("order payment updates maintain pre-aggregated siteAnalyticsDaily revenue and analytics skips order scans when tracked", async () => {
+  const { db, placeHandler, adminOrdersHandler } = await seedOrderEnv();
+  const { createAnalyticsHandler } = await import("../server/analytics.js");
+  const { analyticsDay } = await import("../src/lib/analytics.js");
+
+  const ordId = crypto.randomUUID();
+  const created = makeRes();
+  await placeHandler(makeReq({
+    auth: false,
+    body: {
+      requestId: ordId, productId: "p1", quantity: 2,
+      name: "Khach Rev", phone: "0903334455", email: "rev@example.com",
+      address: "10 Le Loi, Quan 1, TP.HCM", paymentMethod: "cod", consent: true,
+    },
+  }), created);
+  assert.equal(created.statusCode, 201);
+  await db.collection("orders").doc(ordId).set({ shippingFee: 0, totalAmount: 400000 }, { merge: true });
+
+  // Mark paid -> siteAnalyticsDaily/{day} updated atomically
+  const paidRes = makeRes();
+  await adminOrdersHandler(makeReq({ method: "POST", body: { id: ordId, paymentStatus: "paid" } }), paidRes);
+  assert.equal(paidRes.statusCode, 200);
+
+  const savedOrder = (await db.collection("orders").doc(ordId).get()).data();
+  const day = analyticsDay(savedOrder.createdAt);
+  const dailyDoc = (await db.collection("siteAnalyticsDaily").doc(day).get()).data();
+  assert.equal(dailyDoc.revenueTracked, true);
+  assert.equal(dailyDoc.paidOrders, 1);
+  assert.equal(dailyDoc.paidAmount, 400000);
+
+  // Analytics report for 1 day uses pre-aggregated siteAnalyticsDaily without scanning orders
+  let scannedOrders = false;
+  const guardedDb = {
+    collection(name) {
+      if (name === "orders") {
+        scannedOrders = true;
+        throw new Error("Should not scan orders when all window days have revenueTracked=true");
+      }
+      return db.collection(name);
+    },
+  };
+  const analyticsHandler = createAnalyticsHandler({
+    getDb: () => guardedDb,
+    verifyToken: async () => ({ uid: "admin-1" }),
+    env: { NEWSLETTER_SITE_ORIGIN: "https://ororavn.com", ORDER_ADMIN_UIDS: "admin-1" },
+    now: () => savedOrder.createdAt.getTime(),
+  });
+  const reportRes = makeRes();
+  await analyticsHandler(makeReq({ method: "GET", query: { days: "1" } }), reportRes);
+  assert.equal(reportRes.statusCode, 200);
+  assert.equal(scannedOrders, false);
+  assert.equal(reportRes.body.series[0].paidOrders, 1);
+  assert.equal(reportRes.body.series[0].paidAmount, 400000);
+
+  // Cancelling the paid order decrements pre-aggregated daily revenue back to 0
+  const cancelRes = makeRes();
+  await adminOrdersHandler(makeReq({ method: "POST", body: { id: ordId, status: "cancelled" } }), cancelRes);
+  assert.equal(cancelRes.statusCode, 200);
+  const afterCancel = (await db.collection("siteAnalyticsDaily").doc(day).get()).data();
+  assert.equal(afterCancel.paidOrders, 0);
+  assert.equal(afterCancel.paidAmount, 0);
+});
+
+
 

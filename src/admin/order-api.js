@@ -5,7 +5,7 @@ export async function orderRequest(body, params = {}, { signal } = {}) {
   const query = new URLSearchParams(params).toString();
   const response = await fetch(`/api/admin-orders${query ? `?${query}` : ""}`, { signal, method: body ? "POST" : "GET", headers: { Authorization: `Bearer ${token}`, ...(body ? { "Content-Type": "application/json" } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
   let data;
-  try { data = await response.json(); } catch { throw new Error("Chưa kết nối được API đơn hàng. Kiểm tra deployment Vercel."); }
+  try { data = await response.json(); } catch { throw new Error("Chưa kết nối được máy chủ đơn hàng. Vui lòng thử lại sau ít giây."); }
   if (!response.ok) throw Object.assign(new Error(data.message || "Chưa xử lý được đơn hàng."), { status: response.status });
   return data;
 }

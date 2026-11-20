@@ -3,7 +3,7 @@ import { chatAppearanceVars, CHAT_LABELS } from "../lib/chat-appearance";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { CHAT_MESSAGE_LIMIT, safeChatHref } from "../lib/chat";
-import { cdnSrc, THUMB } from "../lib/cloudinary";
+import { cdnSrc, THUMB } from "../lib/image-cdn";
 
 function ChatArrow() {
   return <svg className="orora-chat-arrow" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="m4 12 8-8M4 4h8v8" /></svg>;

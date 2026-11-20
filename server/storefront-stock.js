@@ -1,5 +1,15 @@
 import { LOW_STOCK_THRESHOLD } from '../src/lib/stock.js';
+import { productVolumeOptions } from '../src/lib/product-options.js';
+import { inventoryDocId } from './inventory.js';
 import { reserveRequestBudget } from './request-limits.js';
+
+function stockState(data) {
+  const quantity = data?.quantity;
+  if (!Number.isSafeInteger(quantity) || quantity < 0) return null;
+  const reserved = Number.isSafeInteger(data?.reserved) && data.reserved > 0 ? data.reserved : 0;
+  const available = Math.max(0, quantity - reserved);
+  return available === 0 ? 'out' : available <= LOW_STOCK_THRESHOLD ? 'low' : 'available';
+}
 
 export function createStorefrontStockHandler({ getDb, clock = Date.now, env = process.env }) {
   return async (req, res) => {
@@ -29,15 +39,31 @@ export function createStorefrontStockHandler({ getDb, clock = Date.now, env = pr
       }
       const products = await db.getAll(...ids.map(id => db.collection('products').doc(id)));
       const visible = products.filter(doc => doc.exists && doc.data().active !== false);
-      const stock = visible.length ? await db.getAll(...visible.map(doc => db.collection('inventory').doc(doc.id))) : [];
-      const availability = Object.fromEntries(stock.flatMap(doc => {
-        const data = doc.data();
-        const quantity = data?.quantity;
-        if (!Number.isSafeInteger(quantity) || quantity < 0) return [];
-        const reserved = Number.isSafeInteger(data?.reserved) && data.reserved > 0 ? data.reserved : 0;
-        const available = Math.max(0, quantity - reserved);
-        return [[doc.id, available === 0 ? 'out' : available <= LOW_STOCK_THRESHOLD ? 'low' : 'available']];
-      }));
+      const stockKeys = [...new Set(visible.flatMap(doc => {
+        const variants = productVolumeOptions(doc.data());
+        return [doc.id, ...variants.map(v => inventoryDocId(doc.id, v.id))];
+      }))];
+      const stockDocs = stockKeys.length ? await db.getAll(...stockKeys.map(id => db.collection('inventory').doc(id))) : [];
+      const stockById = new Map(stockKeys.map((id, i) => [id, stockDocs[i]?.data()]));
+      const availability = {};
+      for (const doc of visible) {
+        const variants = productVolumeOptions(doc.data());
+        const variantStates = [];
+        for (const variant of variants) {
+          const vKey = inventoryDocId(doc.id, variant.id);
+          const state = stockState(stockById.get(vKey));
+          if (state) {
+            availability[vKey] = state;
+            variantStates.push(state);
+          }
+        }
+        if (variantStates.length) {
+          availability[doc.id] = variantStates.includes('available') ? 'available' : variantStates.includes('low') ? 'low' : 'out';
+        } else {
+          const baseState = stockState(stockById.get(doc.id));
+          if (baseState) availability[doc.id] = baseState;
+        }
+      }
       res.setHeader('Cache-Control', 'public, max-age=15, s-maxage=30');
       return res.status(200).json({ availability });
     } catch {

@@ -1,3 +1,36 @@
+## 20/11/2026 — Nâng cấp tồn kho theo biến thể dung tích, tổng hợp doanh thu theo ngày, chỉ mục Firestore và tối ưu UI/UX Storefront & Admin
+
+- **Lý do**: Xử lý các hạng mục đã xác minh từ báo cáo kiểm tra kỹ thuật toàn diện (bỏ qua các mục trùng/đã xử lý và bỏ qua đổi Rate Limiter sang Redis/KV theo yêu cầu), đồng thời nâng cấp schema Firestore khi website đang trong giai đoạn thử nghiệm.
+- **Thay đổi chính**:
+  - **Tồn kho theo biến thể dung tích (`server/inventory.js`, `server/orders.js`, `server/storefront-stock.js`, `src/admin/InventoryAdmin.jsx`, `src/components/ProductDetail.jsx`, `src/components/ShopCart.jsx`)**:
+    - Tách tài liệu tồn kho theo mã `{productId}__{variantId}` cho sản phẩm có nhiều dung tích (`volumeOptions`), vẫn tương thích ngược với tài liệu `{productId}` cũ khi chưa tách kho.
+    - Cập nhật `createOrderHandler` và `settleOrderInventory` để giữ chỗ, chặn đặt vượt kho và trừ/hoàn kho đúng theo từng dung tích trong transaction an toàn (đọc trước khi ghi).
+    - Cập nhật `server/storefront-stock.js`, `ProductDetail.jsx` và `ShopCart.jsx` đọc trạng thái tồn kho theo từng dung tích đang chọn.
+    - Thêm nút **Lưu tất cả (N)** theo lô trên trang Kiểm hàng (`InventoryAdmin.jsx`).
+  - **Tổng hợp doanh thu theo ngày & chỉ mục Firestore (`server/orders.js`, `server/analytics.js`, `firestore.indexes.json`)**:
+    - Cập nhật nguyên tử `paidAmount`, `paidOrders`, `unpricedPaid`, `revenueTracked: true` vào `siteAnalyticsDaily/{YYYY-MM-DD}` ngay khi đơn hàng đổi trạng thái thanh toán hoặc hủy.
+    - `server/analytics.js` đọc trực tiếp tổng hợp doanh thu từ `siteAnalyticsDaily` và bỏ qua quét collection `orders` cho các ngày đã có `revenueTracked: true` (giữ fallback quét cho ngày cũ chưa tổng hợp).
+    - Tạo `firestore.indexes.json` khai báo composite index cho `orders (status ASC, createdAt DESC)` và `orders (customer.phone ASC, createdAt DESC)`.
+  - **Tối ưu bundle, mobile & typography (`src/components/ChatPanel.jsx`, `src/components/RelatedProductsSidebar.jsx`, `src/styles/checkout.css`, `src/styles/hero.css`)**:
+    - Chuyển import `cdnSrc`/`THUMB` ở `ChatPanel.jsx` và `RelatedProductsSidebar.jsx` sang `../lib/image-cdn` để tách mã upload Cloudinary khỏi bundle storefront.
+    - Đặt `font-size: 16px` cho các trường nhập ở màn hình đặt hàng mobile (`checkout.css`) để tránh iOS Safari tự phóng to khi focus.
+    - Đổi `letter-spacing` của `.hero-title` từ `-4px` sang `-0.02em` để tránh dính dấu tiếng Việt.
+  - **Cải tiến UI/UX Storefront & Admin (`src/components/CursorSparkle.jsx`, `src/App.jsx`, `src/admin/builder/SurfaceSettings.jsx`, `src/components/ProductDetail.jsx`, `src/components/ShopCart.jsx`, `src/styles/shop-cart.css`, `src/admin/AdminApp.jsx`, `src/admin/AdminLogin.jsx`, `src/admin/order-api.js`, `src/admin/ProductReviewsEditor.jsx`, `src/admin/ProductVolumeEditor.jsx`)**:
+    - Tắt mặc định hiệu ứng lấp lánh theo con trỏ (`CursorSparkle`) và thêm công tắc bật/tắt trong Visual Builder (`SurfaceSettings.jsx`).
+    - Giữ cố định thứ tự ảnh thumbnail và hỗ trợ vuốt ngang đổi ảnh trên mobile trong `ProductDetail.jsx`.
+    - Thêm thanh **Hoàn tác** 5 giây khi xóa sản phẩm và gợi ý 3 sản phẩm khi giỏ hàng trống trong `ShopCart.jsx`.
+    - Hỗ trợ đường dẫn sạch `/admin/:tab` trong `AdminApp.jsx` (vẫn tương thích `#hash` cũ), thêm xác nhận `useConfirm()` trước khi xóa đánh giá/dung tích, hiển thị trạng thái `"Đang đăng nhập…"` trên nút đăng nhập Admin và thay câu thông báo kỹ thuật Vercel trong `order-api.js`.
+  - **Kiểm thử (`tests/order-flow-and-stock.test.js`)**:
+    - Thêm 2 unit test cho tách tồn kho theo biến thể (`productId__variantId`) và tổng hợp doanh thu ngày không quét `orders`.
+- **File / khu vực liên quan**: `firestore.indexes.json`, `server/inventory.js`, `server/orders.js`, `server/storefront-stock.js`, `server/analytics.js`, `src/App.jsx`, `src/components/ChatPanel.jsx`, `src/components/RelatedProductsSidebar.jsx`, `src/components/CursorSparkle.jsx`, `src/components/ProductDetail.jsx`, `src/components/ShopCart.jsx`, `src/styles/checkout.css`, `src/styles/hero.css`, `src/styles/shop-cart.css`, `src/admin/AdminApp.jsx`, `src/admin/AdminLogin.jsx`, `src/admin/InventoryAdmin.jsx`, `src/admin/ProductReviewsEditor.jsx`, `src/admin/ProductVolumeEditor.jsx`, `src/admin/order-api.js`, `src/admin/builder/SurfaceSettings.jsx`, `tests/order-flow-and-stock.test.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **263/263** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt (`136.78 kB` gzip).
+  - Playwright (`width-390`): **30/30** test đạt trên `qa/cart.spec.js`, `qa/cart-toggle.spec.js`, `qa/cart-settings.spec.js`, `qa/admin-navigation.spec.js`, `qa/admin-appearance.spec.js`, `qa/audit-resilience.spec.js`, `qa/shopping.spec.js`, `qa/button-press.spec.js`.
+- **Ảnh hưởng database**:
+  - Mở rộng collection `inventory` hỗ trợ document ID `{productId}__{variantId}` cho sản phẩm có nhiều dung tích (tương thích ngược với `{productId}`).
+  - Bổ sung các trường tổng hợp doanh thu (`paidAmount`, `paidOrders`, `unpricedPaid`, `revenueTracked`) vào `siteAnalyticsDaily/{YYYY-MM-DD}`.
+  - Bổ sung `firestore.indexes.json` (cần chạy `firebase deploy --only firestore:indexes` khi triển khai lên môi trường Firebase mới).
+
 ## 20/11/2026 — Đồng bộ toàn diện Backend, Popup Storefront và vận hành Admin sau rà soát chi tiết
 
 - **Lý do**: Rà soát lại toàn bộ hệ thống từ Backend (`server/`), giao diện Storefront đến Admin để xử lý các trường hợp biên, đồng bộ ngôn ngữ thiết kế tối giản cao cấp và hiệu ứng mở/đóng cho toàn bộ popup trên website, cũng như tối ưu thao tác vận hành hằng ngày cho quản trị viên.

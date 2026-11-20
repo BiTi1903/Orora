@@ -283,6 +283,7 @@
   .checkout-item-price { font-size: 13.5px; padding: 4px 9px; }
 }
 @media (max-width:768px) {
+  .order-field input, .order-field textarea, .order-field select, .address-picker input { font-size: 16px; }
   .order-form-modal [style*="--mobile-font-size"],
   .order-success-modal [style*="--mobile-font-size"] { font-size: var(--mobile-font-size) !important; }
   .order-form-modal:has(.checkout-form :is(input:not([type="checkbox"]):not([type="radio"]),textarea):focus) .checkout-sticky {

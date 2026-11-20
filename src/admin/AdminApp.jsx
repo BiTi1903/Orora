@@ -50,10 +50,26 @@ function OrderBadge({ notifications }) {
 }
 
 const initialAdminTab = () => {
-  const hash = typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
+  if (typeof window === "undefined") return "dashboard";
+  const pathMatch = /^\/admin\/([a-z-]+)\/?$/i.exec(window.location.pathname);
+  if (pathMatch && ALL_TABS.includes(pathMatch[1])) return pathMatch[1];
+  const hash = window.location.hash.replace(/^#/, "");
   if (ALL_TABS.includes(hash)) return hash;
   return "dashboard";
 };
+
+function syncAdminUrl(key, replace = false) {
+  if (typeof window === "undefined") return;
+  const method = replace ? "replaceState" : "pushState";
+  if (window.location.pathname.startsWith("/admin")) {
+    const nextPath = key === "dashboard" ? "/admin" : `/admin/${key}`;
+    if (window.location.pathname !== nextPath || window.location.hash) {
+      window.history[method](null, "", nextPath);
+    }
+  } else if (window.location.hash !== `#${key}`) {
+    window.history[method](null, "", `#${key}`);
+  }
+}
 
 function AdminWorkspace({ user }) {
   const confirm = useConfirm();
@@ -79,13 +95,17 @@ function AdminWorkspace({ user }) {
       if (!ok) return;
     }
     setTab(key);
-    if (typeof window !== "undefined" && window.location.hash !== `#${key}`) window.history.replaceState(null, "", `#${key}`);
+    syncAdminUrl(key);
   };
 
   useEffect(() => {
-    const onHash = () => setTab(initialAdminTab());
-    window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
+    const onNav = () => setTab(initialAdminTab());
+    window.addEventListener("popstate", onNav);
+    window.addEventListener("hashchange", onNav);
+    return () => {
+      window.removeEventListener("popstate", onNav);
+      window.removeEventListener("hashchange", onNav);
+    };
   }, []);
 
   useEffect(() => {
@@ -93,7 +113,7 @@ function AdminWorkspace({ user }) {
       setStoreVersion((v) => v + 1);
       setStoreSection(event.detail?.section || "links");
       setTab("store");
-      if (typeof window !== "undefined") window.history.replaceState(null, "", "#store");
+      syncAdminUrl("store", true);
     };
     window.addEventListener("orora-admin-store", open);
     return () => window.removeEventListener("orora-admin-store", open);

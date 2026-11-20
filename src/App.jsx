@@ -108,7 +108,7 @@ function App() {
                  {visible("reviews") && <Testimonials />}
    {visible("newsletter") && <Newsletter />}
               {visible("footer") && <Footer />}
-<CursorSparkle />
+<CursorSparkle enabled={home.navStyles?.surfaces?.cursorSparkle === true} />
 {!home.loading && <Petals settings={home.navStyles?.surfaces?.petals} />}
             </main>
           }

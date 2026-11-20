@@ -1,29 +1,37 @@
 import { randomUUID } from "node:crypto";
 import { requireAdmin } from "./admin-auth.js";
 import { LOW_STOCK_THRESHOLD } from "../src/lib/stock.js";
+import { productVolumeOptions } from "../src/lib/product-options.js";
 const validId = (value) => typeof value === "string" && /^[a-zA-Z0-9_-]{1,150}$/.test(value);
 const validQuantity = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 1_000_000_000;
 const fail = (message, status = 409) => Object.assign(new Error(message), { status });
 
+export const inventoryDocId = (productId, variantId = "") => (variantId ? `${productId}__${variantId}` : productId);
+export function parseInventoryId(docId) {
+  const sep = String(docId || "").indexOf("__");
+  return sep > 0 ? { productId: docId.slice(0, sep), variantId: docId.slice(sep + 2) } : { productId: String(docId || ""), variantId: "" };
+}
+
 export function waitingQuantity(order) {
   return order.paymentStatus !== "paid" && !["cancelled", "shipping", "completed"].includes(order.status) && !["deducted", "restocked", "legacy_paid"].includes(order.inventory?.state) && Number.isInteger(order.quantity) && order.quantity > 0 ? order.quantity : 0;
 }
-function orderProductQuantities(order) {
+function orderStockEntries(order) {
   const counts = new Map();
+  const add = (productId, variantId, qty) => {
+    if (!validId(productId) || !Number.isInteger(qty) || qty <= 0) return;
+    const key = inventoryDocId(productId, variantId || "");
+    const existing = counts.get(key);
+    counts.set(key, { productId, variantId: variantId || "", quantity: (existing?.quantity || 0) + qty });
+  };
   if (Array.isArray(order.items) && order.items.length) {
-    for (const item of order.items) {
-      if (validId(item?.id) && Number.isInteger(item.quantity) && item.quantity > 0) {
-        counts.set(item.id, (counts.get(item.id) || 0) + item.quantity);
-      }
-    }
+    for (const item of order.items) add(item?.id, item?.variantId, item?.quantity);
     return counts;
   }
-  if (validId(order.product?.id) && Number.isInteger(order.quantity) && order.quantity > 0) {
-    counts.set(order.product.id, order.quantity);
-  }
+  add(order.product?.id, order.product?.variantId, order.quantity);
   return counts;
 }
-async function countWaitingForProduct(tx, db, productId) {
+async function countWaitingForStockKey(tx, db, stockKey) {
+  const { productId, variantId } = parseInventoryId(stockKey);
   const pending = await tx.get(
     db.collection("orders")
       .where("status", "in", ["new", "confirmed"])
@@ -32,74 +40,105 @@ async function countWaitingForProduct(tx, db, productId) {
   return pending.docs.reduce((sum, doc) => {
     const order = doc.data();
     if (waitingQuantity(order) <= 0) return sum;
-    return sum + (orderProductQuantities(order).get(productId) || 0);
+    const entries = orderStockEntries(order);
+    if (variantId) return sum + (entries.get(stockKey)?.quantity || 0);
+    let matched = 0;
+    for (const entry of entries.values()) {
+      if (entry.productId === productId) matched += entry.quantity;
+    }
+    return sum + matched;
   }, 0);
 }
-export async function reserveOrderInventory(tx, db, productId, quantity, stockSnapshot) {
-  const ref = db.collection("inventory").doc(productId);
-  // Order creation supplies the stock snapshot from its initial batched reads.
-  const stock = stockSnapshot || await tx.get(ref);
+export async function prepareOrderInventoryReservation(tx, db, productId, quantity, stockSnapshot, variantId = "", variantSnapshot = null) {
+  const variantKey = variantId ? inventoryDocId(productId, variantId) : productId;
+  let targetKey = productId;
+  let stock = stockSnapshot;
+  if (variantId) {
+    const variantSnap = variantSnapshot || (await tx.get(db.collection("inventory").doc(variantKey)));
+    if (variantSnap?.exists && validQuantity(variantSnap.data()?.quantity)) {
+      targetKey = variantKey;
+      stock = variantSnap;
+    }
+  }
+  const ref = db.collection("inventory").doc(targetKey);
+  if (!stock) stock = await tx.get(ref);
   const current = stock.data() || {};
   let nextReserved = Number.isSafeInteger(current.reserved) && current.reserved >= 0 ? current.reserved : null;
-  // Uncounted stock intentionally accepts orders. Scanning historical orders in
-  // that case cannot change the decision and only adds a database round trip.
   if (validQuantity(current.quantity)) {
     if (nextReserved === null) {
-      nextReserved = await countWaitingForProduct(tx, db, productId);
+      nextReserved = await countWaitingForStockKey(tx, db, targetKey);
     }
     if (current.quantity - nextReserved < quantity) throw fail("Sản phẩm không đủ số lượng còn có thể đặt. Vui lòng giảm số lượng hoặc liên hệ ORORA.");
   }
-  // Serialize reservations against stock adjustments and other orders. Physical
-  // quantity stays unchanged until payment or shipping is confirmed.
-  tx.set(ref, { quantity: current.quantity ?? null, ...(nextReserved !== null ? { reserved: nextReserved + quantity } : {}), version: (current.version || 0) + 1, updatedAt: new Date() }, { merge: true });
+  return {
+    targetKey,
+    ref,
+    data: { quantity: current.quantity ?? null, ...(nextReserved !== null ? { reserved: nextReserved + quantity } : {}), version: (current.version || 0) + 1, updatedAt: new Date() },
+  };
+}
+export async function reserveOrderInventory(tx, db, productId, quantity, stockSnapshot, variantId = "", variantSnapshot = null) {
+  const plan = await prepareOrderInventoryReservation(tx, db, productId, quantity, stockSnapshot, variantId, variantSnapshot);
+  tx.set(plan.ref, plan.data, { merge: true });
 }
 // Called inside the order update transaction, before any writes.
 export async function settleOrderInventory(tx, db, order, nextPaymentStatus, orderId, userId, nextStatus) {
   if (["deducted", "restocked", "legacy_paid"].includes(order.inventory?.state)) return {};
   if (order.paymentStatus === "paid" || order.status === "shipping" || order.status === "completed") return { inventory: { state: "legacy_paid" } };
   const wasWaiting = waitingQuantity(order) > 0;
-  const qtyByProduct = orderProductQuantities(order);
+  const rawEntries = [...orderStockEntries(order).values()];
+  if (!rawEntries.length) {
+    if (nextPaymentStatus === "paid" || nextStatus === "shipping") throw fail("Đơn thiếu ID sản phẩm hoặc số lượng hợp lệ. Kiểm tra đơn trước khi xác nhận.");
+    return {};
+  }
+  // Resolve each entry to variant doc if counted, else legacy product doc.
+  const candidateIds = [...new Set(rawEntries.flatMap((e) => (e.variantId ? [inventoryDocId(e.productId, e.variantId), e.productId] : [e.productId])))];
+  const candidateRefs = candidateIds.map((id) => db.collection("inventory").doc(id));
+  const candidateSnaps = await tx.getAll(...candidateRefs);
+  const snapById = new Map(candidateIds.map((id, i) => [id, candidateSnaps[i]]));
+  const resolvedByDoc = new Map();
+  for (const entry of rawEntries) {
+    const vKey = entry.variantId ? inventoryDocId(entry.productId, entry.variantId) : entry.productId;
+    const vSnap = snapById.get(vKey);
+    const chosenId = entry.variantId && vSnap?.exists && (validQuantity(vSnap.data()?.quantity) || Number.isSafeInteger(vSnap.data()?.reserved))
+      ? vKey
+      : entry.productId;
+    resolvedByDoc.set(chosenId, (resolvedByDoc.get(chosenId) || 0) + entry.quantity);
+  }
+  const entries = [...resolvedByDoc.entries()];
   if (nextStatus === "cancelled") {
-    if (wasWaiting && qtyByProduct.size) {
-      const entries = [...qtyByProduct.entries()];
-      const refs = entries.map(([productId]) => db.collection("inventory").doc(productId));
-      const stocks = await tx.getAll(...refs);
+    if (wasWaiting && entries.length) {
       const updatedAt = new Date();
-      entries.forEach(([, qty], index) => {
-        const stock = stocks[index];
-        const current = stock.data();
-        if (stock.exists && Number.isSafeInteger(current?.reserved)) {
-          tx.set(refs[index], { reserved: Math.max(0, current.reserved - qty), version: (current.version || 0) + 1, updatedAt, updatedBy: userId }, { merge: true });
+      entries.forEach(([docId, qty]) => {
+        const stock = snapById.get(docId);
+        const current = stock?.data();
+        if (stock?.exists && Number.isSafeInteger(current?.reserved)) {
+          tx.set(db.collection("inventory").doc(docId), { reserved: Math.max(0, current.reserved - qty), version: (current.version || 0) + 1, updatedAt, updatedBy: userId }, { merge: true });
         }
       });
     }
     return {};
   }
   if (nextPaymentStatus !== "paid" && nextStatus !== "shipping") return {};
-  if (!qtyByProduct.size) throw fail("Đơn thiếu ID sản phẩm hoặc số lượng hợp lệ. Kiểm tra đơn trước khi xác nhận.");
-  const entries = [...qtyByProduct.entries()];
-  const refs = entries.map(([productId]) => db.collection("inventory").doc(productId));
-  const stocks = await tx.getAll(...refs);
-  entries.forEach(([, qty], index) => {
-    const stock = stocks[index];
-    const current = stock.data();
-    if (!stock.exists || !validQuantity(current.quantity)) throw fail("Chưa nhập tồn kho cho sản phẩm này. Vào Kiểm Hàng nhập số lượng trước khi xác nhận thanh toán hoặc giao hàng.");
+  entries.forEach(([docId, qty]) => {
+    const stock = snapById.get(docId);
+    const current = stock?.data();
+    if (!stock?.exists || !validQuantity(current.quantity)) throw fail("Chưa nhập tồn kho cho sản phẩm này. Vào Kiểm Hàng nhập số lượng trước khi xác nhận thanh toán hoặc giao hàng.");
     if (current.quantity < qty) throw fail(`Tồn kho chỉ còn ${current.quantity}, không đủ ${qty} sản phẩm của đơn. Kiểm tra và cập nhật Kiểm Hàng trước.`);
   });
   const updatedAt = new Date();
   let totalDeducted = 0;
-  entries.forEach(([productId, qty], index) => {
+  entries.forEach(([docId, qty]) => {
     totalDeducted += qty;
-    const current = stocks[index].data();
-    tx.set(refs[index], {
+    const current = snapById.get(docId).data();
+    tx.set(db.collection("inventory").doc(docId), {
       quantity: current.quantity - qty,
       ...(wasWaiting && Number.isSafeInteger(current.reserved) ? { reserved: Math.max(0, current.reserved - qty) } : {}),
       version: (current.version || 0) + 1,
       updatedAt,
       updatedBy: userId,
     }, { merge: true });
-    const movementId = entries.length === 1 ? `order-${orderId}` : `order-${orderId}-${productId}`;
-    tx.set(db.collection("inventoryMovements").doc(movementId), { type: "order_out", productId, orderId, orderCode: order.code || "", change: -qty, before: current.quantity, after: current.quantity - qty, createdAt: updatedAt, actor: userId });
+    const movementId = entries.length === 1 ? `order-${orderId}` : `order-${orderId}-${docId}`;
+    tx.set(db.collection("inventoryMovements").doc(movementId), { type: "order_out", productId: docId, orderId, orderCode: order.code || "", change: -qty, before: current.quantity, after: current.quantity - qty, createdAt: updatedAt, actor: userId });
   });
   return {
     inventory: entries.length === 1
@@ -134,8 +173,10 @@ export function createInventoryHandler({ getDb, verifyToken, env = process.env }
         for (const doc of page.docs) {
           const order = doc.data();
           const isWaiting = waitingQuantity(order) > 0;
-          for (const [productId, qty] of orderProductQuantities(order)) {
-            pending[productId] = (pending[productId] || 0) + (isWaiting ? qty : 0);
+          for (const [docKey, entry] of orderStockEntries(order)) {
+            const addQty = isWaiting ? entry.quantity : 0;
+            pending[docKey] = (pending[docKey] || 0) + addQty;
+            if (entry.variantId) pending[entry.productId] = (pending[entry.productId] || 0) + addQty;
           }
         }
         return res.status(200).json({ pending, nextCursor: page.docs.length === 100 ? page.docs.at(-1).id : null });
@@ -149,17 +190,23 @@ export function createInventoryHandler({ getDb, verifyToken, env = process.env }
             const reserved = Number.isSafeInteger(data.reserved) && data.reserved > 0 ? data.reserved : 0;
             const available = Math.max(0, data.quantity - reserved);
             if (available > LOW_STOCK_THRESHOLD) return null;
-            return { id: doc.id, quantity: data.quantity, reserved, available };
+            const { productId, variantId } = parseInventoryId(doc.id);
+            return { id: doc.id, productId, variantId, quantity: data.quantity, reserved, available };
           })
           .filter(Boolean)
           .sort((a, b) => a.available - b.available || a.quantity - b.quantity || a.id.localeCompare(b.id))
           .slice(0, 20);
-        const prodRefs = lowDocs.map((entry) => db.collection("products").doc(entry.id));
+        const uniqueProdIds = [...new Set(lowDocs.map((entry) => entry.productId))];
+        const prodRefs = uniqueProdIds.map((id) => db.collection("products").doc(id));
         const prodDocs = !prodRefs.length ? [] : typeof db.getAll === "function" ? await db.getAll(...prodRefs) : await Promise.all(prodRefs.map((ref) => ref.get()));
-        const items = lowDocs.flatMap((entry, index) => {
-          const prod = prodDocs[index];
+        const prodById = new Map(uniqueProdIds.map((id, i) => [id, prodDocs[i]]));
+        const items = lowDocs.flatMap((entry) => {
+          const prod = prodById.get(entry.productId);
           if (!prod?.exists) return [];
-          return [{ id: entry.id, name: String(prod.data().name || ""), quantity: entry.quantity, ...(entry.reserved > 0 ? { reserved: entry.reserved, available: entry.available } : {}) }];
+          const pData = prod.data();
+          const variant = entry.variantId ? productVolumeOptions(pData).find((v) => v.id === entry.variantId) : null;
+          const name = variant ? `${String(pData.name || "")} (${variant.label})` : String(pData.name || "");
+          return [{ id: entry.id, name, quantity: entry.quantity, ...(entry.reserved > 0 ? { reserved: entry.reserved, available: entry.available } : {}) }];
         });
         return res.status(200).json({ items });
       }
@@ -168,12 +215,31 @@ export function createInventoryHandler({ getDb, verifyToken, env = process.env }
         const cursor = req.query?.cursor;
         if (cursor) { if (!validId(cursor)) throw fail("Trang không hợp lệ.", 400); query = query.startAfter(cursor); }
         const page = await query.get();
-        const refs = page.docs.map((product) => db.collection("inventory").doc(product.id));
+        const rows = page.docs.flatMap((product) => {
+          const data = product.data();
+          const variants = productVolumeOptions(data);
+          if (variants.length) {
+            return variants.map((variant) => ({
+              id: inventoryDocId(product.id, variant.id),
+              productId: product.id,
+              variantId: variant.id,
+              variantLabel: variant.label,
+              name: `${String(data.name || "")} (${variant.label})`,
+              ...(data.number ? { number: String(data.number) } : {}),
+            }));
+          }
+          return [{
+            id: product.id,
+            name: String(data.name || ""),
+            ...(data.number ? { number: String(data.number) } : {}),
+          }];
+        });
+        const refs = rows.map((row) => db.collection("inventory").doc(row.id));
         const stockDocs = !refs.length ? [] : typeof db.getAll === "function" ? await db.getAll(...refs) : await Promise.all(refs.map((ref) => ref.get()));
-        const items = page.docs.map((product, index) => {
+        const items = rows.map((row, index) => {
           const stock = stockDocs[index]?.data?.();
           const reserved = Number.isSafeInteger(stock?.reserved) && stock.reserved >= 0 ? stock.reserved : null;
-          return { id: product.id, name: String(product.data().name || ""), ...(product.data().number ? { number: String(product.data().number) } : {}), quantity: stock?.quantity ?? null, ...(reserved !== null ? { reserved } : {}), version: stock?.version || 0, updatedAt: stock?.updatedAt?.toMillis?.() ?? (stock?.updatedAt ? new Date(stock.updatedAt).getTime() : null) };
+          return { ...row, quantity: stock?.quantity ?? null, ...(reserved !== null ? { reserved } : {}), version: stock?.version || 0, updatedAt: stock?.updatedAt?.toMillis?.() ?? (stock?.updatedAt ? new Date(stock.updatedAt).getTime() : null) };
         });
         return res.status(200).json({ items, nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
       }
@@ -183,19 +249,24 @@ export function createInventoryHandler({ getDb, verifyToken, env = process.env }
       let body;
       try { body = typeof req.body === "string" ? JSON.parse(req.body) : req.body; } catch { throw fail("Dữ liệu không hợp lệ.", 400); }
       if (!body || Buffer.byteLength(JSON.stringify(body)) > 2048 || !validId(body.id) || !validQuantity(body.quantity) || !Number.isSafeInteger(body.version) || body.version < 0) throw fail("Nhập số lượng nguyên không âm và tải lại tồn kho hiện tại.", 400);
+      const { productId, variantId } = parseInventoryId(body.id);
       const ref = db.collection("inventory").doc(body.id); const movement = db.collection("inventoryMovements").doc(randomUUID());
       const item = await db.runTransaction(async (tx) => {
-        const [product, stock] = await tx.getAll(db.collection("products").doc(body.id), ref);
+        const [product, stock] = await tx.getAll(db.collection("products").doc(productId), ref);
         if (!product.exists) throw fail("Sản phẩm không còn tồn tại. Hãy tải lại.", 404);
+        const pData = product.data();
+        const variant = variantId ? productVolumeOptions(pData).find((v) => v.id === variantId) : null;
+        if (variantId && !variant) throw fail("Dung tích sản phẩm không còn tồn tại. Hãy tải lại.", 404);
         const previous = stock.data() || {};
         if ((previous.version || 0) !== body.version) throw fail("Tồn kho vừa thay đổi do đơn hàng hoặc người khác cập nhật. Tải lại rồi kiểm tra trước khi lưu.");
         const syncedReserved = Number.isSafeInteger(previous.reserved) && previous.reserved >= 0
           ? previous.reserved
-          : await countWaitingForProduct(tx, db, body.id);
+          : await countWaitingForStockKey(tx, db, body.id);
         const updatedAt = new Date(); const version = body.version + 1;
         tx.set(ref, { quantity: body.quantity, reserved: syncedReserved, version, updatedAt, updatedBy: user.uid }, { merge: true });
         tx.set(movement, { type: "adjustment", productId: body.id, before: previous.quantity ?? null, after: body.quantity, change: body.quantity - (previous.quantity || 0), actor: user.uid, createdAt: updatedAt });
-        return { id: body.id, name: String(product.data().name || ""), ...(product.data().number ? { number: String(product.data().number) } : {}), quantity: body.quantity, reserved: syncedReserved, version, updatedAt: updatedAt.getTime() };
+        const displayName = variant ? `${String(pData.name || "")} (${variant.label})` : String(pData.name || "");
+        return { id: body.id, ...(variant ? { productId, variantId, variantLabel: variant.label } : {}), name: displayName, ...(pData.number ? { number: String(pData.number) } : {}), quantity: body.quantity, reserved: syncedReserved, version, updatedAt: updatedAt.getTime() };
       });
       return res.status(200).json({ item, message: "Đã cập nhật tồn kho." });
     } catch (error) { return res.status(error.status || 503).json({ message: error.status ? error.message : "Chưa tải hoặc cập nhật được Kiểm Hàng. Vui lòng thử lại." }); }

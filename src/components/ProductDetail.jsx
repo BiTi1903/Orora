@@ -88,8 +88,7 @@ function ProductDetail({
     ? previewProduct || null
     : loadedProduct && (loadedProduct.id === id || (loadedProduct.product && matchesProductRoute(loadedProduct.product, id))) ? loadedProduct.product : undefined;
 
-  const stock = useStorefrontStock([product?.id], !preview)[product?.id];
-  const soldOut = stock === "out";
+  const stockMap = useStorefrontStock([product?.id], !preview);
   const acceptsWebsiteOrders = availablePaymentMethods(home).length > 0;
   const showMobileBuy = Boolean(product) && (preview || acceptsWebsiteOrders);
   const mobileViewport = useSyncExternalStore(subscribeMobileBuy, readMobileBuy, () => false);
@@ -149,15 +148,16 @@ function ProductDetail({
   const selectedClass = (key) =>
     preview && selectedElement === key ? "builder-selected" : "";
 
-  // Hàng đợi vòng: order[0] = khung lớn; order[1..] = dưới (ảnh vừa rời khung lớn → cuối hàng)
+  // Giữ thứ tự ảnh cố định (không tráo thumbnail khi chọn) và hỗ trợ vuốt ngang trên mobile
   const images = productImages(product || {});
   const galleryKey = JSON.stringify([product?.id, product?.slug, ...images]);
   const [previousGalleryKey, setPreviousGalleryKey] = useState(galleryKey);
-  const [order, setOrder] = useState(images);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [thumbStart, setThumbStart] = useState(0);
+  const swipeStartRef = useRef(null);
   if (previousGalleryKey !== galleryKey) {
     setPreviousGalleryKey(galleryKey);
-    setOrder(images);
+    setActiveImageIndex(0);
     setThumbStart(0);
   }
 
@@ -193,6 +193,8 @@ function ProductDetail({
   const choice = purchaseSelection?.key === selectionKey ? purchaseSelection : initialCart;
   const variant = selectedVolumeOption(options, choice.variantId);
   const variantId = variant?.id || "";
+  const stock = (variantId && stockMap[`${product.id}__${variantId}`]) || stockMap[product.id];
+  const soldOut = stock === "out";
   const changeSelection = (patch) => setPurchaseSelection((previous) => ({ key: selectionKey, variantId, quantity: choice.quantity, ...(previous?.key === selectionKey ? previous : {}), ...patch }));
   const displayedPrice = volumePriceText(product, variant);
   const unitPrice = parseVndPrice(displayedPrice);
@@ -218,24 +220,20 @@ function ProductDetail({
   const css = (key) => toCss(ps[key], { responsive: true });
   const textProps = (key, styleKey) => ({ style: css(styleKey), className: selectedClass(key), "data-builder-key": preview ? key : undefined, onClick: preview ? select(key) : undefined });
 
-  // order[0] = đang hiện khung lớn; còn lại = hàng đợi dưới (xoay 2 ảnh, ảnh vừa rời khung lớn nằm cuối)
   const mainImage = (product.image || "").trim();
   const secondaryImages = secondaryProductImages(product).filter((src) => typeof src === "string" && src.trim()).map((src) => src.trim());
-
-  const displaySrc = order[0] || mainImage;
-  const thumbPool = order.length > 1 ? order.slice(1) : secondaryImages;
+  const allImages = images.length ? images : [mainImage, ...secondaryImages].filter(Boolean);
+  const safeIndex = activeImageIndex < allImages.length ? activeImageIndex : 0;
+  const displaySrc = allImages[safeIndex] || mainImage;
+  const thumbPool = allImages.length > 1 ? allImages : secondaryImages;
 
   const promoteToMain = (src) => {
-    if (!src || src === displaySrc) return;
-    setOrder((prev) => {
-      const list = prev.length
-        ? prev
-        : [mainImage, ...secondaryImages].filter(Boolean);
-      const oldMain = list[0];
-      const rest = list.slice(1).filter((s) => s !== src);
-      // Ảnh được chọn lên đầu; ảnh chính cũ xuống cuối hàng đợi
-      return [src, ...rest, oldMain].filter(Boolean);
-    });
+    const idx = allImages.indexOf(src);
+    if (idx >= 0) setActiveImageIndex(idx);
+  };
+  const stepMainImage = (delta) => {
+    if (allImages.length <= 1) return;
+    setActiveImageIndex((current) => (current + delta + allImages.length) % allImages.length);
   };
 
   // Layout từ Visual Builder — ngang/margin/padding cả khối; dọc chỉ khung ảnh chính
@@ -437,6 +435,21 @@ function ProductDetail({
             }}
             data-builder-key={preview ? "pdImage" : undefined}
             onClick={preview ? select("pdImage") : undefined}
+            onTouchStart={!preview && allImages.length > 1 ? (event) => {
+              const t = event.touches?.[0];
+              if (t) swipeStartRef.current = { x: t.clientX, y: t.clientY };
+            } : undefined}
+            onTouchEnd={!preview && allImages.length > 1 ? (event) => {
+              const start = swipeStartRef.current;
+              swipeStartRef.current = null;
+              const t = event.changedTouches?.[0];
+              if (!start || !t) return;
+              const dx = t.clientX - start.x;
+              const dy = t.clientY - start.y;
+              if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+                stepMainImage(dx < 0 ? 1 : -1);
+              }
+            } : undefined}
           >
             {displaySrc ? (
               <img

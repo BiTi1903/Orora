@@ -16,6 +16,7 @@ export default function SurfaceSettings({value={},onChange}){
  return <>
   <SettingGroup title="Hiệu ứng nhấn nút — website và admin">
    <label className="admin-check"><input type="checkbox" role="switch" checked={value.pressFeedback!==false} onChange={e=>onChange({pressFeedback:e.target.checked})}/>Hiệu ứng nhấn cho toàn bộ nút</label>
+   <label className="admin-check"><input type="checkbox" role="switch" checked={value.cursorSparkle===true} onChange={e=>onChange({cursorSparkle:e.target.checked})}/>Hiệu ứng lấp lánh theo chuột (máy tính)</label>
    {fields([['pressDuration','Thời gian phản hồi nút (ms)',240,120,500,20],['pressDepth','Độ nhún khi nhấn (%)',4,2,10]])}
    <button type="button" className="admin-btn" data-press-preview onClick={event=>animateButtonPress(event.currentTarget,false,value)}>Nhấn thử hiệu ứng</button>
    <small className="builder-help">Áp dụng desktop, mobile và admin; nút chat nảy rõ hơn. Hiệu ứng tự tắt khi thiết bị yêu cầu giảm chuyển động. Lưu tất cả để áp dụng.</small>

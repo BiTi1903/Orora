@@ -3,7 +3,7 @@ import { recordOrderActivity } from "./order-activity.js";
 import { resolveDeliveryAddress } from "./addresses.js";
 import { shippingFeeFor } from "../src/lib/shipping.js";
 import { allocateOrderCode } from "./order-code.js";
-import { reserveOrderInventory, settleOrderInventory } from "./inventory.js";
+import { inventoryDocId, prepareOrderInventoryReservation, settleOrderInventory } from "./inventory.js";
 import { syncOutlookStatus, OUTLOOK_ERROR_MESSAGES } from "./outlook-status.js";
 import { templateIdentity } from "./template-snapshot.js";
 import { mailActor, resolveMailActors } from "./mail-actor.js";
@@ -13,10 +13,22 @@ import { parseVndPrice, sameVndPrice, availablePaymentMethods, PAYMENT_LABELS } 
 import { requireAdmin, resolveAdminPermissions } from "./admin-auth.js";
 import { rateLimitSalt, reserveBudgetOrAllow } from "./request-limits.js";
 import { normalizeTrackingPhone } from "../src/lib/order-tracking.js";
+import { analyticsDay } from "../src/lib/analytics.js";
 
 const uuid = (value) => typeof value === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value);
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 const millis = (value) => value?.toMillis?.() ?? (value ? new Date(value).getTime() : 0);
+function paidContribution(order) {
+  if (!order || order.paymentStatus !== "paid" || order.status === "cancelled") {
+    return { paidAmount: 0, paidOrders: 0, unpricedPaid: 0 };
+  }
+  const validAmount = Number.isSafeInteger(order.totalAmount) && order.totalAmount >= 0;
+  return {
+    paidAmount: validAmount ? order.totalAmount : 0,
+    paidOrders: 1,
+    unpricedPaid: validAmount ? 0 : 1,
+  };
+}
 function readBody(req, env, maxBytes = 8000) {
   const expected = new URL(env.NEWSLETTER_SITE_ORIGIN || "https://ororavn.com").origin;
   if (req.headers.origin !== expected) throw Object.assign(new Error("Vui lòng đặt hàng trực tiếp trên website."), { status: 403 });
@@ -91,19 +103,22 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
       const orderDate = `${parts.year}-${parts.month}-${parts.day}`;
       const codePool = db.collection("orderCodePools").doc(body.paymentMethod === "cod" ? "C" : "B");
       const uniqueProductIds = [...new Set(rawItems.map((item) => item.productId))];
+      const uniqueVariantStockKeys = [...new Set(rawItems.filter((item) => item.variantId).map((item) => inventoryDocId(item.productId, item.variantId)))];
       const result = await db.runTransaction(async (tx) => {
         const productRefs = uniqueProductIds.map((pid) => db.collection("products").doc(pid));
         const stockRefs = uniqueProductIds.map((pid) => db.collection("inventory").doc(pid));
-        const snaps = await tx.getAll(order, db.collection("settings").doc("home"), codePool, ...productRefs, ...stockRefs);
+        const variantStockRefs = uniqueVariantStockKeys.map((key) => db.collection("inventory").doc(key));
+        const snaps = await tx.getAll(order, db.collection("settings").doc("home"), codePool, ...productRefs, ...stockRefs, ...variantStockRefs);
         const [existing, settings, pool] = snaps;
         const productSnaps = new Map(uniqueProductIds.map((pid, idx) => [pid, snaps[3 + idx]]));
         const stockSnaps = new Map(uniqueProductIds.map((pid, idx) => [pid, snaps[3 + uniqueProductIds.length + idx]]));
+        const variantStockSnaps = new Map(uniqueVariantStockKeys.map((key, idx) => [key, snaps[3 + uniqueProductIds.length * 2 + idx]]));
         if (existing.exists) {
           if (existing.data().requestHash !== digest) throw Object.assign(new Error("Đơn này đã được tiếp nhận. Vui lòng liên hệ ORORA nếu muốn thay đổi thông tin."), { status: 409 });
           return existing.data();
         }
         const resolvedItems = [];
-        const qtyByProduct = new Map();
+        const qtyByStockTarget = new Map();
         for (const item of rawItems) {
           const product = productSnaps.get(item.productId);
           if (!product?.exists || product.data().active === false) throw Object.assign(new Error("Sản phẩm hiện không nhận đặt hàng."), { status: 404 });
@@ -129,7 +144,18 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
             quantity: item.quantity,
             ...(variant ? { variantId: variant.id, variantLabel: variant.label } : {}),
           });
-          qtyByProduct.set(product.id, (qtyByProduct.get(product.id) || 0) + item.quantity);
+          const vId = variant?.id || "";
+          const vKey = vId ? inventoryDocId(product.id, vId) : product.id;
+          const vSnap = vId ? variantStockSnaps.get(vKey) : null;
+          const hasVariantStock = Boolean(vId && vSnap?.exists && Number.isSafeInteger(vSnap.data()?.quantity) && vSnap.data().quantity >= 0);
+          const targetKey = hasVariantStock ? vKey : product.id;
+          const prev = qtyByStockTarget.get(targetKey);
+          qtyByStockTarget.set(targetKey, {
+            productId: product.id,
+            variantId: hasVariantStock ? vId : "",
+            quantity: (prev?.quantity || 0) + item.quantity,
+            variantSnap: hasVariantStock ? vSnap : null,
+          });
         }
         const shipping = shippingFeeFor(settings.data()?.shippingSettings, delivery?.provinceCode, delivery?.wardCode);
         if (settings.data()?.shippingSettings?.enabled === true && shipping.fee === null) throw Object.assign(new Error(shipping.reason), { status: 400 });
@@ -155,8 +181,12 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
           paymentMethod: body.paymentMethod,
           confirmationMail: { state: "pending", updatedAt: createdAt }, paymentStatus: "unpaid", shippingFee: shipping.fee, status: "new", channel: "website", createdAt, requestHash: digest,
         };
-        for (const [pid, qty] of qtyByProduct) {
-          await reserveOrderInventory(tx, db, pid, qty, stockSnaps.get(pid));
+        const reservationPlans = [];
+        for (const entry of qtyByStockTarget.values()) {
+          reservationPlans.push(await prepareOrderInventoryReservation(tx, db, entry.productId, entry.quantity, stockSnaps.get(entry.productId), entry.variantId, entry.variantSnap));
+        }
+        for (const plan of reservationPlans) {
+          tx.set(plan.ref, plan.data, { merge: true });
         }
         tx.set(order, record); tx.set(codePool, { ...allocated.pool, updatedAt: createdAt });
         return record;
@@ -376,11 +406,36 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
             if (cur.inventory?.state === "deducted") throw Object.assign(new Error("Đơn đã trừ kho không thể bỏ đánh dấu đã thanh toán. Nếu khách trả hàng, hãy hủy đơn và hoàn kho."), { status: 409 });
           }
         }
+        const nextStatus = body.status ?? cur.status;
         const nextPaymentStatus = body.status === "completed" ? "paid" : body.status !== undefined ? cur.paymentStatus : body.paymentStatus;
-        const stockPatch = await settleOrderInventory(tx, db, cur, nextPaymentStatus, body.id, user.uid, body.status ?? cur.status);
+        const beforePaid = paidContribution(cur);
+        const afterPaid = paidContribution({ ...cur, status: nextStatus, paymentStatus: nextPaymentStatus });
+        const deltaAmount = afterPaid.paidAmount - beforePaid.paidAmount;
+        const deltaOrders = afterPaid.paidOrders - beforePaid.paidOrders;
+        const deltaUnpriced = afterPaid.unpricedPaid - beforePaid.unpricedPaid;
+        const orderTime = millis(cur.createdAt);
+        let dailyRef = null;
+        let dailySnap = null;
+        let revenueDay = "";
+        if ((deltaAmount || deltaOrders || deltaUnpriced) && Number.isFinite(orderTime) && orderTime > 0) {
+          revenueDay = analyticsDay(orderTime);
+          dailyRef = db.collection("siteAnalyticsDaily").doc(revenueDay);
+          dailySnap = await tx.get(dailyRef);
+        }
+        const stockPatch = await settleOrderInventory(tx, db, cur, nextPaymentStatus, body.id, user.uid, nextStatus);
         const patch = { ...stockPatch, ...(body.status !== undefined ? { status: body.status, ...(body.status === "completed" ? { paymentStatus: "paid" } : {}) } : { paymentStatus: body.paymentStatus }), updatedAt: new Date(clock()), updatedBy: user.uid };
         const activity = recordOrderActivity(tx, ref, { before: cur, after: { ...cur, ...patch }, user, createdAt: patch.updatedAt, quantity: stockPatch.inventory?.state === "deducted" ? stockPatch.inventory.quantity : undefined });
         tx.set(ref, patch, { merge: true });
+        if (dailyRef) {
+          const prevDaily = dailySnap?.data() || {};
+          tx.set(dailyRef, {
+            day: revenueDay,
+            paidAmount: Math.max(0, (Number.isSafeInteger(prevDaily.paidAmount) ? prevDaily.paidAmount : 0) + deltaAmount),
+            paidOrders: Math.max(0, (Number.isSafeInteger(prevDaily.paidOrders) ? prevDaily.paidOrders : 0) + deltaOrders),
+            unpricedPaid: Math.max(0, (Number.isSafeInteger(prevDaily.unpricedPaid) ? prevDaily.unpricedPaid : 0) + deltaUnpriced),
+            revenueTracked: true,
+          }, { merge: true });
+        }
         return { inventory: stockPatch.inventory || cur.inventory || null, activity };
       });
       return res.status(200).json({ ...result, message: body.status === "completed" ? "Đã hoàn tất đơn hàng và ghi nhận đã thanh toán." : "Đã cập nhật trạng thái đơn hàng." });

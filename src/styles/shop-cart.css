@@ -30,8 +30,18 @@ body:has(dialog[open]:not(.shop-cart)) .desktop-cart { visibility:hidden; }
 .cart-row-actions button { margin:0; }
 .cart-row-actions .cart-row-detail { margin-left:auto; }
 .cart-row-actions input { width:54px; text-align:center; }
-.cart-empty-state { padding:28px 12px; text-align:center; display:grid; gap:14px; justify-items:center; color:#5b4d54; }
+.cart-empty-state { padding:24px 12px; text-align:center; display:grid; gap:14px; justify-items:center; color:#5b4d54; }
 .cart-empty-state p { margin:0; font-size:14px; }
+.cart-undo-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; margin-bottom:10px; border:1px solid #ece4e8; border-radius:12px; background:#faf8f9; font-size:13px; color:#3a2d33; }
+.cart-undo-bar button { padding:5px 12px; min-height:30px; border:1px solid var(--cart-accent,var(--rose-deep)); border-radius:999px; background:#fff; color:var(--cart-accent,var(--rose-deep)); font-size:12px; font-weight:600; cursor:pointer; }
+.cart-suggestions { width:100%; margin-top:8px; padding-top:14px; border-top:1px solid #efe9ec; text-align:left; }
+.cart-suggestions-title { margin:0 0 10px; font-size:12px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:#75676e; }
+.cart-suggestions-list { display:grid; gap:8px; }
+.cart-suggestion-card { display:grid; grid-template-columns:44px minmax(0,1fr); align-items:center; gap:10px; width:100%; padding:8px; border:1px solid #ece4e8; border-radius:12px; background:#faf8f9; text-align:left; cursor:pointer; transition:border-color .15s ease,background-color .15s ease; }
+.cart-suggestion-card:hover { border-color:var(--cart-accent,var(--rose-deep)); background:#fff; }
+.cart-suggestion-card img,.cart-suggestion-card .cart-image-placeholder { width:44px; height:48px; border-radius:8px; object-fit:cover; }
+.cart-suggestion-card strong { display:block; font-size:13px; font-weight:600; color:#181316; overflow-wrap:anywhere; }
+.cart-suggestion-card small { display:block; font-size:12px; font-weight:600; color:var(--cart-accent,var(--rose-deep)); font-variant-numeric:tabular-nums; }
 .cart-footer { display:grid; gap:12px; margin-top:14px; }
 .cart-summary-card { padding:14px 16px; border:1px solid #ece4e8; border-radius:14px; background:#faf8f9; display:grid; gap:8px; }
 .cart-footer-shipping { margin:0; font-size:12px; line-height:1.5; color:#6c5d64; }
