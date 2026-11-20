@@ -1,3 +1,24 @@
+## 20/11/2026 — Thiết kế lại giao diện Form đặt hàng và Form đã nhận đơn theo chuẩn thương mại điện tử tối giản cao cấp
+
+- **Lý do**: Chủ website yêu cầu thiết kế lại Form đặt hàng và Form đã nhận hàng cho sang trọng, hiện đại và dễ thao tác giống các thương hiệu thương mại điện tử lớn (chuẩn Shopify Checkout / Glossier / Stripe), đồng thời vẫn tương thích hoàn toàn với toàn bộ tùy chỉnh trong Visual Builder.
+- **Thay đổi chính**:
+  - **Form đặt hàng (`src/components/OrderFormFields.jsx`, `src/styles/checkout.css`)**:
+    - Chuyển nền hộp thoại sang trắng tinh khiết (`#ffffff`), thẻ phụ sáng nhẹ (`#faf8f9`), viền mảnh (`#ece4e8`), đổ bóng mềm sâu và chữ số căn cột (`tabular-nums`).
+    - Bổ sung **ảnh thumbnail sản phẩm** (54×54 bo góc kèm badge số lượng) ở thẻ tóm tắt đầu form.
+    - Đánh số bước trực quan **`1` Thông tin người nhận → `2` Địa chỉ giao hàng → `3` Phương thức thanh toán**.
+    - Thay dropdown phương thức thanh toán khô cứng bằng **thẻ chọn trực quan (Payment Option Cards)** hiển thị ngay mô tả ngắn của COD / Chuyển khoản và highlight khi chọn.
+    - Bổ sung dòng **Tạm tính** rõ ràng trước Phí giao hàng và Tổng cộng trong khối Tóm tắt thanh toán.
+  - **Form đã nhận đơn hàng (`src/components/OrderSuccessView.jsx`, `src/components/OrderReceiptActions.jsx`, `src/styles/checkout.css`)**:
+    - Thêm **biểu tượng dấu tích thành công (checkmark badge)** ở banner xác nhận, kèm **nút Sao chép 1 chạm** ngay cạnh Mã đơn hàng, Số tài khoản và Nội dung chuyển khoản.
+    - Thêm **thanh tiến trình 3 bước** (`1. Đã tiếp nhận` → `2. Xác nhận & đóng gói` → `3. Giao tận nơi`) trong khối Bước tiếp theo.
+    - Nâng cấp nút **Lưu ảnh đơn hàng** thành nút có icon kèm nhãn `"Tải ảnh"` rõ ràng, cân đối với nút xác nhận nhanh Zalo/Facebook.
+  - **Tương thích Visual Builder**: Giữ nguyên toàn bộ `data-builder-key` và biến CSS `--checkout-*`, `--receipt-*` để mọi chỉnh sửa chữ, font, cỡ chữ desktop/mobile, màu sắc, viền và bo góc trong Admin vẫn áp dụng trực tiếp.
+- **File / khu vực liên quan**: `src/components/OrderFormFields.jsx`, `src/components/OrderSuccessView.jsx`, `src/components/OrderReceiptActions.jsx`, `src/styles/checkout.css`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **256/256** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt.
+  - Playwright: **24/24** test đạt trên `qa/shopping.spec.js`, `qa/editor-checkout.spec.js`, `qa/form-builder.spec.js`, `qa/order-receipt.spec.js`, `qa/admin-appearance.spec.js` (`width-390`) + **5/5** test đạt trên `qa/shopping.spec.js` và `qa/form-builder.spec.js` (`width-1440`).
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu hiện có.
+
 ## 20/11/2026 — Chuẩn hóa quy trình tìm/lọc/sắp xếp đơn từ server, thao tác nhanh trạng thái, xem trước biến email và bỏ quét toàn bộ đơn
 
 - **Lý do**: Rà soát thao tác vận hành thực tế theo chuẩn quản trị thương mại điện tử phát hiện các điểm chưa hợp lý: tìm/lọc trạng thái đơn chỉ chạy trên 50 đơn mới nhất ở trình duyệt, ô Sắp xếp bị giấu trong Bộ lọc nâng cao, bảng đơn thiếu cột Sản phẩm, chưa có nút hành động 1 chạm cho bước xử lý tiếp theo, chưa có xem trước thư sau khi ghép biến `{{...}}`, hai tab Khách hàng & Lịch sử email tự động quét toàn bộ đơn khi mở, và còn tab trung gian dư thừa.

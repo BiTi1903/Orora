@@ -61,9 +61,17 @@ export default function OrderFormFields({product,items=null,subtotal,options,var
  }}>
   <div className="checkout-product-card">
    <div className="checkout-product-header">
-    <div>
-     <p {...mark('ofProductName','order-product-name')} style={productNameStyle}>{isMulti?`Giỏ hàng (${items.length} sản phẩm)`:product.name}</p>
-     {copy.intro&&<p {...mark('ofIntro','order-help')} style={helpTextStyle}>{copy.intro}</p>}
+    <div className="checkout-product-lead">
+     {!isMulti && product?.image && (
+      <div className="checkout-product-thumb">
+       <img src={product.image} alt="" loading="lazy" />
+       <span className="checkout-product-qty-badge" aria-hidden="true">{quantity}</span>
+      </div>
+     )}
+     <div className="checkout-product-meta">
+      <p {...mark('ofProductName','order-product-name')} style={productNameStyle}>{isMulti?`Giỏ hàng (${items.length} sản phẩm)`:product.name}</p>
+      {copy.intro&&<p {...mark('ofIntro','order-help')} style={helpTextStyle}>{copy.intro}</p>}
+     </div>
     </div>
     <strong {...mark('ofPrice','checkout-item-price')} style={pricePillStyle} aria-label="Giá sản phẩm">{itemTotal}</strong>
    </div>
@@ -86,13 +94,15 @@ export default function OrderFormFields({product,items=null,subtotal,options,var
    )}
   </div>
   <fieldset className="checkout-fields-stack" disabled={busy||(preview&&!onSelect)}>
-   <section className="checkout-section checkout-card"><h3 {...mark('ofRecipientHeading')} style={headingStyle}>{copy.recipientHeading}</h3>
+   <section className="checkout-section checkout-card">
+    <h3 {...mark('ofRecipientHeading','checkout-step-heading')} style={headingStyle}><span className="checkout-step-num" aria-hidden="true">1</span><span>{copy.recipientHeading}</span></h3>
     <div {...mark('ofRecipientFields')}>
      <div className="order-field-row"><label>{label('nameLabel')}<input name="name" required minLength={2} maxLength={100} autoComplete="name" readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('namePlaceholder')}/></label><label>{label('phoneLabel')}<input name="phone" type="tel" required maxLength={25} autoComplete="tel" inputMode="tel" readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('phonePlaceholder')}/></label></div>
      <label>{label('emailLabel')}<input name="email" type="email" required maxLength={254} autoComplete="email" inputMode="email" readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('emailPlaceholder')}/></label>
     </div>
    </section>
-   <section className="checkout-section checkout-card"><h3 {...mark('ofAddressHeading')} style={headingStyle}>{copy.addressHeading}</h3>
+   <section className="checkout-section checkout-card">
+    <h3 {...mark('ofAddressHeading','checkout-step-heading')} style={headingStyle}><span className="checkout-step-num" aria-hidden="true">2</span><span>{copy.addressHeading}</span></h3>
     <div {...mark('ofAddressFields')}>
      <div className="order-field-row order-address-row">
       <AddressSelect label={label('provinceLabel')} name="provinceCode" required value={provinceCode} options={addresses.provinces} disabled={preview||!addresses.provinces.length} loading={addresses.loadingProvinces} placeholder={label('provincePlaceholder')} onChange={code=>{setAddressError(false);onProvinceChange(code);}}/>
@@ -104,13 +114,31 @@ export default function OrderFormFields({product,items=null,subtotal,options,var
      {(shipping.reason||(preview&&label('addressHint')))&&!addressError&&<p className="order-help checkout-shipping-note" style={helpTextStyle}>{shipping.reason||label('addressHint')}</p>}
     </div>
    </section>
-   <section className="checkout-section checkout-card"><h3 {...mark('ofPaymentHeading')} style={headingStyle}>{copy.paymentHeading}</h3>
+   <section className="checkout-section checkout-card">
+    <h3 {...mark('ofPaymentHeading','checkout-step-heading')} style={headingStyle}><span className="checkout-step-num" aria-hidden="true">3</span><span>{copy.paymentHeading}</span></h3>
     <div {...mark('ofPaymentFields')}>
-     <label>{label('paymentMethodLabel')}<select aria-label={label('paymentMethodLabel')} name="paymentMethod" required value={activeMethod} onChange={event=>setSelectedMethod(event.target.value)} tabIndex={preview?-1:undefined}>{methods.map(key=><option key={key} value={key}>{PAYMENT_LABELS[key]}</option>)}</select></label>
+     {methods.length > 0 && (
+      <div className="checkout-payment-options" role="radiogroup" aria-label={label('paymentMethodLabel')}>
+       {methods.map(key=>{
+        const checked=activeMethod===key;
+        const hint=key==='bank_transfer'?label('bankPaymentHint'):key==='cod'?label('codPaymentHint'):label('paymentHint');
+        return (
+         <label key={key} className={`checkout-payment-option${checked?' is-selected':''}`}>
+          <input type="radio" name="paymentMethod" value={key} required checked={checked} onChange={()=>setSelectedMethod(key)} tabIndex={preview?-1:undefined}/>
+          <span className="checkout-payment-option-body">
+           <strong>{PAYMENT_LABELS[key]}</strong>
+           <small>{hint}</small>
+          </span>
+         </label>
+        );
+       })}
+      </div>
+     )}
      <details className="checkout-note"><summary>{copy.noteLabel}</summary><label>{label('noteFieldLabel')}<textarea name="note" rows={2} maxLength={1000} readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('notePlaceholder')}/></label></details>
     </div>
    </section>
    <section {...mark('ofSummary','checkout-summary')} aria-label={copy.summaryHeading||'Thanh toán'}>
+    <div className="order-summary"><span>Tạm tính</span><strong>{itemTotal}</strong></div>
     <div className="order-summary"><span>{label('shippingFeeLabel')}</span><strong>{shipping.fee===null?label('shippingUnknownLabel'):formatVnd(shipping.fee)}</strong></div>
     <div className="order-summary checkout-total"><span>{shipping.fee===null?label('subtotalPendingLabel'):label('totalLabel')}</span><strong style={summaryTotalStyle}>{total===null?(effectiveSubtotal===null?'ORORA sẽ xác nhận':itemTotal):formatVnd(total)}</strong></div>
     <p className="order-help checkout-payment-hint" style={helpTextStyle}>{paymentHintText}</p>

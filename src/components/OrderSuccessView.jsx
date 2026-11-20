@@ -1,3 +1,4 @@
+import {useState} from 'react';
 import {Link} from 'react-router-dom';
 import OrderReceiptActions from './OrderReceiptActions';
 import {PAYMENT_LABELS,formatVnd} from '../lib/commerce';
@@ -30,6 +31,14 @@ const SAMPLE_ORDER={
 };
 
 export function OrderSuccessContent({order,home={},appearance={},onClose,preview=false,selectedElement,onSelect}){
+ const [copiedKey,setCopiedKey]=useState('');
+ const copyValue=(key,val)=>{
+  if(preview||!val)return;
+  navigator.clipboard?.writeText(String(val)).then(()=>{
+   setCopiedKey(key);
+   window.setTimeout(()=>setCopiedKey(cur=>cur===key?'':cur),2200);
+  }).catch(()=>{});
+ };
  const copy={...CHECKOUT_RECEIPT_COPY};
  const text=(key)=>appearance[key]?.trim()||copy[key];
  const pick=(key,event)=>{if(!preview)return;event?.stopPropagation?.();onSelect?.(key);};
@@ -41,6 +50,7 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
  const trackingStyle=toCss(appearance.receiptTrackingStyle,{responsive:true});
  const closeStyle=toCss(appearance.receiptCloseStyle,{responsive:true});
  const displayMessage=appearance.receiptMessage?.trim()||order.message||SAMPLE_ORDER.message;
+ const transferNote=(appearance.bankTransferNote||copy.bankTransferNote).replace(/\{\{code\}\}/g,order.code);
  const mailNote=appearance.receiptEmailNote?.trim()
   ||(order.mailStatus==='accepted'
    ?'Vui lòng kiểm tra email xác nhận và mục thư rác.'
@@ -51,9 +61,15 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
  return (
   <section className="order-received" aria-label="Thông tin đơn đã nhận">
    <div className="order-received-banner">
-    <div {...mark('osCode')}>
+    <div className="order-received-check" aria-hidden="true">
+     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+    </div>
+    <div {...mark('osCode','order-received-code-wrap')}>
      <span className="order-received-code-label">{text('receiptCodeLabel')}</span>
-     <strong className="order-received-code" style={codeStyle}>{order.code}</strong>
+     <div className="order-received-code-row">
+      <strong className="order-received-code" style={codeStyle}>{order.code}</strong>
+      {!preview&&<button type="button" className="order-copy-pill" onClick={()=>copyValue('code',order.code)}>{copiedKey==='code'?'✓ Đã chép':'Sao chép'}</button>}
+     </div>
     </div>
     <p {...mark('osMessage','order-received-msg')} style={messageStyle}>{displayMessage}</p>
    </div>
@@ -77,14 +93,14 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
     </dl>
    </details>
    {(order.paymentMethod==='bank_transfer'||preview)&&(
-    <div {...mark('osBank','order-received-details checkout-card')}>
+    <div {...mark('osBank','order-received-details checkout-card order-bank-card')}>
      <h3 style={cardHeadingStyle}>{text('bankHeading')}</h3>
      {appearance.bankName||appearance.bankAccountNumber||appearance.bankAccountName?(
       <dl>
        {appearance.bankName&&<div><dt>Ngân hàng</dt><dd>{appearance.bankName}</dd></div>}
-       {appearance.bankAccountNumber&&<div><dt>Số tài khoản</dt><dd>{appearance.bankAccountNumber}</dd></div>}
+       {appearance.bankAccountNumber&&<div><dt>Số tài khoản</dt><dd className="order-copy-dd"><span>{appearance.bankAccountNumber}</span>{!preview&&<button type="button" className="order-copy-pill" onClick={()=>copyValue('bank',appearance.bankAccountNumber)}>{copiedKey==='bank'?'✓ Đã chép':'Sao chép'}</button>}</dd></div>}
        {appearance.bankAccountName&&<div><dt>Chủ tài khoản</dt><dd>{appearance.bankAccountName}</dd></div>}
-       <div><dt>Nội dung chuyển khoản</dt><dd>{(appearance.bankTransferNote||copy.bankTransferNote).replace(/\{\{code\}\}/g,order.code)}</dd></div>
+       <div><dt>Nội dung chuyển khoản</dt><dd className="order-copy-dd"><span>{transferNote}</span>{!preview&&<button type="button" className="order-copy-pill" onClick={()=>copyValue('note',transferNote)}>{copiedKey==='note'?'✓ Đã chép':'Sao chép'}</button>}</dd></div>
       </dl>
      ):(
       <p className="order-help">ORORA sẽ gửi thông tin tài khoản ngân hàng ngay khi xác nhận đơn hàng của bạn. Nội dung chuyển khoản: <strong>{order.code}</strong>.</p>
@@ -94,10 +110,15 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
    {text('receiptNextStepsBody')&&(
     <div {...mark('osNextSteps','order-received-details checkout-card')}>
      <h3 style={cardHeadingStyle}>{text('receiptNextStepsHeading')}</h3>
+     <ol className="order-progress-steps" aria-label="Tiến trình đơn hàng">
+      <li className="is-done"><span>1</span><strong>Đã tiếp nhận</strong></li>
+      <li><span>2</span><strong>Xác nhận & đóng gói</strong></li>
+      <li><span>3</span><strong>Giao tận nơi</strong></li>
+     </ol>
      <p className="order-help">{text('receiptNextStepsBody')}</p>
     </div>
    )}
-   <p {...mark('osEmailNote','order-help')}>{mailNote}</p>
+   <p {...mark('osEmailNote','order-help order-email-note')}>{mailNote}</p>
    <div className="order-received-footer">
     {preview
      ?<a href="#tra-cuu-don-hang" style={trackingStyle} {...mark('osTracking','order-tracking-link')}>{text('receiptTrackingLabel')}</a>
