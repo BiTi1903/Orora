@@ -1,9 +1,8 @@
 import ButtonIcon from "./ButtonIcon";
 import '../styles/product-card-actions.css';
-import useHomeContent from '../hooks/useHomeContent';
 import { formatProductPrice } from "../lib/commerce";
 import { mobileImageVars } from "../lib/image-layout";
-import { useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { splitColor, toCss } from "../lib/typography";
 import ProductSlideshow from "./ProductSlideshow";
@@ -30,13 +29,19 @@ function ProductCard({
 }) {
   const location = useLocation();
   const catalogState = location.pathname === "/" ? { catalogSearch: location.search } : undefined;
-  const cartSettings=useHomeContent().navStyles?.cart||{};
   const mobile=styles.mobileActions||{};
   const desktop=styles.desktopActions||{},desktopPrice=desktop.price||{};
   const bounded=(value,fallback,min,max)=>{const number=Number(value??fallback);return Math.max(min,Math.min(max,Number.isFinite(number)?number:fallback));};
   const desktopVars={'--mobile-card-price-size':`${bounded(mobile.priceSize,styles.price?.mobileFontSize||14,12,72)}px`,'--mobile-card-price-align':mobile.priceAlign||'left','--desktop-card-title-align':desktop.titleAlign||'left','--desktop-action-width':`${bounded(desktop.buttonWidth,104,72,180)}px`,'--desktop-action-gap':`${bounded(desktop.gap,10,4,24)}px`,'--desktop-action-radius':`${bounded(desktop.radius,14,0,28)}px`,'--desktop-action-bg':desktop.background||'var(--store-button-pink)','--desktop-action-color':desktop.color||'#ffffff','--desktop-action-font-size':`${bounded(desktop.fontSize,13,10,20)}px`,'--desktop-price-size':`${bounded(desktopPrice.fontSize,20,12,36)}px`,'--desktop-price-weight':desktopPrice.fontWeight||600,'--desktop-price-family':desktopPrice.fontFamily||'var(--font-body)','--desktop-price-style':desktopPrice.fontStyle||(desktopPrice.italic?'italic':'normal'),'--desktop-price-align':desktopPrice.textAlign||'left','--desktop-price-spacing':typeof desktopPrice.letterSpacing==='number'?`${desktopPrice.letterSpacing}px`:desktopPrice.letterSpacing||'0px','--desktop-price-line-height':desktopPrice.lineHeight||1.35,'--desktop-price-color':desktopPrice.color||styles.price?.color||'var(--rose-deep)'};
   const frameRef = useRef(null);
+  const rectRef = useRef(null);
+  const rafRef = useRef(0);
+  const pointerRef = useRef({ x: 0, y: 0 });
   const k = (name) => keyMap?.[name] || name;
+
+  useEffect(() => () => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+  }, []);
 
   /* màu tên đi qua biến CSS để giữ hiệu ứng đổi màu khi rê chuột */
   const { color: nameColor, rest: nameRest } = splitColor(styles.name);
@@ -44,21 +49,42 @@ function ProductCard({
     ? { ...nameRest, "--pc-name": nameColor }
     : nameRest;
 
+  const handleEnter = () => {
+    if (preview) return;
+    const el = frameRef.current;
+    if (!el || !window.matchMedia("(hover: hover)").matches) return;
+    rectRef.current = el.getBoundingClientRect();
+  };
+
   const handleMove = (e) => {
     if (preview) return;
     const el = frameRef.current;
     if (!el || !window.matchMedia("(hover: hover)").matches) return;
-    const r = el.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width;
-    const y = (e.clientY - r.top) / r.height;
-    el.style.setProperty("--ry", `${(x - 0.5) * 12}deg`);
-    el.style.setProperty("--rx", `${(0.5 - y) * 12}deg`);
-    el.style.setProperty("--mx", `${x * 100}%`);
-    el.style.setProperty("--my", `${y * 100}%`);
+    pointerRef.current.x = e.clientX;
+    pointerRef.current.y = e.clientY;
+    if (rafRef.current) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = 0;
+      const target = frameRef.current;
+      if (!target) return;
+      const r = rectRef.current || target.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      const x = (pointerRef.current.x - r.left) / r.width;
+      const y = (pointerRef.current.y - r.top) / r.height;
+      target.style.setProperty("--ry", `${(x - 0.5) * 12}deg`);
+      target.style.setProperty("--rx", `${(0.5 - y) * 12}deg`);
+      target.style.setProperty("--mx", `${x * 100}%`);
+      target.style.setProperty("--my", `${y * 100}%`);
+    });
   };
 
   const handleLeave = () => {
     if (preview) return;
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+    }
+    rectRef.current = null;
     const el = frameRef.current;
     if (!el) return;
     el.style.setProperty("--rx", "0deg");
@@ -188,6 +214,7 @@ function ProductCard({
     >      <div
         className={`gallery-image tilt ${selectedClass(k("cardImage"))}`}
         ref={frameRef}
+        onMouseEnter={handleEnter}
         onMouseMove={handleMove}
         onMouseLeave={handleLeave}
 style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined}
@@ -259,7 +286,7 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
             {(!styles.button?.text||styles.button.text.trim().toLocaleLowerCase('vi')==='xem chi tiết')?'Xem':styles.button.text}
             <ButtonIcon name="productView" defaultSize={12}/>
           </ButtonWrap>
-          {productId&&cartSettings.enabled!==false&&styles.cartEnabled!==false&&<button type="button" className="card-cart-button" disabled={stock === "out"} aria-label={cartSettings.copy?.add||styles.cartLabel||'Thêm vào giỏ'} onClick={e=>{if(preview)return;e.stopPropagation();const r=e.currentTarget.getBoundingClientRect();window.dispatchEvent(new CustomEvent('orora-cart-add',{detail:{id:productId,source:{x:r.x,y:r.y,width:r.width,height:r.height}}}));}}><ButtonIcon name="productCart" defaultSize={22} allowHidden={false}/></button>}
+          {productId&&styles.cartEnabled!==false&&<button type="button" className="card-cart-button" disabled={stock === "out"} aria-label={styles.cartLabel||'Thêm vào giỏ'} onClick={e=>{if(preview)return;e.stopPropagation();const r=e.currentTarget.getBoundingClientRect();window.dispatchEvent(new CustomEvent('orora-cart-add',{detail:{id:productId,source:{x:r.x,y:r.y,width:r.width,height:r.height}}}));}}><ButtonIcon name="productCart" defaultSize={22} allowHidden={false}/></button>}
           </div>
         </div>
       </div>
@@ -267,4 +294,4 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
   );
 }
 
-export default ProductCard;
+export default memo(ProductCard);

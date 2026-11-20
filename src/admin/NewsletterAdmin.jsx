@@ -34,7 +34,7 @@ function ContactActions({ label, disabled, onApply }) {
   );
 }
 
-export default function NewsletterAdmin({ initialView = "contacts", viewRequest, onOpenOrderMail }) {
+export default function NewsletterAdmin({ initialView = "contacts", viewRequest, onOpenOrderMail, onOpenExport }) {
   const confirm = useConfirm();
   const [outlookCampaign, setOutlookCampaign] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -264,6 +264,7 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
               <div className="admin-actions">
                 <ContactActions label="Thao tác cho email đã chọn" disabled={busy || !selectedContacts.length} onApply={(operation) => manageContacts(selectedContacts, operation)} />
                 {cursor && <button type="button" className="admin-btn" disabled={busy} onClick={() => perform(loadRemainingContacts)}>Tải toàn bộ</button>}
+                {onOpenExport && <button type="button" className="admin-btn" disabled={busy} onClick={onOpenExport}>Xuất Excel / CSV</button>}
               </div>
             </div>
             <p className="admin-muted" role="status">{busy ? "Đang xử lý…" : `Hiển thị ${visibleContacts.length} email · Đã chọn ${selectedContacts.length} (tối đa 100)`}</p>

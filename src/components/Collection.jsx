@@ -5,7 +5,7 @@ import CatalogLoadError from "./CatalogLoadError";
 import useVisiblePlayback from "../hooks/useVisiblePlayback";
 import { productNumber, productSlug, withProductIdentity } from "../lib/product-identity";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ProductCard from "./ProductCard";
 import useCategories from "../hooks/useCategories";
 import useProducts from "../hooks/useProducts";
@@ -331,7 +331,17 @@ function Collection({
   const collectionHighlight = pick(forceHighlight, home.collectionHighlight, "Tiêu đề dòng 2");
 
   const headStyles = headStylesOverride || home.collectionStyles || {};
-  const cardStyles = cardStylesOverride || home.productCardStyles || {};
+  const rawCardStyles = cardStylesOverride || home.productCardStyles;
+  const navCartEnabled = home.navStyles?.cart?.enabled !== false;
+  const navCartLabel = home.navStyles?.cart?.copy?.add || "";
+  const cardStyles = useMemo(() => {
+    const base = rawCardStyles || {};
+    return {
+      ...base,
+      cartEnabled: base.cartEnabled !== false && navCartEnabled,
+      cartLabel: navCartLabel || base.cartLabel,
+    };
+  }, [rawCardStyles, navCartEnabled, navCartLabel]);
   const k = (name) => keyMap?.[name] || name;
   const isRelated = !!headStylesOverride;
 

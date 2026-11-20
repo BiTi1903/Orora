@@ -1,3 +1,4 @@
+import { useState } from "react";
 import "../styles/order-tracking.css";
 import { ORDER_STATUSES } from '../lib/order-tracking';
 import { formatVnd, PAYMENT_LABELS } from '../lib/commerce';
@@ -5,6 +6,7 @@ import {trackingCopy,trackingStyle} from '../lib/order-tracking-copy';
 const date = value => value == null ? 'Chưa cập nhật' : new Date(value).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
 const steps = ['new','confirmed','shipping','completed'];
 export default function OrderTrackingDetails({ order, copy: suppliedCopy, styles={} }) {
+ const [copied, setCopied] = useState(false);
  const nextKey={new:'nextNew',confirmed:'nextConfirmed',shipping:'nextShipping',completed:'nextCompleted'}[order.status];
  const copy=trackingCopy(suppliedCopy);
  const css=key=>trackingStyle(styles,key);
@@ -13,9 +15,15 @@ export default function OrderTrackingDetails({ order, copy: suppliedCopy, styles
  const row=(label,value,className)=><div key={label} className={className}><dt>{label}</dt><dd style={className==='is-wide tracking-product-name'?css('detailProduct'):className==='is-total'?css('detailTotal'):undefined}>{value}</dd></div>;
  return <div className="order-tracking-result" aria-label={`Kết quả tra cứu đơn ${order.code}`}>
   <section className="tracking-status-section" aria-label={copy.progressTitle}>
-   <div className="order-tracking-result-heading"><strong>{ORDER_STATUSES[order.status]||'Đang cập nhật'}</strong><span className="tracking-order-code">{order.code}</span></div>
+   <div className="order-tracking-result-heading">
+    <strong>{ORDER_STATUSES[order.status]||'Đang cập nhật'}</strong>
+    <span className="tracking-order-code-wrap">
+     <span className="tracking-order-code">{order.code}</span>
+     <button type="button" className="tracking-copy-pill" onClick={() => { navigator.clipboard?.writeText(order.code).then(() => { setCopied(true); window.setTimeout(() => setCopied(false), 2000); }).catch(() => {}); }}>{copied ? '✓ Đã chép' : 'Sao chép'}</button>
+    </span>
+   </div>
    <div className="order-tracking-dates"><p><span>{copy.createdLabel}</span><time>{date(order.createdAt)}</time></p><p><span>{copy.updatedLabel}</span><time>{date(order.updatedAt)}</time></p></div>
-   {steps.includes(order.status)&&<ol className="order-tracking-steps" aria-label="Tiến trình đơn hàng">{steps.map((step,index)=><li key={step} className={index<=steps.indexOf(order.status)?'is-reached':''} aria-current={step===order.status?'step':undefined}>{ORDER_STATUSES[step]}</li>)}</ol>}
+   {steps.includes(order.status)&&<ol className="order-tracking-steps" aria-label="Tiến trình đơn hàng">{steps.map((step,index)=><li key={step} className={index<=steps.indexOf(order.status)?'is-reached':''} aria-current={step===order.status?'step':undefined}><span className="tracking-step-num" aria-hidden="true">{index+1}</span><span>{ORDER_STATUSES[step]}</span></li>)}</ol>}
    {nextKey&&<p className="tracking-next-step"><strong>Bước tiếp theo</strong> {copy[nextKey]}</p>}
    {order.status==='cancelled'&&<p className="order-tracking-error">{copy.cancelledHelp}</p>}
   </section>

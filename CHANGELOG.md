@@ -1,3 +1,25 @@
+## 20/11/2026 — Đồng bộ giao diện Giỏ hàng, Tra cứu đơn, Chính sách, Admin và tối ưu hiệu năng hiển thị
+
+- **Lý do**: Rà soát toàn diện website khách hàng và trang quản trị phát hiện một số điểm chưa đồng bộ về thẩm mỹ với hệ giao diện tối giản cao cấp mới, thao tác admin còn rời rạc ở Chat AI và Email, cùng 3 điểm nghẽn hiệu năng ở thẻ sản phẩm và hook tải danh mục.
+- **Thay đổi chính**:
+  - **Đồng bộ giao diện Storefront (`src/components/ShopCart.jsx`, `src/components/CartFormPreview.jsx`, `src/styles/shop-cart.css`, `src/components/OrderTrackingDetails.jsx`, `src/components/PolicyPage.jsx`, `src/styles/order-tracking.css`)**:
+    - Bỏ lệnh ép cứng `if (copy.order === 'Đặt sản phẩm này')` trong `ShopCart` và `CartFormPreview` để tôn trọng 100% nhãn nút do Admin chỉnh.
+    - Nâng cấp khung Giỏ hàng (`shop-cart.css`) sang nền trắng tinh khiết, viền mảnh `#ece4e8`, đổ bóng sâu, thẻ `.cart-summary-card` đóng khung rõ ràng, số tiền `tabular-nums`, và hiển thị **thành tiền theo số lượng** kèm chú thích đơn giá khi `SL > 1` (vẫn giữ nguyên toàn bộ biến `--cart-*` của Visual Builder).
+    - Nâng cấp Tra cứu đơn hàng (`OrderTrackingDetails.jsx`) thêm **nút Sao chép 1 chạm** cạnh mã đơn hàng và **vòng tròn đánh số bước `1–4`** trên thanh tiến trình.
+    - Chuyển trang Chính sách (`PolicyPage.jsx`) từ inline style sang hệ thẻ chuẩn (`.policy-page`, `.policy-header`, `.policy-card`, `.policy-contact-card`) đồng bộ với trang Tra cứu đơn.
+  - **Đồng bộ giao diện & thao tác Admin (`src/admin/ChatSettings.jsx`, `src/admin/AdminApp.jsx`, `src/admin/NewsletterAdmin.jsx`)**:
+    - Chuyển `ChatSettings.jsx` sang chỉ render đúng tab đang mở thay vì mount cả 5 tab ẩn trong DOM, đồng thời đổi khung xem trước font chữ sang `.admin-detail-box` đồng bộ theme phẳng.
+    - Thêm nút **Xuất Excel / CSV** ngay trên thanh công cụ tab **Người đăng ký** trong `NewsletterAdmin.jsx` để chuyển thẳng sang màn hình xuất file.
+  - **Tối ưu hiệu năng Web & Visual Builder (`src/components/Collection.jsx`, `src/components/ProductCard.jsx`, `src/hooks/useProducts.js`)**:
+    - Loại bỏ hook `useHomeContent()` riêng lẻ trong từng thẻ `ProductCard`, truyền cấu hình giỏ hàng đã `useMemo` từ `Collection.jsx` và bọc `React.memo(ProductCard)` để tránh 30–40 thẻ render lại đồng loạt khi cuộn hoặc chỉnh trong Visual Builder.
+    - Throttle hiệu ứng nghiêng 3D (`handleMove`) trên `ProductCard` bằng `requestAnimationFrame` và cache `getBoundingClientRect()` khi `onMouseEnter` để loại bỏ forced layout reflow.
+    - Bổ sung bộ nhớ đệm snapshot 30 giây ở mức module trong `useProducts.js` để các component mount sau (như Giỏ hàng, chuyển trang) hiển thị danh sách sản phẩm tức thì không nháy trạng thái tải lại (vẫn xóa cache khi bấm thử lại).
+- **File / khu vực liên quan**: `src/components/ShopCart.jsx`, `src/components/CartFormPreview.jsx`, `src/styles/shop-cart.css`, `src/components/OrderTrackingDetails.jsx`, `src/components/PolicyPage.jsx`, `src/styles/order-tracking.css`, `src/admin/ChatSettings.jsx`, `src/admin/AdminApp.jsx`, `src/admin/NewsletterAdmin.jsx`, `src/components/Collection.jsx`, `src/components/ProductCard.jsx`, `src/hooks/useProducts.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **258/258** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt (`140.2 kB` gzip).
+  - Playwright (`width-390`): **23/23** test đạt trên `qa/cart.spec.js`, `qa/cart-settings.spec.js`, `qa/form-builder.spec.js`, `qa/tracking-layout.spec.js`, `qa/shopping.spec.js`, `qa/admin-appearance.spec.js`, `qa/audit-resilience.spec.js`.
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu hiện có.
+
 ## 20/11/2026 — Sửa 5 điểm Backend Admin về tồn kho đa sản phẩm, biến mẫu mail, gửi thử và truy vấn lọc đơn
 
 - **Lý do**: Rà soát chuyên sâu backend quản trị phát hiện 5 điểm bất cập trong tính toán `reserved` cho đơn nhiều sản phẩm, đồng bộ `reserved` khi nhập tồn kho lần đầu, nhật ký trừ kho đa sản phẩm, biến mẫu email đơn hàng (`{{trackingUrl}}`, `{{total}}`), dữ liệu mẫu khi gửi thử email, sắp xếp lọc đơn theo trạng thái và tối ưu truy vấn Kiểm Hàng.

@@ -144,6 +144,7 @@ function AdminWorkspace({ user }) {
           initialView={emailSection.view}
           viewRequest={emailSection}
           onOpenOrderMail={(draft) => { setPendingRequest(null); setOrderMailDraft(draft); setOrderMailVersion((value) => value + 1); navigate("orders"); }}
+          onOpenExport={() => navigate("export")}
         />
       );
     }

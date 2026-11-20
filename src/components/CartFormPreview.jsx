@@ -13,7 +13,6 @@ const SAMPLE_CART_ROWS=[
 
 export default function CartFormPreview({settings={},products=[],selectedElement,onSelect}){
  const copy={...CART_COPY,...settings.copy};
- if(copy.order==='Đặt sản phẩm này')copy.order='Chi tiết';
  const rows=SAMPLE_CART_ROWS.map((row,idx)=>({...row,image:products[idx]?.image||''}));
  const total=rows.reduce((sum,row)=>sum+row.price*row.quantity,0);
  const pick=(key,event)=>{event?.stopPropagation?.();onSelect?.(key);};
@@ -53,25 +52,27 @@ export default function CartFormPreview({settings={},products=[],selectedElement
        <div className="cart-row-body">
         <strong {...mark('cartItemName')} style={nameStyle}>{row.name}</strong>
         {row.variantLabel&&<p {...mark('cartItemVariant')} style={variantStyle}>{row.variantLabel}</p>}
-        <p {...mark('cartItemPrice')} style={priceStyle}>{formatVnd(row.price)}</p>
+        <p {...mark('cartItemPrice','cart-line-price')} style={priceStyle}>{formatVnd(row.price*row.quantity)}{row.quantity>1&&<small className="cart-unit-price">{formatVnd(row.price)} × {row.quantity}</small>}</p>
         <div className="cart-row-actions">
          <div {...mark('cartQty','cart-quantity')}>
           <button type="button" tabIndex={-1}>−</button>
           <input type="number" readOnly tabIndex={-1} value={row.quantity} aria-label={copy.quantity}/>
           <button type="button" tabIndex={-1}>+</button>
          </div>
-         <button type="button" style={removeBtnStyle} {...mark('cartRemove')}>{copy.remove}</button>
+         <button type="button" className="cart-row-remove" style={removeBtnStyle} {...mark('cartRemove')}>{copy.remove}</button>
          <button type="button" style={detailBtnStyle} {...mark('cartDetail','cart-row-detail')}>{copy.order}</button>
         </div>
        </div>
       </article>
      ))}
      <div className="cart-footer">
-      <p className="cart-footer-summary">
-       <span {...mark('cartShipping')} style={shippingStyle}>{copy.shipping}</span>
-       <br/>
-       <span {...mark('cartTotal')} style={totalStyle}>{copy.total}: <strong>{formatVnd(total)}</strong></span>
-      </p>
+      <div className="cart-summary-card">
+       <p className="cart-footer-shipping"><span {...mark('cartShipping')} style={shippingStyle}>{copy.shipping}</span></p>
+       <div {...mark('cartTotal','cart-footer-total')} style={totalStyle}>
+        <span>{copy.total}</span>
+        <strong>{formatVnd(total)}</strong>
+       </div>
+      </div>
       <button
        type="button"
        style={checkoutBtnStyle}
