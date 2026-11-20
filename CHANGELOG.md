@@ -1,3 +1,26 @@
+## 20/11/2026 — Đại tu giao diện Admin theo phong cách vận hành phẳng, gọn quy trình và giảm lag
+
+- **Lý do**: Chủ website phản ánh giao diện quản trị đang bị lag, có các hiệu ứng/bóng đổ không cần thiết, đồng thời một số màn hình chính (Đơn hàng, Gửi mail, Sản phẩm, Visual Builder) có bố cục dàn trải hoặc tải ẩn quá nhiều DOM/dữ liệu gây chậm khi thao tác.
+- **Thay đổi chính**:
+  - **Hệ thống giao diện vận hành phẳng, không hiệu ứng thừa (`src/styles/admin-theme.css`, `src/styles/admin.css`, `src/admin/builder/VisualBuilder.css`)**:
+    - Chuyển nền làm việc sang tông xám-trắng trung tính (`#f8fafc` / `#ffffff`), viền `1px` sắc nét (`#e2e8f0`), giữ điểm nhấn hồng ORORA (`#b8446d` / `#9a3358`) cho nút hành động chính và nút nguy hiểm.
+    - Loại bỏ toàn bộ `box-shadow` trang trí và `transition` thừa trên sidebar, thẻ, bảng, nút, ô nhập liệu và khung chrome của Visual Builder (không ảnh hưởng bản xem trước website).
+    - Bổ sung bố cục lưới vận hành 2 cột chuẩn responsive cho chi tiết đơn hàng và khung soạn thư.
+  - **Đơn hàng 1 màn hình, lọc gọn (`src/admin/OrdersAdmin.jsx`)**:
+    - Chỉ render đúng tab đang mở (bỏ cơ chế giữ DOM ẩn của các tab khác), thu gọn thanh tìm kiếm/lọc về 1 hàng (`.admin-order-filter-bar`), phân trang 25 đơn/trang và bỏ vòng lặp `"Tải toàn bộ đơn để lọc"` gây treo máy.
+    - Chuyển hộp thoại **Chi tiết đơn hàng** từ 3 tab rải rác sang bố cục **1 màn hình 2 cột**: cột trái gồm sản phẩm, tổng tiền, trạng thái đơn, thanh toán và hoàn kho; cột phải gồm thông tin người nhận, trạng thái/lịch sử/gửi lại email xác nhận; bên dưới là mục **Nhật ký xử lý** dạng gập gọn (`<details>`).
+  - **Gửi Email 2 cột, chèn biến nhanh, giảm tải nền (`src/admin/NewsletterAdmin.jsx`, `src/admin/MailWriter.jsx`)**:
+    - Chỉ render đúng tab đang mở trong `NewsletterAdmin`, bỏ cơ chế tự gọi `loadRemainingContacts()` khi bấm vào ô tìm kiếm (thay bằng nút tải rõ ràng khi cần).
+    - Tái thiết kế `MailWriter` theo bố cục 2 cột (trái: soạn tiêu đề & nội dung kèm các nút chip bấm chèn nhanh biến `{{customerName}}`, `{{orderCode}}`, `{{productName}}`, `{{total}}`, `{{paymentMethod}}`, `{{trackingUrl}}`; phải: chọn đối tượng/đơn hàng và hành động gửi).
+    - Chỉ bật chu kỳ tự làm mới 30 giây khi đơn hàng đang chọn thực sự ở trạng thái `"sending"`.
+  - **Sản phẩm gọn nhẹ (`src/admin/ProductsAdmin.jsx`)**:
+    - Chỉ render đúng màn hình và tab đang mở (danh sách sản phẩm, từng nhóm trong Thiết lập dùng chung, từng mục trong form chỉnh sản phẩm) thay vì giữ toàn bộ cây DOM ẩn và các listener nền cùng lúc.
+- **File / khu vực liên quan**: `src/styles/admin-theme.css`, `src/styles/admin.css`, `src/admin/builder/VisualBuilder.css`, `src/admin/OrdersAdmin.jsx`, `src/admin/MailWriter.jsx`, `src/admin/NewsletterAdmin.jsx`, `src/admin/ProductsAdmin.jsx`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **255/255** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt.
+  - Playwright: **14/14** test đạt trên `qa/admin-appearance.spec.js` (cả mobile `390px` và desktop `1440px`), cùng **17/17** test đạt trên `qa/admin-confirm.spec.js`, `qa/admin-consistency.spec.js`, `qa/admin-navigation.spec.js`, `qa/form-builder.spec.js` và `qa/editor-checkout.spec.js` (`width-390`).
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu hiện có.
+
 ## 20/11/2026 — Chuẩn hóa 3 form trong Visual Builder: bấm đúng từng phần tử để chỉnh và chỉ chỉnh UI với mục dữ liệu tự động
 
 - **Lý do**: Chủ website yêu cầu 3 mục **Form giỏ hàng**, **Form đặt hàng** và **Form đã đặt hàng** trong Visual Builder phải có trải nghiệm chỉnh sửa giống hệt các mục khác: bấm trúng từng thành phần nào thì mở đúng bộ chỉnh của thành phần đó, có tab **Thiết lập mục** riêng cho khung/màu chung, và những mục hiển thị dữ liệu tự động từ sản phẩm/đơn hàng thì chỉ cho chỉnh UI chứ không hiện ô sửa nội dung.

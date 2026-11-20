@@ -827,3 +827,25 @@
 .builder-help[data-spacing="tight"] { margin-top: -6px; }
 .builder-help[data-spacing="flush"] { margin: 0; }
 .builder-field textarea { width: 100%; resize: vertical; font: inherit; }
+
+
+/* ---- Flat operational Visual Builder chrome (zero decorative motion/shadow) ---- */
+.visual-builder .builder-toolbar,
+.visual-builder .builder-sections,
+.visual-builder .builder-canvas,
+.visual-builder .builder-settings {
+  box-shadow: none;
+  border-color: var(--ad-line, #e2e8f0);
+  background: var(--ad-surface, #ffffff);
+}
+.visual-builder .inspector-group,
+.visual-builder .builder-setting-group {
+  box-shadow: none;
+  border-radius: var(--ad-r-md, 8px);
+  border-color: var(--ad-line, #e2e8f0);
+}
+.visual-builder .builder-section-item,
+.visual-builder .inspector-tabs button,
+.visual-builder button {
+  transition: none;
+}

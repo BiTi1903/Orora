@@ -2,35 +2,35 @@
 :where(.admin-shell, .admin-login, .admin-main, .admin-mail-dialog, .visual-builder) {
   --ad-primary: #b8446d;
   --ad-primary-strong: #9a3358;
-  --ad-primary-soft: #fdecf2;
+  --ad-primary-soft: #fdf2f6;
   --ad-primary-line: #f0c2d3;
-  --ad-ink: #3a1526;
-  --ad-ink-soft: #5c4150;
-  --ad-muted: #7a6270;
-  --ad-page: #fbf5f8;
-  --ad-surface: #fff;
-  --ad-surface-2: #f8eff3;
-  --ad-line: #ead9e1;
-  --ad-line-strong: #d6bcc9;
-  --ad-line-rose: #edcfdd;
-  --ad-surface-tint: #fffafc;
-  --ad-ok: #1f7a4d;
-  --ad-ok-soft: #e6f5ed;
-  --ad-danger: #b42318;
+  --ad-ink: #0f172a;
+  --ad-ink-soft: #334155;
+  --ad-muted: #64748b;
+  --ad-page: #f8fafc;
+  --ad-surface: #ffffff;
+  --ad-surface-2: #f1f5f9;
+  --ad-line: #e2e8f0;
+  --ad-line-strong: #cbd5e1;
+  --ad-line-rose: #f0c2d3;
+  --ad-surface-tint: #f8fafc;
+  --ad-ok: #15803d;
+  --ad-ok-soft: #f0fdf4;
+  --ad-danger: #b91c1c;
   --ad-danger-action: var(--ad-primary-strong);
   --ad-danger-action-hover: #7d2445;
   --ad-danger-action-tint: var(--ad-primary-soft);
   --ad-danger-action-border: var(--ad-line-rose);
   --ad-on-danger: #fff;
-  --ad-danger-soft: #fdecea;
+  --ad-danger-soft: #fef2f2;
   --ad-r-sm: 8px;
-  --ad-r-md: 12px;
-  --ad-r-lg: 16px;
-  --ad-r-xl: 20px;
+  --ad-r-md: 8px;
+  --ad-r-lg: 10px;
+  --ad-r-xl: 12px;
   --ad-r-pill: 999px;
-  --ad-h: 44px;
-  --ad-shadow: 0 1px 2px #3a15260d, 0 6px 20px #3a15260f;
-  --ad-ring: 0 0 0 3px #b8446d24;
+  --ad-h: 40px;
+  --ad-shadow: none;
+  --ad-ring: 0 0 0 2px #b8446d33;
   --a-rose: var(--ad-primary);
   --a-deep: var(--ad-primary);
   --a-petal: var(--ad-primary-soft);
@@ -39,9 +39,9 @@
   --a-line: var(--ad-line);
   --a-muted: var(--ad-muted);
   --a-focus: var(--ad-primary-strong);
-  font-family: "Jost", "Segoe UI", Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color: var(--a-plum);
-  line-height: 1.55;
+  line-height: 1.5;
   color-scheme: light;
 }
 
@@ -52,13 +52,12 @@
   min-width: 0;
   max-width: 100%;
   min-height: var(--ad-h);
-  padding: 10px 13px;
+  padding: 8px 11px;
   border: 1px solid var(--ad-line-strong);
   border-radius: var(--ad-r-md);
   color: var(--a-plum);
   background-color: var(--ad-surface);
-  font: 400 14px/1.5 "Jost", "Segoe UI", Arial, sans-serif;
-  transition: border-color .15s, box-shadow .15s, background-color .15s;
+  font: 400 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 }
 :is(.admin-shell, .admin-main, .admin-login, .admin-mail-dialog, .visual-builder) select:not(:where([data-admin-preview] *, .builder-preview *)) {
   appearance: none;

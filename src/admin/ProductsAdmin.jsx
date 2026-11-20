@@ -61,7 +61,6 @@ export default function ProductsAdmin() {
   const uploadState = (id, value) => setUploads((current) => ({ ...current, [id]: value }));
   const patchSection = (id, patch) => setSections((current) => current.map((item) => item.id === id ? { ...item, ...patch } : item));
   const [view, setView] = useState("products");
-  const [settingsOpened, setSettingsOpened] = useState(false);
   const [sharedPanel,setSharedPanel]=useState("links");
   const [editorPanel, setEditorPanel] = useState("basics");
   const editorRef = useRef(null);
@@ -191,15 +190,15 @@ export default function ProductsAdmin() {
   const panels = [["basics", "Thông tin"], ["pricing", "Giá & dung tích"], ["images", "Hình ảnh"], ["content", "Nội dung"], ["reviews", "Đánh giá"]];
   return <section className="products-admin">
     <div className="admin-top"><div><h1>Sản phẩm</h1><p className="admin-muted">Quản lý sản phẩm, giá và nội dung hiển thị.</p></div>{!editing && view === "products" && <button className="admin-btn primary" onClick={startNew} disabled={loading || busy || uploading}>+ Thêm sản phẩm</button>}</div>
-    {!editing && <nav className="product-admin-views" aria-label="Quản lý sản phẩm"><button type="button" aria-pressed={view === "products"} onClick={() => setView("products")}>Danh sách sản phẩm</button><button type="button" aria-pressed={view === "settings"} onClick={() => { setSettingsOpened(true); setView("settings"); }}>Thiết lập dùng chung</button></nav>}
+    {!editing && <nav className="product-admin-views" aria-label="Quản lý sản phẩm"><button type="button" aria-pressed={view === "products"} onClick={() => setView("products")}>Danh sách sản phẩm</button><button type="button" aria-pressed={view === "settings"} onClick={() => setView("settings")}>Thiết lập dùng chung</button></nav>}
     {message && !editing && <div role="status" className={`admin-${message.type}`} style={{ marginBottom: 16 }}>{message.text}</div>}
-    {settingsOpened && <div hidden={editing || view !== "settings"} className="product-common-settings">
-      <div className="product-shared-header"><div><h2>Thiết lập dùng chung</h2><p className="admin-muted">Chọn nhóm bên dưới để chỉnh. Mỗi nhóm có nút lưu riêng; nội dung đang nhập được giữ khi chuyển nhóm hoặc về danh sách.</p></div><button type="button" className="admin-btn" onClick={()=>setView("products")}>← Danh sách sản phẩm</button></div>
+    {!editing && view === "settings" && <div className="product-common-settings">
+      <div className="product-shared-header"><div><h2>Thiết lập dùng chung</h2><p className="admin-muted">Chọn nhóm bên dưới để chỉnh. Mỗi nhóm có nút lưu riêng.</p></div><button type="button" className="admin-btn" onClick={()=>setView("products")}>← Danh sách sản phẩm</button></div>
       <div className="product-shared-layout"><nav className="product-shared-nav" aria-label="Nhóm thiết lập dùng chung">{SHARED_SETTINGS.map(([id,title,description])=><button type="button" key={id} aria-pressed={sharedPanel===id} onClick={()=>setSharedPanel(id)}><strong>{title}</strong><small>{description}</small></button>)}</nav><div className="product-shared-panels">
 
-      <section hidden={sharedPanel!=="links"} aria-label="Kênh mua hàng và liên hệ" className="product-shared-panel"><StoreSettingsLink section="links"/></section>
-      <section hidden={sharedPanel!=="policies"} aria-label="Cam kết và chính sách" className="product-shared-panel"><ProductPoliciesSettings /></section>
-      <section hidden={sharedPanel!=="categories"} aria-label="Danh mục sản phẩm" className="product-shared-panel">
+      {sharedPanel === "links" && <section aria-label="Kênh mua hàng và liên hệ" className="product-shared-panel"><StoreSettingsLink section="links"/></section>}
+      {sharedPanel === "policies" && <section aria-label="Cam kết và chính sách" className="product-shared-panel"><ProductPoliciesSettings /></section>}
+      {sharedPanel === "categories" && <section aria-label="Danh mục sản phẩm" className="product-shared-panel">
       {categoriesError && <div className="admin-error">Không tải được danh mục: {explainError(categoriesError)}</div>}
       <form aria-busy={categoryBusy} className="admin-card admin-form" style={{ marginBottom: 20 }} onSubmit={async (event) => {
         event.preventDefault();
@@ -224,11 +223,11 @@ export default function ProductsAdmin() {
           {categories.map((category) => <button type="button" className="admin-btn" key={category.id} disabled={categoryBusy} onClick={() => { setCategoryId(category.id); setCategoryName(category.name); }}>{category.name} · Sửa tên</button>)}
         </div>
       </form>
-      </section>
-      <section hidden={sharedPanel!=="slogan"} aria-label="Slogan trên chi tiết sản phẩm" className="product-shared-panel"><ProductSloganSettings /></section>
-      <section hidden={sharedPanel!=="care"} aria-label="Cách chăm sóc phù hợp — trên footer" className="product-shared-panel"><ProductCareSettings /></section>
-      <section hidden={sharedPanel!=="needs"} aria-label="Chọn sản phẩm theo nhu cầu" className="product-shared-panel"><ProductDiscoverySettings /></section>
-      <section hidden={sharedPanel!=="faq"} aria-label="Câu hỏi thường gặp theo sản phẩm" className="product-shared-panel"><ProductDiscoverySettings faq /></section>
+      </section>}
+      {sharedPanel === "slogan" && <section aria-label="Slogan trên chi tiết sản phẩm" className="product-shared-panel"><ProductSloganSettings /></section>}
+      {sharedPanel === "care" && <section aria-label="Cách chăm sóc phù hợp — trên footer" className="product-shared-panel"><ProductCareSettings /></section>}
+      {sharedPanel === "needs" && <section aria-label="Chọn sản phẩm theo nhu cầu" className="product-shared-panel"><ProductDiscoverySettings /></section>}
+      {sharedPanel === "faq" && <section aria-label="Câu hỏi thường gặp theo sản phẩm" className="product-shared-panel"><ProductDiscoverySettings faq /></section>}
       </div></div>
     </div>}
     {editing && <form aria-busy={busy} ref={editorRef} className="admin-card admin-form product-editor-form" noValidate onSubmit={save}>
@@ -238,7 +237,7 @@ export default function ProductsAdmin() {
         {uploading && <p className="admin-muted" role="status">Đang tải ảnh. Chờ ảnh tải xong rồi lưu.</p>}
         {message && <p role={message.type === "error" ? "alert" : "status"} className={`admin-${message.type}`}>{message.text}</p>}
       </div>
-      <div hidden={editorPanel !== "basics"} className="product-editor-panel">
+      {editorPanel === "basics" && <div className="product-editor-panel">
         <h3>Thông tin sản phẩm</h3><div className="admin-form-grid">
           <div className="admin-field"><label htmlFor="product-name">Tên sản phẩm</label><input id="product-name" disabled={busy} name="name" value={form.name} onChange={change} required /></div>
           <div className="admin-field"><label htmlFor="product-number">Mã SP / STT</label><input id="product-number" name="number" value={form.number} readOnly /><small className="admin-muted">Mã tự tăng; đường dẫn bên dưới lấy theo tên sản phẩm.</small></div>
@@ -257,25 +256,25 @@ export default function ProductsAdmin() {
             <input type="checkbox" role="switch" disabled={busy} checked={form.active !== false} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
             Hiển thị trên website
           </label>
-      </div>
-      <div hidden={editorPanel !== "pricing"} className="product-editor-panel"><h3>Giá bán và dung tích</h3><div className="admin-field"><label htmlFor="product-price">Giá</label><PriceInput id="product-price" disabled={busy} name="price" value={form.price} onChange={(price) => setForm((current) => ({ ...current, price }))} placeholder="250000" /><small className="admin-muted">Chỉ nhập số, ví dụ 250000. Đơn vị đ tự hiển thị; để trống nếu cần báo giá. Giá chung áp dụng khi dung tích không có giá riêng.</small></div><ProductVolumeEditor options={volumeOptions} onChange={setVolumeOptions} disabled={busy} /></div>
-      <div hidden={editorPanel !== "images"} className="product-editor-panel">
+      </div>}
+      {editorPanel === "pricing" && <div className="product-editor-panel"><h3>Giá bán và dung tích</h3><div className="admin-field"><label htmlFor="product-price">Giá</label><PriceInput id="product-price" disabled={busy} name="price" value={form.price} onChange={(price) => setForm((current) => ({ ...current, price }))} placeholder="250000" /><small className="admin-muted">Chỉ nhập số, ví dụ 250000. Đơn vị đ tự hiển thị; để trống nếu cần báo giá. Giá chung áp dụng khi dung tích không có giá riêng.</small></div><ProductVolumeEditor options={volumeOptions} onChange={setVolumeOptions} disabled={busy} /></div>}
+      {editorPanel === "images" && <div className="product-editor-panel">
           <section className="product-editor-block" aria-label="Ảnh sản phẩm"><div className="product-editor-heading"><div><h3>Ảnh sản phẩm</h3><p className="admin-muted">Một ảnh chính và các ảnh phụ theo thứ tự bạn thêm.</p></div></div>
             <ImageField label="Ảnh chính" value={form.image} disabled={busy} onBusyChange={(value) => uploadState("main", value)} onChange={(value) => setForm((current) => ({ ...current, image: value }))} width={1200} />
             <div className="product-secondary-images">{media.map((item, index) => <div className="product-secondary-image" key={item.id}><ImageField label={`Ảnh phụ ${index + 1}`} value={item.src} disabled={busy} onBusyChange={(value) => uploadState(item.id, value)} onChange={(src) => setMedia((current) => current.map((entry) => entry.id === item.id ? { ...entry, src } : entry))} width={1200} />{media.length > 1 && <button type="button" className="admin-btn danger" disabled={busy || uploading} aria-label={`Xóa mục ảnh phụ ${index + 1}`} onClick={() => setMedia((current) => current.filter((entry) => entry.id !== item.id))}>Xóa mục ảnh</button>}</div>)}</div>
             <button type="button" className="admin-btn" disabled={busy || uploading} onClick={() => setMedia((current) => [...current, { id: crypto.randomUUID(), src: "" }])}>+ Thêm ảnh phụ</button>
           </section>
 
-      </div>
-      <div hidden={editorPanel !== "content"} className="product-editor-panel">
+      </div>}
+      {editorPanel === "content" && <div className="product-editor-panel">
           <section className="product-editor-block" aria-label="Nội dung chi tiết sản phẩm"><div className="product-editor-heading"><div><h3>Nội dung chi tiết</h3><p className="admin-muted">Mặc định chỉ có Mô tả. Tên mục không bắt buộc; bấm Thêm mục nội dung khi cần thêm phần khác.</p></div></div>
             {sections.map((item, index) => <div className="product-content-section" key={item.id}><div className="product-editor-heading"><strong>Mục {index + 1}</strong>{sections.length > 1 && <button type="button" className="admin-btn danger" disabled={busy} aria-label={`Xóa mục nội dung ${index + 1}`} onClick={async () => { if ((item.title.trim() || item.content.trim()) && !await confirm("Bỏ mục này khỏi nội dung sản phẩm? Chỉ áp dụng khi bạn lưu sản phẩm.", { title: "Xóa mục nội dung", confirmLabel: "Xóa mục", danger: true })) return; setSections((current) => current.filter((entry) => entry.id !== item.id)); }}>Xóa mục</button>}</div><div className="admin-field"><label htmlFor={`section-group-${item.id}`}>Phần hiển thị mục {index + 1}</label><select id={`section-group-${item.id}`} value={item.group || productSectionGroup(item, index)} disabled={busy} onChange={(event) => patchSection(item.id, { group: event.target.value })}>{Object.entries(PRODUCT_CONTENT_GROUPS).map(([key, title]) => <option key={key} value={key}>{title}</option>)}</select></div><div className="admin-field"><label htmlFor={`section-title-${item.id}`}>Tên mục {index + 1} (không bắt buộc)</label><input id={`section-title-${item.id}`} value={item.title} disabled={busy} placeholder={index === 0 ? "Mô tả" : "Để trống hoặc nhập tên mục…"} onChange={(event) => patchSection(item.id, { title: event.target.value })} /></div><ProductContentEditor label={`Nội dung mục ${index + 1}`} value={item.content} disabled={busy} onChange={(content) => patchSection(item.id, { content })} /></div>)}
             <button type="button" className="admin-btn" disabled={busy} onClick={() => setSections((current) => [...current, newSection("specifications")])}>+ Thêm mục nội dung</button>
           </section>
-      </div>
-      <div hidden={editorPanel !== "reviews"} className="product-editor-panel"><ProductReviewsEditor reviews={reviews} onChange={setReviews} disabled={busy} /></div>
+      </div>}
+      {editorPanel === "reviews" && <div className="product-editor-panel"><ProductReviewsEditor reviews={reviews} onChange={setReviews} disabled={busy} /></div>}
     </form>}
-      <div className="admin-card" hidden={editing || view !== "products"}>
+      {!editing && view === "products" && <div className="admin-card">
         <div className="product-list-tools"><div className="admin-field"><label htmlFor="products-search">Tìm sản phẩm</label><input id="products-search" type="search" placeholder="Tên hoặc mã sản phẩm…" value={search} onChange={(event) => setSearch(event.target.value)} /></div><div className="admin-field"><label htmlFor="products-status">Hiển thị</label><select id="products-status" value={status} onChange={(event) => setStatus(event.target.value)}><option value="all">Tất cả</option><option value="active">Đang hiện</option><option value="hidden">Đang ẩn</option></select></div><span className="admin-muted">{visibleItems.length} / {items.length} sản phẩm</span></div>
         {!loading && visibleItems.length === 0 ? (
           <div className="admin-empty">
@@ -313,6 +312,6 @@ export default function ProductsAdmin() {
             </table>
           </div>
         )}
-      </div>
+      </div>}
   </section>;
 }
