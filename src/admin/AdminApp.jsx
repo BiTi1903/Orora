@@ -1,26 +1,28 @@
 import ConfirmProvider from "./ConfirmDialog";
 import { useConfirm } from "./confirm-context";
 import "../styles/product-detail.css";
-import {dirtyRegistry} from "../lib/dirty-registry";
+import { dirtyRegistry } from "../lib/dirty-registry";
 import useOrderNotifications from "./useOrderNotifications";
-import EmailExport from "./EmailExport";
 import { newsletterRequest } from "./newsletter-api";
-import ShippingAdmin from "./ShippingAdmin";
-import ChatSettings from "./ChatSettings";
-import InventoryAdmin from "./InventoryAdmin";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { auth, onAuthStateChanged, signOut } from "../lib/firebaseAuth";
 import AdminLogin from "./AdminLogin";
-import Dashboard from "./Dashboard";
-import HomeAdmin from "./HomeAdmin";
-import ProductsAdmin from "./ProductsAdmin";
-import OrdersAdmin from "./OrdersAdmin";
-import NewsletterAdmin from "./NewsletterAdmin";
 import "../styles/admin.css";
+
+const Dashboard = lazy(() => import("./Dashboard"));
+const AnalyticsDashboard = lazy(() => import("./AnalyticsDashboard"));
+const HomeAdmin = lazy(() => import("./HomeAdmin"));
+const ProductsAdmin = lazy(() => import("./ProductsAdmin"));
+const OrdersAdmin = lazy(() => import("./OrdersAdmin"));
+const NewsletterAdmin = lazy(() => import("./NewsletterAdmin"));
+const ShippingAdmin = lazy(() => import("./ShippingAdmin"));
+const InventoryAdmin = lazy(() => import("./InventoryAdmin"));
+const ChatSettings = lazy(() => import("./ChatSettings"));
+const EmailExport = lazy(() => import("./EmailExport"));
 
 /* Menu chia nhóm theo công việc; mỗi mục là [khóa, nhãn]. */
 const GROUPS = [
-  { title: null, items: [["dashboard", "Tổng quan"]] },
+  { title: null, items: [["dashboard", "Tổng quan"], ["analytics", "Thống kê"]] },
   { title: "Bán hàng", items: [["orders", "Đơn hàng"], ["inventory", "Kiểm kho"], ["shipping", "Phí vận chuyển"]] },
   { title: "Giao diện và nội dung", items: [["home", "Trang chủ"], ["products", "Sản phẩm"], ["store", "Cửa hàng"]] },
   { title: "Khách hàng", items: [["newsletter", "Email"], ["chat", "Chat AI"], ["export", "Xuất danh sách email"]] },
@@ -59,53 +61,94 @@ function AdminWorkspace({ user }) {
   const [pendingRequest, setPendingRequest] = useState(null);
   const [signOutError, setSignOutError] = useState("");
   const [tab, setTab] = useState(initialAdminTab);
-  const [visited, setVisited] = useState(() => {
-    const start = initialAdminTab();
-    if (start === "dashboard" || start === "export") return [];
-    return [start === "store" ? "home" : start];
-  });
   const [orderMailDraft, setOrderMailDraft] = useState(null);
   const [orderMailVersion, setOrderMailVersion] = useState(0);
   const [emailSection, setEmailSection] = useState({ view: "contacts" });
   const [storeSection, setStoreSection] = useState("links");
   const [storeVersion, setStoreVersion] = useState(0);
-  const navigate = (key) => {
-    if (!ALL_TABS.includes(key)) return;
-    setVisited((items) => items.includes(key === "store" ? "home" : key) ? items : [...items, key === "store" ? "home" : key]);
+
+  const navigate = async (key, { force = false } = {}) => {
+    if (!ALL_TABS.includes(key) || key === tab) return;
+    const sameBuilder = (tab === "home" || tab === "store") && (key === "home" || key === "store");
+    if (!force && !sameBuilder && dirtyRegistry.hasChanges()) {
+      const ok = await confirm("Bạn có thay đổi chưa lưu. Chuyển sang mục khác và bỏ các thay đổi này?", {
+        title: "Thay đổi chưa lưu",
+        confirmLabel: "Rời mục",
+        danger: true,
+      });
+      if (!ok) return;
+    }
     setTab(key);
     if (typeof window !== "undefined" && window.location.hash !== `#${key}`) window.history.replaceState(null, "", `#${key}`);
   };
+
   useEffect(() => {
-    const onHash = () => {
-      const next = initialAdminTab();
-      setVisited((items) => (next === "dashboard" || next === "export" || items.includes(next === "store" ? "home" : next)) ? items : [...items, next === "store" ? "home" : next]);
-      setTab(next);
-    };
+    const onHash = () => setTab(initialAdminTab());
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
+
   useEffect(() => {
     const open = (event) => {
       setStoreVersion((v) => v + 1);
       setStoreSection(event.detail?.section || "links");
-      setVisited((items) => items.includes("home") ? items : [...items, "home"]);
       setTab("store");
       if (typeof window !== "undefined") window.history.replaceState(null, "", "#store");
     };
     window.addEventListener("orora-admin-store", open);
     return () => window.removeEventListener("orora-admin-store", open);
   }, []);
+
   const orderBadgeShown = notifications.snapshot?.pendingCount > 0 || notifications.error;
 
-  /* Các mục giữ trạng thái sau lần mở đầu (ẩn bằng `hidden`, không gỡ khỏi trang). */
-  const panels = {
-    home: <HomeAdmin workspace={tab === "store" ? "store" : "home"} storeSection={storeSection} storeVersion={storeVersion} />,
-    products: <ProductsAdmin />,
-    chat: <ChatSettings />,
-    orders: <OrdersAdmin statusCounts={notifications.snapshot?.counts} refreshKey={notifications.revision} pendingRequest={pendingRequest} onOrderChanged={notifications.refresh} key={`${user.uid}:${orderMailVersion}`} initialMailDraft={orderMailDraft} canEditStore canUseNewsletter onOpenEmailTemplates={() => { setEmailSection({ view: "templates" }); navigate("newsletter"); }} />,
-    shipping: <ShippingAdmin key={user.uid} />,
-    inventory: <InventoryAdmin key={user.uid} />,
-    newsletter: <NewsletterAdmin initialView={emailSection.view} viewRequest={emailSection} onOpenOrderMail={(draft) => { setPendingRequest(null); setOrderMailDraft(draft); setOrderMailVersion((value) => value + 1); navigate("orders"); }} />,
+  const renderActiveTab = () => {
+    if (tab === "dashboard") {
+      return (
+        <Dashboard
+          pendingCount={notifications.snapshot?.pendingCount}
+          revision={notifications.revision}
+          onOpenOrder={(id) => { setPendingRequest({ id, allStatuses: true }); navigate("orders"); }}
+          onOpenInventory={() => navigate("inventory")}
+          onOpenAnalytics={() => navigate("analytics")}
+        />
+      );
+    }
+    if (tab === "analytics") {
+      return <section><h1>Thống kê</h1><AnalyticsDashboard /></section>;
+    }
+    if (tab === "home" || tab === "store") {
+      return <HomeAdmin workspace={tab === "store" ? "store" : "home"} storeSection={storeSection} storeVersion={storeVersion} />;
+    }
+    if (tab === "products") return <ProductsAdmin />;
+    if (tab === "chat") return <ChatSettings />;
+    if (tab === "orders") {
+      return (
+        <OrdersAdmin
+          statusCounts={notifications.snapshot?.counts}
+          refreshKey={notifications.revision}
+          pendingRequest={pendingRequest}
+          onOrderChanged={notifications.refresh}
+          key={`${user.uid}:${orderMailVersion}`}
+          initialMailDraft={orderMailDraft}
+          canEditStore
+          canUseNewsletter
+          onOpenEmailTemplates={() => { setEmailSection({ view: "templates" }); navigate("newsletter"); }}
+        />
+      );
+    }
+    if (tab === "shipping") return <ShippingAdmin key={user.uid} />;
+    if (tab === "inventory") return <InventoryAdmin key={user.uid} />;
+    if (tab === "newsletter") {
+      return (
+        <NewsletterAdmin
+          initialView={emailSection.view}
+          viewRequest={emailSection}
+          onOpenOrderMail={(draft) => { setPendingRequest(null); setOrderMailDraft(draft); setOrderMailVersion((value) => value + 1); navigate("orders"); }}
+        />
+      );
+    }
+    if (tab === "export") return <EmailExport key={user.uid} request={newsletterRequest} />;
+    return null;
   };
 
   return (
@@ -135,10 +178,9 @@ function AdminWorkspace({ user }) {
 
       <main className="admin-main">
         {notifications.incoming && <div className="admin-order-notification" role="status"><div><strong>Có đơn hàng mới · {notifications.incoming.code}</strong><p>{notifications.snapshot?.pendingCount ?? ""} đơn đang chờ xác nhận.</p></div><button type="button" className="admin-btn" onClick={() => { setPendingRequest({ id: notifications.incoming.id }); navigate("orders"); notifications.dismiss(); }}>Xem đơn chờ</button><button type="button" className="notification-dismiss" aria-label="Đóng thông báo đơn mới" onClick={notifications.dismiss}>×</button></div>}
-
-        {tab === "dashboard" && <Dashboard pendingCount={notifications.snapshot?.pendingCount} revision={notifications.revision} onOpenOrder={id => { setPendingRequest({ id, allStatuses: true }); navigate("orders"); }} onOpenInventory={() => navigate("inventory")} />}
-        {Object.entries(panels).filter(([key]) => visited.includes(key)).map(([key, panel]) => <div key={key} className="admin-workspace-panel" hidden={key === "home" ? !["home", "store"].includes(tab) : tab !== key}>{panel}</div>)}
-        {tab === "export" && <EmailExport key={user.uid} request={newsletterRequest} />}
+        <Suspense fallback={<div className="admin-card"><p className="admin-muted">Đang tải mục quản trị…</p></div>}>
+          {renderActiveTab()}
+        </Suspense>
       </main>
     </div>
   );

@@ -9,12 +9,19 @@ import '../styles/checkout.css';
 export default function OrderFormFields({product,items=null,subtotal,options,variantId,quantity,onVariantChange,onQuantityChange,addresses,provinceCode,wardCode,onProvinceChange,onWardChange,methods,unitPrice,shipping,total,appearance={},busy=false,error,onSubmit,preview=false,selectedElement,onSelect}){
  const [addressError,setAddressError]=useState(false);
  const [variantError,setVariantError]=useState(false);
+ const [selectedMethod,setSelectedMethod]=useState(()=>methods[0]||'');
+ const activeMethod=methods.includes(selectedMethod)?selectedMethod:(methods[0]||'');
  const isMulti=Array.isArray(items)&&items.length>1;
  const copy={...CHECKOUT_COPY,...appearance.formLabels};
  for (const key of ['recipientHeading','addressHeading','paymentHeading','summaryHeading']) {
   if (typeof copy[key] !== 'string' || !copy[key].trim()) copy[key]=CHECKOUT_COPY[key];
  }
  const label=(key)=>typeof copy[key]==='string'&&copy[key].trim()?copy[key]:CHECKOUT_COPY[key];
+ const paymentHintText=activeMethod==='bank_transfer'
+  ?label('bankPaymentHint')
+  :activeMethod==='cod'
+   ?label('codPaymentHint')
+   :label('paymentHint');
  const headingStyle=toCss(appearance.formHeadingStyle,{responsive:true});
  const productNameStyle=toCss(appearance.productNameStyle,{responsive:true});
  const pricePillStyle=toCss(appearance.pricePillStyle,{responsive:true});
@@ -92,13 +99,13 @@ export default function OrderFormFields({product,items=null,subtotal,options,var
     {(shipping.reason||(preview&&label('addressHint')))&&!addressError&&<p className="order-help checkout-shipping-note" style={helpTextStyle}>{shipping.reason||label('addressHint')}</p>}
    </section>
    <section {...mark('ofPayment','checkout-section checkout-card')}><h3 style={headingStyle}>{copy.paymentHeading}</h3>
-    <label>{label('paymentMethodLabel')}<select aria-label={label('paymentMethodLabel')} name="paymentMethod" required defaultValue={methods[0]||''} tabIndex={preview?-1:undefined}>{methods.map(key=><option key={key} value={key}>{PAYMENT_LABELS[key]}</option>)}</select></label>
+    <label>{label('paymentMethodLabel')}<select aria-label={label('paymentMethodLabel')} name="paymentMethod" required value={activeMethod} onChange={event=>setSelectedMethod(event.target.value)} tabIndex={preview?-1:undefined}>{methods.map(key=><option key={key} value={key}>{PAYMENT_LABELS[key]}</option>)}</select></label>
     <details className="checkout-note"><summary>{copy.noteLabel}</summary><label>{label('noteFieldLabel')}<textarea name="note" rows={2} maxLength={1000} readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('notePlaceholder')}/></label></details>
    </section>
    <section {...mark('ofSummary','checkout-summary')} aria-label={copy.summaryHeading||'Thanh toán'}>
-    <div className="order-summary"><span>{label('shippingFeeLabel')}</span><strong>{shipping.fee===null?'Theo khu vực giao':formatVnd(shipping.fee)}</strong></div>
-    <div className="order-summary checkout-total"><span>{label('totalLabel')}</span><strong style={summaryTotalStyle}>{total===null?(effectiveSubtotal===null?'ORORA sẽ xác nhận':`${itemTotal} (+ phí giao hàng)`):formatVnd(total)}</strong></div>
-    <p className="order-help checkout-payment-hint" style={helpTextStyle}>{label('paymentHint')}</p>
+    <div className="order-summary"><span>{label('shippingFeeLabel')}</span><strong>{shipping.fee===null?label('shippingUnknownLabel'):formatVnd(shipping.fee)}</strong></div>
+    <div className="order-summary checkout-total"><span>{shipping.fee===null?label('subtotalPendingLabel'):label('totalLabel')}</span><strong style={summaryTotalStyle}>{total===null?(effectiveSubtotal===null?'ORORA sẽ xác nhận':itemTotal):formatVnd(total)}</strong></div>
+    <p className="order-help checkout-payment-hint" style={helpTextStyle}>{paymentHintText}</p>
    </section>
    <label className="order-consent" onClick={preview&&onSelect?event=>{event.preventDefault();pick('ofSummary',event);}:undefined}><input name="consent" type="checkbox" required tabIndex={preview?-1:undefined}/><span>{label('consentText')}</span></label>
    {!methods.length&&<p role="status">Website đang tạm ngưng nhận đơn. Vui lòng liên hệ ORORA hoặc mua qua các kênh bên trên.</p>}

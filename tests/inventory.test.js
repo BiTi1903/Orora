@@ -47,9 +47,8 @@ test("cancelled waiting orders release holds; concurrent orders cannot reserve t
 });
 test("COD shipment deducts stock before payment; returns require explicit receipt and are idempotent", async () => {
   const { db, call } = await setup(10); const data = orderBody(2); await call("place", data);
-  assert.equal((await call("orders", { id: data.requestId, status: "shipping" })).statusCode, 409);
-  assert.equal((await call("orders", { id: data.requestId, status: "confirmed" })).statusCode, 200);
-  await call("orders", { id: data.requestId, status: "shipping" }); assert.equal((await stock(db)).quantity, 8);
+  assert.equal((await call("orders", { id: data.requestId, status: "completed" })).statusCode, 409);
+  assert.equal((await call("orders", { id: data.requestId, status: "shipping" })).statusCode, 200); assert.equal((await stock(db)).quantity, 8);
   let order = (await db.collection("orders").doc(data.requestId).get()).data(); assert.equal(order.paymentStatus, "unpaid"); assert.equal(order.inventory.state, "deducted");
   assert.equal((await call("orders", { action: "restockOrder", id: data.requestId })).statusCode, 409);
   await call("orders", { id: data.requestId, status: "cancelled" }); assert.equal((await stock(db)).quantity, 8);

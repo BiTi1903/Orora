@@ -1,3 +1,29 @@
+## 20/11/2026 — Hoàn thiện máy trạng thái đơn, kiểm kho nhanh, nội dung đặt hàng/chuyển khoản và tối ưu giảm lag trang Admin
+
+- **Lý do**: Khắc phục các điểm tồn đọng theo rà soát: gom máy trạng thái đơn về một nguồn dùng chung, cho phép `new → shipping` và `completed → cancelled` (kèm hoàn kho cho đơn hoàn tất bị trả hàng), chặn tuyệt đối đổi `paymentStatus` trên đơn đã hủy, thay vòng lặp 10 trang kho ở `TodayTasks` bằng endpoint `?lowStock=1`, bổ sung hướng dẫn chuyển khoản / Bước tiếp theo / biên nhận / email xác nhận, dọn các khóa chết trong `CHECKOUT_COPY`, và tách chunk lazy-load + tách tab Thống kê để giảm lag trang Admin.
+- **Thay đổi chính**:
+  - **Máy trạng thái đơn & Kiểm kho (`src/lib/order-flow.js`, `server/orders.js`, `src/admin/OrdersAdmin.jsx`, `server/inventory.js`, `src/admin/TodayTasks.jsx`)**:
+    - Tạo file dùng chung `src/lib/order-flow.js` chứa `ORDER_STATUSES` và `NEXT_ORDER_STATUSES` cho cả API và giao diện quản trị.
+    - Cho phép chuyển thẳng `new → shipping` và `completed → cancelled` (mở khóa thao tác hủy đơn hoàn tất trong `OrdersAdmin` và hỗ trợ hoàn kho kể cả đơn nhiều sản phẩm qua `restockOrder`).
+    - Chặn mọi yêu cầu thay đổi `paymentStatus` khi đơn đã ở trạng thái `cancelled` (kể cả khi gửi kèm `status: "cancelled"`).
+    - Bổ sung chế độ `GET /api/inventory?lowStock=1` trả danh sách sản phẩm sắp hết hàng trong 1 truy vấn duy nhất thay vì quét tuần tự tới 10 trang trong `TodayTasks`.
+  - **Nội dung Form đặt hàng, Giỏ hàng, Trang đã đặt, Ảnh biên nhận & Email (`src/lib/checkout-presentation.js`, `src/components/OrderFormFields.jsx`, `src/components/OrderSuccessView.jsx`, `src/components/OrderReceiptActions.jsx`, `src/lib/order-receipt.js`, `server/order-mail.js`, `src/components/ShopCart.jsx`, `src/lib/cart-copy.js`, `src/admin/builder/CheckoutSettings.jsx`, `src/admin/builder/FormBuilderPanels.jsx`)**:
+    - Bỏ 4 khóa không sử dụng (`productHeading`, `confirmHeading`, `continueLabel`, `backLabel`) khỏi `CHECKOUT_COPY` và `CheckoutSettings`.
+    - Hiển thị rõ `"Chọn tỉnh và phường để tính phí"` và `"Tạm tính (chưa gồm phí giao)"` trước khi có phí ship; đổi ghi chú thanh toán linh hoạt theo phương thức đang chọn (COD / Chuyển khoản).
+    - Mở sẵn khung **Thông tin người nhận**, bổ sung khối **Thông tin chuyển khoản** (ngân hàng, số tài khoản, chủ tài khoản, mẫu nội dung `{{code}}`) và khối **Bước tiếp theo** trên trang Đã đặt hàng (tất cả chỉnh được trong Visual Builder).
+    - Thêm nút **Xem sản phẩm** khi giỏ hàng trống; bổ sung **Ngày đặt**, **Tình trạng thanh toán** và **Liên hệ ORORA** vào ảnh biên nhận PNG; bổ sung mục **Bước tiếp theo** và email hỗ trợ vào mẫu mail xác nhận mặc định.
+  - **Tối ưu hiệu năng trang Admin (`src/admin/AdminApp.jsx`, `src/admin/Dashboard.jsx`)**:
+    - Tách toàn bộ các mục quản trị bằng `React.lazy` + `Suspense` (giảm chunk khởi đầu `AdminApp` từ ~483 KB xuống ~15 KB).
+    - Chỉ render đúng tab đang mở kèm cảnh báo giữ bản nháp khi chuyển tab, tránh giữ toàn bộ DOM ẩn và render lại mỗi 60 giây khi polling thông báo.
+    - Tách `AnalyticsDashboard` sang tab **Thống kê** riêng để màn hình **Tổng quan** chỉ tải `TodayTasks` và số liệu nhẹ, không quét 10.000 đơn ngay khi mới vào.
+  - **Kiểm thử (`tests/order-flow-and-stock.test.js`, `tests/inventory.test.js`, `qa/admin-navigation.spec.js`)**:
+    - Bổ sung unit test cho toàn bộ vòng đời `reserved`, `new → shipping`, `completed → cancelled → restockOrder`, chặn `paymentStatus` trên đơn đã hủy, `?lowStock=1` và `receiptLines`.
+- **File / khu vực liên quan**: `src/lib/order-flow.js`, `server/orders.js`, `server/inventory.js`, `server/order-mail.js`, `src/admin/OrdersAdmin.jsx`, `src/admin/TodayTasks.jsx`, `src/admin/Dashboard.jsx`, `src/admin/AdminApp.jsx`, `src/admin/builder/CheckoutSettings.jsx`, `src/admin/builder/FormBuilderPanels.jsx`, `src/lib/checkout-presentation.js`, `src/lib/cart-copy.js`, `src/lib/order-receipt.js`, `src/components/OrderFormFields.jsx`, `src/components/OrderSuccessView.jsx`, `src/components/OrderReceiptActions.jsx`, `src/components/ShopCart.jsx`, `tests/order-flow-and-stock.test.js`, `tests/inventory.test.js`, `qa/admin-navigation.spec.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **255/255** unit test đạt, `eslint .` 0 lỗi, `vite build` (chunk `AdminApp` còn `15.22 kB`) và ngân sách bundle đạt.
+  - Playwright (`width-390`): **15/15** test đạt trên `qa/admin-navigation.spec.js`, `qa/form-builder.spec.js`, `qa/cart.spec.js`, `qa/shopping.spec.js` và `qa/editor-checkout.spec.js`.
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu hiện có; truy vấn `?lowStock=1` dùng single-field index mặc định trên `inventory.quantity`.
+
 ## 19/11/2026 — Thêm 3 mục riêng trong Visual Builder cho Form giỏ hàng, Form đặt hàng và Form đã đặt hàng với bộ chỉnh toàn diện
 
 - **Lý do**: Chủ website yêu cầu tách **Form giỏ hàng** và **Form đặt hàng** thành các mục riêng ngay trong danh sách của **Visual Builder** để xem trước trực tiếp và chỉnh sửa được đầy đủ mọi thành phần, đồng thời bổ sung thêm mục **Form đã đặt hàng** (màn hình xác nhận sau khi đặt đơn) để tiện chỉnh sửa và xem trước.

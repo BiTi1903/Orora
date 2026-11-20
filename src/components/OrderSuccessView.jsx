@@ -70,12 +70,33 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
      <div className="order-received-total" style={totalStyle}><dt>{text('receiptTotalLabel')}</dt><dd>{order.totalAmount==null?'ORORA sẽ xác nhận tổng tiền':formatVnd(order.totalAmount)}</dd></div>
     </dl>
    </div>
-   <details className="order-received-details checkout-card" open={preview?true:undefined} onClick={preview?event=>pick('osDetails',event):undefined}>
+   <details className="order-received-details checkout-card" open onClick={preview?event=>pick('osDetails',event):undefined}>
     <summary style={cardHeadingStyle}>{text('receiptRecipientHeading')}</summary>
     <dl>
      {[['Họ và tên',order.recipient.name],['Số điện thoại',order.recipient.phone],['Email',order.recipient.email],['Địa chỉ nhận hàng',order.recipient.address],['Ghi chú',order.recipient.note]].filter(([,value])=>value).map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
     </dl>
    </details>
+   {(order.paymentMethod==='bank_transfer'||(preview&&(appearance.bankName||appearance.bankAccountNumber||appearance.bankAccountName)))&&(
+    <div {...mark('osDetails','order-received-details checkout-card')}>
+     <h3 style={cardHeadingStyle}>{text('bankHeading')}</h3>
+     {appearance.bankName||appearance.bankAccountNumber||appearance.bankAccountName?(
+      <dl>
+       {appearance.bankName&&<div><dt>Ngân hàng</dt><dd>{appearance.bankName}</dd></div>}
+       {appearance.bankAccountNumber&&<div><dt>Số tài khoản</dt><dd>{appearance.bankAccountNumber}</dd></div>}
+       {appearance.bankAccountName&&<div><dt>Chủ tài khoản</dt><dd>{appearance.bankAccountName}</dd></div>}
+       <div><dt>Nội dung chuyển khoản</dt><dd>{(appearance.bankTransferNote||copy.bankTransferNote).replace(/\{\{code\}\}/g,order.code)}</dd></div>
+      </dl>
+     ):(
+      <p className="order-help">ORORA sẽ gửi thông tin tài khoản ngân hàng ngay khi xác nhận đơn hàng của bạn. Nội dung chuyển khoản: <strong>{order.code}</strong>.</p>
+     )}
+    </div>
+   )}
+   {text('receiptNextStepsBody')&&(
+    <div {...mark('osFooter','order-received-details checkout-card')}>
+     <h3 style={cardHeadingStyle}>{text('receiptNextStepsHeading')}</h3>
+     <p className="order-help">{text('receiptNextStepsBody')}</p>
+    </div>
+   )}
    <p className="order-help" {...mark('osFooter','order-help')}>{mailNote}</p>
    <div {...mark('osFooter','order-received-footer')}>
     {preview

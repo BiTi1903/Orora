@@ -10,9 +10,9 @@ export default function OrderReceiptActions({order,home={},appearance={},preview
  useEffect(()=>{
   if(preview||!order)return;
   let alive=true;
-  renderOrderReceiptBlob(order).then(next=>{if(alive)setBlob(next);}).catch(()=>{if(alive)setRenderFailed(true);});
+  renderOrderReceiptBlob(order,home).then(next=>{if(alive)setBlob(next);}).catch(()=>{if(alive)setRenderFailed(true);});
   return()=>{alive=false;};
- },[order,preview]);
+ },[order,home,preview]);
  const links=contactLinks(home,'',home.productDetailStyles?.contactActions||{});
  const facebook=socialShopUrl(home.shopLinks?.facebookUrl||home.footerFacebook,'facebook');
  const zaloLabel=appearance.receiptZaloLabel||'Xác nhận qua Zalo',fbLabel=appearance.receiptFacebookLabel||'Xác nhận qua Facebook',saveLabel=appearance.receiptSaveLabel||'Lưu ảnh đơn hàng';

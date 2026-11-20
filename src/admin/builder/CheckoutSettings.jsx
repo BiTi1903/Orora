@@ -2,7 +2,7 @@ import {CHECKOUT_COPY,CHECKOUT_FRAME_FIELDS} from '../../lib/checkout-presentati
 import OrderReceiptActions from '../../components/OrderReceiptActions';
 import OrderFormPreview from '../../components/OrderFormPreview';
 import {ColorField,StyleTypographyBlock} from './ui';
-const LABELS={title:'Tiêu đề form đặt hàng',intro:'Lời hướng dẫn đầu form',productHeading:'Tiêu đề phần sản phẩm',recipientHeading:'Tiêu đề người nhận',addressHeading:'Tiêu đề địa chỉ',paymentHeading:'Tiêu đề thanh toán',noteLabel:'Nhãn mở ghi chú',summaryHeading:'Tiêu đề tóm tắt đơn',confirmHeading:'Nhãn bước xác nhận',continueLabel:'Nhãn nút tiếp tục',backLabel:'Nhãn nút quay lại'};
+const LABELS={title:'Tiêu đề form đặt hàng',intro:'Lời hướng dẫn đầu form',recipientHeading:'Tiêu đề người nhận',addressHeading:'Tiêu đề địa chỉ',paymentHeading:'Tiêu đề thanh toán',noteLabel:'Nhãn mở ghi chú',summaryHeading:'Tiêu đề tóm tắt đơn'};
 export default function CheckoutSettings({value={},onChange}){return <>
  <p className="builder-help">Form được chia theo thông tin người nhận, địa chỉ và thanh toán. Giá, phí và kiểm tra đơn vẫn theo dữ liệu hiện có.</p>
  {Object.entries(LABELS).map(([key,label])=><label className="builder-field" key={key}>{label}<input value={value.formLabels?.[key]??CHECKOUT_COPY[key]} onChange={event=>onChange({formLabels:{...value.formLabels,[key]:event.target.value}})}/></label>)}

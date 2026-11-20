@@ -1,20 +1,29 @@
-import {formatVnd,PAYMENT_LABELS} from './commerce';
-export function receiptLines(order){return [
- ['Mã đơn',order.code],['Sản phẩm',order.productName],['Dung tích',order.variantLabel],['Số lượng',order.quantity],
- ['Người nhận',order.recipient?.name],['Điện thoại',order.recipient?.phone],['Địa chỉ',order.recipient?.address],
- ['Thanh toán',PAYMENT_LABELS[order.paymentMethod]||order.paymentMethod],
- ['Tiền sản phẩm',order.subtotal==null?'Xác nhận sau':formatVnd(order.subtotal)],
- ['Phí giao hàng',order.shippingFee==null?'Xác nhận sau':formatVnd(order.shippingFee)],
- ['Tổng tiền',order.totalAmount==null?'Xác nhận sau':formatVnd(order.totalAmount)],
-].filter(([,value])=>value!==undefined&&value!==null&&value!=='').map(([label,value])=>`${label}: ${value}`);}
+import {formatVnd,PAYMENT_LABELS} from './commerce.js';
+export function receiptLines(order,home={}){
+ const created=order.createdAt?new Date(order.createdAt):new Date();
+ const dateText=Number.isFinite(created.getTime())?created.toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}):'';
+ const contact=home.footerPhone||home.productDetailStyles?.contactActions?.phone||'';
+ return [
+  ['Mã đơn',order.code],
+  ['Ngày đặt',dateText],
+  ['Sản phẩm',order.productName],['Dung tích',order.variantLabel],['Số lượng',order.quantity],
+  ['Người nhận',order.recipient?.name],['Điện thoại',order.recipient?.phone],['Địa chỉ',order.recipient?.address],
+  ['Thanh toán',PAYMENT_LABELS[order.paymentMethod]||order.paymentMethod],
+  ['Tình trạng',order.paymentStatus==='paid'?'Đã thanh toán':'Chưa thanh toán'],
+  ['Tiền sản phẩm',order.subtotal==null?'Xác nhận sau':formatVnd(order.subtotal)],
+  ['Phí giao hàng',order.shippingFee==null?'Xác nhận sau':formatVnd(order.shippingFee)],
+  ['Tổng tiền',order.totalAmount==null?'Xác nhận sau':formatVnd(order.totalAmount)],
+  ['Liên hệ ORORA',contact],
+ ].filter(([,value])=>value!==undefined&&value!==null&&value!=='').map(([label,value])=>`${label}: ${value}`);
+}
 export function receiptFileName(order){
  return `ORORA-${String(order.code).replace(/[^a-z0-9_-]/gi,'')}.png`;
 }
-export async function renderOrderReceiptBlob(order){
+export async function renderOrderReceiptBlob(order,home={}){
  await document.fonts?.ready;
  const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');if(!ctx)throw new Error('Không tạo được ảnh.');
  ctx.font='24px Arial';const lines=[];
- for(const text of receiptLines(order)){let line='';for(const char of text){if(ctx.measureText(line+char).width>656){lines.push(line);line='';}line+=char;}if(line)lines.push(line);lines.push('');}
+ for(const text of receiptLines(order,home)){let line='';for(const char of text){if(ctx.measureText(line+char).width>656){lines.push(line);line='';}line+=char;}if(line)lines.push(line);lines.push('');}
  const width=760,height=220+lines.length*34;
  const dpr=Math.max(2,Math.min(3,Math.ceil((typeof window!=='undefined'&&window.devicePixelRatio)||2)));
  canvas.width=width*dpr;canvas.height=height*dpr;ctx.scale(dpr,dpr);

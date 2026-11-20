@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { requireAdmin } from "./admin-auth.js";
+import { LOW_STOCK_THRESHOLD } from "../src/lib/stock.js";
 const validId = (value) => typeof value === "string" && /^[a-zA-Z0-9_-]{1,150}$/.test(value);
 const validQuantity = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 1_000_000_000;
 const fail = (message, status = 409) => Object.assign(new Error(message), { status });
@@ -130,6 +131,22 @@ export function createInventoryHandler({ getDb, verifyToken, env = process.env }
           }
         }
         return res.status(200).json({ pending, nextCursor: page.docs.length === 100 ? page.docs.at(-1).id : null });
+      }
+      if (req.method === "GET" && req.query?.lowStock === "1") {
+        const lowSnap = await db.collection("inventory")
+          .where("quantity", "<=", LOW_STOCK_THRESHOLD)
+          .orderBy("quantity")
+          .limit(20)
+          .get();
+        const validDocs = lowSnap.docs.filter((doc) => Number.isSafeInteger(doc.data()?.quantity) && doc.data().quantity >= 0);
+        const prodRefs = validDocs.map((doc) => db.collection("products").doc(doc.id));
+        const prodDocs = !prodRefs.length ? [] : typeof db.getAll === "function" ? await db.getAll(...prodRefs) : await Promise.all(prodRefs.map((ref) => ref.get()));
+        const items = validDocs.flatMap((doc, index) => {
+          const prod = prodDocs[index];
+          if (!prod?.exists) return [];
+          return [{ id: doc.id, name: String(prod.data().name || ""), quantity: doc.data().quantity }];
+        });
+        return res.status(200).json({ items });
       }
       if (req.method === "GET") {
         let query = db.collection("products").orderBy("__name__").limit(50);

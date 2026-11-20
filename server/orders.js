@@ -26,13 +26,7 @@ function readBody(req, env, maxBytes = 8000) {
   if (!body || Buffer.byteLength(JSON.stringify(body)) > maxBytes) throw Object.assign(new Error("Dữ liệu không hợp lệ."), { status: 400 });
   return body;
 }
-const NEXT_ORDER_STATUSES = {
-  new: ["confirmed", "cancelled"],
-  confirmed: ["shipping", "completed", "cancelled"],
-  shipping: ["completed", "cancelled"],
-  completed: [],
-  cancelled: [],
-};
+import { NEXT_ORDER_STATUSES, ORDER_STATUSES } from "../src/lib/order-flow.js";
 const orderCreatedPayload = (result, mailStatus) => ({
   code: result.code,
   productName: result.product.name,
@@ -282,22 +276,35 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
           if (!saved.exists || order.status !== "cancelled") throw Object.assign(new Error("Chỉ hoàn kho cho đơn đã hủy và đã nhận lại hàng."), { status: 409 });
           if (order.inventory?.state === "restocked") return;
           if (order.inventory?.state !== "deducted") throw Object.assign(new Error("Đơn này chưa có lần trừ kho để hoàn lại."), { status: 409 });
-          const stockRef = db.collection("inventory").doc(order.inventory.productId); const stock = (await tx.get(stockRef)).data();
-          if (!stock || !Number.isSafeInteger(stock.quantity) || stock.quantity < 0 || stock.quantity + order.inventory.quantity > 1_000_000_000) throw Object.assign(new Error("Kiểm tra số tồn kho hiện tại trước khi hoàn hàng."), { status: 409 });
+          const returnEntries = Array.isArray(order.inventory.items) && order.inventory.items.length
+            ? order.inventory.items.map((item) => [item.productId, item.quantity])
+            : [[order.inventory.productId, order.inventory.quantity]];
+          const stockRefs = returnEntries.map(([productId]) => db.collection("inventory").doc(productId));
+          const stockSnaps = typeof tx.getAll === "function" ? await tx.getAll(...stockRefs) : await Promise.all(stockRefs.map((r) => tx.get(r)));
           const now = new Date(clock());
-          tx.set(stockRef, { quantity: stock.quantity + order.inventory.quantity, version: (stock.version || 0) + 1, updatedAt: now, updatedBy: user.uid }, { merge: true });
-          tx.set(db.collection("inventoryMovements").doc(`return-${body.id}`), { type: "order_return", productId: order.inventory.productId, orderId: body.id, change: order.inventory.quantity, before: stock.quantity, after: stock.quantity + order.inventory.quantity, createdAt: now, actor: user.uid });
+          let totalReturned = 0;
+          for (let i = 0; i < returnEntries.length; i++) {
+            const [productId, qty] = returnEntries[i];
+            const stock = stockSnaps[i]?.data();
+            if (!stock || !Number.isSafeInteger(stock.quantity) || stock.quantity < 0 || stock.quantity + qty > 1_000_000_000) throw Object.assign(new Error("Kiểm tra số tồn kho hiện tại trước khi hoàn hàng."), { status: 409 });
+            tx.set(stockRefs[i], { quantity: stock.quantity + qty, version: (stock.version || 0) + 1, updatedAt: now, updatedBy: user.uid }, { merge: true });
+            tx.set(db.collection("inventoryMovements").doc(returnEntries.length === 1 ? `return-${body.id}` : `return-${body.id}-${productId}`), { type: "order_return", productId, orderId: body.id, change: qty, before: stock.quantity, after: stock.quantity + qty, createdAt: now, actor: user.uid });
+            totalReturned += qty;
+          }
           const nextInventory = { ...order.inventory, state: "restocked", restockedAt: now };
           tx.set(ref, { inventory: nextInventory, updatedAt: now, updatedBy: user.uid }, { merge: true });
-          return recordOrderActivity(tx, ref, { before: order, after: { ...order, inventory: nextInventory }, user, createdAt: now, action: "stock_returned", quantity: order.inventory.quantity });
+          return recordOrderActivity(tx, ref, { before: order, after: { ...order, inventory: nextInventory }, user, createdAt: now, action: "stock_returned", quantity: totalReturned });
         });
         return res.status(200).json({ activity: activity || null, message: "Đã ghi nhận nhận lại hàng và hoàn kho." });
       }
-      if (!uuid(body.id) || (body.status !== undefined ? !["new", "confirmed", "shipping", "completed", "cancelled"].includes(body.status) : !["unpaid", "paid"].includes(body.paymentStatus))) return res.status(400).json({ message: "Đơn hàng hoặc trạng thái không hợp lệ." });
+      if (!uuid(body.id) || (body.status !== undefined ? !ORDER_STATUSES.includes(body.status) : !["unpaid", "paid"].includes(body.paymentStatus))) return res.status(400).json({ message: "Đơn hàng hoặc trạng thái không hợp lệ." });
       const result = await db.runTransaction(async (tx) => {
         const ref = orders.doc(body.id); const current = await tx.get(ref);
         if (!current.exists) throw Object.assign(new Error("Không tìm thấy đơn hàng."), { status: 404 });
         const cur = current.data();
+        if (cur.status === "cancelled" && body.paymentStatus !== undefined && body.paymentStatus !== cur.paymentStatus) {
+          throw Object.assign(new Error("Đơn đã hủy không thể cập nhật trạng thái thanh toán."), { status: 409 });
+        }
         if (body.status !== undefined && body.status !== cur.status) {
           if (cur.status === "cancelled") throw Object.assign(new Error("Đơn đã hủy không mở lại. Tạo đơn mới để số lượng và lịch sử kho được ghi nhận đúng."), { status: 409 });
           if (!NEXT_ORDER_STATUSES[cur.status]?.includes(body.status)) throw Object.assign(new Error("Không thể chuyển sang trạng thái này từ trạng thái hiện tại."), { status: 409 });

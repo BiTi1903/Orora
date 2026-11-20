@@ -1,3 +1,4 @@
+import { NEXT_ORDER_STATUSES } from "../lib/order-flow";
 import { useConfirm } from "./confirm-context";
 import StoreSettingsLink from "./StoreSettingsLink";
 import { ORDER_STATUSES as STATUSES } from "../lib/order-tracking";
@@ -98,14 +99,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
     setOrders((items) => items.map((item) => item.id === id ? { ...item, ...patch } : item));
     setDetail((value) => value?.order.id === id ? { ...value, order: { ...value.order, ...patch } } : value);
   };
-const NEXT_ORDER_STATUSES = {
-  new: ["confirmed", "cancelled"],
-  confirmed: ["shipping", "completed", "cancelled"],
-  shipping: ["completed", "cancelled"],
-  completed: [],
-  cancelled: [],
-};
-const update = async (order, patch) => {
+  const update = async (order, patch) => {
     if (patch.status === "cancelled" && order.status !== "cancelled") {
       if (!await confirm(`Hủy đơn ${order.code}? Đơn đã hủy không thể mở lại.`, { title: "Xác nhận hủy đơn", confirmLabel: "Hủy đơn", danger: true })) return;
     } else if (patch.status === "completed" && order.status !== "completed") {
@@ -239,7 +233,7 @@ const update = async (order, patch) => {
         ? <ul className="admin-order-items">{selected.items.map((item, idx) => <li key={`${item.id || idx}:${item.variantId || ""}`}>{orderProductName(item)} × {item.quantity} — {formatProductPrice(item.priceText) || "Cần báo giá"}</li>)}</ul>
         : <><p>{orderProductName(selected.product)} × {selected.quantity}</p><p>Đơn giá: {formatProductPrice(selected.product.priceText) || "Cần báo giá"}</p></>}<p>Tạm tính: {selected.subtotal === null ? "Cần báo giá" : formatVnd(selected.subtotal)}</p><p>Phí giao hàng: {selected.shippingFee == null ? "Xác nhận sau" : formatVnd(selected.shippingFee)}</p><p>Tổng tiền: {selected.totalAmount == null ? "Chưa chốt tổng tiền" : formatVnd(selected.totalAmount)}</p><p>Phương thức: {PAYMENT_LABELS[selected.paymentMethod] || selected.paymentMethod}</p><p>Thanh toán: {orderPaymentLabel(selected)}</p><label className="admin-check"><input type="checkbox" checked={selected.paymentStatus === "paid"} disabled={busy || detail.loading || selected.status === "completed" || selected.status === "cancelled" || (selected.paymentStatus === "paid" && selected.inventory?.state === "deducted")} onChange={(event) => update(selected, { paymentStatus: event.target.checked ? "paid" : "unpaid" })} />Đã thanh toán</label></div></div>
       <p className="admin-muted">Khách có thể xem trạng thái này tại trang Tra cứu đơn hàng bằng mã đơn hoặc số điện thoại đã đặt.</p>
-      <fieldset className="order-status-options" aria-busy={busy} disabled={busy || detail.loading || selected.status === "cancelled" || selected.status === "completed"}><legend>Trạng thái xử lý đơn</legend>{Object.entries(STATUSES).map(([key, label]) => <label key={key}><input type="radio" name={`status-${selected.id}`} checked={selected.status === key} disabled={key !== selected.status && !NEXT_ORDER_STATUSES[selected.status]?.includes(key)} onChange={() => update(selected, { status: key })} />{label}</label>)}</fieldset>
+      <fieldset className="order-status-options" aria-busy={busy} disabled={busy || detail.loading || selected.status === "cancelled"}><legend>Trạng thái xử lý đơn</legend>{Object.entries(STATUSES).map(([key, label]) => <label key={key}><input type="radio" name={`status-${selected.id}`} checked={selected.status === key} disabled={key !== selected.status && !NEXT_ORDER_STATUSES[selected.status]?.includes(key)} onChange={() => update(selected, { status: key })} />{label}</label>)}</fieldset>
       <p className="admin-muted">Chọn Hoàn tất sẽ ghi nhận đã thanh toán và không thể lùi trạng thái. Đơn đã trừ kho không thể bỏ đánh dấu đã thanh toán.</p>
       <details className="admin-filter-panel"><summary>Quy tắc tồn kho & mã lưu trữ</summary><p className="admin-muted">ID: {selected.id}</p><p className="admin-muted">Đơn chờ giữ số lượng, chưa trừ tồn thực tế. Xác nhận thanh toán, bắt đầu giao hoặc Hoàn tất sẽ trừ kho một lần. Hủy đơn chưa xuất giải phóng hàng chờ; đơn đã xuất chỉ hoàn kho khi xác nhận nhận lại hàng.</p></details>
       {selected.status === "cancelled" && selected.inventory?.state === "deducted" && <button type="button" className="admin-btn" disabled={busy} onClick={async () => {

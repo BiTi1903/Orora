@@ -62,6 +62,7 @@ export function CartFormSettings({selected,navbar,onChange}){
    <SettingGroup title="Hiển thị sản phẩm trong giỏ">
     <NumberList fields={[CART_MODAL_FIELDS[3]]} value={cart} onChange={patch}/>
     {copyField('empty','Chữ khi giỏ hàng trống')}
+    {copyField('shopNow','Nút Xem sản phẩm khi giỏ trống')}
     {copyField('added','Thông báo đã thêm vào giỏ')}
    </SettingGroup>
    <StyleTypographyBlock title="Kiểu chữ tên sản phẩm" style={cart.itemNameStyle||{}} onStyleChange={next=>patch({itemNameStyle:{...cart.itemNameStyle,...next}})}/>
@@ -247,8 +248,11 @@ export function OrderFormBuilderSettings({selected,productDetail,onChange}){
    <SettingGroup title="Tóm tắt thanh toán & đồng ý">
     {labelField('summaryHeading','Tiêu đề vùng tóm tắt')}
     {labelField('shippingFeeLabel','Nhãn Phí giao hàng')}
+    {labelField('shippingUnknownLabel','Chữ khi chưa chọn địa chỉ')}
+    {labelField('subtotalPendingLabel','Nhãn tổng khi chưa có phí ship')}
     {labelField('totalLabel','Nhãn Tổng thanh toán')}
-    {labelField('paymentHint','Chú thích chưa thu tiền',2)}
+    {labelField('codPaymentHint','Chú thích khi chọn COD',2)}
+    {labelField('bankPaymentHint','Chú thích khi chọn Chuyển khoản',2)}
     {labelField('consentText','Nội dung ô tích đồng ý',3)}
     <ColorField label="Màu nền khung tổng tiền" value={value.summaryBackground||'#fff5f8'} onChange={summaryBackground=>patch({summaryBackground})}/>
     <ColorField label="Màu viền khung tổng tiền" value={value.summaryBorderColor||'#e8bfd0'} onChange={summaryBorderColor=>patch({summaryBorderColor})}/>
@@ -357,13 +361,22 @@ export function OrderSuccessBuilderSettings({selected,productDetail,onChange}){
     <ColorField label="Màu nền thẻ chi tiết" value={value.receiptCardBackground||'#ffffff'} onChange={receiptCardBackground=>patch({receiptCardBackground})}/>
     <ColorField label="Màu viền thẻ chi tiết" value={value.receiptCardBorderColor||'#efd7e1'} onChange={receiptCardBorderColor=>patch({receiptCardBorderColor})}/>
    </SettingGroup>
+   <SettingGroup title="Thông tin chuyển khoản (hiện khi khách chọn chuyển khoản)">
+    {field('bankHeading','Tiêu đề khối chuyển khoản')}
+    {field('bankName','Tên ngân hàng')}
+    {field('bankAccountNumber','Số tài khoản')}
+    {field('bankAccountName','Tên chủ tài khoản')}
+    {field('bankTransferNote','Mẫu nội dung chuyển khoản (dùng {{code}} cho mã đơn)')}
+   </SettingGroup>
    <StyleTypographyBlock title="Kiểu chữ tiêu đề thẻ" style={value.receiptCardHeadingStyle||{}} onStyleChange={next=>patch({receiptCardHeadingStyle:{...value.receiptCardHeadingStyle,...next}})}/>
    <StyleTypographyBlock title="Kiểu chữ dòng Tổng thanh toán" style={value.receiptTotalStyle||{}} onStyleChange={next=>patch({receiptTotalStyle:{...value.receiptTotalStyle,...next}})}/>
   </>;
  }
 
  return <>
-  <SettingGroup title="Ghi chú email, link tra cứu & nút Đóng">
+  <SettingGroup title="Bước tiếp theo, ghi chú email & nút Đóng">
+   {field('receiptNextStepsHeading','Tiêu đề Bước tiếp theo')}
+   {field('receiptNextStepsBody','Nội dung Bước tiếp theo',3)}
    {field('receiptEmailNote','Ghi chú kiểm tra email',2)}
    {field('receiptTrackingLabel','Chữ link tra cứu đơn')}
    {field('receiptCloseLabel','Chữ nút Đóng')}
