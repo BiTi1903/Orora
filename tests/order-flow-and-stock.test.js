@@ -211,3 +211,69 @@ test("GET /api/admin-orders supports server-side status filter and direct code/p
   assert.deepEqual(byEmail.body.orders.map((o) => o.id), [idA]);
 });
 
+test("multi-item reserved fallback, first stock sync, multi-item deduction quantity, and GET /api/inventory reserved", async () => {
+  const { db, placeHandler, adminOrdersHandler, inventoryHandler } = await seedOrderEnv();
+  // Remove reserved field on p2 and add p3 uncounted to simulate legacy/first-time stock entry
+  await db.collection("products").doc("p3").set({ name: "Cream", active: true, price: "300000" });
+  await db.collection("inventory").doc("p2").set({ quantity: 5, version: 1 });
+
+  // Place a multi-item order containing p3 (2) and p2 (1) while p3 is uncounted and p2 has no reserved field
+  const multiId = crypto.randomUUID();
+  const multiRes = makeRes();
+  await placeHandler(makeReq({
+    auth: false,
+    body: {
+      requestId: multiId,
+      items: [{ productId: "p3", quantity: 2 }, { productId: "p2", quantity: 1 }],
+      name: "Khach Multi", phone: "0905556666", email: "multi@example.com",
+      address: "10 Le Loi, Quan 1, TP.HCM", paymentMethod: "cod", consent: true,
+    },
+  }), multiRes);
+  assert.equal(multiRes.statusCode, 201);
+  // p2 reserved must be 1 (only p2's item quantity, not total order quantity 3)
+  assert.equal((await db.collection("inventory").doc("p2").get()).data().reserved, 1);
+
+  // Admin enters stock for p3 for the first time -> reserved must sync to 2
+  const p3Stock = (await db.collection("inventory").doc("p3").get()).data();
+  const adjustRes = makeRes();
+  await inventoryHandler(makeReq({ method: "POST", body: { id: "p3", quantity: 10, version: p3Stock?.version || 0 } }), adjustRes);
+  assert.equal(adjustRes.statusCode, 200);
+  assert.equal(adjustRes.body.item.reserved, 2);
+
+  // GET /api/inventory returns reserved for each product
+  const listRes = makeRes();
+  await inventoryHandler(makeReq({ method: "GET" }), listRes);
+  assert.equal(listRes.statusCode, 200);
+  const p3Item = listRes.body.items.find((item) => item.id === "p3");
+  assert.equal(p3Item.reserved, 2);
+
+  // Shipping multi-item order records total deducted quantity (3) in inventory snapshot
+  const shipRes = makeRes();
+  await adminOrdersHandler(makeReq({ method: "POST", body: { id: multiId, status: "shipping" } }), shipRes);
+  assert.equal(shipRes.statusCode, 200);
+  assert.equal(shipRes.body.inventory.quantity, 3);
+  assert.equal((await db.collection("inventory").doc("p3").get()).data().quantity, 8);
+  assert.equal((await db.collection("inventory").doc("p3").get()).data().reserved, 0);
+});
+
+test("order mail templates accept {{trackingUrl}} and {{total}} tokens", async () => {
+  const { validateOrderTemplate, renderOrderMessage } = await import("../server/order-mail.js");
+  const template = validateOrderTemplate({
+    subject: "Đơn {{orderCode}} - {{total}}",
+    text: "Tra cứu đơn tại: {{trackingUrl}}\nTổng: {{total}}",
+  });
+  const rendered = renderOrderMessage(template, {
+    code: "OW_999C",
+    customer: { name: "An", phone: "0901234567", email: "an@example.com", address: "HCM" },
+    product: { name: "Gel" },
+    quantity: 1,
+    subtotal: 200000,
+    shippingFee: 20000,
+    totalAmount: 220000,
+    paymentMethod: "cod",
+  }, { NEWSLETTER_SITE_ORIGIN: "https://ororavn.com" });
+  assert.ok(rendered.subject.includes("220.000"));
+  assert.ok(rendered.text.includes("https://ororavn.com/tra-cuu-don-hang"));
+});
+
+

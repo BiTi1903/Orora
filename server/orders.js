@@ -263,7 +263,13 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
           return res.status(200).json({ orders: list, nextCursor: null, serverSearch: true });
         }
         if (!historyOnly && !bounceOnly && rawStatus && ORDER_STATUSES.includes(rawStatus)) {
-          const page = await orders.where("status", "==", rawStatus).limit(100).get();
+          let page;
+          try {
+            page = await orders.where("status", "==", rawStatus).orderBy("createdAt", "desc").limit(100).get();
+          } catch (indexError) {
+            if (indexError?.code !== 9 && !/index|FAILED_PRECONDITION/i.test(String(indexError?.message || ""))) throw indexError;
+            page = await orders.where("status", "==", rawStatus).limit(100).get();
+          }
           const list = page.docs.map(formatOrderDoc).sort((a, b) => b.createdAt - a.createdAt || a.id.localeCompare(b.id));
           return res.status(200).json({ orders: list, nextCursor: null });
         }

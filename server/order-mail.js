@@ -9,20 +9,23 @@ export const DEFAULT_ORDER_MESSAGE = {
   subject: "ORORA xác nhận đã nhận đơn {{orderCode}}",
   text: "Chào {{customerName}},\n\nORORA đã nhận đơn hàng {{orderCode}} của bạn.\n\nSản phẩm: {{productName}}\nSố lượng: {{quantity}}\nTạm tính: {{subtotal}}\nPhí giao hàng: {{shippingFee}}\nTổng thanh toán: {{totalAmount}}\nPhương thức thanh toán: {{paymentMethod}}\nĐịa chỉ nhận hàng: {{address}}\nSố điện thoại: {{phone}}\n\nBước tiếp theo:\n- ORORA sẽ liên hệ xác nhận đơn, phí giao hàng và hướng dẫn thanh toán (nếu chuyển khoản).\n- Thư này xác nhận đã nhận yêu cầu đặt hàng, chưa xác nhận thanh toán.\n- Nếu cần hỗ trợ nhanh, bạn có thể trả lời trực tiếp email này (sales@ororavn.com) kèm mã đơn {{orderCode}}.\n\nCảm ơn bạn đã chọn ORORA!",
 };
-export const ORDER_TOKENS = ["customerName", "orderCode", "productName", "variantLabel", "quantity", "subtotal", "shippingFee", "totalAmount", "paymentMethod", "address", "phone", "email", "note", "unitPrice", "createdAt", "paymentStatus"];
+export const ORDER_TOKENS = ["customerName", "orderCode", "productName", "variantLabel", "quantity", "subtotal", "shippingFee", "totalAmount", "total", "paymentMethod", "address", "phone", "email", "note", "unitPrice", "createdAt", "paymentStatus", "trackingUrl"];
 export const validOrderEmail = (value) => typeof value === "string" && value.length <= 254 && /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/.test(value);
 export function validateOrderTemplate(value) {
   const message = validateMessage(value);
   if ([...`${message.subject}\n${message.text}`.matchAll(/\{\{(\w+)\}\}/g)].some((match) => !ORDER_TOKENS.includes(match[1]))) throw new Error("invalid_order_token");
   return message;
 }
-export function renderOrderMessage(template, order) {
+export function renderOrderMessage(template, order, env = process.env) {
   const orderedAt = order.createdAt?.toDate?.() ?? order.createdAt;
   const orderedDate = orderedAt ? new Date(orderedAt) : null;
   const multiProductSummary = Array.isArray(order.items) && order.items.length > 1
     ? order.items.map((item) => `${orderProductName(item)} × ${item.quantity}`).join("; ")
     : orderProductName(order.product);
-  const values = { customerName: order.customer.name, orderCode: order.code, productName: multiProductSummary, variantLabel: order.product.variantLabel || "", quantity: order.quantity, subtotal: order.subtotal == null ? "ORORA sẽ báo giá" : formatVnd(order.subtotal), unitPrice: order.product.unitPrice == null ? formatProductPrice(order.product.priceText) || "ORORA sẽ báo giá" : formatVnd(order.product.unitPrice), shippingFee: order.shippingFee == null ? "ORORA sẽ xác nhận" : formatVnd(order.shippingFee), totalAmount: order.totalAmount == null ? "ORORA sẽ xác nhận" : formatVnd(order.totalAmount), paymentMethod: PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod, paymentStatus: order.paymentStatus === "paid" ? "Đã thanh toán" : "Chưa thanh toán", address: order.customer.address, phone: order.customer.phone, email: order.customer.email, note: order.customer.note || "Không có", createdAt: orderedDate && Number.isFinite(orderedDate.getTime()) ? orderedDate.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "Chưa lưu ngày đặt" };
+  const totalFormatted = order.totalAmount == null ? "ORORA sẽ xác nhận" : formatVnd(order.totalAmount);
+  let origin = "https://ororavn.com";
+  try { if (env?.NEWSLETTER_SITE_ORIGIN) origin = new URL(env.NEWSLETTER_SITE_ORIGIN).origin; } catch { /* fallback to default */ }
+  const values = { customerName: order.customer.name, orderCode: order.code, productName: multiProductSummary, variantLabel: order.product.variantLabel || "", quantity: order.quantity, subtotal: order.subtotal == null ? "ORORA sẽ báo giá" : formatVnd(order.subtotal), unitPrice: order.product.unitPrice == null ? formatProductPrice(order.product.priceText) || "ORORA sẽ báo giá" : formatVnd(order.product.unitPrice), shippingFee: order.shippingFee == null ? "ORORA sẽ xác nhận" : formatVnd(order.shippingFee), totalAmount: totalFormatted, total: totalFormatted, paymentMethod: PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod, paymentStatus: order.paymentStatus === "paid" ? "Đã thanh toán" : "Chưa thanh toán", address: order.customer.address, phone: order.customer.phone, email: order.customer.email, note: order.customer.note || "Không có", createdAt: orderedDate && Number.isFinite(orderedDate.getTime()) ? orderedDate.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "Chưa lưu ngày đặt", trackingUrl: `${origin}/tra-cuu-don-hang` };
   const fill = (text, subject = false) => text.replace(/\{\{(\w+)\}\}/g, (_, key) => subject ? String(values[key] ?? "").replace(/[\r\n]/g, " ") : String(values[key] ?? ""));
   return validateMessage({ subject: fill(template.subject, true), text: fill(template.text) });
 }

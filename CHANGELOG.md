@@ -1,3 +1,25 @@
+## 20/11/2026 — Sửa 5 điểm Backend Admin về tồn kho đa sản phẩm, biến mẫu mail, gửi thử và truy vấn lọc đơn
+
+- **Lý do**: Rà soát chuyên sâu backend quản trị phát hiện 5 điểm bất cập trong tính toán `reserved` cho đơn nhiều sản phẩm, đồng bộ `reserved` khi nhập tồn kho lần đầu, nhật ký trừ kho đa sản phẩm, biến mẫu email đơn hàng (`{{trackingUrl}}`, `{{total}}`), dữ liệu mẫu khi gửi thử email, sắp xếp lọc đơn theo trạng thái và tối ưu truy vấn Kiểm Hàng.
+- **Thay đổi chính**:
+  - **Tồn kho & hàng chờ đa sản phẩm (`server/inventory.js`, `src/admin/InventoryAdmin.jsx`)**:
+    - Sửa fallback tính `reserved` (`countWaitingForProduct`) để cộng đúng số lượng của từng sản phẩm trong cả đơn nhiều món (`order.items`) thay vì cộng tổng số lượng cả giỏ.
+    - Đồng bộ và lưu luôn `reserved` hiện tại ngay khi Admin nhập tồn kho lần đầu qua `POST /api/inventory`.
+    - Gắn tổng `quantity` đã trừ kho vào `inventory` của đơn nhiều sản phẩm để `recordOrderActivity` ghi nhật ký đầy đủ.
+    - Trả `reserved` đã đồng bộ trong `GET /api/inventory` và tối ưu `InventoryAdmin.jsx` dùng trực tiếp `reserved` (chỉ fallback quét `?pending=1` khi còn sản phẩm cũ chưa đồng bộ).
+  - **Biến mẫu email & Gửi thử (`server/order-mail.js`, `server/newsletter-admin.js`, `src/admin/MailWriter.jsx`)**:
+    - Bổ sung `{{trackingUrl}}` (link `/tra-cuu-don-hang`) và alias `{{total}}` vào `ORDER_TOKENS`, `renderOrderMessage`, cùng chip chèn nhanh & xem trước trong `MailWriter`.
+    - Bổ sung đủ `priceText`, `unitPrice`, `subtotal`, `shippingFee`, `totalAmount`, `createdAt` cho đơn giả lập khi bấm **Gửi thử** (`sendTest`).
+  - **Sắp xếp lọc đơn theo trạng thái (`server/orders.js`)**:
+    - Ưu tiên `orders.where("status", "==", rawStatus).orderBy("createdAt", "desc").limit(100)` và tự động fallback an toàn nếu Firestore chưa tạo composite index.
+  - **Kiểm thử (`tests/order-flow-and-stock.test.js`)**:
+    - Thêm unit test xác minh fallback `reserved` đa sản phẩm, đồng bộ `reserved` khi nhập tồn lần đầu, `GET /api/inventory` trả `reserved`, tổng `quantity` khi trừ kho đơn nhiều món và biến `{{trackingUrl}}`/`{{total}}`.
+- **File / khu vực liên quan**: `server/inventory.js`, `server/order-mail.js`, `server/newsletter-admin.js`, `server/orders.js`, `src/admin/InventoryAdmin.jsx`, `src/admin/MailWriter.jsx`, `tests/order-flow-and-stock.test.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **258/258** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt.
+  - Playwright (`width-390`): **11/11** test đạt trên `qa/audit-resilience.spec.js` và `qa/admin-appearance.spec.js`.
+- **Ảnh hưởng database**: Không thay đổi schema hay rules; `POST /api/inventory` tự khởi tạo trường `reserved` cho sản phẩm chưa có, còn truy vấn `status` có fallback an toàn nếu chưa tạo composite index.
+
 ## 20/11/2026 — Thiết kế lại giao diện Form đặt hàng và Form đã nhận đơn theo chuẩn thương mại điện tử tối giản cao cấp
 
 - **Lý do**: Chủ website yêu cầu thiết kế lại Form đặt hàng và Form đã nhận hàng cho sang trọng, hiện đại và dễ thao tác giống các thương hiệu thương mại điện tử lớn (chuẩn Shopify Checkout / Glossier / Stripe), đồng thời vẫn tương thích hoàn toàn với toàn bộ tùy chỉnh trong Visual Builder.

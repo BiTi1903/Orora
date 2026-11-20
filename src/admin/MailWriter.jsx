@@ -17,6 +17,7 @@ const ORDER_QUICK_TOKENS = [
   ["{{paymentMethod}}", "Thanh toán"],
   ["{{address}}", "Địa chỉ"],
   ["{{phone}}", "SĐT"],
+  ["{{trackingUrl}}", "Link tra cứu"],
 ];
 
 function previewOrderVariables(text, order) {
@@ -33,6 +34,7 @@ function previewOrderVariables(text, order) {
     "{{paymentMethod}}": PAYMENT_LABELS[order?.paymentMethod] || "Thanh toán khi nhận hàng (COD)",
     "{{address}}": order?.customer?.address || "12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh",
     "{{phone}}": order?.customer?.phone || "0901234567",
+    "{{trackingUrl}}": `${typeof window !== "undefined" ? window.location.origin : "https://ororavn.com"}/tra-cuu-don-hang`,
   };
   return Object.entries(map).reduce((acc, [token, val]) => acc.replaceAll(token, val), text);
 }

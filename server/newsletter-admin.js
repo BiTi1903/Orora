@@ -232,8 +232,8 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
             const saved = await db.collection("orders").doc(body.orderId).get();
             if (!saved.exists) return reply(404, { message: "Không tìm thấy đơn gửi thử." });
             order = saved.data();
-          } else order = { code: "OR-GUI-THU", customer: { name: "Khách thử nghiệm", email, phone: "0900000000", address: "Địa chỉ minh họa" }, product: { name: "Sản phẩm minh họa" }, quantity: 1, subtotal: 0, paymentMethod: "cod" };
-          message = renderOrderMessage(validateOrderTemplate(body), order);
+          } else order = { code: "OR-GUI-THU", customer: { name: "Khách thử nghiệm", email, phone: "0900000000", address: "123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh" }, product: { name: "Sản phẩm minh họa", priceText: "250000", unitPrice: 250000 }, quantity: 1, subtotal: 250000, shippingFee: 25000, totalAmount: 275000, paymentMethod: "cod", paymentStatus: "unpaid", createdAt: new Date() };
+          message = renderOrderMessage(validateOrderTemplate(body), order, env);
         } else if (body.mailType && hasOrderTokens(message)) throw new Error("order_context_required");
         await sendMail(email, message);
         return reply(200, { message: `MS đã nhận thư gửi tới ${email}. Kiểm tra cả mục thư rác.` });

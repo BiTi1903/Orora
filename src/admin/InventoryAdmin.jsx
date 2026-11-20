@@ -21,19 +21,18 @@ export default function InventoryAdmin() {
     async function load() {
       setLoading(true); setNotice(null);
       try {
-        const [all, pending] = await Promise.all([
-          (async () => {
-            const all = new Map(); const seen = new Set(); let cursor;
-            do { const page = await inventoryRequest(null, cursor); page.items.forEach((item) => all.set(item.id, item)); cursor = page.nextCursor; if (cursor && seen.has(cursor)) throw new Error("Không tải đủ sản phẩm. Hãy tải lại."); if (cursor) seen.add(cursor); } while (cursor);
-            return all;
-          })(),
-          (async () => {
-            const pending = Object.create(null); const seen = new Set(); let cursor;
-            do { const page = await inventoryRequest(null, cursor, true); for (const [id, quantity] of Object.entries(page.pending)) pending[id] = (pending[id] || 0) + quantity; cursor = page.nextCursor; if (cursor && seen.has(cursor)) throw new Error("Không tải đủ hàng đang chờ. Hãy tải lại."); if (cursor) seen.add(cursor); } while (cursor);
-            return pending;
-          })(),
-        ]);
-        if (alive) { setItems(withProductIdentity([...all.values()])); setPendingQuantities(pending); setDrafts({}); }
+        const all = new Map(); const seen = new Set(); let cursor;
+        do { const page = await inventoryRequest(null, cursor); page.items.forEach((item) => all.set(item.id, item)); cursor = page.nextCursor; if (cursor && seen.has(cursor)) throw new Error("Không tải đủ sản phẩm. Hãy tải lại."); if (cursor) seen.add(cursor); } while (cursor);
+        const list = [...all.values()];
+        const needsPendingScan = list.some((item) => !Number.isSafeInteger(item.reserved));
+        let pending = Object.create(null);
+        if (needsPendingScan) {
+          const seenPending = new Set(); let pCursor;
+          do { const page = await inventoryRequest(null, pCursor, true); for (const [id, quantity] of Object.entries(page.pending)) pending[id] = (pending[id] || 0) + quantity; pCursor = page.nextCursor; if (pCursor && seenPending.has(pCursor)) throw new Error("Không tải đủ hàng đang chờ. Hãy tải lại."); if (pCursor) seenPending.add(pCursor); } while (pCursor);
+        } else {
+          for (const item of list) pending[item.id] = item.reserved;
+        }
+        if (alive) { setItems(withProductIdentity(list)); setPendingQuantities(pending); setDrafts({}); }
       } catch (error) { if (alive) setNotice({ error: true, text: error.message }); }
       finally { if (alive) setLoading(false); }
     }
