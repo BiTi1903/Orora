@@ -589,6 +589,7 @@ function ProductDetail({
           <ProductPurchaseSelection options={options} variantId={variantId} quantity={choice.quantity} onVariantChange={(variantId) => changeSelection({ variantId })} onQuantityChange={(quantity) => changeSelection({ quantity })} disabled={soldOut} textProps={textProps} />
           <section className={`purchase-options ${selectedClass("pdPurchaseOptions")}`} aria-label="Chọn kênh mua hàng" data-builder-key={preview ? "pdPurchaseOptions" : undefined} onClick={preview ? select("pdPurchaseOptions") : undefined}>
             <h2 {...textProps("pdPurchaseHeading", "purchaseHeading")}>{purchase.heading?.trim() || "Chọn cách mua hàng"}</h2>
+            {!pinBuyBar && mobileBuyBar}
             {home.navStyles?.cart?.enabled !== false && (
               <button
                 type="button"
@@ -634,7 +635,6 @@ function ProductDetail({
               </div>
             )}
             {!preview && acceptsWebsiteOrders && !soldOut && orderProductId === (product.id || product.slug) && createPortal(<OrderForm key={product.id || product.slug} product={product} motionSource={orderSource} home={home} selection={{ variantId, quantity: choice.quantity }} fromCart={incoming?.productId === product.id} onSelectionChange={changeSelection} onClose={() => setOrderProductId(null)} />, document.body)}
-            {!pinBuyBar && mobileBuyBar}
           </section>
 
         </div></div>

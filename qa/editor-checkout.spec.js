@@ -23,6 +23,7 @@ test('detail selects the catalog price by default, keeps totals compact and isol
  const purchase = page.getByRole('button',{name:'Mua ngay',exact:true});
  if (page.viewportSize().width <= 768) await expect(purchase).toBeInViewport();
  await purchase.click();const dialog=page.getByRole('dialog',{name:'Đặt hàng trên website',exact:true});await expect(dialog).toBeVisible();
+ await dialog.evaluate((el)=>Promise.all(el.getAnimations().map((a)=>a.finished.catch(()=>{}))));
  if(page.viewportSize().width<=600){const labels=dialog.locator('.order-field-row').first().locator('label');const first=await labels.nth(0).boundingBox(),second=await labels.nth(1).boundingBox();expect(second.y).toBeGreaterThan(first.y+20);expect(first.width).toBeGreaterThan(230);}
  await expect(dialog.getByLabel('220ml',{exact:true})).toBeChecked();await expect(page.locator('.product-detail dialog')).toHaveCount(0);
  await page.evaluate(()=>{window.__detailMutations=0;new MutationObserver(()=>window.__detailMutations++).observe(document.querySelector('.product-detail'),{childList:true,subtree:true});});

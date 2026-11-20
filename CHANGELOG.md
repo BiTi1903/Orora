@@ -1,3 +1,18 @@
+## 20/11/2026 — Thiết kế lại bố cục khung nút Mua ngay trên trang Chi tiết sản phẩm (Desktop)
+
+- **Lý do**: Trên giao diện máy tính, khung tạm tính & nút **Mua ngay** bị đặt ở dưới cùng sau `Thêm vào giỏ`, `Tư vấn`, `Facebook`/`Tiktok`, bề ngang chật (`320px`) và không đồng bộ bo góc với các nút kênh mua hàng khác.
+- **Thay đổi chính**:
+  - **Thứ bậc nút mua hàng (`src/components/ProductDetail.jsx`)**: Đưa khung tạm tính & nút **Mua ngay** (`product-mobile-buy` khi không ghim mobile) lên vị trí đầu tiên ngay dưới tiêu đề `Chọn cách mua hàng`, ngay trên nút phụ **Thêm vào giỏ**; vẫn giữ nguyên thanh kính nổi ghim đáy màn hình trên mobile (`<= 768px`) và giữ đủ tùy chỉnh từ Visual Builder (`PurchaseOptionsSettings`, `pdWebsiteText`).
+  - **Đồng bộ thẩm mỹ & kích thước (`src/styles/product-detail.css`)**:
+    - Đồng nhất bề ngang `max-width: 380px` và hệ bo góc `12px–14px` cho toàn bộ khối mua hàng (`Mua ngay`, `Thêm vào giỏ`, `Tư vấn`, `Facebook`, `Tiktok`).
+    - Nâng cấp khung **Mua ngay** trên desktop sang nền trắng sạch (`#ffffff`), viền mảnh `#e9dde3`, bóng nhẹ, nút CTA rộng rãi (`min-width: 152px`); nút **Thêm vào giỏ** chuyển sang kiểu viền mảnh đồng cặp; tách nhóm hỗ trợ (`Tư vấn` + `Facebook`/`Tiktok`) bên dưới bằng đường kẻ mảnh.
+  - **Kiểm thử (`qa/editor-checkout.spec.js`)**: Đợi hoàn tất hiệu ứng mở modal `OrderForm` trước khi đo tọa độ nhãn trên mobile (`width-390`).
+- **File / khu vực liên quan**: `src/components/ProductDetail.jsx`, `src/styles/product-detail.css`, `qa/editor-checkout.spec.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **263/263** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt (`136.78 kB` gzip).
+  - Playwright (`width-390` & `width-1440`): **15/15** test đạt trên `qa/editor-checkout.spec.js` (1 test mobile-only bỏ qua trên desktop) và **2/2** test đạt trên `qa/cart.spec.js`.
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu.
+
 ## 20/11/2026 — Nâng cấp tồn kho theo biến thể dung tích, tổng hợp doanh thu theo ngày, chỉ mục Firestore và tối ưu UI/UX Storefront & Admin
 
 - **Lý do**: Xử lý các hạng mục đã xác minh từ báo cáo kiểm tra kỹ thuật toàn diện (bỏ qua các mục trùng/đã xử lý và bỏ qua đổi Rate Limiter sang Redis/KV theo yêu cầu), đồng thời nâng cấp schema Firestore khi website đang trong giai đoạn thử nghiệm.
