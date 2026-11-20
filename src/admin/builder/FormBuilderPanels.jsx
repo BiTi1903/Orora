@@ -140,8 +140,8 @@ export function CartFormSectionSettings({navbar,onChange}){
   <InspectorGroup title="Hiệu ứng mở giỏ & thông báo">
    <SettingGroup title="Hiệu ứng & giỏ trống">
     <label><input type="checkbox" role="switch" checked={cart.animation!==false} onChange={event=>patch({animation:event.target.checked})}/>Hiệu ứng bay và nảy vào giỏ</label>
-    <label><input type="checkbox" role="switch" checked={cart.popupAnimation!==false} onChange={event=>patch({popupAnimation:event.target.checked})}/>Popup giỏ hàng phóng lớn, nảy nhẹ</label>
-    <label className="builder-field">Thời gian mở giỏ (ms)<input type="number" min={650} max={1200} step={20} value={Math.max(650,cart.popupDuration??650)} onChange={event=>patch({popupDuration:Number(event.target.value)})}/></label>
+    <label><input type="checkbox" role="switch" checked={cart.popupAnimation!==false} onChange={event=>patch({popupAnimation:event.target.checked})}/>Mở giỏ hàng từ nút giỏ hàng</label>
+    <label className="builder-field">Thời gian mở giỏ (ms)<input type="number" min={200} max={700} step={20} value={Math.max(200,Math.min(700,Number(cart.popupDuration)||420))} onChange={event=>patch({popupDuration:Number(event.target.value)})}/></label>
     <label><input type="checkbox" role="switch" checked={cart.backgroundScroll!==false} onChange={event=>patch({backgroundScroll:event.target.checked})}/>Cho phép cuộn nền khi mở giỏ</label>
     {copyField('empty','Chữ khi giỏ hàng trống')}
     {copyField('shopNow','Nút Xem sản phẩm khi giỏ trống')}

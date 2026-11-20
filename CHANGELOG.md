@@ -1,3 +1,18 @@
+## 20/11/2026 — Đồng bộ hiệu ứng mở và đóng Giỏ hàng theo đúng hiệu ứng nút Chat AI
+
+- **Lý do**: Chủ website yêu cầu đồng bộ hiệu ứng khi mở và đóng giỏ hàng giống hệt hiệu ứng mở và đóng của nút Chat AI để trải nghiệm mượt mà, dứt khoát và đồng nhất trên toàn trang.
+- **Thay đổi chính**:
+  - **Hiệu ứng mở/đóng Giỏ hàng (`src/lib/popup-motion.js`, `src/components/ModalDialog.jsx`, `src/components/ShopCart.jsx`, `src/components/CartSelectionDialog.jsx`)**:
+    - Thay hiệu ứng lò xo nảy chậm (650ms) bằng chuyển động phóng mở dứt khoát từ đúng vị trí và tỉ lệ nút giỏ hàng (`sx`/`sy` trong khoảng `0.05–0.4`, `opacity: 0 → 1`) với đường cong `cubic-bezier(.16, 1, .3, 1)` và thời gian mặc định `420ms` (`200–700ms`), giống hệt `useChatEntrance.js` của Chat AI.
+    - Hiệu ứng đóng thu gọn mượt ngược về nút giỏ hàng với thời gian bằng `0.65×` thời gian mở (`120–380ms`) và đường cong đối xứng tương đương `cubic-bezier(.4, 0, .7, .4)` của `animateChatExit`, tái sử dụng animation sẵn có (`playbackRate = -1`) để tránh xung đột WebKit.
+  - **Tùy chỉnh trong Visual Builder (`src/admin/builder/CartSettings.jsx`, `src/admin/builder/FormBuilderPanels.jsx`)**:
+    - Cập nhật nhãn công tắc thành `Mở giỏ hàng từ nút giỏ hàng` và giới hạn ô `Thời gian mở giỏ (ms)` về `200–700ms` (mặc định `420ms`) đồng bộ với cài đặt mở form Chat AI.
+- **File / khu vực liên quan**: `src/lib/popup-motion.js`, `src/components/ModalDialog.jsx`, `src/components/ShopCart.jsx`, `src/components/CartSelectionDialog.jsx`, `src/admin/builder/CartSettings.jsx`, `src/admin/builder/FormBuilderPanels.jsx`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **258/258** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt (`140.1 kB` gzip).
+  - Playwright (`width-390`): **15/15** test đạt trên `qa/cart-toggle.spec.js`, `qa/cart.spec.js`, `qa/cart-settings.spec.js`, `qa/form-builder.spec.js`, `qa/button-press.spec.js`.
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu hiện có.
+
 ## 20/11/2026 — Đồng bộ giao diện Giỏ hàng, Tra cứu đơn, Chính sách, Admin và tối ưu hiệu năng hiển thị
 
 - **Lý do**: Rà soát toàn diện website khách hàng và trang quản trị phát hiện một số điểm chưa đồng bộ về thẩm mỹ với hệ giao diện tối giản cao cấp mới, thao tác admin còn rời rạc ở Chat AI và Email, cùng 3 điểm nghẽn hiệu năng ở thẻ sản phẩm và hook tải danh mục.

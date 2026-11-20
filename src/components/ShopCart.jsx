@@ -27,7 +27,7 @@ export default function ShopCart(){
  const cartHost=useSyncExternalStore(subscribeNavbarCartSlot,getNavbarCartSlot,getNavbarCartSlot);
  const home=useHomeContent(),{products,loading:productsLoading}=useProducts(),settings=home.navStyles?.cart||{},copy={...CART_COPY,...settings.copy};
  const acceptsWebsiteOrders=availablePaymentMethods(home).length>0;
- const popupDuration=Math.max(650,Math.min(1200,Number(settings.popupDuration)||650));
+ const popupDuration=Math.max(200,Math.min(700,Number(settings.popupDuration)||420));
  const popupMotion=settings.popupAnimation!==false;
  const [rows,setRows]=useState(readCartRows),[qtyDrafts,setQtyDrafts]=useState({}),[open,setOpen]=useState(false),[pending,setPending]=useState(null),[notice,setNotice]=useState('');
  const rowsRef=useRef(rows);

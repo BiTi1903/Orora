@@ -1,7 +1,7 @@
 import { useLayoutEffect, useId, useRef } from "react";
-import {popupMotionKeyframes} from "../lib/popup-motion";
+import { POPUP_OPEN_EASING, POPUP_CLOSE_EASING, popupCloseDuration, popupMotionKeyframes } from "../lib/popup-motion";
 const locks = new WeakMap();
-export default function ModalDialog({ title, children, onClose, className = "", closeDisabled = false, closeLabel="Đóng cửa sổ", style, headingStyle, headerStyle, closeButtonStyle, initialFocusRef, allowBackgroundScroll=false, outsideClickIgnoreSelector, motionSource, motionDuration=650, motionClosing=false, onMotionClosed }) {
+export default function ModalDialog({ title, children, onClose, className = "", closeDisabled = false, closeLabel="Đóng cửa sổ", style, headingStyle, headerStyle, closeButtonStyle, initialFocusRef, allowBackgroundScroll=false, outsideClickIgnoreSelector, motionSource, motionDuration=420, motionClosing=false, onMotionClosed }) {
   const closeRef=useRef(onClose);useLayoutEffect(()=>{closeRef.current=()=>{if(!closeDisabled)onClose();};});
   const motionRef=useRef(null),motionClosedRef=useRef(onMotionClosed);
   useLayoutEffect(()=>{motionClosedRef.current=onMotionClosed;});
@@ -43,7 +43,7 @@ export default function ModalDialog({ title, children, onClose, className = "", 
     if (!motionSource || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const box = dialog.getBoundingClientRect();
     const animation = dialog.animate(popupMotionKeyframes(motionSource, box), {
-      duration: motionDuration, easing: 'linear', fill: 'both'
+      duration: motionDuration, easing: POPUP_OPEN_EASING, fill: 'both'
     });
     motionRef.current=animation;
     return () => { animation.cancel(); motionRef.current=null; };
@@ -57,29 +57,24 @@ export default function ModalDialog({ title, children, onClose, className = "", 
     const frame={transform:current.transform,opacity:current.opacity,offset:1};
     const elapsed=Number(animation.currentTime)||0;
     if(elapsed<=0){dialog.style.visibility='hidden';motionClosedRef.current?.();return;}
-    // Returning through the opening spring's overshoot would enlarge the cart
-    // again. Start at its actual painted frame and shrink directly to the source.
-    // Only a settled dialog can be remeasured without including its transform.
     const origin=animation.playState==='finished'&&motionSource
       ?popupMotionKeyframes(motionSource,dialog.getBoundingClientRect())[0]
       :animation.effect.getKeyframes()[0];
     animation.pause();
     animation.effect.setKeyframes([
-      {transform:origin.transform,opacity:origin.opacity,offset:0},frame
+      {transform:origin.transform,opacity:origin.opacity,offset:0},
+      frame,
     ]);
-    const duration=Math.max(100,Math.min(motionDuration,elapsed));
-    animation.effect.updateTiming({duration,easing:'cubic-bezier(.4,0,.2,1)'});
+    const closeDuration=popupCloseDuration(motionDuration);
+    const duration=Math.max(120,Math.min(closeDuration,elapsed));
+    animation.effect.updateTiming({duration,easing:POPUP_CLOSE_EASING});
     animation.currentTime=duration;
     animation.onfinish=()=>{
-      // WebKit can deliver the forward finish event after reverse was requested.
       if(animation.playbackRate<0&&animation.currentTime<=0){
-        // Keep the final invisible frame while React removes the dialog.
-        ref.current.style.visibility='hidden';
+        if(ref.current)ref.current.style.visibility='hidden';
         motionClosedRef.current?.();
       }
     };
-    // reverse() can stay pending on a finished, filled WebKit animation.
-    // Set the return direction while paused, then resume from the captured frame.
     animation.playbackRate=-Math.abs(animation.playbackRate||1);
     animation.play();
     return()=>{animation.onfinish=null;};
