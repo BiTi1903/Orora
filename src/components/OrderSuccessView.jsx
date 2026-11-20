@@ -43,9 +43,16 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
  const text=(key)=>appearance[key]?.trim()||copy[key];
  const pick=(key,event)=>{if(!preview)return;event?.stopPropagation?.();onSelect?.(key);};
  const mark=(key,base='')=>preview?{'data-builder-key':key,className:`${base}${selectedElement===key?' builder-selected':''}`.trim()||undefined,onClick:event=>{event.preventDefault();pick(key,event);}}:{className:base||undefined};
+ const textStyle=toCss(appearance.receiptTextStyle,{responsive:true});
+ const codeLabelStyle=toCss(appearance.receiptCodeLabelStyle,{responsive:true});
  const codeStyle=toCss(appearance.receiptCodeStyle,{responsive:true});
  const messageStyle=toCss(appearance.receiptMessageStyle,{responsive:true});
  const cardHeadingStyle=toCss(appearance.receiptCardHeadingStyle,{responsive:true});
+ const bodyStyle=toCss(appearance.receiptBodyStyle,{responsive:true});
+ const recipientBodyStyle=toCss(appearance.receiptRecipientStyle||appearance.receiptBodyStyle,{responsive:true});
+ const bankTextStyle=toCss(appearance.receiptBankTextStyle,{responsive:true});
+ const nextStepsStyle=toCss(appearance.receiptNextStepsStyle,{responsive:true});
+ const emailNoteStyle=toCss(appearance.receiptEmailNoteStyle,{responsive:true});
  const totalStyle=toCss(appearance.receiptTotalStyle,{responsive:true});
  const trackingStyle=toCss(appearance.receiptTrackingStyle,{responsive:true});
  const closeStyle=toCss(appearance.receiptCloseStyle,{responsive:true});
@@ -59,13 +66,13 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
     :copy.receiptEmailNote);
 
  return (
-  <section className="order-received" aria-label="Thông tin đơn đã nhận">
+  <section className="order-received" aria-label="Thông tin đơn đã nhận" style={textStyle}>
    <div className="order-received-banner">
     <div className="order-received-check" aria-hidden="true">
      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
     </div>
     <div {...mark('osCode','order-received-code-wrap')}>
-     <span className="order-received-code-label">{text('receiptCodeLabel')}</span>
+     <span className="order-received-code-label" style={codeLabelStyle}>{text('receiptCodeLabel')}</span>
      <div className="order-received-code-row">
       <strong className="order-received-code" style={codeStyle}>{order.code}</strong>
       {!preview&&<button type="button" className="order-copy-pill" onClick={()=>copyValue('code',order.code)}>{copiedKey==='code'?'✓ Đã chép':'Sao chép'}</button>}
@@ -76,7 +83,7 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
    <OrderReceiptActions order={order} home={home} appearance={appearance} preview={preview} selectedElement={selectedElement} onSelect={onSelect}/>
    <div {...mark('osDetails','order-received-details checkout-card')}>
     <h3 style={cardHeadingStyle}>{text('receiptDetailsHeading')}</h3>
-    <dl>
+    <dl style={bodyStyle}>
      {Array.isArray(order.items)&&order.items.length>1
       ?<div className="order-received-items-row"><dt>{text('receiptProductLabel')} ({order.items.length})</dt><dd><ul className="order-received-items">{order.items.map((item,idx)=><li key={`${item.id||item.productId||idx}:${item.variantId||''}`}>{item.name}{item.variantLabel?` (${item.variantLabel})`:''} × {item.quantity}</li>)}</ul></dd></div>
       :<div><dt>{text('receiptProductLabel')}</dt><dd>{order.productName}{order.variantLabel?` (${order.variantLabel})`:''} × {order.quantity}</dd></div>}
@@ -88,12 +95,12 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
    </div>
    <details {...mark('osRecipient','order-received-details checkout-card')} open>
     <summary style={cardHeadingStyle}>{text('receiptRecipientHeading')}</summary>
-    <dl>
+    <dl style={recipientBodyStyle}>
      {[['Họ và tên',order.recipient.name],['Số điện thoại',order.recipient.phone],['Email',order.recipient.email],['Địa chỉ nhận hàng',order.recipient.address],['Ghi chú',order.recipient.note]].filter(([,value])=>value).map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
     </dl>
    </details>
    {(order.paymentMethod==='bank_transfer'||preview)&&(
-    <div {...mark('osBank','order-received-details checkout-card order-bank-card')}>
+    <div {...mark('osBank','order-received-details checkout-card order-bank-card')} style={bankTextStyle}>
      <h3 style={cardHeadingStyle}>{text('bankHeading')}</h3>
      {appearance.bankName||appearance.bankAccountNumber||appearance.bankAccountName?(
       <dl>
@@ -103,7 +110,7 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
        <div><dt>Nội dung chuyển khoản</dt><dd className="order-copy-dd"><span>{transferNote}</span>{!preview&&<button type="button" className="order-copy-pill" onClick={()=>copyValue('note',transferNote)}>{copiedKey==='note'?'✓ Đã chép':'Sao chép'}</button>}</dd></div>
       </dl>
      ):(
-      <p className="order-help">ORORA sẽ gửi thông tin tài khoản ngân hàng ngay khi xác nhận đơn hàng của bạn. Nội dung chuyển khoản: <strong>{order.code}</strong>.</p>
+      <p className="order-help" style={bankTextStyle}>ORORA sẽ gửi thông tin tài khoản ngân hàng ngay khi xác nhận đơn hàng của bạn. Nội dung chuyển khoản: <strong>{order.code}</strong>.</p>
      )}
     </div>
    )}
@@ -115,10 +122,10 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
       <li><span>2</span><strong>Xác nhận & đóng gói</strong></li>
       <li><span>3</span><strong>Giao tận nơi</strong></li>
      </ol>
-     <p className="order-help">{text('receiptNextStepsBody')}</p>
+     <p className="order-help" style={nextStepsStyle}>{text('receiptNextStepsBody')}</p>
     </div>
    )}
-   <p {...mark('osEmailNote','order-help order-email-note')}>{mailNote}</p>
+   <p {...mark('osEmailNote','order-help order-email-note')} style={emailNoteStyle}>{mailNote}</p>
    <div className="order-received-footer">
     {preview
      ?<a href="#tra-cuu-don-hang" style={trackingStyle} {...mark('osTracking','order-tracking-link')}>{text('receiptTrackingLabel')}</a>

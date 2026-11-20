@@ -12,11 +12,13 @@
     - Thêm **biểu tượng dấu tích thành công (checkmark badge)** ở banner xác nhận, kèm **nút Sao chép 1 chạm** ngay cạnh Mã đơn hàng, Số tài khoản và Nội dung chuyển khoản.
     - Thêm **thanh tiến trình 3 bước** (`1. Đã tiếp nhận` → `2. Xác nhận & đóng gói` → `3. Giao tận nơi`) trong khối Bước tiếp theo.
     - Nâng cấp nút **Lưu ảnh đơn hàng** thành nút có icon kèm nhãn `"Tải ảnh"` rõ ràng, cân đối với nút xác nhận nhanh Zalo/Facebook.
-  - **Tương thích Visual Builder**: Giữ nguyên toàn bộ `data-builder-key` và biến CSS `--checkout-*`, `--receipt-*` để mọi chỉnh sửa chữ, font, cỡ chữ desktop/mobile, màu sắc, viền và bo góc trong Admin vẫn áp dụng trực tiếp.
-- **File / khu vực liên quan**: `src/components/OrderFormFields.jsx`, `src/components/OrderSuccessView.jsx`, `src/components/OrderReceiptActions.jsx`, `src/styles/checkout.css`.
+  - **Bộ chỉnh format chữ đầy đủ cho mọi thành phần trong Visual Builder (`src/admin/builder/FormBuilderPanels.jsx`, `src/components/OrderFormFields.jsx`, `src/components/OrderSuccessView.jsx`, `src/components/OrderReceiptActions.jsx`, `src/styles/checkout.css`)**:
+    - Bổ sung đầy đủ `StyleTypographyBlock` (font, cỡ chữ desktop/mobile, màu chữ, độ đậm, chữ hoa/thường, giãn chữ/giãn dòng, căn lề, in nghiêng, lề/đệm) cho toàn bộ các phần tử trước đây còn thiếu ở **Form đặt hàng** (`ofSelection`, `ofPaymentFields`, `ofSummary`, `ofConsent`) và **Form đã đặt hàng** (nhãn mã đơn `osCode`, `osSave`, nội dung `osDetails`, nội dung `osRecipient`, `osBank`, `osNextSteps`, `osEmailNote`, và kiểu chữ chung `receiptTextStyle`).
+    - Kết nối trực tiếp mọi cấu hình kiểu chữ mới vào trang thật và bản xem trước Visual Builder, đảm bảo kế thừa sạch vào các thành phần con.
+- **File / khu vực liên quan**: `src/admin/builder/FormBuilderPanels.jsx`, `src/components/OrderFormFields.jsx`, `src/components/OrderSuccessView.jsx`, `src/components/OrderReceiptActions.jsx`, `src/styles/checkout.css`.
 - **Kiểm tra đã chạy**:
   - `npm run check`: **256/256** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt.
-  - Playwright: **24/24** test đạt trên `qa/shopping.spec.js`, `qa/editor-checkout.spec.js`, `qa/form-builder.spec.js`, `qa/order-receipt.spec.js`, `qa/admin-appearance.spec.js` (`width-390`) + **5/5** test đạt trên `qa/shopping.spec.js` và `qa/form-builder.spec.js` (`width-1440`).
+  - Playwright: **24/24** test đạt trên `qa/shopping.spec.js`, `qa/editor-checkout.spec.js`, `qa/form-builder.spec.js`, `qa/order-receipt.spec.js`, `qa/admin-appearance.spec.js` (`width-390`) + **5/5** test đạt trên `qa/shopping.spec.js` và `qa/form-builder.spec.js` (`width-1440`), và xác nhận lại **17/17** test sau khi bổ sung bộ chỉnh format chữ.
 - **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu hiện có.
 
 ## 20/11/2026 — Chuẩn hóa quy trình tìm/lọc/sắp xếp đơn từ server, thao tác nhanh trạng thái, xem trước biến email và bỏ quét toàn bộ đơn

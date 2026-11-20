@@ -201,11 +201,14 @@ export function OrderFormBuilderSettings({selected,productDetail,onChange}){
   </>;
  }
  if(selected==='ofSelection'){
-  return <SettingGroup title="Chọn dung tích & số lượng">
-   {labelField('volumeLabel','Nhãn dung tích')}
-   {labelField('quantityLabel','Nhãn số lượng')}
-   <ColorField label="Màu nhấn nút đang chọn" value={value.accentColor||'#b8446d'} onChange={accentColor=>patch({accentColor})}/>
-  </SettingGroup>;
+  return <>
+   <SettingGroup title="Chọn dung tích & số lượng">
+    {labelField('volumeLabel','Nhãn dung tích')}
+    {labelField('quantityLabel','Nhãn số lượng')}
+    <ColorField label="Màu nhấn nút đang chọn" value={value.accentColor||'#b8446d'} onChange={accentColor=>patch({accentColor})}/>
+   </SettingGroup>
+   <StyleTypographyBlock title="Kiểu chữ dung tích & số lượng" style={value.selectionStyle||{}} onStyleChange={next=>patch({selectionStyle:{...value.selectionStyle,...next}})}/>
+  </>;
  }
  if(selected==='ofRecipientHeading'){
   return <>
@@ -259,12 +262,15 @@ export function OrderFormBuilderSettings({selected,productDetail,onChange}){
   </>;
  }
  if(selected==='ofPaymentFields'){
-  return <SettingGroup title="Phương thức thanh toán & Ghi chú">
-   {labelField('paymentMethodLabel','Nhãn Phương thức thanh toán')}
-   {labelField('noteLabel','Nhãn mở phần ghi chú')}
-   {labelField('noteFieldLabel','Nhãn ô nhập ghi chú')}
-   {labelField('notePlaceholder','Chữ gợi ý ô ghi chú')}
-  </SettingGroup>;
+  return <>
+   <SettingGroup title="Phương thức thanh toán & Ghi chú">
+    {labelField('paymentMethodLabel','Nhãn Phương thức thanh toán')}
+    {labelField('noteLabel','Nhãn mở phần ghi chú')}
+    {labelField('noteFieldLabel','Nhãn ô nhập ghi chú')}
+    {labelField('notePlaceholder','Chữ gợi ý ô ghi chú')}
+   </SettingGroup>
+   <StyleTypographyBlock title="Kiểu chữ thẻ thanh toán & ghi chú" style={value.paymentOptionStyle||{}} onStyleChange={next=>patch({paymentOptionStyle:{...value.paymentOptionStyle,...next}})}/>
+  </>;
  }
  if(selected==='ofSummary'){
   return <>
@@ -275,9 +281,10 @@ export function OrderFormBuilderSettings({selected,productDetail,onChange}){
     {labelField('totalLabel','Nhãn Tổng thanh toán')}
     {labelField('codPaymentHint','Chú thích khi chọn COD',2)}
     {labelField('bankPaymentHint','Chú thích khi chọn Chuyển khoản',2)}
-    <ColorField label="Màu nền khung tổng tiền" value={value.summaryBackground||'#fff5f8'} onChange={summaryBackground=>patch({summaryBackground})}/>
-    <ColorField label="Màu viền khung tổng tiền" value={value.summaryBorderColor||'#e8bfd0'} onChange={summaryBorderColor=>patch({summaryBorderColor})}/>
+    <ColorField label="Màu nền khung tổng tiền" value={value.summaryBackground||'#faf8f9'} onChange={summaryBackground=>patch({summaryBackground})}/>
+    <ColorField label="Màu viền khung tổng tiền" value={value.summaryBorderColor||'#ece4e8'} onChange={summaryBorderColor=>patch({summaryBorderColor})}/>
    </SettingGroup>
+   <StyleTypographyBlock title="Kiểu chữ các dòng tóm tắt" style={value.summaryTextStyle||{}} onStyleChange={next=>patch({summaryTextStyle:{...value.summaryTextStyle,...next}})}/>
    <StyleTypographyBlock title="Kiểu chữ số tiền Tổng thanh toán" style={value.summaryTotalStyle||{}} onStyleChange={next=>patch({summaryTotalStyle:{...value.summaryTotalStyle,...next}})}/>
   </>;
  }
@@ -286,7 +293,7 @@ export function OrderFormBuilderSettings({selected,productDetail,onChange}){
    <SettingGroup title="Ô tích đồng ý">
     {labelField('consentText','Nội dung câu đồng ý',3)}
    </SettingGroup>
-   <StyleTypographyBlock title="Kiểu chữ chung trong form" style={value.formTextStyle||{}} onStyleChange={next=>patch({formTextStyle:{...value.formTextStyle,...next}})}/>
+   <StyleTypographyBlock title="Kiểu chữ câu đồng ý" style={value.consentStyle||{}} onStyleChange={next=>patch({consentStyle:{...value.consentStyle,...next}})}/>
   </>;
  }
  return <>
@@ -365,9 +372,10 @@ export function OrderSuccessBuilderSettings({selected,productDetail,onChange}){
    <SettingGroup title="Mã đơn hàng">
     {field('receiptCodeLabel','Nhãn mã đơn hàng')}
     <NumberList fields={[RECEIPT_FRAME_FIELDS[3]]} value={value} onChange={patch}/>
-    <ColorField label="Màu nền khung mã đơn" value={value.receiptBannerBackground||'#fff6fa'} onChange={receiptBannerBackground=>patch({receiptBannerBackground})}/>
-    <ColorField label="Màu viền khung mã đơn" value={value.receiptBannerBorderColor||'#e8bfd0'} onChange={receiptBannerBorderColor=>patch({receiptBannerBorderColor})}/>
+    <ColorField label="Màu nền khung mã đơn" value={value.receiptBannerBackground||'#faf8f9'} onChange={receiptBannerBackground=>patch({receiptBannerBackground})}/>
+    <ColorField label="Màu viền khung mã đơn" value={value.receiptBannerBorderColor||'#ece4e8'} onChange={receiptBannerBorderColor=>patch({receiptBannerBorderColor})}/>
    </SettingGroup>
+   <StyleTypographyBlock title="Kiểu chữ nhãn Mã đơn" style={value.receiptCodeLabelStyle||{}} onStyleChange={next=>patch({receiptCodeLabelStyle:{...value.receiptCodeLabelStyle,...next}})}/>
    <StyleTypographyBlock title="Kiểu chữ mã đơn hàng" style={value.receiptCodeStyle||{}} onStyleChange={next=>patch({receiptCodeStyle:{...value.receiptCodeStyle,...next}})}/>
   </>;
  }
@@ -389,8 +397,8 @@ export function OrderSuccessBuilderSettings({selected,productDetail,onChange}){
     {field('receiptContactHint','Chú thích xác nhận nhanh')}
     {field('receiptZaloLabel','Chữ nút Zalo')}
     {field('receiptFacebookLabel','Chữ nút Facebook')}
-    <ColorField label="Màu nền khung xác nhận" value={value.receiptBackground||'#fff5f8'} onChange={receiptBackground=>patch({receiptBackground})}/>
-    <ColorField label="Màu viền khung xác nhận" value={value.receiptActionsBorderColor||'#efd7e1'} onChange={receiptActionsBorderColor=>patch({receiptActionsBorderColor})}/>
+    <ColorField label="Màu nền khung xác nhận" value={value.receiptBackground||'#faf8f9'} onChange={receiptBackground=>patch({receiptBackground})}/>
+    <ColorField label="Màu viền khung xác nhận" value={value.receiptActionsBorderColor||'#ece4e8'} onChange={receiptActionsBorderColor=>patch({receiptActionsBorderColor})}/>
     <ColorField label="Màu nền nút Zalo" value={value.receiptZaloBackground||'#0754bb'} onChange={receiptZaloBackground=>patch({receiptZaloBackground})}/>
     <ColorField label="Màu chữ nút Zalo" value={value.receiptZaloColor||'#ffffff'} onChange={receiptZaloColor=>patch({receiptZaloColor})}/>
    </SettingGroup>
@@ -398,12 +406,15 @@ export function OrderSuccessBuilderSettings({selected,productDetail,onChange}){
   </>;
  }
  if(selected==='osSave'){
-  return <SettingGroup title="Lưu ảnh đơn hàng">
-   {field('receiptSaveLabel','Chữ nút lưu ảnh đơn')}
-   {field('receiptSaveHint','Chú thích lưu ảnh đơn')}
-   {field('receiptDownloadNote','Ghi chú phía dưới',3)}
-   <ColorField label="Màu icon nút tải ảnh" value={value.receiptAccent||'#b8446d'} onChange={receiptAccent=>patch({receiptAccent})}/>
-  </SettingGroup>;
+  return <>
+   <SettingGroup title="Lưu ảnh đơn hàng">
+    {field('receiptSaveLabel','Chữ nút lưu ảnh đơn')}
+    {field('receiptSaveHint','Chú thích lưu ảnh đơn')}
+    {field('receiptDownloadNote','Ghi chú phía dưới',3)}
+    <ColorField label="Màu icon nút tải ảnh" value={value.receiptAccent||'#b8446d'} onChange={receiptAccent=>patch({receiptAccent})}/>
+   </SettingGroup>
+   <StyleTypographyBlock title="Kiểu chữ khung lưu ảnh đơn" style={value.receiptSaveTextStyle||{}} onStyleChange={next=>patch({receiptSaveTextStyle:{...value.receiptSaveTextStyle,...next}})}/>
+  </>;
  }
  if(selected==='osDetails'){
   return <>
@@ -416,9 +427,10 @@ export function OrderSuccessBuilderSettings({selected,productDetail,onChange}){
     {field('receiptTotalLabel','Nhãn dòng Tổng thanh toán')}
     <NumberList fields={[RECEIPT_FRAME_FIELDS[4]]} value={value} onChange={patch}/>
     <ColorField label="Màu nền thẻ chi tiết" value={value.receiptCardBackground||'#ffffff'} onChange={receiptCardBackground=>patch({receiptCardBackground})}/>
-    <ColorField label="Màu viền thẻ chi tiết" value={value.receiptCardBorderColor||'#efd7e1'} onChange={receiptCardBorderColor=>patch({receiptCardBorderColor})}/>
+    <ColorField label="Màu viền thẻ chi tiết" value={value.receiptCardBorderColor||'#ece4e8'} onChange={receiptCardBorderColor=>patch({receiptCardBorderColor})}/>
    </SettingGroup>
    <StyleTypographyBlock title="Kiểu chữ tiêu đề thẻ" style={value.receiptCardHeadingStyle||{}} onStyleChange={next=>patch({receiptCardHeadingStyle:{...value.receiptCardHeadingStyle,...next}})}/>
+   <StyleTypographyBlock title="Kiểu chữ nội dung chi tiết đơn" style={value.receiptBodyStyle||{}} onStyleChange={next=>patch({receiptBodyStyle:{...value.receiptBodyStyle,...next}})}/>
    <StyleTypographyBlock title="Kiểu chữ dòng Tổng thanh toán" style={value.receiptTotalStyle||{}} onStyleChange={next=>patch({receiptTotalStyle:{...value.receiptTotalStyle,...next}})}/>
   </>;
  }
@@ -428,30 +440,40 @@ export function OrderSuccessBuilderSettings({selected,productDetail,onChange}){
     {field('receiptRecipientHeading','Tiêu đề Thông tin người nhận')}
     <NumberList fields={[RECEIPT_FRAME_FIELDS[4]]} value={value} onChange={patch}/>
     <ColorField label="Màu nền thẻ" value={value.receiptCardBackground||'#ffffff'} onChange={receiptCardBackground=>patch({receiptCardBackground})}/>
-    <ColorField label="Màu viền thẻ" value={value.receiptCardBorderColor||'#efd7e1'} onChange={receiptCardBorderColor=>patch({receiptCardBorderColor})}/>
+    <ColorField label="Màu viền thẻ" value={value.receiptCardBorderColor||'#ece4e8'} onChange={receiptCardBorderColor=>patch({receiptCardBorderColor})}/>
    </SettingGroup>
    <StyleTypographyBlock title="Kiểu chữ tiêu đề thẻ" style={value.receiptCardHeadingStyle||{}} onStyleChange={next=>patch({receiptCardHeadingStyle:{...value.receiptCardHeadingStyle,...next}})}/>
+   <StyleTypographyBlock title="Kiểu chữ nội dung người nhận" style={value.receiptRecipientStyle||value.receiptBodyStyle||{}} onStyleChange={next=>patch({receiptRecipientStyle:{...(value.receiptRecipientStyle||value.receiptBodyStyle),...next}})}/>
   </>;
  }
  if(selected==='osBank'){
-  return <SettingGroup title="Thông tin chuyển khoản">
-   {field('bankHeading','Tiêu đề khối chuyển khoản')}
-   {field('bankName','Tên ngân hàng')}
-   {field('bankAccountNumber','Số tài khoản')}
-   {field('bankAccountName','Tên chủ tài khoản')}
-   {field('bankTransferNote','Mẫu nội dung chuyển khoản (dùng {{code}} cho mã đơn)')}
-  </SettingGroup>;
+  return <>
+   <SettingGroup title="Thông tin chuyển khoản">
+    {field('bankHeading','Tiêu đề khối chuyển khoản')}
+    {field('bankName','Tên ngân hàng')}
+    {field('bankAccountNumber','Số tài khoản')}
+    {field('bankAccountName','Tên chủ tài khoản')}
+    {field('bankTransferNote','Mẫu nội dung chuyển khoản (dùng {{code}} cho mã đơn)')}
+   </SettingGroup>
+   <StyleTypographyBlock title="Kiểu chữ thông tin chuyển khoản" style={value.receiptBankTextStyle||{}} onStyleChange={next=>patch({receiptBankTextStyle:{...value.receiptBankTextStyle,...next}})}/>
+  </>;
  }
  if(selected==='osNextSteps'){
-  return <SettingGroup title="Khối Bước tiếp theo">
-   {field('receiptNextStepsHeading','Tiêu đề Bước tiếp theo')}
-   {field('receiptNextStepsBody','Nội dung Bước tiếp theo',3)}
-  </SettingGroup>;
+  return <>
+   <SettingGroup title="Khối Bước tiếp theo">
+    {field('receiptNextStepsHeading','Tiêu đề Bước tiếp theo')}
+    {field('receiptNextStepsBody','Nội dung Bước tiếp theo',3)}
+   </SettingGroup>
+   <StyleTypographyBlock title="Kiểu chữ Bước tiếp theo" style={value.receiptNextStepsStyle||{}} onStyleChange={next=>patch({receiptNextStepsStyle:{...value.receiptNextStepsStyle,...next}})}/>
+  </>;
  }
  if(selected==='osEmailNote'){
-  return <SettingGroup title="Ghi chú kiểm tra email">
-   {field('receiptEmailNote','Nội dung ghi chú email',2)}
-  </SettingGroup>;
+  return <>
+   <SettingGroup title="Ghi chú kiểm tra email">
+    {field('receiptEmailNote','Nội dung ghi chú email',2)}
+   </SettingGroup>
+   <StyleTypographyBlock title="Kiểu chữ ghi chú email" style={value.receiptEmailNoteStyle||{}} onStyleChange={next=>patch({receiptEmailNoteStyle:{...value.receiptEmailNoteStyle,...next}})}/>
+  </>;
  }
  if(selected==='osTracking'){
   return <>

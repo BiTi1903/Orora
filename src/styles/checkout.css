@@ -465,3 +465,21 @@
 .order-receipt-actions .receipt-download-note { margin-top: 10px; font-size: 11.5px; }
 .receipt-download:disabled { opacity: .5; cursor: wait; }
 .receipt-social:focus-visible, .receipt-download:focus-visible { outline: 2px solid var(--receipt-accent, #b8446d); outline-offset: 3px; }
+
+/* Allow Visual Builder typography controls to cascade cleanly into inner form text */
+.checkout-summary[style*="font-size"] .order-summary,
+.checkout-summary[style*="color"] .order-summary,
+.checkout-summary[style*="font-family"] .order-summary { font-size: inherit; color: inherit; font-family: inherit; }
+.order-received-details dl[style*="font-size"] > div,
+.order-received-details dl[style*="color"] > div,
+.order-received-details dl[style*="color"] dd,
+.order-received-details dl[style*="color"] dt,
+.order-bank-card[style*="color"] dd,
+.order-bank-card[style*="color"] dt,
+.order-bank-card[style*="font-size"] dl > div { font-size: inherit; color: inherit; font-family: inherit; }
+.checkout-payment-options { font-family: inherit; }
+[data-builder-key="ofPaymentFields"][style*="font-size"] .checkout-payment-option-body strong,
+[data-builder-key="ofPaymentFields"][style*="color"] .checkout-payment-option-body strong,
+.checkout-card > div[style*="font-size"] .checkout-payment-option-body strong,
+.checkout-card > div[style*="color"] .checkout-payment-option-body strong { font-size: inherit; color: inherit; }
+

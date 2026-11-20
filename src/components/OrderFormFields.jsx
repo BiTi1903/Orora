@@ -26,7 +26,11 @@ export default function OrderFormFields({product,items=null,subtotal,options,var
  const productNameStyle=toCss(appearance.productNameStyle,{responsive:true});
  const pricePillStyle=toCss(appearance.pricePillStyle,{responsive:true});
  const helpTextStyle=toCss(appearance.helpTextStyle,{responsive:true});
+ const selectionStyle=toCss(appearance.selectionStyle,{responsive:true});
+ const paymentOptionStyle=toCss(appearance.paymentOptionStyle,{responsive:true});
+ const summaryTextStyle=toCss(appearance.summaryTextStyle,{responsive:true});
  const summaryTotalStyle=toCss(appearance.summaryTotalStyle,{responsive:true});
+ const consentStyle=toCss(appearance.consentStyle,{responsive:true});
  const pick=(key,event)=>{if(!preview||!onSelect)return;event?.stopPropagation?.();onSelect(key);};
  const mark=(key,base='')=>preview&&onSelect?{'data-builder-key':key,className:`${base}${selectedElement===key?' builder-selected':''}`.trim(),onClick:event=>pick(key,event)}:{className:base||undefined};
  const effectiveSubtotal=subtotal!==undefined?subtotal:(unitPrice===null?null:unitPrice*(Number(quantity)||0));
@@ -84,7 +88,7 @@ export default function OrderFormFields({product,items=null,subtotal,options,var
     </ul>
    ) : (
     <>
-     <div {...mark('ofSelection')}>
+     <div {...mark('ofSelection')} style={selectionStyle}>
       <fieldset className="checkout-selection-fieldset" disabled={busy||preview}>
        <ProductPurchaseSelection options={options} variantId={variantId} quantity={quantity} labels={{volume:label('volumeLabel'),quantity:label('quantityLabel')}} onVariantChange={next=>{setVariantError(false);onVariantChange(next);}} onQuantityChange={onQuantityChange} disabled={busy||preview} required/>
       </fieldset>
@@ -116,7 +120,7 @@ export default function OrderFormFields({product,items=null,subtotal,options,var
    </section>
    <section className="checkout-section checkout-card">
     <h3 {...mark('ofPaymentHeading','checkout-step-heading')} style={headingStyle}><span className="checkout-step-num" aria-hidden="true">3</span><span>{copy.paymentHeading}</span></h3>
-    <div {...mark('ofPaymentFields')}>
+    <div {...mark('ofPaymentFields')} style={paymentOptionStyle}>
      {methods.length > 0 && (
       <div className="checkout-payment-options" role="radiogroup" aria-label={label('paymentMethodLabel')}>
        {methods.map(key=>{
@@ -137,13 +141,13 @@ export default function OrderFormFields({product,items=null,subtotal,options,var
      <details className="checkout-note"><summary>{copy.noteLabel}</summary><label>{label('noteFieldLabel')}<textarea name="note" rows={2} maxLength={1000} readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('notePlaceholder')}/></label></details>
     </div>
    </section>
-   <section {...mark('ofSummary','checkout-summary')} aria-label={copy.summaryHeading||'Thanh toán'}>
+   <section {...mark('ofSummary','checkout-summary')} aria-label={copy.summaryHeading||'Thanh toán'} style={summaryTextStyle}>
     <div className="order-summary"><span>Tạm tính</span><strong>{itemTotal}</strong></div>
     <div className="order-summary"><span>{label('shippingFeeLabel')}</span><strong>{shipping.fee===null?label('shippingUnknownLabel'):formatVnd(shipping.fee)}</strong></div>
     <div className="order-summary checkout-total"><span>{shipping.fee===null?label('subtotalPendingLabel'):label('totalLabel')}</span><strong style={summaryTotalStyle}>{total===null?(effectiveSubtotal===null?'ORORA sẽ xác nhận':itemTotal):formatVnd(total)}</strong></div>
     <p className="order-help checkout-payment-hint" style={helpTextStyle}>{paymentHintText}</p>
    </section>
-   <label {...mark('ofConsent','order-consent')} onClick={preview&&onSelect?event=>{event.preventDefault();pick('ofConsent',event);}:undefined}><input name="consent" type="checkbox" required tabIndex={preview?-1:undefined}/><span>{label('consentText')} {!preview&&<a href="/chinh-sach" target="_blank" rel="noopener noreferrer" className="order-consent-link" onClick={event=>event.stopPropagation()}>(Chính sách bảo mật & đổi trả)</a>}</span></label>
+   <label {...mark('ofConsent','order-consent')} style={consentStyle} onClick={preview&&onSelect?event=>{event.preventDefault();pick('ofConsent',event);}:undefined}><input name="consent" type="checkbox" required tabIndex={preview?-1:undefined}/><span>{label('consentText')} {!preview&&<a href="/chinh-sach" target="_blank" rel="noopener noreferrer" className="order-consent-link" onClick={event=>event.stopPropagation()}>(Chính sách bảo mật & đổi trả)</a>}</span></label>
    {!methods.length&&<p role="status">Website đang tạm ngưng nhận đơn. Vui lòng liên hệ ORORA hoặc mua qua các kênh bên trên.</p>}
    {error&&<p className="order-error" role="alert">{error}</p>}
    <div {...mark('ofSubmit','checkout-sticky')}><div className="checkout-submit"><button type={preview?'button':'submit'} className="website-order-submit" aria-busy={busy} style={checkoutSubmitStyle(appearance,busy)} disabled={(preview&&!onSelect)||busy||!methods.length} onClick={preview&&onSelect?event=>{event.preventDefault();pick('ofSubmit',event);}:undefined}>{busy?appearance.orderBusyLabel?.trim()||'Đang gửi đơn hàng…':appearance.orderSubmitLabel?.trim()||'Đặt hàng ngay'}</button></div></div>
