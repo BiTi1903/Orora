@@ -134,6 +134,9 @@ export function receiptModalStyle(value={}){
   ...(value.receiptZaloColor?{'--receipt-zalo-color':value.receiptZaloColor}:{}),
   ...(value.receiptCloseBackground?{'--receipt-close-bg':value.receiptCloseBackground}:{}),
   ...(value.receiptCloseBorderColor?{'--receipt-close-border':value.receiptCloseBorderColor}:{}),
+  ...(value.receiptCloseIconColor?{'--receipt-close-icon-color':value.receiptCloseIconColor}:{}),
+  ...(value.receiptCloseIconBackground?{'--receipt-close-icon-bg':value.receiptCloseIconBackground}:{}),
+  ...(value.receiptCloseIconBorderColor?{'--receipt-close-icon-border':value.receiptCloseIconBorderColor}:{}),
   ...toCss(value.receiptTextStyle,{responsive:true}),
  };
 }

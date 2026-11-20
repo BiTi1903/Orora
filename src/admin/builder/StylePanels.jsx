@@ -22,7 +22,14 @@ import PurchaseOptionsSettings from "./PurchaseOptionsSettings";
 import { CollectionSettings } from "./CollectionPanels";
 import { HeroSettings } from "./HeroPanels";
 import { SectionSettings, ImageSettings, TextSettings, StatsSettings, StatTextSettings } from "./AboutPanels";
-import { CartFormSettings, OrderFormBuilderSettings, OrderSuccessBuilderSettings } from "./FormBuilderPanels";
+import {
+  CartFormSettings,
+  CartFormSectionSettings,
+  OrderFormBuilderSettings,
+  OrderFormSectionSettings,
+  OrderSuccessBuilderSettings,
+  OrderSuccessSectionSettings,
+} from "./FormBuilderPanels";
 import {
   HERO_FIELD_MAP,
   COLLECTION_FIELD_MAP,
@@ -187,6 +194,12 @@ export function StylePanel({
           />
         </InspectorGroup>
       </>
+    ) : section === "cartform" ? (
+      <CartFormSectionSettings navbar={navbar} onChange={onChange} />
+    ) : section === "orderform" ? (
+      <OrderFormSectionSettings productDetail={productDetail} onChange={onChange} />
+    ) : section === "ordersuccess" ? (
+      <OrderSuccessSectionSettings productDetail={productDetail} onChange={onChange} />
     ) : null;
   return (
     <div className="builder-settings-inner">
@@ -196,7 +209,12 @@ export function StylePanel({
             ["pdName", "pdPrice", "pdDescription", "pdImage", "pdThumbs"].includes(selected)) ||
           (section === "collection" && String(selected).startsWith("card"))
             ? "Nội dung, ảnh và giá sản phẩm sửa trong mục Sản phẩm. Bộ chỉnh này thay đổi cách hiển thị."
-            : undefined
+            : (section === "cartform" &&
+                ["cartImage", "cartItemName", "cartItemVariant", "cartItemPrice", "cartQty", "cartClose"].includes(selected)) ||
+              (section === "orderform" && ["ofProductName", "ofPrice", "ofClose"].includes(selected)) ||
+              (section === "ordersuccess" && ["osCloseIcon", "osRecipient"].includes(selected))
+              ? "Nội dung hiển thị tự động theo sản phẩm / đơn hàng. Bộ chỉnh này chỉ thay đổi giao diện hiển thị."
+              : undefined
         }
         elementOptions={inspectorElements(section, { navbar, about, features, reviews })}
         selectedElement={selected}

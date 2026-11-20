@@ -15,7 +15,7 @@ const SAMPLE_ORDER={
   {id:'sample-1',name:'Deodorant Mist - Bodyplex',variantLabel:'220ml',quantity:1},
   {id:'sample-2',name:'White Gel - Bodyplex',variantLabel:'',quantity:1},
  ],
- paymentMethod:'cod',
+ paymentMethod:'bank_transfer',
  subtotal:1009000,
  shippingFee:25000,
  totalAmount:1034000,
@@ -33,7 +33,7 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
  const copy={...CHECKOUT_RECEIPT_COPY};
  const text=(key)=>appearance[key]?.trim()||copy[key];
  const pick=(key,event)=>{if(!preview)return;event?.stopPropagation?.();onSelect?.(key);};
- const mark=(key,base='')=>preview?{'data-builder-key':key,className:`${base}${selectedElement===key?' builder-selected':''}`.trim(),onClick:event=>pick(key,event)}:{className:base||undefined};
+ const mark=(key,base='')=>preview?{'data-builder-key':key,className:`${base}${selectedElement===key?' builder-selected':''}`.trim()||undefined,onClick:event=>{event.preventDefault();pick(key,event);}}:{className:base||undefined};
  const codeStyle=toCss(appearance.receiptCodeStyle,{responsive:true});
  const messageStyle=toCss(appearance.receiptMessageStyle,{responsive:true});
  const cardHeadingStyle=toCss(appearance.receiptCardHeadingStyle,{responsive:true});
@@ -50,14 +50,14 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
 
  return (
   <section className="order-received" aria-label="Thông tin đơn đã nhận">
-   <div {...mark('osBanner','order-received-banner')}>
-    <span className="order-received-code-label">{text('receiptCodeLabel')}</span>
-    <strong className="order-received-code" style={codeStyle}>{order.code}</strong>
-    <p className="order-received-msg" style={messageStyle}>{displayMessage}</p>
+   <div className="order-received-banner">
+    <div {...mark('osCode')}>
+     <span className="order-received-code-label">{text('receiptCodeLabel')}</span>
+     <strong className="order-received-code" style={codeStyle}>{order.code}</strong>
+    </div>
+    <p {...mark('osMessage','order-received-msg')} style={messageStyle}>{displayMessage}</p>
    </div>
-   <div {...mark('osActions')}>
-    <OrderReceiptActions order={order} home={home} appearance={appearance} preview={preview}/>
-   </div>
+   <OrderReceiptActions order={order} home={home} appearance={appearance} preview={preview} selectedElement={selectedElement} onSelect={onSelect}/>
    <div {...mark('osDetails','order-received-details checkout-card')}>
     <h3 style={cardHeadingStyle}>{text('receiptDetailsHeading')}</h3>
     <dl>
@@ -70,14 +70,14 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
      <div className="order-received-total" style={totalStyle}><dt>{text('receiptTotalLabel')}</dt><dd>{order.totalAmount==null?'ORORA sẽ xác nhận tổng tiền':formatVnd(order.totalAmount)}</dd></div>
     </dl>
    </div>
-   <details className="order-received-details checkout-card" open onClick={preview?event=>pick('osDetails',event):undefined}>
+   <details {...mark('osRecipient','order-received-details checkout-card')} open>
     <summary style={cardHeadingStyle}>{text('receiptRecipientHeading')}</summary>
     <dl>
      {[['Họ và tên',order.recipient.name],['Số điện thoại',order.recipient.phone],['Email',order.recipient.email],['Địa chỉ nhận hàng',order.recipient.address],['Ghi chú',order.recipient.note]].filter(([,value])=>value).map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
     </dl>
    </details>
-   {(order.paymentMethod==='bank_transfer'||(preview&&(appearance.bankName||appearance.bankAccountNumber||appearance.bankAccountName)))&&(
-    <div {...mark('osDetails','order-received-details checkout-card')}>
+   {(order.paymentMethod==='bank_transfer'||preview)&&(
+    <div {...mark('osBank','order-received-details checkout-card')}>
      <h3 style={cardHeadingStyle}>{text('bankHeading')}</h3>
      {appearance.bankName||appearance.bankAccountNumber||appearance.bankAccountName?(
       <dl>
@@ -92,17 +92,17 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
     </div>
    )}
    {text('receiptNextStepsBody')&&(
-    <div {...mark('osFooter','order-received-details checkout-card')}>
+    <div {...mark('osNextSteps','order-received-details checkout-card')}>
      <h3 style={cardHeadingStyle}>{text('receiptNextStepsHeading')}</h3>
      <p className="order-help">{text('receiptNextStepsBody')}</p>
     </div>
    )}
-   <p className="order-help" {...mark('osFooter','order-help')}>{mailNote}</p>
-   <div {...mark('osFooter','order-received-footer')}>
+   <p {...mark('osEmailNote','order-help')}>{mailNote}</p>
+   <div className="order-received-footer">
     {preview
-     ?<a className="order-tracking-link" href="#tra-cuu-don-hang" style={trackingStyle} onClick={event=>{event.preventDefault();pick('osFooter',event);}}>{text('receiptTrackingLabel')}</a>
+     ?<a href="#tra-cuu-don-hang" style={trackingStyle} {...mark('osTracking','order-tracking-link')}>{text('receiptTrackingLabel')}</a>
      :<Link className="order-tracking-link" to="/tra-cuu-don-hang" state={{code:order.code,phone:order.recipient.phone}} style={trackingStyle} onClick={onClose}>{text('receiptTrackingLabel')}</Link>}
-    <button type="button" style={closeStyle} onClick={preview?event=>{event.preventDefault();pick('osFooter',event);}:onClose}>{text('receiptCloseLabel')}</button>
+    <button type="button" style={closeStyle} {...(preview?mark('osCloseBtn'):{onClick:onClose})}>{text('receiptCloseLabel')}</button>
    </div>
   </section>
  );
@@ -111,21 +111,16 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
 export default function OrderSuccessPreview({appearance={},selectedElement,onSelect}){
  const title=appearance.receiptTitle?.trim()||CHECKOUT_RECEIPT_COPY.receiptTitle;
  const pick=(key,event)=>{event?.stopPropagation?.();onSelect?.(key);};
+ const mark=(key,base='')=>({'data-builder-key':key,className:`${base}${selectedElement===key?' builder-selected':''}`.trim()||undefined,onClick:event=>{event.preventDefault();pick(key,event);}});
  return (
   <section
    aria-label="Xem trước Form đã đặt hàng"
-   data-builder-key="osFrame"
-   className={`orora-modal order-success-modal is-preview${selectedElement==='osFrame'?' builder-selected':''}`}
+   className="orora-modal order-success-modal is-preview"
    style={receiptModalStyle(appearance)}
-   onClick={event=>pick('osFrame',event)}
   >
-   <div
-    data-builder-key="osHeader"
-    className={`orora-modal-heading${selectedElement==='osHeader'?' builder-selected':''}`}
-    onClick={event=>pick('osHeader',event)}
-   >
-    <h2 style={toCss(appearance.receiptTitleStyle,{responsive:true})}>{title}</h2>
-    <button type="button" aria-label="Đóng cửa sổ" onClick={event=>{event.preventDefault();pick('osHeader',event);}}>×</button>
+   <div className="orora-modal-heading">
+    <h2 {...mark('osTitle')} style={toCss(appearance.receiptTitleStyle,{responsive:true})}>{title}</h2>
+    <button type="button" aria-label="Đóng cửa sổ" {...mark('osCloseIcon')}>×</button>
    </div>
    <div className="orora-modal-content">
     <OrderSuccessContent

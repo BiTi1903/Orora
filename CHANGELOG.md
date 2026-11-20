@@ -1,3 +1,22 @@
+## 20/11/2026 — Chuẩn hóa 3 form trong Visual Builder: bấm đúng từng phần tử để chỉnh và chỉ chỉnh UI với mục dữ liệu tự động
+
+- **Lý do**: Chủ website yêu cầu 3 mục **Form giỏ hàng**, **Form đặt hàng** và **Form đã đặt hàng** trong Visual Builder phải có trải nghiệm chỉnh sửa giống hệt các mục khác: bấm trúng từng thành phần nào thì mở đúng bộ chỉnh của thành phần đó, có tab **Thiết lập mục** riêng cho khung/màu chung, và những mục hiển thị dữ liệu tự động từ sản phẩm/đơn hàng thì chỉ cho chỉnh UI chứ không hiện ô sửa nội dung.
+- **Thay đổi chính**:
+  - **Bấm chọn từng phần tử riêng biệt trên bản xem trước (`src/components/CartFormPreview.jsx`, `src/components/OrderFormPreview.jsx`, `src/components/OrderFormFields.jsx`, `src/components/OrderSuccessView.jsx`, `src/components/OrderReceiptActions.jsx`, `src/admin/builder/element-options.js`, `src/admin/builder/home-model.js`)**:
+    - **Form giỏ hàng** (12 phần tử độc lập): Tiêu đề, Nút đóng ×, Ảnh sản phẩm, Tên sản phẩm, Dung tích/phân loại, Giá sản phẩm, Khung chọn số lượng, Nút Xóa, Nút Chi tiết, Chú thích phí giao hàng, Dòng Tạm tính, Nút Mua ngay.
+    - **Form đặt hàng** (15 phần tử độc lập): Tiêu đề hộp thoại, Nút đóng ×, Tên sản phẩm, Lời hướng dẫn, Nhãn giá, Dung tích & số lượng, Tiêu đề Người nhận, Các ô Người nhận, Tiêu đề Địa chỉ, Các ô Địa chỉ, Tiêu đề Thanh toán, Phương thức thanh toán & Ghi chú, Khối Tóm tắt, Ô tích đồng ý, Nút Đặt hàng ngay.
+    - **Form đã đặt hàng** (13 phần tử độc lập): Tiêu đề hộp thoại, Nút đóng ×, Mã đơn hàng, Lời cảm ơn/Lời nhắn, Xác nhận nhanh (Zalo/FB), Lưu ảnh đơn hàng, Chi tiết đơn hàng, Thông tin người nhận, Thông tin chuyển khoản, Bước tiếp theo, Ghi chú email, Link Tra cứu đơn, Nút Đóng.
+  - **Chỉ chỉnh UI với thành phần dữ liệu tự động + Tab Thiết lập mục (`src/admin/builder/FormBuilderPanels.jsx`, `src/admin/builder/StylePanels.jsx`, `src/lib/checkout-presentation.js`, `src/styles/checkout.css`)**:
+    - Các thành phần dữ liệu tự động (Ảnh, Tên sản phẩm, Dung tích, Giá, Khung số lượng, Nút đóng ×, Thông tin người nhận) chỉ hiển thị bộ chỉnh giao diện (kiểu chữ, màu, viền, bo góc) kèm ghi chú nguồn dữ liệu giống mục Sản phẩm và Chi tiết SP.
+    - Chuyển các thiết lập khung hộp thoại, màu nền/viền tổng thể, hiệu ứng và nút giỏ hàng navbar vào tab **Thiết lập mục** riêng của `Inspector`.
+  - **Kiểm thử (`qa/form-builder.spec.js`)**:
+    - Bổ sung bước kiểm tra bấm trực tiếp vào từng phần tử dữ liệu tự động (`cartItemName`, `ofPrice`) xác nhận chỉ mở chỉnh UI và hiện ghi chú nguồn dữ liệu.
+- **File / khu vực liên quan**: `src/components/CartFormPreview.jsx`, `src/components/OrderFormPreview.jsx`, `src/components/OrderFormFields.jsx`, `src/components/OrderSuccessView.jsx`, `src/components/OrderReceiptActions.jsx`, `src/admin/builder/FormBuilderPanels.jsx`, `src/admin/builder/StylePanels.jsx`, `src/admin/builder/element-options.js`, `src/admin/builder/home-model.js`, `src/lib/checkout-presentation.js`, `src/styles/checkout.css`, `qa/form-builder.spec.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **255/255** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt.
+  - Playwright (`width-390`): **15/15** test đạt trên `qa/form-builder.spec.js`, `qa/cart-settings.spec.js`, `qa/visual-builder-focus.spec.js` và `qa/editor-checkout.spec.js`.
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu hiện có.
+
 ## 20/11/2026 — Hoàn thiện máy trạng thái đơn, kiểm kho nhanh, nội dung đặt hàng/chuyển khoản và tối ưu giảm lag trang Admin
 
 - **Lý do**: Khắc phục các điểm tồn đọng theo rà soát: gom máy trạng thái đơn về một nguồn dùng chung, cho phép `new → shipping` và `completed → cancelled` (kèm hoàn kho cho đơn hoàn tất bị trả hàng), chặn tuyệt đối đổi `paymentStatus` trên đơn đã hủy, thay vòng lặp 10 trang kho ở `TodayTasks` bằng endpoint `?lowStock=1`, bổ sung hướng dẫn chuyển khoản / Bước tiếp theo / biên nhận / email xác nhận, dọn các khóa chết trong `CHECKOUT_COPY`, và tách chunk lazy-load + tách tab Thống kê để giảm lag trang Admin.

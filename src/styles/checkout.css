@@ -169,6 +169,11 @@
   padding: 14px var(--receiptPadding, 18px);
   background: var(--receipt-modal-bg, #fffafb);
 }
+.order-success-modal .orora-modal-heading > button {
+  color: var(--receipt-close-icon-color, var(--receipt-accent, var(--rose-deep)));
+  background: var(--receipt-close-icon-bg, #fff);
+  border-color: var(--receipt-close-icon-border, var(--line));
+}
 .order-success-modal .orora-modal-content { padding: var(--receiptPadding, 18px); }
 .order-success-modal.is-preview { position: relative; inset: auto; display: flex; flex-direction: column; max-height: none; margin: 24px auto; border: 1px solid var(--receipt-modal-border, var(--line)); box-shadow: 0 20px 50px rgba(46, 18, 32, .14); }
 .order-success-modal .order-received { display: grid; gap: 12px; font-size: var(--receipt-size, 13px); }
