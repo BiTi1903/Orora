@@ -34,6 +34,7 @@ import "./App.css";
 // Trang quản trị chỉ tải khi vào /admin
 const ProductDetail=lazy(()=>import("./components/ProductDetail"));
 const OrderTracking=lazy(()=>import("./components/OrderTracking"));
+const PolicyPage=lazy(()=>import("./components/PolicyPage"));
 function RouteLoading(){return <section className="route-loading" role="status" aria-label="Đang tải trang"><div className="loading-placeholder"/><div className="loading-placeholder loading-line"/></section>;}
 const AdminApp = lazy(() => import("./admin/AdminApp"));
 
@@ -115,6 +116,7 @@ function App() {
 
 
         <Route path="/tra-cuu-don-hang" element={<main>{visible("navbar") && <Navbar />}<Suspense fallback={<RouteLoading/>}><OrderTracking /></Suspense>{visible("footer") && <Footer />}</main>} />
+        <Route path="/chinh-sach" element={<main>{visible("navbar") && <Navbar />}<Suspense fallback={<RouteLoading/>}><PolicyPage /></Suspense>{visible("footer") && <Footer />}</main>} />
         <Route path="/san-pham" element={<Navigate to={{ pathname: "/", search: location.search, hash: "#shop" }} replace />} />
         <Route path="/ve-orora" element={<Navigate to="/#about" replace />} />
         <Route path="/lien-he" element={<Navigate to="/#contact" replace />} />

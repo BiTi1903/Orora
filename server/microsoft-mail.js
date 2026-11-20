@@ -78,7 +78,13 @@ function createGraphMailer(
         },
         body: JSON.stringify({
           message: {
-            internetMessageHeaders: [{ name: "x-orora-mail-id", value: tracking.trackingId }],
+            internetMessageHeaders: [
+              { name: "x-orora-mail-id", value: tracking.trackingId },
+              ...(message.unsubscribeUrl ? [
+                { name: "List-Unsubscribe", value: `<${message.unsubscribeUrl}>` },
+                { name: "List-Unsubscribe-Post", value: "List-Unsubscribe=One-Click" },
+              ] : []),
+            ],
             subject: message.subject,
             body: {
               contentType: "Text",

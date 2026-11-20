@@ -127,10 +127,10 @@ function Footer({
             {shopText}
           </LinkOrSpan>
           {(data.footerTrackingText ?? 'Tra cứu đơn hàng') && <LinkOrSpan preview={preview} selectedClass={selectedClass} select={select} style={css("link")} href="/tra-cuu-don-hang" sel="ftTracking">{data.footerTrackingText ?? 'Tra cứu đơn hàng'}</LinkOrSpan>}
-          <LinkOrSpan preview={preview} selectedClass={selectedClass} select={select} style={css("link")} href="#" sel="ftTerms">
+          <LinkOrSpan preview={preview} selectedClass={selectedClass} select={select} style={css("link")} href="/chinh-sach" sel="ftTerms">
             {termsText}
           </LinkOrSpan>
-          <LinkOrSpan preview={preview} selectedClass={selectedClass} select={select} style={css("link")} href="#" sel="ftPrivacy">
+          <LinkOrSpan preview={preview} selectedClass={selectedClass} select={select} style={css("link")} href="/chinh-sach#bao-mat" sel="ftPrivacy">
             {privacyText}
           </LinkOrSpan>
         </div>

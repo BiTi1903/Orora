@@ -15,10 +15,13 @@
     - Chỉ bật chu kỳ tự làm mới 30 giây khi đơn hàng đang chọn thực sự ở trạng thái `"sending"`.
   - **Sản phẩm gọn nhẹ (`src/admin/ProductsAdmin.jsx`)**:
     - Chỉ render đúng màn hình và tab đang mở (danh sách sản phẩm, từng nhóm trong Thiết lập dùng chung, từng mục trong form chỉnh sản phẩm) thay vì giữ toàn bộ cây DOM ẩn và các listener nền cùng lúc.
-- **File / khu vực liên quan**: `src/styles/admin-theme.css`, `src/styles/admin.css`, `src/admin/builder/VisualBuilder.css`, `src/admin/OrdersAdmin.jsx`, `src/admin/MailWriter.jsx`, `src/admin/NewsletterAdmin.jsx`, `src/admin/ProductsAdmin.jsx`.
+  - **Trang Chính sách `/chinh-sach` & Header hủy đăng ký Microsoft Graph (`src/components/PolicyPage.jsx`, `src/App.jsx`, `src/lib/seo.js`, `src/components/Footer.jsx`, `src/components/OrderFormFields.jsx`, `server/microsoft-mail.js`)**:
+    - Tạo trang `/chinh-sach` hiển thị Điều khoản sử dụng, Chính sách đổi trả, Chính sách bảo mật và thông tin cam kết/liên hệ đọc từ cấu hình quản trị; gắn link trực tiếp ở Footer và ngay tại ô tích đồng ý trong Form đặt hàng.
+    - Bổ sung header `List-Unsubscribe` và `List-Unsubscribe-Post: List-Unsubscribe=One-Click` cho kênh gửi mail Microsoft Graph (`server/microsoft-mail.js`) đồng bộ với kênh SMTP.
+- **File / khu vực liên quan**: `src/styles/admin-theme.css`, `src/styles/admin.css`, `src/admin/builder/VisualBuilder.css`, `src/admin/OrdersAdmin.jsx`, `src/admin/MailWriter.jsx`, `src/admin/NewsletterAdmin.jsx`, `src/admin/ProductsAdmin.jsx`, `src/components/PolicyPage.jsx`, `src/App.jsx`, `src/lib/seo.js`, `src/components/Footer.jsx`, `src/components/OrderFormFields.jsx`, `server/microsoft-mail.js`, `qa/audit-resilience.spec.js`, `qa/mobile-polish.spec.js`.
 - **Kiểm tra đã chạy**:
   - `npm run check`: **255/255** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt.
-  - Playwright: **14/14** test đạt trên `qa/admin-appearance.spec.js` (cả mobile `390px` và desktop `1440px`), cùng **17/17** test đạt trên `qa/admin-confirm.spec.js`, `qa/admin-consistency.spec.js`, `qa/admin-navigation.spec.js`, `qa/form-builder.spec.js` và `qa/editor-checkout.spec.js` (`width-390`).
+  - Playwright: **127/127** test toàn bộ bộ kiểm thử `qa/*.spec.js` (`width-390`) đạt (2 test desktop-only bỏ qua theo cấu hình viewport), và **14/14** test `qa/admin-appearance.spec.js` đạt trên cả mobile (`390px`) và desktop (`1440px`).
 - **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu hiện có.
 
 ## 20/11/2026 — Chuẩn hóa 3 form trong Visual Builder: bấm đúng từng phần tử để chỉnh và chỉ chỉnh UI với mục dữ liệu tự động

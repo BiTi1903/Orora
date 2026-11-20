@@ -38,7 +38,7 @@ test('chat hint repeats after hiding or dismissal and resumes when chat closes',
  await page.clock.runFor(2000);await expect(hint).toBeVisible();
  await page.getByRole('button',{name:'Bạn cần tư vấn?',exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible();
  await page.clock.runFor(5000);await expect(hint).toHaveCount(0);
- await page.getByRole('button',{name:'Đóng lựa chọn tư vấn',exact:true}).click();await page.clock.runFor(1000);await expect(hint).toBeVisible();
+ await page.getByRole('button',{name:'Đóng lựa chọn tư vấn',exact:true}).click();await expect(page.getByRole('dialog')).toHaveCount(0);await page.clock.runFor(1000);await expect(hint).toBeVisible();
 });
 
 test('default hint timing is 5 seconds before first display, 3 visible and 10 hidden',async({page})=>{

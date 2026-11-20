@@ -32,11 +32,11 @@ test('inventory drafts survive failed saves and saving one row does not mark oth
   }
   return route.fulfill({json:new URL(request.url()).searchParams.has('pending')?{pending:{},nextCursor:null}:{items:[{id:'1',name:'SP 1',quantity:10,version:1},{id:'2',name:'SP 2',quantity:20,version:1}],nextCursor:null}});
  });
- await mount(page,`import Inventory from '/src/admin/InventoryAdmin.jsx';import {dirtyRegistry} from '/src/lib/dirty-registry.js';window.__hasDraft=()=>dirtyRegistry.hasChanges();${render('R.createElement(Inventory)')}`,{'lib/firebaseAuth.js':'export const auth={currentUser:{getIdToken:async()=>"test"}};'});
+ await mount(page,`import ConfirmProvider from '/src/admin/ConfirmDialog.jsx';import Inventory from '/src/admin/InventoryAdmin.jsx';import {dirtyRegistry} from '/src/lib/dirty-registry.js';window.__hasDraft=()=>dirtyRegistry.hasChanges();${render('R.createElement(ConfirmProvider,null,R.createElement(Inventory))')}`,{'lib/firebaseAuth.js':'export const auth={currentUser:{getIdToken:async()=>"test"}};'});
  const first=page.getByRole('spinbutton',{name:'Số lượng tồn của SP 1',exact:true}),second=page.getByRole('spinbutton',{name:'Số lượng tồn của SP 2',exact:true});
  await first.fill('12');await second.fill('25');await expect.poll(()=>page.evaluate(()=>window.__hasDraft())).toBe(true);
  await page.locator('.inventory-stock-form').first().getByRole('button',{name:'Lưu',exact:true}).click();await expect(page.getByRole('status')).toContainText('chưa lưu');await expect(first).toHaveValue('12');
  fail=false;await page.locator('.inventory-stock-form').first().getByRole('button',{name:'Lưu',exact:true}).click();await expect(first).toHaveValue('');await expect(second).toHaveValue('25');await expect.poll(()=>page.evaluate(()=>window.__hasDraft())).toBe(true);
- const prompt=page.waitForEvent('dialog');const click=page.getByRole('button',{name:'Tải lại tồn kho',exact:true}).click();const dialog=await prompt;await dialog.dismiss();await click;await expect(second).toHaveValue('25');
+ await page.getByRole('button',{name:'Tải lại tồn kho',exact:true}).click();await page.getByRole('dialog',{name:'Tải lại tồn kho',exact:true}).getByRole('button',{name:'Hủy',exact:true}).click();await expect(second).toHaveValue('25');
  await second.fill('');await expect.poll(()=>page.evaluate(()=>window.__hasDraft())).toBe(false);await fit(page);
 });
