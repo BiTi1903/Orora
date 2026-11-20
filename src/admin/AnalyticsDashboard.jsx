@@ -3,47 +3,47 @@ import { validAnalyticsReport } from "../lib/analytics";
 import { useEffect, useId, useState } from "react";
 import { auth } from "../lib/firebaseAuth";
 import { formatVnd } from "../lib/commerce";
+
+const PRESETS = [
+  { days: 7, label: "7 ngày" },
+  { days: 14, label: "14 ngày" },
+  { days: 30, label: "30 ngày" },
+  { days: 90, label: "90 ngày" },
+];
 const shortDay = (day) => `${day.slice(8)}/${day.slice(5, 7)}`;
+const fullDay = (day) => day.split("-").reverse().join("/");
 const compact = (n) =>
   new Intl.NumberFormat("vi-VN", { notation: "compact", maximumFractionDigits: 1 }).format(n);
-function DailyChart({ series, fields, money = false, title }) {
+
+function DailyChart({ series, fields, money = false, title, heading }) {
   const [activeField, setActiveField] = useState(null);
-  const [guide, setGuide] = useState(() => {
-    try {
-      return {
-        enabled: true,
-        color: "#b8446d",
-        dash: "5 5",
-        ...JSON.parse(localStorage.getItem(`analytics-guide-${money ? "money" : "traffic"}`) || "{}"),
-      };
-    } catch {
-      return { enabled: true, color: "#b8446d", dash: "5 5" };
-    }
-  });
-  useEffect(() => {
-    try {
-      localStorage.setItem(`analytics-guide-${money ? "money" : "traffic"}`, JSON.stringify(guide));
-    } catch {
-      /* Optional appearance preference. */
-    }
-  }, [guide, money]);
-  const [activeDay, setActiveDay] = useState(null),
-    [spacing, setSpacing] = useState(0),
-    tooltipId = useId(),
-    spacingId = useId();
-  const activeIndex = series.findIndex((day) => day.day === activeDay),
-    active = series[activeIndex];
-  if (!series.some((day) => fields.some((field) => Number.isFinite(day[field.key]))))
-    return <p className="analytics-empty">Chưa có dữ liệu trong khoảng này.</p>;
+  const [activeDay, setActiveDay] = useState(null);
+  const tooltipId = useId();
+  const gradientId = useId();
+  const activeIndex = series.findIndex((day) => day.day === activeDay);
+  const active = series[activeIndex];
+
+  if (!series.some((day) => fields.some((field) => Number.isFinite(day[field.key])))) {
+    return (
+      <div className="admin-card analytics-chart-card">
+        <div className="analytics-card-head">
+          <h3>{heading}</h3>
+        </div>
+        <p className="analytics-empty">Chưa có dữ liệu trong khoảng này.</p>
+      </div>
+    );
+  }
+
   const peak = Math.max(1, ...series.flatMap((day) => fields.map((field) => day[field.key] || 0)));
   const max = money ? Math.max(1000, peak) : Math.max(2, Math.ceil(peak / 2) * 2);
-  const plotWidth = spacing === 0 ? 600 : Math.max(600, 76 + (series.length - 1) * spacing);
-  const x = (i) => 54 + i * ((plotWidth - 76) / Math.max(1, series.length - 1)),
-    y = (n) => 190 - (n / max) * 160;
+  const plotWidth = series.length > 30 ? Math.max(600, 76 + (series.length - 1) * 22) : 600;
+  const x = (i) => 54 + i * ((plotWidth - 76) / Math.max(1, series.length - 1));
+  const y = (n) => 190 - (n / max) * 160;
   const activeValue = active?.[activeField || fields[0].key];
+
   const inspect = (event) => {
-    const svg = event.currentTarget,
-      matrix = svg.getScreenCTM();
+    const svg = event.currentTarget;
+    const matrix = svg.getScreenCTM();
     if (!matrix) return;
     const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse());
     if (point.x < 54 || point.x > plotWidth - 22 || point.y < 30 || point.y > 190) {
@@ -57,8 +57,8 @@ function DailyChart({ series, fields, money = false, title }) {
         Math.round(((point.x - 54) / (plotWidth - 76)) * Math.max(1, series.length - 1)),
       ),
     );
-    const day = series[index],
-      available = fields.filter((field) => Number.isFinite(day[field.key]));
+    const day = series[index];
+    const available = fields.filter((field) => Number.isFinite(day[field.key]));
     if (!available.length) {
       setActiveDay(null);
       return;
@@ -69,73 +69,35 @@ function DailyChart({ series, fields, money = false, title }) {
     setActiveDay(day.day);
     setActiveField(nearest.key);
   };
+
+  const primaryField = fields[0];
+  const primarySegments = series.reduce((segments, day, i) => {
+    if (!Number.isFinite(day[primaryField.key])) {
+      if (segments.at(-1)?.length) segments.push([]);
+      return segments;
+    }
+    if (!segments.length) segments.push([]);
+    segments.at(-1).push({ x: x(i), y: y(day[primaryField.key]) });
+    return segments;
+  }, []).filter((segment) => segment.length > 1);
+
   return (
-    <>
-      <details className="analytics-guide-controls">
-        <summary>Kiểu đường X–Y</summary>
-        <label>
-          <input
-            type="checkbox"
-            role="switch"
-            checked={guide.enabled}
-            onChange={(event) => setGuide({ ...guide, enabled: event.target.checked })}
-          />
-          Hiện đường X–Y khi xem mốc
-        </label>
-        <label>
-          Màu đường
-          <input
-            aria-label={`Màu đường X–Y: ${title}`}
-            type="color"
-            value={guide.color}
-            onChange={(event) => setGuide({ ...guide, color: event.target.value })}
-          />
-        </label>
-        <label>
-          Kiểu nét
-          <select
-            aria-label={`Kiểu nét X–Y: ${title}`}
-            value={guide.dash}
-            onChange={(event) => setGuide({ ...guide, dash: event.target.value })}
-          >
-            <option value="5 5">Nét đứt</option>
-            <option value="2 4">Chấm nhỏ</option>
-            <option value="">Nét liền</option>
-          </select>
-        </label>
-      </details>
-      <div className="analytics-zoom">
-        <label htmlFor={spacingId}>Khoảng cách mốc</label>
-        <span>Sát</span>
-        <input
-          id={spacingId}
-          type="range"
-          min="8"
-          max="80"
-          step="4"
-          value={spacing || 8}
-          aria-label={`Khoảng cách mốc: ${title}`}
-          onChange={(event) => {
-            setSpacing(Number(event.target.value));
-            setActiveDay(null);
-          }}
-        />
-        <span>Rộng</span>
-        <button
-          type="button"
-          className="admin-btn"
-          onClick={() => {
-            setSpacing(0);
-            setActiveDay(null);
-          }}
-        >
-          Vừa khung
-        </button>
+    <div className="admin-card analytics-chart-card">
+      <div className="analytics-card-head">
+        <h3>{heading}</h3>
+        <div className="analytics-legend">
+          {fields.map((field) => (
+            <span key={field.key}>
+              <i style={{ background: field.color }} />
+              {field.label}
+            </span>
+          ))}
+        </div>
       </div>
-      <div className="analytics-chart-scroll" tabIndex="0" role="region" aria-label={`Cuộn ngang: ${title}`}>
+      <div className="analytics-chart-scroll" tabIndex="0" role="region" aria-label={`Biểu đồ: ${title}`}>
         <div
           className="analytics-plot"
-          style={{ width: spacing === 0 ? "100%" : `max(100%, ${plotWidth}px)` }}
+          style={{ width: series.length > 30 ? `max(100%, ${plotWidth}px)` : "100%" }}
           onMouseLeave={() => setActiveDay(null)}
           onKeyDown={(event) => {
             if (event.key === "Escape") setActiveDay(null);
@@ -149,33 +111,43 @@ function DailyChart({ series, fields, money = false, title }) {
             onMouseMove={inspect}
           >
             <title>{title}</title>
+            <defs>
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={primaryField.color} stopOpacity="0.18" />
+                <stop offset="100%" stopColor={primaryField.color} stopOpacity="0.01" />
+              </linearGradient>
+            </defs>
             {[0, 0.5, 1].map((ratio) => (
               <g key={ratio}>
-                <line x1="54" x2={plotWidth - 22} y1={y(max * ratio)} y2={y(max * ratio)} stroke="#ecdce3" />
+                <line
+                  x1="54"
+                  x2={plotWidth - 22}
+                  y1={y(max * ratio)}
+                  y2={y(max * ratio)}
+                  stroke="#efe4e9"
+                  strokeDasharray={ratio === 0 ? undefined : "4 4"}
+                />
                 <text x="46" y={y(max * ratio) + 4} textAnchor="end">
                   {compact(max * ratio)}
                 </text>
               </g>
             ))}
-            {active && guide.enabled && Number.isFinite(activeValue) && (
+            {primarySegments.map((seg, i) => {
+              const area = `M ${seg[0].x} 190 ${seg.map((pt) => `L ${pt.x} ${pt.y}`).join(" ")} L ${seg.at(-1).x} 190 Z`;
+              return <path key={i} d={area} fill={`url(#${gradientId})`} pointerEvents="none" />;
+            })}
+            {active && Number.isFinite(activeValue) && (
               <g className="analytics-crosshair" pointerEvents="none" aria-hidden="true">
                 <line
                   x1={x(activeIndex)}
                   x2={x(activeIndex)}
                   y1="30"
                   y2="190"
-                  stroke={guide.color}
-                  strokeDasharray={guide.dash}
+                  stroke="#b8446d"
+                  strokeDasharray="4 4"
+                  strokeOpacity="0.55"
                 />
-                <line
-                  x1="54"
-                  x2={plotWidth - 22}
-                  y1={y(activeValue)}
-                  y2={y(activeValue)}
-                  stroke={guide.color}
-                  strokeDasharray={guide.dash}
-                />
-                <rect x={x(activeIndex) - 28} y="200" width="56" height="22" rx="5" fill={guide.color} />
+                <rect x={x(activeIndex) - 26} y="200" width="52" height="22" rx="6" fill="#b8446d" />
                 <text className="analytics-crosshair-label" x={x(activeIndex)} y="215" textAnchor="middle">
                   {shortDay(active.day)}
                 </text>
@@ -199,7 +171,9 @@ function DailyChart({ series, fields, money = false, title }) {
                       key={i}
                       fill="none"
                       stroke={field.color}
-                      strokeWidth="3"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                       points={segment.join(" ")}
                     />
                   ))}
@@ -210,8 +184,10 @@ function DailyChart({ series, fields, money = false, title }) {
                         <circle
                           cx={x(i)}
                           cy={y(day[field.key])}
-                          r={activeDay === day.day ? 6 : 4}
-                          fill={field.color}
+                          r={activeDay === day.day ? 5.5 : 3.5}
+                          fill={activeDay === day.day ? "#ffffff" : field.color}
+                          stroke={field.color}
+                          strokeWidth={activeDay === day.day ? 2.5 : 0}
                           pointerEvents="none"
                         />
                         <circle
@@ -259,7 +235,7 @@ function DailyChart({ series, fields, money = false, title }) {
               )
               .map((i) => (
                 <text
-                  style={guide.enabled && activeDay === series[i].day ? { visibility: "hidden" } : undefined}
+                  style={activeDay === series[i].day ? { visibility: "hidden" } : undefined}
                   key={i}
                   x={x(i)}
                   y="216"
@@ -276,7 +252,7 @@ function DailyChart({ series, fields, money = false, title }) {
               role="tooltip"
               style={{ left: `clamp(110px, ${(x(activeIndex) / plotWidth) * 100}%, calc(100% - 110px))` }}
             >
-              <strong>{active.day.split("-").reverse().join("/")}</strong>
+              <strong>{fullDay(active.day)}</strong>
               {fields.map((field) => (
                 <span key={field.key}>
                   <i style={{ background: field.color }} />
@@ -294,24 +270,17 @@ function DailyChart({ series, fields, money = false, title }) {
           )}
         </div>
       </div>
-      <div className="analytics-legend">
-        {fields.map((field) => (
-          <span key={field.key}>
-            <i style={{ background: field.color }} />
-            {field.label}
-          </span>
-        ))}
-      </div>
-    </>
+    </div>
   );
 }
+
 export default function AnalyticsDashboard() {
-  const rangeId = useId();
-  const [days, setDays] = useState(7),
-    [revision, setRevision] = useState(0),
-    [liveData, setData] = useState(null),
-    [busy, setBusy] = useState(true),
-    [error, setError] = useState("");
+  const [days, setDays] = useState(7);
+  const [revision, setRevision] = useState(0);
+  const [liveData, setData] = useState(null);
+  const [busy, setBusy] = useState(true);
+  const [error, setError] = useState("");
+
   useEffect(() => {
     let alive = true;
     const controller = new AbortController();
@@ -338,46 +307,50 @@ export default function AnalyticsDashboard() {
           if (alive) setBusy(false);
         }
       })();
-    }, 200);
+    }, 150);
     return () => {
       alive = false;
       clearTimeout(timer);
       controller.abort();
     };
   }, [days, revision]);
+
   const data = liveData;
-  const series = data?.series || [],
-    hasTraffic = series.some((day) => day.pageViews != null),
-    total = (key) => series.reduce((sum, day) => sum + (day[key] || 0), 0),
-    maxClicks = Math.max(1, ...(data?.products || []).map((p) => p.clicks));
+  const series = data?.series || [];
+  const hasTraffic = series.some((day) => day.pageViews != null);
+  const total = (key) => series.reduce((sum, day) => sum + (day[key] || 0), 0);
+  const maxClicks = Math.max(1, ...(data?.products || []).map((p) => p.clicks));
   const chartSeries = chartDisplaySeries(series);
+
+  const selectRange = (nextDays) => {
+    if (nextDays === days) return;
+    setBusy(true);
+    setError("");
+    setDays(nextDays);
+  };
+
   return (
     <section className="analytics-dashboard">
       <div className="analytics-toolbar">
-        <div>
-          <h2>Thống kê website & thanh toán</h2>
-          <p className="admin-muted">Theo ngày Việt Nam · Hôm nay chưa kết thúc.</p>
-        </div>
-        <div className="admin-actions">
-          <div className="analytics-range">
-            <label htmlFor={rangeId}>Khoảng thời gian</label>
-            <select
-              id={rangeId}
-              value={days}
-              onChange={(e) => {
-                setBusy(true);
-                setError("");
-                setDays(Number(e.target.value));
-              }}
-            >
-              {[...new Set([7, 30, 90, days])]
-                .sort((a, b) => a - b)
-                .map((n) => (
-                  <option key={n} value={n}>
-                    {n} ngày gần nhất
-                  </option>
-                ))}
-            </select>
+        <p className="admin-muted analytics-meta" role={busy ? "status" : undefined}>
+          {busy
+            ? "Đang tổng hợp thống kê…"
+            : data
+              ? `Cập nhật ${new Date(data.updatedAt).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })} · Giờ Việt Nam`
+              : "Theo ngày Việt Nam"}
+        </p>
+        <div className="analytics-controls">
+          <div className="analytics-presets" role="group" aria-label="Chọn khoảng thời gian">
+            {PRESETS.map((preset) => (
+              <button
+                key={preset.days}
+                type="button"
+                aria-pressed={days === preset.days}
+                onClick={() => selectRange(preset.days)}
+              >
+                {preset.label}
+              </button>
+            ))}
           </div>
           <button
             type="button"
@@ -395,100 +368,59 @@ export default function AnalyticsDashboard() {
           </button>
         </div>
       </div>
-      <div className="analytics-period-zoom">
-        <label htmlFor={`${rangeId}-zoom`}>
-          Thu/phóng thời gian: <strong>{days} ngày gần nhất</strong>
-        </label>
-        <div>
-          <span>1 ngày</span>
-          <input
-            id={`${rangeId}-zoom`}
-            type="range"
-            min="1"
-            max="90"
-            step="1"
-            value={days}
-            onChange={(event) => {
-              setBusy(true);
-              setError("");
-              setDays(Number(event.target.value));
-            }}
-          />
-          <span>90 ngày</span>
-          <button
-            type="button"
-            className="admin-btn"
-            onClick={() => {
-              if (days !== 7) {
-                setBusy(true);
-                setError("");
-                setDays(7);
-              }
-            }}
-          >
-            Về 1 tuần
-          </button>
-        </div>
-      </div>
-      {busy && <p role="status">Đang tổng hợp thống kê…</p>}
+
       {error && (
         <p className="admin-error" role="alert">
           {error}
         </p>
       )}
+
       {data && (
         <>
-          <p className="admin-muted">
-            Cập nhật lúc {new Date(data.updatedAt).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}
-          </p>
           <div className="analytics-kpis">
             {[
-              ["Lượt xem trang", hasTraffic ? total("pageViews").toLocaleString("vi-VN") : "—"],
-              ["Lượt bấm sản phẩm", hasTraffic ? total("productClicks").toLocaleString("vi-VN") : "—"],
-              ["Giá trị đã thanh toán", formatVnd(total("paidAmount"))],
-              ["Đơn đã thanh toán", total("paidOrders").toLocaleString("vi-VN")],
-            ].map(([label, value]) => (
-              <div className="admin-card" key={label}>
+              ["Doanh thu đã thanh toán", formatVnd(total("paidAmount")), true],
+              ["Đơn đã thanh toán", total("paidOrders").toLocaleString("vi-VN"), false],
+              ["Lượt xem trang", hasTraffic ? total("pageViews").toLocaleString("vi-VN") : "—", false],
+              ["Lượt bấm sản phẩm", hasTraffic ? total("productClicks").toLocaleString("vi-VN") : "—", false],
+            ].map(([label, value, highlight]) => (
+              <div className={`admin-card${highlight ? " is-primary" : ""}`} key={label}>
                 <span className="admin-muted">{label}</span>
                 <strong>{value}</strong>
               </div>
             ))}
           </div>
-          <div className="analytics-charts">
-            <div className="admin-card">
-              <h3>Lượt truy cập theo ngày</h3>
-              <DailyChart
-                series={chartSeries}
-                title="Lượt xem và khách theo ngày"
-                fields={[
-                  { key: "pageViews", label: "Lượt xem trang", color: "#b8446d" },
-                  { key: "visitors", label: "Khách/ngày (ước tính)", color: "#6a89ae" },
-                ]}
-              />
-            </div>
-            <div className="admin-card">
-              <h3>Giá trị đơn đã thanh toán (đ)</h3>
-              <DailyChart
-                series={chartSeries}
-                title="Giá trị đơn đã thanh toán theo ngày đặt"
-                money
-                fields={[{ key: "paidAmount", label: "Giá trị đã thanh toán", color: "#b8446d" }]}
-              />
-              <p className="admin-muted">
-                Theo ngày đặt đơn, trạng thái thanh toán hiện tại; gồm phí giao hàng, loại đơn đã hủy. Không
-                phải sao kê tiền nhận trong ngày.
-              </p>
-            </div>
-          </div>
+
           {total("unpricedPaid") > 0 && (
             <p className="admin-context-note">
-              Có {total("unpricedPaid")} đơn đã đánh dấu thanh toán nhưng chưa chốt tổng tiền; chưa cộng vào
-              biểu đồ tiền.
+              Có {total("unpricedPaid")} đơn đã thanh toán nhưng chưa chốt tổng tiền (chưa cộng vào doanh thu).
             </p>
           )}
+
+          <div className="analytics-charts">
+            <DailyChart
+              series={chartSeries}
+              heading="Doanh thu đã thanh toán"
+              title="Giá trị đơn đã thanh toán theo ngày đặt"
+              money
+              fields={[{ key: "paidAmount", label: "Doanh thu (đ)", color: "#b8446d" }]}
+            />
+            <DailyChart
+              series={chartSeries}
+              heading="Lượt truy cập theo ngày"
+              title="Lượt xem và khách theo ngày"
+              fields={[
+                { key: "pageViews", label: "Lượt xem", color: "#b8446d" },
+                { key: "visitors", label: "Khách/ngày", color: "#6a89ae" },
+              ]}
+            />
+          </div>
+
           <div className="admin-card">
-            <h3>Sản phẩm được quan tâm</h3>
-            <p className="admin-muted">Tối đa 20 sản phẩm, xếp theo lượt bấm trong khoảng đã chọn.</p>
+            <div className="analytics-card-head">
+              <h3>Sản phẩm được quan tâm</h3>
+              <span className="admin-muted">Top 20 theo lượt bấm</span>
+            </div>
             {!data.products.length ? (
               <p className="admin-muted">Chưa ghi nhận lượt bấm hoặc xem sản phẩm trong khoảng này.</p>
             ) : (
@@ -500,7 +432,7 @@ export default function AnalyticsDashboard() {
                         {index + 1}. {product.name}
                       </span>
                       <strong>
-                        {product.clicks} lượt bấm · {product.views} lượt xem
+                        {product.clicks} bấm · {product.views} xem
                       </strong>
                     </div>
                     <div className="analytics-bar">
@@ -511,40 +443,46 @@ export default function AnalyticsDashboard() {
               </div>
             )}
           </div>
-          <p className="admin-muted">
-            Dấu “—” là chưa có dữ liệu thu thập. Khách/ngày ước tính theo trình duyệt, không phải số người
-            chính xác. Không tính trang admin và yêu cầu tự động được nhận diện; khách chặn thống kê có thể
-            không được ghi nhận.{" "}
-            {data.recordedSince
-              ? `Dữ liệu truy cập bắt đầu từ ${data.recordedSince.split("-").reverse().join("/")}.`
-              : "Chưa có dữ liệu truy cập; website sẽ tự ghi nhận khi khách ghé thăm."}
-          </p>
+
           <details className="admin-filter-panel">
-            <summary>Xem số liệu từng ngày</summary>
+            <summary>Xem bảng số liệu từng ngày</summary>
             <div className="analytics-data-scroll">
               <table className="admin-table">
                 <thead>
                   <tr>
                     <th>Ngày</th>
+                    <th>Doanh thu</th>
+                    <th>Đơn thanh toán</th>
                     <th>Lượt xem</th>
-                    <th>Khách ước tính</th>
-                    <th>Bấm sản phẩm</th>
-                    <th>Đã thanh toán</th>
+                    <th>Khách</th>
+                    <th>Bấm SP</th>
                   </tr>
                 </thead>
                 <tbody>
                   {[...series].reverse().map((day) => (
                     <tr key={day.day}>
-                      <td>{day.day}</td>
+                      <td>{fullDay(day.day)}</td>
+                      <td>{formatVnd(day.paidAmount)}</td>
+                      <td>{day.paidOrders}</td>
                       <td>{day.pageViews ?? "—"}</td>
                       <td>{day.visitors ?? "—"}</td>
                       <td>{day.productClicks ?? "—"}</td>
-                      <td>{formatVnd(day.paidAmount)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+          </details>
+
+          <details className="analytics-notes">
+            <summary>Ghi chú cách tính số liệu</summary>
+            <p className="admin-muted">
+              Doanh thu tính theo ngày đặt đơn đối với đơn đã thanh toán (gồm phí giao hàng, loại đơn đã hủy).
+              Dấu “—” là ngày chưa có dữ liệu truy cập. Không tính trang admin và bot tự động.{" "}
+              {data.recordedSince
+                ? `Bắt đầu ghi nhận truy cập từ ${fullDay(data.recordedSince)}.`
+                : "Website sẽ tự ghi nhận khi khách ghé thăm."}
+            </p>
           </details>
         </>
       )}

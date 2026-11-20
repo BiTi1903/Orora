@@ -70,6 +70,14 @@ function ChatButton() {
     exitAnimation.current?.cancel();
     exitAnimation.current = null;
   }, [settings.enabled]);
+  useEffect(() => {
+    const onExternalOpen = (event) => {
+      setChannel(event.detail?.channel === "ai" ? "ai" : "choose");
+      setOpen(true);
+    };
+    window.addEventListener("orora-chat-open", onExternalOpen);
+    return () => window.removeEventListener("orora-chat-open", onExternalOpen);
+  }, []);
   const close = useCallback(() => {
     if (exitAnimation.current) return;
     const finish = () => {

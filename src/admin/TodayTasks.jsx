@@ -53,16 +53,34 @@ export default function TodayTasks({ onOpenOrder, onOpenInventory, revision }) {
   }, [revision]);
 
   return <section className="admin-card admin-today" aria-labelledby="admin-today-title">
-    <h2 id="admin-today-title">Cần xử lý hôm nay</h2>
-    <p className="admin-muted">Đơn gần đây và tồn kho đã kiểm đếm trong trang đầu. Mail bị trả lại chỉ hiện sau khi kiểm tra Outlook. Danh sách chưa tự quét Outlook.</p>
-    {!tasks && <p role="status">Đang tải công việc…</p>}
+    <div className="admin-today-head">
+      <div>
+        <h2 id="admin-today-title">Cần xử lý hôm nay</h2>
+        <p className="admin-muted">Đơn mới, lỗi gửi thư và sản phẩm sắp hết cần ưu tiên.</p>
+      </div>
+      {!!tasks?.stock.length && <button type="button" className="admin-btn" onClick={onOpenInventory}>Mở kiểm kho</button>}
+    </div>
+    {!tasks && <p className="admin-muted" role="status">Đang tải công việc…</p>}
     {tasks?.partial && <p className="admin-muted">Một phần dữ liệu chưa tải được.</p>}
-    {tasks && !tasks.orders.length && !tasks.stock.length && <p>Chưa thấy việc cần xử lý trong dữ liệu đã tải.</p>}
-    {!!tasks?.orders.length && <ul>{tasks.orders.map(order => <li key={order.id}>
-      <button type="button" className="admin-btn" onClick={() => onOpenOrder(order.id)}>{order.code}</button>
-      <span>{order.reasons.join(' · ')}</span>
-      {order.phone && <a href={`tel:${order.phone}`}>Gọi khách</a>}
-    </li>)}</ul>}
-    {!!tasks?.stock.length && <div><h3>Sản phẩm sắp hết</h3><ul>{tasks.stock.map(item => <li key={item.id}>{item.name} · {item.reserved > 0 ? `còn bán được ${item.available} (tồn ${item.quantity}, chờ ${item.reserved})` : `${item.quantity} trong kho`}</li>)}</ul><button type="button" className="admin-btn" onClick={onOpenInventory}>Mở kiểm kho</button></div>}
+    {tasks && !tasks.orders.length && !tasks.stock.length && <p className="admin-muted">Mọi đơn hàng và tồn kho đều ổn định.</p>}
+    {!!tasks?.orders.length && (
+      <div className="admin-today-group">
+        <h3>Đơn hàng ({tasks.orders.length})</h3>
+        <ul className="admin-task-list">{tasks.orders.map(order => <li key={order.id}>
+          <button type="button" className="admin-btn" onClick={() => onOpenOrder(order.id)}>{order.code}</button>
+          <span className="admin-task-reasons">{order.reasons.map(reason => <span key={reason} className="admin-task-tag">{reason}</span>)}</span>
+          {order.phone && <a className="admin-task-call" href={`tel:${order.phone}`}>Gọi khách</a>}
+        </li>)}</ul>
+      </div>
+    )}
+    {!!tasks?.stock.length && (
+      <div className="admin-today-group">
+        <h3>Sản phẩm sắp hết ({tasks.stock.length})</h3>
+        <ul className="admin-task-list admin-task-stock">{tasks.stock.map(item => <li key={item.id}>
+          <span>{item.name}</span>
+          <span className="admin-task-tag is-warn">{item.reserved > 0 ? `Còn bán ${item.available} (tồn ${item.quantity}, chờ ${item.reserved})` : `Còn ${item.quantity}`}</span>
+        </li>)}</ul>
+      </div>
+    )}
   </section>;
 }

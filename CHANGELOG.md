@@ -1,3 +1,22 @@
+## 20/11/2026 — Tinh gọn Tổng quan & Thống kê Admin; thiết kế lại nút Giỏ hàng, Tư vấn (Zalo/AI) và Mua ngay trên trang sản phẩm
+
+- **Lý do**:
+  - Trang Tổng quan và Thống kê Admin có nhiều điều khiển thừa (thanh trượt Thu/phóng thời gian trùng với bộ chọn khoảng ngày, panel tùy chỉnh màu/nét đường X–Y và thanh giãn mốc trên từng biểu đồ, tiêu đề trùng lặp, đoạn chú thích dài dòng).
+  - Trên trang Chi tiết sản phẩm, nút `Thêm vào giỏ` chiếm nguyên hàng gây nặng bố cục, nút `Tư vấn` quá lớn và cần hỗ trợ chọn nhanh giữa **Tư vấn qua Zalo** hoặc **Tư vấn cùng AI** giống khung Chat AI.
+- **Thay đổi chính**:
+  - **Tổng quan & Thống kê Admin (`src/admin/Dashboard.jsx`, `src/admin/TodayTasks.jsx`, `src/admin/AnalyticsDashboard.jsx`, `src/styles/admin.css`)**:
+    - Đưa hàng 4 thẻ KPI lên đầu trang Tổng quan, nhấn màu khi có đơn chờ xác nhận; trình bày lại `Cần xử lý hôm nay` gọn gàng với nhãn lý do và số lượng tồn kho còn bán được.
+    - Bỏ toàn bộ điều khiển thừa trên trang Thống kê (thanh trượt `Thu/phóng thời gian`, `Kiểu đường X–Y`, `Khoảng cách mốc` và tiêu đề `<h2>` trùng với `<h1>Thống kê</h1>`), thay bằng nhóm nút chọn nhanh `7 / 14 / 30 / 90 ngày`, đưa KPI **Doanh thu đã thanh toán** lên đầu, thêm vùng đổ bóng gradient nhẹ trên biểu đồ SVG, định dạng ngày `DD/MM/YYYY` trong bảng số liệu và gom ghi chú kỹ thuật vào mục thu gọn.
+  - **Khu vực mua hàng & Tư vấn trên Chi tiết sản phẩm (`src/components/ProductDetail.jsx`, `src/components/ChatButton.jsx`, `src/styles/product-detail.css`)**:
+    - Bỏ nút `Thêm vào giỏ` cỡ lớn, chuyển thành nút biểu tượng giỏ hàng nhỏ gọn (`40×40px`, giữ nguyên tùy chỉnh `pdAddToCart` trong Visual Builder) đặt ngay bên cạnh giá sản phẩm.
+    - Thu gọn nút **Tư vấn** (`min-height: 36px`) nằm gọn cùng hàng với **Facebook** / **Tiktok**, đặt khung **Mua ngay** phía dưới cùng.
+    - Nâng cấp popup Tư vấn (`ConsultationDialog`) hiển thị lựa chọn **Tư vấn qua Zalo** và **Tư vấn cùng AI** (phát sự kiện `orora-chat-open` mở thẳng khung Chat AI trong `ChatButton.jsx`) cùng tùy chọn gọi điện nếu có cấu hình.
+- **File / khu vực liên quan**: `src/admin/Dashboard.jsx`, `src/admin/TodayTasks.jsx`, `src/admin/AnalyticsDashboard.jsx`, `src/styles/admin.css`, `src/components/ProductDetail.jsx`, `src/components/ChatButton.jsx`, `src/styles/product-detail.css`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **263/263** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt (`136.82 kB` gzip).
+  - Playwright (`width-1440` & `width-390`): **16/16** test đạt trên `qa/admin-appearance.spec.js` & `qa/admin-navigation.spec.js`; **33/33** test đạt trên `qa/editor-checkout.spec.js`, `qa/cart.spec.js` & `qa/button-press.spec.js` (1 test mobile-only bỏ qua trên desktop).
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu.
+
 ## 20/11/2026 — Thiết kế lại bố cục khung nút Mua ngay trên trang Chi tiết sản phẩm (Desktop)
 
 - **Lý do**: Trên giao diện máy tính, khung tạm tính & nút **Mua ngay** bị đặt ở dưới cùng sau `Thêm vào giỏ`, `Tư vấn`, `Facebook`/`Tiktok`, bề ngang chật (`320px`) và không đồng bộ bo góc với các nút kênh mua hàng khác.
