@@ -1,3 +1,30 @@
+## 20/11/2026 — Đồng bộ toàn diện Backend, Popup Storefront và vận hành Admin sau rà soát chi tiết
+
+- **Lý do**: Rà soát lại toàn bộ hệ thống từ Backend (`server/`), giao diện Storefront đến Admin để xử lý các trường hợp biên, đồng bộ ngôn ngữ thiết kế tối giản cao cấp và hiệu ứng mở/đóng cho toàn bộ popup trên website, cũng như tối ưu thao tác vận hành hằng ngày cho quản trị viên.
+- **Thay đổi chính**:
+  - **Backend (`server/orders.js`, `server/inventory.js`, `server/order-tracking.js`, `server/chat-knowledge.js`, `server/unsubscribe.js`)**:
+    - Chuẩn hóa biến thể SĐT (`0...`, `+0...`, `84...`, `+84...`) bằng `normalizeTrackingPhone`, mở rộng tìm mã đơn và bổ sung tìm theo tên khách hàng / tên sản phẩm không dấu khi Admin tìm kiếm trên máy chủ (`GET /api/admin-orders?q=`).
+    - Tính `available = Math.max(0, quantity - reserved)` trong `GET /api/inventory?lowStock=1` để cảnh báo sớm cả sản phẩm đang có nhiều đơn chờ giữ chỗ (giữ nguyên tương thích ngược khi `reserved = 0`), và hiển thị chi tiết trên `TodayTasks.jsx`.
+    - Bổ sung fallback an toàn trong `server/order-tracking.js` khi Firestore chưa tạo composite index cho truy vấn tra cứu theo SĐT.
+    - Thêm liên kết nhanh **Tra cứu đơn hàng** (`/tra-cuu-don-hang`) và **Chính sách đổi trả & bảo mật** (`/chinh-sach`) vào `buildChatKnowledge` và `guidedChatReply` của Chat AI.
+    - Nâng cấp trang xác nhận hủy đăng ký email (`/api/unsubscribe` `GET` & `POST`) thành giao diện thẻ HTML chuẩn thương hiệu ORORA, có `<meta name="viewport">` và nút quay về trang chủ.
+  - **Giao diện & UX Storefront (`src/components/CartSelectionDialog.jsx`, `src/components/ConsultationDialog.jsx`, `src/components/OrderForm.jsx`, `src/components/OrderTracking.jsx`, `src/components/ProductDetail.jsx`, `src/components/ShopCart.jsx`, `src/components/Extras.jsx`, `src/styles/shop-cart.css`, `src/styles/storefront-polish.css`)**:
+    - Nâng cấp popup **Chọn dung tích** (`CartSelectionDialog`) và **Tư vấn** (`ConsultationDialog`) sang thẻ trắng tinh khiết (`#ffffff`), viền `#ebe4e8`, đổ bóng sâu, nút CTA nổi bật và gắn hiệu ứng mở/đóng mượt từ nút bấm.
+    - Đồng bộ hiệu ứng mở/đóng từ tọa độ nút bấm (`motionSource` + `motionClosing`) cho **Form Đặt hàng / Đã nhận hàng** (`OrderForm`) và **Chi tiết đơn tra cứu** (`OrderTracking`).
+    - Xóa component `Footer` cũ không còn sử dụng trong `src/components/Extras.jsx`.
+  - **Giao diện & Quy trình Admin (`src/admin/MailWriter.jsx`, `src/admin/OrdersAdmin.jsx`, `src/admin/ProductsAdmin.jsx`, `src/admin/Dashboard.jsx`, `src/admin/AdminApp.jsx`, `src/admin/TodayTasks.jsx`, `src/admin/EmailExport.jsx`)**:
+    - Đồng bộ đủ 18 biến đơn hàng (`ORDER_TOKENS`) và hiển thị danh sách nhiều sản phẩm trong khung Xem trước thư thực tế của `MailWriter.jsx`.
+    - Thêm nút sao chép 1 chạm cho **Mã đơn**, **Số điện thoại** và **Địa chỉ giao hàng** trong modal Chi tiết đơn hàng Admin.
+    - Chuyển ảnh bảng sản phẩm trong `ProductsAdmin.jsx` sang thumbnail CDN (`cdnSrc(p.image, THUMB)`) kèm `loading="lazy" decoding="async"`.
+    - Nâng cấp thẻ thống kê trên `Dashboard.jsx` hiển thị số liệu vận hành (`Sản phẩm`, `Đơn chờ xác nhận`, `Đang xử lý & giao`, `Đơn hoàn tất`) có thể bấm để mở thẳng mục tương ứng; mặc định chọn sẵn `Email đã đăng ký` ở `EmailExport.jsx`.
+  - **Kiểm thử (`tests/order-flow-and-stock.test.js`)**:
+    - Thêm 3 unit test mới cho tìm đơn theo biến thể SĐT & tên không dấu, cảnh báo tồn kho có tính `reserved`, và liên kết nhanh Chat AI.
+- **File / khu vực liên quan**: `server/orders.js`, `server/inventory.js`, `server/order-tracking.js`, `server/chat-knowledge.js`, `server/unsubscribe.js`, `src/components/CartSelectionDialog.jsx`, `src/components/ConsultationDialog.jsx`, `src/components/OrderForm.jsx`, `src/components/OrderTracking.jsx`, `src/components/ProductDetail.jsx`, `src/components/ShopCart.jsx`, `src/components/Extras.jsx`, `src/styles/shop-cart.css`, `src/styles/storefront-polish.css`, `src/admin/MailWriter.jsx`, `src/admin/OrdersAdmin.jsx`, `src/admin/ProductsAdmin.jsx`, `src/admin/Dashboard.jsx`, `src/admin/AdminApp.jsx`, `src/admin/TodayTasks.jsx`, `src/admin/EmailExport.jsx`, `tests/order-flow-and-stock.test.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **261/261** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt (`140.2 kB` gzip).
+  - Playwright (`width-390`): **25/25** test đạt trên `qa/cart.spec.js`, `qa/cart-toggle.spec.js`, `qa/cart-settings.spec.js`, `qa/form-builder.spec.js`, `qa/shopping.spec.js`, `qa/tracking-layout.spec.js`, `qa/admin-appearance.spec.js`, `qa/audit-resilience.spec.js`.
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu hiện có; truy vấn tra cứu SĐT có fallback an toàn nếu chưa có composite index.
+
 ## 20/11/2026 — Đồng bộ hiệu ứng mở và đóng Giỏ hàng theo đúng hiệu ứng nút Chat AI
 
 - **Lý do**: Chủ website yêu cầu đồng bộ hiệu ứng khi mở và đóng giỏ hàng giống hệt hiệu ứng mở và đóng của nút Chat AI để trải nghiệm mượt mà, dứt khoát và đồng nhất trên toàn trang.

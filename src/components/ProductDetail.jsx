@@ -64,9 +64,11 @@ function ProductDetail({
   const pageRef = useRef(null);
   const mobileBuyRef = useRef(null);
   const [orderProductId, setOrderProductId] = useState(null);
+  const [orderSource, setOrderSource] = useState(null);
   const [purchaseSelection, setPurchaseSelection] = useState(null);
   const [lightbox, setLightbox] = useState(null);
   const [consultationOpen, setConsultationOpen] = useState(false);
+  const [consultationSource, setConsultationSource] = useState(null);
 
   const home = useHomeContent();
   const ps = preview && previewStyles
@@ -393,6 +395,7 @@ function ProductDetail({
               { boxShadow: `0 10px 26px color-mix(in srgb, ${pulseColor} 38%, transparent), 0 0 0 12px color-mix(in srgb, ${pulseColor} 0%, transparent)` },
             ], { duration: 420, easing: "cubic-bezier(0.22, 1, 0.36, 1)" });
           }
+          setOrderSource(btn.getBoundingClientRect().toJSON());
           setOrderProductId(product.id || product.slug);
         }}><ButtonIcon name="orderNow" defaultSize={16}/><span>{soldOut ? "Hết hàng" : (purchase.mobileBuyLabel?.trim() || (purchase.websiteLabel?.trim() && !["Đặt hàng trên website", "Đặt hàng ngay"].includes(purchase.websiteLabel.trim()) ? purchase.websiteLabel.trim() : "Mua ngay"))}</span><ButtonIcon name="orderArrow" defaultSize={15}/></button>
     </div>
@@ -599,12 +602,12 @@ function ProductDetail({
             )}
           {(preview || showZalo || showCall || (!contact.zalo && contact.email && contactSettings.showZalo !== false)) && (
             <div className={`product-contact-actions product-consultation ${selectedClass("pdContactActions")}`} aria-label="Tư vấn sản phẩm" data-builder-key={preview ? "pdContactActions" : undefined} onClick={preview ? select("pdContactActions") : undefined}>
-              <button type="button" className="purchase-website product-consultation-toggle" style={css("contactActions")} aria-haspopup="dialog" onClick={preview ? select("pdContactActions") : () => setConsultationOpen(true)}>
+              <button type="button" className="purchase-website product-consultation-toggle" style={css("contactActions")} aria-haspopup="dialog" onClick={preview ? select("pdContactActions") : (event) => { setConsultationSource(event.currentTarget.getBoundingClientRect().toJSON()); setConsultationOpen(true); }}>
                 <ButtonIcon name="consultation" defaultSize={17}/>
                 <span>{contactSettings.triggerLabel?.trim() || "Tư vấn"}</span>
                 <ButtonIcon name="consultationArrow" defaultSize={16}/>
               </button>
-              {!preview && consultationOpen && <ConsultationDialog onClose={() => setConsultationOpen(false)}>
+              {!preview && consultationOpen && <ConsultationDialog source={consultationSource} onClose={() => setConsultationOpen(false)}>
               {(preview || showZalo) && <a className="product-contact-primary" href={preview ? undefined : contact.zalo} target={preview ? undefined : "_blank"} rel="noreferrer" style={{ ...css("contactActions"), background: contactSettings.primaryBackground, borderColor: contactSettings.primaryBackground, color: contactSettings.primaryColor, ...(preview && contactSettings.showZalo === false ? { opacity: 0.4 } : {}) }}>{contactSettings.zaloLabel?.trim() || "Tư vấn qua Zalo"}</a>}
               {(preview || showCall) && <a href={preview ? undefined : contact.phone} style={{ ...css("contactActions"), background: contactSettings.secondaryBackground, color: contactSettings.secondaryColor, ...(preview && contactSettings.showCall === false ? { opacity: 0.4 } : {}) }}>{contactSettings.callLabel?.trim() || "Gọi tư vấn"}</a>}
               {!preview && !contact.zalo && contact.email && contactSettings.showZalo !== false && <a className="product-contact-primary" href={contact.email}>Liên hệ qua email</a>}
@@ -617,7 +620,7 @@ function ProductDetail({
                 {(preview || tiktokShop) && <a className="purchase-tiktok" href={preview ? undefined : tiktokShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.tiktokBackground, ...(purchase.tiktokBackground ? { color: "#fff" } : {}), ...toCss(purchase.tiktokStyle) }}><ButtonIcon name="tiktok" defaultSize={17}/><span className={selectedClass("pdTiktokText")} data-builder-key={preview ? "pdTiktokText" : undefined} onClick={preview ? select("pdTiktokText") : undefined}>{channelLabels.tiktokLabel}</span><svg className="purchase-external" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8" /></svg></a>}
               </div>
             )}
-            {!preview && acceptsWebsiteOrders && !soldOut && orderProductId === (product.id || product.slug) && createPortal(<OrderForm key={product.id || product.slug} product={product} home={home} selection={{ variantId, quantity: choice.quantity }} fromCart={incoming?.productId === product.id} onSelectionChange={changeSelection} onClose={() => setOrderProductId(null)} />, document.body)}
+            {!preview && acceptsWebsiteOrders && !soldOut && orderProductId === (product.id || product.slug) && createPortal(<OrderForm key={product.id || product.slug} product={product} motionSource={orderSource} home={home} selection={{ variantId, quantity: choice.quantity }} fromCart={incoming?.productId === product.id} onSelectionChange={changeSelection} onClose={() => setOrderProductId(null)} />, document.body)}
             {!pinBuyBar && mobileBuyBar}
           </section>
 

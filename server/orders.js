@@ -12,6 +12,7 @@ import { createHash } from "node:crypto";
 import { parseVndPrice, sameVndPrice, availablePaymentMethods, PAYMENT_LABELS } from "../src/lib/commerce.js";
 import { requireAdmin, resolveAdminPermissions } from "./admin-auth.js";
 import { rateLimitSalt, reserveBudgetOrAllow } from "./request-limits.js";
+import { normalizeTrackingPhone } from "../src/lib/order-tracking.js";
 
 const uuid = (value) => typeof value === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value);
 const hash = (value) => createHash("sha256").update(value).digest("hex");
@@ -236,28 +237,46 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
           return { id: doc.id, ...data, createdAt: millis(data.createdAt), updatedAt: millis(data.updatedAt) };
         };
         if (!historyOnly && !bounceOnly && rawQuery) {
+          const fold = (value) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/gi, "d").toLowerCase();
           const lookups = [];
           const upper = rawQuery.toUpperCase();
-          if (/^OW_[A-Z0-9_-]{2,40}$/i.test(upper)) {
+          if (/^[A-Z0-9_-]{3,40}$/i.test(upper)) {
             lookups.push(orders.where("code", "==", upper).limit(25).get());
           }
           if (rawQuery.includes("@")) {
             lookups.push(orders.where("customer.email", "==", rawQuery.toLowerCase()).limit(50).get());
           }
-          const digits = rawQuery.replace(/[\s().-]/g, "");
-          if (/^\+?\d{8,15}$/.test(digits)) {
-            lookups.push(orders.where("customer.phone", "==", digits).limit(50).get());
+          const normalizedPhone = normalizeTrackingPhone(rawQuery);
+          if (normalizedPhone) {
+            const variants = [normalizedPhone, `+${normalizedPhone}`];
+            if (normalizedPhone.startsWith("0") && [10, 11].includes(normalizedPhone.length)) {
+              variants.push(`84${normalizedPhone.slice(1)}`, `+84${normalizedPhone.slice(1)}`);
+            }
+            lookups.push(orders.where("customer.phone", "in", [...new Set(variants)]).limit(50).get());
           }
           if (uuid(rawQuery)) {
             lookups.push(orders.doc(rawQuery).get().then((snap) => ({ docs: snap.exists ? [snap] : [] })));
           }
-          if (!lookups.length) {
-            lookups.push(orders.where("code", "==", upper).limit(25).get());
-          }
-          const snaps = await Promise.all(lookups);
+          const snaps = lookups.length ? await Promise.all(lookups) : [];
           const found = new Map();
           for (const snap of snaps) {
             for (const doc of snap.docs || []) found.set(doc.id, formatOrderDoc(doc));
+          }
+          if (!found.size) {
+            const needle = fold(rawQuery);
+            const recent = await orders.orderBy("createdAt", "desc").limit(200).get();
+            for (const doc of recent.docs) {
+              const formatted = formatOrderDoc(doc);
+              const haystack = [
+                formatted.code,
+                formatted.customer?.name,
+                formatted.customer?.phone,
+                formatted.customer?.email,
+                formatted.product?.name,
+                ...(Array.isArray(formatted.items) ? formatted.items.map((item) => item?.name) : []),
+              ].map(fold).join(" ");
+              if (haystack.includes(needle)) found.set(doc.id, formatted);
+            }
           }
           const list = [...found.values()].sort((a, b) => b.createdAt - a.createdAt || a.id.localeCompare(b.id));
           return res.status(200).json({ orders: list, nextCursor: null, serverSearch: true });

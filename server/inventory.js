@@ -141,18 +141,25 @@ export function createInventoryHandler({ getDb, verifyToken, env = process.env }
         return res.status(200).json({ pending, nextCursor: page.docs.length === 100 ? page.docs.at(-1).id : null });
       }
       if (req.method === "GET" && req.query?.lowStock === "1") {
-        const lowSnap = await db.collection("inventory")
-          .where("quantity", "<=", LOW_STOCK_THRESHOLD)
-          .orderBy("quantity")
-          .limit(20)
-          .get();
-        const validDocs = lowSnap.docs.filter((doc) => Number.isSafeInteger(doc.data()?.quantity) && doc.data().quantity >= 0);
-        const prodRefs = validDocs.map((doc) => db.collection("products").doc(doc.id));
+        const invSnap = await db.collection("inventory").limit(200).get();
+        const lowDocs = invSnap.docs
+          .map((doc) => {
+            const data = doc.data() || {};
+            if (!validQuantity(data.quantity)) return null;
+            const reserved = Number.isSafeInteger(data.reserved) && data.reserved > 0 ? data.reserved : 0;
+            const available = Math.max(0, data.quantity - reserved);
+            if (available > LOW_STOCK_THRESHOLD) return null;
+            return { id: doc.id, quantity: data.quantity, reserved, available };
+          })
+          .filter(Boolean)
+          .sort((a, b) => a.available - b.available || a.quantity - b.quantity || a.id.localeCompare(b.id))
+          .slice(0, 20);
+        const prodRefs = lowDocs.map((entry) => db.collection("products").doc(entry.id));
         const prodDocs = !prodRefs.length ? [] : typeof db.getAll === "function" ? await db.getAll(...prodRefs) : await Promise.all(prodRefs.map((ref) => ref.get()));
-        const items = validDocs.flatMap((doc, index) => {
+        const items = lowDocs.flatMap((entry, index) => {
           const prod = prodDocs[index];
           if (!prod?.exists) return [];
-          return [{ id: doc.id, name: String(prod.data().name || ""), quantity: doc.data().quantity }];
+          return [{ id: entry.id, name: String(prod.data().name || ""), quantity: entry.quantity, ...(entry.reserved > 0 ? { reserved: entry.reserved, available: entry.available } : {}) }];
         });
         return res.status(200).json({ items });
       }

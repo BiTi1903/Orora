@@ -1,7 +1,7 @@
 import { useConfirm } from "./confirm-context";
 import { useEffect, useId, useRef, useState } from "react";
 import { auth } from "../lib/firebaseAuth";
-import { PAYMENT_LABELS, formatVnd } from "../lib/commerce";
+import { PAYMENT_LABELS, formatProductPrice, formatVnd } from "../lib/commerce";
 import { orderProductName } from "../lib/product-options";
 import { effectiveMailState } from "../lib/mail-state";
 import { orderRequest, MAIL_STATES } from "./order-api";
@@ -10,30 +10,54 @@ const ORDER_QUICK_TOKENS = [
   ["{{customerName}}", "Tên khách"],
   ["{{orderCode}}", "Mã đơn"],
   ["{{productName}}", "Sản phẩm"],
+  ["{{variantLabel}}", "Dung tích"],
   ["{{quantity}}", "Số lượng"],
+  ["{{unitPrice}}", "Đơn giá"],
   ["{{subtotal}}", "Tạm tính"],
   ["{{shippingFee}}", "Phí ship"],
   ["{{totalAmount}}", "Tổng tiền"],
   ["{{paymentMethod}}", "Thanh toán"],
+  ["{{paymentStatus}}", "TT thanh toán"],
   ["{{address}}", "Địa chỉ"],
   ["{{phone}}", "SĐT"],
+  ["{{email}}", "Email"],
+  ["{{note}}", "Ghi chú"],
+  ["{{createdAt}}", "Ngày đặt"],
   ["{{trackingUrl}}", "Link tra cứu"],
 ];
 
 function previewOrderVariables(text, order) {
   if (!text) return "";
+  const multiProductSummary = Array.isArray(order?.items) && order.items.length > 1
+    ? order.items.map((item) => `${orderProductName(item)} × ${item.quantity}`).join("; ")
+    : order?.product
+      ? orderProductName(order.product)
+      : "Gel dưỡng ORORA 100ml";
+  const unitPriceFormatted = order?.product
+    ? (order.product.unitPrice == null ? formatProductPrice(order.product.priceText) || "ORORA sẽ báo giá" : formatVnd(order.product.unitPrice))
+    : "250.000 đ";
+  const totalFormatted = order ? (order.totalAmount == null ? "ORORA sẽ xác nhận" : formatVnd(order.totalAmount)) : "280.000 đ";
+  const createdAtFormatted = order?.createdAt
+    ? new Date(order.createdAt).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })
+    : new Date().toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
   const map = {
     "{{customerName}}": order?.customer?.name || "Nguyễn Minh Anh",
     "{{orderCode}}": order?.code || "OW_1024C",
-    "{{productName}}": order?.product ? orderProductName(order.product) : "Gel dưỡng ORORA 100ml",
+    "{{productName}}": multiProductSummary,
+    "{{variantLabel}}": order?.product?.variantLabel || "100 ml",
     "{{quantity}}": String(order?.quantity ?? 1),
-    "{{subtotal}}": order?.subtotal != null ? formatVnd(order.subtotal) : "250.000 đ",
-    "{{shippingFee}}": order?.shippingFee != null ? formatVnd(order.shippingFee) : "30.000 đ",
-    "{{totalAmount}}": order?.totalAmount != null ? formatVnd(order.totalAmount) : "280.000 đ",
-    "{{total}}": order?.totalAmount != null ? formatVnd(order.totalAmount) : "280.000 đ",
+    "{{unitPrice}}": unitPriceFormatted,
+    "{{subtotal}}": order ? (order.subtotal == null ? "ORORA sẽ báo giá" : formatVnd(order.subtotal)) : "250.000 đ",
+    "{{shippingFee}}": order ? (order.shippingFee == null ? "ORORA sẽ xác nhận" : formatVnd(order.shippingFee)) : "30.000 đ",
+    "{{totalAmount}}": totalFormatted,
+    "{{total}}": totalFormatted,
     "{{paymentMethod}}": PAYMENT_LABELS[order?.paymentMethod] || "Thanh toán khi nhận hàng (COD)",
+    "{{paymentStatus}}": order?.paymentStatus === "paid" ? "Đã thanh toán" : "Chưa thanh toán",
     "{{address}}": order?.customer?.address || "12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh",
     "{{phone}}": order?.customer?.phone || "0901234567",
+    "{{email}}": order?.customer?.email || "khachhang@example.com",
+    "{{note}}": order?.customer?.note || "Không có",
+    "{{createdAt}}": createdAtFormatted,
     "{{trackingUrl}}": `${typeof window !== "undefined" ? window.location.origin : "https://ororavn.com"}/tra-cuu-don-hang`,
   };
   return Object.entries(map).reduce((acc, [token, val]) => acc.replaceAll(token, val), text);

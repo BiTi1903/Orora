@@ -62,14 +62,24 @@ export function createOrderTrackingHandler({ getDb, env = process.env, now = () 
       } else {
         const variants = [phone, `+${phone}`];
         if (phone.startsWith('0') && [10,11].includes(phone.length)) variants.push(`84${phone.slice(1)}`,`+84${phone.slice(1)}`);
-        let query = db.collection('orders').where('customer.phone','in',[...new Set(variants)]).orderBy('createdAt','desc').limit(21);
+        const uniqueVariants = [...new Set(variants)];
+        let cursorDoc = null;
         if (body.cursor) {
           const prior = await db.collection('orders').where('code','==',body.cursor).limit(5).get();
-          const cursor = prior.docs.find(doc => matchesPhone(doc.data()));
-          if (!cursor) throw failure(400,'Mốc tra cứu không hợp lệ. Vui lòng tra cứu lại.');
-          query = query.startAfter(cursor);
+          cursorDoc = prior.docs.find(doc => matchesPhone(doc.data())) || null;
+          if (!cursorDoc) throw failure(400,'Mốc tra cứu không hợp lệ. Vui lòng tra cứu lại.');
         }
-        documents = (await query.get()).docs;
+        try {
+          let query = db.collection('orders').where('customer.phone','in',uniqueVariants).orderBy('createdAt','desc').limit(21);
+          if (cursorDoc) query = query.startAfter(cursorDoc);
+          documents = (await query.get()).docs;
+        } catch (indexError) {
+          if (indexError?.code !== 9 && !/index|FAILED_PRECONDITION/i.test(String(indexError?.message || ''))) throw indexError;
+          const allDocs = (await db.collection('orders').where('customer.phone','in',uniqueVariants).get()).docs
+            .sort((a,b) => (timestamp(b.data().createdAt) || 0) - (timestamp(a.data().createdAt) || 0) || a.id.localeCompare(b.id));
+          const startAt = cursorDoc ? allDocs.findIndex(doc => doc.id === cursorDoc.id) + 1 : 0;
+          documents = startAt > 0 ? allDocs.slice(startAt, startAt + 21) : allDocs.slice(0, 21);
+        }
       }
       if (!documents.length && !body.cursor) return res.status(404).json({message:missing});
       const amount = value => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;

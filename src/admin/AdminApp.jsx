@@ -106,8 +106,11 @@ function AdminWorkspace({ user }) {
       return (
         <Dashboard
           pendingCount={notifications.snapshot?.pendingCount}
+          statusCounts={notifications.snapshot?.counts}
           revision={notifications.revision}
           onOpenOrder={(id) => { setPendingRequest({ id, allStatuses: true }); navigate("orders"); }}
+          onOpenOrders={(allStatuses = false) => { setPendingRequest({ allStatuses }); navigate("orders"); }}
+          onOpenProducts={() => navigate("products")}
           onOpenInventory={() => navigate("inventory")}
           onOpenAnalytics={() => navigate("analytics")}
         />

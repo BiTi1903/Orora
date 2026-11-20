@@ -16,6 +16,7 @@ import { useEffect, useRef, useState } from "react";
 import { explainError, getProducts, removeProduct, saveProduct, saveCategory, setProductCategory } from "../lib/api";
 import useCategories from "../hooks/useCategories";
 import ImageField from "./ImageField";
+import { cdnSrc, THUMB } from "../lib/image-cdn";
 
 const empty = {
   id: "", number: "", name: "", slug: "", price: "", image: "",
@@ -287,7 +288,7 @@ export default function ProductsAdmin() {
                 {visibleItems.map((p) => (
                   <tr key={p.id}>
                     <td>#{productNumber(p, items)}</td>
-                    <td>{p.image && <img className="admin-thumb" src={p.image} alt="" />}</td>
+                    <td>{p.image && <img className="admin-thumb" src={cdnSrc(p.image, THUMB)} alt="" loading="lazy" decoding="async" />}</td>
                     <td><strong>{p.name}</strong><a className="product-list-link" href={productPath(p, items)} target="_blank" rel="noopener noreferrer">Xem trên website</a></td>
                     <td>{formatProductPrice(p.price) || "Cần báo giá"}</td>
                     <td><span className={`admin-badge ${p.active === false ? "off" : ""}`}>{p.active === false ? "Ẩn" : "Hiện"}</span></td>

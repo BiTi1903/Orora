@@ -276,4 +276,52 @@ test("order mail templates accept {{trackingUrl}} and {{total}} tokens", async (
   assert.ok(rendered.text.includes("https://ororavn.com/tra-cuu-don-hang"));
 });
 
+test("admin order search matches +84/0 phone variants and accent-insensitive customer names", async () => {
+  const { placeHandler, adminOrdersHandler } = await seedOrderEnv();
+  const id = crypto.randomUUID();
+  const created = makeRes();
+  await placeHandler(makeReq({
+    auth: false,
+    body: {
+      requestId: id, productId: "p1", quantity: 1,
+      name: "Nguyễn Minh Ánh", phone: "+84912345678", email: "minhanh@example.com",
+      address: "123 Đường A, Quận 1, TP.HCM", paymentMethod: "cod", consent: true,
+    },
+  }), created);
+  assert.equal(created.statusCode, 201);
+
+  const byLocalPhone = makeRes();
+  await adminOrdersHandler(makeReq({ method: "GET", query: { q: "0912345678" } }), byLocalPhone);
+  assert.equal(byLocalPhone.statusCode, 200);
+  assert.equal(byLocalPhone.body.orders.length, 1);
+  assert.equal(byLocalPhone.body.orders[0].id, id);
+
+  const byName = makeRes();
+  await adminOrdersHandler(makeReq({ method: "GET", query: { q: "nguyen minh anh" } }), byName);
+  assert.equal(byName.statusCode, 200);
+  assert.equal(byName.body.orders.length, 1);
+  assert.equal(byName.body.orders[0].id, id);
+});
+
+test("GET /api/inventory?lowStock=1 accounts for reserved stock when computing available quantity", async () => {
+  const { db, inventoryHandler } = await seedOrderEnv();
+  await db.collection("inventory").doc("p1").set({ quantity: 10, reserved: 8, version: 2 });
+  const res = makeRes();
+  await inventoryHandler(makeReq({ method: "GET", query: { lowStock: "1" } }), res);
+  assert.equal(res.statusCode, 200);
+  const p1 = res.body.items.find((item) => item.id === "p1");
+  assert.deepEqual(p1, { id: "p1", name: "Gel", quantity: 10, reserved: 8, available: 2 });
+});
+
+test("Chat AI knowledge exposes tracking and policy quick links in guided replies", async () => {
+  const { buildChatKnowledge, guidedChatReply } = await import("../server/chat-knowledge.js");
+  const knowledge = buildChatKnowledge([], {});
+  assert.ok(knowledge.links.some((l) => l.id === "tracking" && l.href === "/tra-cuu-don-hang"));
+  assert.ok(knowledge.links.some((l) => l.id === "policy" && l.href === "/chinh-sach"));
+  const trackReply = guidedChatReply(knowledge, [{ role: "user", content: "Tôi muốn tra cứu đơn hàng" }]);
+  assert.ok(trackReply.links.some((l) => l.href === "/tra-cuu-don-hang"));
+  const policyReply = guidedChatReply(knowledge, [{ role: "user", content: "Chính sách đổi trả thế nào?" }]);
+  assert.ok(policyReply.links.some((l) => l.href === "/chinh-sach"));
+});
+
 

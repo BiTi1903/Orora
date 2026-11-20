@@ -235,7 +235,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
     </>}
     {selected && <ModalDialog title={`Đơn ${selected.code}`} className="admin-order-modal admin-order-fullscreen" onClose={() => { sequence.current.value++; setDetail(null); }}><article aria-busy={busy || detail.loading} className="admin-order-detail" aria-label={`Chi tiết đơn ${selected.code}`}>
       {notice && <p role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
-      <div className="order-detail-heading"><span className={`order-state-badge ${selected.status}`}>{STATUSES[selected.status] || selected.status}</span><span className="admin-muted">{date(selected.createdAt)}</span></div>
+      <div className="order-detail-heading"><span className={`order-state-badge ${selected.status}`}>{STATUSES[selected.status] || selected.status}</span><span className="admin-muted">{date(selected.createdAt)}</span><button type="button" className="admin-btn" style={{ marginLeft: "auto", minHeight: 30, padding: "4px 10px", fontSize: 12 }} onClick={() => { navigator.clipboard?.writeText(selected.code).then(() => setNotice({ text: `Đã sao chép mã đơn ${selected.code}.` })).catch(() => {}); }}>Sao chép mã đơn</button></div>
       <div className="admin-order-detail-columns">
         <div className="admin-order-detail-col">
           <div className="admin-detail-box">
@@ -276,6 +276,8 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
             {selected.customer.note && <p className="order-preserve-text">Ghi chú: {selected.customer.note}</p>}
             <div className="admin-actions" style={{ marginTop: 10 }}>
               {selected.customer.phone && <a className="admin-btn" href={`tel:${selected.customer.phone}`}>Gọi khách</a>}
+              {selected.customer.phone && <button type="button" className="admin-btn" onClick={() => { navigator.clipboard?.writeText(selected.customer.phone).then(() => setNotice({ text: `Đã sao chép SĐT ${selected.customer.phone}.` })).catch(() => {}); }}>Chép SĐT</button>}
+              {selected.customer.address && <button type="button" className="admin-btn" onClick={() => { navigator.clipboard?.writeText(selected.customer.address).then(() => setNotice({ text: "Đã sao chép địa chỉ giao hàng." })).catch(() => {}); }}>Chép địa chỉ</button>}
               <button type="button" className="admin-btn primary" disabled={detail.loading || !selected.customer.email} onClick={() => { setComposer({ orderId: selected.id }); sequence.current.value++; setDetail(null); }}>Gửi email riêng</button>
             </div>
           </div>

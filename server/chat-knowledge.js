@@ -24,6 +24,8 @@ export function buildChatKnowledge(records, home = {}, path = "") {
   const contact = contactLinks(home, "", home.productDetailStyles?.contactActions || {});
   const links = [
     home.sectionVisibility?.collection !== false && { id: "catalog", label: "Xem tất cả sản phẩm", href: "/#shop" },
+    { id: "tracking", label: "Tra cứu đơn hàng", href: "/tra-cuu-don-hang" },
+    { id: "policy", label: "Chính sách đổi trả & bảo mật", href: "/chinh-sach" },
     home.sectionVisibility?.about !== false && { id: "about", label: "Về ORORA", href: "/#about" },
     home.sectionVisibility?.footer !== false && { id: "contact", label: "Thông tin liên hệ", href: "/#contact" },
     contact.zalo && { id: "zalo", label: "Nhắn ORORA qua Zalo", href: contact.zalo },
@@ -68,9 +70,11 @@ export function guidedChatReply(knowledge, messages, notice = "") {
   let reply;
   if (/lien he|nhan vien|nguoi that|zalo|facebook|tiktok|hotline/.test(query)) {
     reply = { answer: human.length ? "Bạn có thể liên hệ trực tiếp với ORORA qua các kênh bên dưới để được hỗ trợ thêm." : "ORORA chưa cập nhật kênh liên hệ tại đây. Bạn có thể xem thông tin trên website.", linkIds: human, suggestions: ["Tôi muốn xem sản phẩm", "Hướng dẫn đặt hàng"] };
-  } else if (/giao hang|van chuyen|phi ship|mien phi|doi tra|thanh toan|dat hang|mua hang/.test(query)) {
-    const policies = knowledge.policies.filter((p) => /giao hang|van chuyen|doi tra|thanh toan/.test(searchText(p.title)));
-    reply = { answer: ["Để đặt hàng, mở sản phẩm, chọn dung tích và số lượng, rồi bấm Đặt hàng ngay để điền thông tin nhận hàng.", knowledge.shipping, knowledge.payments.length ? `Phương thức đang hỗ trợ: ${knowledge.payments.join("; ")}.` : "Website đang tạm ngưng nhận đơn trực tiếp.", ...policies.slice(0, 2).map((p) => `${p.title}: ${p.content}`)].join("\n\n"), productIds: chosen ? [chosen.id] : [], linkIds: ["catalog", ...human.slice(0, 1)], suggestions: ["Tìm sản phẩm phù hợp", "Liên hệ nhân viên ORORA"] };
+  } else if (/tra cuu|kiem tra don|tinh trang don|theo doi don|ma don/.test(query)) {
+    reply = { answer: "Bạn có thể kiểm tra tình trạng đơn hàng ngay tại trang Tra cứu đơn hàng bằng số điện thoại đặt hàng hoặc mã đơn kèm 4 số cuối điện thoại.", linkIds: ["tracking", ...human.slice(0, 1)], suggestions: ["Chính sách đổi trả & bảo mật", "Liên hệ nhân viên ORORA"] };
+  } else if (/giao hang|van chuyen|phi ship|mien phi|doi tra|bao mat|chinh sach|thanh toan|dat hang|mua hang/.test(query)) {
+    const policies = knowledge.policies.filter((p) => /giao hang|van chuyen|doi tra|thanh toan|bao mat/.test(searchText(p.title)));
+    reply = { answer: ["Để đặt hàng, mở sản phẩm, chọn dung tích và số lượng, rồi bấm Đặt hàng ngay để điền thông tin nhận hàng.", knowledge.shipping, knowledge.payments.length ? `Phương thức đang hỗ trợ: ${knowledge.payments.join("; ")}.` : "Website đang tạm ngưng nhận đơn trực tiếp.", ...policies.slice(0, 2).map((p) => `${p.title}: ${p.content}`)].join("\n\n"), productIds: chosen ? [chosen.id] : [], linkIds: ["policy", "tracking", "catalog", ...human.slice(0, 1)], suggestions: ["Tra cứu đơn hàng", "Liên hệ nhân viên ORORA"] };
   } else if (/cach (su )?dung|huong dan|su dung|hdsd/.test(query)) {
     const usage = chosen?.sections.filter((s) => s.group === "usage");
     reply = { answer: chosen ? usage.length ? `Hướng dẫn đã đăng cho ${chosen.name}:\n\n${usage.map((s) => s.content).join("\n\n")}` : `ORORA chưa đăng hướng dẫn sử dụng đầy đủ cho ${chosen.name}. Bạn có thể mở chi tiết hoặc liên hệ ORORA để được hướng dẫn đúng sản phẩm.` : "Bạn muốn xem cách sử dụng sản phẩm nào? Chọn một sản phẩm bên dưới hoặc nhập tên sản phẩm giúp mình nhé.", productIds: chosen ? [chosen.id] : ranked.slice(0, 3).map((p) => p.product.id), linkIds: chosen && !usage.length ? human.slice(0, 1) : [], suggestions: ["Xem thành phần sản phẩm", "Hướng dẫn đặt hàng"] };

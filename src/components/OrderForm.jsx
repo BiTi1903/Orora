@@ -10,7 +10,15 @@ import { shippingFeeFor } from "../lib/shipping";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { availablePaymentMethods, parseVndPrice } from "../lib/commerce";
 
-export default function OrderForm({ product, cartItems, home, onClose, selection, initialVariantId = "", initialQuantity = 1, onSelectionChange, fromCart = false }) {
+export default function OrderForm({ product, cartItems, home, onClose, selection, initialVariantId = "", initialQuantity = 1, onSelectionChange, fromCart = false, motionSource }) {
+  const [closing, setClosing] = useState(false);
+  const requestClose = useCallback(() => {
+    if (!motionSource || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      onClose?.();
+    } else {
+      setClosing(true);
+    }
+  }, [motionSource, onClose]);
   const isMulti = Array.isArray(cartItems) && cartItems.length > 1;
   const activeProduct = product || cartItems?.[0]?.product;
   const startVariantId = initialVariantId || (!isMulti && cartItems?.[0]?.variantId) || "";
@@ -62,10 +70,10 @@ export default function OrderForm({ product, cartItems, home, onClose, selection
     : (unitPrice === null ? null : unitPrice * (Number(quantity) || 0));
   const shipping = shippingFeeFor(home.shippingSettings, provinceCode, wardCode);
   const total = subtotal === null || shipping.fee === null ? null : subtotal + shipping.fee;
-  if (result?.code) return <ModalDialog key="success" title={appearance.receiptTitle?.trim() || CHECKOUT_RECEIPT_COPY.receiptTitle} onClose={onClose} className="order-success-modal" style={receiptModalStyle(appearance)} headingStyle={toCss(appearance.receiptTitleStyle, { responsive: true })}><OrderSuccessContent order={result} home={home} appearance={appearance} onClose={onClose} /></ModalDialog>;
+  if (result?.code) return <ModalDialog key="success" title={appearance.receiptTitle?.trim() || CHECKOUT_RECEIPT_COPY.receiptTitle} motionSource={motionSource} motionClosing={closing} onMotionClosed={onClose} onClose={requestClose} className="order-success-modal" style={receiptModalStyle(appearance)} headingStyle={toCss(appearance.receiptTitleStyle, { responsive: true })}><OrderSuccessContent order={result} home={home} appearance={appearance} onClose={requestClose} /></ModalDialog>;
   if (!activeProduct) return null;
   const titleStyle = toCss(appearance.formTitleStyle || appearance.formHeadingStyle, { responsive: true });
-  return <ModalDialog key="form" title={appearance.formLabels?.title?.trim() || CHECKOUT_COPY.title} onClose={onClose} closeDisabled={busy} className="order-form-modal" style={{ ...checkoutStyle(appearance), background: appearance.formBackground, borderColor: appearance.formBorderColor }} headingStyle={titleStyle}><OrderFormFields product={activeProduct} items={normalizedItems} subtotal={subtotal} options={isMulti ? [] : options} variantId={variantId} quantity={quantity} onVariantChange={changeVariant} onQuantityChange={changeQuantity} addresses={addresses} provinceCode={provinceCode} wardCode={wardCode} onProvinceChange={changeProvince} onWardChange={setWardCode} methods={methods} unitPrice={unitPrice} shipping={{ ...shipping, blocked: home.shippingSettings?.enabled === true && shipping.fee === null }} total={total} appearance={appearance} busy={busy} error={result?.error} onSubmit={async (event) => {
+  return <ModalDialog key="form" title={appearance.formLabels?.title?.trim() || CHECKOUT_COPY.title} motionSource={motionSource} motionClosing={closing} onMotionClosed={onClose} onClose={requestClose} closeDisabled={busy} className="order-form-modal" style={{ ...checkoutStyle(appearance), background: appearance.formBackground, borderColor: appearance.formBorderColor }} headingStyle={titleStyle}><OrderFormFields product={activeProduct} items={normalizedItems} subtotal={subtotal} options={isMulti ? [] : options} variantId={variantId} quantity={quantity} onVariantChange={changeVariant} onQuantityChange={changeQuantity} addresses={addresses} provinceCode={provinceCode} wardCode={wardCode} onProvinceChange={changeProvince} onWardChange={setWardCode} methods={methods} unitPrice={unitPrice} shipping={{ ...shipping, blocked: home.shippingSettings?.enabled === true && shipping.fee === null }} total={total} appearance={appearance} busy={busy} error={result?.error} onSubmit={async (event) => {
     event.preventDefault();
     if (submitting.current || busy || !methods.length || !provinceCode || !wardCode || (home.shippingSettings?.enabled === true && shipping.fee === null)) return;
     if (!isMulti && ((options.length > 0 && !variant) || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_ORDER_QUANTITY)) return;

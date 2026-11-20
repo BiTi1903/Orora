@@ -42,7 +42,10 @@ export default function TodayTasks({ onOpenOrder, onOpenInventory, revision }) {
       }
       setTasks({
         orders: [...items.values()].slice(0, 8),
-        stock: (inventory.value?.items || []).filter(item => Number.isInteger(item.quantity) && item.quantity >= 0 && item.quantity <= LOW_STOCK_THRESHOLD).slice(0, 6),
+        stock: (inventory.value?.items || []).filter(item => {
+          const avail = Number.isInteger(item.available) ? item.available : item.quantity;
+          return Number.isInteger(avail) && avail >= 0 && avail <= LOW_STOCK_THRESHOLD;
+        }).slice(0, 6),
         partial: [orders, history, inventory].some(result => result.status === 'rejected'),
       });
     });
@@ -60,6 +63,6 @@ export default function TodayTasks({ onOpenOrder, onOpenInventory, revision }) {
       <span>{order.reasons.join(' · ')}</span>
       {order.phone && <a href={`tel:${order.phone}`}>Gọi khách</a>}
     </li>)}</ul>}
-    {!!tasks?.stock.length && <div><h3>Sản phẩm sắp hết</h3><ul>{tasks.stock.map(item => <li key={item.id}>{item.name} · {item.quantity} trong kho</li>)}</ul><button type="button" className="admin-btn" onClick={onOpenInventory}>Mở kiểm kho</button></div>}
+    {!!tasks?.stock.length && <div><h3>Sản phẩm sắp hết</h3><ul>{tasks.stock.map(item => <li key={item.id}>{item.name} · {item.reserved > 0 ? `còn bán được ${item.available} (tồn ${item.quantity}, chờ ${item.reserved})` : `${item.quantity} trong kho`}</li>)}</ul><button type="button" className="admin-btn" onClick={onOpenInventory}>Mở kiểm kho</button></div>}
   </section>;
 }
