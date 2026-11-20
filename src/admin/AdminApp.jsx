@@ -7,6 +7,7 @@ import { newsletterRequest } from "./newsletter-api";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { auth, onAuthStateChanged, signOut } from "../lib/firebaseAuth";
 import AdminLogin from "./AdminLogin";
+import { clearAdminCache, prefetchAdminTab } from "./admin-cache";
 import "../styles/admin.css";
 
 const Dashboard = lazy(() => import("./Dashboard"));
@@ -184,7 +185,7 @@ function AdminWorkspace({ user }) {
             <div className="admin-nav-group" key={title || "main"} role="group" aria-label={title || undefined}>
               {title && <span className="admin-nav-title" aria-hidden="true">{title}</span>}
               {items.map(([key, label]) => (
-                <button key={key} aria-label={label} aria-describedby={key === "orders" && orderBadgeShown ? "admin-pending-order-count" : undefined} aria-current={tab === key ? "page" : undefined} className={tab === key ? "active" : ""} onClick={() => navigate(key)}>
+                <button key={key} aria-label={label} aria-describedby={key === "orders" && orderBadgeShown ? "admin-pending-order-count" : undefined} aria-current={tab === key ? "page" : undefined} className={tab === key ? "active" : ""} onPointerEnter={() => prefetchAdminTab(key)} onFocus={() => prefetchAdminTab(key)} onClick={() => navigate(key)}>
                   {label}{key === "orders" && <OrderBadge notifications={notifications} />}
                 </button>
               ))}
@@ -196,7 +197,7 @@ function AdminWorkspace({ user }) {
           <details className="admin-muted admin-uid"><summary>Mã tài khoản (UID)</summary><span>{user.uid}</span></details>
           <a href="/" target="_blank" rel="noopener noreferrer" className="admin-btn">Xem website</a>
           {signOutError && <p className="admin-error" role="alert">{signOutError}</p>}
-          <button className="admin-btn" onClick={async () => { if (!dirtyRegistry.hasChanges() || await confirm("Bạn có thay đổi chưa lưu. Đăng xuất và bỏ những thay đổi này?", { title: "Đăng xuất", confirmLabel: "Đăng xuất", danger: true })) { setSignOutError(""); try { await signOut(auth); } catch { setSignOutError("Chưa thể đăng xuất lúc này. Vui lòng thử lại."); } } }}>Đăng xuất</button>
+          <button className="admin-btn" onClick={async () => { if (!dirtyRegistry.hasChanges() || await confirm("Bạn có thay đổi chưa lưu. Đăng xuất và bỏ những thay đổi này?", { title: "Đăng xuất", confirmLabel: "Đăng xuất", danger: true })) { setSignOutError(""); try { clearAdminCache(); await signOut(auth); } catch { setSignOutError("Chưa thể đăng xuất lúc này. Vui lòng thử lại."); } } }}>Đăng xuất</button>
         </div>
       </aside>
 

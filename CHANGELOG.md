@@ -1,3 +1,20 @@
+## 20/11/2026 — Sắp xếp trực tiếp trên tiêu đề cột Đơn hàng và tải tức thì tab Đơn hàng, Kiểm kho, Email
+
+- **Lý do**: Quản trị viên muốn bấm trực tiếp vào từng tiêu đề cột trong bảng Đơn hàng để sắp xếp (bỏ hộp chọn `Sắp xếp đơn` thừa ở trên) và khắc phục tình trạng phải chờ tải lại từ đầu mỗi lần bấm vào các mục `Đơn hàng`, `Kiểm kho`, `Email`.
+- **Thay đổi chính**:
+  - **Sắp xếp trực tiếp trên tiêu đề cột (`src/admin/OrdersAdmin.jsx`, `src/styles/admin.css`)**:
+    - Bỏ dropdown `Sắp xếp đơn` trên thanh lọc.
+    - Chuyển toàn bộ 7 tiêu đề cột (`Mã đơn / Ngày đặt`, `Người mua`, `Sản phẩm`, `Giá trị đơn`, `Trạng thái`, `Thanh toán`, `Thư xác nhận`) thành nút bấm sắp xếp tăng/giảm trực tiếp kèm `aria-sort` và mũi tên chỉ hướng (`↑`/`↓`/`↕`).
+  - **Cache SWR & tải trước nền cho Admin (`src/admin/admin-cache.js`, `src/admin/AdminApp.jsx`, `src/admin/OrdersAdmin.jsx`, `src/admin/InventoryAdmin.jsx`, `src/admin/NewsletterAdmin.jsx`)**:
+    - Tạo bộ nhớ đệm in-memory dùng chung `src/admin/admin-cache.js` kèm chống gọi trùng (`dedupe`) cho `Đơn hàng`, `Kiểm kho`, `Email`.
+    - Tải trước nền (chỉ đọc GET + preload JS chunk) sau 500ms khi vào Admin và khi di chuột/focus vào nút menu bên trái; xóa cache khi đăng xuất.
+    - Khi bấm vào `Đơn hàng`, `Kiểm kho`, `Email`, dữ liệu đã tải hiện lên ngay lập tức và tự làm mới âm thầm ở nền; tách `ensureDefaultTemplates` sang chạy tối đa 1 lần mỗi phiên ở nền thay vì chặn hiển thị trang Email.
+- **File / khu vực liên quan**: `src/admin/admin-cache.js`, `src/admin/AdminApp.jsx`, `src/admin/OrdersAdmin.jsx`, `src/admin/InventoryAdmin.jsx`, `src/admin/NewsletterAdmin.jsx`, `src/styles/admin.css`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **263/263** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt (`136.84 kB` gzip).
+  - Playwright (`width-1440` & `width-390`): **24/24** test đạt trên `qa/admin-appearance.spec.js`, `qa/admin-navigation.spec.js`, `qa/audit-resilience.spec.js`.
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu.
+
 ## 20/11/2026 — Tinh gọn Tổng quan & Thống kê Admin; thiết kế lại nút Giỏ hàng, Tư vấn (Zalo/AI) và Mua ngay trên trang sản phẩm
 
 - **Lý do**:

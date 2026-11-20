@@ -2,37 +2,26 @@ import { useConfirm } from "./confirm-context";
 import useDraftGuard from "../hooks/useDraftGuard";
 import { productNumber, withProductIdentity } from "../lib/product-identity";
 import { useEffect, useState } from "react";
-import { auth } from "../lib/firebaseAuth";
-async function inventoryRequest(body, cursor, pending = false) {
-  const token = await auth?.currentUser?.getIdToken();
-  if (!token) throw new Error("Vui lòng đăng nhập lại.");
-  const response = await fetch(`/api/inventory?${new URLSearchParams({ ...(cursor ? { cursor } : {}), ...(pending ? { pending: "1" } : {}) })}`, { method: body ? "POST" : "GET", headers: { Authorization: `Bearer ${token}`, ...(body ? { "Content-Type": "application/json" } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
-  let result; try { result = await response.json(); } catch { throw new Error("Chưa kết nối được API Kiểm Hàng."); }
-  if (!response.ok) throw new Error(result.message || "Chưa cập nhật được Kiểm Hàng.");
-  return result;
-}
+import { fetchInventoryCached, getAdminCache, inventoryApiRequest, setAdminCache } from "./admin-cache";
 export default function InventoryAdmin() {
   const confirm = useConfirm();
-  const [pendingQuantities, setPendingQuantities] = useState({});
-  const [items, setItems] = useState([]); const [drafts, setDrafts] = useState({}); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(""); const [notice, setNotice] = useState(null); const [search, setSearch] = useState(""); const [version, setVersion] = useState(0);
+  const cached = getAdminCache("inventory");
+  const [pendingQuantities, setPendingQuantities] = useState(() => cached?.pendingQuantities || {});
+  const [items, setItems] = useState(() => cached?.items || []); const [drafts, setDrafts] = useState({}); const [loading, setLoading] = useState(() => !cached); const [saving, setSaving] = useState(""); const [notice, setNotice] = useState(null); const [search, setSearch] = useState(""); const [version, setVersion] = useState(0);
   const guard=useDraftGuard(null,{enabled:!loading,busy:Boolean(saving),dirty:Object.values(drafts).some(value=>String(value).trim()!=="")});
   useEffect(() => {
     let alive = true;
     async function load() {
-      setLoading(true); setNotice(null);
+      const hasCached = Boolean(getAdminCache("inventory"));
+      if (!hasCached) setLoading(true);
+      setNotice(null);
       try {
-        const all = new Map(); const seen = new Set(); let cursor;
-        do { const page = await inventoryRequest(null, cursor); page.items.forEach((item) => all.set(item.id, item)); cursor = page.nextCursor; if (cursor && seen.has(cursor)) throw new Error("Không tải đủ sản phẩm. Hãy tải lại."); if (cursor) seen.add(cursor); } while (cursor);
-        const list = [...all.values()];
-        const needsPendingScan = list.some((item) => !Number.isSafeInteger(item.reserved));
-        let pending = Object.create(null);
-        if (needsPendingScan) {
-          const seenPending = new Set(); let pCursor;
-          do { const page = await inventoryRequest(null, pCursor, true); for (const [id, quantity] of Object.entries(page.pending)) pending[id] = (pending[id] || 0) + quantity; pCursor = page.nextCursor; if (pCursor && seenPending.has(pCursor)) throw new Error("Không tải đủ hàng đang chờ. Hãy tải lại."); if (pCursor) seenPending.add(pCursor); } while (pCursor);
-        } else {
-          for (const item of list) pending[item.id] = item.reserved;
+        const data = await fetchInventoryCached({ force: version > 0 || hasCached });
+        if (alive) {
+          setItems(data.items);
+          setPendingQuantities(data.pendingQuantities);
+          if (version > 0 || !hasCached) setDrafts({});
         }
-        if (alive) { setItems(withProductIdentity(list)); setPendingQuantities(pending); setDrafts({}); }
       } catch (error) { if (alive) setNotice({ error: true, text: error.message }); }
       finally { if (alive) setLoading(false); }
     }
@@ -49,8 +38,12 @@ export default function InventoryAdmin() {
     let savedCount = 0;
     try {
       for (const entry of pendingDraftEntries) {
-        const result = await inventoryRequest({ id: entry.item.id, quantity: entry.quantity, version: entry.item.version });
-        setItems((current) => withProductIdentity(current.map((row) => row.id === entry.item.id ? { ...row, ...result.item } : row)));
+        const result = await inventoryApiRequest({ id: entry.item.id, quantity: entry.quantity, version: entry.item.version });
+        setItems((current) => {
+          const next = withProductIdentity(current.map((row) => row.id === entry.item.id ? { ...row, ...result.item } : row));
+          setAdminCache("inventory", { items: next, pendingQuantities });
+          return next;
+        });
         setDrafts((current) => { const next = { ...current }; delete next[entry.item.id]; return next; });
         savedCount += 1;
       }
@@ -71,7 +64,7 @@ export default function InventoryAdmin() {
       const value = drafts[item.id] ?? ""; const quantity = Number(value);
       if (!value.trim() || !Number.isSafeInteger(quantity) || quantity < 0 || quantity > 1_000_000_000) { setNotice({ error: true, text: "Nhập số lượng nguyên không âm." }); return; }
       setSaving(item.id); setNotice(null);
-      try { const result = await inventoryRequest({ id: item.id, quantity, version: item.version }); setItems((current) => withProductIdentity(current.map((entry) => entry.id === item.id ? { ...entry, ...result.item } : entry))); setDrafts((current) => { const next = { ...current }; delete next[item.id]; return next; }); setNotice({ text: `${result.item.name}: tồn kho ${result.item.quantity}.` }); }
+      try { const result = await inventoryApiRequest({ id: item.id, quantity, version: item.version }); setItems((current) => { const next = withProductIdentity(current.map((entry) => entry.id === item.id ? { ...entry, ...result.item } : entry)); setAdminCache("inventory", { items: next, pendingQuantities }); return next; }); setDrafts((current) => { const next = { ...current }; delete next[item.id]; return next; }); setNotice({ text: `${result.item.name}: tồn kho ${result.item.quantity}.` }); }
       catch (error) { setNotice({ error: true, text: error.message }); }
       finally { setSaving(""); }
     }}><input type="number" aria-label={`Số lượng tồn của ${item.name}`} min="0" max="1000000000" step="1" required placeholder={item.quantity === null ? "Nhập số lượng" : String(item.quantity)} value={drafts[item.id] ?? ""} disabled={Boolean(saving)} onChange={(event) => setDrafts((current) => ({ ...current, [item.id]: event.target.value }))} /><button className="admin-btn" aria-busy={saving === item.id} disabled={Boolean(saving) || drafts[item.id] === undefined}>{saving === item.id ? "Đang lưu…" : "Lưu"}</button></form></td></tr>)}</tbody></table>{!visible.length && <p className="admin-muted">Không có sản phẩm phù hợp.</p>}</div>}

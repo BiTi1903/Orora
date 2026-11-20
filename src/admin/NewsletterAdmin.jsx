@@ -9,6 +9,7 @@ import MailTemplatePicker from "./MailTemplatePicker";
 import { mailActorLabel, groupMailTemplates, templateReference } from "../lib/mail-templates";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { newsletterRequest as request } from "./newsletter-api";
+import { ensureNewsletterTemplatesOnce, fetchNewsletterCached, getAdminCache } from "./admin-cache";
 import useDraftGuard from "../hooks/useDraftGuard";
 
 const EMPTY = { subject: "", text: "" };
@@ -36,6 +37,7 @@ function ContactActions({ label, disabled, onApply }) {
 
 export default function NewsletterAdmin({ initialView = "contacts", viewRequest, onOpenOrderMail, onOpenExport }) {
   const confirm = useConfirm();
+  const cached = getAdminCache("newsletter");
   const [outlookCampaign, setOutlookCampaign] = useState(null);
   const [preview, setPreview] = useState(null);
   const [picker, setPicker] = useState(null);
@@ -50,15 +52,15 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
   const [recipientMode, setRecipientMode] = useState("selected");
   const [recipientIds, setRecipientIds] = useState([]);
   const [recipientSearch, setRecipientSearch] = useState("");
-  const [welcome, setWelcome] = useState(EMPTY);
-  const [savedWelcome, setSavedWelcome] = useState(EMPTY);
-  const [contacts, setContacts] = useState([]);
+  const [welcome, setWelcome] = useState(() => cached?.welcome || EMPTY);
+  const [savedWelcome, setSavedWelcome] = useState(() => cached?.welcome || EMPTY);
+  const [contacts, setContacts] = useState(() => cached?.contacts || []);
   const [selectedContacts, setSelectedContacts] = useState([]);
   const [contactFilter, setContactFilter] = useState("all");
   const [emailSearch, setEmailSearch] = useState("");
-  const [campaigns, setCampaigns] = useState([]);
-  const [cursor, setCursor] = useState(null);
-  const [ready, setReady] = useState(false);
+  const [campaigns, setCampaigns] = useState(() => cached?.campaigns || []);
+  const [cursor, setCursor] = useState(() => cached?.nextCursor ?? null);
+  const [ready, setReady] = useState(() => Boolean(cached));
   const [busy, setBusy] = useState(false);
   const [sending, setSending] = useState(false);
   const [notice, setNotice] = useState(null);
@@ -70,8 +72,8 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
     || (ready && (welcome.subject !== savedWelcome.subject || welcome.text !== savedWelcome.text));
   useDraftGuard({ writerDrafts, welcome }, { enabled: ready, busy: sending, dirty: hasUnsavedDrafts });
 
-  const load = useCallback(async () => {
-    const [data] = await Promise.all([request(), request({ action: "ensureDefaultTemplates" })]);
+  const load = useCallback(async ({ force = false } = {}) => {
+    const data = await fetchNewsletterCached({ force: force || Boolean(getAdminCache("newsletter")) });
     if (!alive.current) return;
     setContacts(data.contacts);
     setSelectedContacts([]);
@@ -80,6 +82,7 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
     setWelcome(data.welcome);
     setSavedWelcome(data.welcome);
     setReady(true);
+    ensureNewsletterTemplatesOnce();
   }, []);
 
   useEffect(() => {

@@ -16,7 +16,9 @@ import { useEffect, useRef, useState } from "react";
 import { PAYMENT_LABELS, formatProductPrice, formatVnd } from "../lib/commerce";
 import { effectiveMailState } from "../lib/mail-state";
 import { orderRequest, MAIL_STATES } from "./order-api";
+import { fetchOrdersCached, getAdminCache, setAdminCache } from "./admin-cache";
 const date = (value) => value ? new Date(value).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "—";
+const STATUS_RANK = { new: 0, confirmed: 1, shipping: 2, completed: 3, cancelled: 4 };
 const QUICK_STATUS_ACTIONS = {
   new: [["confirmed", "Xác nhận đơn", true], ["shipping", "Giao ngay", false], ["cancelled", "Hủy đơn", false]],
   confirmed: [["shipping", "Bắt đầu giao", true], ["completed", "Hoàn tất đơn", false], ["cancelled", "Hủy đơn", false]],
@@ -26,8 +28,11 @@ const QUICK_STATUS_ACTIONS = {
 };
 export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, refreshKey = 0, pendingRequest, onOrderChanged, statusCounts, canUseNewsletter = true }) {
   const confirm = useConfirm();
+  const cachedOrders = getAdminCache("orders");
   const [mailPreview, setMailPreview] = useState(null);
   const [filters, setFilters] = useState(EMPTY_ORDER_FILTERS);
+  const [sortCol, setSortCol] = useState("date");
+  const [sortDir, setSortDir] = useState("desc");
   const [customerEmail, setCustomerEmail] = useState("");
   const startAutomation = canUseNewsletter && initialMailDraft?.purpose === "automation";
   const [view, setView] = useState(startAutomation ? "automation" : "orders");
@@ -41,10 +46,10 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
   const [mailFilter, setMailFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState(pendingRequest && !pendingRequest.allStatuses ? "new" : "all");
   const [lastPendingRequest, setLastPendingRequest] = useState(pendingRequest);
-  const [orders, setOrders] = useState([]);
-  const [cursor, setCursor] = useState(null);
+  const [orders, setOrders] = useState(() => cachedOrders?.orders || []);
+  const [cursor, setCursor] = useState(() => cachedOrders?.nextCursor ?? null);
   const [busy, setBusy] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(() => Boolean(cachedOrders));
   const [notice, setNotice] = useState(null);
   const [detail, setDetail] = useState(null);
   const extended = useRef(false);
@@ -63,14 +68,16 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
   });
   useEffect(() => {
     let alive = true; const startedRevision = workRevision.current;
-    orderRequest().then((data) => {
+    fetchOrdersCached({ force: refreshKey > 0 || Boolean(getAdminCache("orders")) }).then((data) => {
       if (!alive) return;
       setOrders((items) => {
         // A background read must not overwrite a status/payment change in progress.
         const protectLoaded = working.current || startedRevision !== workRevision.current;
         const merged = new Map(items.map((item) => [item.id, item]));
         data.orders.forEach((item) => { if (!protectLoaded || !merged.has(item.id)) merged.set(item.id, item); });
-        return [...merged.values()].sort((a, b) => b.createdAt - a.createdAt || a.id.localeCompare(b.id));
+        const next = [...merged.values()].sort((a, b) => b.createdAt - a.createdAt || a.id.localeCompare(b.id));
+        setAdminCache("orders", { orders: next, nextCursor: extended.current ? cursor : data.nextCursor });
+        return next;
       });
       if (!extended.current) setCursor(data.nextCursor);
       setReady(true);
@@ -185,7 +192,37 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
     if (mailFilter === "unsent") return state === "none" || state === "pending";
     return true;
   };
-  const visibleOrders = filterOrderDetails(orders.filter((order) => matchesMail(order) && (statusFilter === "all" || order.status === statusFilter) && (!customerEmail || String(order.customer.email || "").trim().toLowerCase() === customerEmail) && [order.id, order.code, order.customer.name, order.customer.phone, order.customer.email, orderProductName(order.product)].some((value) => String(value || "").toLocaleLowerCase("vi").includes(query))), filters);
+  const toggleSort = (col) => {
+    if (sortCol === col) {
+      setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
+    } else {
+      setSortCol(col);
+      setSortDir(col === "date" || col === "amount" ? "desc" : "asc");
+    }
+  };
+  const filteredOrders = filterOrderDetails(orders.filter((order) => matchesMail(order) && (statusFilter === "all" || order.status === statusFilter) && (!customerEmail || String(order.customer.email || "").trim().toLowerCase() === customerEmail) && [order.id, order.code, order.customer.name, order.customer.phone, order.customer.email, orderProductName(order.product)].some((value) => String(value || "").toLocaleLowerCase("vi").includes(query))), filters);
+  const visibleOrders = [...filteredOrders].sort((a, b) => {
+    const dir = sortDir === "asc" ? 1 : -1;
+    const textCmp = (x, y) => String(x || "").localeCompare(String(y || ""), "vi", { sensitivity: "base" });
+    let diff = 0;
+    if (sortCol === "date") diff = (a.createdAt || 0) - (b.createdAt || 0);
+    else if (sortCol === "customer") diff = textCmp(a.customer?.name, b.customer?.name);
+    else if (sortCol === "product") diff = textCmp(orderProductName(a.product), orderProductName(b.product));
+    else if (sortCol === "amount") diff = (a.totalAmount ?? a.subtotal ?? -1) - (b.totalAmount ?? b.subtotal ?? -1);
+    else if (sortCol === "status") diff = (STATUS_RANK[a.status] ?? 99) - (STATUS_RANK[b.status] ?? 99);
+    else if (sortCol === "payment") diff = textCmp(orderPaymentLabel(a), orderPaymentLabel(b));
+    else if (sortCol === "mail") diff = textCmp(MAIL_STATES[effectiveMailState(a.confirmationMail)], MAIL_STATES[effectiveMailState(b.confirmationMail)]);
+    return diff !== 0 ? diff * dir : (b.createdAt - a.createdAt || a.id.localeCompare(b.id));
+  });
+  const sortColumns = [
+    ["date", "Mã đơn / Ngày đặt"],
+    ["customer", "Người mua"],
+    ["product", "Sản phẩm"],
+    ["amount", "Giá trị đơn"],
+    ["status", "Trạng thái"],
+    ["payment", "Thanh toán"],
+    ["mail", "Thư xác nhận"],
+  ];
   const filterKey = JSON.stringify([search, statusFilter, customerEmail, filters, mailFilter]);
   if (filterKey !== lastFilterKey) { setLastFilterKey(filterKey); setPage(1); }
   const pageCount = Math.max(1, Math.ceil(visibleOrders.length / 25));
@@ -198,7 +235,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
     ...(canUseNewsletter ? [["automation", "Thư tự động"]] : []),
   ];
   return <section aria-busy={busy}>
-    <div className="admin-top"><div><h1>Đơn hàng</h1><p className="admin-muted">Tìm đơn theo mã, SĐT hoặc email; bấm vào đơn để xử lý trạng thái, thanh toán và email trên một màn hình.</p></div>{view === "orders" && <button className="admin-btn" disabled={busy} onClick={() => perform(async () => { const data = await orderRequest(); extended.current = false; setOrders(data.orders); setCursor(data.nextCursor); setReady(true); onOrderChanged?.(); })}>Tải lại</button>}</div>
+    <div className="admin-top"><div><h1>Đơn hàng</h1><p className="admin-muted">Tìm đơn theo mã, SĐT hoặc email; bấm vào tiêu đề cột để sắp xếp nhanh.</p></div>{view === "orders" && <button className="admin-btn" disabled={busy} onClick={() => perform(async () => { const data = await fetchOrdersCached({ force: true }); extended.current = false; setOrders(data.orders); setCursor(data.nextCursor); setReady(true); onOrderChanged?.(); })}>Tải lại</button>}</div>
     <nav className="admin-section-tabs" aria-label="Các mục đơn hàng">{sectionTabs.map(([key, label]) => <button key={key} type="button" aria-current={view === key ? "page" : undefined} onClick={() => navigate(key)}>{label}</button>)}</nav>
     {view === "automation" && canUseNewsletter && <OrderEmails canUseNewsletter={canUseNewsletter} initialDraft={initialMailDraft?.purpose === "automation" ? initialMailDraft : null} onManageTemplates={onOpenEmailTemplates} />}
     {view === "history" && <OrderMailHistory refreshKey={mailRevision} onReuse={(draft, original) => setComposer({ draft, reused: true, original })} />}
@@ -210,7 +247,6 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
       <div className="admin-order-filter-bar">
         <div className="admin-field"><label htmlFor="order-search">Tìm đơn hàng</label><input id="order-search" type="search" placeholder="Mã đơn OW_..., SĐT, email hoặc tên" value={search} onChange={(event) => { setSearch(event.target.value); setCustomerEmail(""); }} onKeyDown={(event) => { if (event.key === "Enter" && search.trim()) { event.preventDefault(); searchOnServer(); } }} /></div>
         <div className="admin-field"><label htmlFor="order-filter-payment">Thanh toán</label><select id="order-filter-payment" value={filters.payment} onChange={(event) => setFilters({ ...filters, payment: event.target.value })}><option value="all">Tất cả thanh toán</option><option value="paid">Đã thanh toán</option><option value="unpaid">Chưa thu tiền</option></select></div>
-        <div className="admin-field"><label htmlFor="order-filter-sort">Sắp xếp đơn</label><select id="order-filter-sort" value={filters.sort} onChange={(event) => setFilters({ ...filters, sort: event.target.value })}><option value="newest">Mới nhất</option><option value="oldest">Cũ nhất</option><option value="amountDesc">Số tiền cao đến thấp</option><option value="amountAsc">Số tiền thấp đến cao</option></select></div>
         <div className="admin-actions order-mail-quick-filters" role="group" aria-label="Lọc nhanh email">
           {search.trim() && <button type="button" className="admin-btn" disabled={busy} onClick={() => searchOnServer()}>Tìm trên máy chủ</button>}
           {[["all","Mọi email"],["error","Mail lỗi"],["unsent","Chưa gửi mail"]].map(([id,label])=><button key={id} type="button" className={`admin-btn ${mailFilter===id?"primary":""}`} aria-pressed={mailFilter===id} onClick={()=>setMailFilter(id)}>{label}</button>)}
@@ -227,7 +263,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
       </details>
       {(invalidMoneyRange(filters.min, filters.max) || (filters.from && filters.to && filters.from > filters.to)) && <p className="admin-error" role="alert">Khoảng tiền hoặc khoảng ngày chưa hợp lệ.</p>}
       <p className="admin-muted">Hiển thị {visibleOrders.length} / {orders.length} đơn đã tải{cursor ? ". Nhập mã đơn/SĐT rồi bấm Enter để tìm trực tiếp trên máy chủ, hoặc bấm Tải thêm đơn ở cuối bảng." : "."}</p>
-      <div className="admin-card admin-order-list-scroll"><table className="admin-table"><thead><tr><th>Mã đơn / Ngày đặt</th><th>Người mua</th><th>Sản phẩm</th><th>Giá trị đơn</th><th>Trạng thái</th><th>Thanh toán</th><th>Thư xác nhận</th><th /></tr></thead><tbody>
+      <div className="admin-card admin-order-list-scroll"><table className="admin-table"><thead><tr>{sortColumns.map(([key, label]) => <th key={key} aria-sort={sortCol === key ? (sortDir === "asc" ? "ascending" : "descending") : "none"}><button type="button" className={`admin-sort-btn${sortCol === key ? " is-active" : ""}`} onClick={() => toggleSort(key)}><span>{label}</span><span className="admin-sort-icon" aria-hidden="true">{sortCol === key ? (sortDir === "asc" ? "↑" : "↓") : "↕"}</span></button></th>)}<th /></tr></thead><tbody>
         {pageOrders.map((order) => { const mailState = effectiveMailState(order.confirmationMail); return <tr key={order.id}><td data-label="Mã đơn"><strong>{order.code}</strong><br /><small>{date(order.createdAt)}</small></td><td data-label="Người mua">{order.customer.name}{order.customer.phone && <small className="order-summary-note"><a href={`tel:${order.customer.phone}`}>{order.customer.phone}</a></small>}</td><td data-label="Sản phẩm"><span>{orderProductName(order.product)}</span><small className="order-summary-note">SL: {order.quantity}</small></td><td data-label="Giá trị đơn">{order.totalAmount != null ? formatVnd(order.totalAmount) : order.subtotal != null ? <>{formatVnd(order.subtotal)}<small className="order-summary-note">Chưa chốt phí ship</small></> : "Cần báo giá"}</td><td data-label="Trạng thái"><span className={`order-state-badge ${order.status}`}>{STATUSES[order.status] || order.status}</span></td><td data-label="Thanh toán">{orderPaymentLabel(order)}</td><td data-label="Thư xác nhận"><span>{MAIL_STATES[mailState] || "Chưa có lịch sử"}</span>{order.customer?.email && ["failed", "unknown", "stuck"].includes(mailState) && <div className="admin-order-phone"><button type="button" className="admin-btn" disabled={busy} onClick={() => quickResendMail(order)}>{mailState === "stuck" ? "Gỡ kẹt mail" : "Gửi lại mail"}</button></div>}</td><td><button className="admin-btn" type="button" aria-label={`Xem đơn ${order.code}`} aria-expanded={selected?.id === order.id} onClick={() => showDetail(order)}>Xem chi tiết</button></td></tr>; })}
       </tbody></table>{!visibleOrders.length && <p className="admin-muted">{orders.length ? "Không có đơn phù hợp với bộ lọc." : "Chưa có đơn hàng."}</p>}</div>
       {pageCount > 1 && <div className="admin-pagination" aria-label="Phân trang đơn hàng"><span>Trang {activePage} / {pageCount} · {visibleOrders.length} đơn phù hợp</span><div className="admin-actions"><button type="button" className="admin-btn" disabled={activePage <= 1} onClick={() => setPage(activePage - 1)}>Trang trước</button><button type="button" className="admin-btn" disabled={activePage >= pageCount} onClick={() => setPage(activePage + 1)}>Trang sau</button></div></div>}

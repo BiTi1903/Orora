@@ -508,6 +508,11 @@
 .admin-preview-toolbar [role="switch"][aria-checked="true"] { color:var(--ad-surface); background:var(--a-deep); }
 .admin-preview-hidden { padding:24px; border:1px dashed var(--a-line); border-radius:var(--ad-r-lg); background:#fff7fa; color:var(--a-plum); }
 
+.admin-sort-btn { display:inline-flex; align-items:center; gap:5px; padding:2px 4px; margin:-2px -4px; border:0; border-radius:6px; background:transparent; color:inherit; font:inherit; letter-spacing:inherit; text-transform:inherit; cursor:pointer; white-space:nowrap; transition:color .14s ease, background .14s ease; }
+.admin-sort-btn:hover { color:var(--ad-primary); background:rgba(184,68,109,.06); }
+.admin-sort-btn.is-active { color:var(--ad-primary); }
+.admin-sort-icon { font-size:11px; opacity:.5; }
+.admin-sort-btn.is-active .admin-sort-icon, .admin-sort-btn:hover .admin-sort-icon { opacity:1; }
 .admin-overview-grid { margin-bottom:20px; }
 .admin-overview-grid .admin-stat { text-align:left; cursor:pointer; transition:border-color .16s ease, box-shadow .16s ease, transform .16s ease; }
 .admin-overview-grid .admin-stat:hover { border-color:var(--ad-line-rose); box-shadow:0 6px 16px rgba(58,22,40,.06); transform:translateY(-1px); }
