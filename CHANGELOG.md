@@ -1,3 +1,24 @@
+## 20/11/2026 — Chuẩn hóa quy trình tìm/lọc/sắp xếp đơn từ server, thao tác nhanh trạng thái, xem trước biến email và bỏ quét toàn bộ đơn
+
+- **Lý do**: Rà soát thao tác vận hành thực tế theo chuẩn quản trị thương mại điện tử phát hiện các điểm chưa hợp lý: tìm/lọc trạng thái đơn chỉ chạy trên 50 đơn mới nhất ở trình duyệt, ô Sắp xếp bị giấu trong Bộ lọc nâng cao, bảng đơn thiếu cột Sản phẩm, chưa có nút hành động 1 chạm cho bước xử lý tiếp theo, chưa có xem trước thư sau khi ghép biến `{{...}}`, hai tab Khách hàng & Lịch sử email tự động quét toàn bộ đơn khi mở, và còn tab trung gian dư thừa.
+- **Thay đổi chính**:
+  - **Tìm đơn & lọc trạng thái trực tiếp trên server (`server/orders.js`, `src/admin/OrdersAdmin.jsx`, `tests/order-flow-and-stock.test.js`)**:
+    - Bổ sung `GET /api/admin-orders?q=...` (tra trực tiếp theo mã đơn `OW_...`, SĐT, email hoặc ID đơn bằng single-field index mặc định của Firestore) và `GET /api/admin-orders?status=...` (lấy đúng các đơn theo trạng thái đang chọn kể cả đơn cũ nằm ngoài 50 đơn mới nhất).
+    - Đưa dropdown **Sắp xếp đơn** và **Thanh toán** lên thẳng thanh công cụ chính cạnh ô tìm kiếm; bấm `Enter` hoặc nút **Tìm trên máy chủ** để tra thẳng trong toàn bộ database.
+  - **Bảng đơn rõ sản phẩm & Nút thao tác nhanh 1 chạm (`src/admin/OrdersAdmin.jsx`)**:
+    - Bổ sung cột **Sản phẩm** (tên + dung tích + số lượng) ngay trên bảng danh sách đơn, bỏ 2 nút `Gọi` / `Sao chép số` lặp lại trên từng dòng (giữ link `tel:` gọn sạch và nút gọi trong chi tiết đơn).
+    - Thêm thanh nút hành động bước tiếp theo nổi bật ngay trong Chi tiết đơn (`Xác nhận đơn`, `Giao ngay` / `Bắt đầu giao`, `Hoàn tất đơn`, `Hủy đơn`).
+  - **Xem trước thư thực tế trong `MailWriter` (`src/admin/MailWriter.jsx`)**:
+    - Bổ sung khối **Xem trước thư thực tế** tự động thay các biến `{{customerName}}`, `{{orderCode}}`, `{{productName}}`, `{{quantity}}`, `{{subtotal}}`, `{{shippingFee}}`, `{{totalAmount}}`, `{{paymentMethod}}`, `{{address}}`, `{{phone}}` bằng dữ liệu của đơn đang chọn (hoặc dữ liệu minh họa khi sửa mẫu tự động).
+  - **Chặn quét vô hạn toàn bộ đơn & Dọn tab dư thừa (`src/admin/OrderMailHistory.jsx`, `src/admin/OrderCustomers.jsx`, `src/admin/OrdersAdmin.jsx`, `src/admin/ProductsAdmin.jsx`)**:
+    - Thay vòng lặp tự quét toàn bộ database ở `OrderMailHistory` và `OrderCustomers` bằng tải 1 trang gần nhất (20/50 đơn) kèm nút **Tải thêm từ đơn cũ hơn** khi cần.
+    - Bỏ 2 tab trung gian chỉ chứa nút chuyển trang: `Chữ trang tra cứu` trong Đơn hàng và `Kênh mua hàng` trong Sản phẩm -> Thiết lập dùng chung (cả 2 đã có sẵn ở mục `Cửa hàng`).
+- **File / khu vực liên quan**: `server/orders.js`, `src/admin/OrdersAdmin.jsx`, `src/admin/MailWriter.jsx`, `src/admin/OrderMailHistory.jsx`, `src/admin/OrderCustomers.jsx`, `src/admin/ProductsAdmin.jsx`, `tests/order-flow-and-stock.test.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **256/256** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt.
+  - Playwright: **14/14** test `qa/admin-appearance.spec.js` đạt trên cả mobile (`390px`) và desktop (`1440px`), cùng **5/5** test `qa/admin-confirm.spec.js` và `qa/admin-navigation.spec.js` đạt.
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay index; các truy vấn `?q=` và `?status=` đều dùng single-field index mặc định của Firestore.
+
 ## 20/11/2026 — Đại tu giao diện Admin theo phong cách vận hành phẳng, gọn quy trình và giảm lag
 
 - **Lý do**: Chủ website phản ánh giao diện quản trị đang bị lag, có các hiệu ứng/bóng đổ không cần thiết, đồng thời một số màn hình chính (Đơn hàng, Gửi mail, Sản phẩm, Visual Builder) có bố cục dàn trải hoặc tải ẩn quá nhiều DOM/dữ liệu gây chậm khi thao tác.

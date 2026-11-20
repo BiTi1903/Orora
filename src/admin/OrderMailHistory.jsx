@@ -17,39 +17,46 @@ export default function OrderMailHistory({ onReuse, refreshKey = 0 }) {
   const [kind, setKind] = useState("all");
   const [state, setState] = useState("all");
   const [version, setVersion] = useState(0);
+  const [nextCursor, setNextCursor] = useState(null);
   const [visibleCount, setVisibleCount] = useState(30);
   useEffect(() => {
     let alive = true;
     async function load() {
-      setBusy(true); setError(""); setCount(0); setMails([]); setSelected(null); setTemplateFilter("all");
-      const items = new Map(); const seen = new Set(); let cursor; let scanned = 0;
+      setBusy(true); setError(""); setCount(0); setMails([]); setSelected(null); setTemplateFilter("all"); setNextCursor(null);
       try {
-        do {
-          const page = await orderRequest(null, { mailHistory: "1", ...(cursor ? { cursor } : {}) });
-          if (!alive) return;
-          page.mails.forEach((mail) => items.set(mail.id, mail)); scanned += page.scannedOrders;
-          setCount(scanned); setMails([...items.values()].sort((a, b) => b.createdAt - a.createdAt || a.id.localeCompare(b.id)));
-          cursor = page.nextCursor;
-          if (cursor && seen.has(cursor)) throw new Error("Không tải đủ lịch sử. Vui lòng tải lại.");
-          if (cursor) seen.add(cursor);
-        } while (cursor);
+        const page = await orderRequest(null, { mailHistory: "1" });
+        if (!alive) return;
+        setCount(page.scannedOrders || 0);
+        setMails([...(page.mails || [])].sort((a, b) => b.createdAt - a.createdAt || a.id.localeCompare(b.id)));
+        setNextCursor(page.nextCursor || null);
       } catch (cause) { if (alive) setError(cause.message); }
       finally { if (alive) setBusy(false); }
     }
     load(); return () => { alive = false; };
   }, [version, refreshKey]);
+  const loadMoreOrders = async () => {
+    if (!nextCursor || busy) return;
+    setBusy(true); setError("");
+    try {
+      const page = await orderRequest(null, { mailHistory: "1", cursor: nextCursor });
+      setCount((c) => c + (page.scannedOrders || 0));
+      setMails((current) => [...new Map([...current, ...(page.mails || [])].map((mail) => [mail.id, mail])).values()].sort((a, b) => b.createdAt - a.createdAt || a.id.localeCompare(b.id)));
+      setNextCursor(page.nextCursor || null);
+    } catch (cause) { setError(cause.message); }
+    finally { setBusy(false); }
+  };
   const { templates, byMail } = groupMailTemplates(mails);
   const query = search.trim().toLowerCase();
   const filtered = mails.filter((mail) => (templateFilter === "all" || byMail.get(mail.id)?.id === templateFilter) && (kind === "all" || (kind === "manual" ? mail.manual : !mail.manual)) && (state === "all" || effectiveMailState(mail) === state) && [mail.recipient, mail.orderId, mail.orderCode, mail.subject, mail.templateName, mail.customerName, mail.actorName, mail.actorEmail, mail.actor].some((value) => String(value || "").toLowerCase().includes(query)));
   return <div>
-    <div className="admin-top"><div><h2>Lịch sử email đơn hàng</h2><p className="admin-muted">Hiển thị tối đa 50 lượt gửi mới nhất mỗi đơn. Thư xác nhận mua hàng tự động và thư gửi riêng từ tài khoản đăng nhập, tách khỏi thư gửi danh sách đăng ký.</p></div><button className="admin-btn" aria-busy={busy} disabled={busy} onClick={() => { setVisibleCount(30); setVersion((value) => value + 1); }}>Tải lại lịch sử thư</button></div>
+    <div className="admin-top"><div><h2>Lịch sử email đơn hàng</h2><p className="admin-muted">Mặc định tải 20 đơn gần nhất để tránh chậm máy; bấm Tải thêm nếu cần tra các đơn cũ hơn.</p></div><button className="admin-btn" aria-busy={busy} disabled={busy} onClick={() => { setVisibleCount(30); setVersion((value) => value + 1); }}>Tải lại lịch sử thư</button></div>
     <div className="admin-form-grid order-mail-history-filters">
       <div className="admin-field"><label htmlFor="order-mail-history-search">Tìm thư đơn hàng</label><input id="order-mail-history-search" type="search" placeholder="Email, mã/ID đơn, tên khách hoặc tiêu đề" value={search} onChange={(event) => { setSearch(event.target.value); setVisibleCount(30); }} /></div>
       <div className="admin-field"><label htmlFor="order-mail-history-kind">Cách gửi</label><select id="order-mail-history-kind" value={kind} onChange={(event) => { setKind(event.target.value); setVisibleCount(30); }}><option value="all">Tất cả cách gửi</option><option value="manual">Gửi bởi tài khoản</option><option value="automatic">Tự động khi đặt hàng</option></select></div>
       <div className="admin-field"><label htmlFor="order-mail-history-state">Kết quả gửi</label><select id="order-mail-history-state" value={state} onChange={(event) => { setState(event.target.value); setVisibleCount(30); }}><option value="all">Tất cả kết quả</option>{Object.entries(MAIL_STATES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
     <div className="admin-field"><label htmlFor="order-mail-template-filter">Lọc mẫu thư</label><select id="order-mail-template-filter" className="mail-template-select" value={templateFilter} onChange={(event) => { setTemplateFilter(event.target.value); setVisibleCount(30); }}><option value="all">Tất cả mẫu thư</option>{templates.map((template) => <option key={template.id} value={template.id}>{template.label} · {template.count} lượt gửi</option>)}</select></div>
     </div>
-    <p className="admin-muted" role="status">{busy ? `Đang tải lịch sử… Đã kiểm tra ${count} đơn.` : `Có ${filtered.length} thư phù hợp · Đã kiểm tra ${count} đơn.`}</p>
+    <p className="admin-muted" role="status">{busy ? `Đang tải lịch sử… Đã kiểm tra ${count} đơn.` : `Có ${filtered.length} thư phù hợp · Đã kiểm tra ${count} đơn gần nhất.`}</p>
     {error && <p className="admin-error" role="alert">{error} Lịch sử đang hiển thị chưa đầy đủ.</p>}
 
     <>
@@ -63,7 +70,10 @@ export default function OrderMailHistory({ onReuse, refreshKey = 0 }) {
       {onReuse && <button className="admin-btn" onClick={() => { onReuse(selected.template.message, selected.template.original); setSelected(null); }}>Soạn thư mới từ bản này</button>}
     </MailPreviewDialog>}
     {!busy && !error && !filtered.length && <p className="admin-muted">Chưa có thư đơn hàng phù hợp.</p>}
-    {filtered.length > visibleCount && <button className="admin-btn" onClick={() => setVisibleCount((value) => value + 30)}>Hiển thị thêm thư</button>}
+    <div className="admin-actions" style={{ marginTop: 10 }}>
+      {filtered.length > visibleCount && <button className="admin-btn" onClick={() => setVisibleCount((value) => value + 30)}>Hiển thị thêm thư</button>}
+      {nextCursor && <button className="admin-btn" disabled={busy} onClick={loadMoreOrders}>Tải thêm từ đơn cũ hơn</button>}
+    </div>
     <p className="admin-muted">“Đã nhận” chưa bảo đảm thư vào hộp thư khách. Mở “Xem thư” để Check hoặc dùng lại nội dung. Chỉ gồm thư gửi từ website.</p>
   </div>;
 }

@@ -228,6 +228,45 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
       if (req.method === "GET") {
         const historyOnly = req.query?.mailHistory === "1";
         const bounceOnly = req.query?.mailBounceSummary === "1";
+        const rawQuery = typeof req.query?.q === "string" ? req.query.q.trim() : "";
+        const rawStatus = typeof req.query?.status === "string" ? req.query.status.trim() : "";
+        const formatOrderDoc = (doc) => {
+          const { requestHash: _private, ...data } = doc.data();
+          void _private;
+          return { id: doc.id, ...data, createdAt: millis(data.createdAt), updatedAt: millis(data.updatedAt) };
+        };
+        if (!historyOnly && !bounceOnly && rawQuery) {
+          const lookups = [];
+          const upper = rawQuery.toUpperCase();
+          if (/^OW_[A-Z0-9_-]{2,40}$/i.test(upper)) {
+            lookups.push(orders.where("code", "==", upper).limit(25).get());
+          }
+          if (rawQuery.includes("@")) {
+            lookups.push(orders.where("customer.email", "==", rawQuery.toLowerCase()).limit(50).get());
+          }
+          const digits = rawQuery.replace(/[\s().-]/g, "");
+          if (/^\+?\d{8,15}$/.test(digits)) {
+            lookups.push(orders.where("customer.phone", "==", digits).limit(50).get());
+          }
+          if (uuid(rawQuery)) {
+            lookups.push(orders.doc(rawQuery).get().then((snap) => ({ docs: snap.exists ? [snap] : [] })));
+          }
+          if (!lookups.length) {
+            lookups.push(orders.where("code", "==", upper).limit(25).get());
+          }
+          const snaps = await Promise.all(lookups);
+          const found = new Map();
+          for (const snap of snaps) {
+            for (const doc of snap.docs || []) found.set(doc.id, formatOrderDoc(doc));
+          }
+          const list = [...found.values()].sort((a, b) => b.createdAt - a.createdAt || a.id.localeCompare(b.id));
+          return res.status(200).json({ orders: list, nextCursor: null, serverSearch: true });
+        }
+        if (!historyOnly && !bounceOnly && rawStatus && ORDER_STATUSES.includes(rawStatus)) {
+          const page = await orders.where("status", "==", rawStatus).limit(100).get();
+          const list = page.docs.map(formatOrderDoc).sort((a, b) => b.createdAt - a.createdAt || a.id.localeCompare(b.id));
+          return res.status(200).json({ orders: list, nextCursor: null });
+        }
         const pageSize = historyOnly || bounceOnly ? 20 : 50;
         let query = orders.orderBy("createdAt", "desc").limit(pageSize);
         if (req.query?.cursor) {
@@ -252,11 +291,7 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
           }));
           return res.status(200).json({ mails: await resolveMailActors(histories.flat(), lookupUser), scannedOrders: page.docs.length, nextCursor: page.docs.length === pageSize ? page.docs.at(-1).id : null });
         }
-        return res.status(200).json({ orders: page.docs.map((doc) => {
-          const { requestHash: _private, ...data } = doc.data();
-          void _private;
-          return { id: doc.id, ...data, createdAt: millis(data.createdAt), updatedAt: millis(data.updatedAt) };
-        }), nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
+        return res.status(200).json({ orders: page.docs.map(formatOrderDoc), nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
       }
       const body = readBody(req, env, 40000);
       if (body.action === "checkOrderOutlook") {

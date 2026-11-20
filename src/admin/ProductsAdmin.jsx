@@ -12,7 +12,6 @@ import ProductPoliciesSettings from "./ProductPoliciesSettings";
 import ProductReviewsEditor from "./ProductReviewsEditor";
 import ProductContentEditor from "./ProductContentEditor";
 import { productSections, productSectionGroup, PRODUCT_CONTENT_GROUPS, secondaryProductImages } from "../lib/product-content";
-import StoreSettingsLink from "./StoreSettingsLink";
 import { useEffect, useRef, useState } from "react";
 import { explainError, getProducts, removeProduct, saveProduct, saveCategory, setProductCategory } from "../lib/api";
 import useCategories from "../hooks/useCategories";
@@ -26,7 +25,6 @@ const empty = {
 };
 
 const SHARED_SETTINGS = [
-  ['links','Kênh mua hàng','Link Facebook, TikTok và phương thức thanh toán.'],
   ['policies','Cam kết & chính sách','Nội dung cam kết hiển thị cạnh phần mua hàng.'],
   ['categories','Danh mục','Thêm hoặc đổi tên nhóm sản phẩm.'],
   ['slogan','Slogan','Nội dung, kiểu chữ và khung Slogan.'],
@@ -61,7 +59,7 @@ export default function ProductsAdmin() {
   const uploadState = (id, value) => setUploads((current) => ({ ...current, [id]: value }));
   const patchSection = (id, patch) => setSections((current) => current.map((item) => item.id === id ? { ...item, ...patch } : item));
   const [view, setView] = useState("products");
-  const [sharedPanel,setSharedPanel]=useState("links");
+  const [sharedPanel,setSharedPanel]=useState("policies");
   const [editorPanel, setEditorPanel] = useState("basics");
   const editorRef = useRef(null);
   const changePanel = (key) => { setEditorPanel(key); requestAnimationFrame(() => editorRef.current?.scrollIntoView({ block: "start", behavior: "auto" })); };
@@ -196,7 +194,6 @@ export default function ProductsAdmin() {
       <div className="product-shared-header"><div><h2>Thiết lập dùng chung</h2><p className="admin-muted">Chọn nhóm bên dưới để chỉnh. Mỗi nhóm có nút lưu riêng.</p></div><button type="button" className="admin-btn" onClick={()=>setView("products")}>← Danh sách sản phẩm</button></div>
       <div className="product-shared-layout"><nav className="product-shared-nav" aria-label="Nhóm thiết lập dùng chung">{SHARED_SETTINGS.map(([id,title,description])=><button type="button" key={id} aria-pressed={sharedPanel===id} onClick={()=>setSharedPanel(id)}><strong>{title}</strong><small>{description}</small></button>)}</nav><div className="product-shared-panels">
 
-      {sharedPanel === "links" && <section aria-label="Kênh mua hàng và liên hệ" className="product-shared-panel"><StoreSettingsLink section="links"/></section>}
       {sharedPanel === "policies" && <section aria-label="Cam kết và chính sách" className="product-shared-panel"><ProductPoliciesSettings /></section>}
       {sharedPanel === "categories" && <section aria-label="Danh mục sản phẩm" className="product-shared-panel">
       {categoriesError && <div className="admin-error">Không tải được danh mục: {explainError(categoriesError)}</div>}

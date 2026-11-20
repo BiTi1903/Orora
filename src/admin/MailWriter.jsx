@@ -1,6 +1,8 @@
 import { useConfirm } from "./confirm-context";
 import { useEffect, useId, useRef, useState } from "react";
 import { auth } from "../lib/firebaseAuth";
+import { PAYMENT_LABELS, formatVnd } from "../lib/commerce";
+import { orderProductName } from "../lib/product-options";
 import { effectiveMailState } from "../lib/mail-state";
 import { orderRequest, MAIL_STATES } from "./order-api";
 
@@ -16,6 +18,24 @@ const ORDER_QUICK_TOKENS = [
   ["{{address}}", "Địa chỉ"],
   ["{{phone}}", "SĐT"],
 ];
+
+function previewOrderVariables(text, order) {
+  if (!text) return "";
+  const map = {
+    "{{customerName}}": order?.customer?.name || "Nguyễn Minh Anh",
+    "{{orderCode}}": order?.code || "OW_1024C",
+    "{{productName}}": order?.product ? orderProductName(order.product) : "Gel dưỡng ORORA 100ml",
+    "{{quantity}}": String(order?.quantity ?? 1),
+    "{{subtotal}}": order?.subtotal != null ? formatVnd(order.subtotal) : "250.000 đ",
+    "{{shippingFee}}": order?.shippingFee != null ? formatVnd(order.shippingFee) : "30.000 đ",
+    "{{totalAmount}}": order?.totalAmount != null ? formatVnd(order.totalAmount) : "280.000 đ",
+    "{{total}}": order?.totalAmount != null ? formatVnd(order.totalAmount) : "280.000 đ",
+    "{{paymentMethod}}": PAYMENT_LABELS[order?.paymentMethod] || "Thanh toán khi nhận hàng (COD)",
+    "{{address}}": order?.customer?.address || "12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh",
+    "{{phone}}": order?.customer?.phone || "0901234567",
+  };
+  return Object.entries(map).reduce((acc, [token, val]) => acc.replaceAll(token, val), text);
+}
 
 export default function MailWriter({ mode, onModeChange, value, onChange, onChooseTemplate, request, onApply, onSendPrivate, privateRecipients, privateSendLabel, privateSendDisabled, disabled, allowedModes = ["welcome_auto", "order_auto", "private"], title = "Viết Thư", initialOrderId = "", purpose = "combined", onSent }) {
   const confirm = useConfirm();
@@ -73,14 +93,23 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
           {onChooseTemplate && <div className="admin-actions"><button type="button" className="admin-btn" onClick={onChooseTemplate}>Chọn mẫu từ Mẫu Thư</button></div>}
           <div className="admin-field"><label htmlFor={`${fieldId}-writer-subject`}>Tiêu đề thư</label><input id={`${fieldId}-writer-subject`} required maxLength={200} value={value.subject} onChange={(event) => onChange({ subject: event.target.value, text: value.text })} /></div>
           <div className="admin-field"><label htmlFor={`${fieldId}-writer-text`}>Nội dung thư</label><textarea id={`${fieldId}-writer-text`} required rows={11} maxLength={20000} value={value.text} onChange={(event) => onChange({ subject: value.subject, text: event.target.value })} /></div>
-          {mode === "order_auto" && <div className="admin-detail-box">
-            <h3>Chèn nhanh thông tin đơn hàng</h3>
-            <div className="mail-token-bar">
-              {ORDER_QUICK_TOKENS.map(([token, label]) => (
-                <button type="button" className="mail-token-chip" key={token} title={token} onClick={() => insertToken(token)}>+ {label}</button>
-              ))}
+          {mode === "order_auto" && <>
+            <div className="admin-detail-box">
+              <h3>Chèn nhanh thông tin đơn hàng</h3>
+              <div className="mail-token-bar">
+                {ORDER_QUICK_TOKENS.map(([token, label]) => (
+                  <button type="button" className="mail-token-chip" key={token} title={token} onClick={() => insertToken(token)}>+ {label}</button>
+                ))}
+              </div>
             </div>
-          </div>}
+            <details className="admin-filter-panel">
+              <summary>Xem trước thư thực tế{selectedOrder ? ` (${selectedOrder.code})` : " (dữ liệu minh họa)"}</summary>
+              <div className="admin-detail-box" style={{ marginTop: 8 }}>
+                <p><strong>Tiêu đề:</strong> {previewOrderVariables(value.subject, selectedOrder)}</p>
+                <p style={{ whiteSpace: "pre-wrap", marginTop: 6 }}>{previewOrderVariables(value.text, selectedOrder)}</p>
+              </div>
+            </details>
+          </>}
         </div>
 
         <div className="mail-writer-side">

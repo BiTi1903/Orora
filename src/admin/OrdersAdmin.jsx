@@ -1,6 +1,5 @@
 import { NEXT_ORDER_STATUSES } from "../lib/order-flow";
 import { useConfirm } from "./confirm-context";
-import StoreSettingsLink from "./StoreSettingsLink";
 import { ORDER_STATUSES as STATUSES } from "../lib/order-tracking";
 import { orderProductName } from "../lib/product-options";
 import OrderActivity from "./OrderActivity";
@@ -18,7 +17,14 @@ import { PAYMENT_LABELS, formatProductPrice, formatVnd } from "../lib/commerce";
 import { effectiveMailState } from "../lib/mail-state";
 import { orderRequest, MAIL_STATES } from "./order-api";
 const date = (value) => value ? new Date(value).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "—";
-export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, refreshKey = 0, pendingRequest, onOrderChanged, statusCounts, canEditStore = true, canUseNewsletter = true }) {
+const QUICK_STATUS_ACTIONS = {
+  new: [["confirmed", "Xác nhận đơn", true], ["shipping", "Giao ngay", false], ["cancelled", "Hủy đơn", false]],
+  confirmed: [["shipping", "Bắt đầu giao", true], ["completed", "Hoàn tất đơn", false], ["cancelled", "Hủy đơn", false]],
+  shipping: [["completed", "Hoàn tất đơn", true], ["cancelled", "Hủy đơn", false]],
+  completed: [["cancelled", "Hủy đơn (khách trả hàng)", false]],
+  cancelled: [],
+};
+export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, refreshKey = 0, pendingRequest, onOrderChanged, statusCounts, canUseNewsletter = true }) {
   const confirm = useConfirm();
   const [mailPreview, setMailPreview] = useState(null);
   const [filters, setFilters] = useState(EMPTY_ORDER_FILTERS);
@@ -50,6 +56,11 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
     if (pendingRequest) { setView("orders"); setStatusFilter(pendingRequest?.allStatuses ? "all" : "new"); setSearch(""); setCustomerEmail(""); setFilters(EMPTY_ORDER_FILTERS); setMailFilter("all"); }
   }
   useEffect(() => { const tracker = sequence.current; return () => { tracker.value++; }; }, []);
+  const mergeOrders = (incoming) => setOrders((items) => {
+    const merged = new Map(items.map((item) => [item.id, item]));
+    incoming.forEach((item) => merged.set(item.id, item));
+    return [...merged.values()].sort((a, b) => b.createdAt - a.createdAt || a.id.localeCompare(b.id));
+  });
   useEffect(() => {
     let alive = true; const startedRevision = workRevision.current;
     orderRequest().then((data) => {
@@ -66,6 +77,14 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
     }).catch((error) => { if (alive) setNotice({ error: true, text: error.message }); });
     return () => { alive = false; };
   }, [refreshKey]);
+  useEffect(() => {
+    if (statusFilter === "all") return;
+    const controller = new AbortController();
+    orderRequest(null, { status: statusFilter }, { signal: controller.signal }).then((data) => {
+      if (!controller.signal.aborted && Array.isArray(data?.orders)) mergeOrders(data.orders);
+    }).catch(() => {});
+    return () => controller.abort();
+  }, [statusFilter]);
   useEffect(() => {
     if (!pendingRequest?.allStatuses || !pendingRequest.id) return;
     const requestId = ++sequence.current.value;
@@ -85,6 +104,19 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
     try { await work(); }
     catch (error) { setNotice({ error: true, text: error.message }); }
     finally { working.current = false; workRevision.current++; setBusy(false); }
+  };
+  const searchOnServer = (raw = search) => {
+    const keyword = String(raw || "").trim();
+    if (!keyword) return;
+    perform(async () => {
+      const data = await orderRequest(null, { q: keyword });
+      if (Array.isArray(data?.orders) && data.orders.length) {
+        mergeOrders(data.orders);
+        setNotice({ text: `Tìm thấy ${data.orders.length} đơn khớp trên máy chủ.` });
+      } else {
+        setNotice({ text: "Không tìm thấy thêm đơn nào trên máy chủ theo mã đơn / SĐT / email này." });
+      }
+    });
   };
   const showDetail = async (order) => {
     const current = ++sequence.current.value;
@@ -164,12 +196,10 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
     ["customers", "Khách hàng"],
     ["history", "Lịch sử email"],
     ...(canUseNewsletter ? [["automation", "Thư tự động"]] : []),
-    ...(canEditStore ? [["tracking", "Chữ trang tra cứu"]] : []),
   ];
   return <section aria-busy={busy}>
-    <div className="admin-top"><div><h1>Đơn hàng</h1><p className="admin-muted">Chọn một đơn để xem thông tin người mua, thanh toán, trạng thái và email trên cùng một màn hình.</p></div>{view === "orders" && <button className="admin-btn" disabled={busy} onClick={() => perform(async () => { const data = await orderRequest(); extended.current = false; setOrders(data.orders); setCursor(data.nextCursor); setReady(true); onOrderChanged?.(); })}>Tải lại</button>}</div>
+    <div className="admin-top"><div><h1>Đơn hàng</h1><p className="admin-muted">Tìm đơn theo mã, SĐT hoặc email; bấm vào đơn để xử lý trạng thái, thanh toán và email trên một màn hình.</p></div>{view === "orders" && <button className="admin-btn" disabled={busy} onClick={() => perform(async () => { const data = await orderRequest(); extended.current = false; setOrders(data.orders); setCursor(data.nextCursor); setReady(true); onOrderChanged?.(); })}>Tải lại</button>}</div>
     <nav className="admin-section-tabs" aria-label="Các mục đơn hàng">{sectionTabs.map(([key, label]) => <button key={key} type="button" aria-current={view === key ? "page" : undefined} onClick={() => navigate(key)}>{label}</button>)}</nav>
-    {view === "tracking" && canEditStore && <StoreSettingsLink section="tracking"/>}
     {view === "automation" && canUseNewsletter && <OrderEmails canUseNewsletter={canUseNewsletter} initialDraft={initialMailDraft?.purpose === "automation" ? initialMailDraft : null} onManageTemplates={onOpenEmailTemplates} />}
     {view === "history" && <OrderMailHistory refreshKey={mailRevision} onReuse={(draft, original) => setComposer({ draft, reused: true, original })} />}
     {view === "customers" && <OrderCustomers onViewOrders={(email, allOrders) => { extended.current = true; setOrders(allOrders); setCursor(null); setSearch(email); setFilters(EMPTY_ORDER_FILTERS); setMailFilter("all"); setCustomerEmail(email); setStatusFilter("all"); sequence.current.value++; setDetail(null); setReady(true); setView("orders"); }} />}
@@ -178,32 +208,27 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
     {!ready ? <p className="admin-muted">Đang tải dữ liệu đơn hàng…</p> : <>
       <div className="order-status-tabs" role="group" aria-label="Lọc trạng thái đơn hàng">{[["all", "Tất cả"], ...Object.entries(STATUSES)].map(([key, label]) => <button key={key} type="button" aria-pressed={statusFilter === key} onClick={() => setStatusFilter(key)}>{label}<span>{statusCounts?.[key] ?? (key === "all" ? orders.length : orders.filter((order) => order.status === key).length)}</span></button>)}</div>
       <div className="admin-order-filter-bar">
-        <div className="admin-field"><label htmlFor="order-search">Tìm đơn hàng</label><input id="order-search" type="search" placeholder="Mã/ID đơn, tên, điện thoại hoặc email" value={search} onChange={(event) => { setSearch(event.target.value); setCustomerEmail(""); }} /></div>
+        <div className="admin-field"><label htmlFor="order-search">Tìm đơn hàng</label><input id="order-search" type="search" placeholder="Mã đơn OW_..., SĐT, email hoặc tên" value={search} onChange={(event) => { setSearch(event.target.value); setCustomerEmail(""); }} onKeyDown={(event) => { if (event.key === "Enter" && search.trim()) { event.preventDefault(); searchOnServer(); } }} /></div>
+        <div className="admin-field"><label htmlFor="order-filter-payment">Thanh toán</label><select id="order-filter-payment" value={filters.payment} onChange={(event) => setFilters({ ...filters, payment: event.target.value })}><option value="all">Tất cả thanh toán</option><option value="paid">Đã thanh toán</option><option value="unpaid">Chưa thu tiền</option></select></div>
+        <div className="admin-field"><label htmlFor="order-filter-sort">Sắp xếp đơn</label><select id="order-filter-sort" value={filters.sort} onChange={(event) => setFilters({ ...filters, sort: event.target.value })}><option value="newest">Mới nhất</option><option value="oldest">Cũ nhất</option><option value="amountDesc">Số tiền cao đến thấp</option><option value="amountAsc">Số tiền thấp đến cao</option></select></div>
         <div className="admin-actions order-mail-quick-filters" role="group" aria-label="Lọc nhanh email">
+          {search.trim() && <button type="button" className="admin-btn" disabled={busy} onClick={() => searchOnServer()}>Tìm trên máy chủ</button>}
           {[["all","Mọi email"],["error","Mail lỗi"],["unsent","Chưa gửi mail"]].map(([id,label])=><button key={id} type="button" className={`admin-btn ${mailFilter===id?"primary":""}`} aria-pressed={mailFilter===id} onClick={()=>setMailFilter(id)}>{label}</button>)}
+          {(search || customerEmail || statusFilter !== "all" || mailFilter !== "all" || Object.keys(EMPTY_ORDER_FILTERS).some((key) => filters[key] !== EMPTY_ORDER_FILTERS[key])) && <button type="button" className="admin-btn" onClick={() => { setFilters(EMPTY_ORDER_FILTERS); setSearch(""); setCustomerEmail(""); setStatusFilter("all"); setMailFilter("all"); }}>Xóa bộ lọc</button>}
         </div>
-        {(search || customerEmail || statusFilter !== "all" || mailFilter !== "all" || Object.keys(EMPTY_ORDER_FILTERS).some((key) => filters[key] !== EMPTY_ORDER_FILTERS[key])) && <button type="button" className="admin-btn" onClick={() => { setFilters(EMPTY_ORDER_FILTERS); setSearch(""); setCustomerEmail(""); setStatusFilter("all"); setMailFilter("all"); }}>Xóa bộ lọc</button>}
       </div>
       {mailFilter === "error" && <p className="admin-muted">Mail bị trả lại chỉ hiện với các đơn gần đây đã kiểm tra Outlook.</p>}
-      <details className="admin-filter-panel"><summary>Bộ lọc nâng cao{Object.keys(EMPTY_ORDER_FILTERS).some((key) => filters[key] !== EMPTY_ORDER_FILTERS[key]) ? " · Đang áp dụng" : ""}</summary>
+      <details className="admin-filter-panel"><summary>Bộ lọc nâng cao{(filters.min || filters.max || filters.from || filters.to || filters.method !== "all") ? " · Đang áp dụng" : ""}</summary>
         <div className="admin-form-grid">
           {[["min", "Từ số tiền (đ)"], ["max", "Đến số tiền (đ)"]].map(([key, label]) => <div className="admin-field" key={key}><label htmlFor={`order-filter-${key}`}>{label}</label><input id={`order-filter-${key}`} type="number" min="0" step="1" value={filters[key]} onChange={(event) => setFilters({ ...filters, [key]: event.target.value })} /></div>)}
           {[["from", "Từ ngày đặt"], ["to", "Đến ngày đặt"]].map(([key, label]) => <div className="admin-field" key={key}><label htmlFor={`order-filter-${key}`}>{label}</label><input id={`order-filter-${key}`} type="date" value={filters[key]} onChange={(event) => setFilters({ ...filters, [key]: event.target.value })} /></div>)}
-          <div className="admin-field"><label htmlFor="order-filter-payment">Thanh toán</label><select id="order-filter-payment" value={filters.payment} onChange={(event) => setFilters({ ...filters, payment: event.target.value })}><option value="all">Tất cả thanh toán</option><option value="paid">Đã thanh toán</option><option value="unpaid">Chưa thu tiền</option></select></div>
           <div className="admin-field"><label htmlFor="order-filter-method">Phương thức thanh toán</label><select id="order-filter-method" value={filters.method} onChange={(event) => setFilters({ ...filters, method: event.target.value })}><option value="all">Tất cả phương thức</option>{Object.entries(PAYMENT_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
-          <div className="admin-field"><label htmlFor="order-filter-sort">Sắp xếp đơn</label><select id="order-filter-sort" value={filters.sort} onChange={(event) => setFilters({ ...filters, sort: event.target.value })}><option value="newest">Mới nhất</option><option value="oldest">Cũ nhất</option><option value="amountDesc">Số tiền cao đến thấp</option><option value="amountAsc">Số tiền thấp đến cao</option></select></div>
         </div>
       </details>
       {(invalidMoneyRange(filters.min, filters.max) || (filters.from && filters.to && filters.from > filters.to)) && <p className="admin-error" role="alert">Khoảng tiền hoặc khoảng ngày chưa hợp lệ.</p>}
-      <p className="admin-muted">Hiển thị {visibleOrders.length} / {orders.length} đơn đã tải{cursor ? ". Bấm Tải thêm đơn ở cuối bảng để xem đơn cũ hơn." : "."}</p>
-      <div className="admin-card admin-order-list-scroll"><table className="admin-table"><thead><tr><th>Mã đơn / Ngày đặt</th><th>Người mua</th><th>Giá trị đơn</th><th>Trạng thái</th><th>Thanh toán</th><th>Thư xác nhận</th><th /></tr></thead><tbody>
-        {pageOrders.map((order) => { const mailState = effectiveMailState(order.confirmationMail); return <tr key={order.id}><td data-label="Mã đơn"><strong>{order.code}</strong><br /><small>{date(order.createdAt)}</small></td><td data-label="Người mua">{order.customer.name}<small className="order-summary-note">{order.customer.phone}</small>{order.customer.phone&&<div className="admin-order-phone">
-          <a className="admin-btn" href={`tel:${order.customer.phone}`}>Gọi</a>
-          <button type="button" className="admin-btn" aria-label={`Sao chép số điện thoại đơn ${order.code}`} onClick={async ()=>{
-            try { await navigator.clipboard.writeText(order.customer.phone); setNotice({text:"Đã sao chép số điện thoại."}); }
-            catch { setNotice({error:true,text:"Chưa sao chép được số điện thoại."}); }
-          }}>Sao chép số</button>
-        </div>}</td><td data-label="Giá trị đơn">{order.totalAmount != null ? formatVnd(order.totalAmount) : order.subtotal != null ? <>{formatVnd(order.subtotal)}<small className="order-summary-note">Chưa chốt phí ship</small></> : "Cần báo giá"}</td><td data-label="Trạng thái"><span className={`order-state-badge ${order.status}`}>{STATUSES[order.status] || order.status}</span></td><td data-label="Thanh toán">{orderPaymentLabel(order)}</td><td data-label="Thư xác nhận"><span>{MAIL_STATES[mailState] || "Chưa có lịch sử"}</span>{order.customer?.email && ["failed", "unknown", "stuck"].includes(mailState) && <div className="admin-order-phone"><button type="button" className="admin-btn" disabled={busy} onClick={() => quickResendMail(order)}>{mailState === "stuck" ? "Gỡ kẹt mail" : "Gửi lại mail"}</button></div>}</td><td><button className="admin-btn" type="button" aria-label={`Xem đơn ${order.code}`} aria-expanded={selected?.id === order.id} onClick={() => showDetail(order)}>Xem chi tiết</button></td></tr>; })}
+      <p className="admin-muted">Hiển thị {visibleOrders.length} / {orders.length} đơn đã tải{cursor ? ". Nhập mã đơn/SĐT rồi bấm Enter để tìm trực tiếp trên máy chủ, hoặc bấm Tải thêm đơn ở cuối bảng." : "."}</p>
+      <div className="admin-card admin-order-list-scroll"><table className="admin-table"><thead><tr><th>Mã đơn / Ngày đặt</th><th>Người mua</th><th>Sản phẩm</th><th>Giá trị đơn</th><th>Trạng thái</th><th>Thanh toán</th><th>Thư xác nhận</th><th /></tr></thead><tbody>
+        {pageOrders.map((order) => { const mailState = effectiveMailState(order.confirmationMail); return <tr key={order.id}><td data-label="Mã đơn"><strong>{order.code}</strong><br /><small>{date(order.createdAt)}</small></td><td data-label="Người mua">{order.customer.name}{order.customer.phone && <small className="order-summary-note"><a href={`tel:${order.customer.phone}`}>{order.customer.phone}</a></small>}</td><td data-label="Sản phẩm"><span>{orderProductName(order.product)}</span><small className="order-summary-note">SL: {order.quantity}</small></td><td data-label="Giá trị đơn">{order.totalAmount != null ? formatVnd(order.totalAmount) : order.subtotal != null ? <>{formatVnd(order.subtotal)}<small className="order-summary-note">Chưa chốt phí ship</small></> : "Cần báo giá"}</td><td data-label="Trạng thái"><span className={`order-state-badge ${order.status}`}>{STATUSES[order.status] || order.status}</span></td><td data-label="Thanh toán">{orderPaymentLabel(order)}</td><td data-label="Thư xác nhận"><span>{MAIL_STATES[mailState] || "Chưa có lịch sử"}</span>{order.customer?.email && ["failed", "unknown", "stuck"].includes(mailState) && <div className="admin-order-phone"><button type="button" className="admin-btn" disabled={busy} onClick={() => quickResendMail(order)}>{mailState === "stuck" ? "Gỡ kẹt mail" : "Gửi lại mail"}</button></div>}</td><td><button className="admin-btn" type="button" aria-label={`Xem đơn ${order.code}`} aria-expanded={selected?.id === order.id} onClick={() => showDetail(order)}>Xem chi tiết</button></td></tr>; })}
       </tbody></table>{!visibleOrders.length && <p className="admin-muted">{orders.length ? "Không có đơn phù hợp với bộ lọc." : "Chưa có đơn hàng."}</p>}</div>
       {pageCount > 1 && <div className="admin-pagination" aria-label="Phân trang đơn hàng"><span>Trang {activePage} / {pageCount} · {visibleOrders.length} đơn phù hợp</span><div className="admin-actions"><button type="button" className="admin-btn" disabled={activePage <= 1} onClick={() => setPage(activePage - 1)}>Trang trước</button><button type="button" className="admin-btn" disabled={activePage >= pageCount} onClick={() => setPage(activePage + 1)}>Trang sau</button></div></div>}
       {cursor && <button className="admin-btn" disabled={busy} onClick={() => perform(async () => { extended.current = true; const data = await orderRequest(null, { cursor }); setOrders((items) => [...new Map([...items, ...data.orders].map((item) => [item.id, item])).values()]); setCursor(data.nextCursor); })}>Tải thêm đơn</button>}
@@ -226,6 +251,13 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
           </div>
           <div className="admin-detail-box">
             <h3>Xử lý đơn hàng</h3>
+            {(QUICK_STATUS_ACTIONS[selected.status]?.length > 0) && (
+              <div className="admin-actions" style={{ marginBottom: 10 }}>
+                {QUICK_STATUS_ACTIONS[selected.status].map(([nextKey, label, isPrimary]) => (
+                  <button key={nextKey} type="button" className={`admin-btn ${nextKey === "cancelled" ? "danger" : isPrimary ? "primary" : ""}`} disabled={busy || detail.loading} onClick={() => update(selected, { status: nextKey })}>{label}</button>
+                ))}
+              </div>
+            )}
             <fieldset className="order-status-options" aria-busy={busy} disabled={busy || detail.loading || selected.status === "cancelled"}><legend>Trạng thái xử lý đơn</legend>{Object.entries(STATUSES).map(([key, label]) => <label key={key}><input type="radio" name={`status-${selected.id}`} checked={selected.status === key} disabled={key !== selected.status && !NEXT_ORDER_STATUSES[selected.status]?.includes(key)} onChange={() => update(selected, { status: key })} />{label}</label>)}</fieldset>
             {selected.status === "cancelled" && selected.inventory?.state === "deducted" && <button type="button" className="admin-btn danger" disabled={busy} onClick={async () => {
               if (!await confirm("Bạn đã thực tế nhận lại đủ hàng của đơn này? Xác nhận sẽ cộng lại số lượng vào kho một lần.", { title: "Hoàn kho", confirmLabel: "Hoàn kho", danger: true })) return;

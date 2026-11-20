@@ -160,3 +160,54 @@ test("receiptLines includes order date, payment status, and support contact", ()
   assert.ok(lines.some((line) => line === "Tình trạng: Chưa thanh toán"));
   assert.ok(lines.some((line) => line === "Liên hệ ORORA: 0900112233"));
 });
+
+test("GET /api/admin-orders supports server-side status filter and direct code/phone/email lookup", async () => {
+  const { placeHandler, adminOrdersHandler } = await seedOrderEnv();
+  const idA = crypto.randomUUID();
+  const resA = makeRes();
+  await placeHandler(makeReq({
+    auth: false,
+    body: {
+      requestId: idA, productId: "p1", quantity: 1,
+      name: "Khach A", phone: "0912345678", email: "khacha@example.com",
+      address: "123 Duong A, Quan 1, TP.HCM", paymentMethod: "cod", consent: true,
+    },
+  }), resA);
+  assert.equal(resA.statusCode, 201);
+  const codeA = resA.body.code;
+
+  const idB = crypto.randomUUID();
+  const resB = makeRes();
+  await placeHandler(makeReq({
+    auth: false,
+    body: {
+      requestId: idB, productId: "p1", quantity: 1,
+      name: "Khach B", phone: "0987654321", email: "khachb@example.com",
+      address: "456 Duong B, Quan 3, TP.HCM", paymentMethod: "cod", consent: true,
+    },
+  }), resB);
+  assert.equal(resB.statusCode, 201);
+
+  await adminOrdersHandler(makeReq({ method: "POST", body: { id: idB, status: "shipping" } }), makeRes());
+
+  const shippingRes = makeRes();
+  await adminOrdersHandler(makeReq({ method: "GET", query: { status: "shipping" } }), shippingRes);
+  assert.equal(shippingRes.statusCode, 200);
+  assert.deepEqual(shippingRes.body.orders.map((o) => o.id), [idB]);
+
+  const byCode = makeRes();
+  await adminOrdersHandler(makeReq({ method: "GET", query: { q: codeA.toLowerCase() } }), byCode);
+  assert.equal(byCode.statusCode, 200);
+  assert.deepEqual(byCode.body.orders.map((o) => o.id), [idA]);
+
+  const byPhone = makeRes();
+  await adminOrdersHandler(makeReq({ method: "GET", query: { q: "0987 654 321" } }), byPhone);
+  assert.equal(byPhone.statusCode, 200);
+  assert.deepEqual(byPhone.body.orders.map((o) => o.id), [idB]);
+
+  const byEmail = makeRes();
+  await adminOrdersHandler(makeReq({ method: "GET", query: { q: "KHACHA@example.com" } }), byEmail);
+  assert.equal(byEmail.statusCode, 200);
+  assert.deepEqual(byEmail.body.orders.map((o) => o.id), [idA]);
+});
+
