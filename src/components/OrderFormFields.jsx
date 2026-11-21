@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {memo,useMemo,useState} from 'react';
 import ProductPurchaseSelection from './ProductPurchaseSelection';
 import AddressSelect from './AddressSelect';
 import {PAYMENT_LABELS,formatVnd} from '../lib/commerce';
@@ -6,7 +6,7 @@ import {toCss} from '../lib/typography';
 import {CHECKOUT_COPY,checkoutSubmitStyle} from '../lib/checkout-presentation';
 import '../styles/checkout.css';
 
-export default function OrderFormFields({product,items=null,subtotal,options,variantId,quantity,onVariantChange,onQuantityChange,addresses,provinceCode,wardCode,onProvinceChange,onWardChange,methods,unitPrice,shipping,total,appearance={},busy=false,error,onSubmit,preview=false,selectedElement,onSelect}){
+function OrderFormFields({product,items=null,subtotal,options,variantId,quantity,onVariantChange,onQuantityChange,addresses,provinceCode,wardCode,onProvinceChange,onWardChange,methods,unitPrice,shipping,total,appearance={},busy=false,error,onSubmit,preview=false,selectedElement,onSelect}){
  const [addressError,setAddressError]=useState(false);
  const [variantError,setVariantError]=useState(false);
  const [selectedMethod,setSelectedMethod]=useState(()=>methods[0]||'');
@@ -22,15 +22,18 @@ export default function OrderFormFields({product,items=null,subtotal,options,var
   :activeMethod==='cod'
    ?label('codPaymentHint')
    :label('paymentHint');
- const headingStyle=toCss(appearance.formHeadingStyle,{responsive:true});
- const productNameStyle=toCss(appearance.productNameStyle,{responsive:true});
- const pricePillStyle=toCss(appearance.pricePillStyle,{responsive:true});
- const helpTextStyle=toCss(appearance.helpTextStyle,{responsive:true});
- const selectionStyle=toCss(appearance.selectionStyle,{responsive:true});
- const paymentOptionStyle=toCss(appearance.paymentOptionStyle,{responsive:true});
- const summaryTextStyle=toCss(appearance.summaryTextStyle,{responsive:true});
- const summaryTotalStyle=toCss(appearance.summaryTotalStyle,{responsive:true});
- const consentStyle=toCss(appearance.consentStyle,{responsive:true});
+ const {headingStyle,productNameStyle,pricePillStyle,helpTextStyle,selectionStyle,paymentOptionStyle,summaryTextStyle,summaryTotalStyle,consentStyle,formTextStyle}=useMemo(()=>({
+  headingStyle:toCss(appearance.formHeadingStyle,{responsive:true}),
+  productNameStyle:toCss(appearance.productNameStyle,{responsive:true}),
+  pricePillStyle:toCss(appearance.pricePillStyle,{responsive:true}),
+  helpTextStyle:toCss(appearance.helpTextStyle,{responsive:true}),
+  selectionStyle:toCss(appearance.selectionStyle,{responsive:true}),
+  paymentOptionStyle:toCss(appearance.paymentOptionStyle,{responsive:true}),
+  summaryTextStyle:toCss(appearance.summaryTextStyle,{responsive:true}),
+  summaryTotalStyle:toCss(appearance.summaryTotalStyle,{responsive:true}),
+  consentStyle:toCss(appearance.consentStyle,{responsive:true}),
+  formTextStyle:toCss(appearance.formTextStyle,{responsive:true}),
+ }),[appearance]);
  const pick=(key,event)=>{if(!preview||!onSelect)return;event?.stopPropagation?.();onSelect(key);};
  const mark=(key,base='')=>preview&&onSelect?{'data-builder-key':key,className:`${base}${selectedElement===key?' builder-selected':''}`.trim(),onClick:event=>pick(key,event)}:{className:base||undefined};
  const effectiveSubtotal=subtotal!==undefined?subtotal:(unitPrice===null?null:unitPrice*(Number(quantity)||0));
@@ -50,7 +53,7 @@ export default function OrderFormFields({product,items=null,subtotal,options,var
    target?.focus?.();
   }
  };
- return <form className="website-order checkout-form" aria-busy={busy} aria-label={copy.title?.trim()||CHECKOUT_COPY.title} style={toCss(appearance.formTextStyle,{responsive:true})} onKeyDown={event=>{
+ return <form className="website-order checkout-form" aria-busy={busy} aria-label={copy.title?.trim()||CHECKOUT_COPY.title} style={formTextStyle} onKeyDown={event=>{
   if(!preview&&event.key==="Enter"&&event.target.tagName==="INPUT"&&!(event.target.getAttribute("aria-expanded")==="true"&&event.target.getAttribute("aria-activedescendant"))){
    if(!isMulti&&options.length>0&&!variantId){event.preventDefault();setVariantError(true);focusFirstMissing(event.currentTarget);return;}
    if(!provinceCode||!wardCode||shipping.blocked){event.preventDefault();setAddressError(true);focusFirstMissing(event.currentTarget);}
@@ -154,3 +157,5 @@ export default function OrderFormFields({product,items=null,subtotal,options,var
   </fieldset>
  </form>;
 }
+
+export default memo(OrderFormFields);

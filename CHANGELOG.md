@@ -1,3 +1,18 @@
+## 21/11/2026 — Tối ưu hiệu năng, giảm giật lag cho Form đặt hàng
+
+- **Lý do**: Người dùng phản ánh form đặt hàng có cảm giác lag khi mở, cuộn và gõ chọn địa chỉ; kiểm tra cho thấy nguyên nhân chính đến từ `backdrop-filter: blur(4px)` toàn màn hình trên `dialog::backdrop` chạy chồng lên hiệu ứng cánh hoa rơi nền, kết hợp `backdrop-filter` glass trên mobile, `scrollIntoView` cưỡng bức trên mỗi lần gõ phím trong `AddressSelect`, và thời lượng mở modal `420ms` kèm re-render không cần thiết.
+- **Thay đổi chính**:
+  - **Loại bỏ GPU blur toàn màn hình & tạm dừng cánh hoa nền (`src/styles/global.css`, `src/styles/checkout.css`)**:
+    - Bỏ `backdrop-filter: blur(4px)` ở `.orora-modal::backdrop`, thay bằng lớp phủ tối dịu (`rgba(32, 16, 26, .48)`), thêm `overscroll-behavior: contain` và tạm dừng hiệu ứng `.petal` (`animation-play-state: paused`) khi bất kỳ hộp thoại modal nào đang mở.
+    - Tắt rõ `backdrop-filter` trên `.order-form-modal.orora-modal` (nền trắng đặc) để tránh lớp kính kép gây nặng khi cuộn trên mobile.
+  - **Giảm reflow khi tìm địa chỉ (`src/components/AddressSelect.jsx`)**: Chỉ gọi `scrollIntoView({ block: "nearest" })` khi điều hướng bằng phím mũi tên (`ArrowDown`/`ArrowUp`) thay vì chạy trên mỗi ký tự gõ, và giới hạn danh sách hiển thị tối đa `40` mục mỗi lần lọc.
+  - **Mở form nhanh hơn & giảm re-render (`src/components/OrderForm.jsx`, `src/components/OrderFormFields.jsx`)**: Rút ngắn `motionDuration` của form đặt hàng xuống `240ms`, memoize `modalStyle`/`titleStyle`/`shippingProp`/`methods` trong `OrderForm.jsx` và bọc `OrderFormFields` bằng `React.memo` kèm `useMemo` cho toàn bộ style cấu hình.
+- **File / khu vực liên quan**: `src/styles/global.css`, `src/styles/checkout.css`, `src/components/AddressSelect.jsx`, `src/components/OrderForm.jsx`, `src/components/OrderFormFields.jsx`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **269/269** unit test đạt, `eslint .` 0 lỗi, `vite build` & ngân sách bundle đạt.
+  - Playwright (`width-1440` & `width-390`): **25/25** test đạt trên `qa/editor-checkout.spec.js`, `qa/glass-surfaces.spec.js`, và `qa/petals-icons.spec.js` (1 test mobile-only bỏ qua trên `width-1440`).
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu.
+
 ## 21/11/2026 — Bỏ phần `/ dung tích` bên cạnh giá sản phẩm và sắp xếp lại cụm nút mua hàng
 
 - **Lý do**: Chủ website yêu cầu bỏ phần `/ 180ml` dư thừa bên cạnh giá ở trang Chi tiết sản phẩm (vì dung tích đã chọn ngay bên dưới) và sắp xếp lại vị trí các nút mua hàng cho hợp lý, đồng đều kích thước.

@@ -82,8 +82,9 @@ img { max-width: 100%; }
 .address-select-options > button[aria-selected="true"] { color: var(--rose-deep); font-weight: 600; }
 .address-select-options > p { padding: 12px; font-size: 13px; color: var(--plum-soft); }
 /* Native top-layer dialog shared by customer receipts and admin order details. */
-.orora-modal { position: fixed; inset: 0; margin: auto; width: min(760px, calc(100% - 32px)); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); padding: 0; overflow-y: auto; border: 1px solid var(--line); border-radius: 24px; background: #fffafb; color: var(--plum); box-shadow: 0 24px 80px #35112430; }
-.orora-modal::backdrop { background: #29132166; backdrop-filter: blur(4px); }
+.orora-modal { position: fixed; inset: 0; margin: auto; width: min(760px, calc(100% - 32px)); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); padding: 0; overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: 24px; background: #fffafb; color: var(--plum); box-shadow: 0 24px 80px #35112430; }
+.orora-modal::backdrop { background: rgba(32, 16, 26, .48); }
+body:has(dialog:modal) .petal { animation-play-state: paused; }
 .orora-modal-heading { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 24px; border-bottom: 1px solid var(--line); background: #fffafb; }
 .orora-modal-heading h2 { margin: 0; font-size: 24px; line-height: 1.3; }
 .orora-modal-heading > button { flex: 0 0 36px; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 50%; background: #fff; color: var(--rose-deep); font-size: 24px; cursor: pointer; }
