@@ -63,6 +63,8 @@ function ProductDetail({
   const pageRef = useRef(null);
   const mobileBuyRef = useRef(null);
   const imageBoxRef = useRef(null);
+  const zoomOriginRef = useRef({ x: 50, y: 50 });
+  const lastTouchAtRef = useRef(0);
   const [orderProductId, setOrderProductId] = useState(null);
   const [orderSource, setOrderSource] = useState(null);
   const [purchaseSelection, setPurchaseSelection] = useState(null);
@@ -475,10 +477,12 @@ function ProductDetail({
             onMouseEnter={
               !preview && displaySrc
                 ? (event) => {
+                    if (Date.now() - lastTouchAtRef.current < 600) return;
                     const rect = event.currentTarget.getBoundingClientRect();
                     if (rect.width && rect.height) {
                       const px = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
                       const py = Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100));
+                      zoomOriginRef.current = { x: px, y: py };
                       event.currentTarget.style.setProperty("--zoom-x", `${px.toFixed(2)}%`);
                       event.currentTarget.style.setProperty("--zoom-y", `${py.toFixed(2)}%`);
                     }
@@ -490,10 +494,12 @@ function ProductDetail({
             onMouseMove={
               !preview && displaySrc
                 ? (event) => {
+                    if (Date.now() - lastTouchAtRef.current < 600) return;
                     const rect = event.currentTarget.getBoundingClientRect();
                     if (rect.width && rect.height) {
                       const px = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
                       const py = Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100));
+                      zoomOriginRef.current = { x: px, y: py };
                       event.currentTarget.style.setProperty("--zoom-x", `${px.toFixed(2)}%`);
                       event.currentTarget.style.setProperty("--zoom-y", `${py.toFixed(2)}%`);
                     }
@@ -502,7 +508,10 @@ function ProductDetail({
                   }
                 : undefined
             }
-            onMouseLeave={!preview && displaySrc ? () => setZoomActive(false) : undefined}
+            onMouseLeave={!preview && displaySrc ? () => {
+              if (Date.now() - lastTouchAtRef.current < 600) return;
+              setZoomActive(false);
+            } : undefined}
             onKeyDown={
               !preview && displaySrc
                 ? (event) => {
@@ -525,25 +534,39 @@ function ProductDetail({
                 : undefined
             }
             onTouchStart={!preview && displaySrc ? (event) => {
+              lastTouchAtRef.current = Date.now();
               const t = event.touches?.[0];
-              if (t) swipeStartRef.current = { x: t.clientX, y: t.clientY, moved: false };
+              if (t) {
+                swipeStartRef.current = {
+                  x: t.clientX,
+                  y: t.clientY,
+                  startZoomX: zoomOriginRef.current.x,
+                  startZoomY: zoomOriginRef.current.y,
+                  moved: false,
+                };
+              }
             } : undefined}
             onTouchMove={!preview && displaySrc ? (event) => {
+              lastTouchAtRef.current = Date.now();
               const t = event.touches?.[0];
               const start = swipeStartRef.current;
               if (!t || !start) return;
-              if (Math.hypot(t.clientX - start.x, t.clientY - start.y) > 10) start.moved = true;
+              const dx = t.clientX - start.x;
+              const dy = t.clientY - start.y;
+              if (Math.hypot(dx, dy) > 10) start.moved = true;
               if (zoomActive) {
                 const rect = event.currentTarget.getBoundingClientRect();
                 if (rect.width && rect.height) {
-                  const px = Math.max(0, Math.min(100, ((t.clientX - rect.left) / rect.width) * 100));
-                  const py = Math.max(0, Math.min(100, ((t.clientY - rect.top) / rect.height) * 100));
-                  event.currentTarget.style.setProperty("--zoom-x", `${px.toFixed(2)}%`);
-                  event.currentTarget.style.setProperty("--zoom-y", `${py.toFixed(2)}%`);
+                  const nextX = Math.max(0, Math.min(100, start.startZoomX - (dx / rect.width) * 100));
+                  const nextY = Math.max(0, Math.min(100, start.startZoomY - (dy / rect.height) * 100));
+                  zoomOriginRef.current = { x: nextX, y: nextY };
+                  event.currentTarget.style.setProperty("--zoom-x", `${nextX.toFixed(2)}%`);
+                  event.currentTarget.style.setProperty("--zoom-y", `${nextY.toFixed(2)}%`);
                 }
               }
             } : undefined}
             onTouchEnd={!preview && displaySrc ? (event) => {
+              lastTouchAtRef.current = Date.now();
               const start = swipeStartRef.current;
               swipeStartRef.current = null;
               const t = event.changedTouches?.[0];
@@ -559,6 +582,7 @@ function ProductDetail({
                 if (rect.width && rect.height) {
                   const px = Math.max(0, Math.min(100, ((t.clientX - rect.left) / rect.width) * 100));
                   const py = Math.max(0, Math.min(100, ((t.clientY - rect.top) / rect.height) * 100));
+                  zoomOriginRef.current = { x: px, y: py };
                   event.currentTarget.style.setProperty("--zoom-x", `${px.toFixed(2)}%`);
                   event.currentTarget.style.setProperty("--zoom-y", `${py.toFixed(2)}%`);
                 }
