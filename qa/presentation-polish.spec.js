@@ -31,7 +31,7 @@ test('footer links remain above the real bottom navigation at the end of the pag
  });
  await page.evaluate(()=>document.fonts.ready);
  await page.evaluate(()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'}));
- await expect(page.getByText('Thông tin',{exact:true})).toBeVisible();await expect(page.getByRole('link',{name:'Điều khoản sử dụng',exact:true})).toBeVisible();await expect(page.getByText('Nội dung tùy chỉnh')).toBeVisible();
+ await expect(page.getByText('INFORMATION',{exact:true})).toBeVisible();await expect(page.getByRole('link',{name:'Terms & Conditions',exact:true})).toBeVisible();await expect(page.getByText('Nội dung tùy chỉnh')).toBeVisible();
  if(page.viewportSize().width<=768){const nav=page.getByRole('navigation',{name:'Điều hướng mobile',exact:true});await expect(nav).toBeVisible();await page.evaluate(()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'}));const bar=await nav.boundingBox(),footer=await page.locator('footer').boundingBox();expect(footer.y+footer.height).toBeLessThanOrEqual(bar.y+1);expect(bar.height).toBeGreaterThanOrEqual(88);}
  await fit(page);await page.screenshot({path:testInfo.outputPath('footer-bottom-navigation.png')});
 });

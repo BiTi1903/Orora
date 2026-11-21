@@ -1,3 +1,15 @@
+## 21/11/2026 — Sửa lỗi Footer tự đổi `Information` → `Thông tin`, `Contact` → `Liên hệ`
+
+- **Lý do**: Hàm `footerCopy()` trong `src/lib/footer-copy.js` có cơ chế tự dịch cứng các nhãn tiếng Anh cũ (`information`, `contact`, `about us`, `shop`, `terms & conditions`, `privacy policy`, `follow us`, `All rights reserved.`) sang tiếng Việt, khiến mỗi khi chủ website cố tình nhập `Information` hoặc `Contact` trong trình sửa Footer thì chữ bị tự động nhảy ngược lại thành `Thông tin` / `Liên hệ`.
+- **Thay đổi chính**:
+  - **Giữ nguyên giá trị chủ website đã lưu (`src/lib/footer-copy.js`)**: `footerCopy()` chỉ điền nhãn mặc định tiếng Việt khi trường chưa được thiết lập (`null`/`undefined`); mọi chuỗi quản trị viên đã nhập (kể cả tiếng Anh như `Information`, `Contact` hoặc chuỗi rỗng) đều được giữ nguyên ở cả trình sửa lẫn trang thật.
+  - **Kiểm thử (`tests/presentation-defaults.test.js`, `qa/presentation-polish.spec.js`)**: Cập nhật unit test và Playwright test xác minh `footerCopy()` giữ nguyên nhãn tiếng Anh người quản trị nhập và chỉ điền mặc định cho trường chưa có dữ liệu.
+- **File / khu vực liên quan**: `src/lib/footer-copy.js`, `tests/presentation-defaults.test.js`, `qa/presentation-polish.spec.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **269/269** unit test đạt, `eslint .` 0 lỗi, `vite build` & ngân sách bundle đạt.
+  - Playwright (`width-1440` & `width-390`): **7/7** test đạt trên `qa/presentation-polish.spec.js` (1 test mobile-only bỏ qua trên desktop).
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu.
+
 ## 21/11/2026 — Hoàn thiện trải nghiệm Form đặt hàng, Màn Đã nhận đơn và Khung Chat AI
 
 - **Lý do**: Xử lý hàng loạt điểm chưa hợp lý phát hiện qua rà soát thực tế trên 3 luồng khách hàng: Form đặt hàng (trùng dòng Tạm tính, mâu thuẫn lý do phí ship, lặp hướng dẫn chuyển khoản, viền focus trên nút `×` khi vừa mở, lệch kiểu mũi tên mở rộng, hộp thoại còn lề trên mobile), Màn Đã nhận đơn (sai thứ tự ưu tiên, chân trang yếu), và Khung Chat AI (lộ thông báo nội bộ khi chưa cấu hình Zalo, cắt biểu tượng, tiêu đề chào quá lớn, thừa nhãn "Bạn", viền kép ở ô nhập).

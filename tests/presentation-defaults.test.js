@@ -10,8 +10,8 @@ test('contrast calculation handles opaque and translucent colors and unknown syn
  assert.equal(contrastRatio('var(--custom)','#fff'),null);
  assert.equal(contrastRatio('rgb(300,0,0)','#fff'),null);
 });
-test('footer translates stock labels without mutating custom content or source config',()=>{
- const saved={footerInfoTitle:'INFORMATION',footerAboutText:'Về đội ngũ chúng tôi',footerShopText:'',footerTermsText:'Terms & Conditions',footerPhone:'custom',footerCopyright:'© 2026 ORORA. All rights reserved.',future:{kept:true}};
+test('footer applies defaults only for unset fields and preserves explicit English or custom labels',()=>{
+ const saved={footerInfoTitle:'INFORMATION',footerContactTitle:'Contact',footerAboutText:'Về đội ngũ chúng tôi',footerShopText:'',footerTermsText:'Terms & Conditions',footerPhone:'custom',footerCopyright:'© 2026 ORORA. All rights reserved.',future:{kept:true}};
  const original=structuredClone(saved),display=footerCopy(saved);
- assert.equal(display.footerInfoTitle,'Thông tin');assert.equal(display.footerTermsText,'Điều khoản sử dụng');assert.equal(display.footerAboutText,saved.footerAboutText);assert.equal(display.footerShopText,'');assert.equal(display.footerPhone,'custom');assert.equal(display.footerCopyright,'© 2026 ORORA. Bảo lưu mọi quyền.');assert.equal(display.future,saved.future);assert.deepEqual(saved,original);
+ assert.equal(display.footerInfoTitle,'INFORMATION');assert.equal(display.footerContactTitle,'Contact');assert.equal(display.footerTermsText,'Terms & Conditions');assert.equal(display.footerPrivacyText,'Chính sách bảo mật');assert.equal(display.footerSocialTitle,'Kết nối với ORORA');assert.equal(display.footerAboutText,saved.footerAboutText);assert.equal(display.footerShopText,'');assert.equal(display.footerPhone,'custom');assert.equal(display.footerCopyright,'© 2026 ORORA. All rights reserved.');assert.equal(display.future,saved.future);assert.deepEqual(saved,original);
 });
