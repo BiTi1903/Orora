@@ -9,4 +9,4 @@ export async function orderRequest(body, params = {}, { signal } = {}) {
   if (!response.ok) throw Object.assign(new Error(data.message || "Chưa xử lý được đơn hàng."), { status: response.status });
   return data;
 }
-export const MAIL_STATES = { pending: "Chưa gửi", sending: "Đang xử lý", stuck: "Kẹt quá 5 phút, cần kiểm tra Outlook rồi gửi lại", accepted: "Đã nhận", failed: "Gửi lỗi", unknown: "Chưa rõ kết quả" };
+export const MAIL_STATES = { pending: "Chưa gửi", sending: "Đang gửi", stuck: "Cần kiểm tra", accepted: "Đã gửi đi", failed: "Gửi lỗi", unknown: "Cần kiểm tra" };

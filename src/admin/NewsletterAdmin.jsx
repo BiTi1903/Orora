@@ -13,8 +13,8 @@ import { ensureNewsletterTemplatesOnce, fetchNewsletterCached, getAdminCache } f
 import useDraftGuard from "../hooks/useDraftGuard";
 
 const EMPTY = { subject: "", text: "" };
-const CONTACT_STATUS = { active: "Hoạt động", paused: "Tạm ngưng", unsubscribed: "Đã hủy đăng ký" };
-const STATUS = { draft: "Chưa gửi", sending: "Đang xử lý", paused: "Tạm dừng", completed: "Hoàn tất" };
+const CONTACT_STATUS = { active: "Hoạt động", paused: "Tạm ngưng", unsubscribed: "Đã hủy đăng ký", bounced: "Bị trả lại" };
+const STATUS = { draft: "Chưa gửi", sending: "Đang gửi", paused: "Tạm dừng", completed: "Hoàn tất" };
 
 
 function ContactActions({ label, disabled, onApply }) {

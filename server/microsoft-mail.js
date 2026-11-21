@@ -78,12 +78,10 @@ function createGraphMailer(
         },
         body: JSON.stringify({
           message: {
+            // Microsoft Graph JSON sendMail only permits custom x-* headers in internetMessageHeaders.
+            // List-Unsubscribe / List-Unsubscribe-Post are sent on SMTP (default) and included in the body footer.
             internetMessageHeaders: [
               { name: "x-orora-mail-id", value: tracking.trackingId },
-              ...(message.unsubscribeUrl ? [
-                { name: "List-Unsubscribe", value: `<${message.unsubscribeUrl}>` },
-                { name: "List-Unsubscribe-Post", value: "List-Unsubscribe=One-Click" },
-              ] : []),
             ],
             subject: message.subject,
             body: {

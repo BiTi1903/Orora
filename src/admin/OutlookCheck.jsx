@@ -1,5 +1,5 @@
 import { useState } from "react";
-const OUTLOOK_LABELS = { untracked: "Thư cũ chưa có mã đối chiếu", sent_item: "Đã gửi", bounced: "Có thư báo trả lại (NDR)", delayed: "Có thư báo gửi chậm", not_found: "Chưa tìm thấy bằng mã đối chiếu" };
+const OUTLOOK_LABELS = { untracked: "Thư cũ (không theo dõi)", sent_item: "Đã gửi đi", bounced: "Bị trả lại", delayed: "Gửi chậm", not_found: "Chưa tìm thấy trên hộp thư" };
 export default function OutlookCheck({ outlook, check, label = "thư này" }) {
   const [saved, setSaved] = useState(null); const [busy, setBusy] = useState(false); const [error, setError] = useState("");
   const result = saved && (!outlook || Date.parse(saved.checkedAt) >= Date.parse(outlook.checkedAt)) ? saved : outlook;

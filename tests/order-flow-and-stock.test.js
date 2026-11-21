@@ -510,6 +510,68 @@ test("POST /api/admin-orders action=checkAllOrderOutlook scans recent order mail
   assert.ok(res.body.message.includes("1 thư lỗi gửi"));
 });
 
+test("Graph mailer only sends x-* internetMessageHeaders and hasOrderTokens covers trackingUrl and total", async () => {
+  const { createMicrosoftMailer } = await import("../server/microsoft-mail.js");
+  const { hasOrderTokens } = await import("../src/lib/template-kinds.js");
+  assert.equal(hasOrderTokens({ subject: "Hi", text: "Link: {{trackingUrl}}" }), true);
+  assert.equal(hasOrderTokens({ subject: "Total {{total}}", text: "Body" }), true);
+  assert.equal(hasOrderTokens({ subject: "Chào bạn", text: "Tin khuyến mãi" }), false);
+
+  let sentPayload = null;
+  const mailer = createMicrosoftMailer(
+    { MS_MAIL_TRANSPORT: "graph", MS_TENANT_ID: "t", MS_CLIENT_ID: "c", MS_CLIENT_SECRET: "s", MS_SENDER_EMAIL: "sales@ororavn.com" },
+    async (url, init) => {
+      if (url.includes("/oauth2/v2.0/token")) return { ok: true, status: 200, json: async () => ({ access_token: "tok", expires_in: 3600 }) };
+      sentPayload = JSON.parse(init.body);
+      return { ok: true, status: 202 };
+    },
+  );
+  await mailer("user@example.com", { subject: "Sub", text: "Body", unsubscribeUrl: "https://ororavn.com/api/unsubscribe?t=1" });
+  const headerNames = sentPayload.message.internetMessageHeaders.map((h) => h.name.toLowerCase());
+  assert.ok(headerNames.every((name) => name.startsWith("x-")));
+  assert.ok(!headerNames.includes("list-unsubscribe"));
+});
+
+test("bounced subscriber is auto-suppressed and per-recipient rejection does not pause the campaign batch", async () => {
+  const { createNewsletterAdminHandler } = await import("../server/newsletter-admin.js");
+  const db = memoryDb();
+  const idBad = "a".repeat(64);
+  const idGood = "b".repeat(64);
+  const createdAt = new Date(Date.now() - 60000);
+  await db.collection("newsletterSubscribers").doc(idBad).set({ email: "bad@example.com", status: "active", createdAt, consentAt: createdAt, welcomeTracking: { trackingId: "w-bad" } });
+  await db.collection("newsletterSubscribers").doc(idGood).set({ email: "good@example.com", status: "active", createdAt, consentAt: createdAt });
+
+  const env = { ...ENV, MS_MAIL_TRANSPORT: "graph", MS_TENANT_ID: "t", MS_CLIENT_ID: "c", MS_CLIENT_SECRET: "s", NEWSLETTER_ADMIN_UIDS: "admin-1", NEWSLETTER_UNSUBSCRIBE_SECRET: "u".repeat(40) };
+  const handler = createNewsletterAdminHandler({
+    getDb: async () => db,
+    verifyToken,
+    sendMail: async (email) => {
+      if (email === "bad@example.com") throw Object.assign(new Error("mail_recipient_rejected"), { recipientRejected: true });
+      return { trackingId: "ok-1", transport: "graph" };
+    },
+    checkOutlook: async () => ({ state: "bounced", diagnosticCode: "5.1.1", checkedAt: new Date().toISOString() }),
+    env,
+  });
+
+  // 1) Recipient-only rejection in sendBatch does NOT pause campaign, continues to idGood
+  const createRes = makeRes();
+  await handler(makeReq({ method: "POST", body: { action: "createCampaign", id: "camp-1", subject: "Chào", text: "Nội dung" } }), createRes);
+  assert.equal(createRes.statusCode, 200);
+  const batchRes = makeRes();
+  await handler(makeReq({ method: "POST", body: { action: "sendBatch", id: "camp-1" } }), batchRes);
+  assert.equal(batchRes.statusCode, 200);
+  assert.equal(batchRes.body.paused, false);
+  assert.equal(batchRes.body.campaign.failed, 1);
+  assert.equal(batchRes.body.campaign.accepted, 1);
+
+  // 2) checkWelcomeOutlook detecting bounce auto-suppresses subscriber status -> bounced
+  const bounceRes = makeRes();
+  await handler(makeReq({ method: "POST", body: { action: "checkWelcomeOutlook", id: idBad } }), bounceRes);
+  assert.equal(bounceRes.statusCode, 200);
+  assert.equal((await db.collection("newsletterSubscribers").doc(idBad).get()).data().status, "bounced");
+});
+
+
 
 
 

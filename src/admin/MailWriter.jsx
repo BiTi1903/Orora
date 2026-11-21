@@ -58,7 +58,7 @@ function previewOrderVariables(text, order) {
     "{{email}}": order?.customer?.email || "khachhang@example.com",
     "{{note}}": order?.customer?.note || "Không có",
     "{{createdAt}}": createdAtFormatted,
-    "{{trackingUrl}}": `${typeof window !== "undefined" ? window.location.origin : "https://ororavn.com"}/tra-cuu-don-hang`,
+    "{{trackingUrl}}": `${typeof window !== "undefined" ? window.location.origin : "https://ororavn.com"}/tra-cuu-don-hang?code=${encodeURIComponent(order?.code || "OW_1024C")}`,
   };
   return Object.entries(map).reduce((acc, [token, val]) => acc.replaceAll(token, val), text);
 }
@@ -78,6 +78,9 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
   const [orderId, setOrderId] = useState(initialOrderId);
   const [orderError, setOrderError] = useState("");
   const attempt = useRef(null);
+  const subjectRef = useRef(null);
+  const textRef = useRef(null);
+  const activeFieldRef = useRef("text");
   const working = disabled || localBusy;
   const valid = Boolean(value.subject.trim() && value.text.trim());
   const selectedOrder = orders.find((order) => order.id === orderId);
@@ -106,8 +109,19 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
   };
 
   const insertToken = (token) => {
-    const nextText = value.text ? `${value.text}${value.text.endsWith(" ") || value.text.endsWith("\n") ? "" : " "}${token}` : token;
-    onChange({ subject: value.subject, text: nextText });
+    const field = activeFieldRef.current === "subject" ? "subject" : "text";
+    const el = field === "subject" ? subjectRef.current : textRef.current;
+    const current = value[field] || "";
+    const start = el && typeof el.selectionStart === "number" ? el.selectionStart : current.length;
+    const end = el && typeof el.selectionEnd === "number" ? el.selectionEnd : current.length;
+    const updated = `${current.slice(0, start)}${token}${current.slice(end)}`;
+    onChange({ ...value, [field]: updated });
+    requestAnimationFrame(() => {
+      if (!el) return;
+      el.focus();
+      const pos = start + token.length;
+      el.setSelectionRange?.(pos, pos);
+    });
   };
 
   return <div aria-busy={Boolean(working)} className="admin-card admin-form">
@@ -117,14 +131,14 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
         <div className="mail-writer-main">
           {allowedModes.length > 1 && <div className="admin-field"><label htmlFor={`${fieldId}-writer-mode`}>Loại thư muốn viết</label><select id={`${fieldId}-writer-mode`} className="mail-template-select" value={mode} onChange={(event) => { onModeChange(event.target.value); setNotice(null); }}>{[["welcome_auto", "Thư Đăng Ký"], ["order_auto", "Thư Đơn Hàng"], ["private", "Gửi riêng"]].filter(([key]) => allowedModes.includes(key)).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>}
           {onChooseTemplate && <div className="admin-actions"><button type="button" className="admin-btn" onClick={onChooseTemplate}>Chọn mẫu từ Mẫu Thư</button></div>}
-          <div className="admin-field"><label htmlFor={`${fieldId}-writer-subject`}>Tiêu đề thư</label><input id={`${fieldId}-writer-subject`} required maxLength={200} value={value.subject} onChange={(event) => onChange({ subject: event.target.value, text: value.text })} /></div>
-          <div className="admin-field"><label htmlFor={`${fieldId}-writer-text`}>Nội dung thư</label><textarea id={`${fieldId}-writer-text`} required rows={11} maxLength={20000} value={value.text} onChange={(event) => onChange({ subject: value.subject, text: event.target.value })} /></div>
+          <div className="admin-field"><label htmlFor={`${fieldId}-writer-subject`}>Tiêu đề thư</label><input ref={subjectRef} id={`${fieldId}-writer-subject`} required maxLength={200} value={value.subject} onFocus={() => { activeFieldRef.current = "subject"; }} onChange={(event) => onChange({ subject: event.target.value, text: value.text })} /></div>
+          <div className="admin-field"><label htmlFor={`${fieldId}-writer-text`}>Nội dung thư</label><textarea ref={textRef} id={`${fieldId}-writer-text`} required rows={11} maxLength={20000} value={value.text} onFocus={() => { activeFieldRef.current = "text"; }} onChange={(event) => onChange({ subject: value.subject, text: event.target.value })} /></div>
           {mode === "order_auto" && <>
             <div className="admin-detail-box">
-              <h3>Chèn nhanh thông tin đơn hàng</h3>
+              <h3>Chèn nhanh thông tin đơn hàng (tại vị trí con trỏ)</h3>
               <div className="mail-token-bar">
                 {ORDER_QUICK_TOKENS.map(([token, label]) => (
-                  <button type="button" className="mail-token-chip" key={token} title={token} onClick={() => insertToken(token)}>+ {label}</button>
+                  <button type="button" className="mail-token-chip" key={token} title={token} onMouseDown={(e) => e.preventDefault()} onClick={() => insertToken(token)}>+ {label}</button>
                 ))}
               </div>
             </div>

@@ -85,11 +85,11 @@ test('recoverOnly refreshes the selected order when the server returns unchanged
     'lib/firebaseAuth.js': 'export const auth={currentUser:{getIdToken:async()=>"fixture-token"}};',
   });
   await page.getByLabel('Chọn đơn hàng').selectOption(order.id);
-  await expect(page.getByText(/Kẹt quá 5 phút/)).toBeVisible();
+  await expect(page.getByText(/Cần kiểm tra/)).toBeVisible();
   await page.getByRole('button', { name: 'Cập nhật trạng thái gửi' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Cập nhật trạng thái', exact: true }).click();
   await expect(page.getByText('Trạng thái đã thay đổi.')).toBeVisible();
-  await expect(page.getByText(/test@example\.test · Đã nhận/)).toBeVisible();
+  await expect(page.getByText(/test@example\.test · Đã gửi đi/)).toBeVisible();
   await expect(page.getByRole('button', { name: 'Cập nhật trạng thái gửi' })).toHaveCount(0);
   expect(recoveryRequest).toMatchObject({ id: order.id, recoverOnly: true });
   expect(detailReads).toBe(1);

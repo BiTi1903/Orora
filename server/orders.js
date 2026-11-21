@@ -4,7 +4,8 @@ import { resolveDeliveryAddress } from "./addresses.js";
 import { shippingFeeFor } from "../src/lib/shipping.js";
 import { allocateOrderCode } from "./order-code.js";
 import { inventoryDocId, prepareOrderInventoryReservation, settleOrderInventory } from "./inventory.js";
-import { syncOutlookStatus, OUTLOOK_ERROR_MESSAGES } from "./outlook-status.js";
+import { syncOutlookStatus, syncOutlookBatch, OUTLOOK_ERROR_MESSAGES } from "./outlook-status.js";
+import { effectiveMailState } from "../src/lib/mail-state.js";
 import { templateIdentity } from "./template-snapshot.js";
 import { mailActor, resolveMailActors } from "./mail-actor.js";
 import { sendOrderConfirmation, validOrderEmail } from "./order-mail.js";
@@ -369,11 +370,12 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
         for (const { orderDoc, orderData, events } of eventsByOrder) {
           for (const evDoc of events) {
             const ev = evDoc.data();
-            if (["failed", "stuck", "unknown"].includes(ev.state)) {
-              failed.push({ orderId: orderDoc.id, orderCode: orderData.code || "", eventId: evDoc.id, recipient: ev.recipient || orderData.customer?.email || "", state: ev.state, errorMessage: ev.errorMessage || "" });
+            const derivedState = effectiveMailState(ev, clock());
+            if (["failed", "stuck", "unknown"].includes(derivedState)) {
+              failed.push({ orderId: orderDoc.id, orderCode: orderData.code || "", eventId: evDoc.id, recipient: ev.recipient || orderData.customer?.email || "", state: derivedState, errorMessage: ev.errorMessage || "" });
               continue;
             }
-            if (ev.state === "sent" || ev.trackingId || ev.internetMessageId) {
+            if (ev.state === "sent" || ev.state === "accepted" || ev.trackingId || ev.internetMessageId) {
               tasks.push({ orderId: orderDoc.id, orderCode: orderData.code || "", eventId: evDoc.id, recipient: ev.recipient || orderData.customer?.email || "", ref: orders.doc(orderDoc.id).collection("mailEvents").doc(evDoc.id) });
             }
           }
@@ -384,22 +386,20 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
         let ok = 0;
         let untracked = 0;
         const maxTasks = tasks.slice(0, 30);
-        for (let i = 0; i < maxTasks.length; i += 4) {
-          const chunk = maxTasks.slice(i, i + 4);
-          const outcomes = await Promise.all(chunk.map(async (task) => ({ task, outlook: await syncOutlookStatus(task.ref, checkOutlook) })));
-          for (const { task, outlook } of outcomes) {
-            results[`${task.orderId}/${task.eventId}`] = outlook;
-            if (outlook.state === "bounced") {
-              bounced.push({ orderId: task.orderId, orderCode: task.orderCode, eventId: task.eventId, recipient: task.recipient, diagnosticCode: outlook.diagnosticCode || "", webLink: outlook.webLink || "" });
-            } else if (outlook.state === "delayed") {
-              delayed.push({ orderId: task.orderId, orderCode: task.orderCode, eventId: task.eventId, recipient: task.recipient, diagnosticCode: outlook.diagnosticCode || "" });
-            } else if (outlook.state === "untracked" || outlook.state === "not_found") {
-              untracked += 1;
-            } else {
-              ok += 1;
-            }
+        const batchOutlooks = await syncOutlookBatch(maxTasks, checkOutlook);
+        maxTasks.forEach((task, index) => {
+          const outlook = batchOutlooks[index];
+          results[`${task.orderId}/${task.eventId}`] = outlook;
+          if (outlook.state === "bounced") {
+            bounced.push({ orderId: task.orderId, orderCode: task.orderCode, eventId: task.eventId, recipient: task.recipient, diagnosticCode: outlook.diagnosticCode || "", webLink: outlook.webLink || "" });
+          } else if (outlook.state === "delayed") {
+            delayed.push({ orderId: task.orderId, orderCode: task.orderCode, eventId: task.eventId, recipient: task.recipient, diagnosticCode: outlook.diagnosticCode || "" });
+          } else if (outlook.state === "untracked" || outlook.state === "not_found") {
+            untracked += 1;
+          } else {
+            ok += 1;
           }
-        }
+        });
         const issueCount = bounced.length + delayed.length + failed.length;
         const checked = maxTasks.length + failed.length;
         const message = !checked

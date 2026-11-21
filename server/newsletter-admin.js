@@ -121,12 +121,21 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         if (!validId(body.id) || !/^[a-f0-9]{64}$/.test(body.deliveryId || "")) return reply(400, { message: "Bản ghi gửi thư không hợp lệ." });
         const ref = campaigns.doc(body.id).collection("deliveries").doc(body.deliveryId);
         const outlook = await syncOutlookStatus(ref, checkOutlook, { recipient: (await ref.get()).data()?.email || "" });
+        if (outlook.state === "bounced") {
+          const contactRef = contacts.doc(body.deliveryId);
+          if ((await contactRef.get()).exists) {
+            await contactRef.set({ status: "bounced", bouncedAt: new Date(), updatedAt: new Date() }, { merge: true });
+          }
+        }
         return reply(200, { outlook });
       }
       if (body.action === "checkWelcomeOutlook") {
         if (!/^[a-f0-9]{64}$/.test(body.id || "")) return reply(400, { message: "Email không hợp lệ." });
         const ref = contacts.doc(body.id); const person = await ref.get();
         const outlook = await syncOutlookStatus(ref, checkOutlook, { ...(person.data()?.welcomeTracking || {}), recipient: person.data()?.email || "" });
+        if (outlook.state === "bounced" && person.exists) {
+          await ref.set({ status: "bounced", bouncedAt: new Date(), updatedAt: new Date() }, { merge: true });
+        }
         return reply(200, { outlook });
       }
       if (body.action === "addTemplateType") {
@@ -311,9 +320,12 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
             } catch (error) {
               tracking = safeMailTracking(error.mailTracking);
               diagnostic = describeMailError(error); lastError = diagnostic;
+              const recipientOnly = error.recipientRejected === true
+                || error.message === "mail_recipient_rejected"
+                || [550, 551, 553].includes(Number(error.smtp?.responseCode));
               // A timeout may happen AFTER Microsoft accepts a message. Never resend it automatically.
-              result = ["mail_auth_failed", "mail_send_failed", "mail_configuration_missing", "mail_smtp_auth_failed", "mail_smtp_connection_failed", "mail_transport_invalid"].includes(error.message) ? "failed" : "unknown";
-              paused = true;
+              result = recipientOnly || ["mail_auth_failed", "mail_send_failed", "mail_configuration_missing", "mail_smtp_auth_failed", "mail_smtp_connection_failed", "mail_transport_invalid"].includes(error.message) ? "failed" : "unknown";
+              if (!recipientOnly) paused = true;
             }
             await db.runTransaction(async (tx) => {
               const current = await tx.get(campaign);

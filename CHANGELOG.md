@@ -1,3 +1,25 @@
+## 21/11/2026 — Nâng cấp độ tin cậy hệ thống Email (Graph headers, tự chặn bounce, quét NDR 1 lần, thống nhất trạng thái)
+
+- **Lý do**: Xử lý các lỗi kỹ thuật và điểm chưa đồng bộ trong hệ thống gửi/kiểm tra email được phát hiện qua rà soát (header `List-Unsubscribe` trên Microsoft Graph, thiếu `trackingUrl`/`total` trong `hasOrderTokens`, địa chỉ bounce không tự bị loại khỏi chiến dịch, 1 địa chỉ lỗi làm dừng cả chiến dịch, quét NDR lặp nhiều lần gây tốn quota Graph, chèn biến luôn nối cuối nội dung, và từ vựng trạng thái thư khác nhau giữa 3 màn hình).
+- **Thay đổi chính**:
+  - **Microsoft Graph & Header (`server/microsoft-mail.js`)**: Chỉ gửi header tùy chỉnh bắt đầu bằng `x-` (`x-orora-mail-id`) trong `internetMessageHeaders` của Graph JSON để tránh bị Microsoft Graph từ chối khi bật `MS_MAIL_TRANSPORT=graph` (SMTP mặc định vẫn gửi đầy đủ `List-Unsubscribe` / `List-Unsubscribe-Post`).
+  - **Một nguồn chân lý cho biến đơn hàng (`src/lib/template-kinds.js`, `server/order-mail.js`)**: Chuyển `ORDER_TOKENS` sang `src/lib/template-kinds.js` và sinh regex `hasOrderTokens` trực tiếp từ `ORDER_TOKENS` (bao gồm `trackingUrl` và `total`). Cập nhật `DEFAULT_ORDER_MESSAGE` dùng `Tổng dự kiến`, thêm `{{trackingUrl}}` (tự gắn `?code=...`), bỏ email viết cứng `sales@ororavn.com`.
+  - **Tự động chặn địa chỉ bị trả lại & không dừng cả chiến dịch vì 1 người nhận lỗi (`server/newsletter-admin.js`, `src/admin/NewsletterAdmin.jsx`)**:
+    - Khi `checkWelcomeOutlook` hoặc `checkCampaignOutlook` phát hiện `bounced`, tự động chuyển `status: "bounced"` trên `newsletterSubscribers/{id}` để loại khỏi các chiến dịch sau.
+    - Trong `sendBatch`, phân biệt lỗi riêng của người nhận (`recipientRejected` / `mail_recipient_rejected` / SMTP `550`/`551`/`553`) để ghi nhận `failed` và gửi tiếp thay vì dừng cả chiến dịch; lỗi xác thực/cấu hình toàn cục vẫn dừng an toàn.
+  - **Quét NDR gộp 1 lần & phát hiện thư `stuck` thật (`server/outlook-status.js`, `server/orders.js`)**:
+    - Bổ sung `check.checkBatch` và `syncOutlookBatch` để tải Sent Items & NDR **1 lần duy nhất** từ mốc thời gian cũ nhất của cả lô rồi đối chiếu trong bộ nhớ thay vì quét lặp lại cho từng thư.
+    - Dùng `effectiveMailState(ev, clock())` trong `checkAllOrderOutlook` để phát hiện cả thư `sending` bị kẹt quá 5 phút.
+  - **Soạn thư & thống nhất từ vựng trạng thái (`src/admin/MailWriter.jsx`, `src/admin/order-api.js`, `src/admin/OutlookCheck.jsx`, `src/admin/NewsletterAdmin.jsx`, `qa/admin-confirm.spec.js`)**:
+    - Nút chèn biến trong `MailWriter.jsx` chèn đúng tại vị trí con trỏ của cả **Tiêu đề** và **Nội dung**, và đồng bộ link xem trước `{{trackingUrl}}` có `?code=`.
+    - Thống nhất nhãn trạng thái gọn rõ: `Chưa gửi`, `Đang gửi`, `Đã gửi đi`, `Bị trả lại`, `Gửi lỗi`, `Cần kiểm tra`.
+  - **Kiểm thử (`tests/order-flow-and-stock.test.js`)**: Thêm 2 unit test cho Graph `x-*` headers + `hasOrderTokens` (`trackingUrl`, `total`), tự động chặn subscriber `bounced`, và tiếp tục chiến dịch khi 1 người nhận bị từ chối.
+- **File / khu vực liên quan**: `server/microsoft-mail.js`, `src/lib/template-kinds.js`, `server/order-mail.js`, `server/outlook-status.js`, `server/orders.js`, `server/newsletter-admin.js`, `src/admin/MailWriter.jsx`, `src/admin/order-api.js`, `src/admin/OutlookCheck.jsx`, `src/admin/NewsletterAdmin.jsx`, `tests/order-flow-and-stock.test.js`, `qa/admin-confirm.spec.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **266/266** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt (`136.84 kB` gzip).
+  - Playwright (`width-390`): **11/11** test đạt trên `qa/admin-confirm.spec.js` và `qa/admin-appearance.spec.js`.
+- **Ảnh hưởng database**: Bổ sung giá trị trạng thái `status: "bounced"` (kèm `bouncedAt`) trên tài liệu `newsletterSubscribers/{id}` khi kiểm tra Outlook phát hiện thư bị trả lại; không thay đổi schema/rules hiện có.
+
 ## 21/11/2026 — Chuyển phóng to ảnh sản phẩm sang dạng phóng trực tiếp theo vị trí con trỏ (không mở popup riêng)
 
 - **Lý do**: Chủ website yêu cầu di chuột vào vị trí nào trên ảnh sản phẩm thì phóng to trực tiếp ngay tại chỗ đó thay vì mở cửa sổ popup Lightbox riêng.
