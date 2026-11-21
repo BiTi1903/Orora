@@ -17,11 +17,6 @@ function OrderFormFields({product,items=null,subtotal,options,variantId,quantity
   if (typeof copy[key] !== 'string' || !copy[key].trim()) copy[key]=CHECKOUT_COPY[key];
  }
  const label=(key)=>typeof copy[key]==='string'&&copy[key].trim()?copy[key]:CHECKOUT_COPY[key];
- const paymentHintText=activeMethod==='bank_transfer'
-  ?label('bankPaymentHint')
-  :activeMethod==='cod'
-   ?label('codPaymentHint')
-   :label('paymentHint');
  const {headingStyle,productNameStyle,pricePillStyle,helpTextStyle,selectionStyle,paymentOptionStyle,summaryTextStyle,summaryTotalStyle,consentStyle,formTextStyle}=useMemo(()=>({
   headingStyle:toCss(appearance.formHeadingStyle,{responsive:true}),
   productNameStyle:toCss(appearance.productNameStyle,{responsive:true}),
@@ -145,10 +140,9 @@ function OrderFormFields({product,items=null,subtotal,options,variantId,quantity
     </div>
    </section>
    <section {...mark('ofSummary','checkout-summary')} aria-label={copy.summaryHeading||'Thanh toán'} style={summaryTextStyle}>
-    <div className="order-summary"><span>Tạm tính</span><strong>{itemTotal}</strong></div>
-    <div className="order-summary"><span>{label('shippingFeeLabel')}</span><strong>{shipping.fee===null?label('shippingUnknownLabel'):formatVnd(shipping.fee)}</strong></div>
+    {shipping.fee!==null&&<div className="order-summary"><span>Tạm tính</span><strong>{itemTotal}</strong></div>}
+    <div className="order-summary"><span>{label('shippingFeeLabel')}</span><strong>{shipping.fee===null?(shipping.reason||label('shippingUnknownLabel')):formatVnd(shipping.fee)}</strong></div>
     <div className="order-summary checkout-total"><span>{shipping.fee===null?label('subtotalPendingLabel'):label('totalLabel')}</span><strong style={summaryTotalStyle}>{total===null?(effectiveSubtotal===null?'ORORA sẽ xác nhận':itemTotal):formatVnd(total)}</strong></div>
-    <p className="order-help checkout-payment-hint" style={helpTextStyle}>{paymentHintText}</p>
    </section>
    <label {...mark('ofConsent','order-consent')} style={consentStyle} onClick={preview&&onSelect?event=>{event.preventDefault();pick('ofConsent',event);}:undefined}><input name="consent" type="checkbox" required tabIndex={preview?-1:undefined}/><span>{label('consentText')} {!preview&&<a href="/chinh-sach" target="_blank" rel="noopener noreferrer" className="order-consent-link" onClick={event=>event.stopPropagation()}>(Chính sách bảo mật & đổi trả)</a>}</span></label>
    {!methods.length&&<p role="status">Website đang tạm ngưng nhận đơn. Vui lòng liên hệ ORORA hoặc mua qua các kênh bên trên.</p>}

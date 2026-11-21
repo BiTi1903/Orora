@@ -236,8 +236,18 @@
   border: 1px dashed #dfd5da; border-radius: 10px;
   padding: 9px 12px; font-size: 13px; background: #fcfbfc;
 }
-.checkout-form .checkout-note summary { cursor: pointer; color: #5b4d54; font-weight: 500; }
+.checkout-form .checkout-note summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  list-style: none; cursor: pointer; color: #5b4d54; font-weight: 500;
+}
+.checkout-form .checkout-note summary::-webkit-details-marker { display: none; }
+.checkout-form .checkout-note summary::after {
+  content: ""; width: 7px; height: 7px; flex-shrink: 0;
+  border-right: 1.7px solid currentColor; border-bottom: 1.7px solid currentColor;
+  transform: rotate(45deg); transition: transform .18s ease;
+}
 .checkout-form .checkout-note[open] summary { margin-bottom: 8px; }
+.checkout-form .checkout-note[open] summary::after { transform: rotate(225deg); }
 .checkout-form .checkout-note label { margin-bottom: 0; }
 
 /* Sticky CTA Bar */
@@ -286,6 +296,15 @@
   .checkout-item-price { font-size: 13.5px; padding: 4px 9px; }
 }
 @media (max-width:768px) {
+  .order-form-modal.orora-modal[open]:not(.checkout-preview) {
+    width: 100%;
+    max-width: none;
+    height: var(--modal-viewport-height, 100dvh);
+    max-height: var(--modal-viewport-height, 100dvh);
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
   .order-field input, .order-field textarea, .order-field select, .address-picker input { font-size: 16px; }
   .order-form-modal [style*="--mobile-font-size"],
   .order-success-modal [style*="--mobile-font-size"] { font-size: var(--mobile-font-size) !important; }
@@ -389,8 +408,20 @@
 .order-success-modal .order-received-details h3,
 .order-success-modal .order-received-details summary {
   font-size: 13px; font-weight: 700; margin: 0 0 10px;
-  color: #181316; cursor: pointer; letter-spacing: -.005em;
+  color: #181316; letter-spacing: -.005em;
 }
+.order-success-modal .order-received-details summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  list-style: none; cursor: pointer; margin: 0;
+}
+.order-success-modal .order-received-details summary::-webkit-details-marker { display: none; }
+.order-success-modal .order-received-details summary::after {
+  content: ""; width: 7px; height: 7px; flex-shrink: 0;
+  border-right: 1.7px solid currentColor; border-bottom: 1.7px solid currentColor;
+  transform: rotate(45deg); transition: transform .18s ease;
+}
+.order-success-modal details.order-received-details[open] > summary { margin-bottom: 10px; }
+.order-success-modal details.order-received-details[open] > summary::after { transform: rotate(225deg); }
 
 /* 3-Step Order Progress Stepper */
 .order-progress-steps {
@@ -417,12 +448,34 @@
 
 .order-email-note { text-align: center; }
 .order-received-footer {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 12px; padding-top: 8px; border-top: 1px solid #efe9ec;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px; padding-top: 12px; border-top: 1px solid #efe9ec;
 }
-.order-tracking-link {
+.order-received-footer .order-tracking-link {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 44px; padding: 10px 14px;
+  border: 1px solid var(--receipt-close-border, #e2d9de);
+  border-radius: 12px; background: var(--receipt-close-bg, #ffffff);
   color: var(--receipt-accent, var(--rose-deep));
-  font-weight: 600; text-decoration: underline; text-underline-offset: 3px;
+  font-size: 13.5px; font-weight: 600; text-decoration: none; text-align: center;
+  transition: border-color .16s ease, background-color .16s ease;
+}
+.order-received-footer .order-tracking-link:hover {
+  border-color: var(--receipt-accent, var(--rose-deep));
+  background: #fff7fa;
+}
+.order-received-footer .order-received-close-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 44px; padding: 10px 14px;
+  border: 1px solid transparent; border-radius: 12px;
+  background: var(--receipt-accent, var(--store-button-pink, #b8446d));
+  color: #ffffff;
+  font-size: 13.5px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--receipt-accent, var(--rose-deep)) 24%, transparent);
+  transition: filter .16s ease, transform .16s ease;
+}
+.order-received-footer .order-received-close-btn:hover {
+  filter: brightness(1.04); transform: translateY(-1px);
 }
 
 /* Quick Confirm & Save Receipt Box */

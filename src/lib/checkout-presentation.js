@@ -61,8 +61,8 @@ export const CHECKOUT_RECEIPT_COPY={
  bankAccountName:'',
  bankTransferNote:'Thanh toán đơn {{code}}',
  receiptEmailNote:'ORORA sẽ gửi email xác nhận trong ít phút; nếu không thấy hãy kiểm tra thư rác hoặc tra cứu đơn.',
- receiptTrackingLabel:'Tra cứu trạng thái đơn',
- receiptCloseLabel:'Đóng',
+ receiptTrackingLabel:'Tra cứu đơn',
+ receiptCloseLabel:'Tiếp tục mua sắm',
 };
 export const CHECKOUT_FRAME_FIELDS=[
  ['formWidth','Chiều rộng form (px)',600,320,800],

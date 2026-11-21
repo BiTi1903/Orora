@@ -1,3 +1,26 @@
+## 21/11/2026 — Hoàn thiện trải nghiệm Form đặt hàng, Màn Đã nhận đơn và Khung Chat AI
+
+- **Lý do**: Xử lý hàng loạt điểm chưa hợp lý phát hiện qua rà soát thực tế trên 3 luồng khách hàng: Form đặt hàng (trùng dòng Tạm tính, mâu thuẫn lý do phí ship, lặp hướng dẫn chuyển khoản, viền focus trên nút `×` khi vừa mở, lệch kiểu mũi tên mở rộng, hộp thoại còn lề trên mobile), Màn Đã nhận đơn (sai thứ tự ưu tiên, chân trang yếu), và Khung Chat AI (lộ thông báo nội bộ khi chưa cấu hình Zalo, cắt biểu tượng, tiêu đề chào quá lớn, thừa nhãn "Bạn", viền kép ở ô nhập).
+- **Thay đổi chính**:
+  - **Form đặt hàng (`src/components/OrderFormFields.jsx`, `src/components/ModalDialog.jsx`, `src/styles/global.css`, `src/styles/checkout.css`)**:
+    - Ẩn dòng `Tạm tính` trùng lặp khi chưa có phí giao hàng (`shipping.fee === null`), chỉ giữ 1 dòng `Tạm tính (chưa gồm phí giao)`.
+    - Hiển thị đúng `shipping.reason` từ `shippingFeeFor()` tại dòng phí giao hàng để khớp hoàn toàn cả 3 tình huống (chưa chọn địa chỉ / chưa có biểu phí / chưa bật tính phí).
+    - Bỏ dòng hướng dẫn phương thức thanh toán bị lặp lại dưới khung tóm tắt (giữ bản ngay trong từng lựa chọn thanh toán). Link chính sách giữ `target="_blank" rel="noopener noreferrer"` để không làm mất dữ liệu đang nhập.
+    - Focus vào tiêu đề hộp thoại (`tabIndex={-1}`, ẩn outline focus lập trình) thay vì nút đóng `×` khi mở `ModalDialog`.
+    - Thống nhất mũi tên mở rộng dạng chevron xoay mượt trên cả `.checkout-note summary` và `.order-received-details summary`.
+    - Trên mobile (`≤ 768px`), `.order-form-modal[open]:not(.checkout-preview)` hiển thị toàn màn hình (`100%`, không lề, không bo góc).
+  - **Màn Đã nhận đơn hàng (`src/components/OrderSuccessView.jsx`, `src/lib/checkout-presentation.js`, `src/styles/checkout.css`)**:
+    - Sắp xếp lại theo thứ tự ưu tiên: **Mã đơn** → **Bước tiếp theo & Thông tin chuyển khoản** → **Chi tiết đơn & Người nhận** → **Lưu ảnh biên lai / Xác nhận nhanh**.
+    - Nâng cấp chân trang thành 2 nút rõ ràng: nút phụ **Tra cứu đơn** (dạng nút viền gắn sẵn `?code=...`) và nút chính **Tiếp tục mua sắm** (nút hồng nổi bật; vẫn giữ khả năng đổi chữ trong Visual Builder).
+  - **Khung Chat AI (`src/components/ChatButton.jsx`, `src/components/ChatChannelChooser.jsx`, `src/components/ChatPanel.jsx`, `src/styles/chat-button.css`, `qa/chat-popup-side.spec.js`)**:
+    - Khi chưa cấu hình Zalo (chỉ có 1 kênh AI), bấm nút chat hoặc gợi ý sẽ mở thẳng khung chat AI; thông báo nội bộ `Zalo chưa được cấu hình...` chỉ hiện ở chế độ xem trước admin (`preview`), không bao giờ lộ ra khách.
+    - Sửa lỗi cắt biểu tượng `✧` ở đầu vùng tin nhắn, thu gọn tiêu đề lời chào (`17px` gọn gàng cho khung ~310px, vẫn tôn trọng biến tùy chỉnh admin), bỏ nhãn `"Bạn"` thừa trên bong bóng tin nhắn của khách, và xóa viền kép trên `textarea` của ô nhập liệu.
+- **File / khu vực liên quan**: `src/components/OrderFormFields.jsx`, `src/components/ModalDialog.jsx`, `src/components/OrderSuccessView.jsx`, `src/lib/checkout-presentation.js`, `src/styles/global.css`, `src/styles/checkout.css`, `src/components/ChatButton.jsx`, `src/components/ChatChannelChooser.jsx`, `src/components/ChatPanel.jsx`, `src/styles/chat-button.css`, `qa/chat-popup-side.spec.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **269/269** unit test đạt, `eslint .` 0 lỗi, `vite build` & ngân sách bundle đạt (`136.90 kB` gzip).
+  - Playwright (`width-1440` & `width-390`): **32/32** test đạt trên `qa/editor-checkout.spec.js`, `qa/order-receipt.spec.js`, `qa/chat-popup-side.spec.js`, `qa/chat-liquid.spec.js`, và `qa/glass-surfaces.spec.js` (2 test phân tách thiết bị bỏ qua đúng điều kiện).
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu.
+
 ## 21/11/2026 — Tối ưu hiệu năng, giảm giật lag cho Form đặt hàng
 
 - **Lý do**: Người dùng phản ánh form đặt hàng có cảm giác lag khi mở, cuộn và gõ chọn địa chỉ; kiểm tra cho thấy nguyên nhân chính đến từ `backdrop-filter: blur(4px)` toàn màn hình trên `dialog::backdrop` chạy chồng lên hiệu ứng cánh hoa rơi nền, kết hợp `backdrop-filter` glass trên mobile, `scrollIntoView` cưỡng bức trên mỗi lần gõ phím trong `AddressSelect`, và thời lượng mở modal `420ms` kèm re-render không cần thiết.

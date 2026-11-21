@@ -131,7 +131,7 @@ function ChatButton() {
         }
         animateButtonPress(event.currentTarget,true);
         if (open) { close(); return; }
-        setChannel("choose");
+        setChannel(zalo ? "choose" : "ai");
         setOpen(true);
       }}
       aria-label={open ? "Đóng chat với ORORA" : "Chat với ORORA"}
@@ -141,7 +141,7 @@ function ChatButton() {
     >
       <span className="chat-icon" aria-hidden="true">{open ? "×" : "✦"}</span>
       <span className="chat-text">Trò chuyện cùng ORORA</span>
-    </button>{!open && <ChatHint open={false} dismissed={false} settings={settings} anchor={button} position={position} startedAt={hintEpoch} onOpen={() => { setChannel("choose");setOpen(true); }} />}</div>{open && (channel === "choose" ? <ChatChannelChooser anchor={button} motion={home.navStyles?.surfaces} dockSide={popupSide} settings={settings} id={panelId} zalo={zalo} onAI={() => setChannel("ai")} onClose={close} /> : <ChatPanel anchor={button} motion={home.navStyles?.surfaces} anchorY={position?.y} panelWidth={home.navStyles?.surfaces?.chatPanelWidth} panelHeight={home.navStyles?.surfaces?.chatPanelHeight} dockSide={popupSide} id={panelId} settings={settings} conversation={conversation} onClose={close} contactLinks={zalo ? [{ href: zalo }] : conversation.metadata?.links?.filter((link) => ["phone", "facebook", "contact"].includes(link.id)) || []} />)}</>
+    </button>{!open && <ChatHint open={false} dismissed={false} settings={settings} anchor={button} position={position} startedAt={hintEpoch} onOpen={() => { setChannel(zalo ? "choose" : "ai"); setOpen(true); }} />}</div>{open && (channel === "choose" ? <ChatChannelChooser anchor={button} motion={home.navStyles?.surfaces} dockSide={popupSide} settings={settings} id={panelId} zalo={zalo} onAI={() => setChannel("ai")} onClose={close} /> : <ChatPanel anchor={button} motion={home.navStyles?.surfaces} anchorY={position?.y} panelWidth={home.navStyles?.surfaces?.chatPanelWidth} panelHeight={home.navStyles?.surfaces?.chatPanelHeight} dockSide={popupSide} id={panelId} settings={settings} conversation={conversation} onClose={close} contactLinks={zalo ? [{ href: zalo }] : conversation.metadata?.links?.filter((link) => ["phone", "facebook", "contact"].includes(link.id)) || []} />)}</>
   );
 }
 
