@@ -1,3 +1,18 @@
+## 21/11/2026 — Chuyển phóng to ảnh sản phẩm sang dạng phóng trực tiếp theo vị trí con trỏ (không mở popup riêng)
+
+- **Lý do**: Chủ website yêu cầu di chuột vào vị trí nào trên ảnh sản phẩm thì phóng to trực tiếp ngay tại chỗ đó thay vì mở cửa sổ popup Lightbox riêng.
+- **Thay đổi chính**:
+  - **Phóng to trực tiếp trên khung ảnh (`src/components/ProductDetail.jsx`, `src/styles/product-detail.css`)**:
+    - Bỏ hoàn toàn popup `ProductImageLightbox` khỏi trang Chi tiết sản phẩm.
+    - Trên desktop: di chuột vào ảnh tự động phóng to `2.15×` ngay tại tọa độ con trỏ (`--zoom-x`, `--zoom-y`, cập nhật trực tiếp qua style DOM mượt 60fps) và tự nạp ảnh độ phân giải cao `w_1600`; rời chuột khỏi ảnh hoặc đưa chuột vào nút `‹` / `›` sẽ tự thu về `1×`.
+    - Trên mobile: chạm trực tiếp để bật/tắt phóng to tại điểm chạm và kéo ngón tay để soi chi tiết trong khung ảnh; vuốt ngang khi ở mức `1×` để đổi ảnh.
+  - **Kiểm thử (`qa/editor-checkout.spec.js`)**: Cập nhật test xác minh di chuột vào ảnh kích hoạt `data-zooming="true"`, cập nhật đúng `--zoom-x`/`--zoom-y`, nạp ảnh `w_1600`, không mở bất kỳ `dialog` nào và tự tắt khi rời chuột.
+- **File / khu vực liên quan**: `src/components/ProductDetail.jsx`, `src/styles/product-detail.css`, `qa/editor-checkout.spec.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **264/264** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt (`136.83 kB` gzip).
+  - Playwright (`width-1440` & `width-390`): **15/15** test đạt trên `qa/editor-checkout.spec.js` (1 test mobile-only bỏ qua trên desktop).
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu.
+
 ## 21/11/2026 — Bỏ nút "Phóng to ảnh" riêng lẻ, nâng cấp trải nghiệm xem & phóng to ảnh sản phẩm chuẩn e-commerce
 
 - **Lý do**: Nút `Phóng to ảnh` đặt bên dưới ảnh chính làm thừa chi tiết và không tự nhiên bằng thao tác bấm/chạm trực tiếp vào ảnh như các trang thương mại điện tử lớn.

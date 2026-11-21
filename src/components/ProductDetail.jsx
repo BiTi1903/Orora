@@ -1,4 +1,3 @@
-import ProductImageLightbox from "./ProductImageLightbox";
 import useStorefrontStock from "../hooks/useStorefrontStock";
 import ButtonIcon from "./ButtonIcon";
 import {createPortal} from "react-dom";
@@ -63,10 +62,12 @@ function ProductDetail({
   const navigate = useNavigate();
   const pageRef = useRef(null);
   const mobileBuyRef = useRef(null);
+  const imageBoxRef = useRef(null);
   const [orderProductId, setOrderProductId] = useState(null);
   const [orderSource, setOrderSource] = useState(null);
   const [purchaseSelection, setPurchaseSelection] = useState(null);
-  const [lightbox, setLightbox] = useState(null);
+  const [zoomActive, setZoomActive] = useState(false);
+  const [zoomHiRes, setZoomHiRes] = useState(false);
   const [consultationOpen, setConsultationOpen] = useState(false);
   const [consultationSource, setConsultationSource] = useState(null);
 
@@ -458,6 +459,7 @@ function ProductDetail({
       <section className="product-detail-content product-detail-content--with-sections">
         <div className="product-detail-gallery" style={galleryStyle}>
           <div
+            ref={imageBoxRef}
             className={`product-detail-image ${!preview && displaySrc ? "is-interactive " : ""}${selectedClass("pdImage")}${
               fixedHeight != null ? " product-detail-image--fixed-h" : ""
             }`}
@@ -466,53 +468,109 @@ function ProductDetail({
               ["--pd-object-fit"]: objectFitValue,
             }}
             data-builder-key={preview ? "pdImage" : undefined}
-            role={!preview && displaySrc ? "button" : undefined}
+            data-zooming={!preview && displaySrc ? String(zoomActive) : undefined}
             tabIndex={!preview && displaySrc ? 0 : undefined}
-            aria-label={!preview && displaySrc ? "Phóng to ảnh" : undefined}
-            onClick={
-              preview
-                ? select("pdImage")
-                : displaySrc
-                  ? () => setLightbox(displaySrc)
-                  : undefined
+            aria-label={!preview && displaySrc ? "Di chuột hoặc chạm vào ảnh để phóng to tại vị trí đó" : undefined}
+            onClick={preview ? select("pdImage") : undefined}
+            onMouseEnter={
+              !preview && displaySrc
+                ? (event) => {
+                    const rect = event.currentTarget.getBoundingClientRect();
+                    if (rect.width && rect.height) {
+                      const px = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
+                      const py = Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100));
+                      event.currentTarget.style.setProperty("--zoom-x", `${px.toFixed(2)}%`);
+                      event.currentTarget.style.setProperty("--zoom-y", `${py.toFixed(2)}%`);
+                    }
+                    setZoomHiRes(true);
+                    setZoomActive(true);
+                  }
+                : undefined
             }
+            onMouseMove={
+              !preview && displaySrc
+                ? (event) => {
+                    const rect = event.currentTarget.getBoundingClientRect();
+                    if (rect.width && rect.height) {
+                      const px = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
+                      const py = Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100));
+                      event.currentTarget.style.setProperty("--zoom-x", `${px.toFixed(2)}%`);
+                      event.currentTarget.style.setProperty("--zoom-y", `${py.toFixed(2)}%`);
+                    }
+                    if (!zoomHiRes) setZoomHiRes(true);
+                    if (!zoomActive) setZoomActive(true);
+                  }
+                : undefined
+            }
+            onMouseLeave={!preview && displaySrc ? () => setZoomActive(false) : undefined}
             onKeyDown={
               !preview && displaySrc
                 ? (event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
-                      setLightbox(displaySrc);
+                      setZoomHiRes(true);
+                      setZoomActive((current) => !current);
+                    } else if (event.key === "Escape" && zoomActive) {
+                      setZoomActive(false);
                     } else if (allImages.length > 1 && event.key === "ArrowLeft") {
                       event.preventDefault();
+                      setZoomActive(false);
                       stepMainImage(-1);
                     } else if (allImages.length > 1 && event.key === "ArrowRight") {
                       event.preventDefault();
+                      setZoomActive(false);
                       stepMainImage(1);
                     }
                   }
                 : undefined
             }
-            onTouchStart={!preview && allImages.length > 1 ? (event) => {
+            onTouchStart={!preview && displaySrc ? (event) => {
               const t = event.touches?.[0];
-              if (t) swipeStartRef.current = { x: t.clientX, y: t.clientY };
+              if (t) swipeStartRef.current = { x: t.clientX, y: t.clientY, moved: false };
             } : undefined}
-            onTouchEnd={!preview && allImages.length > 1 ? (event) => {
+            onTouchMove={!preview && displaySrc ? (event) => {
+              const t = event.touches?.[0];
+              const start = swipeStartRef.current;
+              if (!t || !start) return;
+              if (Math.hypot(t.clientX - start.x, t.clientY - start.y) > 10) start.moved = true;
+              if (zoomActive) {
+                const rect = event.currentTarget.getBoundingClientRect();
+                if (rect.width && rect.height) {
+                  const px = Math.max(0, Math.min(100, ((t.clientX - rect.left) / rect.width) * 100));
+                  const py = Math.max(0, Math.min(100, ((t.clientY - rect.top) / rect.height) * 100));
+                  event.currentTarget.style.setProperty("--zoom-x", `${px.toFixed(2)}%`);
+                  event.currentTarget.style.setProperty("--zoom-y", `${py.toFixed(2)}%`);
+                }
+              }
+            } : undefined}
+            onTouchEnd={!preview && displaySrc ? (event) => {
               const start = swipeStartRef.current;
               swipeStartRef.current = null;
               const t = event.changedTouches?.[0];
               if (!start || !t) return;
               const dx = t.clientX - start.x;
               const dy = t.clientY - start.y;
-              if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.2) {
-                event.preventDefault();
+              if (!zoomActive && allImages.length > 1 && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.2) {
                 stepMainImage(dx < 0 ? 1 : -1);
+                return;
+              }
+              if (!start.moved && Math.hypot(dx, dy) < 10) {
+                const rect = event.currentTarget.getBoundingClientRect();
+                if (rect.width && rect.height) {
+                  const px = Math.max(0, Math.min(100, ((t.clientX - rect.left) / rect.width) * 100));
+                  const py = Math.max(0, Math.min(100, ((t.clientY - rect.top) / rect.height) * 100));
+                  event.currentTarget.style.setProperty("--zoom-x", `${px.toFixed(2)}%`);
+                  event.currentTarget.style.setProperty("--zoom-y", `${py.toFixed(2)}%`);
+                }
+                setZoomHiRes(true);
+                setZoomActive((current) => !current);
               }
             } : undefined}
           >
             {displaySrc ? (
               <img
                 key={displaySrc}
-                src={productMainImage(displaySrc, window.innerWidth)}
+                src={zoomHiRes ? cdnSrc(displaySrc, { w: 1600, q: "auto:best" }) : productMainImage(displaySrc, window.innerWidth)}
                 loading="eager"
                 fetchPriority="high"
                 decoding="async"
@@ -529,7 +587,8 @@ function ProductDetail({
                   type="button"
                   className="product-image-nav prev"
                   aria-label="Ảnh trước"
-                  onClick={(event) => { event.stopPropagation(); stepMainImage(-1); }}
+                  onMouseEnter={(event) => { event.stopPropagation(); setZoomActive(false); }}
+                  onClick={(event) => { event.stopPropagation(); setZoomActive(false); stepMainImage(-1); }}
                 >
                   ‹
                 </button>
@@ -537,7 +596,8 @@ function ProductDetail({
                   type="button"
                   className="product-image-nav next"
                   aria-label="Ảnh sau"
-                  onClick={(event) => { event.stopPropagation(); stepMainImage(1); }}
+                  onMouseEnter={(event) => { event.stopPropagation(); setZoomActive(false); }}
+                  onClick={(event) => { event.stopPropagation(); setZoomActive(false); stepMainImage(1); }}
                 >
                   ›
                 </button>
@@ -555,16 +615,6 @@ function ProductDetail({
               </span>
             )}
           </div>
-
-          {!preview && lightbox && (
-            <ProductImageLightbox
-              src={lightbox}
-              images={allImages}
-              initialIndex={safeIndex}
-              name={product.name}
-              onClose={() => setLightbox(null)}
-            />
-          )}
           {secondaryImages.length > 0 && (
             <div
               className={`product-detail-thumbs-wrap ${selectedClass("pdThumbs")}`}

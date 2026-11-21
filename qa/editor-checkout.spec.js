@@ -75,7 +75,7 @@ test('known stock blocks orders', async ({ page }) => {
  await expect(page.locator('.product-mobile-buy .product-mobile-buy-cta')).toBeDisabled();
 });
 
-test('product image dialog opens the source and zoom controls enlarge it', async ({ page }) => {
+test('product image zooms inline at cursor position without opening a popup', async ({ page }) => {
  await page.route('https://res.cloudinary.com/**', route => route.fulfill({
   contentType: 'image/svg+xml',
   body: '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600"><rect width="600" height="600" fill="pink"/></svg>',
@@ -84,24 +84,20 @@ test('product image dialog opens the source and zoom controls enlarge it', async
   ...base,
   'lib/api.js': `export const getProduct=async()=>(${JSON.stringify({ ...product, image: 'https://res.cloudinary.com/demo/image/upload/product.svg' })});`,
  });
- await page.getByRole('button', { name: 'Phóng to ảnh' }).click();
- const dialog = page.getByRole('dialog', { name: product.name });
- await expect(dialog.getByRole('img')).toHaveAttribute('src', /w_1600/);
- await dialog.getByRole('button', { name: 'Phóng to', exact: true }).click();
- await expect(dialog.getByRole('img')).toHaveAttribute('style', /width: 150%/);
- const view = dialog.getByRole('region', { name: 'Ảnh sản phẩm phóng to' });
- await view.focus();
- await expect(view).toBeFocused();
- const box = await view.boundingBox();
- await page.mouse.move(box.x + box.width * .75, box.y + 30);
- await page.mouse.down();
- await page.mouse.move(box.x + box.width * .25, box.y + 30, { steps: 4 });
- await page.mouse.up();
- await expect.poll(() => view.evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
- await dialog.getByRole('button', { name: 'Phóng to', exact: true }).click();
- await expect(dialog.getByRole('img')).toHaveAttribute('src', /w_2400/);
- await page.keyboard.press('Escape');
- await expect(dialog).toHaveCount(0);
+ const imageBox = page.locator('.product-detail-image.is-interactive');
+ await expect(imageBox).toBeVisible();
+ const box = await imageBox.boundingBox();
+ await page.mouse.move(box.x + box.width * 0.25, box.y + box.height * 0.75);
+ await expect(imageBox).toHaveAttribute('data-zooming', 'true');
+ await expect(imageBox.locator('img')).toHaveAttribute('src', /w_1600/);
+ await expect(page.getByRole('dialog')).toHaveCount(0);
+ const origin = await imageBox.evaluate(el => ({ x: parseFloat(el.style.getPropertyValue('--zoom-x')), y: parseFloat(el.style.getPropertyValue('--zoom-y')) }));
+ expect(origin.x).toBeGreaterThan(15);
+ expect(origin.x).toBeLessThan(35);
+ expect(origin.y).toBeGreaterThan(65);
+ expect(origin.y).toBeLessThan(85);
+ await page.mouse.move(box.x + box.width + 40, box.y);
+ await expect(imageBox).toHaveAttribute('data-zooming', 'false');
 });
 
 test('mobile buy bar shares purchase settings and leaves room for chat and navigation', async ({ page }) => {
