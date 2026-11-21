@@ -749,6 +749,7 @@ function buildHomePayload({ about, hero, collection, productDetail, features, re
     navLogo: navbar.navLogo,
     navLinks: navbar.navLinks,
     navStyles: navbar.navStyles,
+    translations: navbar.translations || {},
     philosophyLabel: philosophy.philosophyLabel,
     philosophyBody: philosophy.philosophyBody,
     philosophyAccentCount: philosophy.philosophyAccentCount,

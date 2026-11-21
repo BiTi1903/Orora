@@ -9,6 +9,7 @@ import useHomeContent from "../hooks/useHomeContent";
 import useCategories from "../hooks/useCategories";
 import { socialShopUrl } from "../lib/commerce";
 import { toCss } from "../lib/typography";
+import { SUPPORTED_LOCALES, useLocale, setLocale, translatePhrase } from "../lib/i18n";
 
 const DEFAULT_LINKS = [
   { label: "Về Chúng Tôi", href: "/#about" },
@@ -34,12 +35,70 @@ function NavDropdown({ children, label, items, onSelect }) {
   </div>;
 }
 
+function LanguageSwitcher({ settings = {}, preview = false, className = "", onSelect }) {
+  const locale = useLocale();
+  if (settings.enabled === false) return null;
+  const activeLocale = preview && settings.previewLocale ? settings.previewLocale : locale;
+  const showEn = settings.enableEn !== false;
+  const showJa = settings.enableJa !== false;
+  const codes = ["vi", ...(showEn ? ["en"] : []), ...(showJa ? ["ja"] : [])];
+  if (codes.length <= 1 && !preview) return null;
+  const labels = {
+    vi: settings.viLabel?.trim() || "VI",
+    en: settings.enLabel?.trim() || "EN",
+    ja: settings.jaLabel?.trim() || "JA",
+  };
+  const boxVars = {
+    ...(settings.background ? { "--lang-bg": settings.background } : {}),
+    ...(settings.borderColor ? { "--lang-border": settings.borderColor } : {}),
+    ...(settings.activeBackground ? { "--lang-active-bg": settings.activeBackground } : {}),
+    ...(settings.activeColor ? { "--lang-active-color": settings.activeColor } : {}),
+    ...(settings.radius != null && settings.radius !== "" ? { "--lang-radius": `${Math.max(0, Math.min(28, Number(settings.radius)))}px` } : {}),
+    ...toCss(settings.text, { responsive: true }),
+  };
+  return (
+    <div
+      role="group"
+      aria-label="Chọn ngôn ngữ / Language"
+      className={`navbar-lang-switcher ${className}`.trim()}
+      data-builder-key={preview ? "navLang" : undefined}
+      style={boxVars}
+      onClick={preview ? onSelect : undefined}
+    >
+      {SUPPORTED_LOCALES.filter((item) => codes.includes(item.code)).map((item) => {
+        const active = activeLocale === item.code;
+        return (
+          <button
+            key={item.code}
+            type="button"
+            className={`navbar-lang-btn${active ? " is-active" : ""}`}
+            aria-pressed={active}
+            aria-label={item.label}
+            title={item.label}
+            onClick={(event) => {
+              if (preview) {
+                onSelect?.(event);
+                return;
+              }
+              setLocale(item.code);
+            }}
+          >
+            {labels[item.code]}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function Navbar({
   preview = false,
   previewData = null,
   selectedElement = "",
   onSelect,
 }) {
+  const locale = useLocale();
+  const tr = (val) => (!preview && locale !== "vi" ? translatePhrase(val, locale) : val);
   const location = useLocation();
   const navRef = useRef(null);
   const drawerRef = useRef(null);
@@ -56,13 +115,14 @@ function Navbar({
   const logo = data.navLogo || "";
   const links = withTrackingNavLink(Array.isArray(data.navLinks) ? data.navLinks : []);
   const styles = data.navStyles || {};
+  const langSettings = styles.languageSwitcher || {};
   const { zalo } = contactLinks(home, "", home.productDetailStyles?.contactActions || {});
   const facebook = socialShopUrl(home.shopLinks?.facebookUrl || home.footerFacebook, "facebook");
   const tiktok = socialShopUrl(home.shopLinks?.tiktokUrl || home.footerTikTok, "tiktok");
   const submenu = (item, index) => {
     const href = resolveHref(item, index);
     if (href === "/#shop" && home.sectionVisibility?.collection !== false) return [
-      { label: "Tất cả sản phẩm", href: "/#shop" },
+      { label: tr("Tất cả sản phẩm"), href: "/#shop" },
       ...categories.filter((category) => category.id && category.name).map((category) => ({ label: category.name, href: `/?category=${encodeURIComponent(category.id)}#shop` })),
     ];
     if (href === "/#contact") return [zalo && { label: "Zalo", href: zalo, external: true }, facebook && { label: "Facebook", href: facebook, external: true }, tiktok && { label: "TikTok", href: tiktok, external: true }].filter(Boolean);
@@ -132,23 +192,26 @@ function Navbar({
         <div className="nav-links">
           {links.map((item, index) => {
             const entries = submenu(item, index);
-            const link = <Link to={resolveHref(item, index)} className={selectedClass(`navLink:${index}`)} data-builder-key={preview ? `navLink:${index}` : undefined} onClick={select(`navLink:${index}`)} style={toCss(styles.link, { responsive: true })}>{item.label}</Link>;
-            return entries.length && !preview ? <NavDropdown key={index} label={item.label} items={entries}>{link}</NavDropdown> : <span key={index}>{link}</span>;
+            const link = <Link to={resolveHref(item, index)} className={selectedClass(`navLink:${index}`)} data-builder-key={preview ? `navLink:${index}` : undefined} onClick={select(`navLink:${index}`)} style={toCss(styles.link, { responsive: true })}>{tr(item.label)}</Link>;
+            return entries.length && !preview ? <NavDropdown key={index} label={tr(item.label)} items={entries}>{link}</NavDropdown> : <span key={index}>{link}</span>;
           })}
         </div>
 
-        <span ref={preview?undefined:mountNavbarCartSlot} className="navbar-cart-slot" data-desktop-cart-slot={preview?undefined:""}>{preview&&<CartButton settings={styles.cart} inNavbar preview className={selectedClass("navCart")} onClick={select("navCart")}/>}</span>
-        <button
-          className={`menu${menuOpen ? " menu--open" : ""}`}
-          type="button"
-          onClick={toggleMenu}
-          aria-label={menuOpen ? "Đóng menu" : "Mở menu"}
-          aria-expanded={menuOpen}
-          style={{ visibility: menuOpen ? "hidden" : undefined }}
-          tabIndex={menuOpen ? -1 : 0}
-        >
-          <span className="menu-icon" />
-        </button>
+        <div className="navbar-actions">
+          <LanguageSwitcher settings={langSettings} preview={preview} className={selectedClass("navLang")} onSelect={select("navLang")} />
+          <span ref={preview?undefined:mountNavbarCartSlot} className="navbar-cart-slot" data-desktop-cart-slot={preview?undefined:""}>{preview&&<CartButton settings={styles.cart} inNavbar preview className={selectedClass("navCart")} onClick={select("navCart")}/>}</span>
+          <button
+            className={`menu${menuOpen ? " menu--open" : ""}`}
+            type="button"
+            onClick={toggleMenu}
+            aria-label={menuOpen ? "Đóng menu" : "Mở menu"}
+            aria-expanded={menuOpen}
+            style={{ visibility: menuOpen ? "hidden" : undefined }}
+            tabIndex={menuOpen ? -1 : 0}
+          >
+            <span className="menu-icon" />
+          </button>
+        </div>
       </nav>
 
       {/* ===== MOBILE DRAWER ===== */}
@@ -165,11 +228,15 @@ function Navbar({
           <button type="button" className="drawer-close" aria-label="Đóng menu" onClick={closeMenu}>×</button>
         </div>
 
+        <div className="mobile-drawer-lang">
+          <LanguageSwitcher settings={langSettings} preview={preview} />
+        </div>
+
         <nav key={menuOpen ? "open" : "closed"} className="mobile-drawer-links">
           {links.map((item, index) => {
             const entries = submenu(item, index);
-            if (!entries.length) return <Link key={index} to={resolveHref(item, index)} onClick={closeMenu}>{item.label}</Link>;
-            return <details className="mobile-nav-group" key={index}><summary>{item.label}<ButtonIcon name="navMobileDropdown" defaultSize={14} allowHidden={false}/></summary><div className="mobile-nav-submenu">{entries.map((entry) => entry.external ? <a key={entry.href} href={entry.href} target="_blank" rel="noreferrer" onClick={closeMenu}>{entry.label}</a> : <Link key={entry.href} to={entry.href} onClick={closeMenu}>{entry.label}</Link>)}</div></details>;
+            if (!entries.length) return <Link key={index} to={resolveHref(item, index)} onClick={closeMenu}>{tr(item.label)}</Link>;
+            return <details className="mobile-nav-group" key={index}><summary>{tr(item.label)}<ButtonIcon name="navMobileDropdown" defaultSize={14} allowHidden={false}/></summary><div className="mobile-nav-submenu">{entries.map((entry) => entry.external ? <a key={entry.href} href={entry.href} target="_blank" rel="noreferrer" onClick={closeMenu}>{entry.label}</a> : <Link key={entry.href} to={entry.href} onClick={closeMenu}>{entry.label}</Link>)}</div></details>;
           })}
         </nav>
       </aside>

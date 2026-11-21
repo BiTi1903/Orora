@@ -3,6 +3,7 @@ import { InspectorGroup } from "./Inspector";
 import CartSettings from "./CartSettings";
 import MobileNavSettings from "./MobileNavSettings";
 import SurfaceSettings from "./SurfaceSettings";
+import LanguageSwitcherSettings from "./LanguageSwitcherSettings";
 import { SettingGroup, SelectField, StyleTypographyBlock, ColorField } from "./ui";
 import { BUILDER_COLOR_DEFAULTS } from "../controls/color-defaults";
 import { SPACE_OPTIONS } from "./options";
@@ -24,6 +25,7 @@ export function NavbarSettings({ selected, navbar, onChange, onStyleChange }) {
   );
 
   if (selected === "navCart") return <CartSettings navbar={navbar} onChange={onChange} />;
+  if (selected === "navLang") return <LanguageSwitcherSettings navbar={navbar} onChange={onChange} />;
 
   return (
     <>
@@ -89,9 +91,14 @@ export function NavbarSettings({ selected, navbar, onChange, onStyleChange }) {
   );
 }
 
-export function NavbarSectionSettings({ navbar, onChange, includeCart = true }) {
+export function NavbarSectionSettings({ navbar, onChange, includeCart = true, includeLang = true }) {
   return (
     <>
+      {includeLang && (
+        <InspectorGroup title="Đa ngôn ngữ (VI / EN / JA)">
+          <LanguageSwitcherSettings navbar={navbar} onChange={onChange} />
+        </InspectorGroup>
+      )}
       {includeCart && (
         <InspectorGroup title="Form giỏ hàng & nút giỏ hàng">
           <CartSettings navbar={navbar} onChange={onChange} />

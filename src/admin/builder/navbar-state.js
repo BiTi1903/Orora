@@ -42,5 +42,6 @@ export function createNav(data = {}) {
       logo: { ...DEFAULT_NAV.navStyles.logo, ...(data.navStyles?.logo || {}) },
       link: { ...DEFAULT_NAV.navStyles.link, ...(data.navStyles?.link || {}) },
     },
+    translations: data.translations || {},
   };
 }

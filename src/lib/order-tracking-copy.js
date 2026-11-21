@@ -1,4 +1,5 @@
 import { toCss } from './typography.js';
+import { getLocale, translatePhrase } from './i18n.js';
 export const ORDER_TRACKING_FIELDS = [
   ['nextNew','Bước tiếp theo — mới nhận','ORORA sẽ kiểm tra và liên hệ xác nhận đơn.'],
   ['nextConfirmed','Bước tiếp theo — đã xác nhận','ORORA sẽ chuẩn bị đơn và bàn giao cho đơn vị giao hàng.'],
@@ -41,8 +42,12 @@ export const ORDER_TRACKING_FIELDS = [
 ];
 export const TRACKING_RESULT_KEYS=['nextNew','nextConfirmed','nextShipping','nextCompleted','progressTitle','createdLabel','updatedLabel','productSectionTitle','productLabel','volumeLabel','paymentSectionTitle','methodLabel','costSectionTitle','subtotalLabel','shippingLabel','totalLabel','cancelledHelp','paidLabel','unpaidLabel','refundedLabel','paymentLabel','resultTitle','resultSummary','allLabel','detailLabel','quantityLabel','pendingTotalLabel','emptyFilterLabel','previousLabel','nextLabel','pageLabel','moreLabel','moreLoadingLabel','moreHelp','statusHelp'];
 export const TRACKING_STYLE_GROUPS=[['detailHeading','Chi tiết — tiêu đề nhóm'],['detailProduct','Chi tiết — tên sản phẩm'],['detailTotal','Chi tiết — tổng tiền'],['eyebrow','Dòng chữ nhỏ'],['title','Tiêu đề trang'],['intro','Lời giới thiệu'],['formTitle','Tiêu đề khung nhập'],['modeTitle','Tên cách tra cứu'],['modeBody','Mô tả cách tra cứu'],['label','Nhãn ô nhập'],['input','Chữ trong ô nhập'],['button','Nút tra cứu'],['guideTitle','Tiêu đề hướng dẫn'],['guideBody','Nội dung hướng dẫn'],['help','Ghi chú và liên hệ'],['resultTitle','Tiêu đề kết quả'],['resultBody','Nội dung kết quả']];
-export function trackingCopy(value = {}) {
-  return Object.fromEntries(ORDER_TRACKING_FIELDS.map(([key,,fallback]) => [key,typeof value?.[key] === 'string' && value[key].trim() ? value[key] : fallback]));
+export function trackingCopy(value = {}, locale = getLocale()) {
+  const isAdmin = typeof window !== 'undefined' && window.location?.pathname?.startsWith('/admin');
+  return Object.fromEntries(ORDER_TRACKING_FIELDS.map(([key,,fallback]) => {
+    const raw = typeof value?.[key] === 'string' && value[key].trim() ? value[key] : fallback;
+    return [key, (!isAdmin && locale !== 'vi') ? translatePhrase(raw, locale) : raw];
+  }));
 }
 export function trackingTemplate(value,fields){return value.replace(/\{(\w+)\}/g,(token,key)=>fields[key]??token);}
 export function trackingStyle(value,key){const style=value?.text?.[key]||{};return {...toCss(style),textDecoration:style.textDecoration};}

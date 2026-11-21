@@ -4,9 +4,12 @@ import AddressSelect from './AddressSelect';
 import {PAYMENT_LABELS,formatVnd} from '../lib/commerce';
 import {toCss} from '../lib/typography';
 import {CHECKOUT_COPY,checkoutSubmitStyle} from '../lib/checkout-presentation';
+import {translatePhrase,useLocale} from '../lib/i18n';
 import '../styles/checkout.css';
 
 function OrderFormFields({product,items=null,subtotal,options,variantId,quantity,onVariantChange,onQuantityChange,addresses,provinceCode,wardCode,onProvinceChange,onWardChange,methods,unitPrice,shipping,total,appearance={},busy=false,error,onSubmit,preview=false,selectedElement,onSelect}){
+ const locale=useLocale();
+ const tr=(val)=>preview?val:translatePhrase(val,locale);
  const [addressError,setAddressError]=useState(false);
  const [variantError,setVariantError]=useState(false);
  const [selectedMethod,setSelectedMethod]=useState(()=>methods[0]||'');
@@ -16,7 +19,7 @@ function OrderFormFields({product,items=null,subtotal,options,variantId,quantity
  for (const key of ['recipientHeading','addressHeading','paymentHeading','summaryHeading']) {
   if (typeof copy[key] !== 'string' || !copy[key].trim()) copy[key]=CHECKOUT_COPY[key];
  }
- const label=(key)=>typeof copy[key]==='string'&&copy[key].trim()?copy[key]:CHECKOUT_COPY[key];
+ const label=(key)=>tr(typeof copy[key]==='string'&&copy[key].trim()?copy[key]:CHECKOUT_COPY[key]);
  const {headingStyle,productNameStyle,pricePillStyle,helpTextStyle,selectionStyle,paymentOptionStyle,summaryTextStyle,summaryTotalStyle,consentStyle,formTextStyle}=useMemo(()=>({
   headingStyle:toCss(appearance.formHeadingStyle,{responsive:true}),
   productNameStyle:toCss(appearance.productNameStyle,{responsive:true}),
@@ -128,7 +131,7 @@ function OrderFormFields({product,items=null,subtotal,options,variantId,quantity
          <label key={key} className={`checkout-payment-option${checked?' is-selected':''}`}>
           <input type="radio" name="paymentMethod" value={key} required checked={checked} onChange={()=>setSelectedMethod(key)} tabIndex={preview?-1:undefined}/>
           <span className="checkout-payment-option-body">
-           <strong>{PAYMENT_LABELS[key]}</strong>
+           <strong>{tr(PAYMENT_LABELS[key])}</strong>
            <small>{hint}</small>
           </span>
          </label>
@@ -140,14 +143,14 @@ function OrderFormFields({product,items=null,subtotal,options,variantId,quantity
     </div>
    </section>
    <section {...mark('ofSummary','checkout-summary')} aria-label={copy.summaryHeading||'Thanh toán'} style={summaryTextStyle}>
-    {shipping.fee!==null&&<div className="order-summary"><span>Tạm tính</span><strong>{itemTotal}</strong></div>}
-    <div className="order-summary"><span>{label('shippingFeeLabel')}</span><strong>{shipping.fee===null?(shipping.reason||label('shippingUnknownLabel')):formatVnd(shipping.fee)}</strong></div>
+    {shipping.fee!==null&&<div className="order-summary"><span>{tr('Tạm tính')}</span><strong>{itemTotal}</strong></div>}
+    <div className="order-summary"><span>{label('shippingFeeLabel')}</span><strong>{shipping.fee===null?tr(shipping.reason||label('shippingUnknownLabel')):formatVnd(shipping.fee)}</strong></div>
     <div className="order-summary checkout-total"><span>{shipping.fee===null?label('subtotalPendingLabel'):label('totalLabel')}</span><strong style={summaryTotalStyle}>{total===null?(effectiveSubtotal===null?'ORORA sẽ xác nhận':itemTotal):formatVnd(total)}</strong></div>
    </section>
    <label {...mark('ofConsent','order-consent')} style={consentStyle} onClick={preview&&onSelect?event=>{event.preventDefault();pick('ofConsent',event);}:undefined}><input name="consent" type="checkbox" required tabIndex={preview?-1:undefined}/><span>{label('consentText')} {!preview&&<a href="/chinh-sach" target="_blank" rel="noopener noreferrer" className="order-consent-link" onClick={event=>event.stopPropagation()}>(Chính sách bảo mật & đổi trả)</a>}</span></label>
    {!methods.length&&<p role="status">Website đang tạm ngưng nhận đơn. Vui lòng liên hệ ORORA hoặc mua qua các kênh bên trên.</p>}
    {error&&<p className="order-error" role="alert">{error}</p>}
-   <div {...mark('ofSubmit','checkout-sticky')}><div className="checkout-submit"><button type={preview?'button':'submit'} className="website-order-submit" aria-busy={busy} style={checkoutSubmitStyle(appearance,busy)} disabled={(preview&&!onSelect)||busy||!methods.length} onClick={preview&&onSelect?event=>{event.preventDefault();pick('ofSubmit',event);}:undefined}>{busy?appearance.orderBusyLabel?.trim()||'Đang gửi đơn hàng…':appearance.orderSubmitLabel?.trim()||'Đặt hàng ngay'}</button></div></div>
+   <div {...mark('ofSubmit','checkout-sticky')}><div className="checkout-submit"><button type={preview?'button':'submit'} className="website-order-submit" aria-busy={busy} style={checkoutSubmitStyle(appearance,busy)} disabled={(preview&&!onSelect)||busy||!methods.length} onClick={preview&&onSelect?event=>{event.preventDefault();pick('ofSubmit',event);}:undefined}>{tr(busy?appearance.orderBusyLabel?.trim()||'Đang gửi đơn hàng…':appearance.orderSubmitLabel?.trim()||'Đặt hàng ngay')}</button></div></div>
   </fieldset>
  </form>;
 }

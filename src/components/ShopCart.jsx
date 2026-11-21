@@ -16,8 +16,10 @@ import {cartModalStyle,cartActionButtonStyle} from '../lib/cart-presentation';
 import '../styles/shop-cart.css';
 import {cdnSrc,THUMB} from '../lib/image-cdn';
 import {CART_COPY,CART_STORAGE_KEY,readCartRows} from '../lib/cart-copy';
+import {useLocale,translatePhrase} from '../lib/i18n';
 const OrderForm=lazy(()=>import('./OrderForm'));
 export default function ShopCart(){
+ const locale=useLocale();
  const navigate=useNavigate();
  const [closing,setClosing]=useState(false);
  const [openSource,setOpenSource]=useState(null);
@@ -25,7 +27,8 @@ export default function ShopCart(){
  const sourceFor=source=>source||[...document.querySelectorAll('[data-cart-target]')].find(el=>el.getBoundingClientRect().width>0)?.getBoundingClientRect().toJSON()||{x:window.innerWidth/2,y:window.innerHeight,width:0,height:0};
 
  const cartHost=useSyncExternalStore(subscribeNavbarCartSlot,getNavbarCartSlot,getNavbarCartSlot);
- const home=useHomeContent(),{products,loading:productsLoading}=useProducts(),settings=home.navStyles?.cart||{},copy={...CART_COPY,...settings.copy};
+ const home=useHomeContent(),{products,loading:productsLoading}=useProducts(),settings=home.navStyles?.cart||{};
+ const copy=Object.fromEntries(Object.entries({...CART_COPY,...settings.copy}).map(([k,v])=>[k,locale==='vi'?v:translatePhrase(v,locale)]));
  const acceptsWebsiteOrders=availablePaymentMethods(home).length>0;
  const popupDuration=Math.max(200,Math.min(700,Number(settings.popupDuration)||420));
  const popupMotion=settings.popupAnimation!==false;

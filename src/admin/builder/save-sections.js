@@ -2,7 +2,7 @@ const FIELDS = {
   productneeds: ["productNeeds"],
   productfaq: ["productFaq"],
   visibility: ["sectionVisibility"],
-  navbar: ["navLogo", "navLinks", "navStyles"],
+  navbar: ["navLogo", "navLinks", "navStyles", "translations"],
   hero: ["heroEyebrow", "heroTitle", "heroDescription", "heroRotator", "heroRotatorPrefix", "heroRotatorSuffix", "heroStyles", "heroButtonText", "heroButtonLink", "shopButtonText", "shopButtonLink", "heroImage", "heroImageMobile", "heroChip1", "heroChip2", "heroChip3", "heroGlassCards", "heroRingText", "heroScrollText"],
   about: ["storyLabel", "storyTitle", "storyHighlight", "storyText", "storyImage", "storyImages", "storyStats", "aboutBuilder", "aboutStyles"],
   philosophy: ["philosophyLabel", "philosophyBody", "philosophyAccentCount", "philosophyStyles"],

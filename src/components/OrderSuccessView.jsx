@@ -4,6 +4,7 @@ import OrderReceiptActions from './OrderReceiptActions';
 import {PAYMENT_LABELS,formatVnd} from '../lib/commerce';
 import {CHECKOUT_RECEIPT_COPY,receiptModalStyle} from '../lib/checkout-presentation';
 import {toCss} from '../lib/typography';
+import {useLocale,translatePhrase} from '../lib/i18n';
 import '../styles/checkout.css';
 
 const SAMPLE_ORDER={
@@ -31,6 +32,8 @@ const SAMPLE_ORDER={
 };
 
 export function OrderSuccessContent({order,home={},appearance={},onClose,preview=false,selectedElement,onSelect}){
+ const locale=useLocale();
+ const tr=val=>(!preview&&locale!=='vi')?translatePhrase(val,locale):val;
  const [copiedKey,setCopiedKey]=useState('');
  const copyValue=(key,val)=>{
   if(preview||!val)return;
@@ -40,7 +43,7 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
   }).catch(()=>{});
  };
  const copy={...CHECKOUT_RECEIPT_COPY};
- const text=(key)=>appearance[key]?.trim()||copy[key];
+ const text=(key)=>tr(appearance[key]?.trim()||copy[key]);
  const pick=(key,event)=>{if(!preview)return;event?.stopPropagation?.();onSelect?.(key);};
  const mark=(key,base='')=>preview?{'data-builder-key':key,className:`${base}${selectedElement===key?' builder-selected':''}`.trim()||undefined,onClick:event=>{event.preventDefault();pick(key,event);}}:{className:base||undefined};
  const textStyle=toCss(appearance.receiptTextStyle,{responsive:true});
@@ -56,14 +59,14 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
  const totalStyle=toCss(appearance.receiptTotalStyle,{responsive:true});
  const trackingStyle=toCss(appearance.receiptTrackingStyle,{responsive:true});
  const closeStyle=toCss(appearance.receiptCloseStyle,{responsive:true});
- const displayMessage=appearance.receiptMessage?.trim()||order.message||SAMPLE_ORDER.message;
+ const displayMessage=tr(appearance.receiptMessage?.trim()||order.message||SAMPLE_ORDER.message);
  const transferNote=(appearance.bankTransferNote||copy.bankTransferNote).replace(/\{\{code\}\}/g,order.code);
- const mailNote=appearance.receiptEmailNote?.trim()
+ const mailNote=tr(appearance.receiptEmailNote?.trim()
   ||(order.mailStatus==='accepted'
    ?'Vui lòng kiểm tra email xác nhận và mục thư rác.'
    :order.mailStatus==='failed'
     ?'Đơn đã được nhận nhưng chưa gửi được email xác nhận. Bạn có thể liên hệ ORORA với mã đơn bên trên.'
-    :copy.receiptEmailNote);
+    :copy.receiptEmailNote));
 
  return (
   <section className="order-received" aria-label="Thông tin đơn đã nhận" style={textStyle}>

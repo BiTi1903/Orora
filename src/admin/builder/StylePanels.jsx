@@ -101,7 +101,7 @@ export function StylePanel({
 
   const settings =
     section === "navbar" ? (
-      <NavbarSectionSettings navbar={navbar} onChange={onChange} includeCart={selected !== "navCart"} />
+      <NavbarSectionSettings navbar={navbar} onChange={onChange} includeCart={selected !== "navCart"} includeLang={selected !== "navLang"} />
     ) : section === "hero" ? (
       <HeroGlassSettings hero={hero} onChange={onChange} />
     ) : section === "collection" ? (

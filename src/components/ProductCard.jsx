@@ -8,6 +8,7 @@ import { splitColor, toCss } from "../lib/typography";
 import ProductSlideshow from "./ProductSlideshow";
 import { cdnSrc, CARD } from "../lib/image-cdn";
 import { prepareProductDetail } from "../lib/product-navigation";
+import { useLocale, translatePhrase } from "../lib/i18n";
 
 function ProductCard({
   productId,
@@ -27,6 +28,8 @@ function ProductCard({
     /* true = ngang/margin áp dụng cả thẻ (ảnh + tên + mô tả + giá đi cùng) */
   groupLayout = false,
 }) {
+  const locale = useLocale();
+  const tr = (val) => (!preview && locale !== "vi" ? translatePhrase(val, locale) : val);
   const location = useLocation();
   const catalogState = location.pathname === "/" ? { catalogSearch: location.search } : undefined;
   const mobile=styles.mobileActions||{};
@@ -264,7 +267,7 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
           {description}
         </p>
 
-        {(stock === "out" || stock === "low") && <span className={`product-stock-badge is-${stock}`}>{stock === "out" ? "Hết hàng" : "Còn ít"}</span>}
+        {(stock === "out" || stock === "low") && <span className={`product-stock-badge is-${stock}`}>{tr(stock === "out" ? "Hết hàng" : "Còn ít")}</span>}
         <div className="product-bottom">
           <span
             className={`product-price ${selectedClass(k("cardPrice"))}`}
@@ -283,10 +286,10 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
             onClick={preview ? select(k("cardButton")) : prepare}
             style={toCss(styles.button, { responsive: true })}
           >
-            {(!styles.button?.text||styles.button.text.trim().toLocaleLowerCase('vi')==='xem chi tiết')?'Xem':styles.button.text}
+            {tr((!styles.button?.text||styles.button.text.trim().toLocaleLowerCase('vi')==='xem chi tiết')?'Xem':styles.button.text)}
             <ButtonIcon name="productView" defaultSize={12}/>
           </ButtonWrap>
-          {productId&&styles.cartEnabled!==false&&<button type="button" className="card-cart-button" disabled={stock === "out"} aria-label={styles.cartLabel||'Thêm vào giỏ'} onClick={e=>{if(preview)return;e.stopPropagation();const r=e.currentTarget.getBoundingClientRect();window.dispatchEvent(new CustomEvent('orora-cart-add',{detail:{id:productId,source:{x:r.x,y:r.y,width:r.width,height:r.height}}}));}}><ButtonIcon name="productCart" defaultSize={22} allowHidden={false}/></button>}
+          {productId&&styles.cartEnabled!==false&&<button type="button" className="card-cart-button" disabled={stock === "out"} aria-label={tr(styles.cartLabel||'Thêm vào giỏ')} onClick={e=>{if(preview)return;e.stopPropagation();const r=e.currentTarget.getBoundingClientRect();window.dispatchEvent(new CustomEvent('orora-cart-add',{detail:{id:productId,source:{x:r.x,y:r.y,width:r.width,height:r.height}}}));}}><ButtonIcon name="productCart" defaultSize={22} allowHidden={false}/></button>}
           </div>
         </div>
       </div>

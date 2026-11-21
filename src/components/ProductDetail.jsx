@@ -34,6 +34,7 @@ import { contactLinks } from "../lib/contact";
 import RelatedProductsSidebar from "./RelatedProductsSidebar";
 import { cdnSrc, THUMB } from "../lib/image-cdn";
 import { productMainImage } from "../lib/image-cdn";
+import { localizeProduct, translatePhrase, useLocale } from "../lib/i18n";
 
 /* Giữ xuống dòng khi admin nhấn Enter — chèn <br /> thật, không phụ thuộc CSS */
 const renderLines = (text) =>
@@ -57,6 +58,8 @@ function ProductDetail({
   selectedElement = "",
   onSelect,
 }) {
+  const locale = useLocale();
+  const tr = (val) => (preview ? val : translatePhrase(val, locale));
   const cartLocation=useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
@@ -87,9 +90,10 @@ function ProductDetail({
   // undefined = đang tải, null = không tìm thấy
   const [loadedProduct, setLoadedProduct] = useState(null);
   const [loadVersion,setLoadVersion]=useState(0);
-  const product = preview
+  const rawProduct = preview
     ? previewProduct || null
     : loadedProduct && (loadedProduct.id === id || (loadedProduct.product && matchesProductRoute(loadedProduct.product, id))) ? loadedProduct.product : undefined;
+  const product = !preview && rawProduct && locale !== "vi" ? localizeProduct(rawProduct, locale) : rawProduct;
 
   const stockMap = useStorefrontStock([product?.id], !preview);
   const acceptsWebsiteOrders = availablePaymentMethods(home).length > 0;
@@ -379,7 +383,7 @@ function ProductDetail({
       <span className="product-mobile-buy-lens" aria-hidden="true" />
       <div className="product-mobile-buy-total" aria-live="polite">
         <strong style={toCss(purchase.subtotalValueStyle)}>{mobileSubtotal}</strong>
-        {choice.quantity !== "" && <small style={toCss(purchase.subtotalLabelStyle)}>{variant ? `${variant.label} · ` : ""}{choice.quantity} sản phẩm</small>}
+        {choice.quantity !== "" && <small style={toCss(purchase.subtotalLabelStyle)}>{variant ? `${variant.label} · ` : ""}{choice.quantity} {tr("sản phẩm")}</small>}
       </div>
       <div className="product-mobile-buy-actions">
         {home.navStyles?.cart?.enabled !== false && (
@@ -387,8 +391,8 @@ function ProductDetail({
             type="button"
             className={`product-buy-cart-btn ${selectedClass("pdAddToCart")}`}
             data-builder-key={preview ? "pdAddToCart" : undefined}
-            aria-label={soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ")}
-            title={soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ")}
+            aria-label={tr(soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ"))}
+            title={tr(soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ"))}
             style={{
               ...(purchase.addToCartBackground ? { background: purchase.addToCartBackground } : {}),
               ...(purchase.addToCartBorderColor ? { borderColor: purchase.addToCartBorderColor } : {}),
@@ -429,7 +433,7 @@ function ProductDetail({
             }
             setOrderSource(btn.getBoundingClientRect().toJSON());
             setOrderProductId(product.id || product.slug);
-          }}><ButtonIcon name="orderNow" defaultSize={16}/><span>{soldOut ? "Hết hàng" : (purchase.mobileBuyLabel?.trim() || (purchase.websiteLabel?.trim() && !["Đặt hàng trên website", "Đặt hàng ngay"].includes(purchase.websiteLabel.trim()) ? purchase.websiteLabel.trim() : "Mua ngay"))}</span><ButtonIcon name="orderArrow" defaultSize={15}/></button>
+          }}><ButtonIcon name="orderNow" defaultSize={16}/><span>{tr(soldOut ? "Hết hàng" : (purchase.mobileBuyLabel?.trim() || (purchase.websiteLabel?.trim() && !["Đặt hàng trên website", "Đặt hàng ngay"].includes(purchase.websiteLabel.trim()) ? purchase.websiteLabel.trim() : "Mua ngay")))}</span><ButtonIcon name="orderArrow" defaultSize={15}/></button>
       </div>
     </div>
   );
@@ -442,16 +446,16 @@ function ProductDetail({
     >
       <div className="product-detail-top">
         {preview ? (
-          <span className="product-back">← Về danh sách sản phẩm</span>
+          <span className="product-back">{tr("← Về danh sách sản phẩm")}</span>
         ) : (
           <nav className="product-breadcrumb" aria-label="Đường dẫn trang">
-            <Link to="/">Trang chủ</Link><span aria-hidden="true">/</span>
+            <Link to="/">{tr("Trang chủ")}</Link><span aria-hidden="true">/</span>
             <Link to={{ pathname: "/", search: cartLocation.state?.catalogSearch || "", hash: "#shop" }}
               onClick={event => {
                 if (cartLocation.state?.catalogSearch === undefined || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
                 event.preventDefault();
                 navigate(-1);
-              }}>Sản phẩm</Link><span aria-hidden="true">/</span><span aria-current="page">{product.name}</span>
+              }}>{tr("Sản phẩm")}</Link><span aria-hidden="true">/</span><span aria-current="page">{product.name}</span>
           </nav>
         )}
       </div>
@@ -754,13 +758,13 @@ function ProductDetail({
 
 
 
-          {(stock === "out" || stock === "low") && <p className={`product-stock-badge is-${stock}`}>{soldOut ? "Hết hàng" : "Còn ít"}</p>}
+          {(stock === "out" || stock === "low") && <p className={`product-stock-badge is-${stock}`}>{tr(soldOut ? "Hết hàng" : "Còn ít")}</p>}
           <ProductPurchaseSelection options={options} variantId={variantId} quantity={choice.quantity} onVariantChange={(variantId) => changeSelection({ variantId })} onQuantityChange={(quantity) => changeSelection({ quantity })} disabled={soldOut} textProps={textProps} />
           <section className={`purchase-options ${selectedClass("pdPurchaseOptions")}`} aria-label="Chọn kênh mua hàng" data-builder-key={preview ? "pdPurchaseOptions" : undefined} onClick={preview ? select("pdPurchaseOptions") : undefined}>
             {!pinBuyBar && mobileBuyBar}
             {(preview || (!soldOut && (tiktokShop || facebookShop)) || (contactSettings.showTrigger === true && (showZalo || showCall || home.chatSettings?.enabled !== false || (!contact.zalo && contact.email && contactSettings.showZalo !== false)))) && (
               <div className="purchase-channels-block">
-                <h2 {...textProps("pdPurchaseHeading", "purchaseHeading")}>{purchase.heading?.trim() || "Hoặc mua qua"}</h2>
+                <h2 {...textProps("pdPurchaseHeading", "purchaseHeading")}>{tr(purchase.heading?.trim() || "Hoặc mua qua")}</h2>
                 <div className="purchase-channels-row">
                   {!soldOut && (preview || tiktokShop || facebookShop) && (
                     <div className="purchase-social" aria-label="Đặt hàng trên mạng xã hội">
@@ -772,24 +776,24 @@ function ProductDetail({
                     <div className={`product-contact-actions product-consultation ${selectedClass("pdContactActions")}`} aria-label="Tư vấn sản phẩm" data-builder-key={preview ? "pdContactActions" : undefined} onClick={preview ? select("pdContactActions") : undefined} style={preview && contactSettings.showTrigger !== true ? { opacity: 0.42 } : undefined}>
                       <button type="button" className="product-consultation-toggle" style={css("contactActions")} aria-haspopup="dialog" onClick={preview ? select("pdContactActions") : (event) => { setConsultationSource(event.currentTarget.getBoundingClientRect().toJSON()); setConsultationOpen(true); }}>
                         <ButtonIcon name="consultation" defaultSize={15}/>
-                        <span>{contactSettings.triggerLabel?.trim() || "Tư vấn"}</span>
+                        <span>{tr(contactSettings.triggerLabel?.trim() || "Tư vấn")}</span>
                       </button>
                       {!preview && consultationOpen && <ConsultationDialog source={consultationSource} onClose={() => setConsultationOpen(false)}>
                         {(preview || showZalo) && (
                           <a className="consultation-choice is-zalo" href={preview ? undefined : contact.zalo} target={preview ? undefined : "_blank"} rel="noreferrer" onClick={() => setConsultationOpen(false)} style={{ ...css("contactActions"), background: contactSettings.primaryBackground, borderColor: contactSettings.primaryBackground, color: contactSettings.primaryColor }}>
-                            <strong>{contactSettings.zaloLabel?.trim() || "Tư vấn qua Zalo"}</strong>
+                            <strong>{tr(contactSettings.zaloLabel?.trim() || "Tư vấn qua Zalo")}</strong>
                             <span>Nhắn tin trực tiếp với chuyên viên ORORA</span>
                           </a>
                         )}
                         {home.chatSettings?.enabled !== false && (
                           <button type="button" className="consultation-choice is-ai" onClick={() => { setConsultationOpen(false); window.dispatchEvent(new CustomEvent("orora-chat-open", { detail: { channel: "ai" } })); }}>
-                            <strong>Tư vấn cùng AI</strong>
+                            <strong>{tr("Tư vấn cùng AI")}</strong>
                             <span>Trợ lý AI giải đáp nhanh thành phần & cách dùng</span>
                           </button>
                         )}
                         {(preview || showCall) && (
                           <a className="consultation-choice is-call" href={preview ? undefined : contact.phone} onClick={() => setConsultationOpen(false)} style={{ ...css("contactActions"), background: contactSettings.secondaryBackground, color: contactSettings.secondaryColor }}>
-                            <strong>{contactSettings.callLabel?.trim() || "Gọi tư vấn"}</strong>
+                            <strong>{tr(contactSettings.callLabel?.trim() || "Gọi tư vấn")}</strong>
                             <span>Hỗ trợ trực tiếp qua điện thoại</span>
                           </a>
                         )}

@@ -3,12 +3,16 @@ import "../styles/order-tracking.css";
 import { ORDER_STATUSES } from '../lib/order-tracking';
 import { formatVnd, PAYMENT_LABELS } from '../lib/commerce';
 import {trackingCopy,trackingStyle} from '../lib/order-tracking-copy';
+import { useLocale, translatePhrase } from '../lib/i18n';
 const date = value => value == null ? 'Chưa cập nhật' : new Date(value).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
 const steps = ['new','confirmed','shipping','completed'];
 export default function OrderTrackingDetails({ order, copy: suppliedCopy, styles={} }) {
+ const locale = useLocale();
+ const isAdmin = typeof window !== 'undefined' && window.location?.pathname?.startsWith('/admin');
+ const tr = val => (!isAdmin && locale !== 'vi') ? translatePhrase(val, locale) : val;
  const [copied, setCopied] = useState(false);
  const nextKey={new:'nextNew',confirmed:'nextConfirmed',shipping:'nextShipping',completed:'nextCompleted'}[order.status];
- const copy=trackingCopy(suppliedCopy);
+ const copy=trackingCopy(suppliedCopy, locale);
  const css=key=>trackingStyle(styles,key);
  const money=value=>value==null?copy.pendingTotalLabel:formatVnd(value);
  const paid=order.paymentStatus==='paid',refunded=order.paymentStatus==='refunded';
@@ -16,15 +20,15 @@ export default function OrderTrackingDetails({ order, copy: suppliedCopy, styles
  return <div className="order-tracking-result" aria-label={`Kết quả tra cứu đơn ${order.code}`}>
   <section className="tracking-status-section" aria-label={copy.progressTitle}>
    <div className="order-tracking-result-heading">
-    <strong className="tracking-status-pill" data-status={order.status || 'unknown'}>{ORDER_STATUSES[order.status]||'Đang cập nhật'}</strong>
+    <strong className="tracking-status-pill" data-status={order.status || 'unknown'}>{tr(ORDER_STATUSES[order.status]||'Đang cập nhật')}</strong>
     <span className="tracking-order-code-wrap">
      <span className="tracking-order-code">{order.code}</span>
      <button type="button" className="tracking-copy-pill" onClick={() => { navigator.clipboard?.writeText(order.code).then(() => { setCopied(true); window.setTimeout(() => setCopied(false), 2000); }).catch(() => {}); }}>{copied ? '✓ Đã chép' : 'Sao chép'}</button>
     </span>
    </div>
    <div className="order-tracking-dates"><p><span>{copy.createdLabel}</span><time>{date(order.createdAt)}</time></p><p><span>{copy.updatedLabel}</span><time>{date(order.updatedAt)}</time></p></div>
-   {steps.includes(order.status)&&<ol className="order-tracking-steps" aria-label="Tiến trình đơn hàng">{steps.map((step,index)=>{const activeIdx=steps.indexOf(order.status);const reached=index<=activeIdx;const done=index<activeIdx;return <li key={step} className={`${reached?'is-reached':''}${done?' is-done':''}${step===order.status?' is-current':''}`.trim()} aria-current={step===order.status?'step':undefined}><span className="tracking-step-num" aria-hidden="true">{done?'✓':index+1}</span><span className="tracking-step-label">{ORDER_STATUSES[step]}</span></li>;})}</ol>}
-   {nextKey&&<p className="tracking-next-step"><strong>Bước tiếp theo</strong><span>{copy[nextKey]}</span></p>}
+   {steps.includes(order.status)&&<ol className="order-tracking-steps" aria-label="Tiến trình đơn hàng">{steps.map((step,index)=>{const activeIdx=steps.indexOf(order.status);const reached=index<=activeIdx;const done=index<activeIdx;return <li key={step} className={`${reached?'is-reached':''}${done?' is-done':''}${step===order.status?' is-current':''}`.trim()} aria-current={step===order.status?'step':undefined}><span className="tracking-step-num" aria-hidden="true">{done?'✓':index+1}</span><span className="tracking-step-label">{tr(ORDER_STATUSES[step])}</span></li>;})}</ol>}
+   {nextKey&&<p className="tracking-next-step"><strong>{tr('Bước tiếp theo')}</strong><span>{copy[nextKey]}</span></p>}
    {order.status==='cancelled'&&<p className="order-tracking-error">{copy.cancelledHelp}</p>}
   </section>
   <section className="tracking-detail-section tracking-product-section"><h3 style={css("detailHeading")}>{copy.productSectionTitle}</h3><dl>
@@ -42,7 +46,7 @@ export default function OrderTrackingDetails({ order, copy: suppliedCopy, styles
    )}
   </dl></section>
   <section className="tracking-detail-section"><h3 style={css("detailHeading")}>{copy.paymentSectionTitle}</h3><dl>
-   {row(copy.methodLabel,PAYMENT_LABELS[order.paymentMethod]||'Chưa cập nhật','is-wide')}
+   {row(copy.methodLabel,tr(PAYMENT_LABELS[order.paymentMethod]||'Chưa cập nhật'),'is-wide')}
    {row(copy.paymentLabel,<span className={`tracking-payment-badge${paid?' is-paid':''}`}>{paid?copy.paidLabel:refunded?copy.refundedLabel:copy.unpaidLabel}</span>)}
   </dl></section>
   <section className="tracking-detail-section tracking-cost-section"><h3 style={css("detailHeading")}>{copy.costSectionTitle}</h3><dl>

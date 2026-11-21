@@ -8,11 +8,14 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ORDER_STATUSES } from '../lib/order-tracking';
 import { formatVnd, PAYMENT_LABELS } from '../lib/commerce';
+import { useLocale, translatePhrase } from '../lib/i18n';
 const date = value => value == null ? 'Chưa cập nhật' : new Date(value).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
 export default function OrderTracking() {
+  const locale = useLocale();
+  const tr = val => locale !== 'vi' ? translatePhrase(val, locale) : val;
   const location = useLocation();
   const home = useHomeContent();
-  const copy = trackingCopy(home.orderTrackingText);
+  const copy = trackingCopy(home.orderTrackingText, locale);
   const styles=home.orderTrackingText?.styles||{},css=key=>trackingStyle(styles,key);
   const urlCode = new URLSearchParams(location.search).get('code')?.trim() || '';
   const initialCode = typeof location.state?.code === 'string' && location.state.code.trim() ? location.state.code.trim() : urlCode;
@@ -93,12 +96,12 @@ export default function OrderTracking() {
       <h2 style={css("resultTitle")}>{copy.resultTitle}</h2>
       <p className="order-tracking-result-count" role="status">{trackingTemplate(copy.resultSummary,{count:orders.length})}</p>
     </div>
-    <div className="order-tracking-statuses" role="group" aria-label="Lọc theo tình trạng đơn hàng">{[['all',copy.allLabel],...Object.entries(ORDER_STATUSES),...(orders.some(order => !ORDER_STATUSES[order.status]) ? [['unknown','Đang cập nhật']] : [])].map(([key,label]) => <button type="button" key={key} aria-pressed={status === key} onClick={() => {setStatus(key);setPage(1);}}>{label}<span>{key === 'all' ? orders.length : orders.filter(order => (ORDER_STATUSES[order.status] ? order.status : 'unknown') === key).length}</span></button>)}</div>
+    <div className="order-tracking-statuses" role="group" aria-label="Lọc theo tình trạng đơn hàng">{[['all',copy.allLabel],...Object.entries(ORDER_STATUSES),...(orders.some(order => !ORDER_STATUSES[order.status]) ? [['unknown','Đang cập nhật']] : [])].map(([key,label]) => <button type="button" key={key} aria-pressed={status === key} onClick={() => {setStatus(key);setPage(1);}}>{tr(label)}<span>{key === 'all' ? orders.length : orders.filter(order => (ORDER_STATUSES[order.status] ? order.status : 'unknown') === key).length}</span></button>)}</div>
     <div className="order-tracking-summaries">{pageOrders.map(order => <article key={order.code} className="order-tracking-summary" style={css("resultBody")}>
       <div className="order-tracking-summary-code"><strong className="tracking-summary-code-text">{order.code}</strong><small>{date(order.createdAt)}</small></div>
       <div className="order-tracking-summary-product">{order.productName ? <span>{order.productName}</span> : <span>{order.quantity != null ? `${copy.quantityLabel}: ${order.quantity}` : copy.detailLabel}</span>}<small>{order.productName ? [order.variantLabel,order.quantity != null ? `${copy.quantityLabel}: ${order.quantity}` : ''].filter(Boolean).join(' · ') : ''}</small></div>
-      <div className="order-tracking-summary-state"><strong className="tracking-status-pill" data-status={order.status || 'unknown'}>{ORDER_STATUSES[order.status] || 'Đang cập nhật'}</strong><span className="tracking-summary-price">{order.totalAmount == null ? copy.pendingTotalLabel : formatVnd(order.totalAmount)}</span><small className="order-tracking-payment" data-payment={order.paymentStatus || 'unpaid'} aria-label={copy.paymentLabel}>{[order.paymentStatus === "paid" ? copy.paidLabel : order.paymentStatus === "refunded" ? copy.refundedLabel : copy.unpaidLabel, PAYMENT_LABELS[order.paymentMethod]].filter(Boolean).join(" · ")}</small></div>
-      <button type="button" className="order-tracking-detail-btn" disabled={busy || Boolean(loadingCode)} aria-busy={loadingCode === order.code} onClick={(event) => openDetail(order, event.currentTarget.getBoundingClientRect().toJSON())} aria-label={`Xem chi tiết đơn ${order.code}`}><span>{loadingCode === order.code ? 'Đang tải…' : copy.detailLabel}</span><span aria-hidden="true">→</span></button>
+      <div className="order-tracking-summary-state"><strong className="tracking-status-pill" data-status={order.status || 'unknown'}>{tr(ORDER_STATUSES[order.status] || 'Đang cập nhật')}</strong><span className="tracking-summary-price">{order.totalAmount == null ? copy.pendingTotalLabel : formatVnd(order.totalAmount)}</span><small className="order-tracking-payment" data-payment={order.paymentStatus || 'unpaid'} aria-label={copy.paymentLabel}>{[order.paymentStatus === "paid" ? copy.paidLabel : order.paymentStatus === "refunded" ? copy.refundedLabel : copy.unpaidLabel, tr(PAYMENT_LABELS[order.paymentMethod])].filter(Boolean).join(" · ")}</small></div>
+      <button type="button" className="order-tracking-detail-btn" disabled={busy || Boolean(loadingCode)} aria-busy={loadingCode === order.code} onClick={(event) => openDetail(order, event.currentTarget.getBoundingClientRect().toJSON())} aria-label={`Xem chi tiết đơn ${order.code}`}><span>{loadingCode === order.code ? tr('Đang tải…') : copy.detailLabel}</span><span aria-hidden="true">→</span></button>
       {detailErrors[order.code] && <p className="order-tracking-row-error" role="alert">{detailErrors[order.code]}</p>}
     </article>)}</div>
     {!filtered.length && <p className="order-tracking-help">{copy.emptyFilterLabel}</p>}

@@ -1,9 +1,12 @@
-import {useCallback,useEffect,useState} from 'react';
+import {useCallback,useEffect,useMemo,useState} from 'react';
+import {useLocale,localizeProduct} from '../lib/i18n';
 const CACHE_TTL=30000;
 let cached=null;
 const freshCache=()=>cached&&Date.now()-cached.at<CACHE_TTL?cached.products:null;
 
-export default function useProducts({enabled=true}={}){
+export default function useProducts({enabled=true,raw=false}={}){
+ const locale=useLocale();
+ const isAdmin=typeof window!=='undefined'&&window.location?.pathname?.startsWith('/admin');
  const [state,setState]=useState(()=>{
   const hit=enabled?freshCache():null;
   return hit?{products:hit,loaded:true,error:null}:{products:[],loaded:false,error:null};
@@ -23,7 +26,8 @@ export default function useProducts({enabled=true}={}){
   }).catch(error=>{if(alive)setState(previous=>({...previous,loaded:true,error}));});
   return()=>{alive=false;};
  },[enabled,version,cacheHit,state.loaded]);
- const products=cacheHit||state.products;
+ const rawProducts=cacheHit||state.products;
+ const products=useMemo(()=>(raw||isAdmin||locale==='vi')?rawProducts:rawProducts.map(p=>localizeProduct(p,locale)),[rawProducts,locale,raw,isAdmin]);
  const loaded=Boolean(cacheHit)||state.loaded;
  return {products,loading:enabled&&!loaded,error:enabled?state.error:null,retry};
 }

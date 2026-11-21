@@ -7,12 +7,15 @@ import {sectionIsEnabled} from '../lib/page-sections';
 import {mobileNavSettings,mobileNavTheme,mobileNavItems} from '../lib/mobile-shop-nav';
 import {CART_STORAGE_KEY,readCartRows} from '../lib/cart-copy';
 import {toCss} from '../lib/typography';
+import {useLocale,translatePhrase} from '../lib/i18n';
 import '../styles/mobile-shop-nav.css';
 function Icon({kind}){
  const paths={home:'m3 10 9-7 9 7v11h-6v-7H9v7H3Z',story:'M12 5C8 2 4 3 2 4v16c3-2 7-2 10 0 3-2 7-2 10 0V4c-2-1-6-2-10 1Zm0 0v15',products:'M5 7h14l1 14H4ZM8 8V6a4 4 0 0 1 8 0v2',email:'M3 5h18v14H3ZM3 5l9 7 9-7',heart:'M12 21 3 12C-3 3 9 0 12 7c3-7 15-4 9 5Z',star:'m12 2 3 6 7 1-5 5 1 8-6-4-6 4 1-8-5-5 7-1Z',link:'m9 15 6-6M8 17l-2 2a4 4 0 0 1-5-5l5-5M16 7l2-2a4 4 0 0 1 5 5l-5 5',tracking:'M6 3h12v18l-3-2-3 2-3-2-3 2ZM9 8h6M9 12h6'};
  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[kind]}/></svg>;
 }
 export default function MobileShopNav({preview=false,previewData}){
+ const locale=useLocale();
+ const tr=val=>(!preview&&locale!=='vi')?translatePhrase(val,locale):val;
  const live=useHomeContent(),home=preview&&previewData?previewData:live;
  const s=mobileNavSettings(home.navStyles?.mobile),location=useLocation();
  const safari=useMobileSafari(),navId=useId();
@@ -24,8 +27,8 @@ export default function MobileShopNav({preview=false,previewData}){
   return()=>{window.removeEventListener('orora-cart-count',update);window.removeEventListener('storage',sync);};
  },[]);
  const nav=useRef(null),gesture=useRef(null),suppressClick=useRef(0);
- const items=mobileNavItems(s);
- if(home.navStyles?.cart?.enabled!==false)items.push({id:'cart',icon:'products',to:'/#cart',label:home.navStyles?.cart?.copy?.label||'Giỏ hàng'});
+ const items=mobileNavItems(s).map(item=>({...item,label:tr(item.label)}));
+ if(home.navStyles?.cart?.enabled!==false)items.push({id:'cart',icon:'products',to:'/#cart',label:tr(home.navStyles?.cart?.copy?.label||'Giỏ hàng')});
  const [passedTicker,setPassedTicker]=useState(false);
  const gated=!safari&&!preview&&location.pathname==='/'&&s.afterTicker!==false;
  const safariToolbar=useSafariToolbar(preview);
