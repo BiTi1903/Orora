@@ -178,10 +178,26 @@ export function StylePanel({
           />
         </InspectorGroup>
       </>
+    ) : section === "features" ? (
+      <InspectorGroup title="Khung thẻ ưu điểm">
+        <ReviewCardSettings
+          title="Khung thẻ ưu điểm"
+          value={features.featuresStyles?.card}
+          onChange={(patch) =>
+            onChange({
+              featuresStyles: {
+                ...features.featuresStyles,
+                card: { ...features.featuresStyles?.card, ...patch },
+              },
+            })
+          }
+        />
+      </InspectorGroup>
     ) : section === "reviews" ? (
       <>
         <InspectorGroup title="Khung thẻ đánh giá">
           <ReviewCardSettings
+            title="Khung thẻ đánh giá"
             value={reviews.testimonialsStyles?.card}
             onChange={(patch) =>
               onChange({
@@ -194,6 +210,21 @@ export function StylePanel({
           />
         </InspectorGroup>
       </>
+    ) : section === "newsletter" ? (
+      <InspectorGroup title="Khung nhận tin">
+        <ReviewCardSettings
+          title="Khung nhận tin"
+          value={newsletter.newsletterStyles?.frame}
+          onChange={(patch) =>
+            onChange({
+              newsletterStyles: {
+                ...newsletter.newsletterStyles,
+                frame: { ...newsletter.newsletterStyles?.frame, ...patch },
+              },
+            })
+          }
+        />
+      </InspectorGroup>
     ) : section === "cartform" ? (
       <CartFormSectionSettings navbar={navbar} onChange={onChange} />
     ) : section === "orderform" ? (

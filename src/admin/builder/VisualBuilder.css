@@ -673,23 +673,23 @@
 
 /* Inspector: selected content first; section-wide controls live in a separate tab. */
 .inspector-heading { padding:18px 16px 12px; background:var(--ad-surface); }
-.inspector-heading > small { font-size:10px; color:#aa3a63; letter-spacing:1px; font-weight:700; }
-.inspector-heading h2 { margin:6px 0; font-size:16px; line-height:1.4; color:var(--ad-ink); overflow-wrap:anywhere; }
+.inspector-heading > small { font-size:10.5px; color:var(--ad-primary-strong); letter-spacing:1px; font-weight:800; text-transform:uppercase; }
+.inspector-heading h2 { margin:6px 0; font-size:17px; font-weight:800; line-height:1.35; color:var(--ad-ink); overflow-wrap:anywhere; }
 .inspector-heading p,.inspector-settings-help { margin:4px 0 0; color:#826b75; font-size:12px; line-height:1.6; }
 .inspector-tabs { position:sticky; top:0; z-index:10; display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:8px 12px; background:var(--ad-surface); border-bottom:1px solid var(--ad-line); }
-.inspector-tabs button { min-height:38px; padding:8px; border:0; border-radius:var(--ad-r-sm); background:#f5eff2; font-family:inherit; font-weight:600; font-size:12px; line-height:1.4; color:#785462; cursor:pointer; }
+.inspector-tabs button { min-height:38px; padding:8px; border:0; border-radius:var(--ad-r-sm); background:#f5eff2; font-family:inherit; font-weight:700; font-size:12.5px; line-height:1.4; color:#6e4959; cursor:pointer; }
 .inspector-tabs button:focus-visible,.inspector-group > summary:focus-visible { outline:2px solid var(--ad-primary); outline-offset:2px; }
 .builder-inspector [hidden] { display:none!important; }
 .inspector-settings-help { padding:12px 16px; }
 .inspector-group { margin:10px 12px; border:1px solid var(--ad-line); border-radius:var(--ad-r-md); background:var(--ad-surface); overflow:hidden; }
-.inspector-group > summary { cursor:pointer; padding:13px 12px; color:#60404e; font-size:13px; font-weight:600; line-height:1.5; }
-.inspector-group[open] > summary { border-bottom:1px solid #f0e2e8; background:var(--ad-page); color:#a9345f; }
+.inspector-group > summary { cursor:pointer; padding:13px 12px; color:var(--ad-ink); font-size:13.5px; font-weight:700; line-height:1.5; }
+.inspector-group[open] > summary { border-bottom:1px solid #f0e2e8; background:#fff7fa; color:var(--ad-primary-strong); }
 .inspector-group-content { padding:8px 4px; }
 .inspector-group .builder-setting-group { border-bottom:0; }
-.inspector-group .builder-setting-group > h3 { font-size:12px; color:#896f7b; padding-top:8px; }
+.inspector-group .builder-setting-group > h3 { font-size:12px; font-weight:700; color:var(--ad-primary-strong); padding-top:8px; }
 .inspector-group .inspector-group { margin-inline:4px; }
 .inspector-group .builder-help { padding:0 12px; }
-.builder-section-search { display:grid; gap:6px; padding:12px; font-size:11px; color:#806371; }
+.builder-section-search { display:grid; gap:6px; padding:12px; font-size:11.5px; font-weight:700; color:#6b4e5c; }
 .builder-section-search input { width:100%; min-width:0; min-height:44px; border:1px solid var(--ad-line-strong); border-radius:var(--ad-r-md); padding:10px 12px; background:var(--ad-surface-tint); font:inherit; font-size:12px; }
 @media(min-width:1001px) and (max-width:1199px){ .builder-layout { grid-template-columns:220px minmax(0,1fr) 310px; } }
 @media(max-width:1000px){
@@ -709,23 +709,23 @@
 
 .builder-toolbar .admin-btn.primary, .builder-toolbar .admin-btn.primary:hover:not(:disabled) { background:var(--ad-primary); color:var(--ad-surface); white-space:nowrap; }
 .builder-advanced-controls { margin:12px 0; border:1px solid var(--ad-line); border-radius:var(--ad-r-md); padding:10px; }
-.builder-advanced-controls > summary { cursor:pointer; color:#805a6b; font-size:12px; line-height:1.5; }
+.builder-advanced-controls > summary { cursor:pointer; color:#6e4a5b; font-size:12.5px; font-weight:600; line-height:1.5; }
 .builder-advanced-controls[open] > summary { margin-bottom:12px; }
 .builder-advanced-controls .builder-setting-group { padding:0; border:0; }
 
 /* A named element picker and one open control group keep editing focused. */
 .inspector-heading { background:#fbf8fa; border-bottom:1px solid #e8dde3; }
-.inspector-heading > small { color:#76616c; letter-spacing:.3px; }
+.inspector-heading > small { color:var(--ad-primary-strong); letter-spacing:.5px; }
 .inspector-heading p { font-size:11px; }
-.inspector-element-picker { display:grid; gap:6px; margin:14px 0 8px; font-size:12px; font-weight:600; color:#5a414e; }
-.inspector-element-picker select { width:100%; min-width:0; min-height:42px; padding:9px 10px; border:1px solid #d9c5cf; border-radius:var(--ad-r-sm); background-color: var(--ad-surface); color:var(--ad-ink); font:400 14px/1.4 var(--font-body); }
-.compact-setting-group { margin:10px 12px; padding:0; border:1px solid #e8dce2; border-radius:11px; overflow:hidden; background:var(--ad-surface); }
+.inspector-element-picker { display:grid; gap:6px; margin:14px 0 8px; font-size:12.5px; font-weight:700; color:var(--ad-ink); }
+.inspector-element-picker select { width:100%; min-width:0; min-height:42px; padding:9px 10px; border:1px solid #d9c5cf; border-radius:var(--ad-r-sm); background-color: var(--ad-surface); color:var(--ad-ink); font:500 14px/1.4 var(--font-body); }
+.compact-setting-group { margin:10px 12px; padding:0; border:1px solid #e4d4dc; border-radius:11px; overflow:hidden; background:var(--ad-surface); }
 .compact-setting-group > summary { display:flex; align-items:center; gap:10px; padding:13px 12px; cursor:pointer; list-style:none; }
 .compact-setting-group > summary::-webkit-details-marker { display:none; }
 .compact-setting-group > summary::after { content:'+'; margin-left:auto; color:#8c697b; font-size:18px; }
 .compact-setting-group[open] > summary::after { content:'−'; }
-.compact-setting-group[open] > summary { border-bottom:1px solid #eee4e9; background:#fcf8fa; }
-.compact-setting-group > summary h3 { margin:0; color:#4a2f3d; font-size:13px; font-weight:600; letter-spacing:0; text-transform:none; }
+.compact-setting-group[open] > summary { border-bottom:1px solid #eee4e9; background:#fff7fa; }
+.compact-setting-group > summary h3 { margin:0; color:var(--ad-ink); font-size:13.5px; font-weight:700; letter-spacing:0; text-transform:none; }
 .compact-setting-group > .builder-setting-content { padding:14px 12px; gap:14px; }
 .compact-setting-group .builder-setting-group { margin:0; padding:10px 0; border:0; }
 .compact-setting-group .builder-field label,.compact-setting-group .admin-field label { font-size:13px; font-weight:600; color:var(--ad-ink-soft); }

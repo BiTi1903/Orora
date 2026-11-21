@@ -7,39 +7,88 @@
 .admin-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 224px minmax(0, 1fr);
+  grid-template-columns: 236px minmax(0, 1fr);
   background: var(--ad-page);
 }
 
-.admin-shell h1 { margin: 0 0 6px; font-family: inherit; font-size: 24px; line-height: 1.25; font-weight: 600; letter-spacing: -.015em; }
-.admin-shell h2 { font-family: inherit; font-size: 17px; line-height: 1.35; font-weight: 600; margin: 0 0 8px; }
-.admin-shell h3 { font-family: inherit; font-size: 14px; line-height: 1.35; font-weight: 600; margin: 0 0 8px; }
+.admin-shell h1 { margin: 0 0 8px; font-family: inherit; font-size: 26px; line-height: 1.22; font-weight: 800; letter-spacing: -.02em; color: var(--ad-ink); }
+.admin-shell h2 { font-family: inherit; font-size: 18px; line-height: 1.32; font-weight: 700; margin: 0 0 10px; color: var(--ad-ink); }
+.admin-shell h3 { font-family: inherit; font-size: 14.5px; line-height: 1.35; font-weight: 700; margin: 0 0 8px; color: var(--ad-ink); }
 
-.admin-brand { font-family: "Cormorant Garamond", Georgia, serif; font-size: 24px; font-weight: 600; letter-spacing: 3px; color: var(--a-plum); }
+.admin-brand {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: 3.5px;
+  color: var(--ad-primary-strong);
+  padding: 6px 12px 12px;
+  border-bottom: 1px solid var(--ad-line-rose);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.admin-brand::after {
+  content: "ADMIN";
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  padding: 3px 7px;
+  border-radius: var(--ad-r-pill);
+  background: var(--ad-primary-soft);
+  color: var(--ad-primary-strong);
+  border: 1px solid var(--ad-primary-line);
+}
 
 .admin-muted { font-size: 13px; color: var(--a-muted); }
 
 /* ---- thanh bên ---- */
 .admin-side {
   position: sticky; top: 0; height: 100vh; height: 100dvh; overflow-y: auto; scrollbar-gutter: stable;
-  min-width: 0; padding: 18px 12px; display: flex; flex-direction: column; gap: 16px;
-  background: var(--ad-surface); border-right: 1px solid var(--a-line);
+  min-width: 0; padding: 18px 14px; display: flex; flex-direction: column; gap: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #fff9fb 100%);
+  border-right: 1px solid var(--ad-line-rose);
+  box-shadow: 2px 0 18px rgba(154, 51, 88, 0.04);
 }
 
-.admin-nav { flex-shrink: 0; display: flex; flex-direction: column; gap: 2px; }
-.admin-nav-group { display: flex; flex-direction: column; gap: 2px; }
-.admin-nav-title { margin: 12px 10px 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--a-muted); }
+.admin-nav { flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
+.admin-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px;
+  border-radius: var(--ad-r-lg);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(240, 194, 211, 0.42);
+}
+.admin-nav-title {
+  margin: 4px 8px 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed rgba(240, 194, 211, 0.65);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ad-primary-strong);
+}
 
 .admin-nav button {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; padding: 8px 12px; border: 0; border-radius: var(--ad-r-md); text-align: left;
-  font: inherit; font-size: 13.5px; color: var(--ad-ink-soft); background: transparent; cursor: pointer;
+  position: relative;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 38px; padding: 8px 12px; border: 0; border-radius: var(--ad-r-md); text-align: left;
+  font: inherit; font-size: 13.5px; font-weight: 500; color: var(--ad-ink-soft); background: transparent; cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
-.admin-nav button:hover { background: var(--ad-surface-2); color: var(--ad-ink); }
-.admin-nav button.active { color: var(--ad-primary-strong); background: var(--ad-primary-soft); font-weight: 600; }
+.admin-nav button:hover { background: #fff0f5; color: var(--ad-ink); }
+.admin-nav button.active {
+  color: var(--ad-primary-strong);
+  background: linear-gradient(90deg, #fde8f0 0%, #fff4f8 100%);
+  font-weight: 700;
+  box-shadow: inset 3px 0 0 var(--ad-primary), 0 2px 6px rgba(184, 68, 109, 0.08);
+}
 
-.admin-side-bottom { flex-shrink: 0; margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid var(--a-line); }
+.admin-side-bottom { flex-shrink: 0; margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding: 12px 10px 4px; border-top: 1px solid var(--ad-line-rose); }
 .admin-side-bottom .admin-muted { font-size: 12px; overflow-wrap: anywhere; }
-.admin-side-bottom .admin-btn { width: 100%; min-height: 44px; }
+.admin-side-bottom .admin-btn { width: 100%; min-height: 44px; font-weight: 600; }
 .admin-uid summary { cursor: pointer; }
 .admin-uid span { display: block; margin-top: 4px; font-size: 12px; overflow-wrap: anywhere; }
 

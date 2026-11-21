@@ -175,12 +175,18 @@ export function HeroSettings(props) {
     ...hero.heroStyles,
     [key]: {...hero.heroStyles?.[key], ...patch},
   }});
+  const primary = hero.heroStyles?.btnPrimary || {};
   const secondary = hero.heroStyles?.btnSecondary || {};
   const ratio = contrastRatio(secondary.color || '#852447', secondary.backgroundColor || 'rgba(255,250,252,.96)');
   const lowContrast = ratio != null && ratio < 4.5;
 
   return <>
     <HeroFieldSettings {...props} />
+    {selected === 'btnPrimary' && <SettingGroup title="Nền và khung nút chính">
+      <ColorField label="Màu nền nút chính" value={primary.backgroundColor || '#b8446d'} onChange={backgroundColor => style('btnPrimary', {backgroundColor})}/>
+      <ColorField label="Viền nút chính" value={primary.borderColor || '#b8446d'} onChange={borderColor => style('btnPrimary', {borderColor})}/>
+      <label className="builder-field">Bo góc nút chính (px)<input type="number" min="0" max="80" value={primary.borderRadius ?? 40} onChange={event => style('btnPrimary', {borderRadius: Number(event.target.value)})}/></label>
+    </SettingGroup>}
     {selected === 'btnSecondary' && <SettingGroup title="Nền và độ tương phản nút phụ">
       <ColorField label="Nền nút phụ" value={secondary.backgroundColor || '#fffafc'} onChange={backgroundColor => style('btnSecondary', {backgroundColor})}/>
       <ColorField label="Viền nút phụ" value={secondary.borderColor || '#a9345f'} onChange={borderColor => style('btnSecondary', {borderColor})}/>

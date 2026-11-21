@@ -166,7 +166,7 @@ export function ProductDetailSettings({ selected, data, productDetail, onChange,
       />
     );
 
-  if (["relTitle", "relHeader", "relSection", "relImage"].includes(selected) || data.type === "pdRelImage")
+  if (["relTitle", "relImage"].includes(selected) || data.type === "pdRelImage")
     return (
       <ProductRelatedSettings
         selected={selected}

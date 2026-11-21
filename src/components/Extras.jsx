@@ -37,6 +37,7 @@ export function Reveal({
   children,
   delay = 0,
   className = "",
+  style,
 }) {
   const [ref, seen] = useInView();
 
@@ -44,7 +45,7 @@ export function Reveal({
     <div
       ref={ref}
       className={`reveal ${seen ? "in" : ""} ${className}`}
-      style={{ transitionDelay: `${delay}ms` }}
+      style={{ ...style, transitionDelay: `${delay}ms` }}
     >
       {children}
     </div>
@@ -458,6 +459,11 @@ export function Newsletter({
     <section
       id={preview ? undefined : "newsletter"}
       className={`newsletter ${preview ? "newsletter--preview" : ""}`}
+      style={{
+        ...(styles.frame?.background ? { background: styles.frame.background } : {}),
+        ...(styles.frame?.borderColor ? { borderColor: styles.frame.borderColor } : {}),
+        ...(styles.frame?.radius != null && styles.frame.radius !== "" ? { borderRadius: `${Number(styles.frame.radius)}px` } : {}),
+      }}
     >
       {preview ? Content : <Reveal>{Content}</Reveal>}
     </section>

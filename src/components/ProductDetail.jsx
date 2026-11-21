@@ -122,7 +122,7 @@ function ProductDetail({
   const productIdentity = product?.id || product?.slug;
   useLayoutEffect(() => { if (!preview && productIdentity) window.scrollTo({ top: 0, behavior: "instant" }); }, [productIdentity, preview]);
 
-  useProductPanelSize(pageRef, product);
+  useProductPanelSize(pageRef, product, ps.imageLayout);
   useProductReveal(pageRef, product, preview);
 
   /* ---------- lấy sản phẩm từ Firestore ---------- */

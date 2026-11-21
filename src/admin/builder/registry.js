@@ -111,7 +111,6 @@ const PRODUCT_DETAIL_FIELD_MAP = {
   pdTiktokText: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Chữ nút TikTok" },
   pdSelectionLabel: { styleKey: "selectionLabel", label: "Dung tích / số lượng — Nhãn", sample: "Dung tích" },
   pdSelectionValue: { styleKey: "selectionValue", label: "Dung tích — Lựa chọn", sample: "100 ml" },
-  pdNavigation: { styleKey: "navigation", label: "Kiểu chữ chung các tab thông tin", sample: "Nút Mô tả / Thông số / Hướng dẫn sử dụng" },
   pdSubheading: { styleKey: "subheading", label: "Tên mục trong nội dung", sample: "Tên mục trong nội dung" },
   pdPurchaseHeading: { styleKey: "purchaseHeading", label: "Chữ Chọn cách mua hàng", sample: "Chữ Chọn cách mua hàng" },
   pdAssuranceTitle: { styleKey: "assuranceTitle", label: "Cam kết — Tiêu đề", sample: "Cam kết — Tiêu đề" },
@@ -154,14 +153,9 @@ const PRODUCT_DETAIL_FIELD_MAP = {
     label: "Mô tả ngắn",
     sample: "A beautiful piece created for your everyday moments.",
   },
-  pdSectionTitle: {
-    styleKey: "sectionTitle",
-    label: "Tiêu đề nội dung sản phẩm",
-    sample: "Mô tả",
-  },
   pdAboutTitle: {
     styleKey: "aboutTitle",
-    label: "Tiêu đề nội dung",
+    label: "Tiêu đề nội dung sản phẩm",
     sample: "Mô tả",
   },
   pdBody: {
@@ -180,26 +174,12 @@ const PRODUCT_DETAIL_FIELD_MAP = {
     sample: "Nội dung dùng chung font và size",
   },
 
-  /* ---- Mục "Sản phẩm khác" cuối trang chi tiết ---- */
-  relLabel: {
-    styleKey: "relLabel",
-    textKey: "text",
-    label: "Sản phẩm khác — Nhãn nhỏ",
-    sample: "SẢN PHẨM KHÁC",
-  },
+  /* ---- Mục "Sản phẩm khác" cột bên trang chi tiết ---- */
   relTitle: {
     styleKey: "relTitle",
     textKey: "text",
     label: "Sản phẩm khác — Tiêu đề",
-    sample: "Khám phá\nthêm nữa",
-  },
-  relHeader: {
-    styleKey: "relHeader",
-    label: "Sản phẩm khác — Khối tiêu đề",
-  },
-  relSection: {
-    styleKey: "relSection",
-    label: "Sản phẩm khác — Cả khu vực",
+    sample: "Sản phẩm khác",
   },
   relNumber: {
     styleKey: "relNumber",
@@ -211,11 +191,6 @@ const PRODUCT_DETAIL_FIELD_MAP = {
     label: "Sản phẩm khác — Tên sản phẩm",
     sample: "First Story",
   },
-  relDescription: {
-    styleKey: "relDescription",
-    label: "Sản phẩm khác — Mô tả ngắn",
-    sample: "A beautiful piece created for your everyday moments.",
-  },
   relPrice: {
     styleKey: "relPrice",
     label: "Sản phẩm khác — Giá",
@@ -223,8 +198,9 @@ const PRODUCT_DETAIL_FIELD_MAP = {
   },
   relButton: {
     styleKey: "relButton",
-    label: "Sản phẩm khác — Nút Xem chi tiết",
-    sample: "Xem chi tiết ↗",
+    textKey: "text",
+    label: "Sản phẩm khác — Link Xem tất cả",
+    sample: "Xem tất cả sản phẩm",
   },
   relImage: {
     type: "pdRelImage",

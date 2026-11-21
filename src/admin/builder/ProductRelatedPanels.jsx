@@ -73,51 +73,6 @@ export default function ProductRelatedSettings({ selected, data, productDetail, 
     );
   }
 
-  /* Khối tiêu đề / cả khu vực "Sản phẩm khác": chỉnh khoảng cách */
-  if (selected === "relHeader" || selected === "relSection") {
-    const style = productDetail[selected] || {};
-    const GAP_OPTIONS = [0, 4, 8, 12, 16, 20, 24, 32, 40, 48, 60, 80, 100, 120, 140, 180, 220];
-    const sp = (label, key) => (
-      <SelectField
-        label={label}
-        value={style[key] ?? ""}
-        options={GAP_OPTIONS}
-        suffix="px"
-        onChange={(value) => onStyleChange({ [key]: Number(value) })}
-      />
-    );
-    return (
-      <>
-        <SettingGroup title={selected === "relHeader" ? "Khối tiêu đề" : "Cả khu vực Sản phẩm khác"}>
-          <small className="builder-help">
-            {selected === "relHeader"
-              ? "Margin dưới = khoảng cách giữa tiêu đề và các thẻ sản phẩm. Để trống (—) là dùng mặc định."
-              : "Margin / padding của cả khu vực Sản phẩm khác. Để trống (—) là dùng mặc định."}
-          </small>
-        </SettingGroup>
-        <SettingGroup title="Margin">
-          <div className="builder-field-row">
-            {sp("Trên", "marginTop")}
-            {sp("Dưới", "marginBottom")}
-          </div>
-          <div className="builder-field-row">
-            {sp("Trái", "marginLeft")}
-            {sp("Phải", "marginRight")}
-          </div>
-        </SettingGroup>
-        <SettingGroup title="Padding">
-          <div className="builder-field-row">
-            {sp("Trên", "paddingTop")}
-            {sp("Dưới", "paddingBottom")}
-          </div>
-          <div className="builder-field-row">
-            {sp("Trái", "paddingLeft")}
-            {sp("Phải", "paddingRight")}
-          </div>
-        </SettingGroup>
-      </>
-    );
-  }
   /* Khung thẻ "Sản phẩm khác": dùng lại đúng bảng chỉnh thẻ của Collection */
   if (data.type === "pdRelImage" || selected === "relImage") {
     return (

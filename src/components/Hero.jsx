@@ -236,7 +236,12 @@ function Hero({
           <a
             href={preview ? undefined : c.heroButtonLink || "#about"}
             className={`hero-btn hero-btn-primary ${selectedClass("btnPrimary")}`}
-            style={toCss(hs.btnPrimary,{responsive:true})}
+            style={{
+              ...toCss(hs.btnPrimary,{responsive:true}),
+              ...(hs.btnPrimary?.backgroundColor ? { background: hs.btnPrimary.backgroundColor, backgroundColor: hs.btnPrimary.backgroundColor } : {}),
+              ...(hs.btnPrimary?.borderColor ? { borderColor: hs.btnPrimary.borderColor } : {}),
+              ...(hs.btnPrimary?.borderRadius != null ? { borderRadius: `${hs.btnPrimary.borderRadius}px` } : {}),
+            }}
           data-builder-key={preview ? "btnPrimary" : undefined}
             onClick={select("btnPrimary")}
           >

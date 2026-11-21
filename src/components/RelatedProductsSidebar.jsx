@@ -6,6 +6,7 @@ import useProducts from "../hooks/useProducts";
 import { compactRelatedProducts } from "../lib/product-content";
 import { cdnSrc, THUMB } from "../lib/image-cdn";
 import { toCss } from "../lib/typography";
+import { translatePhrase, useLocale } from "../lib/i18n";
 
 const compactStyle = (style, maximum) => {
   const result = toCss(style);
@@ -27,17 +28,19 @@ const readableTextStyle = (saved, maximum = 16) => {
   return { ...style, ...(light ? { color: "var(--rose-deep)" } : {}) };
 };
 export default function RelatedProductsSidebar({ product, preview = false, previewProducts = [], styles = {}, selectedElement = "", onSelect }) {
+  const locale = useLocale();
+  const tr = (val) => (!preview && locale !== "vi" ? translatePhrase(val, locale) : val);
   const { products, loading, error, retry } = useProducts({ enabled: !preview });
   const items = compactRelatedProducts(preview ? previewProducts : products, product);
   if (!loading && !error && !items.length) return null;
   const pick = (key) => (event) => { if (!preview || !onSelect) return; event.preventDefault(); event.stopPropagation(); onSelect(key); };
   const selection = (key) => preview && selectedElement === key ? "builder-selected" : "";
   return <aside className="related-product-sidebar" aria-label="Sản phẩm khác">
-    <h2 className={selection("relTitle")} data-builder-key={preview ? "relTitle" : undefined} onClick={pick("relTitle")} style={compactStyle(styles.relTitle, 24)}>{styles.relTitle?.text?.trim() || "Sản phẩm khác"}</h2>
-    {error && !preview ? <CatalogLoadError value={styles.loadError} onRetry={retry}/> : loading && !preview ? <p className="related-product-loading" role="status">Đang tải sản phẩm…</p> : <div className="related-product-list">{items.map((item) => <Link key={item.id || item.slug} to={productPath(item)} className="related-product-mini" title={item.name} aria-label={`Xem ${item.name}`} onClick={preview ? pick("relName") : undefined}>
+    <h2 className={selection("relTitle")} data-builder-key={preview ? "relTitle" : undefined} onClick={pick("relTitle")} style={compactStyle(styles.relTitle, 24)}>{tr(styles.relTitle?.text?.trim() || "Sản phẩm khác")}</h2>
+    {error && !preview ? <CatalogLoadError value={styles.loadError} onRetry={retry}/> : loading && !preview ? <p className="related-product-loading" role="status">{tr("Đang tải sản phẩm…")}</p> : <div className="related-product-list">{items.map((item) => <Link key={item.id || item.slug} to={productPath(item)} className="related-product-mini" title={item.name} aria-label={`Xem ${item.name}`} onClick={preview ? pick("relName") : undefined}>
       <span className={`related-product-image ${selection("relImage")}`} data-builder-key={preview ? "relImage" : undefined} onClick={preview ? pick("relImage") : undefined}>{item.image ? <img src={cdnSrc(item.image, THUMB)} alt="" loading="lazy" width="64" height="64" /> : <span aria-hidden="true">◇</span>}<span className={`related-product-number ${selection("relNumber")}`} data-builder-key={preview ? "relNumber" : undefined} style={readableTextStyle(styles.relNumber, 12)} onClick={preview ? pick("relNumber") : undefined}>#{productNumber(item)}</span></span>
-      <span className="related-product-copy"><strong className={selection("relName")} data-builder-key={preview ? "relName" : undefined} style={compactStyle(styles.relName, 15)}>{item.name}</strong><span className={`related-product-price ${selection("relPrice")}`} data-builder-key={preview ? "relPrice" : undefined} style={compactStyle(styles.relPrice, 14)} onClick={preview ? pick("relPrice") : undefined}>{formatProductPrice(item.price) || "Liên hệ"}</span></span>
+      <span className="related-product-copy"><strong className={selection("relName")} data-builder-key={preview ? "relName" : undefined} style={compactStyle(styles.relName, 15)}>{item.name}</strong><span className={`related-product-price ${selection("relPrice")}`} data-builder-key={preview ? "relPrice" : undefined} style={compactStyle(styles.relPrice, 14)} onClick={preview ? pick("relPrice") : undefined}>{formatProductPrice(item.price) || tr("Liên hệ")}</span></span>
     </Link>)}</div>}
-    <Link to="/#shop" style={readableTextStyle(styles.relButton)} data-builder-key={preview ? "relButton" : undefined} className={`related-product-more ${selection("relButton")}`} onClick={preview ? pick("relButton") : undefined}>Xem tất cả sản phẩm</Link>
+    <Link to="/#shop" style={readableTextStyle(styles.relButton)} data-builder-key={preview ? "relButton" : undefined} className={`related-product-more ${selection("relButton")}`} onClick={preview ? pick("relButton") : undefined}>{tr(styles.relButton?.text?.trim() || "Xem tất cả sản phẩm")}</Link>
   </aside>;
 }

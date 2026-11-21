@@ -325,10 +325,11 @@ function RevealBox({
   children,
   delay = 0,
   className = "",
+  style,
 }) {
   if (preview) {
     return (
-      <div className={className}>
+      <div className={className} style={style}>
         {children}
       </div>
     );
@@ -338,6 +339,7 @@ function RevealBox({
     <Reveal
       delay={delay}
       className={className}
+      style={style}
     >
       {children}
     </Reveal>
@@ -420,6 +422,11 @@ function About({
           className={`about-image-wrapper ${selectedClass(
             "image"
           )}`}
+          style={{
+            ...(image.height != null && Number(image.height) > 0 ? { height: `${Number(image.height)}px` } : {}),
+            ...(image.radius != null ? { borderRadius: `${Number(image.radius)}px ${Number(image.radius)}px 28px 28px` } : {}),
+            ...(image.borderWidth != null ? { borderWidth: `${Number(image.borderWidth)}px` } : {}),
+          }}
         >
           <div
             data-builder-key={preview ? "image" : undefined}
