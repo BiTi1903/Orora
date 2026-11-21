@@ -1,3 +1,15 @@
+## 21/11/2026 — Sửa lỗi nút Chat AI bị nhảy vị trí trên desktop ở trang Chi tiết sản phẩm
+
+- **Lý do**: Trên desktop (`≥ 769px`), khung `.product-mobile-buy` nằm trong luồng nội dung (`position: relative`) thay vì cố định dưới đáy như trên mobile, nhưng `dock()` trong `ChatButton.jsx` vẫn lấy `getBoundingClientRect().top` của nó để đẩy nút chat lên trên — khiến nút chat bị nhảy lên giữa hoặc đầu màn hình mỗi khi người dùng cuộn hoặc bấm chuyển các mục trong trang chi tiết sản phẩm.
+- **Thay đổi chính**:
+  - **Chỉ né thanh mua cố định (`src/components/ChatButton.jsx`)**: Kiểm tra `getComputedStyle(buyBar).position === "fixed"` (và loại trừ `.is-preview`) trước khi tính khoảng né `aboveBuy` trong `dock()`. Nhờ vậy, trên mobile nút chat vẫn tự né thanh mua cố định phía dưới, còn trên desktop nút chat luôn neo ổn định ở góc dưới.
+  - **Kiểm thử hồi quy (`qa/chat-popup-side.spec.js`)**: Thêm test xác minh trên desktop (`width-1440`) khi có thẻ `.product-mobile-buy` dạng `position: relative` ở giữa trang, nút chat vẫn neo ổn định ở đáy màn hình và không nhảy khi DOM thay đổi.
+- **File / khu vực liên quan**: `src/components/ChatButton.jsx`, `qa/chat-popup-side.spec.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **269/269** unit test đạt, `eslint .` 0 lỗi, `vite build` & ngân sách bundle đạt.
+  - Playwright (`width-1440` & `width-390`): **9/9** test đạt trên `qa/chat-popup-side.spec.js`, `qa/chat-liquid.spec.js`, và `qa/product-information-tabs.spec.js` (1 test desktop-only bỏ qua trên `width-390`).
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu.
+
 ## 21/11/2026 — Thiết kế lại giao diện trang Tra cứu đơn hàng (UI & tùy chỉnh Admin)
 
 - **Lý do**: Chủ website yêu cầu thiết kế lại giao diện trang tra cứu đơn hàng cho tinh tế, rõ phân cấp và đồng bộ phong cách thương hiệu ORORA trên cả máy tính lẫn điện thoại, đồng thời giữ đầy đủ khả năng chỉnh nội dung & kiểu hiển thị trong trang quản trị.

@@ -42,8 +42,9 @@ function ChatButton() {
     const reserved=document.documentElement.classList.contains('has-mobile-shop-nav')?(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-shop-nav-height'))||64):0;
     const size=window.innerWidth<=600?46:52,bottom=reserved?reserved+16:window.innerWidth<=600?20:24;
     const top=window.innerHeight-bottom-size,gap=Math.max(8,Math.min(32,Number(chatDockGap??14)));
-    const buyBar = document.querySelector('.product-mobile-buy');
-    const buyRect = buyBar?.getBoundingClientRect();
+    const buyBar = document.querySelector('.product-mobile-buy:not(.is-preview)');
+    const buyFixed = buyBar && getComputedStyle(buyBar).position === 'fixed';
+    const buyRect = buyFixed ? buyBar.getBoundingClientRect() : null;
     const buyTop = buyRect?.height
       ? Math.min(buyRect.top, window.innerHeight - reserved - buyRect.height)
       : Infinity;
