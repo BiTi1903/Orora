@@ -1,3 +1,18 @@
+## 21/11/2026 — Bỏ phần `/ dung tích` bên cạnh giá sản phẩm và sắp xếp lại cụm nút mua hàng
+
+- **Lý do**: Chủ website yêu cầu bỏ phần `/ 180ml` dư thừa bên cạnh giá ở trang Chi tiết sản phẩm (vì dung tích đã chọn ngay bên dưới) và sắp xếp lại vị trí các nút mua hàng cho hợp lý, đồng đều kích thước.
+- **Thay đổi chính**:
+  - **Hiển thị giá gọn sạch (`src/components/ProductDetail.jsx`)**: Xóa phần `/ {variant.label}` bên cạnh giá sản phẩm (`349.000 đ` thay vì `349.000 đ / 180ml`); dung tích đã chọn vẫn hiển thị rõ ở phần chọn Dung tích và dòng tóm tắt trong thanh Mua ngay.
+  - **Bố cục cụm nút mua hàng (`src/components/ProductDetail.jsx`, `src/styles/product-detail.css`)**:
+    - Đưa thanh **Mua ngay + Giỏ hàng** (hành động chính) lên **trên cùng**, ngay dưới bộ chọn Số lượng, với độ rộng thống nhất `440px` trên desktop.
+    - Đưa cụm kênh phụ (**Facebook / Tiktok** và nút **Tư vấn** nếu bật) xuống **bên dưới** trong `.purchase-channels-block` có cùng độ rộng `440px` để thẳng mép hai bên, với tiêu đề mặc định gọn hơn (`Hoặc mua qua`, vẫn giữ đầy đủ chữ/kiểu chỉnh trong Visual Builder).
+  - **Kiểm thử (`qa/editor-checkout.spec.js`)**: Cập nhật kiểm tra xác minh không còn `.product-price-variant` cạnh giá chính và dung tích vẫn hiện trong `.product-mobile-buy-total`.
+- **File / khu vực liên quan**: `src/components/ProductDetail.jsx`, `src/styles/product-detail.css`, `qa/editor-checkout.spec.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **269/269** unit test đạt, `eslint .` 0 lỗi, `vite build` & ngân sách bundle đạt.
+  - Playwright (`width-1440` & `width-390`): **17/17** test đạt trên `qa/editor-checkout.spec.js` và `qa/product-detail-mobile.spec.js` (1 test mobile-only bỏ qua trên `width-1440`).
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu.
+
 ## 21/11/2026 — Sửa lỗi nút Chat AI bị nhảy vị trí trên desktop ở trang Chi tiết sản phẩm
 
 - **Lý do**: Trên desktop (`≥ 769px`), khung `.product-mobile-buy` nằm trong luồng nội dung (`position: relative`) thay vì cố định dưới đáy như trên mobile, nhưng `dock()` trong `ChatButton.jsx` vẫn lấy `getBoundingClientRect().top` của nó để đẩy nút chat lên trên — khiến nút chat bị nhảy lên giữa hoặc đầu màn hình mỗi khi người dùng cuộn hoặc bấm chuyển các mục trong trang chi tiết sản phẩm.

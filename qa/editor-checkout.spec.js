@@ -15,7 +15,8 @@ async function detail(page,state,overrides={},withMobileControls=false){
 test('detail selects the catalog price by default, keeps totals compact and isolates checkout edits',async({page},testInfo)=>{
  await detail(page);
  await expect(page.getByLabel('180ml',{exact:true})).toBeChecked();await expect(page.locator('.product-detail-price')).toContainText('450.000');
- await expect(page.locator('.product-price-variant')).toContainText('180ml');
+ await expect(page.locator('.product-price-variant')).toHaveCount(0);
+ await expect(page.locator('.product-mobile-buy-total')).toContainText('180ml');
  await expect(page.locator('.purchase-subtotal')).toHaveCount(0);
  if (page.viewportSize().width > 768) await expect(page.locator('.purchase-options .product-mobile-buy')).toBeVisible();
  const buyBar=page.locator('.product-mobile-buy');await expect(buyBar).toBeVisible();expect((await buyBar.boundingBox()).height).toBeLessThan(95);

@@ -741,7 +741,6 @@ function ProductDetail({
             style={css("price")}
           >
             {formatProductPrice(displayedPrice)}
-            {variant && <small className="product-price-variant" style={toCss(ps.selectionValue)}> / {variant.label}</small>}
           </p>
 
           <p
@@ -758,45 +757,49 @@ function ProductDetail({
           {(stock === "out" || stock === "low") && <p className={`product-stock-badge is-${stock}`}>{soldOut ? "Hết hàng" : "Còn ít"}</p>}
           <ProductPurchaseSelection options={options} variantId={variantId} quantity={choice.quantity} onVariantChange={(variantId) => changeSelection({ variantId })} onQuantityChange={(quantity) => changeSelection({ quantity })} disabled={soldOut} textProps={textProps} />
           <section className={`purchase-options ${selectedClass("pdPurchaseOptions")}`} aria-label="Chọn kênh mua hàng" data-builder-key={preview ? "pdPurchaseOptions" : undefined} onClick={preview ? select("pdPurchaseOptions") : undefined}>
-            <h2 {...textProps("pdPurchaseHeading", "purchaseHeading")}>{purchase.heading?.trim() || "Chọn cách mua hàng"}</h2>
-            <div className="purchase-channels-row">
-              {(preview || (contactSettings.showTrigger === true && (showZalo || showCall || home.chatSettings?.enabled !== false || (!contact.zalo && contact.email && contactSettings.showZalo !== false)))) && (
-                <div className={`product-contact-actions product-consultation ${selectedClass("pdContactActions")}`} aria-label="Tư vấn sản phẩm" data-builder-key={preview ? "pdContactActions" : undefined} onClick={preview ? select("pdContactActions") : undefined} style={preview && contactSettings.showTrigger !== true ? { opacity: 0.42 } : undefined}>
-                  <button type="button" className="product-consultation-toggle" style={css("contactActions")} aria-haspopup="dialog" onClick={preview ? select("pdContactActions") : (event) => { setConsultationSource(event.currentTarget.getBoundingClientRect().toJSON()); setConsultationOpen(true); }}>
-                    <ButtonIcon name="consultation" defaultSize={15}/>
-                    <span>{contactSettings.triggerLabel?.trim() || "Tư vấn"}</span>
-                  </button>
-                  {!preview && consultationOpen && <ConsultationDialog source={consultationSource} onClose={() => setConsultationOpen(false)}>
-                    {(preview || showZalo) && (
-                      <a className="consultation-choice is-zalo" href={preview ? undefined : contact.zalo} target={preview ? undefined : "_blank"} rel="noreferrer" onClick={() => setConsultationOpen(false)} style={{ ...css("contactActions"), background: contactSettings.primaryBackground, borderColor: contactSettings.primaryBackground, color: contactSettings.primaryColor }}>
-                        <strong>{contactSettings.zaloLabel?.trim() || "Tư vấn qua Zalo"}</strong>
-                        <span>Nhắn tin trực tiếp với chuyên viên ORORA</span>
-                      </a>
-                    )}
-                    {home.chatSettings?.enabled !== false && (
-                      <button type="button" className="consultation-choice is-ai" onClick={() => { setConsultationOpen(false); window.dispatchEvent(new CustomEvent("orora-chat-open", { detail: { channel: "ai" } })); }}>
-                        <strong>Tư vấn cùng AI</strong>
-                        <span>Trợ lý AI giải đáp nhanh thành phần & cách dùng</span>
-                      </button>
-                    )}
-                    {(preview || showCall) && (
-                      <a className="consultation-choice is-call" href={preview ? undefined : contact.phone} onClick={() => setConsultationOpen(false)} style={{ ...css("contactActions"), background: contactSettings.secondaryBackground, color: contactSettings.secondaryColor }}>
-                        <strong>{contactSettings.callLabel?.trim() || "Gọi tư vấn"}</strong>
-                        <span>Hỗ trợ trực tiếp qua điện thoại</span>
-                      </a>
-                    )}
-                    {!preview && !contact.zalo && contact.email && contactSettings.showZalo !== false && <a className="consultation-choice" href={contact.email}><strong>Liên hệ qua email</strong><span>Gửi câu hỏi tới đội ngũ ORORA</span></a>}
-                  </ConsultationDialog>}
-                </div>
-              )}
-              {!soldOut && (preview || tiktokShop || facebookShop) && (
-                <div className="purchase-social" aria-label="Đặt hàng trên mạng xã hội">
-                  {(preview || facebookShop) && <a className="purchase-facebook" href={preview ? undefined : facebookShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.facebookBackground, ...(purchase.facebookBackground ? { color: "#fff" } : {}), ...toCss(purchase.facebookStyle) }}><ButtonIcon name="facebook" defaultSize={15}/><span className={selectedClass("pdFacebookText")} data-builder-key={preview ? "pdFacebookText" : undefined} onClick={preview ? select("pdFacebookText") : undefined}>{channelLabels.facebookLabel}</span><svg className="purchase-external" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8" /></svg></a>}
-                  {(preview || tiktokShop) && <a className="purchase-tiktok" href={preview ? undefined : tiktokShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.tiktokBackground, ...(purchase.tiktokBackground ? { color: "#fff" } : {}), ...toCss(purchase.tiktokStyle) }}><ButtonIcon name="tiktok" defaultSize={15}/><span className={selectedClass("pdTiktokText")} data-builder-key={preview ? "pdTiktokText" : undefined} onClick={preview ? select("pdTiktokText") : undefined}>{channelLabels.tiktokLabel}</span><svg className="purchase-external" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8" /></svg></a>}
-                </div>
-              )}
-            </div>
             {!pinBuyBar && mobileBuyBar}
+            {(preview || (!soldOut && (tiktokShop || facebookShop)) || (contactSettings.showTrigger === true && (showZalo || showCall || home.chatSettings?.enabled !== false || (!contact.zalo && contact.email && contactSettings.showZalo !== false)))) && (
+              <div className="purchase-channels-block">
+                <h2 {...textProps("pdPurchaseHeading", "purchaseHeading")}>{purchase.heading?.trim() || "Hoặc mua qua"}</h2>
+                <div className="purchase-channels-row">
+                  {!soldOut && (preview || tiktokShop || facebookShop) && (
+                    <div className="purchase-social" aria-label="Đặt hàng trên mạng xã hội">
+                      {(preview || facebookShop) && <a className="purchase-facebook" href={preview ? undefined : facebookShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.facebookBackground, ...(purchase.facebookBackground ? { color: "#fff" } : {}), ...toCss(purchase.facebookStyle) }}><ButtonIcon name="facebook" defaultSize={15}/><span className={selectedClass("pdFacebookText")} data-builder-key={preview ? "pdFacebookText" : undefined} onClick={preview ? select("pdFacebookText") : undefined}>{channelLabels.facebookLabel}</span><svg className="purchase-external" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8" /></svg></a>}
+                      {(preview || tiktokShop) && <a className="purchase-tiktok" href={preview ? undefined : tiktokShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.tiktokBackground, ...(purchase.tiktokBackground ? { color: "#fff" } : {}), ...toCss(purchase.tiktokStyle) }}><ButtonIcon name="tiktok" defaultSize={15}/><span className={selectedClass("pdTiktokText")} data-builder-key={preview ? "pdTiktokText" : undefined} onClick={preview ? select("pdTiktokText") : undefined}>{channelLabels.tiktokLabel}</span><svg className="purchase-external" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8" /></svg></a>}
+                    </div>
+                  )}
+                  {(preview || (contactSettings.showTrigger === true && (showZalo || showCall || home.chatSettings?.enabled !== false || (!contact.zalo && contact.email && contactSettings.showZalo !== false)))) && (
+                    <div className={`product-contact-actions product-consultation ${selectedClass("pdContactActions")}`} aria-label="Tư vấn sản phẩm" data-builder-key={preview ? "pdContactActions" : undefined} onClick={preview ? select("pdContactActions") : undefined} style={preview && contactSettings.showTrigger !== true ? { opacity: 0.42 } : undefined}>
+                      <button type="button" className="product-consultation-toggle" style={css("contactActions")} aria-haspopup="dialog" onClick={preview ? select("pdContactActions") : (event) => { setConsultationSource(event.currentTarget.getBoundingClientRect().toJSON()); setConsultationOpen(true); }}>
+                        <ButtonIcon name="consultation" defaultSize={15}/>
+                        <span>{contactSettings.triggerLabel?.trim() || "Tư vấn"}</span>
+                      </button>
+                      {!preview && consultationOpen && <ConsultationDialog source={consultationSource} onClose={() => setConsultationOpen(false)}>
+                        {(preview || showZalo) && (
+                          <a className="consultation-choice is-zalo" href={preview ? undefined : contact.zalo} target={preview ? undefined : "_blank"} rel="noreferrer" onClick={() => setConsultationOpen(false)} style={{ ...css("contactActions"), background: contactSettings.primaryBackground, borderColor: contactSettings.primaryBackground, color: contactSettings.primaryColor }}>
+                            <strong>{contactSettings.zaloLabel?.trim() || "Tư vấn qua Zalo"}</strong>
+                            <span>Nhắn tin trực tiếp với chuyên viên ORORA</span>
+                          </a>
+                        )}
+                        {home.chatSettings?.enabled !== false && (
+                          <button type="button" className="consultation-choice is-ai" onClick={() => { setConsultationOpen(false); window.dispatchEvent(new CustomEvent("orora-chat-open", { detail: { channel: "ai" } })); }}>
+                            <strong>Tư vấn cùng AI</strong>
+                            <span>Trợ lý AI giải đáp nhanh thành phần & cách dùng</span>
+                          </button>
+                        )}
+                        {(preview || showCall) && (
+                          <a className="consultation-choice is-call" href={preview ? undefined : contact.phone} onClick={() => setConsultationOpen(false)} style={{ ...css("contactActions"), background: contactSettings.secondaryBackground, color: contactSettings.secondaryColor }}>
+                            <strong>{contactSettings.callLabel?.trim() || "Gọi tư vấn"}</strong>
+                            <span>Hỗ trợ trực tiếp qua điện thoại</span>
+                          </a>
+                        )}
+                        {!preview && !contact.zalo && contact.email && contactSettings.showZalo !== false && <a className="consultation-choice" href={contact.email}><strong>Liên hệ qua email</strong><span>Gửi câu hỏi tới đội ngũ ORORA</span></a>}
+                      </ConsultationDialog>}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             {!preview && acceptsWebsiteOrders && !soldOut && orderProductId === (product.id || product.slug) && createPortal(<OrderForm key={product.id || product.slug} product={product} motionSource={orderSource} home={home} selection={{ variantId, quantity: choice.quantity }} fromCart={incoming?.productId === product.id} onSelectionChange={changeSelection} onClose={() => setOrderProductId(null)} />, document.body)}
           </section>
 
