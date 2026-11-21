@@ -582,3 +582,86 @@ test("newsletter admin rejects order-only UIDs and disabled adminUsers records",
   assert.equal((await sendOrderTest({ uid: "mail-only" })).statusCode, 403);
 });
 
+test("re-subscribing an unsubscribed or bounced email keeps its status and sends no welcome email", async () => {
+  const db = memoryDb();
+  let welcomed = 0;
+  const unsubId = subscriberId("opted-out@example.com");
+  const bouncedId = subscriberId("hard-bounce@example.com");
+  await db.collection("newsletterSubscribers").doc(unsubId).set({ email: "opted-out@example.com", status: "unsubscribed", mailStatus: "accepted", unsubscribedAt: new Date(1000) });
+  await db.collection("newsletterSubscribers").doc(bouncedId).set({ email: "hard-bounce@example.com", status: "bounced", mailStatus: "failed", bouncedAt: new Date(1000) });
+
+  const handler = createSubscribeHandler({
+    getDb: () => db,
+    env: { ...env, CHAT_RATE_LIMIT_SALT: "test-salt" },
+    sendWelcome: async () => { welcomed += 1; },
+  });
+  for (const email of ["opted-out@example.com", "hard-bounce@example.com"]) {
+    const res = response();
+    await handler({ method: "POST", headers: { ...headers, "x-forwarded-for": "203.0.113.55" }, body: { email, consent: true } }, res);
+    assert.equal(res.statusCode, 200);
+  }
+  assert.equal(welcomed, 0);
+  assert.equal((await db.collection("newsletterSubscribers").doc(unsubId).get()).data().status, "unsubscribed");
+  assert.equal((await db.collection("newsletterSubscribers").doc(bouncedId).get()).data().status, "bounced");
+});
+
+test("sendBatch pauses on bare 550 sender error, but continues and marks bounced on 5.1.x recipient error", async () => {
+  const db1 = memoryDb(); await seed(db1, 2);
+  const { call: callBare550 } = admin(db1, {
+    sendMail: async () => {
+      const err = new Error("mail_send_failed");
+      err.smtp = { responseCode: 550, enhancedCode: "5.7.60" };
+      throw err;
+    },
+  });
+  await callBare550({ action: "createCampaign", id: "bare-550", ...message });
+  const r1 = await callBare550({ action: "sendBatch", id: "bare-550" });
+  assert.equal(r1.body.paused, true);
+  assert.equal(r1.body.campaign.failed, 1);
+  assert.equal((await db1.collection("newsletterSubscribers").doc(subscriberId("customer0@example.com")).get()).data().status, "active");
+
+  const db2 = memoryDb(); await seed(db2, 2);
+  const delivered = [];
+  const { call: call511 } = admin(db2, {
+    sendMail: async (email) => {
+      if (email === "customer0@example.com") {
+        const err = new Error("mail_send_failed");
+        err.smtp = { responseCode: 550, enhancedCode: "5.1.1" };
+        throw err;
+      }
+      delivered.push(email);
+    },
+  });
+  await call511({ action: "createCampaign", id: "rcpt-511", ...message });
+  const r2 = await call511({ action: "sendBatch", id: "rcpt-511" });
+  assert.equal(r2.body.paused, false);
+  assert.equal(r2.body.completed, true);
+  assert.deepEqual(delivered, ["customer1@example.com"]);
+  assert.equal((await db2.collection("newsletterSubscribers").doc(subscriberId("customer0@example.com")).get()).data().status, "bounced");
+  assert.equal((await db2.collection("newsletterSubscribers").doc(subscriberId("customer1@example.com")).get()).data().status, "active");
+});
+
+test("checkCampaignBatchOutlook batch-checks campaign deliveries and marks bounced subscribers", async () => {
+  const db = memoryDb(); await seed(db, 2);
+  const id0 = subscriberId("customer0@example.com");
+  const id1 = subscriberId("customer1@example.com");
+  await db.collection("newsletterCampaigns").doc("camp-batch").set({ ...message, status: "completed", createdAt: new Date(1000) });
+  await db.collection("newsletterCampaigns").doc("camp-batch").collection("deliveries").doc(id0).set({ email: "customer0@example.com", status: "accepted", messageId: "<m0@orora>", sentAt: new Date(2000) });
+  await db.collection("newsletterCampaigns").doc("camp-batch").collection("deliveries").doc(id1).set({ email: "customer1@example.com", status: "accepted", messageId: "<m1@orora>", sentAt: new Date(2000) });
+
+  const checkOutlook = async () => ({ state: "sent_item" });
+  checkOutlook.checkBatch = async (records) => records.map((rec) =>
+    rec.recipient === "customer0@example.com"
+      ? { state: "bounced", diagnosticCode: "5.1.1", checkedAt: new Date(3000) }
+      : { state: "sent_item", checkedAt: new Date(3000) }
+  );
+  const { call } = admin(db, { checkOutlook });
+  const res = await call({ action: "checkCampaignBatchOutlook", id: "camp-batch" });
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.checked, 2);
+  assert.equal(res.body.bouncedCount, 1);
+  assert.equal((await db.collection("newsletterSubscribers").doc(id0).get()).data().status, "bounced");
+  assert.equal((await db.collection("newsletterSubscribers").doc(id1).get()).data().status, "active");
+});
+
+

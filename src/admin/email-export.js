@@ -1,6 +1,6 @@
 import { mailActorLabel } from "../lib/mail-templates.js";
-const mailStates = { accepted: "Đã nhận", pending: "Chưa gửi", sending: "Đang xử lý", failed: "Gửi lỗi", unknown: "Chưa rõ kết quả" };
-const outlookStates = { sent_item: "Đã gửi", bounced: "Có thư báo trả lại (NDR)", delayed: "Có thư báo gửi chậm", not_found: "Chưa tìm thấy", untracked: "Chưa có mã đối chiếu" };
+const mailStates = { accepted: "Đã gửi đi", pending: "Chưa gửi", sending: "Đang gửi", failed: "Gửi lỗi", unknown: "Cần kiểm tra" };
+const outlookStates = { sent_item: "Đã gửi đi", bounced: "Bị trả lại", delayed: "Gửi chậm", not_found: "Chưa tìm thấy", untracked: "Thư cũ (không theo dõi)" };
 const date = (value) => value ? new Date(value).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "";
 const outlook = (item) => item ? `${outlookStates[item.state] || "Chưa rõ"}${item.diagnosticCode ? ` · ${item.diagnosticCode}` : ""}` : "Chưa check";
 async function collect(fetchPage, field) {

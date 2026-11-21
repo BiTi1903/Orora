@@ -36,6 +36,8 @@ export function createSubscribeHandler({ getDb, sendWelcome, schedule, env = pro
         const saved = await tx.get(subscriber); const prior = saved.data() || {};
         const updatedMs = prior.updatedAt?.toMillis?.() ?? (prior.updatedAt ? new Date(prior.updatedAt).getTime() : 0);
         const stalePending = prior.mailStatus === "pending" && Number.isFinite(updatedMs) && clock() - updatedMs > STALE_PENDING_MS;
+        // Preserve unsubscribed and bounced suppression; never re-activate or re-send welcome mail silently.
+        if (["unsubscribed", "bounced"].includes(prior.status)) return "exists";
         // Repeated submissions succeed without duplicating mail already accepted,
         // actively in progress (<5 min) or with an uncertain outcome.
         if (prior.status === "active" && !stalePending && ["accepted", "pending", "unknown"].includes(prior.mailStatus)) return "exists";

@@ -130,7 +130,7 @@ export function createOutlookStatusReader(env = process.env, request = fetch) {
       nextNdr = data["@odata.nextLink"];
       limited = Boolean(nextNdr);
     }
-    return records.map((record) => {
+    const initial = records.map((record) => {
       if (!record.trackingId && !record.internetMessageId) return { state: "untracked", checkedAt };
       const recipientLower = String(record.recipient || "").toLowerCase();
       let sent = null;
@@ -150,6 +150,14 @@ export function createOutlookStatusReader(env = process.env, request = fetch) {
       }
       return { state: sent ? "sent_item" : "not_found", checkedAt, scanLimited: limited, ...(sent ? { webLink: webLink(sent.webLink) } : {}) };
     });
+    // Fallback to exact lookup for records pushed outside the recent batch window
+    const out = [...initial];
+    for (let i = 0; i < records.length; i++) {
+      if (out[i].state === "not_found" && (records[i].internetMessageId || records[i].trackingId)) {
+        out[i] = await check(records[i]);
+      }
+    }
+    return out;
   };
   return check;
 }

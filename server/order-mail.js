@@ -9,7 +9,7 @@ import { ORDER_TOKENS } from "../src/lib/template-kinds.js";
 export { ORDER_TOKENS };
 export const DEFAULT_ORDER_MESSAGE = {
   subject: "ORORA xác nhận đã nhận đơn {{orderCode}}",
-  text: "Chào {{customerName}},\n\nORORA đã nhận đơn hàng {{orderCode}} của bạn.\n\nSản phẩm: {{productName}}\nSố lượng: {{quantity}}\nTạm tính: {{subtotal}}\nPhí giao hàng: {{shippingFee}}\nTổng dự kiến: {{totalAmount}}\nPhương thức thanh toán: {{paymentMethod}}\nĐịa chỉ nhận hàng: {{address}}\nSố điện thoại: {{phone}}\n\nTra cứu trạng thái đơn hàng: {{trackingUrl}}\n\nBước tiếp theo:\n- ORORA sẽ liên hệ xác nhận đơn, phí giao hàng và hướng dẫn thanh toán (nếu chuyển khoản).\n- Thư này xác nhận đã nhận yêu cầu đặt hàng, chưa xác nhận thanh toán.\n- Nếu cần hỗ trợ nhanh, bạn có thể trả lời trực tiếp email này kèm mã đơn {{orderCode}}.\n\nCảm ơn bạn đã chọn ORORA!",
+  text: "Chào {{customerName}},\n\nORORA đã nhận đơn hàng {{orderCode}} của bạn.\n\nSản phẩm: {{productName}}\nSố lượng: {{quantity}}\nTạm tính: {{subtotal}}\nPhí giao hàng: {{shippingFee}}\nTổng dự kiến: {{totalAmount}}\nPhương thức thanh toán: {{paymentMethod}}\nĐịa chỉ nhận hàng: {{address}}\nSố điện thoại: {{phone}}\n\nTra cứu trạng thái đơn hàng: {{trackingUrl}} (nhập 4 số cuối số điện thoại để xem chi tiết)\n\nBước tiếp theo:\n- ORORA sẽ liên hệ xác nhận đơn, phí giao hàng và hướng dẫn thanh toán (nếu chuyển khoản).\n- Thư này xác nhận đã nhận yêu cầu đặt hàng, chưa xác nhận thanh toán.\n- Nếu cần hỗ trợ nhanh, bạn có thể trả lời trực tiếp email này kèm mã đơn {{orderCode}}.\n\nCảm ơn bạn đã chọn ORORA!",
 };
 export const validOrderEmail = (value) => typeof value === "string" && value.length <= 254 && /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/.test(value);
 export function validateOrderTemplate(value) {

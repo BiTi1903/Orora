@@ -1,7 +1,7 @@
 import { mailTransport } from "./mail-transport.js";
 import { describeMailError } from "./mail-error.js";
 import { safeMailTracking } from "./mail-tracking.js";
-import { syncOutlookStatus, OUTLOOK_ERROR_MESSAGES } from "./outlook-status.js";
+import { syncOutlookStatus, syncOutlookBatch, OUTLOOK_ERROR_MESSAGES } from "./outlook-status.js";
 import { ensureDefaultMailTemplates } from "./default-mail-templates.js";
 import { TEMPLATE_KINDS, normalizeTemplateKind, hasOrderTokens } from "../src/lib/template-kinds.js";
 import { captureTemplate, recordTemplateUse, templateIdentity } from "./template-snapshot.js";
@@ -128,6 +128,45 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
           }
         }
         return reply(200, { outlook });
+      }
+      if (body.action === "checkCampaignBatchOutlook") {
+        if (!validId(body.id)) return reply(400, { message: "Thư không hợp lệ." });
+        const limit = Math.max(1, Math.min(30, Number.isInteger(body.limit) ? body.limit : 30));
+        const page = await campaigns.doc(body.id).collection("deliveries").orderBy("__name__").limit(limit).get();
+        const items = page.docs.map((doc) => ({
+          id: doc.id,
+          ref: campaigns.doc(body.id).collection("deliveries").doc(doc.id),
+          override: { recipient: doc.data().email || "" },
+        }));
+        const outlooks = await syncOutlookBatch(items, checkOutlook);
+        const results = {};
+        let bouncedCount = 0;
+        const bouncedContactUpdates = [];
+        items.forEach((item, idx) => {
+          const outlook = outlooks[idx];
+          results[item.id] = outlook;
+          if (outlook?.state === "bounced") {
+            bouncedCount += 1;
+            bouncedContactUpdates.push(item.id);
+          }
+        });
+        if (bouncedContactUpdates.length) {
+          const now = new Date();
+          await Promise.all(bouncedContactUpdates.map(async (contactId) => {
+            const contactRef = contacts.doc(contactId);
+            if ((await contactRef.get()).exists) {
+              await contactRef.set({ status: "bounced", bouncedAt: now, updatedAt: now }, { merge: true });
+            }
+          }));
+        }
+        return reply(200, {
+          checked: items.length,
+          bouncedCount,
+          results,
+          message: bouncedCount > 0
+            ? `Đã kiểm tra ${items.length} người nhận: phát hiện ${bouncedCount} địa chỉ bị trả lại (đã tự động chuyển sang Bị trả lại).`
+            : `Đã kiểm tra ${items.length} người nhận: chưa phát hiện thư bị trả lại.`,
+        });
       }
       if (body.action === "checkWelcomeOutlook") {
         if (!/^[a-f0-9]{64}$/.test(body.id || "")) return reply(400, { message: "Email không hợp lệ." });
@@ -315,17 +354,18 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
           });
           if (claim) {
             let result = "accepted"; let tracking = {}; let diagnostic = {};
+            let recipientRejected = false;
             try {
               tracking = safeMailTracking(await sendMail(claim.email, withUnsubscribe(validateMessage(state), doc.id, env)));
             } catch (error) {
               tracking = safeMailTracking(error.mailTracking);
               diagnostic = describeMailError(error); lastError = diagnostic;
-              const recipientOnly = error.recipientRejected === true
-                || error.message === "mail_recipient_rejected"
-                || [550, 551, 553].includes(Number(error.smtp?.responseCode));
+              recipientRejected = /^5\.1\.\d+$/.test(error.smtp?.enhancedCode || "")
+                || error.recipientRejected === true
+                || error.message === "mail_recipient_rejected";
               // A timeout may happen AFTER Microsoft accepts a message. Never resend it automatically.
-              result = recipientOnly || ["mail_auth_failed", "mail_send_failed", "mail_configuration_missing", "mail_smtp_auth_failed", "mail_smtp_connection_failed", "mail_transport_invalid"].includes(error.message) ? "failed" : "unknown";
-              if (!recipientOnly) paused = true;
+              result = recipientRejected || ["mail_auth_failed", "mail_send_failed", "mail_configuration_missing", "mail_smtp_auth_failed", "mail_smtp_connection_failed", "mail_transport_invalid"].includes(error.message) ? "failed" : "unknown";
+              if (!recipientRejected) paused = true;
             }
             await db.runTransaction(async (tx) => {
               const current = await tx.get(campaign);
@@ -333,6 +373,9 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
               if (result === "accepted" && !(current.data().accepted > 0)) await recordTemplateUse(tx, db, current.data());
               tx.set(delivery, { status: result, ...diagnostic, ...tracking, updatedAt: new Date() }, { merge: true });
               tx.set(campaign, { [result]: (current.data()[result] || 0) + 1 }, { merge: true });
+              if (recipientRejected) {
+                tx.set(contacts.doc(doc.id), { status: "bounced", bouncedAt: new Date(), updatedAt: new Date() }, { merge: true });
+              }
             });
             sent += 1;
           }

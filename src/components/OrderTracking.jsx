@@ -14,10 +14,17 @@ export default function OrderTracking() {
   const home = useHomeContent();
   const copy = trackingCopy(home.orderTrackingText);
   const styles=home.orderTrackingText?.styles||{},css=key=>trackingStyle(styles,key);
-  const [code,setCode] = useState(typeof location.state?.code === 'string' ? location.state.code : '');
-  const [mode,setMode] = useState(location.state?.code ? 'code' : 'phone');
+  const urlCode = new URLSearchParams(location.search).get('code')?.trim() || '';
+  const initialCode = typeof location.state?.code === 'string' && location.state.code.trim() ? location.state.code.trim() : urlCode;
+  const [code,setCode] = useState(initialCode);
+  const [mode,setMode] = useState(initialCode ? 'code' : 'phone');
   const [phone,setPhone] = useState(typeof location.state?.phone === 'string' ? location.state.phone : ''),[busy,setBusy] = useState(false),[orders,setOrders] = useState([]),[nextCursor,setNextCursor] = useState(null),[error,setError] = useState(''),[moreError,setMoreError] = useState('');
   const request = useRef(null), detailRequest = useRef(null), sequence = useRef(0), result = useRef(null);
+  useEffect(() => {
+    if (urlCode) {
+      requestAnimationFrame(() => document.getElementById('lookup-code-phone')?.focus());
+    }
+  }, [urlCode]);
   useEffect(() => () => { sequence.current++;request.current?.abort();detailRequest.current?.abort(); },[]);
   const edit = setter => event => { request.current?.abort();detailRequest.current?.abort();sequence.current++;setBusy(false);setLoadingCode('');setDetailErrors({});setOrders([]);setNextCursor(null);setSelectedCode(null);setStatus('all');setPage(1);setError('');setMoreError('');setter(event.target.value); };
   const [status,setStatus] = useState('all'),[page,setPage] = useState(1),[selectedCode,setSelectedCode] = useState(null),[detailSource,setDetailSource] = useState(null),[detailClosing,setDetailClosing] = useState(false),[loadingCode,setLoadingCode] = useState(''),[detailErrors,setDetailErrors] = useState({});

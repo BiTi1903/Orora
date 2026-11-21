@@ -115,7 +115,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
     const start = el && typeof el.selectionStart === "number" ? el.selectionStart : current.length;
     const end = el && typeof el.selectionEnd === "number" ? el.selectionEnd : current.length;
     const updated = `${current.slice(0, start)}${token}${current.slice(end)}`;
-    onChange({ ...value, [field]: updated });
+    onChange(field === "subject" ? { subject: updated, text: value.text } : { subject: value.subject, text: updated });
     requestAnimationFrame(() => {
       if (!el) return;
       el.focus();

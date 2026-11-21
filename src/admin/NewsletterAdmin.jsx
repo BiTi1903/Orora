@@ -150,7 +150,7 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
           return;
         }
         if (result.completed) {
-          setNotice({ text: "Đã xử lý xong thư. “Đã nhận” chưa có nghĩa thư đã vào hộp thư khách." });
+          setNotice({ text: "Đã xử lý xong thư. “Đã gửi đi” chưa bảo đảm thư đã vào hộp thư đến." });
           return;
         }
         await new Promise((resolve) => window.setTimeout(resolve, 5000));
@@ -261,6 +261,7 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
                   <option value="all">Tất cả trạng thái</option>
                   <option value="active">Hoạt động</option>
                   <option value="paused">Tạm ngưng</option>
+                  <option value="bounced">Bị trả lại</option>
                   <option value="unsubscribed">Đã hủy đăng ký</option>
                 </select>
               </div>
@@ -283,7 +284,7 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
                 }} /></td>
                 <td>{item.email}</td>
                 <td><span className={`newsletter-contact-status ${item.status}`}>{CONTACT_STATUS[item.status] || item.status}</span></td>
-                <td>{{ accepted: "Đã nhận", pending: "Đang xử lý", failed: "Lỗi", unknown: "Chưa rõ" }[item.mailStatus] || "—"}<OutlookCheck outlook={item.outlook} label={item.email} check={() => request({ action: "checkWelcomeOutlook", id: item.id })} /></td>
+                <td>{{ accepted: "Đã gửi đi", pending: "Đang gửi", failed: "Gửi lỗi", unknown: "Cần kiểm tra" }[item.mailStatus] || "—"}<OutlookCheck outlook={item.outlook} label={item.email} check={() => request({ action: "checkWelcomeOutlook", id: item.id })} /></td>
                 <td><ContactActions label={`Thao tác cho ${item.email}`} disabled={busy} onApply={(operation) => manageContacts([item.id], operation)} /></td>
               </tr>)}</tbody></table></div>
             {!visibleContacts.length && <p className="admin-muted">Không có email phù hợp.</p>}
