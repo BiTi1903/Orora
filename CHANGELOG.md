@@ -1,3 +1,20 @@
+## 21/11/2026 — Bỏ nút "Phóng to ảnh" riêng lẻ, nâng cấp trải nghiệm xem & phóng to ảnh sản phẩm chuẩn e-commerce
+
+- **Lý do**: Nút `Phóng to ảnh` đặt bên dưới ảnh chính làm thừa chi tiết và không tự nhiên bằng thao tác bấm/chạm trực tiếp vào ảnh như các trang thương mại điện tử lớn.
+- **Thay đổi chính**:
+  - **Thư viện ảnh chính (`src/components/ProductDetail.jsx`, `src/styles/product-detail.css`)**:
+    - Xóa bỏ nút `Phóng to ảnh` rời dưới ảnh.
+    - Cho phép bấm/chạm trực tiếp lên ảnh chính (hoặc nhấn `Enter`/`Space`) để mở khung xem ảnh phóng to (`cursor: zoom-in`), kèm hiệu ứng phóng nhẹ khi di chuột trên desktop và biểu tượng kính lúp nhỏ gọn ở góc ảnh.
+    - Khi sản phẩm có nhiều ảnh, hiển thị nút mũi tên `‹` / `›` khi di chuột trên desktop, hỗ trợ vuốt ngang trên mobile và phím `←` / `→`, kèm huy hiệu số thứ tự ảnh (`1 / N`).
+  - **Khung xem ảnh phóng to (`src/components/ProductImageLightbox.jsx`, `src/styles/product-detail.css`)**:
+    - Hỗ trợ chạm trực tiếp vào ảnh để phóng to/thu về `100% ↔ 200%`, kéo để lia ảnh khi đang phóng to, pinch 2 ngón trên mobile, và chuyển ảnh ngay trong Lightbox bằng nút `‹` / `›`, vuốt ngang hoặc phím `←` / `→`.
+    - Tinh gọn thanh điều khiển sang dạng pill (`−`, `100%`, `+` và bộ đếm `1 / N`) kèm dòng gợi ý thao tác ngắn.
+- **File / khu vực liên quan**: `src/components/ProductDetail.jsx`, `src/components/ProductImageLightbox.jsx`, `src/styles/product-detail.css`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **264/264** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt (`136.84 kB` gzip).
+  - Playwright (`width-1440` & `width-390`): **15/15** test đạt trên `qa/editor-checkout.spec.js` (gồm luồng mở lightbox, phóng to, kéo lia ảnh và đóng bằng `Escape`).
+- **Ảnh hưởng database**: Không thay đổi schema, rules hay dữ liệu.
+
 ## 20/11/2026 — Đưa nút Giỏ hàng (kèm biểu tượng SVG) vào thanh Mua ngay và thêm tùy chọn ẩn nút Tư vấn
 
 - **Lý do**: Nút giỏ hàng đặt cạnh giá trên cùng chưa hợp lý và bị trống biểu tượng do `productCart` chưa có mặc định trong `ButtonIcon`; chủ website muốn đặt nút giỏ hàng ngay bên cạnh giá tạm tính & nút **Mua ngay** ở thanh dưới và tạm ẩn nút **Tư vấn** theo tùy chọn quản trị.

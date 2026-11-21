@@ -458,7 +458,7 @@ function ProductDetail({
       <section className="product-detail-content product-detail-content--with-sections">
         <div className="product-detail-gallery" style={galleryStyle}>
           <div
-            className={`product-detail-image ${selectedClass("pdImage")}${
+            className={`product-detail-image ${!preview && displaySrc ? "is-interactive " : ""}${selectedClass("pdImage")}${
               fixedHeight != null ? " product-detail-image--fixed-h" : ""
             }`}
             style={{
@@ -466,7 +466,32 @@ function ProductDetail({
               ["--pd-object-fit"]: objectFitValue,
             }}
             data-builder-key={preview ? "pdImage" : undefined}
-            onClick={preview ? select("pdImage") : undefined}
+            role={!preview && displaySrc ? "button" : undefined}
+            tabIndex={!preview && displaySrc ? 0 : undefined}
+            aria-label={!preview && displaySrc ? "Phóng to ảnh" : undefined}
+            onClick={
+              preview
+                ? select("pdImage")
+                : displaySrc
+                  ? () => setLightbox(displaySrc)
+                  : undefined
+            }
+            onKeyDown={
+              !preview && displaySrc
+                ? (event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setLightbox(displaySrc);
+                    } else if (allImages.length > 1 && event.key === "ArrowLeft") {
+                      event.preventDefault();
+                      stepMainImage(-1);
+                    } else if (allImages.length > 1 && event.key === "ArrowRight") {
+                      event.preventDefault();
+                      stepMainImage(1);
+                    }
+                  }
+                : undefined
+            }
             onTouchStart={!preview && allImages.length > 1 ? (event) => {
               const t = event.touches?.[0];
               if (t) swipeStartRef.current = { x: t.clientX, y: t.clientY };
@@ -479,6 +504,7 @@ function ProductDetail({
               const dx = t.clientX - start.x;
               const dy = t.clientY - start.y;
               if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+                event.preventDefault();
                 stepMainImage(dx < 0 ? 1 : -1);
               }
             } : undefined}
@@ -497,10 +523,48 @@ function ProductDetail({
             ) : (
               <div className="product-detail-image-placeholder" aria-hidden="true" />
             )}
+            {!preview && allImages.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  className="product-image-nav prev"
+                  aria-label="Ảnh trước"
+                  onClick={(event) => { event.stopPropagation(); stepMainImage(-1); }}
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  className="product-image-nav next"
+                  aria-label="Ảnh sau"
+                  onClick={(event) => { event.stopPropagation(); stepMainImage(1); }}
+                >
+                  ›
+                </button>
+                <span className="product-image-counter" aria-hidden="true">
+                  {safeIndex + 1} / {allImages.length}
+                </span>
+              </>
+            )}
+            {!preview && displaySrc && (
+              <span className="product-image-zoom-hint" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m21 21-4.35-4.35M11 8v6M8 11h6" />
+                </svg>
+              </span>
+            )}
           </div>
 
-          {!preview && displaySrc && <button type="button" className="product-image-zoom" onClick={() => setLightbox(displaySrc)}>Phóng to ảnh</button>}
-          {!preview && lightbox && <ProductImageLightbox src={lightbox} name={product.name} onClose={() => setLightbox(null)} />}
+          {!preview && lightbox && (
+            <ProductImageLightbox
+              src={lightbox}
+              images={allImages}
+              initialIndex={safeIndex}
+              name={product.name}
+              onClose={() => setLightbox(null)}
+            />
+          )}
           {secondaryImages.length > 0 && (
             <div
               className={`product-detail-thumbs-wrap ${selectedClass("pdThumbs")}`}
