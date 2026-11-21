@@ -16,15 +16,15 @@ export default function OrderTrackingDetails({ order, copy: suppliedCopy, styles
  return <div className="order-tracking-result" aria-label={`Kết quả tra cứu đơn ${order.code}`}>
   <section className="tracking-status-section" aria-label={copy.progressTitle}>
    <div className="order-tracking-result-heading">
-    <strong>{ORDER_STATUSES[order.status]||'Đang cập nhật'}</strong>
+    <strong className="tracking-status-pill" data-status={order.status || 'unknown'}>{ORDER_STATUSES[order.status]||'Đang cập nhật'}</strong>
     <span className="tracking-order-code-wrap">
      <span className="tracking-order-code">{order.code}</span>
      <button type="button" className="tracking-copy-pill" onClick={() => { navigator.clipboard?.writeText(order.code).then(() => { setCopied(true); window.setTimeout(() => setCopied(false), 2000); }).catch(() => {}); }}>{copied ? '✓ Đã chép' : 'Sao chép'}</button>
     </span>
    </div>
    <div className="order-tracking-dates"><p><span>{copy.createdLabel}</span><time>{date(order.createdAt)}</time></p><p><span>{copy.updatedLabel}</span><time>{date(order.updatedAt)}</time></p></div>
-   {steps.includes(order.status)&&<ol className="order-tracking-steps" aria-label="Tiến trình đơn hàng">{steps.map((step,index)=><li key={step} className={index<=steps.indexOf(order.status)?'is-reached':''} aria-current={step===order.status?'step':undefined}><span className="tracking-step-num" aria-hidden="true">{index+1}</span><span>{ORDER_STATUSES[step]}</span></li>)}</ol>}
-   {nextKey&&<p className="tracking-next-step"><strong>Bước tiếp theo</strong> {copy[nextKey]}</p>}
+   {steps.includes(order.status)&&<ol className="order-tracking-steps" aria-label="Tiến trình đơn hàng">{steps.map((step,index)=>{const activeIdx=steps.indexOf(order.status);const reached=index<=activeIdx;const done=index<activeIdx;return <li key={step} className={`${reached?'is-reached':''}${done?' is-done':''}${step===order.status?' is-current':''}`.trim()} aria-current={step===order.status?'step':undefined}><span className="tracking-step-num" aria-hidden="true">{done?'✓':index+1}</span><span className="tracking-step-label">{ORDER_STATUSES[step]}</span></li>;})}</ol>}
+   {nextKey&&<p className="tracking-next-step"><strong>Bước tiếp theo</strong><span>{copy[nextKey]}</span></p>}
    {order.status==='cancelled'&&<p className="order-tracking-error">{copy.cancelledHelp}</p>}
   </section>
   <section className="tracking-detail-section tracking-product-section"><h3 style={css("detailHeading")}>{copy.productSectionTitle}</h3><dl>

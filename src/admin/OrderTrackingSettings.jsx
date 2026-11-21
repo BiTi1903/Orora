@@ -174,8 +174,8 @@ export default function OrderTrackingSettings() {
               <legend>Kích thước form</legend>
               <div className="admin-form-grid">
                 {[
-                  ["formPadding", "Khoảng đệm form (px)", 14, 8, 32],
-                  ["fieldHeight", "Chiều cao ô nhập / nút (px)", 44, 44, 60],
+                  ["formPadding", "Khoảng đệm form (px)", 24, 8, 40],
+                  ["fieldHeight", "Chiều cao ô nhập / nút (px)", 46, 44, 60],
                 ].map(([key, label, fallback, min, max]) => (
                   <NumberField
                     key={key}
@@ -194,7 +194,8 @@ export default function OrderTrackingSettings() {
               <div className="admin-form-grid">
                 {[
                   ["accent", "Màu nhấn / nút"],
-                  ["background", "Màu nền thẻ"],
+                  ["background", "Màu nền thẻ chính"],
+                  ["surface", "Màu nền phụ (tab / hộp gợi ý)"],
                   ["border", "Màu viền"],
                 ].map(([key, label]) => (
                   <ColorField

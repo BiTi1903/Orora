@@ -9,9 +9,9 @@ test('tracking copy retains existing overrides and provides editable search guid
  assert.equal(new Set(ORDER_TRACKING_FIELDS.map(([key])=>key)).size,ORDER_TRACKING_FIELDS.length);
 });
 test('tracking appearance provides safe bounded corner sizes and separate desktop/mobile typography',()=>{
- assert.deepEqual(trackingTheme({radius:'',accent:'#123456'}),{'--tracking-form-padding':'14px','--tracking-field-height':'44px','--tracking-accent':'#123456'});
+ assert.deepEqual(trackingTheme({radius:'',accent:'#123456',surface:'#fdf7fa'}),{'--tracking-form-padding':'24px','--tracking-field-height':'46px','--tracking-accent':'#123456','--tracking-surface':'#fdf7fa'});
  assert.equal(trackingTheme({radius:80})['--tracking-radius'],'40px');
- assert.equal(trackingTheme({formPadding:100,fieldHeight:12})['--tracking-form-padding'],'32px');
+ assert.equal(trackingTheme({formPadding:100,fieldHeight:12})['--tracking-form-padding'],'40px');
  assert.equal(trackingTheme({formPadding:100,fieldHeight:12})['--tracking-field-height'],'44px');
  const style=trackingStyle({text:{title:{fontSize:22,mobileFontSize:18,fontWeight:700}}},'title');
  assert.equal(style.fontSize,'22px');assert.equal(style['--mobile-font-size'],'18px');assert.equal(style.fontWeight,700);

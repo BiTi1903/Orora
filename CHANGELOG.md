@@ -1,3 +1,23 @@
+## 21/11/2026 — Thiết kế lại giao diện trang Tra cứu đơn hàng (UI & tùy chỉnh Admin)
+
+- **Lý do**: Chủ website yêu cầu thiết kế lại giao diện trang tra cứu đơn hàng cho tinh tế, rõ phân cấp và đồng bộ phong cách thương hiệu ORORA trên cả máy tính lẫn điện thoại, đồng thời giữ đầy đủ khả năng chỉnh nội dung & kiểu hiển thị trong trang quản trị.
+- **Thay đổi chính**:
+  - **Bố cục trang & thẻ tra cứu (`src/components/OrderTracking.jsx`, `src/components/OrderTrackingSearch.jsx`, `src/styles/order-tracking.css`)**:
+    - Đưa phần tiêu đề trang sang bố cục căn giữa thoáng gọn với thanh `← Trở về trang chủ` nhẹ ở góc trên.
+    - Nâng cấp thẻ tra cứu (`order-tracking-panel`) với đổ bóng mềm, thanh chuyển chế độ dạng segmented pill có biểu tượng (Số điện thoại / Mã đơn), lưới 2 cột cân đối cho chế độ tra mã đơn trên màn hình rộng, hiệu ứng focus dịu và dòng ghi chú bảo mật có biểu tượng khiên ở chân thẻ.
+    - Thiết kế lại mục **Hướng dẫn & hỗ trợ** thành thẻ gấp/mở gọn có mũi tên xoay và lưới 3 bước nằm ngang trên desktop (xếp dọc trên mobile).
+  - **Danh sách đơn & chi tiết đơn (`src/components/OrderTracking.jsx`, `src/components/OrderTrackingDetails.jsx`, `src/styles/order-tracking.css`)**:
+    - Thêm nhãn trạng thái phân màu ngữ nghĩa (`data-status`: mới nhận, đã xác nhận, đang giao, hoàn tất, đã hủy), thẻ kết quả có hiệu ứng hover nhẹ và bố cục 3 tầng gọn gàng trên mobile (không còn lưới 2×2 chật).
+    - Nâng cấp thanh tiến trình đơn hàng (`order-tracking-steps`) thành stepper nối liền (nằm ngang trên desktop, timeline dọc trên mobile) với dấu `✓` cho các bước đã qua và vòng nhấn cho bước hiện tại; hộp **Bước tiếp theo** và hộp **Chi tiết số tiền** dùng nền phụ dịu mắt.
+  - **Tùy chỉnh trong Admin (`src/admin/OrderTrackingSettings.jsx`, `src/lib/order-tracking-copy.js`, `src/admin/controls/color-defaults.js`)**:
+    - Bổ sung tùy chọn **Màu nền phụ (tab / hộp gợi ý)** (`surface` → `--tracking-surface`) trong `Kiểu chữ & khung`, mở rộng khoảng đệm mặc định `24px` (8–40px) và chiều cao ô mặc định `46px` (44–60px), áp dụng đồng bộ giữa bản xem trước admin và trang thật.
+  - **Kiểm thử (`tests/order-tracking-copy.test.js`)**: Cập nhật kiểm tra giá trị mặc định mới và xác minh biến `--tracking-surface`.
+- **File / khu vực liên quan**: `src/components/OrderTracking.jsx`, `src/components/OrderTrackingSearch.jsx`, `src/components/OrderTrackingDetails.jsx`, `src/styles/order-tracking.css`, `src/admin/OrderTrackingSettings.jsx`, `src/lib/order-tracking-copy.js`, `src/admin/controls/color-defaults.js`, `tests/order-tracking-copy.test.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **269/269** unit test đạt, `eslint .` 0 lỗi, `vite build` và ngân sách bundle đạt (`136.84 kB` gzip).
+  - Playwright (`width-390` & `width-1440`): **20/20** test đạt trên `qa/tracking-layout.spec.js` và `qa/admin-appearance.spec.js`.
+- **Ảnh hưởng database**: Chỉ bổ sung khóa tùy chọn `orderTrackingText.styles.surface` trên cấu hình giao diện khi quản trị viên chủ động đổi màu; không thay đổi schema hay rules.
+
 ## 21/11/2026 — Sửa 7 lỗi sau kiểm thử hệ thống Email (A–G: chèn biến mẫu, mã lỗi 5.1.x, kiểm tra lô chiến dịch, fallback tra cứu Outlook, điền sẵn `?code=`, chặn đăng ký lại, đồng bộ nhãn)
 
 - **Lý do**: Xử lý 7 vấn đề phát hiện khi chạy thử bản nâng cấp hệ thống Email trước đó (chèn biến làm 409 `template_changed`, mã `550` chung bị coi nhầm là lỗi người nhận, tự loại `bounced` chưa chạy theo lô và chưa có bộ lọc, cửa sổ cố định của `checkBatch` làm bỏ sót thư cũ, trang tra cứu đơn chưa đọc `?code=`, người đã hủy đăng ký/bounce vẫn bị kích hoạt lại khi gửi form đăng ký, và còn sót nhãn cũ `"Đã nhận"` / trùng mục lọc `"Cần kiểm tra"`).

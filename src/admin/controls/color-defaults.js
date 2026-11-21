@@ -20,6 +20,7 @@ export const CHAT_CHANNEL_COLOR_DEFAULTS = {
 export const ORDER_TRACKING_COLOR_DEFAULTS = {
   accent: ADMIN_COLOR_DEFAULTS.primary,
   background: ADMIN_COLOR_DEFAULTS.white,
+  surface: "#fdf7fa",
   border: ADMIN_COLOR_DEFAULTS.softBorder,
 };
 
