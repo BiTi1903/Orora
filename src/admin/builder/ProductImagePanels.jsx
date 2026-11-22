@@ -144,14 +144,14 @@ export default function ProductImageSettings({ selected, data, productDetail, on
 
         <SettingGroup title="Kích thước & khoảng cách">
           <SelectField
-            label="Chiều cao mỗi ảnh"
+            label="Cạnh ảnh vuông"
             value={layout.height ?? 0}
-            options={[0, 44, 48, 56, 64, 72, 80, 96, 110, 120, 140, 160]}
+            options={[...new Set([0, 40, 44, 48, 56, Number(layout.height) || 0])].sort((a, b) => a - b)}
             suffix="px"
             onChange={(value) => onStyleChange({ height: Number(value) })}
           />
           <small className="builder-help" data-spacing="tight">
-            0 = ảnh vuông 56 px, hoặc 48 px trên màn hình nhỏ.
+            0 = ảnh vuông 48 px, hoặc 44 px trên màn hình nhỏ. Giới hạn hiển thị là 56 px trên máy tính và 48 px trên màn hình nhỏ.
           </small>
           <SelectField
             label="Khoảng cách giữa 2 ảnh"

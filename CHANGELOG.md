@@ -1,3 +1,10 @@
+## 22/11/2026 — Làm gọn dải ảnh phụ ở trang chi tiết
+
+- Hai ảnh phụ hiển thị theo khung vuông, mặc định 48 px trên desktop và 44 px ở màn hình hẹp. Bộ chỉnh Ảnh phụ dùng cạnh hình vuông và áp dụng giới hạn để khung luôn gọn.
+- Khi có hơn hai ảnh phụ, hiển thị lát ảnh mờ không viền và không bóng ở cả hai bên. Bấm mỗi bên để lướt theo hướng tương ứng.
+- Kiểm tra đạt với npm run check và hai bài Playwright ở 320 px và 1440 px, gồm trường hợp bật hiệu ứng kính.
+- Database giữ nguyên dữ liệu, cấu trúc và rules.
+
 ## 22/11/2026 — Thu gọn ảnh phụ và tạm ẩn bộ chọn ngôn ngữ
 
 - Trang chi tiết hiển thị tối đa hai ảnh phụ đầy đủ. Khi còn ảnh, nút tiếp hiển thị một phần ảnh kế được làm mờ. Mặc định ảnh vuông 56 px, giảm còn 48 px ở màn hình hẹp. Visual Builder vẫn chỉnh được khung ảnh và có thêm các mức chiều cao nhỏ.

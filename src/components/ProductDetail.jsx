@@ -332,7 +332,7 @@ function ProductDetail({
     gap: px(thumbsLayout.gap) ?? "10px",
   };
 
-  const thumbFixedH =
+  const thumbSize =
     thumbsLayout.height != null && Number(thumbsLayout.height) > 0
       ? Number(thumbsLayout.height)
       : null;
@@ -345,11 +345,10 @@ function ProductDetail({
         ? "solid"
         : "solid",
     borderColor: thumbsLayout.borderColor || "transparent",
-    height: thumbFixedH != null ? `${thumbFixedH}px` : undefined,
-    aspectRatio: thumbFixedH != null ? "auto" : "1",
+    "--pd-thumb-size": thumbSize != null ? `${thumbSize}px` : undefined,
   };
 
-  // Show two secondary images at a time and a cropped preview of the next one.
+  // Show two secondary images with faded previews of the neighboring images.
   const visibleThumbs = (() => {
     if (thumbPool.length <= 2) return thumbPool;
     return [0, 1].map(
@@ -358,6 +357,7 @@ function ProductDetail({
   })();
 
   const canSlideThumbs = thumbPool.length > 2;
+  const prevThumb = canSlideThumbs ? thumbPool[(thumbStart - 1 + thumbPool.length) % thumbPool.length] : null;
   const nextThumb = canSlideThumbs ? thumbPool[(thumbStart + 2) % thumbPool.length] : null;
   const goThumbPrev = () => {
     if (!canSlideThumbs) return;
@@ -650,17 +650,17 @@ function ProductDetail({
               data-builder-key={preview ? "pdThumbs" : undefined}
               onClick={preview ? select("pdThumbs") : undefined}
             >
-              {canSlideThumbs && (
+              {prevThumb && (
                 <button
                   type="button"
-                  className="product-detail-thumb-nav prev"
+                  className="product-detail-thumb-peek prev"
                   aria-label="Ảnh phụ trước"
                   onClick={(e) => {
                     e.stopPropagation();
                     goThumbPrev();
                   }}
                 >
-                  ‹
+                  <img src={cdnSrc(prevThumb, THUMB)} alt="" draggable={false} />
                 </button>
               )}
 
@@ -703,7 +703,7 @@ function ProductDetail({
               {nextThumb && (
                 <button
                   type="button"
-                  className="product-detail-thumb-peek"
+                  className="product-detail-thumb-peek next"
                   aria-label="Ảnh phụ sau"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -711,7 +711,6 @@ function ProductDetail({
                   }}
                 >
                   <img src={cdnSrc(nextThumb, THUMB)} alt="" draggable={false} />
-                  <span aria-hidden="true">›</span>
                 </button>
               )}
             </div>

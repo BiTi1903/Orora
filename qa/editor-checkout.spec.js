@@ -149,16 +149,30 @@ test('website order buttons stay hidden when payment methods are disabled', asyn
  await expect(page.locator('.product-mobile-buy')).toHaveCount(0);
 });
 
-test('the compact thumbnail strip shows two secondary images and reveals the next one', async ({page}) => {
+test('the compact thumbnail strip shows two square images with borderless previews on both sides', async ({page}) => {
  const image = (number) => `/sample-${number}.png`;
- const withImages = {...product, image:image(0), additionalImages:[image(1),image(2),image(3)]};
+ const withImages = {...product, image:image(0), additionalImages:[image(1),image(2),image(3),image(4)]};
  await detail(page, null, {'lib/api.js':`export const getProduct=async()=>(${JSON.stringify(withImages)});`});
  const thumbs = page.locator('.product-detail-thumbs');
  const tiles = thumbs.getByRole('tab');
  await expect(tiles).toHaveCount(2);
  await expect(tiles.first()).toHaveAccessibleName('Ảnh phụ 1');
- expect((await tiles.first().boundingBox()).width).toBeLessThanOrEqual(56);
+ const tile = await tiles.first().boundingBox();
+ expect(tile.width).toBeLessThanOrEqual(48);
+ expect(tile.height).toBe(tile.width);
+ await page.evaluate(async ()=>{
+  await import('/src/styles/mobile-glass.css');
+  document.documentElement.setAttribute('data-glass-buttons','');
+ });
+ const previous = page.getByRole('button',{name:'Ảnh phụ trước',exact:true});
+ await expect(previous.locator('img')).toHaveAttribute('src', /sample-4/);
+ await previous.click();
+ await expect(tiles.first()).toHaveAccessibleName('Ảnh phụ 4');
+ await expect(previous).toHaveCSS('box-shadow','none');
+ await expect(previous).toHaveCSS('border-top-width','0px');
  const next = page.getByRole('button',{name:'Ảnh phụ sau',exact:true});
+ await expect(next.locator('img')).toHaveAttribute('src', /sample-2/);
+ await next.click();
  await expect(next.locator('img')).toHaveAttribute('src', /sample-3/);
  await next.click();
  await expect(tiles).toHaveCount(2);
