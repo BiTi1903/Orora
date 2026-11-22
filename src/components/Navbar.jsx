@@ -9,7 +9,7 @@ import useHomeContent from "../hooks/useHomeContent";
 import useCategories from "../hooks/useCategories";
 import { socialShopUrl } from "../lib/commerce";
 import { toCss } from "../lib/typography";
-import { SUPPORTED_LOCALES, useLocale, setLocale, translatePhrase } from "../lib/i18n";
+import { STOREFRONT_LANGUAGES_ENABLED, SUPPORTED_LOCALES, useLocale, setLocale, translatePhrase } from "../lib/i18n";
 
 const DEFAULT_LINKS = [
   { label: "Về Chúng Tôi", href: "/#about" },
@@ -115,6 +115,7 @@ function Navbar({
   const logo = data.navLogo || "";
   const links = withTrackingNavLink(Array.isArray(data.navLinks) ? data.navLinks : []);
   const styles = data.navStyles || {};
+  const showLanguages = preview || STOREFRONT_LANGUAGES_ENABLED;
   const langSettings = styles.languageSwitcher || {};
   const { zalo } = contactLinks(home, "", home.productDetailStyles?.contactActions || {});
   const facebook = socialShopUrl(home.shopLinks?.facebookUrl || home.footerFacebook, "facebook");
@@ -198,7 +199,7 @@ function Navbar({
         </div>
 
         <div className="navbar-actions">
-          <LanguageSwitcher settings={langSettings} preview={preview} className={selectedClass("navLang")} onSelect={select("navLang")} />
+          {showLanguages && <LanguageSwitcher settings={langSettings} preview={preview} className={selectedClass("navLang")} onSelect={select("navLang")} />}
           <span ref={preview?undefined:mountNavbarCartSlot} className="navbar-cart-slot" data-desktop-cart-slot={preview?undefined:""}>{preview&&<CartButton settings={styles.cart} inNavbar preview className={selectedClass("navCart")} onClick={select("navCart")}/>}</span>
           <button
             className={`menu${menuOpen ? " menu--open" : ""}`}
@@ -228,9 +229,9 @@ function Navbar({
           <button type="button" className="drawer-close" aria-label="Đóng menu" onClick={closeMenu}>×</button>
         </div>
 
-        <div className="mobile-drawer-lang">
+        {showLanguages && <div className="mobile-drawer-lang">
           <LanguageSwitcher settings={langSettings} preview={preview} />
-        </div>
+        </div>}
 
         <nav key={menuOpen ? "open" : "closed"} className="mobile-drawer-links">
           {links.map((item, index) => {

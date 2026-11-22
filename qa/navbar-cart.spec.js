@@ -7,29 +7,14 @@ test('desktop cart belongs to navbar',async({page})=>{
  await page.evaluate(()=>scrollTo(0,500));await expect(page.locator('.back-to-top')).toHaveCount(0);await fit(page);if(page.viewportSize().width>768){await page.setViewportSize({width:900,height:1000});await fit(page);}
 });
 
-test('navbar language switcher toggles between VI, EN, and JA across desktop and mobile',async({page})=>{
+test('public navbar stays in Vietnamese with a previously saved locale',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('orora_locale','ja'));
  await mount(page,`import Navbar from '/src/components/Navbar.jsx';import Cart from '/src/components/ShopCart.jsx';${render("R.createElement(R.Fragment,null,R.createElement('main',{style:{height:1200}},R.createElement(Navbar)),R.createElement(Cart))")}`,{'hooks/useHomeContent.js':`export default function home(){return {loading:false,navLogo:'ORORA',navLinks:[{label:'Về Chúng Tôi',href:'/#about'},{label:'Sản phẩm',href:'/#shop'},{label:'Liên Hệ',href:'/#contact'}]}}`,'hooks/useProducts.js':'export default function products(){return {products:[],loading:false}}','hooks/useCategories.js':'export default function categories(){return {categories:[]}}'});
- if(page.viewportSize().width>768){
-  const switcher=page.locator('.navbar-actions .navbar-lang-switcher');
-  await expect(switcher).toBeVisible();
-  await switcher.getByRole('button',{name:'English'}).click();
-  await expect(page.locator('.nav-links')).toContainText('About Us');
-  await expect(page.locator('.nav-links')).toContainText('Products');
-  await switcher.getByRole('button',{name:'日本語'}).click();
-  await expect(page.locator('.nav-links')).toContainText('ブランド紹介');
-  await expect(page.locator('.nav-links')).toContainText('商品一覧');
-  await switcher.getByRole('button',{name:'Tiếng Việt'}).click();
+ await expect(page.locator('.navbar-lang-switcher')).toHaveCount(0);
+ if(page.viewportSize().width>768) {
   await expect(page.locator('.nav-links')).toContainText('Về Chúng Tôi');
- }else{
+ } else {
   await page.locator('.navbar .menu').click();
-  const mobileSwitcher=page.locator('.mobile-drawer-lang .navbar-lang-switcher');
-  await expect(mobileSwitcher).toBeVisible();
-  await mobileSwitcher.getByRole('button',{name:'English'}).click();
-  await expect(page.locator('.mobile-drawer-links')).toContainText('About Us');
-  await mobileSwitcher.getByRole('button',{name:'日本語'}).click();
-  await expect(page.locator('.mobile-drawer-links')).toContainText('ブランド紹介');
-  await mobileSwitcher.getByRole('button',{name:'Tiếng Việt'}).click();
   await expect(page.locator('.mobile-drawer-links')).toContainText('Về Chúng Tôi');
  }
 });
-

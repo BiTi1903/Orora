@@ -1,5 +1,8 @@
 import { useSyncExternalStore } from "react";
 
+// Pause public language switching without discarding saved preferences or translations.
+export const STOREFRONT_LANGUAGES_ENABLED = false;
+
 export const SUPPORTED_LOCALES = [
   { code: "vi", short: "VI", label: "Tiếng Việt" },
   { code: "en", short: "EN", label: "English" },
@@ -9,7 +12,7 @@ export const SUPPORTED_LOCALES = [
 export const LOCALE_STORAGE_KEY = "orora_locale";
 
 let currentLocale = "vi";
-if (typeof window !== "undefined") {
+if (STOREFRONT_LANGUAGES_ENABLED && typeof window !== "undefined") {
   try {
     const saved = window.localStorage.getItem(LOCALE_STORAGE_KEY);
     if (saved === "en" || saved === "ja" || saved === "vi") currentLocale = saved;
@@ -25,6 +28,7 @@ export function getLocale() {
 }
 
 export function setLocale(next) {
+  if (!STOREFRONT_LANGUAGES_ENABLED) return;
   const normalized = next === "en" || next === "ja" ? next : "vi";
   if (normalized === currentLocale) return;
   currentLocale = normalized;

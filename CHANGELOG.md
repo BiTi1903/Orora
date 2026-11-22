@@ -1,3 +1,10 @@
+## 22/11/2026 — Thu gọn ảnh phụ và tạm ẩn bộ chọn ngôn ngữ
+
+- Trang chi tiết hiển thị tối đa hai ảnh phụ đầy đủ. Khi còn ảnh, nút tiếp hiển thị một phần ảnh kế được làm mờ. Mặc định ảnh vuông 56 px, giảm còn 48 px ở màn hình hẹp. Visual Builder vẫn chỉnh được khung ảnh và có thêm các mức chiều cao nhỏ.
+- Website dùng tiếng Việt trong thời gian tạm ẩn bộ chọn. Phần cấu hình và xem trước bản dịch vẫn có trong Visual Builder.
+- Kiểm tra gồm 270 bài Node, lint, build, giới hạn bundle và 4 bài Playwright cho ảnh phụ và ngôn ngữ tại 320 px và 1440 px, tất cả đều đạt. Kiểm tra thêm phát hiện ngưỡng chiều cao thanh mua ở 320 px đã vượt từ bản gốc 51b99de. Bài hoàn tác trong Builder đạt khi chạy lại riêng.
+- Database giữ nguyên dữ liệu, cấu trúc và rules.
+
 ## 21/11/2026 — Đồng bộ kích thước khung ảnh Chi tiết sản phẩm, rà soát toàn bộ bộ chỉnh Admin và nâng cấp giao diện thanh bên / mục lớn Admin
 
 - **Lý do**:

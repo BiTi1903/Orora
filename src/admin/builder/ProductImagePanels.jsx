@@ -146,12 +146,12 @@ export default function ProductImageSettings({ selected, data, productDetail, on
           <SelectField
             label="Chiều cao mỗi ảnh"
             value={layout.height ?? 0}
-            options={[0, 64, 72, 80, 96, 110, 120, 140, 160]}
+            options={[0, 44, 48, 56, 64, 72, 80, 96, 110, 120, 140, 160]}
             suffix="px"
             onChange={(value) => onStyleChange({ height: Number(value) })}
           />
           <small className="builder-help" data-spacing="tight">
-            0 = tỷ lệ vuông theo chiều ngang.
+            0 = ảnh vuông 56 px, hoặc 48 px trên màn hình nhỏ.
           </small>
           <SelectField
             label="Khoảng cách giữa 2 ảnh"

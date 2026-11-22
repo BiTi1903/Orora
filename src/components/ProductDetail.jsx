@@ -232,7 +232,7 @@ function ProductDetail({
   const allImages = images.length ? images : [mainImage, ...secondaryImages].filter(Boolean);
   const safeIndex = activeImageIndex < allImages.length ? activeImageIndex : 0;
   const displaySrc = allImages[safeIndex] || mainImage;
-  const thumbPool = allImages.length > 1 ? allImages : secondaryImages;
+  const thumbPool = secondaryImages;
 
   const promoteToMain = (src) => {
     const idx = allImages.indexOf(src);
@@ -329,7 +329,6 @@ function ProductDetail({
   };
 
   const thumbsGridStyle = {
-    "--thumb-count": undefined, // set later
     gap: px(thumbsLayout.gap) ?? "10px",
   };
 
@@ -350,7 +349,7 @@ function ProductDetail({
     aspectRatio: thumbFixedH != null ? "auto" : "1",
   };
 
-  // Cửa sổ 2 ảnh trong vòng (chính + phụ), xoay nếu > 2
+  // Show two secondary images at a time and a cropped preview of the next one.
   const visibleThumbs = (() => {
     if (thumbPool.length <= 2) return thumbPool;
     return [0, 1].map(
@@ -359,6 +358,7 @@ function ProductDetail({
   })();
 
   const canSlideThumbs = thumbPool.length > 2;
+  const nextThumb = canSlideThumbs ? thumbPool[(thumbStart + 2) % thumbPool.length] : null;
   const goThumbPrev = () => {
     if (!canSlideThumbs) return;
     setThumbStart((s) => (s - 1 + thumbPool.length) % thumbPool.length);
@@ -643,7 +643,7 @@ function ProductDetail({
               </span>
             )}
           </div>
-          {secondaryImages.length > 0 && (
+          {thumbPool.length > 0 && (
             <div
               className={`product-detail-thumbs-wrap ${selectedClass("pdThumbs")}`}
               style={thumbsWrapStyle}
@@ -668,10 +668,7 @@ function ProductDetail({
                 className="product-detail-thumbs"
                 role="tablist"
                 aria-label="Ảnh phụ"
-                style={{
-                  ...thumbsGridStyle,
-                  "--thumb-count": visibleThumbs.length,
-                }}
+                style={thumbsGridStyle}
               >
                 {visibleThumbs.map((src, i) => {
                   const isActive = displaySrc === src;
@@ -685,6 +682,7 @@ function ProductDetail({
                       type="button"
                       role="tab"
                       aria-selected={isActive}
+                      aria-label={`Ảnh phụ ${thumbPool.indexOf(src) + 1}`}
                       className={`product-detail-thumb${isActive ? " is-active" : ""}`}
                       style={{
                         ...thumbBtnBaseStyle,
@@ -702,17 +700,18 @@ function ProductDetail({
                 })}
               </div>
 
-              {canSlideThumbs && (
+              {nextThumb && (
                 <button
                   type="button"
-                  className="product-detail-thumb-nav next"
+                  className="product-detail-thumb-peek"
                   aria-label="Ảnh phụ sau"
                   onClick={(e) => {
                     e.stopPropagation();
                     goThumbNext();
                   }}
                 >
-                  ›
+                  <img src={cdnSrc(nextThumb, THUMB)} alt="" draggable={false} />
+                  <span aria-hidden="true">›</span>
                 </button>
               )}
             </div>

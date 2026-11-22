@@ -148,3 +148,22 @@ test('website order buttons stay hidden when payment methods are disabled', asyn
  await expect(page.getByRole('button', { name: 'Mua ngay', exact: true })).toHaveCount(0);
  await expect(page.locator('.product-mobile-buy')).toHaveCount(0);
 });
+
+test('the compact thumbnail strip shows two secondary images and reveals the next one', async ({page}) => {
+ const image = (number) => `/sample-${number}.png`;
+ const withImages = {...product, image:image(0), additionalImages:[image(1),image(2),image(3)]};
+ await detail(page, null, {'lib/api.js':`export const getProduct=async()=>(${JSON.stringify(withImages)});`});
+ const thumbs = page.locator('.product-detail-thumbs');
+ const tiles = thumbs.getByRole('tab');
+ await expect(tiles).toHaveCount(2);
+ await expect(tiles.first()).toHaveAccessibleName('Ảnh phụ 1');
+ expect((await tiles.first().boundingBox()).width).toBeLessThanOrEqual(56);
+ const next = page.getByRole('button',{name:'Ảnh phụ sau',exact:true});
+ await expect(next.locator('img')).toHaveAttribute('src', /sample-3/);
+ await next.click();
+ await expect(tiles).toHaveCount(2);
+ const third = thumbs.getByRole('tab',{name:'Ảnh phụ 3',exact:true});
+ await third.click();
+ await expect(third).toHaveAttribute('aria-selected','true');
+ await fit(page);
+});
