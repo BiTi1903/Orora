@@ -10,7 +10,7 @@ import ProductVolumeEditor from "./ProductVolumeEditor";
 import { validateVolumeOptions } from "../lib/product-options";
 import ProductPoliciesSettings from "./ProductPoliciesSettings";
 import ProductReviewsEditor from "./ProductReviewsEditor";
-import ProductContentEditor from "./ProductContentEditor";
+import ProductInformationEditor from "./ProductInformationEditor";
 import { productSections, productSectionGroup, PRODUCT_CONTENT_GROUPS, secondaryProductImages } from "../lib/product-content";
 import { useEffect, useRef, useState } from "react";
 import { explainError, getProducts, removeProduct, saveProduct, saveCategory, setProductCategory } from "../lib/api";
@@ -34,7 +34,15 @@ const SHARED_SETTINGS = [
   ['faq','Câu hỏi thường gặp','Câu hỏi, câu trả lời và sản phẩm áp dụng.'],
 ];
 
-const newSection = (group = "description") => ({ id: crypto.randomUUID(), title: group === "description" ? "Mô tả" : "", content: "", group });
+const newProductInformationBlock = (group) => ({
+  id: crypto.randomUUID(), group, image: "", title: "", content: "", effect: "fade",
+});
+
+function withInformationSlots(sections = []) {
+  return [...sections, ...Object.keys(PRODUCT_CONTENT_GROUPS)
+    .filter((group) => !sections.some((section) => section.group === group))
+    .map(newProductInformationBlock)];
+}
 const imageSlots = (product = {}) => {
   const slots = secondaryProductImages(product).map((src) => ({ id: crypto.randomUUID(), src }));
   while (slots.length > 1 && !slots.at(-1).src.trim()) slots.pop();
@@ -58,7 +66,6 @@ export default function ProductsAdmin() {
   const [uploads, setUploads] = useState({});
   const uploading = Object.values(uploads).some(Boolean);
   const uploadState = (id, value) => setUploads((current) => ({ ...current, [id]: value }));
-  const patchSection = (id, patch) => setSections((current) => current.map((item) => item.id === id ? { ...item, ...patch } : item));
   const [view, setView] = useState("products");
   const [sharedPanel,setSharedPanel]=useState("policies");
   const [editorPanel, setEditorPanel] = useState("basics");
@@ -96,7 +103,7 @@ export default function ProductsAdmin() {
 
   const startNew = () => {
     setView("products"); setEditorPanel("basics");
-    setVolumeOptions([]); setReviews([]); setSections([newSection()]); setMedia(imageSlots()); setUploads({});
+    setVolumeOptions([]); setReviews([]); setSections(withInformationSlots()); setMedia(imageSlots()); setUploads({});
     setForm({ ...empty, number: String(nextProductSequence(items)).padStart(2, "0") });
     setIsNew(true);
     setEditing(true);
@@ -107,7 +114,7 @@ export default function ProductsAdmin() {
     setEditorPanel("basics");
     setVolumeOptions(Array.isArray(p.volumeOptions) ? p.volumeOptions.map((option) => ({ ...option, id: option.id || crypto.randomUUID(), label: String(option.label ?? ""), price: String(option.price ?? "") })) : []);
     const savedSections = productSections(p).map((item, index) => ({ ...item, id: item.id || crypto.randomUUID(), group: productSectionGroup(item, index) }));
-    setSections(savedSections.length ? savedSections : [newSection()]);
+    setSections(withInformationSlots(savedSections));
     setReviews(Array.isArray(p.productReviews) ? p.productReviews.map((item) => ({ ...item, id: item.id || crypto.randomUUID() })) : []);
     setMedia(imageSlots(p)); setUploads({});
     setForm({ ...empty, ...p, name: String(p.name || ""), price: String(p.price ?? ""), number: String(p.number || productNumber(p, items)) });
@@ -143,7 +150,7 @@ export default function ProductsAdmin() {
         number: form.number.trim() || String(nextProductSequence(items)).padStart(2, "0"),
         price: form.price.trim(),
         image: form.image.trim(),
-        detailSections: sections.filter((section) => section.title.trim() || section.content.trim()),
+        detailSections: sections.filter((section) => section.image?.trim() || section.title?.trim() || section.content?.trim()),
         productReviews: reviews,
         volumeOptions: volumeOptions.map((option) => ({ ...option, label: option.label.trim(), price: option.price?.trim() || "" })),
         additionalImages: media.map((item) => item.src),
@@ -265,10 +272,9 @@ export default function ProductsAdmin() {
 
       </div>}
       {editorPanel === "content" && <div className="product-editor-panel">
-          <section className="product-editor-block" aria-label="Nội dung chi tiết sản phẩm"><div className="product-editor-heading"><div><h3>Nội dung chi tiết</h3><p className="admin-muted">Mặc định chỉ có Mô tả. Tên mục không bắt buộc; bấm Thêm mục nội dung khi cần thêm phần khác.</p></div></div>
-            {sections.map((item, index) => <div className="product-content-section" key={item.id}><div className="product-editor-heading"><strong>Mục {index + 1}</strong>{sections.length > 1 && <button type="button" className="admin-btn danger" disabled={busy} aria-label={`Xóa mục nội dung ${index + 1}`} onClick={async () => { if ((item.title.trim() || item.content.trim()) && !await confirm("Bỏ mục này khỏi nội dung sản phẩm? Chỉ áp dụng khi bạn lưu sản phẩm.", { title: "Xóa mục nội dung", confirmLabel: "Xóa mục", danger: true })) return; setSections((current) => current.filter((entry) => entry.id !== item.id)); }}>Xóa mục</button>}</div><div className="admin-field"><label htmlFor={`section-group-${item.id}`}>Phần hiển thị mục {index + 1}</label><select id={`section-group-${item.id}`} value={item.group || productSectionGroup(item, index)} disabled={busy} onChange={(event) => patchSection(item.id, { group: event.target.value })}>{Object.entries(PRODUCT_CONTENT_GROUPS).map(([key, title]) => <option key={key} value={key}>{title}</option>)}</select></div><div className="admin-field"><label htmlFor={`section-title-${item.id}`}>Tên mục {index + 1} (không bắt buộc)</label><input id={`section-title-${item.id}`} value={item.title} disabled={busy} placeholder={index === 0 ? "Mô tả" : "Để trống hoặc nhập tên mục…"} onChange={(event) => patchSection(item.id, { title: event.target.value })} /></div><ProductContentEditor label={`Nội dung mục ${index + 1}`} value={item.content} disabled={busy} onChange={(content) => patchSection(item.id, { content })} /></div>)}
-            <button type="button" className="admin-btn" disabled={busy} onClick={() => setSections((current) => [...current, newSection("specifications")])}>+ Thêm mục nội dung</button>
-          </section>
+        <ProductInformationEditor sections={sections} visibility={form.detailVisibility} onChange={setSections}
+          onVisibility={(group, visible) => setForm((current) => ({ ...current, detailVisibility: { ...current.detailVisibility, [group]: visible } }))}
+          onUpload={uploadState} newBlock={newProductInformationBlock} disabled={busy} uploading={uploading} />
       </div>}
       {editorPanel === "reviews" && <div className="product-editor-panel"><ProductReviewsEditor reviews={reviews} onChange={setReviews} disabled={busy} /></div>}
     </form>}

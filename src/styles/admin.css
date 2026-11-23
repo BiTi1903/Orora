@@ -805,3 +805,5 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.product-media-text-controls { min-width: 0; margin: 10px 0 0; padding: 0; border: 0; }

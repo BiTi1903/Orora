@@ -28,3 +28,53 @@ test('long ingredients span the grid and short facts stack cleanly on mobile',as
  await expect(page.getByRole('button',{name:/Xem thêm|Thu gọn/})).toHaveCount(0);
  await fit(page);
 });
+
+test('product detail editor adds image blocks, applies text effects and hides individual tabs', async ({page}) => {
+ await page.route('**/detail-image.svg', (route) => route.fulfill({
+  contentType: 'image/svg+xml',
+  body: '<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1280"><rect width="1920" height="1280" fill="pink"/></svg>',
+ }));
+ await mount(page,`
+  import Info from '/src/components/ProductInformation.jsx';
+  import Editor from '/src/admin/ProductInformationEditor.jsx';
+  import '/src/styles/product-detail.css';
+  const block = group => ({id:crypto.randomUUID(),group,image:'',content:'',effect:'fade'});
+  function Example() {
+   const [sections,setSections]=R.useState(()=>['description','specifications','usage'].map(block));
+   const [visibility,setVisibility]=R.useState({});
+   return R.createElement('main',{className:'admin-main'},
+    R.createElement(Editor,{sections,visibility,onChange:setSections,onVisibility:(group,value)=>setVisibility(old=>({...old,[group]:value})),onUpload:()=>{},newBlock:block}),
+    R.createElement(Info,{sections,visibility,css:()=>({}),select:()=>()=>{},selectedClass:()=>''}));
+  };
+  ${render('R.createElement(Example)')}`, {
+   'lib/cloudinary.js':'export const cloudinaryConfigured=false;export const uploadImage=async()=>"";',
+  });
+ const editor = page.getByRole('region',{name:'Nội dung chi tiết sản phẩm'});
+ const imageFields = editor.getByRole('textbox',{name:/Mô tả · Ảnh/});
+ await expect(imageFields).toHaveCount(1);
+ await imageFields.first().fill('/detail-image.svg');
+ await editor.getByRole('button',{name:'+ Thêm ảnh · Mô tả',exact:true}).click();
+ await expect(imageFields).toHaveCount(2);
+ await imageFields.nth(1).fill('/detail-image.svg');
+ await editor.getByText('Thêm chữ sau ảnh (tùy chọn)',{exact:true}).first().click();
+ await editor.getByRole('textbox',{name:'Mô tả · Nội dung khối 1',exact:true}).fill('Chữ ngay sau ảnh thứ nhất.');
+ await editor.getByRole('combobox',{name:'Hiệu ứng chữ',exact:true}).selectOption('rise');
+ const panel = page.getByRole('tabpanel');
+ const images = panel.locator('.product-information-image');
+ await expect(images).toHaveCount(2);
+ await images.first().scrollIntoViewIfNeeded();
+ await expect(images.first()).toHaveAttribute('data-image-state','ready');
+ await expect(panel.locator('[data-text-effect="rise"]')).toContainText('Chữ ngay sau ảnh thứ nhất.');
+ const box = await images.first().boundingBox();
+ expect(box.width / box.height).toBeCloseTo(1.5, 1);
+ await editor.getByRole('switch',{name:'Hiển thị Mô tả'}).uncheck();
+ await expect(page.getByRole('tab',{name:'Mô tả',exact:true})).toHaveCount(0);
+ await expect(page.getByRole('tab',{name:'Thông số',exact:true})).toHaveAttribute('aria-selected','true');
+ await editor.locator('summary').filter({hasText:/^Hướng dẫn sử dụng$/}).click();
+ await expect(editor.getByRole('textbox',{name:'Hướng dẫn sử dụng · Ảnh 1'})).toBeVisible();
+ await editor.getByRole('switch',{name:'Hiển thị Hướng dẫn sử dụng'}).uncheck();
+ await editor.locator('summary').filter({hasText:/^Thông số$/}).click();
+ await editor.getByRole('switch',{name:'Hiển thị Thông số'}).uncheck();
+ await expect(page.getByRole('tablist')).toHaveCount(0);
+ await fit(page);
+});

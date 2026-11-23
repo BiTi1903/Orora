@@ -1,3 +1,10 @@
+## 24/11/2026 — Xếp ảnh dọc trong ba mục chi tiết sản phẩm
+
+- Mô tả, Thông số và Hướng dẫn sử dụng hỗ trợ nhiều ảnh toàn chiều rộng cột, tỷ lệ 1920 × 1280. Ảnh tải theo cuộn, giữ sẵn khung và hiện dần khi tải xong.
+- Sản phẩm → Nội dung cung cấp một ô ảnh ban đầu cho mỗi mục, nút thêm ảnh, chữ và kiểu chữ tùy chọn sau mỗi ảnh, hiệu ứng chữ và công tắc hiển thị từng tab.
+- Nội dung chữ cũ vẫn đọc được. Dữ liệu tùy chọn được ghi vào sản phẩm khi admin bấm lưu. Không chạy chuyển đổi dữ liệu hoặc sửa rules.
+- Kiểm tra đạt với npm run check và tám bài Playwright tại 320 px và 1440 px cho tab, ảnh, công tắc và giao diện admin.
+
 ## 22/11/2026 — Làm gọn dải ảnh phụ ở trang chi tiết
 
 - Hai ảnh phụ hiển thị theo khung vuông, mặc định 48 px trên desktop và 44 px ở màn hình hẹp. Bộ chỉnh Ảnh phụ dùng cạnh hình vuông và áp dụng giới hạn để khung luôn gọn.

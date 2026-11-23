@@ -20,7 +20,7 @@ import useProductPanelSize from "../hooks/useProductPanelSize";
 import ProductInformation from "./ProductInformation";
 import ProductAssurances from "./ProductAssurances";
 import ProductReviews from "./ProductReviews";
-import { productImages, productSections, secondaryProductImages } from "../lib/product-content";
+import { productImages, productSections, secondaryProductImages, PRODUCT_CONTENT_GROUPS } from "../lib/product-content";
 import ConsultationDialog from "./ConsultationDialog";
 import OrderForm from "./OrderForm";
 import { availablePaymentMethods, formatProductPrice, formatVnd, parseVndPrice, purchaseChannelLabels, socialShopUrl } from "../lib/commerce";
@@ -221,7 +221,7 @@ function ProductDetail({
     size: detailLabels.size || ps.sizeLabel?.text,
     color: detailLabels.color || ps.colorLabel?.text,
     origin: detailLabels.origin || ps.originLabel?.text,
-  }).filter((section) => section.content?.trim());
+  });
 
 
   const css = (key) => toCss(ps[key], { responsive: true });
@@ -808,9 +808,9 @@ function ProductDetail({
         </div></div>
       </section>
 
-      <div className="product-detail-lower">
-        <ProductInformation key={`${product.id||product.slug}:${ps.informationTabs?.defaultTab||"description"}`} settings={ps.informationTabs} sections={sections} css={css} preview={preview} select={select} selectedClass={selectedClass} textProps={textProps} />
-      </div>
+      {Object.keys(PRODUCT_CONTENT_GROUPS).some((group) => product.detailVisibility?.[group] !== false) && <div className="product-detail-lower">
+        <ProductInformation key={`${product.id||product.slug}:${ps.informationTabs?.defaultTab||"description"}`} settings={ps.informationTabs} sections={sections} visibility={product.detailVisibility} css={css} preview={preview} select={select} selectedClass={selectedClass} textProps={textProps} />
+      </div>}
       {!home.loading && <><ProductCareGuide value={careGuideForProduct(home.productCareGuide, product)} /><ProductFaq value={home.productFaq} product={product} /></>}
       </div>
       <div className="product-side-column">

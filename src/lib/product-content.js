@@ -73,7 +73,7 @@ export function productSectionGroup(section, index = 0) {
 }
 export function groupedProductSections(sections) {
   const groups = { description: [], specifications: [], usage: [] };
-  sections.forEach((section, index) => { if (typeof section.content === "string" && section.content.trim()) groups[productSectionGroup(section, index)].push(section); });
+  sections.forEach((section, index) => { if (section && (section.image?.trim?.() || section.content?.trim?.())) groups[productSectionGroup(section, index)].push(section); });
   return groups;
 }
 export function publishedProductReviews(product = {}) {
