@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import ProductContent from "./ProductContent";
 import { informationTabSettings, isLongSpecification } from "../lib/product-information";
-import { groupedProductSections, PRODUCT_CONTENT_GROUPS } from "../lib/product-content";
+import { groupedProductSections, normalizeProductBlockText, PRODUCT_CONTENT_GROUPS } from "../lib/product-content";
 import { responsiveImage } from "../lib/image-cdn";
 import { toCss } from "../lib/typography";
 import { useLocale, translatePhrase } from "../lib/i18n";
@@ -14,7 +14,7 @@ const tabKeys = {
 
 function InformationImage({ src, alt }) {
   const [state, setState] = useState("loading");
-  return <div className="product-information-image" data-image-state={state}>
+  return <div className="product-information-image" data-image-state={state} data-image-reveal="">
     {state === "error"
       ? <p>Chưa tải được ảnh.</p>
       : <img {...responsiveImage(src, { width: 1200, widths: [480, 800, 1200, 1920], sizes: "(max-width: 768px) 100vw, 75vw" })}
@@ -43,7 +43,7 @@ export default function ProductInformation({ sections, visibility, css, preview,
         observer.unobserve(target);
       }
     });
-    panel.current.querySelectorAll("[data-text-effect]").forEach((element) => observer.observe(element));
+    panel.current.querySelectorAll("[data-text-effect], [data-image-reveal]").forEach((element) => observer.observe(element));
     return () => observer.disconnect();
   }, [sections, selected]);
 
@@ -80,7 +80,7 @@ export default function ProductInformation({ sections, visibility, css, preview,
             if (!hasImages && key === "specifications") {
               return <div className={`product-detail-row${isLongSpecification(section) ? " product-detail-row--long" : ""}${section.title?.trim() ? "" : " product-detail-row--unlabeled"}`} key={blockKey}>
                 {section.title?.trim() && <span {...textProps("pdRowLabel", "rowLabel")} style={{ ...css("rowLabel"), ...toCss(section.textStyle) }}>{tr(section.title)}</span>}
-                <div {...textProps("pdRowValue", "rowValue")} className={`product-detail-value ${selectedClass("pdRowValue")}`} style={{ ...css("rowValue"), ...toCss(section.textStyle) }}><ProductContent text={tr(section.content)} /></div>
+                <div {...textProps("pdRowValue", "rowValue")} className={`product-detail-value ${selectedClass("pdRowValue")}`} style={{ ...css("rowValue"), ...toCss(section.textStyle) }}><ProductContent text={tr(normalizeProductBlockText(section.content))} /></div>
               </div>;
             }
             const title = section.title?.trim();
@@ -92,7 +92,7 @@ export default function ProductInformation({ sections, visibility, css, preview,
               {hasText && <div className={hasImages ? "product-information-media-text" : undefined} data-text-effect={effect}>
                 {showTitle && <h3 {...textProps("pdSubheading", "subheading")} style={{ ...css("subheading"), ...toCss(section.textStyle) }}>{tr(title)}</h3>}
                 {section.content?.trim() && <div {...textProps("pdBody", "body")} className={`product-section-content ${selectedClass("pdBody")}`}
-                  style={{ ...css("body"), ...toCss(section.textStyle) }}><ProductContent text={tr(section.content)} /></div>}
+                  style={{ ...css("body"), ...toCss(section.textStyle) }}><ProductContent text={tr(normalizeProductBlockText(section.content))} /></div>}
               </div>}
             </div>;
           })}

@@ -11,7 +11,7 @@ import { validateVolumeOptions } from "../lib/product-options";
 import ProductPoliciesSettings from "./ProductPoliciesSettings";
 import ProductReviewsEditor from "./ProductReviewsEditor";
 import ProductInformationEditor from "./ProductInformationEditor";
-import { productSections, productSectionGroup, PRODUCT_CONTENT_GROUPS, secondaryProductImages } from "../lib/product-content";
+import { productInformationBlocks, productSectionGroup, PRODUCT_CONTENT_GROUPS, secondaryProductImages } from "../lib/product-content";
 import { useEffect, useRef, useState } from "react";
 import { explainError, getProducts, removeProduct, saveProduct, saveCategory, setProductCategory } from "../lib/api";
 import useCategories from "../hooks/useCategories";
@@ -113,7 +113,7 @@ export default function ProductsAdmin() {
   const edit = (p) => {
     setEditorPanel("basics");
     setVolumeOptions(Array.isArray(p.volumeOptions) ? p.volumeOptions.map((option) => ({ ...option, id: option.id || crypto.randomUUID(), label: String(option.label ?? ""), price: String(option.price ?? "") })) : []);
-    const savedSections = productSections(p).map((item, index) => ({ ...item, id: item.id || crypto.randomUUID(), group: productSectionGroup(item, index) }));
+    const savedSections = productInformationBlocks(p).map((item, index) => ({ ...item, id: item.id || crypto.randomUUID(), group: productSectionGroup(item, index) }));
     setSections(withInformationSlots(savedSections));
     setReviews(Array.isArray(p.productReviews) ? p.productReviews.map((item) => ({ ...item, id: item.id || crypto.randomUUID() })) : []);
     setMedia(imageSlots(p)); setUploads({});

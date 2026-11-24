@@ -1,8 +1,8 @@
 import ProductContent from "../components/ProductContent";
 import { useId, useRef } from "react";
-import { continueProductList, formatProductList, formatProductInline } from "../lib/product-content";
+import { continueProductList, formatProductList, formatProductInline, normalizeProductBlockText } from "../lib/product-content";
 
-export default function ProductContentEditor({ value, onChange, label, disabled }) {
+export default function ProductContentEditor({ value, onChange, label, disabled, escapedLineBreaks = false }) {
   const id = useId(); const ref = useRef(null);
   const restore = (start, end = start) => requestAnimationFrame(() => { ref.current?.focus(); ref.current?.setSelectionRange(start, end); });
   const format = (kind) => {
@@ -19,5 +19,5 @@ export default function ProductContentEditor({ value, onChange, label, disabled 
     if (event.key !== "Enter" || event.shiftKey || event.ctrlKey || event.metaKey || event.nativeEvent.isComposing || event.currentTarget.selectionStart !== event.currentTarget.selectionEnd) return;
     const result = continueProductList(value, event.currentTarget.selectionStart);
     if (result) { event.preventDefault(); onChange(result.text); restore(result.cursor); }
-  }} /><small className="admin-muted">Bôi chọn chữ rồi bấm In đậm / In nghiêng / Gạch chân; bấm lại để bỏ. Phím tắt Ctrl/⌘ + B, I, U. Enter để xuống dòng; chọn các dòng để tạo danh sách.</small><div className="product-content-preview"><strong>Xem trước nội dung</strong><ProductContent text={value}/></div></div>;
+  }} /><small className="admin-muted">Bôi chọn chữ rồi bấm In đậm / In nghiêng / Gạch chân; bấm lại để bỏ. Phím tắt Ctrl/⌘ + B, I, U. Enter để xuống dòng{escapedLineBreaks && <> hoặc gõ <code>{"\\n"}</code></>}; chọn các dòng để tạo danh sách.</small><div className="product-content-preview"><strong>Xem trước nội dung</strong><ProductContent text={escapedLineBreaks ? normalizeProductBlockText(value) : value}/></div></div>;
 }

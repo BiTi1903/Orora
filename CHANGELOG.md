@@ -1,3 +1,11 @@
+## 24/11/2026 — Làm sạch nội dung cũ và thêm thao tác cho từng mục ảnh
+
+- Mô tả, Thông số và Hướng dẫn sử dụng hiển thị các mục ảnh mới. Nội dung chi tiết cũ được bỏ qua trong trang sản phẩm và trình sửa. Mỗi tab bắt đầu với một ô ảnh nếu chưa có mục mới.
+- Admin có thể thêm, xem trước và xóa từng mục. Chữ dưới ảnh hỗ trợ xuống dòng bằng Enter hoặc ký hiệu xuống dòng như hướng dẫn trong form.
+- Ảnh giữ tỷ lệ 3:2 và hiện dần, trượt nhẹ khi cuộn tới. Tùy chọn giảm chuyển động của hệ điều hành được áp dụng.
+- Kiểm tra đạt với npm run check và sáu bài Playwright ở 320 px và 1440 px.
+- Không xóa hàng loạt dữ liệu production. Khi lưu từng sản phẩm, trình sửa lưu danh sách mục mới vào trường nội dung chi tiết hiện có.
+
 ## 24/11/2026 — Xếp ảnh dọc trong ba mục chi tiết sản phẩm
 
 - Mô tả, Thông số và Hướng dẫn sử dụng hỗ trợ nhiều ảnh toàn chiều rộng cột, tỷ lệ 1920 × 1280. Ảnh tải theo cuộn, giữ sẵn khung và hiện dần khi tải xong.

@@ -37,6 +37,8 @@ test('product detail editor adds image blocks, applies text effects and hides in
  await mount(page,`
   import Info from '/src/components/ProductInformation.jsx';
   import Editor from '/src/admin/ProductInformationEditor.jsx';
+  import ConfirmProvider from '/src/admin/ConfirmDialog.jsx';
+  import {productInformationBlocks} from '/src/lib/product-content.js';
   import '/src/styles/product-detail.css';
   const block = group => ({id:crypto.randomUUID(),group,image:'',content:'',effect:'fade'});
   function Example() {
@@ -44,29 +46,40 @@ test('product detail editor adds image blocks, applies text effects and hides in
    const [visibility,setVisibility]=R.useState({});
    return R.createElement('main',{className:'admin-main'},
     R.createElement(Editor,{sections,visibility,onChange:setSections,onVisibility:(group,value)=>setVisibility(old=>({...old,[group]:value})),onUpload:()=>{},newBlock:block}),
-    R.createElement(Info,{sections,visibility,css:()=>({}),select:()=>()=>{},selectedClass:()=>''}));
+    R.createElement(Info,{sections:productInformationBlocks({detailSections:[{group:"description",content:"Nội dung cũ"},...sections]}),visibility,css:()=>({}),select:()=>()=>{},selectedClass:()=>''}));
   };
-  ${render('R.createElement(Example)')}`, {
+  ${render('R.createElement(ConfirmProvider,null,R.createElement(Example))')}`, {
    'lib/cloudinary.js':'export const cloudinaryConfigured=false;export const uploadImage=async()=>"";',
   });
  const editor = page.getByRole('region',{name:'Nội dung chi tiết sản phẩm'});
  const imageFields = editor.getByRole('textbox',{name:/Mô tả · Ảnh/});
  await expect(imageFields).toHaveCount(1);
  await imageFields.first().fill('/detail-image.svg');
- await editor.getByRole('button',{name:'+ Thêm ảnh · Mô tả',exact:true}).click();
+ await editor.getByRole('button',{name:'+ Thêm mục · Mô tả',exact:true}).click();
  await expect(imageFields).toHaveCount(2);
  await imageFields.nth(1).fill('/detail-image.svg');
  await editor.getByText('Thêm chữ sau ảnh (tùy chọn)',{exact:true}).first().click();
- await editor.getByRole('textbox',{name:'Mô tả · Nội dung khối 1',exact:true}).fill('Chữ ngay sau ảnh thứ nhất.');
+ await editor.getByRole('textbox',{name:'Mô tả · Nội dung khối 1',exact:true}).fill('Chữ ngay sau ảnh thứ nhất.\\nDòng thứ hai.');
  await editor.getByRole('combobox',{name:'Hiệu ứng chữ',exact:true}).selectOption('rise');
  const panel = page.getByRole('tabpanel');
  const images = panel.locator('.product-information-image');
  await expect(images).toHaveCount(2);
  await images.first().scrollIntoViewIfNeeded();
  await expect(images.first()).toHaveAttribute('data-image-state','ready');
+ await expect(images.first()).toHaveAttribute('data-revealed','true');
+ await expect(panel.getByText('Nội dung cũ',{exact:true})).toHaveCount(0);
+ await expect(panel.locator('[data-text-effect] br')).toHaveCount(1);
  await expect(panel.locator('[data-text-effect="rise"]')).toContainText('Chữ ngay sau ảnh thứ nhất.');
  const box = await images.first().boundingBox();
  expect(box.width / box.height).toBeCloseTo(1.5, 1);
+ await editor.getByRole('button',{name:'Xem mục',exact:true}).first().click();
+ const preview = page.getByRole('dialog',{name:'Xem mục · Mô tả'});
+ await expect(preview.locator('img')).toBeVisible();
+ await expect(preview).toContainText('Dòng thứ hai.');
+ await preview.getByRole('button',{name:'Đóng cửa sổ'}).click();
+ await editor.getByRole('button',{name:'Xóa mục',exact:true}).last().click();
+ await page.getByRole('dialog',{name:'Xóa mục nội dung'}).getByRole('button',{name:'Xóa mục',exact:true}).click();
+ await expect(images).toHaveCount(1);
  await editor.getByRole('switch',{name:'Hiển thị Mô tả'}).uncheck();
  await expect(page.getByRole('tab',{name:'Mô tả',exact:true})).toHaveCount(0);
  await expect(page.getByRole('tab',{name:'Thông số',exact:true})).toHaveAttribute('aria-selected','true');

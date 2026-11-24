@@ -10,6 +10,18 @@ export function productSections(product = {}, legacyTitles = {}) {
   if (Array.isArray(product.detailSections)) return product.detailSections;
   return LEGACY_PRODUCT_SECTIONS.filter(([key]) => typeof product[key] === "string" && product[key].trim()).map(([key, title]) => ({ id: `legacy-${key}`, title: legacyTitles[key] || title, content: product[key], legacyKey: key }));
 }
+export function productInformationBlocks(product = {}) {
+  const sections = Array.isArray(product.detailSections) ? product.detailSections : [];
+  return sections.filter((section) => section && (
+    (typeof section.image === "string" && section.image.trim()) ||
+    ["fade", "rise", "none"].includes(section.effect)
+  ));
+}
+
+export function normalizeProductBlockText(text) {
+  return String(text ?? "").replace(/\\r\\n|\\n/g, "\n");
+}
+
 export function secondaryProductImages(product = {}) {
   return Array.isArray(product.additionalImages) ? product.additionalImages : [product.image2, product.image3, product.image4, product.image5, product.image6].map((src) => typeof src === "string" ? src : "");
 }
