@@ -1,3 +1,13 @@
+## 25/11/2026 — Thiết kế lại bố cục khung mua sản phẩm trên máy tính hết khoảng trống dưới
+
+- **Lý do**: Chủ website phản hồi phần dưới của khung thông tin mua hàng (`.product-detail-info`) bị trống nhiều khi kéo bằng chiều cao khung ảnh.
+- **Thay đổi chính**:
+  - Cập nhật `src/styles/product-detail.css`: bố cục lại `.product-purchase-content` thành 2 vùng cân đối trên máy tính (vùng trên: mã SP, tên, giá, mô tả ngắn; vùng dưới gắn sát đáy với đường phân cách mảnh gồm chọn dung tích/số lượng, thanh `Mua ngay` & các kênh `Facebook / Tiktok` trải đều toàn chiều rộng khung, kèm dải chip **Cam kết mua hàng** lấy từ dữ liệu Admin).
+- **Kiểm tra đã chạy**:
+  - `npm run check`: 272/272 unit test, ESLint 0 lỗi, Vite build & giới hạn bundle đạt.
+  - Playwright (`qa/editor-checkout.spec.js` tại `width-1440`): đạt toàn bộ.
+- **Ảnh hưởng database**: Không thay đổi database hay security rules.
+
 ## 25/11/2026 — Thu gọn khoảng cách Dải chữ chạy ↔ Câu chuyện ↔ Sản phẩm và chống giật khung khi đổi chế độ Lưới / Trượt ngang
 
 - **Lý do**: Chủ website phản hồi khoảng cách giữa Dải chữ chạy, Câu chuyện và Sản phẩm đang quá xa nhau, và khi bấm chuyển giữa `?view=grid#shop` và `?view=carousel#shop` thì khung ảnh sản phẩm bị nhảy.
