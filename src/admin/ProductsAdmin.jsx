@@ -251,7 +251,7 @@ export default function ProductsAdmin() {
     </div>}
     {editing && <form aria-busy={busy} ref={editorRef} className="admin-card admin-form product-editor-form" noValidate onSubmit={save}>
       <div className="product-editor-toolbar">
-        <div className="product-editor-toolbar-top"><div><h2>{isNew ? "Thêm sản phẩm" : "Chỉnh sửa sản phẩm"}</h2><p className="admin-muted">Mã SP #{form.number} · {form.name || "Sản phẩm mới"}</p></div><div className="admin-actions"><button type="submit" className="admin-btn primary" aria-busy={busy} disabled={busy || uploading || !!categorySaving}>{busy ? "Đang lưu..." : "Lưu"}</button><button type="button" className="admin-btn" disabled={busy || uploading} onClick={async () => {if(!draftGuard.hasChanges()||await confirm("Đóng phần chỉnh sửa? Thay đổi chưa lưu sẽ bị bỏ.", { title: "Bỏ thay đổi sản phẩm", confirmLabel: "Bỏ thay đổi", danger: true }))setEditing(false);}}>Hủy</button></div></div>
+        <div className="product-editor-toolbar-top"><div><h2>{isNew ? "Thêm sản phẩm" : "Chỉnh sửa sản phẩm"}</h2><p className="admin-muted">Mã SP #{form.number} · {form.name || "Sản phẩm mới"}</p></div><div className="admin-actions">{!isNew && form.id && <a className="admin-btn" href={productPath(form, items)} target="_blank" rel="noopener noreferrer">Xem trang sản phẩm ↗</a>}<button type="submit" className="admin-btn primary" aria-busy={busy} disabled={busy || uploading || !!categorySaving}>{busy ? "Đang lưu..." : "Lưu"}</button><button type="button" className="admin-btn" disabled={busy || uploading} onClick={async () => {if(!draftGuard.hasChanges()||await confirm("Đóng phần chỉnh sửa? Thay đổi chưa lưu sẽ bị bỏ.", { title: "Bỏ thay đổi sản phẩm", confirmLabel: "Bỏ thay đổi", danger: true }))setEditing(false);}}>Hủy</button></div></div>
         <nav className="product-editor-tabs" aria-label="Các phần chỉnh sửa sản phẩm">{panels.map(([key, title]) => <button key={key} type="button" aria-pressed={editorPanel === key} onClick={() => changePanel(key)}>{title}</button>)}</nav>
         {uploading && <p className="admin-muted" role="status">Đang tải ảnh. Chờ ảnh tải xong rồi lưu.</p>}
         {message && <p role={message.type === "error" ? "alert" : "status"} className={`admin-${message.type}`}>{message.text}</p>}
@@ -305,11 +305,21 @@ export default function ProductsAdmin() {
                 <tr><th>Mã SP</th><th>Ảnh</th><th>Sản phẩm</th><th>Giá</th><th>Trạng thái</th><th>Danh mục / Thao tác</th></tr>
               </thead>
               <tbody>
-                {visibleItems.map((p) => (
+                {visibleItems.map((p) => {
+                  const enabledTabs = Object.keys(PRODUCT_CONTENT_GROUPS).filter((group) => p.detailVisibility?.[group] === true).length;
+                  const volCount = Array.isArray(p.volumeOptions) ? p.volumeOptions.filter((v) => v?.label?.trim()).length : 0;
+                  return (
                   <tr key={p.id}>
                     <td>#{productNumber(p, items)}</td>
                     <td>{p.image && <img className="admin-thumb" src={cdnSrc(p.image, THUMB)} alt="" loading="lazy" decoding="async" />}</td>
-                    <td><strong>{p.name}</strong><a className="product-list-link" href={productPath(p, items)} target="_blank" rel="noopener noreferrer">Xem trên website</a></td>
+                    <td>
+                      <strong>{p.name}</strong>
+                      <div className="product-list-meta">
+                        <span className="admin-muted">{enabledTabs > 0 ? `${enabledTabs}/3 mục nội dung` : "Chưa bật nội dung"}</span>
+                        {volCount > 0 && <span className="admin-muted">· {volCount} dung tích</span>}
+                      </div>
+                      <a className="product-list-link" href={productPath(p, items)} target="_blank" rel="noopener noreferrer">Xem trên website</a>
+                    </td>
                     <td>{formatProductPrice(p.price) || "Cần báo giá"}</td>
                     <td><span className={`admin-badge ${p.active === false ? "off" : ""}`}>{p.active === false ? "Ẩn" : "Hiện"}</span></td>
                     <td>
@@ -325,7 +335,7 @@ export default function ProductsAdmin() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                );})}
               </tbody>
             </table>
           </div>

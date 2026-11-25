@@ -1,6 +1,7 @@
 import {SHARE_IMAGE_PATH,heroShareImage} from "./share-image.js";
 import {parseVndPrice} from "./commerce.js";
 import { findProductByRoute, productPath } from "./product-identity.js";
+import { productImages } from "./product-content.js";
 export const SITE_URL = "https://ororavn.com";
 export const SITE_NAME = "ORORA";
 const compact = (value) => String(value || "").replace(/\s+/g, " ").trim();
@@ -8,8 +9,13 @@ const imageUrl = (value) => {
   try { const url = new URL(value, SITE_URL); return ["http:", "https:"].includes(url.protocol) ? url.href : null; } catch { return null; }
 };
 const description = (value) => compact(value).slice(0, 160);
+const STOCK_AVAILABILITY = {
+  in: "https://schema.org/InStock",
+  low: "https://schema.org/LimitedAvailability",
+  out: "https://schema.org/OutOfStock",
+};
 
-export function pageSeo(pathname, home = {}, products = [], productsLoading = false) {
+export function pageSeo(pathname, home = {}, products = [], productsLoading = false, stockState) {
   const normalized = pathname.replace(/\/$/, "") || "/";
   const path = ["/san-pham", "/ve-orora", "/lien-he"].includes(normalized) ? "/" : normalized;
   const pages = {
@@ -47,10 +53,12 @@ export function pageSeo(pathname, home = {}, products = [], productsLoading = fa
   }
   if (product) {
     const price=parseVndPrice(product.price);
+    const images = [...new Set(productImages(product).map(imageUrl).filter(Boolean))];
+    const availability = STOCK_AVAILABILITY[stockState];
     graph.push({ "@type": "Product", name: product.name, description: page.description, url,
-      ...(product.image && imageUrl(product.image) ? { image: imageUrl(product.image) } : {}),
+      ...(images.length === 1 ? { image: images[0] } : images.length > 1 ? { image: images } : {}),
       ...(product.brand?{brand:{"@type":"Brand",name:compact(product.brand)}}:{}),
-      ...(price !== null ? { offers: { "@type": "Offer", priceCurrency: "VND", price:String(price), url } } : {}),
+      ...(price !== null ? { offers: { "@type": "Offer", priceCurrency: "VND", price:String(price), url, ...(availability ? { availability } : {}) } } : {}),
     });
   }
   return { ...page, url, image: (product?.image && imageUrl(product.image)) || ((home.heroImage || home.heroImageMobile || home.heroMobileImage) ? heroShareImage(home,SITE_URL) : `${SITE_URL}${SHARE_IMAGE_PATH}`), structuredData: { "@context": "https://schema.org", "@graph": graph } };

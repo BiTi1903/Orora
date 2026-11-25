@@ -63,6 +63,7 @@ function ProductCard({
     if (preview) return;
     const el = frameRef.current;
     if (!el || !window.matchMedia("(hover: hover)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     pointerRef.current.x = e.clientX;
     pointerRef.current.y = e.clientY;
     if (rafRef.current) return;

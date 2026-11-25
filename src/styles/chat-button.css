@@ -452,3 +452,11 @@
   .orora-chat-panel .orora-chat-composer textarea,
   .orora-chat-panel.is-compact .orora-chat-composer textarea { font-size: max(16px, var(--chat-input-mobile-size, var(--chat-input-font-size, 16px))); }
 }
+@media (max-width: 768px) {
+  html.has-mobile-shop-nav .orora-chat-panel:not(.is-compact),
+  html.has-mobile-shop-nav .orora-chat-panel[data-dock-side]:not(.is-compact) {
+    top: calc(var(--chat-viewport-top, 0px) + 8px);
+    height: calc(var(--chat-viewport-height, 100dvh) - var(--mobile-shop-nav-height, 64px) - 20px);
+    max-height: calc(var(--chat-viewport-height, 100dvh) - var(--mobile-shop-nav-height, 64px) - 20px);
+  }
+}

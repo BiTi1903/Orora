@@ -21,6 +21,8 @@ import ProductInformation from "./ProductInformation";
 import ProductAssurances from "./ProductAssurances";
 import ProductReviews from "./ProductReviews";
 import ProductImageLightbox from "./ProductImageLightbox";
+import RecentlyViewedProducts from "./RecentlyViewedProducts";
+import useProducts from "../hooks/useProducts";
 import { isProductContentGroupVisible, productImages, productInformationBlocks, publishedProductReviews, secondaryProductImages, PRODUCT_CONTENT_GROUPS } from "../lib/product-content";
 import ConsultationDialog from "./ConsultationDialog";
 import OrderForm from "./OrderForm";
@@ -51,6 +53,39 @@ function subscribeMobileBuy(update) {
   return () => media.removeEventListener("change", update);
 }
 
+function ProductNotFoundView() {
+  const { products } = useProducts({ enabled: true });
+  const suggested = products.filter((item) => item && item.active !== false).slice(0, 4);
+  return (
+    <div className="product-not-found">
+      <div className="product-not-found-card">
+        <span className="product-eyebrow">ORORA</span>
+        <h1>Không tìm thấy sản phẩm</h1>
+        <p>Sản phẩm này có thể đã ngừng kinh doanh hoặc đường dẫn đã thay đổi. Bạn có thể khám phá thêm các sản phẩm nổi bật khác của ORORA.</p>
+        <Link to="/#shop" className="product-not-found-cta">← Về danh sách sản phẩm</Link>
+      </div>
+      {suggested.length > 0 && (
+        <section className="product-not-found-suggestions" aria-label="Gợi ý sản phẩm nổi bật">
+          <h2>Gợi ý dành cho bạn</h2>
+          <div className="product-recently-viewed-grid">
+            {suggested.map((item) => (
+              <Link key={item.id} to={productPath(item, products)} className="product-recent-card">
+                <div className="product-recent-thumb">
+                  {item.image ? <img src={cdnSrc(item.image, THUMB)} alt={item.name} loading="lazy" decoding="async" /> : <span className="product-recent-placeholder" aria-hidden="true" />}
+                </div>
+                <div className="product-recent-meta">
+                  <strong>{item.name}</strong>
+                  <span>{formatProductPrice(item.price) || "Liên hệ"}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
 function ProductDetail({
   preview = false,
   previewStyles = null,
@@ -66,6 +101,7 @@ function ProductDetail({
   const navigate = useNavigate();
   const pageRef = useRef(null);
   const mobileBuyRef = useRef(null);
+  const purchaseSectionRef = useRef(null);
   const imageBoxRef = useRef(null);
   const zoomOriginRef = useRef({ x: 50, y: 50 });
   const lastTouchAtRef = useRef(0);
@@ -75,6 +111,7 @@ function ProductDetail({
   const [zoomActive, setZoomActive] = useState(false);
   const [zoomHiRes, setZoomHiRes] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [desktopStickyBuy, setDesktopStickyBuy] = useState(false);
   const [consultationOpen, setConsultationOpen] = useState(false);
   const [consultationSource, setConsultationSource] = useState(null);
 
@@ -116,6 +153,25 @@ function ProductDetail({
       root.style.removeProperty("--product-mobile-buy-height");
     };
   }, [showMobileBuy, pinBuyBar]);
+
+  useEffect(() => {
+    if (preview || mobileViewport || !showMobileBuy || typeof IntersectionObserver === "undefined") {
+      return;
+    }
+    const target = purchaseSectionRef.current;
+    if (!target) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setDesktopStickyBuy(!entry.isIntersecting && entry.boundingClientRect.top < 0);
+      },
+      { threshold: 0 },
+    );
+    observer.observe(target);
+    return () => {
+      observer.disconnect();
+      setDesktopStickyBuy(false);
+    };
+  }, [preview, mobileViewport, showMobileBuy, product?.id]);
 
   useEffect(() => {
     if (!preview && product?.canonicalSlug && id !== product.canonicalSlug) navigate(productPath(product), { replace: true, state: cartLocation.state });
@@ -202,12 +258,7 @@ function ProductDetail({
 
   /* ---------- không tìm thấy ---------- */
   if (product === null) {
-    return (
-      <div className="product-not-found">
-        <h1>Không tìm thấy sản phẩm</h1>
-        <Link to="/#shop">← Về danh sách sản phẩm</Link>
-      </div>
-    );
+    return <ProductNotFoundView />;
   }
 
   const options = productVolumeOptions(product);
@@ -806,7 +857,7 @@ function ProductDetail({
 
           {(stock === "out" || stock === "low") && <p className={`product-stock-badge is-${stock}`}>{tr(soldOut ? "Hết hàng" : "Còn ít")}</p>}
           <ProductPurchaseSelection options={options} variantId={variantId} quantity={choice.quantity} onVariantChange={(variantId) => changeSelection({ variantId })} onQuantityChange={(quantity) => changeSelection({ quantity })} disabled={soldOut} textProps={textProps} />
-          <section className={`purchase-options ${selectedClass("pdPurchaseOptions")}`} aria-label="Chọn kênh mua hàng" data-builder-key={preview ? "pdPurchaseOptions" : undefined} onClick={preview ? select("pdPurchaseOptions") : undefined}>
+          <section ref={purchaseSectionRef} className={`purchase-options ${selectedClass("pdPurchaseOptions")}`} aria-label="Chọn kênh mua hàng" data-builder-key={preview ? "pdPurchaseOptions" : undefined} onClick={preview ? select("pdPurchaseOptions") : undefined}>
             {!pinBuyBar && mobileBuyBar}
             {(preview || (!soldOut && (tiktokShop || facebookShop)) || (contactSettings.showTrigger === true && (showZalo || showCall || home.chatSettings?.enabled !== false || (!contact.zalo && contact.email && contactSettings.showZalo !== false)))) && (
               <div className="purchase-channels-block">
@@ -850,6 +901,18 @@ function ProductDetail({
                 </div>
               </div>
             )}
+            {Array.isArray(home.productPolicies) && home.productPolicies.filter((policy) => policy?.title?.trim()).length > 0 && (
+              <div className="product-trust-strip" aria-label="Cam kết mua hàng">
+                {home.productPolicies.filter((policy) => policy?.title?.trim()).slice(0, 3).map((policy, index) => (
+                  <span className="product-trust-chip" key={policy.id || index}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                    <span>{tr(policy.title)}</span>
+                  </span>
+                ))}
+              </div>
+            )}
             {!preview && acceptsWebsiteOrders && !soldOut && orderProductId === (product.id || product.slug) && createPortal(<OrderForm key={product.id || product.slug} product={product} motionSource={orderSource} home={home} selection={{ variantId, quantity: choice.quantity }} fromCart={incoming?.productId === product.id} onSelectionChange={changeSelection} onClose={() => setOrderProductId(null)} />, document.body)}
           </section>
 
@@ -857,7 +920,7 @@ function ProductDetail({
       </section>
 
       {(preview || Object.keys(PRODUCT_CONTENT_GROUPS).some((group) => isProductContentGroupVisible(product.detailVisibility, group))) && <div className="product-detail-lower">
-        <ProductInformation key={`${product.id||product.slug}:${ps.informationTabs?.defaultTab||"description"}`} settings={ps.informationTabs} sections={sections} visibility={product.detailVisibility} css={css} preview={preview} select={select} selectedClass={selectedClass} textProps={textProps} />
+        <ProductInformation key={`${product.id||product.slug}:${ps.informationTabs?.defaultTab||"description"}`} settings={ps.informationTabs} sections={sections} visibility={product.detailVisibility} preview={preview} select={select} selectedClass={selectedClass} textProps={textProps} />
       </div>}
       <ProductReviews product={product} textProps={textProps} />
       {!home.loading && <><ProductCareGuide value={careGuideForProduct(home.productCareGuide, product)} /><ProductFaq value={home.productFaq} product={product} /></>}
@@ -869,8 +932,61 @@ function ProductDetail({
       </div>
       </div>
 
+      <RecentlyViewedProducts currentId={product.id} preview={preview} />
 
       {pinBuyBar && mobileBuyBar && createPortal(mobileBuyBar, document.body)}
+      {!preview && !mobileViewport && showMobileBuy && createPortal(
+        <div
+          className={`product-desktop-sticky-buy${desktopStickyBuy ? " is-visible" : ""}`}
+          aria-hidden={!desktopStickyBuy}
+          inert={!desktopStickyBuy}
+        >
+          <div className="product-desktop-sticky-info">
+            {displaySrc && <img src={cdnSrc(displaySrc, THUMB)} alt="" loading="lazy" decoding="async" />}
+            <div className="product-desktop-sticky-meta">
+              <strong>{product.name}</strong>
+              <span>{variant ? `${variant.label} · ` : ""}{mobileSubtotal}</span>
+            </div>
+          </div>
+          <div className="product-desktop-sticky-actions">
+            {home.navStyles?.cart?.enabled !== false && (
+              <button
+                type="button"
+                className="product-buy-cart-btn"
+                aria-label={tr(soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ"))}
+                data-tooltip={tr(soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ"))}
+                disabled={soldOut || choice.quantity === ""}
+                onClick={(event) => {
+                  window.dispatchEvent(new CustomEvent("orora-cart-confirm", {
+                    detail: { product, variantId, quantity: Number(choice.quantity) || 1, source: event.currentTarget.getBoundingClientRect().toJSON() },
+                  }));
+                }}
+              >
+                <ButtonIcon name="productCart" defaultSize={18} allowHidden={false}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="9" cy="20" r="1.5" />
+                    <circle cx="18" cy="20" r="1.5" />
+                    <path d="M2.5 3.5h2.6l2.2 11.2a1.6 1.6 0 0 0 1.6 1.3h9.8a1.6 1.6 0 0 0 1.6-1.2L22 7.5H6.2" />
+                  </svg>
+                </ButtonIcon>
+              </button>
+            )}
+            <button
+              type="button"
+              className="product-desktop-sticky-cta"
+              disabled={soldOut}
+              onClick={(event) => {
+                if (soldOut) return;
+                setOrderSource(event.currentTarget.getBoundingClientRect().toJSON());
+                setOrderProductId(product.id || product.slug);
+              }}
+            >
+              {tr(soldOut ? "Hết hàng" : (purchase.mobileBuyLabel?.trim() || "Mua ngay"))}
+            </button>
+          </div>
+        </div>,
+        document.body,
+      )}
       {!preview && lightboxOpen && displaySrc && createPortal(
         <ProductImageLightbox
           src={displaySrc}

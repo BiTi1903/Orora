@@ -463,6 +463,7 @@
 .product-list-tools { display: grid; grid-template-columns: minmax(0, 1fr) 160px auto; gap: 16px; align-items: end; margin-bottom: 18px; }
 .product-list-tools .admin-field { margin: 0; }
 .product-list-tools > span { padding-bottom: 12px; font-size: 12px; white-space: nowrap; }
+.product-list-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 3px; font-size: 12px; }
 .product-list-link { display: block; margin-top: 5px; color: var(--a-deep); font-size: 12px; text-decoration: none; }
 .product-list-link:hover { text-decoration: underline; }
 .product-common-settings:not([hidden]) { display: grid; gap: 14px; }

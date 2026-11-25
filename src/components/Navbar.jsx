@@ -4,10 +4,14 @@ import CartButton from "./CartButton";
 import { contactLinks } from "../lib/contact";
 import { withTrackingNavLink } from "../lib/navbar-links";
 import { useState, useEffect, useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import useHomeContent from "../hooks/useHomeContent";
 import useCategories from "../hooks/useCategories";
-import { socialShopUrl } from "../lib/commerce";
+import useProducts from "../hooks/useProducts";
+import { formatProductPrice, socialShopUrl } from "../lib/commerce";
+import { normalizeSearch } from "../lib/catalog-filters";
+import { productPath } from "../lib/product-identity";
+import { cdnSrc, THUMB } from "../lib/image-cdn";
 import { toCss } from "../lib/typography";
 import { STOREFRONT_LANGUAGES_ENABLED, SUPPORTED_LOCALES, useLocale, setLocale, translatePhrase } from "../lib/i18n";
 
@@ -87,6 +91,98 @@ function LanguageSwitcher({ settings = {}, preview = false, className = "", onSe
           </button>
         );
       })}
+    </div>
+  );
+}
+
+function NavbarQuickSearch() {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const wrapRef = useRef(null);
+  const inputRef = useRef(null);
+  const navigate = useNavigate();
+  const { products } = useProducts({ enabled: open });
+
+  useEffect(() => {
+    if (!open) return;
+    requestAnimationFrame(() => inputRef.current?.focus());
+    const onPointerDown = (event) => {
+      if (wrapRef.current && !wrapRef.current.contains(event.target)) setOpen(false);
+    };
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  const term = normalizeSearch(query).trim();
+  const matches = term
+    ? products
+        .filter((item) => item && item.active !== false && normalizeSearch(`${item.name || ""} ${item.description || ""}`).includes(term))
+        .slice(0, 6)
+    : products.filter((item) => item && item.active !== false).slice(0, 4);
+
+  const onSubmit = (event) => {
+    event.preventDefault();
+    const cleaned = query.trim();
+    setOpen(false);
+    if (cleaned) navigate(`/?q=${encodeURIComponent(cleaned)}#shop`);
+    else navigate("/#shop");
+  };
+
+  return (
+    <div ref={wrapRef} className="navbar-search-wrap">
+      <button
+        type="button"
+        className="navbar-search-toggle"
+        aria-label="Tìm kiếm sản phẩm"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+      >
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+      </button>
+      {open && (
+        <div className="navbar-search-popover" role="search" aria-label="Tìm kiếm nhanh sản phẩm">
+          <form className="navbar-search-form" onSubmit={onSubmit}>
+            <input
+              ref={inputRef}
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Tìm sản phẩm ORORA…"
+              aria-label="Nhập tên sản phẩm cần tìm"
+            />
+          </form>
+          {matches.length > 0 ? (
+            <div className="navbar-search-results">
+              {matches.map((item) => (
+                <Link
+                  key={item.id}
+                  to={productPath(item, products)}
+                  className="navbar-search-item"
+                  onClick={() => setOpen(false)}
+                >
+                  {item.image && <img src={cdnSrc(item.image, THUMB)} alt="" loading="lazy" decoding="async" />}
+                  <span>
+                    <strong>{item.name}</strong>
+                    <small>{formatProductPrice(item.price) || "Liên hệ"}</small>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="navbar-search-empty">Không tìm thấy sản phẩm phù hợp.</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -214,6 +310,7 @@ function Navbar({
         </div>
 
         <div className="navbar-actions">
+          {!preview && <NavbarQuickSearch />}
           {showLanguages && <LanguageSwitcher settings={langSettings} preview={preview} className={selectedClass("navLang")} onSelect={select("navLang")} />}
           <span ref={preview?undefined:mountNavbarCartSlot} className="navbar-cart-slot" data-desktop-cart-slot={preview?undefined:""}>{preview&&<CartButton settings={styles.cart} inNavbar preview className={selectedClass("navCart")} onClick={select("navCart")}/>}</span>
           <button

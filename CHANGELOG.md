@@ -1,3 +1,23 @@
+## 25/11/2026 — Nâng cấp trải nghiệm chuẩn flagship (Desktop Sticky Buy Bar, Navbar Search, Sản phẩm vừa xem, SEO, Chat AI & Admin)
+
+- **Lý do**: Thực hiện toàn bộ nhóm sửa lỗi nhỏ và nâng cấp trải nghiệm người dùng + quản trị viên chuẩn các website mỹ phẩm cao cấp.
+- **Thay đổi chính**:
+  - **Sửa lỗi & đồng bộ (`src/styles/chat-button.css`, `src/components/Seo.jsx`, `src/lib/seo.js`, `src/components/ProductCard.jsx`, `qa/mobile-catalog.spec.js`)**:
+    - Đặt quy tắc trừ `--mobile-shop-nav-height` xuống cuối `chat-button.css` (áp dụng cả `[data-dock-side]`) để khung Chat AI trên điện thoại luôn nằm gọn phía trên thanh điều hướng dưới.
+    - Cập nhật `document.title` theo từng trang (`<Tên sản phẩm> | ORORA VN`, `Tra cứu đơn hàng | ORORA VN`...) và bổ sung đa ảnh + `availability` (khi có dữ liệu tồn kho thực) vào JSON-LD `Product`.
+    - Tắt hiệu ứng nghiêng 3D trên thẻ sản phẩm khi bật `prefers-reduced-motion: reduce`; đồng bộ bài test `qa/mobile-catalog.spec.js`.
+  - **Trải nghiệm Website chuẩn Flagship (`src/components/ProductDetail.jsx`, `src/components/RecentlyViewedProducts.jsx`, `src/components/Navbar.jsx`, `src/styles/product-detail.css`, `src/styles/navbar.css`)**:
+    - Thêm **Desktop Sticky Buy Bar** nổi gọn khi cuộn qua khối mua hàng trên máy tính (ảnh nhỏ, tên, dung tích/giá, nút Thêm giỏ & Mua ngay).
+    - Thêm dải **Cam kết ngắn gọn** (`.product-trust-strip`) ngay dưới cụm nút mua trên điện thoại (lấy trực tiếp từ cấu hình Cam kết trong Admin).
+    - Thêm **Tìm kiếm nhanh** trên thanh `Navbar` (`NavbarQuickSearch`) giúp tìm và nhảy thẳng tới sản phẩm từ mọi trang.
+    - Thêm dải **Sản phẩm vừa xem** (`RecentlyViewedProducts`, lưu `localStorage`) ở cuối trang chi tiết sản phẩm và nâng cấp trang 404 **Không tìm thấy sản phẩm** thành card đồng bộ kèm gợi ý sản phẩm nổi bật.
+  - **Tiện ích Admin (`src/admin/ProductsAdmin.jsx`, `src/styles/admin.css`)**:
+    - Thêm nút **Xem trang sản phẩm ↗** ngay trên thanh đầu form sửa sản phẩm và hiển thị tóm tắt số mục nội dung đang bật + số dung tích ngay trên danh sách sản phẩm.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: 272/272 unit test, ESLint 0 lỗi, Vite build & giới hạn bundle đạt.
+  - Playwright (`qa/navbar-cart.spec.js`, `qa/cart.spec.js`, `qa/product-information-tabs.spec.js`, `qa/editor-checkout.spec.js` tại `width-390` và `width-1440`): đạt toàn bộ.
+- **Ảnh hưởng database**: Không thay đổi schema, security rules hay dữ liệu production.
+
 ## 25/11/2026 — Giữ thanh điều hướng dưới khi mở Chat AI trên điện thoại
 
 - **Lý do**: Chủ website yêu cầu khi mở Chat AI trên điện thoại không ẩn thanh điều hướng phía dưới.

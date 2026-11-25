@@ -2,17 +2,23 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import useHomeContent from "../hooks/useHomeContent";
 import useProducts from "../hooks/useProducts";
+import useStorefrontStock from "../hooks/useStorefrontStock";
+import { findProductByRoute } from "../lib/product-identity";
 import { pageSeo } from "../lib/seo";
 
 export default function Seo() {
   const { pathname } = useLocation();
   const home = useHomeContent();
-  const { products, loading, error } = useProducts({enabled:pathname.startsWith("/product/")});
-  const seo = pageSeo(pathname, home, products, loading || Boolean(error));
+  const isProductRoute = pathname.startsWith("/product/");
+  const { products, loading, error } = useProducts({ enabled: isProductRoute });
+  const matchedProduct = isProductRoute ? findProductByRoute(products, decodeURIComponent(pathname.slice(9))) : null;
+  const stockMap = useStorefrontStock(matchedProduct?.id ? [matchedProduct.id] : [], isProductRoute && Boolean(matchedProduct?.id));
+  const stockState = matchedProduct?.id ? stockMap[matchedProduct.id] : undefined;
+  const seo = pageSeo(pathname, home, products, loading || Boolean(error), stockState);
   const serialized = JSON.stringify(seo);
   useEffect(() => {
     const current = JSON.parse(serialized);
-    document.title = "ORORA";
+    document.title = current.title || "ORORA";
     document.documentElement.lang = "vi";
     const meta = (attribute, name, content) => {
       let element = document.head.querySelector(`meta[${attribute}="${name}"]`);
