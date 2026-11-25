@@ -177,32 +177,6 @@ export function applySelectedPatch(
       }));
       return;
     }
-    if (patch.__labelKey && patch.text != null) {
-      const key = `${patch.__labelKey}Label`;
-      setProductDetail((current) => ({
-        ...current,
-        detailLabels: {
-          ...(current.detailLabels || {}),
-          [patch.__labelKey]: patch.text,
-        },
-        [key]: {
-          ...(current[key] || {}),
-          text: patch.text,
-        },
-      }));
-      return;
-    }
-    if (typeof selected === "string" && selected.startsWith("pdLabel:") && patch.text != null) {
-      const key = `${selected.split(":")[1]}Label`;
-      setProductDetail((current) => ({
-        ...current,
-        [key]: {
-          ...(current[key] || {}),
-          text: patch.text,
-        },
-      }));
-      return;
-    }
     const meta = PRODUCT_DETAIL_FIELD_MAP[selected];
     if (meta?.textKey && patch.text != null) {
       setProductDetail((current) => ({
@@ -387,10 +361,7 @@ export function applySelectedStylePatch(
   if (activeSection === "hero") return;
 
   if (activeSection === "productdetail") {
-    const styleKey =
-      typeof selected === "string" && selected.startsWith("pdLabel:")
-        ? "rowLabel"
-        : PRODUCT_DETAIL_FIELD_MAP[selected]?.styleKey;
+    const styleKey = PRODUCT_DETAIL_FIELD_MAP[selected]?.styleKey;
     if (!styleKey) return;
     setProductDetail((current) => ({
       ...current,

@@ -706,6 +706,7 @@
 .product-side-column { gap: 10px; }
 .product-detail-content > .product-detail-info,
 .product-detail-lower > .product-information,
+.product-main-column > .product-reviews,
 .product-side-column > .product-assurances,
 .product-side-column > .product-slogan-card,
 .product-side-column > .related-product-sidebar,
@@ -714,6 +715,16 @@
   border-radius: 16px;
   background: var(--detail-card-surface);
   box-shadow: var(--detail-card-shadow);
+}
+.product-main-column > .product-reviews {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 24px;
+  box-sizing: border-box;
+}
+@media (max-width: 900px) {
+  .product-main-column > .product-reviews { order: 3; width: 100%; padding: 18px 16px; }
 }
 .product-detail-shell .product-detail-image {
   border-color: var(--detail-card-border);

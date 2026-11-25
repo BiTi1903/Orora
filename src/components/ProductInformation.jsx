@@ -310,7 +310,17 @@ export default function ProductInformation({
                               className={`${hasImages ? "product-information-media-text" : ""} ${selectedClass("pdInfoCaption")}`.trim()}
                               data-text-effect={effect}
                               data-builder-key={preview ? "pdInfoCaption" : undefined}
-                              onClick={preview ? select("pdInfoCaption") : undefined}
+                              onClick={
+                                preview
+                                  ? (event) => {
+                                      if (event.target === event.currentTarget) {
+                                        window.__ororaPendingCaptionSub = "box";
+                                        window.dispatchEvent(new CustomEvent("orora:info-caption-sub", { detail: "box" }));
+                                      }
+                                      select("pdInfoCaption")(event);
+                                    }
+                                  : undefined
+                              }
                             >
                               {showTitle && (
                                 <h3
