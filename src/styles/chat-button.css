@@ -138,6 +138,7 @@
 .orora-chat-panel.is-compact .orora-chat-composer textarea { height: 36px; min-height: 36px; }
 @media (max-width: 600px) {
   .orora-chat-panel { top: calc(var(--chat-viewport-top, 0px) + 8px); right: 8px; left: 8px; bottom: auto; width: auto; height: calc(var(--chat-viewport-height, 100dvh) - 16px); max-height: calc(var(--chat-viewport-height, 100dvh) - 16px); min-height: 0; border-radius: 20px; }
+  html.has-mobile-shop-nav .orora-chat-panel:not(.is-compact) { height: calc(var(--chat-viewport-height, 100dvh) - var(--mobile-shop-nav-height, 64px) - 20px); max-height: calc(var(--chat-viewport-height, 100dvh) - var(--mobile-shop-nav-height, 64px) - 20px); }
   .orora-chat-heading { padding: 14px 12px; grid-template-columns: 36px minmax(0, 1fr) 30px 30px; gap: 6px; }
   .orora-chat-heading h2 { font-size: 15px; }
   .orora-chat-log { padding: 18px 12px; }

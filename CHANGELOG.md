@@ -1,3 +1,13 @@
+## 25/11/2026 — Giữ thanh điều hướng dưới khi mở Chat AI trên điện thoại
+
+- **Lý do**: Chủ website yêu cầu khi mở Chat AI trên điện thoại không ẩn thanh điều hướng phía dưới.
+- **Thay đổi chính**:
+  - Gỡ `.orora-chat-panel` và `.orora-chat-channel-chooser` khỏi quy tắc ẩn `.mobile-shop-nav` trong `src/styles/mobile-shop-nav.css`.
+  - Giới hạn chiều cao `.orora-chat-panel` trên màn hình hẹp trong `src/styles/chat-button.css` chừa đúng khoảng `--mobile-shop-nav-height` để khung nhập tin nhắn nằm gọn phía trên thanh điều hướng dưới.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: 272/272 unit test, ESLint 0 lỗi, Vite build & giới hạn bundle đạt.
+- **Ảnh hưởng database**: Không thay đổi database hay security rules.
+
 ## 25/11/2026 — Thêm tooltip & toast "Đã thêm vào giỏ" thiết kế riêng, và định dạng lại nút "Tải lại địa chỉ"
 
 - **Lý do**: Chủ website yêu cầu tăng phản hồi cho nút biểu tượng thêm vào giỏ (tooltip thiết kế đẹp + `aria-label` + toast chỉ hiển thị `"Đã thêm vào giỏ"` đồng bộ thẩm mỹ ORORA, không dùng kiểu mặc định và bỏ nút Xem giỏ) và định dạng lại nút "Tải lại địa chỉ" trong form đặt hàng khỏi kiểu nút trần mặc định của trình duyệt.
