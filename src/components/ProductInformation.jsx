@@ -37,7 +37,7 @@ function InformationImage({ src, alt, preview, selectedClass, onSelect }) {
       ) : (
         <img
           ref={imgRef}
-          {...responsiveImage(src, { width: 1200, widths: [480, 800, 1200, 1920], sizes: "(max-width: 768px) 100vw, 75vw" })}
+          {...responsiveImage(src, { width: 1920, widths: [480, 960, 1440, 1920], sizes: "(max-width: 768px) 100vw, 75vw" })}
           alt={alt}
           loading="lazy"
           decoding="async"
@@ -116,11 +116,12 @@ export default function ProductInformation({
     event.currentTarget.parentElement.querySelectorAll('[role="tab"]')[next]?.focus({ preventScroll: true });
   };
 
-  const captionBaseCss = toCss(config.captionStyle, { responsive: true });
+  const captionTitleCss = toCss(config.captionTitleStyle, { responsive: true });
+  const captionBodyCss = toCss(config.captionStyle, { responsive: true });
   const containerVars = {
     "--spec-columns": config.specColumns,
     "--spec-radius": `${config.cardRadius}px`,
-    "--info-img-ratio": config.imageRatio,
+    "--info-img-ratio": "3 / 2",
     "--info-img-fit": config.imageFit,
     "--info-img-radius": `${config.imageRadius}px`,
     "--info-img-border-w": `${config.imageBorderWidth}px`,
@@ -215,7 +216,7 @@ export default function ProductInformation({
                             {section.title?.trim() && (
                               <span
                                 {...textProps("pdRowLabel", "rowLabel")}
-                                style={{ ...css("rowLabel"), ...toCss(section.textStyle) }}
+                                style={{ ...css("rowLabel"), ...captionTitleCss }}
                               >
                                 {tr(section.title)}
                               </span>
@@ -223,7 +224,7 @@ export default function ProductInformation({
                             <div
                               {...textProps("pdRowValue", "rowValue")}
                               className={`product-detail-value ${selectedClass("pdRowValue")}`}
-                              style={{ ...css("rowValue"), ...toCss(section.textStyle) }}
+                              style={{ ...css("rowValue"), ...captionBodyCss }}
                             >
                               <ProductContent text={tr(normalizeProductBlockText(section.content))} />
                             </div>
@@ -234,9 +235,7 @@ export default function ProductInformation({
                       const showTitle =
                         title && title.toLocaleLowerCase("vi") !== PRODUCT_CONTENT_GROUPS[key].toLocaleLowerCase("vi");
                       const showCaption = section.showText !== false && Boolean(showTitle || section.content?.trim());
-                      const effect =
-                        image && section.effect !== "none" ? (section.effect === "rise" ? "rise" : "fade") : undefined;
-                      const mergedCaptionStyle = { ...captionBaseCss, ...toCss(section.textStyle) };
+                      const effect = image && config.captionEffect !== "none" ? config.captionEffect : undefined;
 
                       return (
                         <div className="product-information-copy" key={blockKey}>
@@ -244,7 +243,7 @@ export default function ProductInformation({
                             <InformationImage
                               key={image}
                               src={image}
-                              alt={section.imageAlt?.trim() || ""}
+                              alt={showTitle ? tr(title) : ""}
                               preview={preview}
                               selectedClass={selectedClass}
                               onSelect={select}
@@ -256,12 +255,11 @@ export default function ProductInformation({
                               data-text-effect={effect}
                               data-builder-key={preview ? "pdInfoCaption" : undefined}
                               onClick={preview ? select("pdInfoCaption") : undefined}
-                              style={hasImages ? mergedCaptionStyle : undefined}
                             >
                               {showTitle && (
                                 <h3
                                   {...textProps("pdSubheading", "subheading")}
-                                  style={{ ...css("subheading"), ...mergedCaptionStyle }}
+                                  style={{ ...css("subheading"), ...captionTitleCss }}
                                 >
                                   {tr(title)}
                                 </h3>
@@ -270,7 +268,7 @@ export default function ProductInformation({
                                 <div
                                   {...textProps("pdBody", "body")}
                                   className={`product-section-content ${selectedClass("pdBody")}`}
-                                  style={{ ...css("body"), ...mergedCaptionStyle }}
+                                  style={{ ...css("body"), ...captionBodyCss }}
                                 >
                                   <ProductContent text={tr(normalizeProductBlockText(section.content))} />
                                 </div>

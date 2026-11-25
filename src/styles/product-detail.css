@@ -1294,6 +1294,9 @@
 .product-information-media-text[data-revealed="true"][data-text-effect="rise"] {
   animation: product-media-rise var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) .06s both;
 }
+.product-information-media-text[data-revealed="true"][data-text-effect="zoom"] {
+  animation: product-media-zoom var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) .06s both;
+}
 .product-information[data-tab-transition="slide-up"] .product-information-panel-body {
   animation: product-media-rise var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) both;
 }

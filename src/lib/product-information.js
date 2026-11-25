@@ -1,6 +1,5 @@
 import { PRODUCT_CONTENT_GROUPS } from "./product-content.js";
 
-const IMAGE_RATIOS = ["3 / 2", "16 / 9", "4 / 3", "4 / 5", "1 / 1", "auto"];
 const IMAGE_FITS = ["cover", "contain"];
 const IMAGE_SHADOWS = {
   none: "none",
@@ -11,6 +10,7 @@ const IMAGE_SHADOWS = {
 const SKELETON_EFFECTS = ["shimmer", "pulse", "static"];
 const TAB_TRANSITIONS = ["slide-up", "fade", "zoom", "none"];
 const REVEAL_EFFECTS = ["rise", "fade", "zoom", "none"];
+const CAPTION_EFFECTS = ["fade", "rise", "zoom", "none"];
 const CAPTION_ALIGNS = ["left", "center", "right"];
 
 const clamp = (raw, min, max, fallback) => {
@@ -40,7 +40,7 @@ export function informationTabSettings(value = {}) {
     defaultTab: Object.hasOwn(PRODUCT_CONTENT_GROUPS, value.defaultTab) ? value.defaultTab : "description",
     emptyText: text(value.emptyText, "Thông tin đang được cập nhật."),
 
-    imageRatio: pick(value.imageRatio, IMAGE_RATIOS, "3 / 2"),
+    imageRatio: "3 / 2",
     imageFit: pick(value.imageFit, IMAGE_FITS, "cover"),
     imageRadius: clamp(value.imageRadius ?? 14, 0, 36, 14),
     imageBorderWidth: clamp(value.imageBorderWidth ?? 1, 0, 6, 1),
@@ -56,7 +56,9 @@ export function informationTabSettings(value = {}) {
     captionPaddingX: clamp(value.captionPaddingX ?? 4, 0, 36, 4),
     captionPaddingY: clamp(value.captionPaddingY ?? 14, 0, 36, 14),
     captionAlign: pick(value.captionAlign, CAPTION_ALIGNS, "left"),
+    captionTitleStyle: value.captionTitleStyle && typeof value.captionTitleStyle === "object" ? value.captionTitleStyle : {},
     captionStyle: value.captionStyle && typeof value.captionStyle === "object" ? value.captionStyle : {},
+    captionEffect: pick(value.captionEffect, CAPTION_EFFECTS, "fade"),
 
     skeletonEffect: pick(value.skeletonEffect, SKELETON_EFFECTS, "shimmer"),
     skeletonBaseColor: color(value.skeletonBaseColor, "#fcebf1"),

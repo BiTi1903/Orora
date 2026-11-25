@@ -77,20 +77,7 @@ export default function InformationTabsSettings({ value = {}, onChange, openSect
 
       <details open={openSection === "media" || undefined}>
         <summary>Khung ảnh nội dung</summary>
-        <label className="builder-field">
-          Tỷ lệ khung ảnh
-          <select
-            value={config.imageRatio}
-            onChange={(e) => onChange({ imageRatio: e.target.value })}
-          >
-            <option value="3 / 2">3 : 2 (Ngang chuẩn)</option>
-            <option value="16 / 9">16 : 9 (Rộng)</option>
-            <option value="4 / 3">4 : 3 (Cân đối)</option>
-            <option value="4 / 5">4 : 5 (Dọc nhẹ)</option>
-            <option value="1 / 1">1 : 1 (Vuông)</option>
-            <option value="auto">Tự động theo ảnh</option>
-          </select>
-        </label>
+        <small className="builder-help">Ảnh nội dung giữ chuẩn tỷ lệ 3:2 (1920 × 1280 px) trên mọi sản phẩm.</small>
         <label className="builder-field">
           Cách hiển thị ảnh
           <select
@@ -161,6 +148,9 @@ export default function InformationTabsSettings({ value = {}, onChange, openSect
 
       <details open={openSection === "caption" || undefined}>
         <summary>Khung chú thích dưới ảnh</summary>
+        <small className="builder-help">
+          Định dạng Đầu mục và Nội dung ở đây áp dụng đồng bộ cho tất cả sản phẩm.
+        </small>
         <label className="builder-field">
           Căn chữ chú thích
           <select
@@ -229,13 +219,18 @@ export default function InformationTabsSettings({ value = {}, onChange, openSect
           </label>
         </div>
         <StyleTypographyBlock
-          title="Kiểu chữ chú thích mặc định"
+          title="Kiểu chữ Đầu mục"
+          style={config.captionTitleStyle}
+          onStyleChange={(patch) => onChange({ captionTitleStyle: { ...config.captionTitleStyle, ...patch } })}
+        />
+        <StyleTypographyBlock
+          title="Kiểu chữ Nội dung"
           style={config.captionStyle}
           onStyleChange={(patch) => onChange({ captionStyle: { ...config.captionStyle, ...patch } })}
         />
       </details>
 
-      <details open={openSection === "motion" || openSection === "media" || undefined}>
+      <details open={openSection === "motion" || openSection === "media" || openSection === "caption" || undefined}>
         <summary>Hiệu ứng tải (Skeleton / Shimmer) & Chuyển cảnh</summary>
         <label className="builder-field">
           Hiệu ứng tải ảnh (Skeleton)
@@ -273,13 +268,25 @@ export default function InformationTabsSettings({ value = {}, onChange, openSect
           </select>
         </label>
         <label className="builder-field">
-          Hiệu ứng hiện ảnh khi cuộn
+          Hiệu ứng load ảnh khi hiện
           <select
             value={config.revealEffect}
             onChange={(e) => onChange({ revealEffect: e.target.value })}
           >
             <option value="rise">Trượt nhẹ lên</option>
             <option value="fade">Hiện dần</option>
+            <option value="zoom">Phóng nhẹ</option>
+            <option value="none">Tắt hiệu ứng</option>
+          </select>
+        </label>
+        <label className="builder-field">
+          Hiệu ứng load text (Đầu mục & Nội dung)
+          <select
+            value={config.captionEffect}
+            onChange={(e) => onChange({ captionEffect: e.target.value })}
+          >
+            <option value="fade">Hiện dần</option>
+            <option value="rise">Trượt nhẹ lên</option>
             <option value="zoom">Phóng nhẹ</option>
             <option value="none">Tắt hiệu ứng</option>
           </select>

@@ -2,17 +2,24 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import ModalDialog from "../components/ModalDialog";
 import ProductContent from "../components/ProductContent";
-import { toCss } from "../lib/typography";
 import "../styles/product-detail.css";
 import ImageField from "./ImageField";
 import ProductContentEditor from "./ProductContentEditor";
 import { useConfirm } from "./confirm-context";
-import { StyleTypographyBlock } from "./builder/ui";
 import { normalizeProductBlockText, PRODUCT_CONTENT_GROUPS } from "../lib/product-content";
 
 const hasBlockData = (item) => Boolean(item?.image?.trim() || item?.title?.trim() || item?.content?.trim());
 
-export default function ProductInformationEditor({ sections, visibility, onChange, onVisibility, onUpload, newBlock, disabled, uploading }) {
+export default function ProductInformationEditor({
+  sections,
+  visibility,
+  onChange,
+  onVisibility,
+  onUpload,
+  newBlock,
+  disabled,
+  uploading,
+}) {
   const confirm = useConfirm();
   const [openGroup, setOpenGroup] = useState("description");
   const [previewId, setPreviewId] = useState(null);
@@ -52,11 +59,14 @@ export default function ProductInformationEditor({ sections, visibility, onChang
 
   const clearAllGroups = async () => {
     if (
-      !(await confirm("Xóa toàn bộ ảnh và chú thích trong cả 3 mục (Mô tả, Thông số, Hướng dẫn sử dụng)? Thay đổi áp dụng khi lưu sản phẩm.", {
-        title: "Xóa toàn bộ nội dung",
-        confirmLabel: "Xóa toàn bộ",
-        danger: true,
-      }))
+      !(await confirm(
+        "Xóa toàn bộ ảnh và chú thích trong cả 3 mục (Mô tả, Thông số, Hướng dẫn sử dụng)? Thay đổi áp dụng khi lưu sản phẩm.",
+        {
+          title: "Xóa toàn bộ nội dung",
+          confirmLabel: "Xóa toàn bộ",
+          danger: true,
+        },
+      ))
     ) {
       return;
     }
@@ -69,16 +79,12 @@ export default function ProductInformationEditor({ sections, visibility, onChang
         <div>
           <h3>Nội dung chi tiết</h3>
           <p className="admin-muted">
-            Bật/tắt riêng từng mục và thêm nhiều khối Ảnh + Chú thích. Ảnh đề xuất 1920 × 1280 px.
+            Ảnh tỷ lệ 3:2 (1920 × 1280 px). Ở đây chỉ nhập Đầu mục & Nội dung; font, màu và hiệu ứng dùng chung chỉnh
+            tại Visual Builder.
           </p>
         </div>
         {hasAnyData && (
-          <button
-            type="button"
-            className="admin-btn danger"
-            disabled={disabled || uploading}
-            onClick={clearAllGroups}
-          >
+          <button type="button" className="admin-btn danger" disabled={disabled || uploading} onClick={clearAllGroups}>
             Xóa toàn bộ nội dung
           </button>
         )}
@@ -210,23 +216,13 @@ export default function ProductInformationEditor({ sections, visibility, onChang
                   </div>
 
                   <ImageField
-                    label={`${label} · Ảnh ${index + 1}`}
+                    label={`${label} · Ảnh ${index + 1} (3:2 · 1920 × 1280)`}
                     value={item.image || ""}
                     width={1920}
                     disabled={disabled}
                     onChange={(image) => update(item.id, { image })}
                     onBusyChange={(busy) => onUpload(item.id, busy)}
                   />
-                  <div className="admin-field">
-                    <label>
-                      Văn bản thay thế cho ảnh
-                      <input
-                        value={item.imageAlt || ""}
-                        disabled={disabled}
-                        onChange={(event) => update(item.id, { imageAlt: event.target.value })}
-                      />
-                    </label>
-                  </div>
 
                   <details>
                     <summary>
@@ -245,9 +241,10 @@ export default function ProductInformationEditor({ sections, visibility, onChang
                       </label>
                       <div className="admin-field">
                         <label>
-                          Tiêu đề
+                          Đầu mục
                           <input
                             value={item.title || ""}
+                            placeholder="Nhập đầu mục (tùy chọn)"
                             onChange={(event) => update(item.id, { title: event.target.value })}
                           />
                         </label>
@@ -258,23 +255,6 @@ export default function ProductInformationEditor({ sections, visibility, onChang
                         escapedLineBreaks
                         disabled={disabled}
                         onChange={(content) => update(item.id, { content })}
-                      />
-                      <div className="admin-field">
-                        <label>
-                          Hiệu ứng chữ
-                          <select
-                            value={item.effect || "fade"}
-                            onChange={(event) => update(item.id, { effect: event.target.value })}
-                          >
-                            <option value="fade">Hiện dần</option>
-                            <option value="rise">Trượt nhẹ lên</option>
-                            <option value="none">Tắt hiệu ứng</option>
-                          </select>
-                        </label>
-                      </div>
-                      <StyleTypographyBlock
-                        style={item.textStyle}
-                        onStyleChange={(patch) => update(item.id, { textStyle: { ...item.textStyle, ...patch } })}
                       />
                     </fieldset>
                   </details>
@@ -307,11 +287,11 @@ export default function ProductInformationEditor({ sections, visibility, onChang
             )}
             {preview.image?.trim() && (
               <div className="product-information-image" data-image-state="ready" data-revealed="true">
-                <img src={preview.image.trim()} alt={preview.imageAlt || ""} width={1920} height={1280} />
+                <img src={preview.image.trim()} alt={preview.title?.trim() || ""} width={1920} height={1280} />
               </div>
             )}
             {preview.showText !== false && (preview.title?.trim() || preview.content?.trim()) && (
-              <div className="product-information-media-text" style={toCss(preview.textStyle)}>
+              <div className="product-information-media-text">
                 {preview.title?.trim() && <h3>{preview.title}</h3>}
                 {preview.content?.trim() && <ProductContent text={normalizeProductBlockText(preview.content)} />}
               </div>

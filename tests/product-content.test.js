@@ -144,17 +144,21 @@ test("informationTabSettings normalizes frame, caption, skeleton shimmer and mot
     imageShadow: "elevated",
     blockGap: 32,
     captionAlign: "center",
+    captionEffect: "zoom",
+    captionTitleStyle: { fontWeight: "700" },
     skeletonEffect: "pulse",
     tabTransition: "zoom",
     revealEffect: "fade",
     motionDuration: 260,
   });
-  assert.equal(custom.imageRatio, "16 / 9");
+  assert.equal(custom.imageRatio, "3 / 2");
   assert.equal(custom.imageFit, "contain");
   assert.equal(custom.imageRadius, 36);
   assert.equal(custom.imageBorderWidth, 0);
   assert.equal(custom.blockGap, 32);
   assert.equal(custom.captionAlign, "center");
+  assert.equal(custom.captionEffect, "zoom");
+  assert.deepEqual(custom.captionTitleStyle, { fontWeight: "700" });
   assert.equal(custom.skeletonEffect, "pulse");
   assert.equal(custom.tabTransition, "zoom");
   assert.equal(custom.revealEffect, "fade");
