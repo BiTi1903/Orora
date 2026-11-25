@@ -138,7 +138,6 @@ const PRODUCT_DETAIL_FIELD_MAP = {
   pdTabDescription: { styleKey: "navigation", label: "Tab Mô tả" },
   pdTabSpecifications: { styleKey: "navigation", label: "Tab Thông số" },
   pdTabUsage: { styleKey: "navigation", label: "Tab Hướng dẫn sử dụng" },
-  pdAboutTitle: { styleKey: "aboutTitle", label: "Tiêu đề nội dung sản phẩm", sample: "Mô tả" },
   pdInfoMedia: { styleKey: "informationTabs", label: "Nội dung · Khung ảnh & hiệu ứng" },
   pdInfoCaption: { styleKey: "informationTabs", label: "Nội dung · Chú thích (Đầu mục & Nội dung)" },
 

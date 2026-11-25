@@ -56,7 +56,6 @@ function InformationImage({ src, alt, preview, selectedClass, onSelect, forceLoa
 export default function ProductInformation({
   sections,
   visibility,
-  css,
   preview,
   select = () => () => {},
   selectedClass = () => "",
@@ -222,16 +221,6 @@ export default function ProductInformation({
             tabIndex={0}
             className="product-section product-information-section"
           >
-            <div className="product-information-heading">
-              <h2
-                className={selectedClass("pdAboutTitle")}
-                data-builder-key={preview ? "pdAboutTitle" : undefined}
-                onClick={select("pdAboutTitle")}
-                style={{ ...css("sectionTitle"), ...css("aboutTitle") }}
-              >
-                {tr(config.labels[key])}
-              </h2>
-            </div>
             {selected === key && (
               <div
                 key={`${key}-body-${replayTick}`}
