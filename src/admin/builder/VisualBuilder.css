@@ -351,11 +351,10 @@
 }
 
 .builder-preview--productdetail .product-detail-content {
-  width: 92% !important;
+  width: 100% !important;
   max-width: none !important;
-  margin: 0 auto 0 !important;
-  padding-bottom: 48px !important;
-  gap: 4% !important;
+  margin: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 /* Không sticky trong khung preview (scroll cha) */
@@ -367,10 +366,6 @@
   position: relative !important;
   top: auto !important;
   max-height: none;
-}
-
-.builder-preview--productdetail .product-detail-info h1 {
-  font-size: clamp(36px, 5vw, 72px);
 }
 
 .builder-preview--productdetail .product-section {
@@ -932,5 +927,74 @@
   font-weight: 600;
   color: #6a4d59;
   cursor: pointer;
+}
+
+/* Compact styling for Care Guide & Slogan editors inside the 340px Visual Builder sidebar */
+.builder-settings .care-assignment {
+  padding: 12px;
+  margin: 12px 0 4px;
+  border-radius: 10px;
+  background: var(--ad-surface-tint, #fffbfd);
+}
+.builder-settings .care-assignment summary {
+  font-size: 13px;
+  color: var(--ad-primary-strong);
+}
+.builder-settings .care-product-list {
+  max-height: 220px;
+  margin-top: 10px;
+  gap: 6px;
+}
+.builder-settings .care-product-choice {
+  padding: 9px 10px;
+  gap: 10px;
+  font-size: 12.5px;
+}
+.builder-settings .slogan-settings-tabs {
+  margin-bottom: 12px;
+  padding: 4px;
+  border-radius: 10px;
+}
+.builder-settings .slogan-settings-tabs button {
+  min-height: 36px;
+  padding: 6px 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.builder-settings .slogan-design-editor {
+  padding: 12px;
+  margin: 0 0 12px;
+  gap: 10px;
+  border-radius: 10px;
+}
+.builder-settings .product-editor-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--ad-line, #eee4e9);
+}
+.builder-settings .product-editor-heading strong {
+  font-size: 13px;
+  color: var(--ad-ink);
+}
+.builder-settings .product-editor-heading .admin-btn {
+  min-height: 30px;
+  padding: 4px 9px;
+  font-size: 12px;
+}
+.builder-care-group-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+.builder-care-group-actions .admin-btn {
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 8px;
+  font-size: 12px;
 }
 

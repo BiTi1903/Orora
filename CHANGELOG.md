@@ -1,3 +1,19 @@
+## 25/11/2026 — Thiết kế lại giao diện khung mua sản phẩm trên PC và form chỉnh sửa Admin
+
+- **Lý do**: Chủ website phản hồi khung thông tin & mua sản phẩm trên PC đang bố cục xấu (nhãn số thứ tự `01` bị kéo dài 100% chiều ngang thành thanh trống, khoảng cách giữa Dung tích và Số lượng bị hở do dòng trợ giúp ẩn vẫn chiếm chỗ, cỡ chữ và khung nút Mua ngay chưa hài hòa) và cần chỉnh lại đồng bộ cả giao diện Chi tiết sản phẩm lẫn form Admin.
+- **Thay đổi chính**:
+  - **Khung mua sản phẩm trên PC (`src/styles/product-detail.css`, `src/styles/purchase-selection.css`)**:
+    - Thu gọn nhãn số thứ tự (`01` — `.product-detail-number`) và huy hiệu đánh giá (`.product-rating-summary`) về đúng kích thước `fit-content` (`align-self: flex-start`) thay vì bị kéo giãn 100% chiều rộng cột flex.
+    - Xóa khoảng trống thừa giữa phần chọn **Dung tích** và **Số lượng** (`.product-selection-help { display: none }`), nâng cấp nút chọn dung tích (hiệu ứng gradient hồng phấn nhẹ khi chọn, bóng đổ tinh tế) và cụm nút tăng/giảm số lượng.
+    - Cân chỉnh lại tỷ lệ chữ tiêu đề sản phẩm (`clamp(30px, 2.75vw, 44px)`), giá (`30px`), đường phân cách mảnh dưới mô tả ngắn, hộp hành động **Mua ngay & Thêm vào giỏ** nền hồng kem sang trọng, và tiêu đề `HOẶC MUA QUA` kèm đường kẻ mảnh nối ngang + nút `Facebook / Tiktok` cân đối.
+  - **Giao diện Preview & Form Admin trong Visual Builder (`src/admin/builder/VisualBuilder.css`, `src/admin/builder/ProductCareBuilderPanel.jsx`)**:
+    - Gỡ quy tắc cũ `.builder-preview--productdetail .product-detail-content { width: 92% !important; padding-bottom: 48px !important; }` để bản xem trước Chi tiết sản phẩm trong Admin khớp 100% với trang thật trên PC.
+    - Tinh gọn giao diện form Admin bên cột phải Visual Builder (340px) cho các mục **Cách chăm sóc**, **Slogan**, danh sách chọn sản phẩm áp dụng và cụm nút thao tác nhóm (`+ Tạo mới / Nhân bản / Xóa bộ` chia 3 cột đều nhau).
+- **Kiểm tra đã chạy**:
+  - `npm run check`: 273/273 unit test, ESLint 0 lỗi, Vite build & giới hạn bundle đạt.
+  - Playwright (`qa/editor-checkout.spec.js`, `qa/admin-appearance.spec.js`, `qa/visual-builder-focus.spec.js` tại `width-390` và `width-1440`): đạt toàn bộ.
+- **Ảnh hưởng database**: Không thay đổi schema, security rules hay dữ liệu production.
+
 ## 25/11/2026 — Chuyển Cách chăm sóc vào Visual Builder và bổ sung tùy chỉnh cho Sản phẩm vừa xem & Dải chip Cam kết
 
 - **Lý do**: Chủ website yêu cầu chuyển phần **Hướng dẫn chăm sóc phù hợp** vào Visual Builder (xóa khỏi `Sản phẩm → Thiết lập dùng chung`) kèm bật/tắt đầy đủ, đồng thời bổ sung bộ chỉnh nội dung, kiểu hiển thị và bật/tắt trong Visual Builder cho mục **Sản phẩm vừa xem (Gợi ý cho bạn)** và **Dải chip Cam kết** dưới nút mua hàng.

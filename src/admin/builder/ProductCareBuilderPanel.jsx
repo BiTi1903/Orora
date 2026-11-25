@@ -127,9 +127,9 @@ export default function ProductCareBuilderPanel({
           </select>
         </div>
 
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+        <div className="builder-care-group-actions">
           <button type="button" className="admin-btn" onClick={() => addGroup(false)}>
-            Tạo bộ mới
+            + Tạo mới
           </button>
           {active && (
             <>
