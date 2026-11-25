@@ -402,7 +402,6 @@ function ProductDetail({
             className={`product-buy-cart-btn ${selectedClass("pdAddToCart")}`}
             data-builder-key={preview ? "pdAddToCart" : undefined}
             aria-label={tr(soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ"))}
-            title={tr(soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ"))}
             data-tooltip={tr(soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ"))}
             style={{
               ...(purchase.addToCartBackground ? { background: purchase.addToCartBackground } : {}),

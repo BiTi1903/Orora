@@ -1067,18 +1067,22 @@
   content: attr(data-tooltip);
   position: absolute;
   left: 50%;
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + 9px);
   transform: translate(-50%, 4px);
-  padding: 5px 10px;
-  border-radius: 8px;
-  background: #24141c;
-  color: #fff;
-  font: 500 12px/1.25 var(--font-body);
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--rose-deep) 24%, white);
+  background: linear-gradient(135deg, rgba(255, 252, 253, .97), rgba(255, 241, 246, .96));
+  color: var(--plum);
+  font: 600 12px/1.2 var(--font-body);
+  letter-spacing: .01em;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
-  box-shadow: 0 8px 20px rgba(24, 14, 20, .2);
-  transition: opacity .15s ease, transform .15s ease;
+  box-shadow: 0 8px 22px rgba(102, 38, 65, .15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: opacity .16s ease, transform .16s ease;
   z-index: 30;
 }
 .product-buy-cart-btn[data-tooltip]:hover::after,

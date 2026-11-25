@@ -1,10 +1,10 @@
-## 25/11/2026 — Thêm tooltip & toast "Đã thêm vào giỏ · Xem giỏ", và định dạng lại nút "Tải lại địa chỉ"
+## 25/11/2026 — Thêm tooltip & toast "Đã thêm vào giỏ" thiết kế riêng, và định dạng lại nút "Tải lại địa chỉ"
 
-- **Lý do**: Chủ website yêu cầu tăng phản hồi cho nút biểu tượng thêm vào giỏ (tooltip + `aria-label` + toast có nút mở giỏ ngay) và định dạng lại nút "Tải lại địa chỉ" trong form đặt hàng khỏi kiểu nút trần mặc định của trình duyệt.
+- **Lý do**: Chủ website yêu cầu tăng phản hồi cho nút biểu tượng thêm vào giỏ (tooltip thiết kế đẹp + `aria-label` + toast chỉ hiển thị `"Đã thêm vào giỏ"` đồng bộ thẩm mỹ ORORA, không dùng kiểu mặc định và bỏ nút Xem giỏ) và định dạng lại nút "Tải lại địa chỉ" trong form đặt hàng khỏi kiểu nút trần mặc định của trình duyệt.
 - **Thay đổi chính**:
   - **Nút thêm vào giỏ & Toast (`src/components/ProductDetail.jsx`, `src/styles/product-detail.css`, `src/components/ShopCart.jsx`, `src/styles/shop-cart.css`)**:
-    - Thêm tooltip nổi khi rê chuột/focus (`data-tooltip` kết hợp `aria-label` và `title` đồng bộ nhãn từ cấu hình Admin) trên nút giỏ hàng cạnh nút Mua ngay.
-    - Nâng cấp thông báo `.cart-announcement` thành toast `"Đã thêm vào giỏ · Xem giỏ"` (hiển thị 3,6 giây, bấm `Xem giỏ` mở ngay giỏ hàng, tự tránh đè thanh điều hướng & thanh Mua ngay trên mobile).
+    - Thêm tooltip nổi dạng viên thuốc kính mờ hồng kem (`data-tooltip` kết hợp `aria-label`, bỏ `title` mặc định của trình duyệt) trên nút giỏ hàng cạnh nút Mua ngay.
+    - Nâng cấp thông báo `.cart-announcement` thành toast kính mờ hồng kem kèm biểu tượng dấu tích tròn màu hồng chỉ hiển thị `"Đã thêm vào giỏ"` (đọc từ cấu hình Admin, tự tránh đè thanh điều hướng & thanh Mua ngay trên mobile).
   - **Form đặt hàng (`src/components/OrderFormFields.jsx`, `src/styles/checkout.css`)**:
     - Bọc lỗi tải địa chỉ bằng `.order-error-action` và gắn class `.order-retry-btn` cho nút `Tải lại địa chỉ` đồng bộ màu viền, bo góc và trạng thái hover/focus của form đặt hàng.
 - **Kiểm tra đã chạy**:
