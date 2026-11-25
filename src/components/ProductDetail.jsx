@@ -20,7 +20,8 @@ import useProductPanelSize from "../hooks/useProductPanelSize";
 import ProductInformation from "./ProductInformation";
 import ProductAssurances from "./ProductAssurances";
 import ProductReviews from "./ProductReviews";
-import { productImages, productInformationBlocks, secondaryProductImages, PRODUCT_CONTENT_GROUPS } from "../lib/product-content";
+import ProductImageLightbox from "./ProductImageLightbox";
+import { productImages, productInformationBlocks, publishedProductReviews, secondaryProductImages, PRODUCT_CONTENT_GROUPS } from "../lib/product-content";
 import ConsultationDialog from "./ConsultationDialog";
 import OrderForm from "./OrderForm";
 import { availablePaymentMethods, formatProductPrice, formatVnd, parseVndPrice, purchaseChannelLabels, socialShopUrl } from "../lib/commerce";
@@ -73,6 +74,7 @@ function ProductDetail({
   const [purchaseSelection, setPurchaseSelection] = useState(null);
   const [zoomActive, setZoomActive] = useState(false);
   const [zoomHiRes, setZoomHiRes] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [consultationOpen, setConsultationOpen] = useState(false);
   const [consultationSource, setConsultationSource] = useState(null);
 
@@ -171,8 +173,23 @@ function ProductDetail({
   /* ---------- đang tải ---------- */
   if (product === undefined) {
     return (
-      <div className="product-not-found">
-        <div className="detail-loading" role="status" aria-live="polite"><div className="loading-placeholder" /><p>Đang tải sản phẩm…</p></div>
+      <div className="product-detail-skeleton" role="status" aria-live="polite" aria-label="Đang tải sản phẩm">
+        <div className="product-skeleton-gallery">
+          <div className="product-skeleton-block is-media" />
+          <div className="product-skeleton-thumbs">
+            <span className="product-skeleton-block is-thumb" />
+            <span className="product-skeleton-block is-thumb" />
+          </div>
+        </div>
+        <div className="product-skeleton-info">
+          <div className="product-skeleton-block is-eyebrow" />
+          <div className="product-skeleton-block is-title" />
+          <div className="product-skeleton-block is-price" />
+          <div className="product-skeleton-block is-line" />
+          <div className="product-skeleton-block is-line is-short" />
+          <div className="product-skeleton-block is-cta" />
+        </div>
+        <span className="sr-only">Đang tải sản phẩm…</span>
       </div>
     );
   }
@@ -322,7 +339,7 @@ function ProductDetail({
   };
 
   const thumbsGridStyle = {
-    gap: px(thumbsLayout.gap) ?? "10px",
+    gap: thumbsLayout.gap != null ? px(thumbsLayout.gap) : "10px",
   };
 
   const thumbSize =
@@ -628,12 +645,23 @@ function ProductDetail({
               </>
             )}
             {!preview && displaySrc && (
-              <span className="product-image-zoom-hint" aria-hidden="true">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <button
+                type="button"
+                className="product-image-zoom-hint"
+                aria-label="Phóng to ảnh toàn màn hình"
+                title="Xem toàn màn hình"
+                onMouseEnter={(event) => { event.stopPropagation(); setZoomActive(false); }}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setZoomActive(false);
+                  setLightboxOpen(true);
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <circle cx="11" cy="11" r="7" />
                   <path d="m21 21-4.35-4.35M11 8v6M8 11h6" />
                 </svg>
-              </span>
+              </button>
             )}
           </div>
           {thumbPool.length > 0 && (
@@ -666,7 +694,7 @@ function ProductDetail({
                 {visibleThumbs.map((src, i) => {
                   const isActive = displaySrc === src;
                   const activeColor =
-                    thumbsLayout.activeBorderColor || "#b8446d";
+                    thumbsLayout.activeBorderColor || "var(--rose-deep)";
                   const idleColor =
                     thumbsLayout.borderColor || "transparent";
                   return (
@@ -738,6 +766,33 @@ function ProductDetail({
             {formatProductPrice(displayedPrice)}
           </p>
 
+          {(() => {
+            const reviews = publishedProductReviews(product);
+            if (!reviews.length) return null;
+            const avg = (reviews.reduce((sum, item) => sum + (Number(item.rating) || 5), 0) / reviews.length).toFixed(1);
+            return (
+              <a
+                href="#product-reviews"
+                className="product-rating-summary"
+                onClick={(event) => {
+                  if (preview) {
+                    event.preventDefault();
+                    return;
+                  }
+                  const target = document.getElementById("product-reviews");
+                  if (target) {
+                    event.preventDefault();
+                    target.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }
+                }}
+              >
+                <span className="product-rating-summary-stars" aria-hidden="true">★</span>
+                <strong>{avg}</strong>
+                <span className="product-rating-summary-count">({reviews.length} đánh giá)</span>
+              </a>
+            );
+          })()}
+
           <p
             className={`product-detail-description ${selectedClass("pdDescription")}`}
             data-builder-key={preview ? "pdDescription" : undefined}
@@ -804,18 +859,28 @@ function ProductDetail({
       {Object.keys(PRODUCT_CONTENT_GROUPS).some((group) => product.detailVisibility?.[group] !== false) && <div className="product-detail-lower">
         <ProductInformation key={`${product.id||product.slug}:${ps.informationTabs?.defaultTab||"description"}`} settings={ps.informationTabs} sections={sections} visibility={product.detailVisibility} css={css} preview={preview} select={select} selectedClass={selectedClass} textProps={textProps} />
       </div>}
+      <ProductReviews product={product} textProps={textProps} />
       {!home.loading && <><ProductCareGuide value={careGuideForProduct(home.productCareGuide, product)} /><ProductFaq value={home.productFaq} product={product} /></>}
       </div>
       <div className="product-side-column">
         <ProductAssurances policies={home.productPolicies} textProps={textProps} />
         <ProductSloganCard home={home} styles={ps} textProps={textProps} cardProps={{ className: selectedClass("pdSloganCard"), "data-builder-key": preview ? "pdSloganCard" : undefined, onClick: preview ? select("pdSloganCard") : undefined }} />
         <RelatedProductsSidebar product={product} preview={preview} previewProducts={previewProducts} styles={ps} selectedElement={selectedElement} onSelect={onSelect} />
-        <ProductReviews product={product} textProps={textProps} />
       </div>
       </div>
 
 
       {pinBuyBar && mobileBuyBar && createPortal(mobileBuyBar, document.body)}
+      {!preview && lightboxOpen && displaySrc && createPortal(
+        <ProductImageLightbox
+          src={displaySrc}
+          images={allImages}
+          initialIndex={safeIndex}
+          name={product.name}
+          onClose={() => setLightboxOpen(false)}
+        />,
+        document.body,
+      )}
     </article>
   );
 }

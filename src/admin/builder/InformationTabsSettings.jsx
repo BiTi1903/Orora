@@ -47,11 +47,27 @@ export default function InformationTabsSettings({ value = {}, onChange, openSect
   const config = informationTabSettings(value);
   const initialTab = TABS.some(([key]) => key === openSection) ? openSection : "tabs";
   const [tab, setTab] = useState(initialTab);
-  const [captionSub, setCaptionSub] = useState("title");
+  const [captionSub, setCaptionSub] = useState(() => {
+    if (typeof window !== "undefined" && ["title", "body", "box"].includes(window.__ororaPendingCaptionSub)) {
+      const next = window.__ororaPendingCaptionSub;
+      window.__ororaPendingCaptionSub = null;
+      return next;
+    }
+    return "title";
+  });
+
+  const [prevOpenSection, setPrevOpenSection] = useState(openSection);
+  if (openSection !== prevOpenSection) {
+    setPrevOpenSection(openSection);
+    if (TABS.some(([key]) => key === openSection)) {
+      setTab(openSection);
+    }
+  }
 
   useEffect(() => {
     const onSub = (event) => {
       if (["title", "body", "box"].includes(event.detail)) {
+        if (typeof window !== "undefined") window.__ororaPendingCaptionSub = null;
         setTab("caption");
         setCaptionSub(event.detail);
       }

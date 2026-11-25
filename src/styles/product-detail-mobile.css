@@ -3,7 +3,7 @@
 @media(max-width:768px) {
  #root .product-detail .product-detail-info,
  #root .product-detail .product-information { padding:var(--pd-mobile-padding)!important; }
- #root .product-detail .product-detail-number { font-size:11px!important; margin-bottom:10px; padding:5px 10px; }
+ #root .product-detail .product-detail-number { font-size:var(--mobile-font-size,11px)!important; margin-bottom:10px; padding:5px 10px; }
  #root .product-detail .product-detail-info h1 { font-size:var(--pd-mobile-nameSize)!important; line-height:1.2!important; margin:0 0 12px!important; }
  #root .product-detail .product-detail-price { font-size:var(--pd-mobile-priceSize)!important; line-height:1.35!important; margin:0 0 12px!important; }
  #root .product-detail .product-detail-description { font-size:var(--pd-mobile-descriptionSize)!important; line-height:1.65!important; margin:0 0 14px!important; }
@@ -12,12 +12,12 @@
  #root .product-detail .product-purchase-content :is(.product-quantity-row > label,.product-volume-options legend,.product-selection-help) { font-size:var(--pd-mobile-labelSize)!important; }
  #root .product-detail .product-purchase-content .product-volume-choice span { font-size:var(--pd-mobile-buttonSize)!important; }
  #root .product-detail .product-purchase-content .product-quantity-control { height:44px; }
- #root .product-detail .product-purchase-content .product-quantity-control button { width:32px; }
- #root .product-detail .product-purchase-content .product-quantity-control input { width:40px; }
+ #root .product-detail .product-purchase-content .product-quantity-control button { width:42px; min-width:42px; }
+ #root .product-detail .product-purchase-content .product-quantity-control input { width:38px; }
  #root .product-detail .purchase-subtotal { padding:var(--subtotal-padding,10px); margin:12px 0 16px; gap:4px 10px; }
  #root .product-detail .purchase-subtotal > div { min-height:0; gap:2px; }
  #root .product-detail .purchase-subtotal :is(span,small) { font-size:var(--pd-mobile-labelSize)!important; line-height:1.45!important; }
- #root .product-detail .purchase-subtotal strong { font-size:18px!important; }
+ #root .product-detail .purchase-subtotal strong { font-size:var(--mobile-font-size,18px)!important; }
  #root .product-detail .purchase-subtotal.is-pending strong { font-size:var(--pd-mobile-labelSize)!important; }
  #root .product-detail .purchase-options { margin:14px 0 0; }
  #root .product-detail .purchase-options > h2 { font-size:var(--pd-mobile-labelSize)!important; margin-bottom:8px; }

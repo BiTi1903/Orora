@@ -35,7 +35,7 @@ const SHARED_SETTINGS = [
 ];
 
 const newProductInformationBlock = (group) => ({
-  id: crypto.randomUUID(), group, enabled: true, showText: true, image: "", title: "", content: "", effect: "fade",
+  id: crypto.randomUUID(), group, enabled: true, showText: true, image: "", title: "", content: "",
 });
 
 function withInformationSlots(sections = []) {

@@ -286,7 +286,7 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
             onClick={preview ? select(k("cardButton")) : prepare}
             style={toCss(styles.button, { responsive: true })}
           >
-            {tr((!styles.button?.text||styles.button.text.trim().toLocaleLowerCase('vi')==='xem chi tiết')?'Xem':styles.button.text)}
+            {tr(styles.button?.text?.trim() || 'Xem')}
             <ButtonIcon name="productView" defaultSize={12}/>
           </ButtonWrap>
           {productId&&styles.cartEnabled!==false&&<button type="button" className="card-cart-button" disabled={stock === "out"} aria-label={tr(styles.cartLabel||'Thêm vào giỏ')} onClick={e=>{if(preview)return;e.stopPropagation();const r=e.currentTarget.getBoundingClientRect();window.dispatchEvent(new CustomEvent('orora-cart-add',{detail:{id:productId,source:{x:r.x,y:r.y,width:r.width,height:r.height}}}));}}><ButtonIcon name="productCart" defaultSize={22} allowHidden={false}/></button>}

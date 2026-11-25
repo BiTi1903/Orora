@@ -1,3 +1,23 @@
+## 25/11/2026 — Đồng bộ Admin ↔ Website, sửa thao tác chọn Preview và nâng cấp trải nghiệm trang Chi tiết sản phẩm
+
+- **Lý do**: Thực hiện các hạng mục rà soát đồng bộ giữa Admin/Visual Builder và Website thật, đồng thời nâng cấp trải nghiệm trang Chi tiết sản phẩm theo chuẩn các trang thương mại điện tử mỹ phẩm cao cấp.
+- **Thay đổi chính**:
+  - **Admin & Visual Builder (`src/admin/builder/InformationTabsSettings.jsx`, `src/components/ProductInformation.jsx`, `src/admin/builder/ProductDetailPanels.jsx`, `src/admin/ProductsAdmin.jsx`)**:
+    - Đồng bộ tab đang mở của `InformationTabsSettings` khi chuyển chọn giữa `Khung ảnh`, `Chú thích`, `Tab` trên Preview và tự mở đúng sub-tab `Đầu mục` / `Nội dung` ngay cả khi vừa bấm từ thành phần khác sang.
+    - Trỏ các dòng Thông số dạng chữ trên Preview về `pdInfoCaption` thay vì mục cũ đã xóa; gỡ hẳn nhánh thừa `pdRowValue` / `pdFieldLabel`, gỡ CSS cũ (`subheading`, `body`, `rowLabel`, `rowValue`) trộn vào chú thích, và bỏ trường `effect` thừa khi tạo khối mới.
+  - **Đồng bộ Admin ↔ Website thật (`src/components/ProductCard.jsx`, `src/styles/product-detail-mobile.css`, `src/components/ProductDetail.jsx`, `src/styles/product-detail.css`)**:
+    - Hiển thị đúng chữ nút trên Thẻ sản phẩm theo cấu hình trong Admin thay vì tự cắt `"Xem chi tiết"` thành `"Xem"`.
+    - Thay cỡ chữ fix cứng `!important` trên mobile (`.product-detail-number`, `.purchase-subtotal strong`) sang dùng biến `--mobile-font-size`, sửa fallback khoảng cách ảnh phụ (`thumbsLayout.gap`), và thay các mã màu cố định trong khu vực mua hàng/tư vấn/ảnh phụ sang biến CSS theo theme.
+  - **Giao diện Website chuẩn Flagship (`src/components/ProductDetail.jsx`, `src/components/ProductReviews.jsx`, `src/components/Navbar.jsx`, `src/styles/product-detail.css`, `src/styles/product-detail-mobile.css`, `src/styles/mobile-shop-nav.css`)**:
+    - Kích hoạt bộ xem ảnh toàn màn hình `ProductImageLightbox` từ nút kính lúp trên ảnh chính.
+    - Nâng vị trí nút `Back-to-top` trên mobile để không đè lên thanh `Mua ngay` kính lỏng; tăng bề rộng nút `+ / -` chọn số lượng trên điện thoại lên `42px`.
+    - Thêm dòng tóm tắt số sao đánh giá (`★ avg (N đánh giá)`) dưới giá sản phẩm (bấm cuộn mượt tới mục đánh giá) và đưa phần Đánh giá ra cột chính rộng rãi dưới nội dung 3 tab.
+    - Thay khung chờ tải trang sản phẩm bằng Skeleton 2 cột khớp bố cục thật; đo chiều cao thực của Navbar (`--navbar-height`) để căn vị trí thanh Tab dính (`sticky`) chính xác.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **272/272** unit test đạt, `eslint .` 0 lỗi, `vite build` & giới hạn bundle đạt.
+  - Playwright (`qa/product-information-tabs.spec.js`, `qa/product-detail-mobile.spec.js`, `qa/editor-simplification.spec.js`, `qa/petals-icons.spec.js` tại `width-320` và `width-1440`): đạt toàn bộ (cập nhật fixture `qa/product-detail-mobile.spec.js` dùng `detailSections` mới).
+- **Ảnh hưởng database**: Không thay đổi schema, security rules hay dữ liệu production.
+
 ## 25/11/2026 — Nâng cấp khối Ảnh + Chú thích, công tắc bật/tắt, hiệu ứng tải & Visual Builder cho nội dung sản phẩm
 
 - **Lý do**: Chủ website yêu cầu bật/tắt riêng từng mục (Mô tả / Thông số / Hướng dẫn sử dụng), thêm nhiều khối Ảnh + Chú thích có công tắc bật/tắt, xóa text/ảnh cũ, cố định ảnh tỷ lệ 3:2 (1920 × 1280 px), bỏ ô văn bản thay thế cho ảnh, gọn phần nhập từng sản phẩm chỉ gồm Đầu mục & Nội dung cơ bản, còn toàn bộ font/màu/hiệu ứng load ảnh & load text dùng chung chỉnh tập trung trong Visual Builder (trang Chi tiết sản phẩm).

@@ -247,21 +247,39 @@ export default function ProductInformation({
                       if (!hasImages && key === "specifications") {
                         return (
                           <div
-                            className={`product-detail-row${isLongSpecification(section) ? " product-detail-row--long" : ""}${section.title?.trim() ? "" : " product-detail-row--unlabeled"}`}
+                            className={`product-detail-row${isLongSpecification(section) ? " product-detail-row--long" : ""}${section.title?.trim() ? "" : " product-detail-row--unlabeled"} ${selectedClass("pdInfoCaption")}`.trim()}
+                            data-builder-key={preview ? "pdInfoCaption" : undefined}
+                            onClick={preview ? select("pdInfoCaption") : undefined}
                             key={blockKey}
                           >
                             {section.title?.trim() && (
                               <span
-                                {...textProps("pdRowLabel", "rowLabel")}
-                                style={{ ...css("rowLabel"), ...captionTitleCss }}
+                                style={captionTitleCss}
+                                onClick={
+                                  preview
+                                    ? (event) => {
+                                        window.__ororaPendingCaptionSub = "title";
+                                        window.dispatchEvent(new CustomEvent("orora:info-caption-sub", { detail: "title" }));
+                                        select("pdInfoCaption")(event);
+                                      }
+                                    : undefined
+                                }
                               >
                                 {tr(section.title)}
                               </span>
                             )}
                             <div
-                              {...textProps("pdRowValue", "rowValue")}
-                              className={`product-detail-value ${selectedClass("pdRowValue")}`}
-                              style={{ ...css("rowValue"), ...captionBodyCss }}
+                              className="product-detail-value"
+                              style={captionBodyCss}
+                              onClick={
+                                preview
+                                  ? (event) => {
+                                      window.__ororaPendingCaptionSub = "body";
+                                      window.dispatchEvent(new CustomEvent("orora:info-caption-sub", { detail: "body" }));
+                                      select("pdInfoCaption")(event);
+                                    }
+                                  : undefined
+                              }
                             >
                               <ProductContent text={tr(normalizeProductBlockText(section.content))} />
                             </div>
@@ -296,10 +314,11 @@ export default function ProductInformation({
                             >
                               {showTitle && (
                                 <h3
-                                  style={{ ...css("subheading"), ...captionTitleCss }}
+                                  style={captionTitleCss}
                                   onClick={
                                     preview
                                       ? (event) => {
+                                          window.__ororaPendingCaptionSub = "title";
                                           window.dispatchEvent(new CustomEvent("orora:info-caption-sub", { detail: "title" }));
                                           select("pdInfoCaption")(event);
                                         }
@@ -312,10 +331,11 @@ export default function ProductInformation({
                               {section.content?.trim() && (
                                 <div
                                   className="product-section-content"
-                                  style={{ ...css("body"), ...captionBodyCss }}
+                                  style={captionBodyCss}
                                   onClick={
                                     preview
                                       ? (event) => {
+                                          window.__ororaPendingCaptionSub = "body";
                                           window.dispatchEvent(new CustomEvent("orora:info-caption-sub", { detail: "body" }));
                                           select("pdInfoCaption")(event);
                                         }

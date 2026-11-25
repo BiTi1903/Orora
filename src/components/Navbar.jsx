@@ -163,6 +163,21 @@ function Navbar({
     };
   }, [menuOpen]);
 
+  useEffect(() => {
+    if (preview) return;
+    const nav = navRef.current;
+    if (!nav) return;
+    const syncHeight = () => {
+      const h = Math.ceil(nav.getBoundingClientRect().height);
+      if (h > 0) document.documentElement.style.setProperty("--navbar-height", `${h}px`);
+    };
+    syncHeight();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(syncHeight);
+    observer.observe(nav);
+    return () => observer.disconnect();
+  }, [preview]);
+
   const toggleMenu = () => setMenuPath(menuOpen ? null : location.pathname);
   const closeMenu = () => setMenuPath(null);
 
