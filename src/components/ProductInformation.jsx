@@ -186,7 +186,12 @@ export default function ProductInformation({
       data-reveal-effect={config.revealEffect}
       style={containerVars}
     >
-      <div className="product-information-nav" role="tablist" aria-label="Nội dung sản phẩm">
+      <div
+        className="product-information-nav"
+        data-tab-count={keys.length}
+        role="tablist"
+        aria-label="Nội dung sản phẩm"
+      >
         {keys.map((key) => (
           <button
             type="button"
