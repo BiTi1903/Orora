@@ -1,3 +1,15 @@
+## 25/11/2026 — Chuyển 3 mục Mô tả / Thông số / Hướng dẫn sử dụng sang mặc định tắt, chỉ hiện khi bật ở từng sản phẩm
+
+- **Lý do**: Chủ website yêu cầu 3 mục (`Mô tả`, `Thông số`, `Hướng dẫn sử dụng`) không tự hiển thị mặc định nữa; chỉ khi bấm bật công tắc hiển thị trong chi tiết từng sản phẩm thì mục đó mới hiện trên trang thật, trong khi cấu trúc và giao diện 3 mục vẫn giữ là thuộc tính dùng chung.
+- **Thay đổi chính**:
+  - Thêm `isProductContentGroupVisible` & `normalizeProductDetailVisibility` trong `src/lib/product-content.js` với mặc định `false` cho cả 3 mục (`description`, `specifications`, `usage`).
+  - Cập nhật `src/components/ProductInformation.jsx` và `src/components/ProductDetail.jsx`: trên trang thật chỉ hiển thị các mục được bật tường minh (`detailVisibility[group] === true`) và ẩn hoàn toàn khối 3 tab nếu chưa bật mục nào; trong Visual Builder (`preview`) vẫn hiển thị đủ 3 tab dùng chung (`src/admin/builder/preview-products.js`) để chỉnh giao diện.
+  - Cập nhật `src/admin/ProductInformationEditor.jsx` & `src/admin/ProductsAdmin.jsx`: công tắc mặc định ở trạng thái tắt, hiển thị nhãn `· Đang hiện / · Đang ẩn` ngay trên từng tiêu đề mục và chuẩn hóa `detailVisibility` khi mở sửa/lưu sản phẩm.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: 272/272 unit test, ESLint 0 lỗi, Vite build & giới hạn bundle đạt.
+  - Playwright (`qa/product-information-tabs.spec.js`, `qa/product-detail-mobile.spec.js` tại `width-320` và `width-1440`): đạt toàn bộ.
+- **Ảnh hưởng database**: Không thay đổi schema, security rules hay xóa dữ liệu production; sản phẩm cũ chưa bật `detailVisibility` sẽ ẩn 3 mục cho đến khi admin bật và lưu.
+
 ## 25/11/2026 — Đồng bộ Admin ↔ Website, sửa thao tác chọn Preview và nâng cấp trải nghiệm trang Chi tiết sản phẩm
 
 - **Lý do**: Thực hiện các hạng mục rà soát đồng bộ giữa Admin/Visual Builder và Website thật, đồng thời nâng cấp trải nghiệm trang Chi tiết sản phẩm theo chuẩn các trang thương mại điện tử mỹ phẩm cao cấp.

@@ -12,6 +12,7 @@ export const PREVIEW_PRODUCTS = [1, 2, 3].map((number) => ({
   ],
   image2: "/preview/product.svg",
   description: "Mô tả mẫu để xem bố cục sản phẩm.",
+  detailVisibility: { description: true, specifications: true, usage: true },
   detailSections: [
     {
       id: `preview-${number}-desc-1`,

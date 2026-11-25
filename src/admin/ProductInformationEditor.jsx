@@ -6,7 +6,7 @@ import "../styles/product-detail.css";
 import ImageField from "./ImageField";
 import ProductContentEditor from "./ProductContentEditor";
 import { useConfirm } from "./confirm-context";
-import { normalizeProductBlockText, PRODUCT_CONTENT_GROUPS } from "../lib/product-content";
+import { isProductContentGroupVisible, normalizeProductBlockText, PRODUCT_CONTENT_GROUPS } from "../lib/product-content";
 
 const hasBlockData = (item) => Boolean(item?.image?.trim() || item?.title?.trim() || item?.content?.trim());
 
@@ -92,7 +92,7 @@ export default function ProductInformationEditor({
 
       {Object.entries(PRODUCT_CONTENT_GROUPS).map(([group, label]) => {
         const blocks = sections.filter((item) => item.group === group);
-        const tabVisible = visibility?.[group] !== false;
+        const tabVisible = isProductContentGroupVisible(visibility, group);
         const groupHasData = blocks.some(hasBlockData);
 
         return (
@@ -108,6 +108,9 @@ export default function ProductInformationEditor({
               }}
             >
               <strong>{label}</strong>
+              <span className="admin-muted" style={{ marginLeft: 8, fontSize: 12, fontWeight: 500 }}>
+                {tabVisible ? "· Đang hiện" : "· Đang ẩn"}
+              </span>
             </summary>
 
             <div className="product-editor-heading">

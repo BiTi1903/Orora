@@ -21,7 +21,7 @@ import ProductInformation from "./ProductInformation";
 import ProductAssurances from "./ProductAssurances";
 import ProductReviews from "./ProductReviews";
 import ProductImageLightbox from "./ProductImageLightbox";
-import { productImages, productInformationBlocks, publishedProductReviews, secondaryProductImages, PRODUCT_CONTENT_GROUPS } from "../lib/product-content";
+import { isProductContentGroupVisible, productImages, productInformationBlocks, publishedProductReviews, secondaryProductImages, PRODUCT_CONTENT_GROUPS } from "../lib/product-content";
 import ConsultationDialog from "./ConsultationDialog";
 import OrderForm from "./OrderForm";
 import { availablePaymentMethods, formatProductPrice, formatVnd, parseVndPrice, purchaseChannelLabels, socialShopUrl } from "../lib/commerce";
@@ -856,7 +856,7 @@ function ProductDetail({
         </div></div>
       </section>
 
-      {Object.keys(PRODUCT_CONTENT_GROUPS).some((group) => product.detailVisibility?.[group] !== false) && <div className="product-detail-lower">
+      {(preview || Object.keys(PRODUCT_CONTENT_GROUPS).some((group) => isProductContentGroupVisible(product.detailVisibility, group))) && <div className="product-detail-lower">
         <ProductInformation key={`${product.id||product.slug}:${ps.informationTabs?.defaultTab||"description"}`} settings={ps.informationTabs} sections={sections} visibility={product.detailVisibility} css={css} preview={preview} select={select} selectedClass={selectedClass} textProps={textProps} />
       </div>}
       <ProductReviews product={product} textProps={textProps} />

@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 import {mount,render,fit} from './fixtures';
 test('product information shows just the selected tab with keyboard controls and editable admin labels',async({page})=>{
  const errors=[];page.on('pageerror',error=>errors.push(error.message));
- await mount(page,`import Info from '/src/components/ProductInformation.jsx';import Settings from '/src/admin/builder/InformationTabsSettings.jsx';import Glass from '/src/components/MobileGlass.jsx';import '/src/styles/product-detail.css';function Fixture(){const [settings,setSettings]=R.useState({});return R.createElement(R.Fragment,null,R.createElement(Glass),R.createElement(Settings,{value:settings,onChange:patch=>setSettings(v=>({...v,...patch}))}),R.createElement('main',null,R.createElement(Info,{key:settings.defaultTab||'description',settings,sections:[{id:'d',group:'description',title:'Mô tả',content:'Mô tả sản phẩm đầy đủ.'},{id:'s',group:'specifications',title:'Thành phần',content:'Thông số sản phẩm riêng.'},{id:'u',group:'usage',title:'Hướng dẫn sử dụng',content:'Hướng dẫn dùng sản phẩm.'}],css:()=>({}),select:()=>()=>{},selectedClass:()=>''})))};${render('R.createElement(Fixture)')}`,{'hooks/useHomeContent.js':'export default function home(){return {loading:false}}'});
+ await mount(page,`import Info from '/src/components/ProductInformation.jsx';import Settings from '/src/admin/builder/InformationTabsSettings.jsx';import Glass from '/src/components/MobileGlass.jsx';import '/src/styles/product-detail.css';function Fixture(){const [settings,setSettings]=R.useState({});return R.createElement(R.Fragment,null,R.createElement(Glass),R.createElement(Settings,{value:settings,onChange:patch=>setSettings(v=>({...v,...patch}))}),R.createElement('main',null,R.createElement(Info,{key:settings.defaultTab||'description',settings,visibility:{description:true,specifications:true,usage:true},sections:[{id:'d',group:'description',title:'Mô tả',content:'Mô tả sản phẩm đầy đủ.'},{id:'s',group:'specifications',title:'Thành phần',content:'Thông số sản phẩm riêng.'},{id:'u',group:'usage',title:'Hướng dẫn sử dụng',content:'Hướng dẫn dùng sản phẩm.'}],css:()=>({}),select:()=>()=>{},selectedClass:()=>''})))};${render('R.createElement(Fixture)')}`,{'hooks/useHomeContent.js':'export default function home(){return {loading:false}}'});
  const description=page.getByRole('tab',{name:'Mô tả',exact:true}),spec=page.getByRole('tab',{name:'Thông số',exact:true});
  await expect(description).toHaveAttribute('aria-selected','true');await expect(page.getByRole('tabpanel')).toHaveCount(1);
  await expect(page.getByText('Thông số sản phẩm riêng.',{exact:true})).toBeHidden();
@@ -17,7 +17,7 @@ test('product information shows just the selected tab with keyboard controls and
 
 test('long ingredients span the grid and short facts stack cleanly on mobile',async({page})=>{
  const ingredients='Thành phần hoạt tính: '+ 'Chiết xuất thực vật, dưỡng ẩm và chăm sóc da. '.repeat(24);
- await mount(page,`import Info from '/src/components/ProductInformation.jsx';import '/src/styles/product-detail.css';import '/src/styles/product-detail-mobile.css';${render(`R.createElement('main',{className:'product-detail'},R.createElement(Info,{settings:{defaultTab:'specifications'},sections:[{id:'ingredients',group:'specifications',title:'Thành phần',content:${JSON.stringify(ingredients)}},{id:'size',group:'specifications',title:'Dung tích',content:'150 ml'},{id:'origin',group:'specifications',title:'Xuất xứ',content:'Nhật Bản'}],css:()=>({}),select:()=>()=>{},selectedClass:()=>''}))`)}`);
+ await mount(page,`import Info from '/src/components/ProductInformation.jsx';import '/src/styles/product-detail.css';import '/src/styles/product-detail-mobile.css';${render(`R.createElement('main',{className:'product-detail'},R.createElement(Info,{settings:{defaultTab:'specifications'},visibility:{specifications:true},sections:[{id:'ingredients',group:'specifications',title:'Thành phần',content:${JSON.stringify(ingredients)}},{id:'size',group:'specifications',title:'Dung tích',content:'150 ml'},{id:'origin',group:'specifications',title:'Xuất xứ',content:'Nhật Bản'}],css:()=>({}),select:()=>()=>{},selectedClass:()=>''}))`)}`);
  const rows=page.locator('.product-detail-row');
  await expect(rows).toHaveCount(3);await expect(rows.first()).toContainText(ingredients);
  const bounds=await rows.evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width};}));
@@ -52,6 +52,11 @@ test('product detail editor adds image blocks, applies text effects and hides in
    'lib/cloudinary.js':'export const cloudinaryConfigured=false;export const uploadImage=async()=>"";',
   });
  const editor = page.getByRole('region',{name:'Nội dung chi tiết sản phẩm'});
+ // All 3 tabs are hidden by default until explicitly enabled
+ await expect(page.getByRole('tablist')).toHaveCount(0);
+ await editor.getByRole('switch',{name:'Hiển thị Mô tả'}).check();
+ await expect(page.getByRole('tab',{name:'Mô tả',exact:true})).toBeVisible();
+ await expect(page.getByRole('tab',{name:'Thông số',exact:true})).toHaveCount(0);
  const imageFields = editor.getByRole('textbox',{name:/Mô tả · Ảnh/});
  await expect(imageFields).toHaveCount(1);
  await imageFields.first().fill('/detail-image.svg');
@@ -80,13 +85,13 @@ test('product detail editor adds image blocks, applies text effects and hides in
   await editor.getByRole('button',{name:'Xóa mục',exact:true}).last().click();
   await page.getByRole('dialog',{name:'Xóa mục nội dung'}).getByRole('button',{name:'Xóa mục',exact:true}).click();
   await expect(images).toHaveCount(1);
+  await editor.locator('summary').filter({hasText:/^Thông số/}).click();
+  await editor.getByRole('switch',{name:'Hiển thị Thông số'}).check();
+  await editor.locator('summary').filter({hasText:/^Mô tả/}).click();
   await editor.getByRole('switch',{name:'Hiển thị Mô tả'}).uncheck();
   await expect(page.getByRole('tab',{name:'Mô tả',exact:true})).toHaveCount(0);
   await expect(page.getByRole('tab',{name:'Thông số',exact:true})).toHaveAttribute('aria-selected','true');
-  await editor.locator('summary').filter({hasText:/^Hướng dẫn sử dụng$/}).click();
-  await expect(editor.getByRole('textbox',{name:/Hướng dẫn sử dụng · Ảnh 1/})).toBeVisible();
-  await editor.getByRole('switch',{name:'Hiển thị Hướng dẫn sử dụng'}).uncheck();
-  await editor.locator('summary').filter({hasText:/^Thông số$/}).click();
+  await editor.locator('summary').filter({hasText:/^Thông số/}).click();
   await editor.getByRole('switch',{name:'Hiển thị Thông số'}).uncheck();
   await expect(page.getByRole('tablist')).toHaveCount(0);
   await fit(page);
@@ -116,7 +121,7 @@ test('block and caption switches, skeleton shimmer, and Visual Builder frame/mot
         block('specifications'),
         block('usage'),
       ]);
-      const [visibility, setVisibility] = R.useState({});
+      const [visibility, setVisibility] = R.useState({ description: true, specifications: true, usage: true });
       const [settings, setSettings] = R.useState({});
       return R.createElement('main', { className: 'admin-main' },
         R.createElement(Settings, { value: settings, onChange: (patch) => setSettings((old) => ({ ...old, ...patch })) }),

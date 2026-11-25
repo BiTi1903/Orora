@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import ProductContent from "./ProductContent";
 import { informationMediaShadow, informationTabSettings, isLongSpecification } from "../lib/product-information";
-import { groupedProductSections, normalizeProductBlockText, PRODUCT_CONTENT_GROUPS } from "../lib/product-content";
+import { groupedProductSections, isProductContentGroupVisible, normalizeProductBlockText, PRODUCT_CONTENT_GROUPS } from "../lib/product-content";
 import { responsiveImage } from "../lib/image-cdn";
 import { toCss } from "../lib/typography";
 import { useLocale, translatePhrase } from "../lib/i18n";
@@ -72,7 +72,9 @@ export default function ProductInformation({
   const [tabSwitches, setTabSwitches] = useState(0);
   const [replayTick, setReplayTick] = useState(0);
   const [replayingSkeleton, setReplayingSkeleton] = useState(false);
-  const keys = Object.keys(PRODUCT_CONTENT_GROUPS).filter((key) => visibility?.[key] !== false);
+  const keys = Object.keys(PRODUCT_CONTENT_GROUPS).filter((key) =>
+    preview ? visibility?.[key] !== false : isProductContentGroupVisible(visibility, key),
+  );
   const selected = keys.includes(active) ? active : keys[0];
   const panel = useRef(null);
 

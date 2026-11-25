@@ -138,3 +138,10 @@ export function formatProductInline(text,start,end,mark){
   if(selected.startsWith(open)&&selected.endsWith(close))return {text:text.slice(0,start)+selected.slice(open.length,-close.length)+text.slice(end),start,end:end-open.length-close.length};
   return {text:text.slice(0,start)+open+selected+close+text.slice(end),start:start+open.length,end:end+open.length};
 }
+export const isProductContentGroupVisible = (visibility, group) => visibility?.[group] === true;
+
+export function normalizeProductDetailVisibility(visibility = {}) {
+  return Object.fromEntries(
+    Object.keys(PRODUCT_CONTENT_GROUPS).map((group) => [group, visibility?.[group] === true]),
+  );
+}

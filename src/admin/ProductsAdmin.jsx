@@ -11,7 +11,7 @@ import { validateVolumeOptions } from "../lib/product-options";
 import ProductPoliciesSettings from "./ProductPoliciesSettings";
 import ProductReviewsEditor from "./ProductReviewsEditor";
 import ProductInformationEditor from "./ProductInformationEditor";
-import { productInformationBlocks, productSectionGroup, PRODUCT_CONTENT_GROUPS, secondaryProductImages } from "../lib/product-content";
+import { normalizeProductDetailVisibility, productInformationBlocks, productSectionGroup, PRODUCT_CONTENT_GROUPS, secondaryProductImages } from "../lib/product-content";
 import { useEffect, useRef, useState } from "react";
 import { explainError, getProducts, removeProduct, saveProduct, saveCategory, setProductCategory } from "../lib/api";
 import useCategories from "../hooks/useCategories";
@@ -22,6 +22,7 @@ const empty = {
   id: "", number: "", name: "", slug: "", price: "", image: "",
   image2: "", image3: "", image4: "", image5: "", image6: "",
   description: "", story: "", material: "", size: "", color: "", origin: "",
+  detailVisibility: { description: false, specifications: false, usage: false },
   active: true, categoryId: "",
 };
 
@@ -117,7 +118,14 @@ export default function ProductsAdmin() {
     setSections(withInformationSlots(savedSections));
     setReviews(Array.isArray(p.productReviews) ? p.productReviews.map((item) => ({ ...item, id: item.id || crypto.randomUUID() })) : []);
     setMedia(imageSlots(p)); setUploads({});
-    setForm({ ...empty, ...p, name: String(p.name || ""), price: String(p.price ?? ""), number: String(p.number || productNumber(p, items)) });
+    setForm({
+      ...empty,
+      ...p,
+      detailVisibility: normalizeProductDetailVisibility(p.detailVisibility),
+      name: String(p.name || ""),
+      price: String(p.price ?? ""),
+      number: String(p.number || productNumber(p, items)),
+    });
     setIsNew(false);
     setEditing(true);
     setMessage(null);
@@ -155,6 +163,7 @@ export default function ProductsAdmin() {
         size: "",
         color: "",
         origin: "",
+        detailVisibility: normalizeProductDetailVisibility(form.detailVisibility),
         detailSections: sections.filter((section) => section.image?.trim() || section.title?.trim() || section.content?.trim()),
         productReviews: reviews,
         volumeOptions: volumeOptions.map((option) => ({ ...option, label: option.label.trim(), price: option.price?.trim() || "" })),
