@@ -102,81 +102,52 @@ const COLLECTION_FIELD_MAP = {
 
 
 const PRODUCT_DETAIL_FIELD_MAP = {
-  pdWebsiteText: {type:"pdPurchaseOptions",styleKey:"purchaseOptions",label:"Website · Chữ nút đặt hàng"},
-  pdAddToCart: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Nút Thêm vào giỏ" },
-  pdTabDescription: {styleKey:"navigation",label:"Tab Mô tả"},
-  pdTabSpecifications: {styleKey:"navigation",label:"Tab Thông số"},
-  pdTabUsage: {styleKey:"navigation",label:"Tab Hướng dẫn sử dụng"},
-  pdInfoMedia: { styleKey: "informationTabs", label: "Nội dung · Khung ảnh & hiệu ứng" },
-  pdInfoCaption: { styleKey: "informationTabs", label: "Nội dung · Chú thích dưới ảnh" },
-  pdFacebookText: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Chữ nút Facebook" },
-  pdTiktokText: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Chữ nút TikTok" },
-  pdSelectionLabel: { styleKey: "selectionLabel", label: "Dung tích / số lượng — Nhãn", sample: "Dung tích" },
-  pdSelectionValue: { styleKey: "selectionValue", label: "Dung tích — Lựa chọn", sample: "100 ml" },
-  pdSubheading: { styleKey: "subheading", label: "Tên mục trong nội dung", sample: "Tên mục trong nội dung" },
-  pdPurchaseHeading: { styleKey: "purchaseHeading", label: "Chữ Chọn cách mua hàng", sample: "Chữ Chọn cách mua hàng" },
-  pdAssuranceTitle: { styleKey: "assuranceTitle", label: "Cam kết — Tiêu đề", sample: "Cam kết — Tiêu đề" },
-  pdAssuranceBody: { styleKey: "assuranceBody", label: "Cam kết — Nội dung", sample: "Cam kết — Nội dung" },
-  pdSloganTitle: { styleKey: "sloganTitle", label: "Card Slogan — Tiêu đề", sample: "Slogan" },
-  pdSloganBody: { styleKey: "sloganBody", label: "Card Slogan — Nội dung", sample: "Slogan do admin nhập" },
-  pdSloganCard: { styleKey: "sloganCard", label: "Card Slogan — Khung và biểu tượng" },
-  pdReviewTitle: { styleKey: "reviewTitle", label: "Đánh giá — Tiêu đề", sample: "Đánh giá — Tiêu đề" },
-  pdReviewName: { styleKey: "reviewName", label: "Đánh giá — Tên hiển thị", sample: "Đánh giá — Tên hiển thị" },
-  pdReviewBody: { styleKey: "reviewBody", label: "Đánh giá — Nội dung", sample: "Đánh giá — Nội dung" },
-  pdPurchaseOptions: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Form Mua ngay & Form đặt hàng" },
-  pdContactActions: { type: "pdContactActions", styleKey: "contactActions", label: "Thiết lập liên hệ" },
-  pdImage: {
-    type: "pdImage",
-    styleKey: "imageLayout",
-    label: "Ảnh chính",
-  },
-  pdThumbs: {
-    type: "pdThumbs",
-    styleKey: "thumbsLayout",
-    label: "Ảnh phụ",
-  },
-  pdNumber: {
-    styleKey: "number",
-    label: "Số thứ tự",
-    sample: "01",
-  },
-  pdName: {
-    styleKey: "name",
-    label: "Tên sản phẩm",
-    sample: "First Story",
-  },
-  pdPrice: {
-    styleKey: "price",
-    label: "Giá",
-    sample: "1.290.000đ",
-  },
+  /* ---- 1. Khung ảnh chính & ảnh phụ ---- */
+  pdImage: { type: "pdImage", styleKey: "imageLayout", label: "Ảnh chính" },
+  pdThumbs: { type: "pdThumbs", styleKey: "thumbsLayout", label: "Ảnh phụ" },
+
+  /* ---- 2. Thông tin, giá & dung tích ---- */
+  pdNumber: { styleKey: "number", label: "Số thứ tự", sample: "01" },
+  pdName: { styleKey: "name", label: "Tên sản phẩm", sample: "First Story" },
+  pdPrice: { styleKey: "price", label: "Giá", sample: "1.290.000đ" },
   pdDescription: {
     styleKey: "description",
     label: "Mô tả ngắn",
     sample: "A beautiful piece created for your everyday moments.",
   },
-  pdAboutTitle: {
-    styleKey: "aboutTitle",
-    label: "Tiêu đề nội dung sản phẩm",
-    sample: "Mô tả",
-  },
-  pdBody: {
-    styleKey: "body",
-    label: "Đoạn câu chuyện sản phẩm",
-    sample: "First Story is created with a simple idea in mind.",
-  },
-  pdRowLabel: {
-    styleKey: "rowLabel",
-    label: "Tên thông tin (Material, Size…)",
-    sample: "Material",
-  },
-  pdRowValue: {
-    styleKey: "rowValue",
-    label: "Nội dung Material / Size / Color / Origin",
-    sample: "Nội dung dùng chung font và size",
-  },
+  pdSelectionLabel: { styleKey: "selectionLabel", label: "Dung tích / số lượng — Nhãn", sample: "Dung tích" },
+  pdSelectionValue: { styleKey: "selectionValue", label: "Dung tích — Lựa chọn", sample: "100 ml" },
 
-  /* ---- Mục "Sản phẩm khác" cột bên trang chi tiết ---- */
+  /* ---- 3. Kênh mua hàng & liên hệ ---- */
+  pdPurchaseOptions: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Thanh Mua ngay & Kênh mua" },
+  pdPurchaseHeading: { styleKey: "purchaseHeading", label: "Chữ Chọn cách mua hàng", sample: "Chữ Chọn cách mua hàng" },
+  pdWebsiteText: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Website · Chữ nút đặt hàng" },
+  pdAddToCart: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Nút Thêm vào giỏ" },
+  pdFacebookText: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Chữ nút Facebook" },
+  pdTiktokText: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Chữ nút TikTok" },
+  pdContactActions: { type: "pdContactActions", styleKey: "contactActions", label: "Thiết lập liên hệ" },
+
+  /* ---- 4. Cam kết & Slogan ---- */
+  pdAssuranceTitle: { styleKey: "assuranceTitle", label: "Cam kết — Tiêu đề", sample: "Cam kết — Tiêu đề" },
+  pdAssuranceBody: { styleKey: "assuranceBody", label: "Cam kết — Nội dung", sample: "Cam kết — Nội dung" },
+  pdSloganCard: { styleKey: "sloganCard", label: "Card Slogan — Khung và biểu tượng" },
+  pdSloganTitle: { styleKey: "sloganTitle", label: "Card Slogan — Tiêu đề", sample: "Slogan" },
+  pdSloganBody: { styleKey: "sloganBody", label: "Card Slogan — Nội dung", sample: "Slogan do admin nhập" },
+
+  /* ---- 5. Nội dung chi tiết (3 tab) ---- */
+  pdTabDescription: { styleKey: "navigation", label: "Tab Mô tả" },
+  pdTabSpecifications: { styleKey: "navigation", label: "Tab Thông số" },
+  pdTabUsage: { styleKey: "navigation", label: "Tab Hướng dẫn sử dụng" },
+  pdAboutTitle: { styleKey: "aboutTitle", label: "Tiêu đề nội dung sản phẩm", sample: "Mô tả" },
+  pdInfoMedia: { styleKey: "informationTabs", label: "Nội dung · Khung ảnh & hiệu ứng" },
+  pdInfoCaption: { styleKey: "informationTabs", label: "Nội dung · Chú thích (Đầu mục & Nội dung)" },
+
+  /* ---- 6. Đánh giá ---- */
+  pdReviewTitle: { styleKey: "reviewTitle", label: "Đánh giá — Tiêu đề", sample: "Đánh giá — Tiêu đề" },
+  pdReviewName: { styleKey: "reviewName", label: "Đánh giá — Tên hiển thị", sample: "Đánh giá — Tên hiển thị" },
+  pdReviewBody: { styleKey: "reviewBody", label: "Đánh giá — Nội dung", sample: "Đánh giá — Nội dung" },
+
+  /* ---- 7. Mục "Sản phẩm khác" cột bên trang chi tiết ---- */
   relTitle: {
     styleKey: "relTitle",
     textKey: "text",

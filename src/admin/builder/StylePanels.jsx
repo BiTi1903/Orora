@@ -148,9 +148,9 @@ export function StylePanel({
       </>
     ) : section === "productdetail" ? (
       <>
-        {selected !== "pdPurchaseOptions" && (
+        {!["pdPurchaseOptions", "pdWebsiteText", "pdAddToCart", "pdFacebookText", "pdTiktokText"].includes(selected) && (
           <PurchaseOptionsSettings
-            initialGroup="checkout"
+            initialGroup="subtotal"
             value={productDetail.purchaseOptions || {}}
             onChange={(patch) =>
               onChange({ purchaseOptions: { ...productDetail.purchaseOptions, ...patch } })
@@ -163,7 +163,7 @@ export function StylePanel({
             onChange={(patch) => onChange({ loadError: { ...productDetail.loadError, ...patch } })}
           />
         </InspectorGroup>
-        {!["pdInfoMedia", "pdInfoCaption"].includes(selected) && (
+        {!["pdInfoMedia", "pdInfoCaption", "pdTabDescription", "pdTabSpecifications", "pdTabUsage"].includes(selected) && (
           <InspectorGroup title="Nội dung chi tiết sản phẩm">
             <InformationTabsSettings
               value={productDetail.informationTabs}

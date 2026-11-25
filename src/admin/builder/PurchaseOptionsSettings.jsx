@@ -4,7 +4,7 @@ import { useId } from "react";
 import { purchaseChannelLabels } from "../../lib/commerce";
 import { SettingGroup, StyleTypographyBlock, ColorField } from "./ui";
 import { PURCHASE_BUTTON_COLOR_DEFAULTS } from "../controls/color-defaults";
-export default function PurchaseOptionsSettings({ value = {}, onChange, initialGroup = "subtotal" }) {
+export default function PurchaseOptionsSettings({ value = {}, onChange, initialGroup = "subtotal", includeCheckoutForm = false }) {
   const id = useId();
   const labels = purchaseChannelLabels(value);
   return (
@@ -89,45 +89,60 @@ export default function PurchaseOptionsSettings({ value = {}, onChange, initialG
           ))}
         </SettingGroup>
       </InspectorGroup>
-      <InspectorGroup title="Form đặt hàng trên website" open={initialGroup === "checkout"}>
-        <CheckoutSettings value={value} onChange={onChange} />
-        <SettingGroup title="Nút xác nhận trong form đặt hàng">
-          {[
-            ["orderSubmitLabel", "Chữ nút gửi đơn", "Đặt hàng ngay"],
-            ["orderBusyLabel", "Chữ khi đang gửi đơn", "Đang gửi đơn hàng…"],
-            [
-              "orderTimeoutLabel",
-              "Thông báo khi chờ quá lâu",
-              "Chưa nhận được phản hồi. Bạn có thể thử gửi lại với cùng thông tin hoặc tra cứu đơn hàng để kiểm tra.",
-            ],
-          ].map(([key, label, placeholder]) => (
-            <div className="builder-field" key={key}>
-              <label htmlFor={`${id}-${key}`}>{label}</label>
-              <input
-                id={`${id}-${key}`}
-                maxLength={key === "orderTimeoutLabel" ? 240 : 100}
-                value={value[key] || ""}
-                placeholder={placeholder}
-                onChange={(event) => onChange({ [key]: event.target.value })}
-              />
-            </div>
-          ))}
-          <small className="builder-help">
-            Khi gửi sẽ hiện ba chấm nhỏ cùng màu chữ, giữ đơn không bị gửi lặp. Chỉ báo thành công sau khi máy
-            chủ xác nhận.
+      {includeCheckoutForm ? (
+        <InspectorGroup title="Form đặt hàng trên website" open={initialGroup === "checkout"}>
+          <CheckoutSettings value={value} onChange={onChange} />
+          <SettingGroup title="Nút xác nhận trong form đặt hàng">
+            {[
+              ["orderSubmitLabel", "Chữ nút gửi đơn", "Đặt hàng ngay"],
+              ["orderBusyLabel", "Chữ khi đang gửi đơn", "Đang gửi đơn hàng…"],
+              [
+                "orderTimeoutLabel",
+                "Thông báo khi chờ quá lâu",
+                "Chưa nhận được phản hồi. Bạn có thể thử gửi lại với cùng thông tin hoặc tra cứu đơn hàng để kiểm tra.",
+              ],
+            ].map(([key, label, placeholder]) => (
+              <div className="builder-field" key={key}>
+                <label htmlFor={`${id}-${key}`}>{label}</label>
+                <input
+                  id={`${id}-${key}`}
+                  maxLength={key === "orderTimeoutLabel" ? 240 : 100}
+                  value={value[key] || ""}
+                  placeholder={placeholder}
+                  onChange={(event) => onChange({ [key]: event.target.value })}
+                />
+              </div>
+            ))}
+            <small className="builder-help">
+              Khi gửi sẽ hiện ba chấm nhỏ cùng màu chữ, giữ đơn không bị gửi lặp. Chỉ báo thành công sau khi máy
+              chủ xác nhận.
+            </small>
+          </SettingGroup>
+          <StyleTypographyBlock
+            style={value.orderSubmitStyle || {}}
+            onStyleChange={(patch) => onChange({ orderSubmitStyle: { ...value.orderSubmitStyle, ...patch } })}
+            title="Chữ nút gửi đơn"
+          />
+          <StyleTypographyBlock
+            style={value.loadingStyle || {}}
+            onStyleChange={(patch) => onChange({ loadingStyle: { ...value.loadingStyle, ...patch } })}
+            title="Chữ khi đang gửi đơn"
+          />
+        </InspectorGroup>
+      ) : (
+        <div className="info-builder-subdetails">
+          <small className="builder-help" style={{ marginBottom: 8 }}>
+            Form đặt hàng có mục chỉnh riêng để tránh chồng chéo trong Chi tiết sản phẩm.
           </small>
-        </SettingGroup>
-        <StyleTypographyBlock
-          style={value.orderSubmitStyle || {}}
-          onStyleChange={(patch) => onChange({ orderSubmitStyle: { ...value.orderSubmitStyle, ...patch } })}
-          title="Chữ nút gửi đơn"
-        />
-        <StyleTypographyBlock
-          style={value.loadingStyle || {}}
-          onStyleChange={(patch) => onChange({ loadingStyle: { ...value.loadingStyle, ...patch } })}
-          title="Chữ khi đang gửi đơn"
-        />
-      </InspectorGroup>
+          <button
+            type="button"
+            className="info-replay-btn"
+            onClick={() => window.dispatchEvent(new CustomEvent("orora:builder-section", { detail: "orderform" }))}
+          >
+            Mở trình sửa Form đặt hàng →
+          </button>
+        </div>
+      )}
       <InspectorGroup title="Màu và kiểu chữ các nút">
         <SettingGroup title="Màu nền nút mua hàng">
           {[

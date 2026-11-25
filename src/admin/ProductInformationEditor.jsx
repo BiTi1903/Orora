@@ -224,21 +224,19 @@ export default function ProductInformationEditor({
                     onBusyChange={(busy) => onUpload(item.id, busy)}
                   />
 
-                  <details>
-                    <summary>
-                      {item.title || item.content ? "Chỉnh chữ sau ảnh" : "Thêm chữ sau ảnh (tùy chọn)"}
-                    </summary>
+                  <label className="admin-check">
+                    <input
+                      type="checkbox"
+                      role="switch"
+                      checked={captionVisible}
+                      disabled={disabled}
+                      onChange={(event) => update(item.id, { showText: event.target.checked })}
+                    />
+                    Hiển thị chú thích khối {index + 1}
+                  </label>
+
+                  {captionVisible && (
                     <fieldset className="product-media-text-controls" disabled={disabled}>
-                      <label className="admin-check" style={{ marginBottom: 12 }}>
-                        <input
-                          type="checkbox"
-                          role="switch"
-                          checked={captionVisible}
-                          disabled={disabled}
-                          onChange={(event) => update(item.id, { showText: event.target.checked })}
-                        />
-                        Hiển thị chú thích khối {index + 1}
-                      </label>
                       <div className="admin-field">
                         <label>
                           Đầu mục
@@ -253,11 +251,12 @@ export default function ProductInformationEditor({
                         label={`${label} · Nội dung khối ${index + 1}`}
                         value={item.content || ""}
                         escapedLineBreaks
+                        showPreview={false}
                         disabled={disabled}
                         onChange={(content) => update(item.id, { content })}
                       />
                     </fieldset>
-                  </details>
+                  )}
                 </div>
               );
             })}

@@ -148,7 +148,14 @@ export function ProductDetailSettings({ selected, data, productDetail, onChange,
           </label>
         </SettingGroup>
         <p className="builder-help">Màu và kiểu chữ dùng chung cho ba tab để giữ giao diện đồng nhất.</p>
-        <StyleTypographyBlock style={productDetail.navigation || {}} onStyleChange={onStyleChange} />
+        <StyleTypographyBlock title="Kiểu chữ thanh tab" style={productDetail.navigation || {}} onStyleChange={onStyleChange} />
+        <SettingGroup title="Khung tab, ảnh, chú thích & hiệu ứng">
+          <InformationTabsSettings
+            openSection="tabs"
+            value={tabs}
+            onChange={(patch) => onChange({ informationTabs: { ...tabs, ...patch } })}
+          />
+        </SettingGroup>
       </>
     );
   }

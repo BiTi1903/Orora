@@ -58,7 +58,6 @@ test('product detail editor adds image blocks, applies text effects and hides in
  await editor.getByRole('button',{name:'+ Thêm mục · Mô tả',exact:true}).click();
  await expect(imageFields).toHaveCount(2);
  await imageFields.nth(1).fill('/detail-image.svg');
-  await editor.getByText('Thêm chữ sau ảnh (tùy chọn)',{exact:true}).first().click();
   await expect(editor.getByLabel('Văn bản thay thế cho ảnh')).toHaveCount(0);
   await editor.getByLabel('Đầu mục',{exact:true}).first().fill('Điểm nổi bật');
   await editor.getByRole('textbox',{name:'Mô tả · Nội dung khối 1',exact:true}).fill('Chữ ngay sau ảnh thứ nhất.\\nDòng thứ hai.');
@@ -136,11 +135,11 @@ test('block and caption switches, skeleton shimmer, and Visual Builder frame/mot
   await expect(infoRoot).toHaveAttribute('data-tab-transition', 'slide-up');
   await expect(firstImage).toHaveAttribute('data-image-state', 'loading');
 
+  await firstImage.scrollIntoViewIfNeeded();
   releaseImage();
   await expect(firstImage).toHaveAttribute('data-image-state', 'ready');
 
   const editor = page.getByRole('region', { name: 'Nội dung chi tiết sản phẩm' });
-  await editor.getByText('Chỉnh chữ sau ảnh', { exact: true }).first().click();
   await editor.getByRole('switch', { name: 'Hiển thị chú thích khối 1' }).uncheck();
   await expect(infoRoot.getByText('Nội dung chú thích.')).toHaveCount(0);
   await expect(firstImage).toBeVisible();

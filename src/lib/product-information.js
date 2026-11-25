@@ -39,6 +39,10 @@ export function informationTabSettings(value = {}) {
     labels,
     defaultTab: Object.hasOwn(PRODUCT_CONTENT_GROUPS, value.defaultTab) ? value.defaultTab : "description",
     emptyText: text(value.emptyText, "Thông tin đang được cập nhật."),
+    tabBarBg: color(value.tabBarBg, ""),
+    tabActiveBg: color(value.tabActiveBg, ""),
+    tabActiveColor: color(value.tabActiveColor, ""),
+    tabInactiveColor: color(value.tabInactiveColor, ""),
 
     imageRatio: "3 / 2",
     imageFit: pick(value.imageFit, IMAGE_FITS, "cover"),

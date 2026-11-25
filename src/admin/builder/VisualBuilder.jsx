@@ -233,6 +233,17 @@ export default function VisualBuilder({
     setSelected(SECTION_DEFAULT_SELECTED[key] || "title");
   };
 
+  useEffect(() => {
+    const onJump = (event) => {
+      if (typeof event.detail === "string" && event.detail) {
+        setActiveSection(event.detail);
+        setSelected(SECTION_DEFAULT_SELECTED[event.detail] || "title");
+      }
+    };
+    window.addEventListener("orora:builder-section", onJump);
+    return () => window.removeEventListener("orora:builder-section", onJump);
+  }, []);
+
   const selectedData = useMemo(
     () =>
       resolveSelectedData({

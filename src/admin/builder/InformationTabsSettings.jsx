@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { ColorField, StyleTypographyBlock } from "./ui";
 import { PRODUCT_CONTENT_GROUPS } from "../../lib/product-content";
 import { informationTabSettings } from "../../lib/product-information";
@@ -48,6 +48,17 @@ export default function InformationTabsSettings({ value = {}, onChange, openSect
   const initialTab = TABS.some(([key]) => key === openSection) ? openSection : "tabs";
   const [tab, setTab] = useState(initialTab);
   const [captionSub, setCaptionSub] = useState("title");
+
+  useEffect(() => {
+    const onSub = (event) => {
+      if (["title", "body", "box"].includes(event.detail)) {
+        setTab("caption");
+        setCaptionSub(event.detail);
+      }
+    };
+    window.addEventListener("orora:info-caption-sub", onSub);
+    return () => window.removeEventListener("orora:info-caption-sub", onSub);
+  }, []);
 
   const updateWithReplay = (patch) => {
     onChange(patch);
@@ -107,6 +118,33 @@ export default function InformationTabsSettings({ value = {}, onChange, openSect
               onChange={(e) => onChange({ emptyText: e.target.value })}
             />
           </label>
+          <details className="info-builder-subdetails">
+            <summary>Màu thanh tab & tab đang chọn</summary>
+            <ColorField
+              label="Nền thanh tab"
+              value={value.tabBarBg}
+              fallback="#fff4f8"
+              onChange={(tabBarBg) => onChange({ tabBarBg })}
+            />
+            <ColorField
+              label="Nền tab đang chọn"
+              value={value.tabActiveBg}
+              fallback="#e2678f"
+              onChange={(tabActiveBg) => onChange({ tabActiveBg })}
+            />
+            <ColorField
+              label="Chữ tab đang chọn"
+              value={value.tabActiveColor}
+              fallback="#ffffff"
+              onChange={(tabActiveColor) => onChange({ tabActiveColor })}
+            />
+            <ColorField
+              label="Chữ tab chưa chọn"
+              value={value.tabInactiveColor}
+              fallback="#5a2e42"
+              onChange={(tabInactiveColor) => onChange({ tabInactiveColor })}
+            />
+          </details>
         </div>
       )}
 

@@ -69,17 +69,24 @@ export default function ProductInformation({
   const id = useId();
   const config = informationTabSettings(settings);
   const [active, setActive] = useState(config.defaultTab);
+  const [tabSwitches, setTabSwitches] = useState(0);
   const [replayTick, setReplayTick] = useState(0);
   const [replayingSkeleton, setReplayingSkeleton] = useState(false);
   const keys = Object.keys(PRODUCT_CONTENT_GROUPS).filter((key) => visibility?.[key] !== false);
   const selected = keys.includes(active) ? active : keys[0];
   const panel = useRef(null);
 
+  const selectTab = (nextKey) => {
+    if (nextKey !== selected) setTabSwitches((count) => count + 1);
+    setActive(nextKey);
+  };
+
   useEffect(() => {
     if (!preview) return;
     let timer = 0;
     const onReplay = () => {
       window.clearTimeout(timer);
+      setTabSwitches((count) => count + 1);
       setReplayingSkeleton(true);
       setReplayTick((tick) => tick + 1);
       timer = window.setTimeout(() => {
@@ -135,7 +142,7 @@ export default function ProductInformation({
               : null;
     if (next === null) return;
     event.preventDefault();
-    setActive(keys[next]);
+    selectTab(keys[next]);
     event.currentTarget.parentElement.querySelectorAll('[role="tab"]')[next]?.focus({ preventScroll: true });
   };
 
@@ -162,6 +169,10 @@ export default function ProductInformation({
     "--info-skeleton-base": config.skeletonBaseColor,
     "--info-skeleton-highlight": config.skeletonHighlightColor,
     "--info-motion-ms": `${config.motionDuration}ms`,
+    ...(config.tabBarBg ? { "--info-tab-bar-bg": config.tabBarBg } : {}),
+    ...(config.tabActiveBg ? { "--info-tab-active-bg": config.tabActiveBg } : {}),
+    ...(config.tabActiveColor ? { "--info-tab-active-color": config.tabActiveColor } : {}),
+    ...(config.tabInactiveColor ? { "--info-tab-inactive-color": config.tabInactiveColor } : {}),
   };
 
   return (
@@ -183,7 +194,7 @@ export default function ProductInformation({
             aria-selected={selected === key}
             aria-controls={`${id}-${key}`}
             tabIndex={selected === key ? 0 : -1}
-            onClickCapture={() => setActive(key)}
+            onClickCapture={() => selectTab(key)}
             onKeyDown={handleKey}
           >
             <strong {...textProps(tabKeys[key], "navigation")}>{tr(config.labels[key])}</strong>
@@ -215,7 +226,10 @@ export default function ProductInformation({
               </h2>
             </div>
             {selected === key && (
-              <div key={`${key}-body-${replayTick}`} className="product-information-panel-body">
+              <div
+                key={`${key}-body-${replayTick}`}
+                className={`product-information-panel-body${tabSwitches > 0 ? " is-tab-switching" : ""}`}
+              >
                 {!groups[key].length && <p className="product-information-empty">{tr(config.emptyText)}</p>}
                 {groups[key].length > 0 && (
                   <div
@@ -282,17 +296,31 @@ export default function ProductInformation({
                             >
                               {showTitle && (
                                 <h3
-                                  {...textProps("pdSubheading", "subheading")}
                                   style={{ ...css("subheading"), ...captionTitleCss }}
+                                  onClick={
+                                    preview
+                                      ? (event) => {
+                                          window.dispatchEvent(new CustomEvent("orora:info-caption-sub", { detail: "title" }));
+                                          select("pdInfoCaption")(event);
+                                        }
+                                      : undefined
+                                  }
                                 >
                                   {tr(title)}
                                 </h3>
                               )}
                               {section.content?.trim() && (
                                 <div
-                                  {...textProps("pdBody", "body")}
-                                  className={`product-section-content ${selectedClass("pdBody")}`}
+                                  className="product-section-content"
                                   style={{ ...css("body"), ...captionBodyCss }}
+                                  onClick={
+                                    preview
+                                      ? (event) => {
+                                          window.dispatchEvent(new CustomEvent("orora:info-caption-sub", { detail: "body" }));
+                                          select("pdInfoCaption")(event);
+                                        }
+                                      : undefined
+                                  }
                                 >
                                   <ProductContent text={tr(normalizeProductBlockText(section.content))} />
                                 </div>
