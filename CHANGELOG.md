@@ -1,3 +1,17 @@
+## 25/11/2026 — Thêm tooltip & toast "Đã thêm vào giỏ · Xem giỏ", và định dạng lại nút "Tải lại địa chỉ"
+
+- **Lý do**: Chủ website yêu cầu tăng phản hồi cho nút biểu tượng thêm vào giỏ (tooltip + `aria-label` + toast có nút mở giỏ ngay) và định dạng lại nút "Tải lại địa chỉ" trong form đặt hàng khỏi kiểu nút trần mặc định của trình duyệt.
+- **Thay đổi chính**:
+  - **Nút thêm vào giỏ & Toast (`src/components/ProductDetail.jsx`, `src/styles/product-detail.css`, `src/components/ShopCart.jsx`, `src/styles/shop-cart.css`)**:
+    - Thêm tooltip nổi khi rê chuột/focus (`data-tooltip` kết hợp `aria-label` và `title` đồng bộ nhãn từ cấu hình Admin) trên nút giỏ hàng cạnh nút Mua ngay.
+    - Nâng cấp thông báo `.cart-announcement` thành toast `"Đã thêm vào giỏ · Xem giỏ"` (hiển thị 3,6 giây, bấm `Xem giỏ` mở ngay giỏ hàng, tự tránh đè thanh điều hướng & thanh Mua ngay trên mobile).
+  - **Form đặt hàng (`src/components/OrderFormFields.jsx`, `src/styles/checkout.css`)**:
+    - Bọc lỗi tải địa chỉ bằng `.order-error-action` và gắn class `.order-retry-btn` cho nút `Tải lại địa chỉ` đồng bộ màu viền, bo góc và trạng thái hover/focus của form đặt hàng.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: 272/272 unit test, ESLint 0 lỗi, Vite build & giới hạn bundle đạt.
+  - Playwright (`qa/cart.spec.js`, `qa/editor-checkout.spec.js` tại `width-320` và `width-1440`): đạt toàn bộ.
+- **Ảnh hưởng database**: Không thay đổi database hay security rules.
+
 ## 25/11/2026 — Chuyển 3 mục Mô tả / Thông số / Hướng dẫn sử dụng sang mặc định tắt, chỉ hiện khi bật ở từng sản phẩm
 
 - **Lý do**: Chủ website yêu cầu 3 mục (`Mô tả`, `Thông số`, `Hướng dẫn sử dụng`) không tự hiển thị mặc định nữa; chỉ khi bấm bật công tắc hiển thị trong chi tiết từng sản phẩm thì mục đó mới hiện trên trang thật, trong khi cấu trúc và giao diện 3 mục vẫn giữ là thuộc tính dùng chung.

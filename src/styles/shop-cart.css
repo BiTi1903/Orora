@@ -9,8 +9,17 @@
 .cart-row button:hover:not(:disabled) { border-color:var(--cart-accent,var(--rose-deep)); color:var(--cart-accent,var(--rose-deep)); }
 .cart-flying { position:fixed; width:44px; height:44px; background:var(--rose,#dc83a3); border:2px solid white; border-radius:50%; z-index:99999; pointer-events:none; overflow:hidden; }
 .cart-flying img { width:100%; height:100%; object-fit:cover; }
-.cart-announcement:not(:empty) { position:fixed; bottom:100px; left:50%; transform:translateX(-50%); z-index:1100; background:#181316; border:1px solid #2e2429; border-radius:999px; padding:10px 18px; color:#fff; font-size:13px; box-shadow:0 12px 30px rgba(24,14,20,.22); }
-@media(max-width:768px) { .shop-cart { max-height:85vh; max-height:85dvh; inset:0; margin:auto; border-radius:var(--cart-modalRadius,20px); } }
+.cart-announcement:not(:empty) { position:fixed; bottom:28px; left:50%; transform:translateX(-50%); z-index:1250; display:inline-flex; align-items:center; gap:8px; max-width:calc(100vw - 24px); background:#24141c; border:1px solid rgba(255,255,255,.14); border-radius:999px; padding:10px 16px; color:#fff; font:500 13px/1.35 var(--font-body); box-shadow:0 14px 32px rgba(24,14,20,.28); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); animation:cart-toast-in .22s ease-out both; }
+.cart-toast-sep { opacity:.45; }
+.cart-toast-action { padding:2px 4px; border:0; background:transparent; color:#ff9ebe; font:600 13px/1.3 var(--font-body); text-decoration:underline; text-underline-offset:3px; cursor:pointer; white-space:nowrap; }
+.cart-toast-action:hover { color:#ffd1e0; }
+.cart-toast-action:focus-visible { outline:2px solid #ff9ebe; outline-offset:2px; border-radius:4px; }
+@keyframes cart-toast-in { from { opacity:0; transform:translate(-50%,10px); } to { opacity:1; transform:translate(-50%,0); } }
+@media(max-width:768px) {
+  .cart-announcement:not(:empty) { bottom:calc(16px + var(--mobile-shop-nav-height,64px) + var(--product-mobile-buy-height,0px)); }
+  .shop-cart { max-height:85vh; max-height:85dvh; inset:0; margin:auto; border-radius:var(--cart-modalRadius,20px); }
+}
+@media(prefers-reduced-motion:reduce) { .cart-announcement:not(:empty) { animation:none; } }
 .cart-count { position:absolute; right:12%; top:2px; min-width:16px; padding:2px; border-radius:10px; background:var(--rose-deep); color:white; font:600 10px/1.2 sans-serif; text-align:center; }
 .shop-cart button { color:var(--cart-accent,var(--rose-deep)); }
 body:has(dialog[open]:not(.shop-cart)) .desktop-cart { visibility:hidden; }

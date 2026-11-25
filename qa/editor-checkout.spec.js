@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {mount,render,fit} from './fixtures';
-const product={id:'gel',slug:'gel',name:'Deodorant Mist - Bodyplex',price:'600000',description:'Xịt khử mùi dịu nhẹ',volumeOptions:[{id:'large',label:'220ml',price:'600000'},{id:'small',label:'180ml',price:'450000'}]};
+const product={id:'gel',slug:'gel',name:'Deodorant Mist - Bodyplex',price:'600000',description:'Xịt khử mùi dịu nhẹ',detailVisibility:{description:true,specifications:true,usage:true},volumeOptions:[{id:'large',label:'220ml',price:'600000'},{id:'small',label:'180ml',price:'450000'}]};
 const base={
  'hooks/useHomeContent.js':`export default function home(){return {loading:false,productDetailStyles:{},productPolicies:[]}}`,
  'hooks/useProducts.js':'export default function products(){return {products:[],loading:false}}',
