@@ -1,3 +1,13 @@
+## 25/11/2026 — Căn đều chiều cao khung ảnh và khung mua sản phẩm trên máy tính
+
+- **Lý do**: Chủ website phản hồi khung ảnh (`.product-detail-gallery`) và khung thông tin mua hàng (`.product-detail-info`) trên trang Chi tiết sản phẩm đang lệch đáy không đều nhau.
+- **Thay đổi chính**:
+  - Cập nhật `src/styles/product-detail.css` (`@media (min-width: 901px)`): đổi `.product-detail-shell .product-detail-content` sang `align-items: stretch`, kéo đều `height: 100%` cho cả `.product-detail-gallery` và `.product-detail-info` để mép trên và mép dưới hai khung luôn bằng nhau bất kể tỷ lệ ảnh hay số lượng dung tích.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: 272/272 unit test, ESLint 0 lỗi, Vite build & giới hạn bundle đạt.
+  - Playwright (`qa/editor-checkout.spec.js` tại `width-1440`): đạt toàn bộ.
+- **Ảnh hưởng database**: Không thay đổi database hay security rules.
+
 ## 25/11/2026 — Nâng cấp trải nghiệm chuẩn flagship (Desktop Sticky Buy Bar, Navbar Search, Sản phẩm vừa xem, SEO, Chat AI & Admin)
 
 - **Lý do**: Thực hiện toàn bộ nhóm sửa lỗi nhỏ và nâng cấp trải nghiệm người dùng + quản trị viên chuẩn các website mỹ phẩm cao cấp.

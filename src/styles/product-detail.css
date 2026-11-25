@@ -841,8 +841,16 @@
 @media (max-width: 600px) {
   .product-detail-shell .product-detail-gallery { padding: 8px; }
 }
-/* Desktop height follows the purchase content when no explicit height or custom aspect ratio is set. */
+/* Desktop height follows the purchase content when no explicit height or custom aspect ratio is set,
+   and both gallery & purchase cards always stretch to equal height. */
 @media (min-width: 901px) {
+  .product-detail-shell .product-detail-content { align-items: stretch; }
+  .product-detail-shell .product-detail-content > .product-detail-gallery,
+  .product-detail-shell .product-detail-content > .product-detail-info {
+    height: 100%;
+    box-sizing: border-box;
+  }
+  .product-detail-shell .product-detail-content > .product-detail-gallery { justify-content: space-between; }
   .product-detail-shell .product-detail-content > .product-detail-info { min-height: 0; }
   .product-detail-shell .product-detail-content[style*="--balanced-image-height"] .product-detail-gallery .product-detail-image:not(.product-detail-image--fixed-h) {
     height: var(--balanced-image-height, auto);
