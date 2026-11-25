@@ -144,12 +144,12 @@ test("informationTabSettings normalizes frame, caption, skeleton shimmer and mot
     imageShadow: "elevated",
     blockGap: 32,
     captionAlign: "center",
-    captionEffect: "zoom",
+    captionEffect: "stagger",
     captionTitleStyle: { fontWeight: "700" },
-    skeletonEffect: "pulse",
-    tabTransition: "zoom",
-    revealEffect: "fade",
-    motionDuration: 260,
+    skeletonEffect: "shimmer-rose",
+    tabTransition: "blur-in",
+    revealEffect: "curtain",
+    motionDuration: 600,
   });
   assert.equal(custom.imageRatio, "3 / 2");
   assert.equal(custom.imageFit, "contain");
@@ -157,12 +157,12 @@ test("informationTabSettings normalizes frame, caption, skeleton shimmer and mot
   assert.equal(custom.imageBorderWidth, 0);
   assert.equal(custom.blockGap, 32);
   assert.equal(custom.captionAlign, "center");
-  assert.equal(custom.captionEffect, "zoom");
+  assert.equal(custom.captionEffect, "stagger");
   assert.deepEqual(custom.captionTitleStyle, { fontWeight: "700" });
-  assert.equal(custom.skeletonEffect, "pulse");
-  assert.equal(custom.tabTransition, "zoom");
-  assert.equal(custom.revealEffect, "fade");
-  assert.equal(custom.motionDuration, 260);
+  assert.equal(custom.skeletonEffect, "shimmer-rose");
+  assert.equal(custom.tabTransition, "blur-in");
+  assert.equal(custom.revealEffect, "curtain");
+  assert.equal(custom.motionDuration, 600);
   assert.ok(informationMediaShadow(custom.imageShadow).includes("rgba"));
 });
 

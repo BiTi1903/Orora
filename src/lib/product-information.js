@@ -7,10 +7,10 @@ const IMAGE_SHADOWS = {
   medium: "0 16px 38px rgba(102, 56, 76, 0.14)",
   elevated: "0 22px 48px rgba(102, 56, 76, 0.2)",
 };
-const SKELETON_EFFECTS = ["shimmer", "pulse", "static"];
-const TAB_TRANSITIONS = ["slide-up", "fade", "zoom", "none"];
-const REVEAL_EFFECTS = ["rise", "fade", "zoom", "none"];
-const CAPTION_EFFECTS = ["fade", "rise", "zoom", "none"];
+const SKELETON_EFFECTS = ["shimmer", "shimmer-rose", "pulse", "wave", "static"];
+const TAB_TRANSITIONS = ["slide-up", "slide-left", "fade", "blur-in", "zoom", "none"];
+const REVEAL_EFFECTS = ["rise", "fade", "zoom", "blur-in", "curtain", "slide-left", "none"];
+const CAPTION_EFFECTS = ["fade", "rise", "blur-in", "zoom", "slide-left", "stagger", "none"];
 const CAPTION_ALIGNS = ["left", "center", "right"];
 
 const clamp = (raw, min, max, fallback) => {

@@ -1249,9 +1249,26 @@
   background-size: 220% 100%;
   animation: product-info-shimmer 1.4s ease-in-out infinite;
 }
+.product-information[data-skeleton-effect="shimmer-rose"] .product-information-image[data-image-state="loading"]::after {
+  background: linear-gradient(
+    115deg,
+    transparent 15%,
+    rgba(232, 166, 190, 0.28) 38%,
+    var(--info-skeleton-highlight, #fff8fb) 52%,
+    rgba(232, 166, 190, 0.22) 66%,
+    transparent 85%
+  );
+  background-size: 240% 100%;
+  animation: product-info-shimmer 1.65s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
 .product-information[data-skeleton-effect="pulse"] .product-information-image[data-image-state="loading"]::after {
   background: var(--info-skeleton-highlight, #fff8fb);
   animation: product-info-pulse 1.5s ease-in-out infinite;
+}
+.product-information[data-skeleton-effect="wave"] .product-information-image[data-image-state="loading"]::after {
+  background: radial-gradient(circle at 50% 50%, var(--info-skeleton-highlight, #fff8fb) 0%, transparent 65%);
+  background-size: 180% 180%;
+  animation: product-info-wave 1.8s ease-in-out infinite;
 }
 .product-information-image img {
   position: absolute;
@@ -1273,6 +1290,15 @@
 }
 .product-information[data-reveal-effect="zoom"] .product-information-image[data-image-state="ready"][data-revealed="true"] img {
   animation: product-media-zoom var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.product-information[data-reveal-effect="blur-in"] .product-information-image[data-image-state="ready"][data-revealed="true"] img {
+  animation: product-media-blur var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.product-information[data-reveal-effect="curtain"] .product-information-image[data-image-state="ready"][data-revealed="true"] img {
+  animation: product-media-curtain var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.product-information[data-reveal-effect="slide-left"] .product-information-image[data-image-state="ready"][data-revealed="true"] img {
+  animation: product-media-slide-left var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .product-information-image p {
   padding: 16px;
@@ -1297,11 +1323,29 @@
 .product-information-media-text[data-revealed="true"][data-text-effect="zoom"] {
   animation: product-media-zoom var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) .06s both;
 }
+.product-information-media-text[data-revealed="true"][data-text-effect="blur-in"] {
+  animation: product-media-blur var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) .06s both;
+}
+.product-information-media-text[data-revealed="true"][data-text-effect="slide-left"] {
+  animation: product-media-slide-left var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) .06s both;
+}
+.product-information-media-text[data-revealed="true"][data-text-effect="stagger"] h3 {
+  animation: product-media-rise var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) .04s both;
+}
+.product-information-media-text[data-revealed="true"][data-text-effect="stagger"] .product-section-content {
+  animation: product-media-rise var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) .16s both;
+}
 .product-information[data-tab-transition="slide-up"] .product-information-panel-body {
   animation: product-media-rise var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+.product-information[data-tab-transition="slide-left"] .product-information-panel-body {
+  animation: product-media-slide-left var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
 .product-information[data-tab-transition="fade"] .product-information-panel-body {
   animation: product-media-fade var(--info-motion-ms, 450ms) ease-out both;
+}
+.product-information[data-tab-transition="blur-in"] .product-information-panel-body {
+  animation: product-media-blur var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .product-information[data-tab-transition="zoom"] .product-information-panel-body {
   animation: product-media-zoom var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -1314,13 +1358,23 @@
   0%, 100% { opacity: .25; }
   50% { opacity: .72; }
 }
+@keyframes product-info-wave {
+  0% { background-position: 0% 50%; opacity: .35; }
+  50% { background-position: 100% 50%; opacity: .8; }
+  100% { background-position: 0% 50%; opacity: .35; }
+}
 @keyframes product-media-fade { from { opacity: 0; } to { opacity: 1; } }
-@keyframes product-media-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes product-media-zoom { from { opacity: 0; transform: scale(0.975); } to { opacity: 1; transform: scale(1); } }
+@keyframes product-media-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes product-media-zoom { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes product-media-blur { from { opacity: 0; filter: blur(8px); transform: translateY(8px); } to { opacity: 1; filter: blur(0); transform: translateY(0); } }
+@keyframes product-media-curtain { from { opacity: 0.3; clip-path: inset(0 0 100% 0); } to { opacity: 1; clip-path: inset(0 0 0 0); } }
+@keyframes product-media-slide-left { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: translateX(0); } }
 @media (prefers-reduced-motion: reduce) {
   .product-information-image[data-image-state="loading"]::after,
   .product-information-image[data-image-state="ready"][data-revealed="true"] img,
   .product-information-media-text[data-revealed="true"][data-text-effect],
+  .product-information-media-text[data-revealed="true"][data-text-effect="stagger"] h3,
+  .product-information-media-text[data-revealed="true"][data-text-effect="stagger"] .product-section-content,
   .product-information-panel-body {
     animation: none !important;
   }

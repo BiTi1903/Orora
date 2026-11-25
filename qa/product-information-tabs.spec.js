@@ -9,7 +9,7 @@ test('product information shows just the selected tab with keyboard controls and
  await spec.click();await expect(page.getByRole('tabpanel')).toContainText('Thông số sản phẩm riêng.');await expect(page.getByText('Mô tả sản phẩm đầy đủ.',{exact:true})).toBeHidden();
  await spec.press('ArrowRight');await expect(page.getByRole('tab',{name:'Hướng dẫn sử dụng',exact:true})).toBeFocused();await expect(page.getByRole('tabpanel')).toContainText('Hướng dẫn dùng sản phẩm.');
  await page.getByRole('tab',{name:'Hướng dẫn sử dụng',exact:true}).press('Home');await expect(description).toBeFocused();await expect(page.getByRole('tabpanel')).toContainText('Mô tả sản phẩm đầy đủ.');
- await page.getByText('Nhãn tab và mục mở mặc định',{exact:true}).click();await page.getByLabel('Tên tab Mô tả',{exact:true}).fill('Giới thiệu');await expect(page.getByRole('tab',{name:'Giới thiệu',exact:true})).toBeVisible();
+ await page.getByLabel('Tên tab Mô tả',{exact:true}).fill('Giới thiệu');await expect(page.getByRole('tab',{name:'Giới thiệu',exact:true})).toBeVisible();
  await page.getByLabel('Tab mở mặc định',{exact:true}).selectOption('specifications');await expect(spec).toHaveAttribute('aria-selected','true');await expect(page.getByRole('tabpanel')).toHaveCount(1);
  if(page.viewportSize().width<=768)await expect.poll(()=>page.locator('.product-information-nav').evaluate(el=>parseFloat(el.style.getPropertyValue('--tab-w')))).toBeGreaterThan(0);
  await fit(page);expect(errors).toEqual([]);
@@ -150,18 +150,18 @@ test('block and caption switches, skeleton shimmer, and Visual Builder frame/mot
   await editor.getByRole('switch', { name: 'Hiển thị mục 1' }).check();
   await expect(infoRoot.locator('.product-information-image')).toHaveCount(1);
 
-  await page.getByText('Khung ảnh nội dung', { exact: true }).click();
+  await page.getByRole('tab', { name: 'Khung ảnh', exact: true }).click();
   await page.getByLabel('Bo góc ảnh (px)', { exact: true }).fill('24');
-  await page.getByText('Hiệu ứng tải (Skeleton / Shimmer) & Chuyển cảnh', { exact: true }).click();
-  await page.getByRole('combobox', { name: 'Hiệu ứng tải ảnh (Skeleton)', exact: true }).selectOption('pulse');
-  await page.getByRole('combobox', { name: 'Hiệu ứng chuyển tab', exact: true }).selectOption('fade');
-  await page.getByRole('combobox', { name: 'Hiệu ứng load ảnh khi hiện', exact: true }).selectOption('zoom');
-  await page.getByRole('combobox', { name: 'Hiệu ứng load text (Đầu mục & Nội dung)', exact: true }).selectOption('rise');
-  await expect(infoRoot).toHaveAttribute('data-skeleton-effect', 'pulse');
-  await expect(infoRoot).toHaveAttribute('data-tab-transition', 'fade');
-  await expect(infoRoot).toHaveAttribute('data-reveal-effect', 'zoom');
+  await page.getByRole('tab', { name: 'Hiệu ứng', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Hiệu ứng tải ảnh (Skeleton)', exact: true }).selectOption('shimmer-rose');
+  await page.getByRole('combobox', { name: 'Hiệu ứng chuyển tab', exact: true }).selectOption('blur-in');
+  await page.getByRole('combobox', { name: 'Hiệu ứng load ảnh khi hiện', exact: true }).selectOption('curtain');
+  await page.getByRole('combobox', { name: 'Hiệu ứng load text (Đầu mục & Nội dung)', exact: true }).selectOption('stagger');
+  await expect(infoRoot).toHaveAttribute('data-skeleton-effect', 'shimmer-rose');
+  await expect(infoRoot).toHaveAttribute('data-tab-transition', 'blur-in');
+  await expect(infoRoot).toHaveAttribute('data-reveal-effect', 'curtain');
   await editor.getByRole('switch', { name: 'Hiển thị chú thích khối 1' }).check();
-  await expect(infoRoot.locator('[data-text-effect="rise"]')).toContainText('Nội dung chú thích.');
+  await expect(infoRoot.locator('[data-text-effect="stagger"]')).toContainText('Nội dung chú thích.');
   const radius = await infoRoot.evaluate((el) => el.style.getPropertyValue('--info-img-radius'));
   expect(radius).toBe('24px');
   await fit(page);

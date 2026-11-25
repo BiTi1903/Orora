@@ -163,14 +163,16 @@ export function StylePanel({
             onChange={(patch) => onChange({ loadError: { ...productDetail.loadError, ...patch } })}
           />
         </InspectorGroup>
-        <InspectorGroup title="Các tab thông tin sản phẩm">
-          <InformationTabsSettings
-            value={productDetail.informationTabs}
-            onChange={(patch) =>
-              onChange({ informationTabs: { ...productDetail.informationTabs, ...patch } })
-            }
-          />
-        </InspectorGroup>
+        {!["pdInfoMedia", "pdInfoCaption"].includes(selected) && (
+          <InspectorGroup title="Nội dung chi tiết sản phẩm">
+            <InformationTabsSettings
+              value={productDetail.informationTabs}
+              onChange={(patch) =>
+                onChange({ informationTabs: { ...productDetail.informationTabs, ...patch } })
+              }
+            />
+          </InspectorGroup>
+        )}
         <InspectorGroup title="Bố cục và chữ trên điện thoại">
           <MobileDetailSettings
             value={productDetail.mobileLayout}

@@ -12,7 +12,7 @@ const tabKeys = {
   usage: "pdTabUsage",
 };
 
-function InformationImage({ src, alt, preview, selectedClass, onSelect }) {
+function InformationImage({ src, alt, preview, selectedClass, onSelect, forceLoading = false }) {
   const [state, setState] = useState("loading");
   const imgRef = useRef(null);
 
@@ -23,16 +23,18 @@ function InformationImage({ src, alt, preview, selectedClass, onSelect }) {
     }
   }, [src]);
 
+  const effectiveState = forceLoading ? "loading" : state;
+
   return (
     <div
       className={`product-information-image ${selectedClass("pdInfoMedia")}`}
-      data-image-state={state}
+      data-image-state={effectiveState}
       data-image-reveal=""
       data-builder-key={preview ? "pdInfoMedia" : undefined}
       onClick={preview ? onSelect("pdInfoMedia") : undefined}
-      aria-busy={state === "loading" ? "true" : undefined}
+      aria-busy={effectiveState === "loading" ? "true" : undefined}
     >
-      {state === "error" ? (
+      {effectiveState === "error" ? (
         <p>Chưa tải được ảnh.</p>
       ) : (
         <img
@@ -67,9 +69,30 @@ export default function ProductInformation({
   const id = useId();
   const config = informationTabSettings(settings);
   const [active, setActive] = useState(config.defaultTab);
+  const [replayTick, setReplayTick] = useState(0);
+  const [replayingSkeleton, setReplayingSkeleton] = useState(false);
   const keys = Object.keys(PRODUCT_CONTENT_GROUPS).filter((key) => visibility?.[key] !== false);
   const selected = keys.includes(active) ? active : keys[0];
   const panel = useRef(null);
+
+  useEffect(() => {
+    if (!preview) return;
+    let timer = 0;
+    const onReplay = () => {
+      window.clearTimeout(timer);
+      setReplayingSkeleton(true);
+      setReplayTick((tick) => tick + 1);
+      timer = window.setTimeout(() => {
+        setReplayingSkeleton(false);
+        setReplayTick((tick) => tick + 1);
+      }, 750);
+    };
+    window.addEventListener("orora:replay-info-motion", onReplay);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("orora:replay-info-motion", onReplay);
+    };
+  }, [preview]);
 
   useEffect(() => {
     const root = panel.current;
@@ -94,7 +117,7 @@ export default function ProductInformation({
     );
     targets.forEach((element) => observer.observe(element));
     return () => observer.disconnect();
-  }, [sections, selected, preview]);
+  }, [sections, selected, preview, replayTick]);
 
   if (!selected) return null;
 
@@ -192,7 +215,7 @@ export default function ProductInformation({
               </h2>
             </div>
             {selected === key && (
-              <div key={`${key}-body`} className="product-information-panel-body">
+              <div key={`${key}-body-${replayTick}`} className="product-information-panel-body">
                 {!groups[key].length && <p className="product-information-empty">{tr(config.emptyText)}</p>}
                 {groups[key].length > 0 && (
                   <div
@@ -247,6 +270,7 @@ export default function ProductInformation({
                               preview={preview}
                               selectedClass={selectedClass}
                               onSelect={select}
+                              forceLoading={replayingSkeleton}
                             />
                           )}
                           {showCaption && (
