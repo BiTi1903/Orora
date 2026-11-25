@@ -1,3 +1,19 @@
+## 25/11/2026 — Chuyển Cách chăm sóc vào Visual Builder và bổ sung tùy chỉnh cho Sản phẩm vừa xem & Dải chip Cam kết
+
+- **Lý do**: Chủ website yêu cầu chuyển phần **Hướng dẫn chăm sóc phù hợp** vào Visual Builder (xóa khỏi `Sản phẩm → Thiết lập dùng chung`) kèm bật/tắt đầy đủ, đồng thời bổ sung bộ chỉnh nội dung, kiểu hiển thị và bật/tắt trong Visual Builder cho mục **Sản phẩm vừa xem (Gợi ý cho bạn)** và **Dải chip Cam kết** dưới nút mua hàng.
+- **Thay đổi chính**:
+  - **Chuyển "Cách chăm sóc" vào Visual Builder (`src/lib/page-sections.js`, `src/lib/product-care-guide.js`, `src/admin/builder/save-sections.js`, `src/admin/builder/useBuilderDraft.js`, `src/admin/builder/ProductCareBuilderPanel.jsx`, `src/admin/builder/VisualBuilder.jsx`, `src/admin/ProductsAdmin.jsx`)**:
+    - Đăng ký mục `productcare` (`Cách chăm sóc`) trong danh sách section của Visual Builder với công tắc bật/tắt toàn cục (`productCareGuide.enabled`), xem trước trực tiếp `<ProductCareGuide>` và đầy đủ công cụ sửa nhóm hướng dẫn, gán sản phẩm, nội dung, kiểu chữ (máy tính/điện thoại) và khung/nền ngay trong Visual Builder.
+    - Xóa tab `Cách chăm sóc` khỏi `Sản phẩm → Thiết lập dùng chung` và gỡ file `src/admin/ProductCareSettings.jsx` không còn dùng.
+  - **Tùy chỉnh "Sản phẩm vừa xem (Gợi ý)" trong Visual Builder (`src/admin/builder/RecentlyViewedSettings.jsx`, `src/components/RecentlyViewedProducts.jsx`, `src/admin/builder/registry.js`, `src/admin/builder/ProductDetailPanels.jsx`, `src/admin/builder/StylePanels.jsx`)**:
+    - Thêm thành phần `pdRecentlyViewed` có thể bấm trực tiếp trên khung xem trước `Chi tiết SP`: bật/tắt mục, sửa nhãn nhỏ, tiêu đề, số sản phẩm tối đa (2–4), màu/viền/bo góc/đệm khung & thẻ, kiểu chữ (font, cỡ máy tính/điện thoại, màu, độ đậm, căn chữ) cho nhãn, tiêu đề, tên sản phẩm và giá.
+  - **Tùy chỉnh "Dải chip Cam kết" dưới nút mua (`src/admin/builder/TrustStripSettings.jsx`, `src/components/ProductDetail.jsx`, `src/admin/builder/registry.js`, `src/admin/builder/ProductDetailPanels.jsx`, `src/admin/builder/StylePanels.jsx`)**:
+    - Thêm thành phần `pdTrustStrip` bấm trực tiếp trên khung xem trước `Chi tiết SP`: bật/tắt dải chip, bật/tắt dấu tích `✓` và đường kẻ ngăn, giới hạn số chip, nhập nội dung tùy chỉnh (hoặc tự động lấy từ Cam kết & chính sách), căn lề, màu nền/viền/icon, bo góc, đệm, khoảng cách và kiểu chữ máy tính/điện thoại.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: 273/273 unit test (gồm test mới trong `tests/page-sections.test.js` cho `productcare`), ESLint 0 lỗi, Vite build & giới hạn bundle đạt.
+  - Playwright (`qa/admin-appearance.spec.js`, `qa/visual-builder-focus.spec.js`, `qa/editor-checkout.spec.js` tại `width-390` và `width-1440`): 37/37 đạt.
+- **Ảnh hưởng database**: Không thay đổi schema, security rules hay dữ liệu production; cấu hình mới lưu vào `productCareGuide` và `productDetailStyles.{trustStrip,recentlyViewed}` khi quản trị viên bấm lưu.
+
 ## 25/11/2026 — Thiết kế lại bố cục khung mua sản phẩm trên máy tính hết khoảng trống dưới
 
 - **Lý do**: Chủ website phản hồi phần dưới của khung thông tin mua hàng (`.product-detail-info`) bị trống nhiều khi kéo bằng chiều cao khung ảnh.

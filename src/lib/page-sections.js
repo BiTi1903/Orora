@@ -28,6 +28,7 @@ export const PAGE_SECTIONS = [
   },
   { key: "productneeds", label: "Chọn theo nhu cầu", icon: "◇", settingsKey: "productNeeds" },
   { key: "productfaq", label: "FAQ sản phẩm", icon: "?", settingsKey: "productFaq" },
+  { key: "productcare", label: "Cách chăm sóc", icon: "♡", settingsKey: "productCareGuide" },
   {
     key: "collection",
     label: "Sản phẩm",

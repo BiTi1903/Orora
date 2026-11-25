@@ -128,6 +128,7 @@ const PRODUCT_DETAIL_FIELD_MAP = {
   pdContactActions: { type: "pdContactActions", styleKey: "contactActions", label: "Thiết lập liên hệ" },
 
   /* ---- 4. Cam kết & Slogan ---- */
+  pdTrustStrip: { type: "pdTrustStrip", styleKey: "trustStrip", label: "Dải chip Cam kết dưới nút mua" },
   pdAssuranceTitle: { styleKey: "assuranceTitle", label: "Cam kết — Tiêu đề", sample: "Cam kết — Tiêu đề" },
   pdAssuranceBody: { styleKey: "assuranceBody", label: "Cam kết — Nội dung", sample: "Cam kết — Nội dung" },
   pdSloganCard: { styleKey: "sloganCard", label: "Card Slogan — Khung và biểu tượng" },
@@ -179,6 +180,9 @@ const PRODUCT_DETAIL_FIELD_MAP = {
     styleKey: "relImage",
     label: "Sản phẩm khác — Khung thẻ / ảnh",
   },
+
+  /* ---- 8. Sản phẩm vừa xem (Gợi ý cho bạn) ---- */
+  pdRecentlyViewed: { type: "pdRecentlyViewed", styleKey: "recentlyViewed", label: "Sản phẩm vừa xem (Gợi ý)" },
 };
 
 

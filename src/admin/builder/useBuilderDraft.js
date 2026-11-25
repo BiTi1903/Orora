@@ -3,6 +3,7 @@ import { DEFAULT_ABOUT, DEFAULT_TICKER } from './defaults';
 import { DEFAULT_HERO, DEFAULT_COLLECTION, DEFAULT_PRODUCT_DETAIL, DEFAULT_FEATURES, DEFAULT_REVIEWS, DEFAULT_NEWSLETTER, DEFAULT_FOOTER, createPhilosophy } from './home-model';
 import { createNav } from './navbar-state';
 import { DEFAULT_PRODUCT_NEEDS, DEFAULT_PRODUCT_FAQ } from '../../lib/product-discovery';
+import { DEFAULT_CARE_GUIDE } from '../../lib/product-care-guide';
 
 const defaults = () => ({
   about: DEFAULT_ABOUT,
@@ -17,7 +18,7 @@ const defaults = () => ({
   navbar: createNav(),
   philosophy: createPhilosophy(),
   sectionVisibility: {},
-  discovery: { productNeeds: DEFAULT_PRODUCT_NEEDS, productFaq: DEFAULT_PRODUCT_FAQ },
+  discovery: { productNeeds: DEFAULT_PRODUCT_NEEDS, productFaq: DEFAULT_PRODUCT_FAQ, productCareGuide: DEFAULT_CARE_GUIDE },
 });
 
 // Builder setters replace their section. Find the one text field that changed.

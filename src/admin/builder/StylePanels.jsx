@@ -19,6 +19,8 @@ import { FooterSettings } from "./FooterPanels";
 import { NewsletterSettings } from "./NewsletterPanels";
 import { ProductDetailSettings } from "./ProductDetailPanels";
 import PurchaseOptionsSettings from "./PurchaseOptionsSettings";
+import RecentlyViewedSettings from "./RecentlyViewedSettings";
+import TrustStripSettings from "./TrustStripSettings";
 import { CollectionSettings } from "./CollectionPanels";
 import { HeroSettings } from "./HeroPanels";
 import { SectionSettings, ImageSettings, TextSettings, StatsSettings, StatTextSettings } from "./AboutPanels";
@@ -169,6 +171,26 @@ export function StylePanel({
               value={productDetail.informationTabs}
               onChange={(patch) =>
                 onChange({ informationTabs: { ...productDetail.informationTabs, ...patch } })
+              }
+            />
+          </InspectorGroup>
+        )}
+        {selected !== "pdTrustStrip" && (
+          <InspectorGroup title="Dải chip Cam kết dưới nút mua">
+            <TrustStripSettings
+              value={productDetail.trustStrip || {}}
+              onChange={(patch) =>
+                onChange({ trustStrip: { ...productDetail.trustStrip, ...patch } })
+              }
+            />
+          </InspectorGroup>
+        )}
+        {selected !== "pdRecentlyViewed" && (
+          <InspectorGroup title="Sản phẩm vừa xem (Gợi ý)">
+            <RecentlyViewedSettings
+              value={productDetail.recentlyViewed || {}}
+              onChange={(patch) =>
+                onChange({ recentlyViewed: { ...productDetail.recentlyViewed, ...patch } })
               }
             />
           </InspectorGroup>

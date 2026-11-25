@@ -1,7 +1,6 @@
 import { useConfirm } from "./confirm-context";
 import useDraftGuard from "../hooks/useDraftGuard";
 import ProductDiscoverySettings from "./ProductDiscoverySettings";
-import ProductCareSettings from "./ProductCareSettings";
 import PriceInput from "./PriceInput";
 import { formatProductPrice, parseVndPrice } from "../lib/commerce";
 import ProductSloganSettings from "./ProductSloganSettings";
@@ -30,7 +29,6 @@ const SHARED_SETTINGS = [
   ['policies','Cam kết & chính sách','Nội dung cam kết hiển thị cạnh phần mua hàng.'],
   ['categories','Danh mục','Thêm hoặc đổi tên nhóm sản phẩm.'],
   ['slogan','Slogan','Nội dung, kiểu chữ và khung Slogan.'],
-  ['care','Cách chăm sóc','Các cách chăm sóc và sản phẩm áp dụng.'],
   ['needs','Nhu cầu','Gợi ý sản phẩm theo từng nhu cầu.'],
   ['faq','Câu hỏi thường gặp','Câu hỏi, câu trả lời và sản phẩm áp dụng.'],
 ];
@@ -244,7 +242,6 @@ export default function ProductsAdmin() {
       </form>
       </section>}
       {sharedPanel === "slogan" && <section aria-label="Slogan trên chi tiết sản phẩm" className="product-shared-panel"><ProductSloganSettings /></section>}
-      {sharedPanel === "care" && <section aria-label="Cách chăm sóc phù hợp — trên footer" className="product-shared-panel"><ProductCareSettings /></section>}
       {sharedPanel === "needs" && <section aria-label="Chọn sản phẩm theo nhu cầu" className="product-shared-panel"><ProductDiscoverySettings /></section>}
       {sharedPanel === "faq" && <section aria-label="Câu hỏi thường gặp theo sản phẩm" className="product-shared-panel"><ProductDiscoverySettings faq /></section>}
       </div></div>

@@ -1,5 +1,7 @@
 import PurchaseOptionsSettings from "./PurchaseOptionsSettings";
 import InformationTabsSettings from "./InformationTabsSettings";
+import RecentlyViewedSettings from "./RecentlyViewedSettings";
+import TrustStripSettings from "./TrustStripSettings";
 import { ColorField } from "./ui";
 import ProductContactSettings from "./ProductContactSettings";
 import ProductRelatedSettings from "./ProductRelatedPanels";
@@ -12,6 +14,12 @@ import { PRODUCT_DETAIL_COLOR_DEFAULTS } from "../controls/color-defaults";
 export function ProductDetailSettings({ selected, data, productDetail, onChange, onStyleChange }) {
   if (!data || data.type === "pdEmpty") {
     return <div className="builder-empty">Chọn một thành phần trên preview.</div>;
+  }
+  if (selected === "pdTrustStrip") {
+    return <TrustStripSettings value={productDetail.trustStrip || {}} onChange={onStyleChange} />;
+  }
+  if (selected === "pdRecentlyViewed") {
+    return <RecentlyViewedSettings value={productDetail.recentlyViewed || {}} onChange={onStyleChange} />;
   }
   if (selected === "pdPurchaseOptions") {
     return (

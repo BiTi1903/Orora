@@ -7,8 +7,24 @@ export const DEFAULT_CARE_GUIDE = { enabled: true, title: 'Chọn cách chăm s�
 // Product IDs are stable database IDs; numbering and slugs may change.
 export function careGuideForProduct(settings, product) {
   if (Array.isArray(settings?.groups)) {
-    if (!product?.id) return { enabled: false };
+    if (settings.enabled === false || !product?.id) return { enabled: false };
     return settings.groups.find(group => Array.isArray(group.productIds) && group.productIds.includes(String(product.id)))?.guide ?? { enabled: false };
   }
   return settings ?? DEFAULT_CARE_GUIDE;
+}
+
+export function normalizeCareGuideGroups(saved, catalog = []) {
+  if (Array.isArray(saved?.groups)) {
+    return saved.groups;
+  }
+  const baseGuide = saved && typeof saved === 'object' ? { ...DEFAULT_CARE_GUIDE, ...saved } : { ...DEFAULT_CARE_GUIDE };
+  delete baseGuide.groups;
+  return [
+    {
+      id: 'default-care-guide',
+      name: 'Bộ hướng dẫn hiện có',
+      productIds: catalog.map(product => String(product.id)),
+      guide: baseGuide,
+    },
+  ];
 }

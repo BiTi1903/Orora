@@ -28,7 +28,10 @@ import useDraftGuard from "../../hooks/useDraftGuard";
 import { createNav } from "./navbar-state";
 import { PAGE_SECTIONS as SECTION_LIST, sectionIsEnabled } from "../../lib/page-sections";
 import { DEFAULT_PRODUCT_NEEDS, DEFAULT_PRODUCT_FAQ } from "../../lib/product-discovery";
+import { DEFAULT_CARE_GUIDE, normalizeCareGuideGroups } from "../../lib/product-care-guide";
 import { ProductNeedsView, ProductFaq } from "../../components/ProductDiscovery";
+import ProductCareGuide from "../../components/ProductCareGuide";
+import ProductCareBuilderPanel from "./ProductCareBuilderPanel";
 import useProducts from "../../hooks/useProducts";
 import { editedSectionPayload, changedValues, mergeSavedValues } from "./save-sections";
 import PreviewFrame from "./PreviewFrame";
@@ -126,6 +129,7 @@ export default function VisualBuilder({
     else setSectionVisibility((current) => ({ ...current, [key]: current[key] === false }));
   };
   const [activeSection, setActiveSection] = useState("about");
+  const [activeCareGroupId, setActiveCareGroupId] = useState("");
   const [selected, setSelected] = useState("title");
   const [sectionSearch, setSectionSearch] = useState("");
   const [selectionVersion, setSelectionVersion] = useState(0);
@@ -170,6 +174,9 @@ export default function VisualBuilder({
         setDiscovery({
           productNeeds: { ...DEFAULT_PRODUCT_NEEDS, ...data?.productNeeds },
           productFaq: { ...DEFAULT_PRODUCT_FAQ, ...data?.productFaq },
+          productCareGuide: data?.productCareGuide
+            ? structuredClone(data.productCareGuide)
+            : structuredClone(DEFAULT_CARE_GUIDE),
         });
         setAbout(createAbout(data || {}));
         setHero(createHero(data || {}));
@@ -358,7 +365,7 @@ export default function VisualBuilder({
   };
   const canResetActive =
     workspace !== "store" &&
-    !["productneeds", "productfaq", "cartform", "orderform", "ordersuccess"].includes(activeSection);
+    !["productneeds", "productfaq", "productcare", "cartform", "orderform", "ordersuccess"].includes(activeSection);
   const resetActive = async () => {
     if (!canResetActive) return;
     if (!await confirm("Khôi phục các giá trị mặc định của mục hiện tại? Thay đổi áp dụng khi bạn lưu.", {
@@ -673,6 +680,18 @@ export default function VisualBuilder({
               />
             ) : activeSection === "productfaq" ? (
               <ProductFaq preview value={{ ...discovery.productFaq, enabled: true }} />
+            ) : activeSection === "productcare" ? (
+              (() => {
+                const careGroups = normalizeCareGuideGroups(discovery.productCareGuide, discoveryProducts);
+                const activeGroup =
+                  careGroups.find((group) => group.id === activeCareGroupId) || careGroups[0];
+                const guideValue = activeGroup?.guide ?? DEFAULT_CARE_GUIDE;
+                return (
+                  <div style={{ padding: "24px 16px" }}>
+                    <ProductCareGuide value={{ ...guideValue, enabled: true }} />
+                  </div>
+                );
+              })()
             ) : activeSection === "cartform" ? (
               <CartFormPreview
                 settings={navbar.navStyles?.cart || {}}
@@ -748,7 +767,19 @@ export default function VisualBuilder({
         </div>
 
         <aside className="builder-settings">
-          {SECTION_LIST.find((section) => section.key === activeSection)?.settingsKey ? (
+          {activeSection === "productcare" ? (
+            <ProductCareBuilderPanel
+              value={discovery.productCareGuide}
+              products={discoveryProducts}
+              activeGroupId={activeCareGroupId}
+              onActiveGroupChange={setActiveCareGroupId}
+              onChange={(nextCare) => {
+                setEditVersion((value) => value + 1);
+                dirtySections.current.add("productcare");
+                setDiscovery((current) => ({ ...current, productCareGuide: nextCare }));
+              }}
+            />
+          ) : SECTION_LIST.find((section) => section.key === activeSection)?.settingsKey ? (
             <div className="admin-card">
               <h3>{SECTION_LIST.find((section) => section.key === activeSection)?.label}</h3>
               <p>

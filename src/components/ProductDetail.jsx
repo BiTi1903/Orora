@@ -901,18 +901,67 @@ function ProductDetail({
                 </div>
               </div>
             )}
-            {Array.isArray(home.productPolicies) && home.productPolicies.filter((policy) => policy?.title?.trim()).length > 0 && (
-              <div className="product-trust-strip" aria-label="Cam kết mua hàng">
-                {home.productPolicies.filter((policy) => policy?.title?.trim()).slice(0, 3).map((policy, index) => (
-                  <span className="product-trust-chip" key={policy.id || index}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M20 6 9 17l-5-5" />
-                    </svg>
-                    <span>{tr(policy.title)}</span>
-                  </span>
-                ))}
-              </div>
-            )}
+            {(() => {
+              const trustStrip = ps.trustStrip || {};
+              const trustEnabled = trustStrip.enabled !== false;
+              if (!trustEnabled && !preview) return null;
+              const customLines = typeof trustStrip.customText === "string"
+                ? trustStrip.customText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+                : [];
+              const policyTitles = Array.isArray(home.productPolicies)
+                ? home.productPolicies.filter((policy) => policy?.title?.trim()).map((policy) => policy.title.trim())
+                : [];
+              const sourceLabels = customLines.length
+                ? customLines
+                : policyTitles.length
+                  ? policyTitles
+                  : preview
+                    ? ["FREESHIP", "100% CHÍNH HÃNG", "ĐỔI TRẢ"]
+                    : [];
+              const limit = Math.max(1, Math.min(4, Number(trustStrip.limit) || 3));
+              const chips = sourceLabels.slice(0, limit);
+              if (!chips.length) return null;
+              const stripStyle = {
+                ...(trustStrip.align ? { justifyContent: trustStrip.align } : {}),
+                ...(trustStrip.gap != null ? { gap: `${trustStrip.gap}px` } : {}),
+                ...(trustStrip.showDivider === false
+                  ? { borderTop: "none", paddingTop: 0 }
+                  : trustStrip.dividerColor
+                    ? { borderTopColor: trustStrip.dividerColor }
+                    : {}),
+                ...(preview && !trustEnabled ? { opacity: 0.42 } : {}),
+              };
+              const chipStyle = {
+                ...(trustStrip.chipBackground ? { background: trustStrip.chipBackground } : {}),
+                ...(trustStrip.chipBorderColor ? { borderColor: trustStrip.chipBorderColor } : {}),
+                ...(trustStrip.chipRadius != null ? { borderRadius: `${trustStrip.chipRadius}px` } : {}),
+                ...(trustStrip.paddingY != null || trustStrip.paddingX != null
+                  ? { padding: `${trustStrip.paddingY ?? 6}px ${trustStrip.paddingX ?? 12}px` }
+                  : {}),
+                ...toCss(trustStrip.textStyle),
+              };
+              const iconStyle = trustStrip.iconColor ? { color: trustStrip.iconColor } : undefined;
+              return (
+                <div
+                  className={`product-trust-strip ${selectedClass("pdTrustStrip")}`}
+                  aria-label="Cam kết mua hàng"
+                  data-builder-key={preview ? "pdTrustStrip" : undefined}
+                  onClick={preview ? select("pdTrustStrip") : undefined}
+                  style={stripStyle}
+                >
+                  {chips.map((label, index) => (
+                    <span className="product-trust-chip" key={`${label}-${index}`} style={chipStyle}>
+                      {trustStrip.showIcon !== false && (
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={iconStyle}>
+                          <path d="M20 6 9 17l-5-5" />
+                        </svg>
+                      )}
+                      <span>{tr(label)}</span>
+                    </span>
+                  ))}
+                </div>
+              );
+            })()}
             {!preview && acceptsWebsiteOrders && !soldOut && orderProductId === (product.id || product.slug) && createPortal(<OrderForm key={product.id || product.slug} product={product} motionSource={orderSource} home={home} selection={{ variantId, quantity: choice.quantity }} fromCart={incoming?.productId === product.id} onSelectionChange={changeSelection} onClose={() => setOrderProductId(null)} />, document.body)}
           </section>
 
@@ -932,7 +981,15 @@ function ProductDetail({
       </div>
       </div>
 
-      <RecentlyViewedProducts currentId={product.id} preview={preview} />
+      <RecentlyViewedProducts
+        currentId={product.id}
+        preview={preview}
+        previewProducts={previewProducts}
+        settings={ps.recentlyViewed}
+        selectedClass={selectedClass}
+        select={select}
+        tr={tr}
+      />
 
       {pinBuyBar && mobileBuyBar && createPortal(mobileBuyBar, document.body)}
       {!preview && !mobileViewport && showMobileBuy && createPortal(
