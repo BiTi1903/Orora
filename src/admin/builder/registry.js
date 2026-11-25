@@ -107,6 +107,8 @@ const PRODUCT_DETAIL_FIELD_MAP = {
   pdTabDescription: {styleKey:"navigation",label:"Tab Mô tả"},
   pdTabSpecifications: {styleKey:"navigation",label:"Tab Thông số"},
   pdTabUsage: {styleKey:"navigation",label:"Tab Hướng dẫn sử dụng"},
+  pdInfoMedia: { styleKey: "informationTabs", label: "Nội dung · Khung ảnh & hiệu ứng" },
+  pdInfoCaption: { styleKey: "informationTabs", label: "Nội dung · Chú thích dưới ảnh" },
   pdFacebookText: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Chữ nút Facebook" },
   pdTiktokText: { type: "pdPurchaseOptions", styleKey: "purchaseOptions", label: "Chữ nút TikTok" },
   pdSelectionLabel: { styleKey: "selectionLabel", label: "Dung tích / số lượng — Nhãn", sample: "Dung tích" },

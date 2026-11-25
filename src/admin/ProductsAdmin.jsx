@@ -35,7 +35,7 @@ const SHARED_SETTINGS = [
 ];
 
 const newProductInformationBlock = (group) => ({
-  id: crypto.randomUUID(), group, image: "", title: "", content: "", effect: "fade",
+  id: crypto.randomUUID(), group, enabled: true, showText: true, image: "", imageAlt: "", title: "", content: "", effect: "fade",
 });
 
 function withInformationSlots(sections = []) {
@@ -150,6 +150,11 @@ export default function ProductsAdmin() {
         number: form.number.trim() || String(nextProductSequence(items)).padStart(2, "0"),
         price: form.price.trim(),
         image: form.image.trim(),
+        story: "",
+        material: "",
+        size: "",
+        color: "",
+        origin: "",
         detailSections: sections.filter((section) => section.image?.trim() || section.title?.trim() || section.content?.trim()),
         productReviews: reviews,
         volumeOptions: volumeOptions.map((option) => ({ ...option, label: option.label.trim(), price: option.price?.trim() || "" })),

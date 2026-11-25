@@ -14,7 +14,9 @@ export function productInformationBlocks(product = {}) {
   const sections = Array.isArray(product.detailSections) ? product.detailSections : [];
   return sections.filter((section) => section && (
     (typeof section.image === "string" && section.image.trim()) ||
-    ["fade", "rise", "none"].includes(section.effect)
+    ["fade", "rise", "none"].includes(section.effect) ||
+    typeof section.enabled === "boolean" ||
+    typeof section.showText === "boolean"
   ));
 }
 
@@ -85,7 +87,12 @@ export function productSectionGroup(section, index = 0) {
 }
 export function groupedProductSections(sections) {
   const groups = { description: [], specifications: [], usage: [] };
-  sections.forEach((section, index) => { if (section && (section.image?.trim?.() || section.content?.trim?.())) groups[productSectionGroup(section, index)].push(section); });
+  sections.forEach((section, index) => {
+    if (!section || section.enabled === false) return;
+    const hasImage = Boolean(section.image?.trim?.());
+    const hasVisibleText = section.showText !== false && Boolean(section.content?.trim?.());
+    if (hasImage || hasVisibleText) groups[productSectionGroup(section, index)].push(section);
+  });
   return groups;
 }
 export function publishedProductReviews(product = {}) {

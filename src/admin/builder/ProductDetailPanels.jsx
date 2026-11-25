@@ -1,4 +1,5 @@
 import PurchaseOptionsSettings from "./PurchaseOptionsSettings";
+import InformationTabsSettings from "./InformationTabsSettings";
 import { ColorField } from "./ui";
 import ProductContactSettings from "./ProductContactSettings";
 import ProductRelatedSettings from "./ProductRelatedPanels";
@@ -152,6 +153,17 @@ export function ProductDetailSettings({ selected, data, productDetail, onChange,
     );
   }
 
+  if (selected === "pdInfoMedia" || selected === "pdInfoCaption") {
+    return (
+      <InformationTabsSettings
+        openSection={selected === "pdInfoMedia" ? "media" : "caption"}
+        value={productDetail.informationTabs || {}}
+        onChange={(patch) =>
+          onChange({ informationTabs: { ...productDetail.informationTabs, ...patch } })
+        }
+      />
+    );
+  }
   if (selected === "pdContactActions")
     return <ProductContactSettings value={productDetail.contactActions || {}} onChange={onStyleChange} />;
   if (selected === "pdSloganCard")

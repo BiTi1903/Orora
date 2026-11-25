@@ -20,7 +20,7 @@ import useProductPanelSize from "../hooks/useProductPanelSize";
 import ProductInformation from "./ProductInformation";
 import ProductAssurances from "./ProductAssurances";
 import ProductReviews from "./ProductReviews";
-import { productImages, productInformationBlocks, productSections, secondaryProductImages, PRODUCT_CONTENT_GROUPS } from "../lib/product-content";
+import { productImages, productInformationBlocks, secondaryProductImages, PRODUCT_CONTENT_GROUPS } from "../lib/product-content";
 import ConsultationDialog from "./ConsultationDialog";
 import OrderForm from "./OrderForm";
 import { availablePaymentMethods, formatProductPrice, formatVnd, parseVndPrice, purchaseChannelLabels, socialShopUrl } from "../lib/commerce";
@@ -214,14 +214,7 @@ function ProductDetail({
   const contact = contactLinks(home, product.name, contactSettings);
   const showZalo = contactSettings.showZalo !== false && !!contact.zalo;
   const showCall = contactSettings.showCall !== false && !!contact.phone;
-  const detailLabels = ps.detailLabels || {};
-  const sections = preview && /^preview-\d+$/.test(product.id) ? productSections(product, {
-    story: ps.aboutTitle?.text,
-    material: detailLabels.material || ps.materialLabel?.text,
-    size: detailLabels.size || ps.sizeLabel?.text,
-    color: detailLabels.color || ps.colorLabel?.text,
-    origin: detailLabels.origin || ps.originLabel?.text,
-  }) : productInformationBlocks(product);
+  const sections = productInformationBlocks(product);
 
 
   const css = (key) => toCss(ps[key], { responsive: true });

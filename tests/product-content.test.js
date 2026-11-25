@@ -103,3 +103,62 @@ test('inline formatting selects and toggles words and preserves multiline lists'
   assert.deepEqual(parseProductInline('[b]Da [i]dịu[/i][/b]'),[{mark:'b',children:['Da ',{mark:'i',children:['dịu']}]}]);
   assert.deepEqual(parseProductInline('<script>alert(1)</script>'),['<script>alert(1)</script>']);
 });
+
+test("productInformationBlocks ignores legacy text fields and groupedProductSections honors block/caption toggles", async () => {
+  const { productInformationBlocks, groupedProductSections } = await import("../src/lib/product-content.js");
+  const product = {
+    story: "Nội dung cũ",
+    material: "Thành phần cũ",
+    detailSections: [
+      { id: "old", group: "description", content: "Text cũ không có ảnh hay effect" },
+      { id: "b1", group: "description", enabled: true, showText: true, image: "/a.jpg", content: "Chú thích 1", effect: "fade" },
+      { id: "b2", group: "description", enabled: false, showText: true, image: "/b.jpg", content: "Đang tắt khối", effect: "rise" },
+      { id: "b3", group: "specifications", enabled: true, showText: false, image: "/c.jpg", content: "Chú thích đang tắt", effect: "fade" },
+      { id: "b4", group: "usage", enabled: true, showText: false, image: "", content: "Chỉ có chữ nhưng tắt chú thích", effect: "fade" },
+    ],
+  };
+  const blocks = productInformationBlocks(product);
+  assert.deepEqual(blocks.map((b) => b.id), ["b1", "b2", "b3", "b4"]);
+  const groups = groupedProductSections(blocks);
+  assert.deepEqual(groups.description.map((b) => b.id), ["b1"]);
+  assert.deepEqual(groups.specifications.map((b) => b.id), ["b3"]);
+  assert.deepEqual(groups.usage, []);
+});
+
+test("informationTabSettings normalizes frame, caption, skeleton shimmer and motion settings safely", async () => {
+  const { informationTabSettings, informationMediaShadow } = await import("../src/lib/product-information.js");
+  const defaults = informationTabSettings();
+  assert.equal(defaults.imageRatio, "3 / 2");
+  assert.equal(defaults.imageFit, "cover");
+  assert.equal(defaults.imageRadius, 14);
+  assert.equal(defaults.skeletonEffect, "shimmer");
+  assert.equal(defaults.tabTransition, "slide-up");
+  assert.equal(defaults.revealEffect, "rise");
+  assert.equal(defaults.motionDuration, 450);
+
+  const custom = informationTabSettings({
+    imageRatio: "16 / 9",
+    imageFit: "contain",
+    imageRadius: 99,
+    imageBorderWidth: -5,
+    imageShadow: "elevated",
+    blockGap: 32,
+    captionAlign: "center",
+    skeletonEffect: "pulse",
+    tabTransition: "zoom",
+    revealEffect: "fade",
+    motionDuration: 260,
+  });
+  assert.equal(custom.imageRatio, "16 / 9");
+  assert.equal(custom.imageFit, "contain");
+  assert.equal(custom.imageRadius, 36);
+  assert.equal(custom.imageBorderWidth, 0);
+  assert.equal(custom.blockGap, 32);
+  assert.equal(custom.captionAlign, "center");
+  assert.equal(custom.skeletonEffect, "pulse");
+  assert.equal(custom.tabTransition, "zoom");
+  assert.equal(custom.revealEffect, "fade");
+  assert.equal(custom.motionDuration, 260);
+  assert.ok(informationMediaShadow(custom.imageShadow).includes("rgba"));
+});
+

@@ -1,3 +1,22 @@
+## 25/11/2026 — Nâng cấp khối Ảnh + Chú thích, công tắc bật/tắt, hiệu ứng Skeleton/Shimmer và bộ chỉnh Visual Builder cho nội dung sản phẩm
+
+- **Lý do**: Chủ website yêu cầu bật/tắt riêng từng mục (Mô tả / Thông số / Hướng dẫn sử dụng) cho từng sản phẩm, cho phép thêm nhiều khối Ảnh + Chú thích dưới ảnh kèm công tắc bật/tắt, xóa sạch text cũ và ảnh cũ trong phần nội dung, đồng thời thiết kế khung ảnh, hiệu ứng tải (skeleton/shimmer) và hiệu ứng hiện mượt khi chuyển tab/cuộn kèm đầy đủ tùy chỉnh trong Admin Visual Builder.
+- **Thay đổi chính**:
+  - **Bật/tắt mục, bật/tắt từng khối & chú thích, dọn sạch nội dung cũ (`src/admin/ProductInformationEditor.jsx`, `src/admin/ProductsAdmin.jsx`, `src/lib/product-content.js`, `src/admin/builder/preview-products.js`, `src/components/ProductDetail.jsx`, `src/styles/admin.css`)**:
+    - Giữ công tắc bật/tắt riêng từng tab (`Mô tả`, `Thông số`, `Hướng dẫn sử dụng`) cho từng sản phẩm, đồng thời bổ sung công tắc bật/tắt cho **từng khối** (`enabled`) và công tắc bật/tắt riêng cho **chú thích dưới ảnh** (`showText`), nút sắp xếp thứ tự khối (↑/↓), nút xóa sạch từng mục và nút xóa toàn bộ nội dung.
+    - Bỏ hẳn nhánh fallback text cũ ở `ProductDetail.jsx`, cập nhật sản phẩm mẫu Visual Builder (`preview-products.js`) sang định dạng khối Ảnh + Chú thích mới, và tự động làm sạch các trường text cũ (`story`, `material`, `size`, `color`, `origin`) khi admin bấm Lưu từng sản phẩm.
+  - **Khung ảnh, hiệu ứng tải Skeleton/Shimmer & chuyển tab/cuộn mượt (`src/components/ProductInformation.jsx`, `src/lib/product-information.js`, `src/styles/product-detail.css`)**:
+    - Thiết kế khung ảnh có tỷ lệ, cách lấp khung (`cover`/`contain`), bo góc, viền, màu nền, đổ bóng và khoảng cách khối tùy biến qua CSS variables; phát hiện ảnh đã cache (`img.complete`) để hiện ngay không bị kẹt trạng thái tải.
+    - Thêm hiệu ứng tải **Skeleton / Shimmer** (`shimmer`, `pulse`, `static`) khi ảnh đang tải (`data-image-state="loading"`), hiệu ứng chuyển tab mượt (`slide-up`, `fade`, `zoom`, `none`) và hiệu ứng hiện ảnh/chú thích khi cuộn tới (`rise`, `fade`, `zoom`, `none`), tôn trọng `prefers-reduced-motion: reduce`.
+  - **Đầy đủ tùy chỉnh trong Admin Visual Builder (`src/admin/builder/InformationTabsSettings.jsx`, `src/admin/builder/ProductDetailPanels.jsx`, `src/admin/builder/registry.js`)**:
+    - Mở rộng `InformationTabsSettings` với 4 nhóm cài đặt: Nhãn tab & mặc định, Khung ảnh nội dung, Khung chú thích dưới ảnh (gồm `StyleTypographyBlock` chỉnh font, cỡ chữ máy tính/điện thoại, màu, độ đậm, căn chữ, nền/viền/bo góc/padding), và Hiệu ứng tải (Skeleton/Shimmer) & Chuyển cảnh.
+    - Đăng ký `pdInfoMedia` và `pdInfoCaption` để admin có thể bấm trực tiếp vào khung ảnh hoặc chú thích trên khung xem trước Visual Builder để chỉnh ngay và lưu vào `productDetailStyles.informationTabs`.
+- **File / khu vực liên quan**: `src/lib/product-content.js`, `src/lib/product-information.js`, `src/components/ProductInformation.jsx`, `src/components/ProductDetail.jsx`, `src/admin/ProductInformationEditor.jsx`, `src/admin/ProductsAdmin.jsx`, `src/admin/builder/InformationTabsSettings.jsx`, `src/admin/builder/ProductDetailPanels.jsx`, `src/admin/builder/registry.js`, `src/admin/builder/preview-products.js`, `src/styles/product-detail.css`, `src/styles/admin.css`, `tests/product-content.test.js`, `qa/product-information-tabs.spec.js`.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: **272/272** unit test đạt, `eslint .` 0 lỗi, `vite build` và giới hạn bundle đạt (`149.13 kB` gzip).
+  - Playwright (`qa/product-information-tabs.spec.js` tại `width-320` và `width-1440` bằng Chrome hệ thống): **8/8** bài đạt (gồm bật/tắt tab, bật/tắt khối, bật/tắt chú thích, trạng thái skeleton/shimmer, và tùy chỉnh Visual Builder).
+- **Ảnh hưởng database**: Không thay đổi schema hay security rules và không xóa hàng loạt dữ liệu production. Các tùy chỉnh giao diện mới lưu trong `home.productDetailStyles.informationTabs`; khi admin bấm Lưu từng sản phẩm, dữ liệu khối mới lưu vào `detailSections` và các trường text cũ (`story`, `material`, `size`, `color`, `origin`) được làm sạch.
+
 ## 24/11/2026 — Làm sạch nội dung cũ và thêm thao tác cho từng mục ảnh
 
 - Mô tả, Thông số và Hướng dẫn sử dụng hiển thị các mục ảnh mới. Nội dung chi tiết cũ được bỏ qua trong trang sản phẩm và trình sửa. Mỗi tab bắt đầu với một ô ảnh nếu chưa có mục mới.

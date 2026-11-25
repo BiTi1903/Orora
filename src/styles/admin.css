@@ -807,3 +807,8 @@
 }
 
 .product-media-text-controls { min-width: 0; margin: 10px 0 0; padding: 0; border: 0; }
+.product-info-block-title { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.product-info-switch { margin: 0; font-size: 13px; }
+.product-content-section.is-tab-hidden { opacity: 0.72; border-style: dashed; }
+.product-info-block.is-block-disabled { opacity: 0.68; border-style: dashed; background: #faf6f8; }
+

@@ -91,3 +91,73 @@ test('product detail editor adds image blocks, applies text effects and hides in
  await expect(page.getByRole('tablist')).toHaveCount(0);
  await fit(page);
 });
+
+test('block and caption switches, skeleton shimmer, and Visual Builder frame/motion settings work together', async ({ page }) => {
+  let releaseImage;
+  const imageGate = new Promise((resolve) => { releaseImage = resolve; });
+  await page.route('**/slow-detail.svg', async (route) => {
+    await imageGate;
+    await route.fulfill({
+      contentType: 'image/svg+xml',
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1280"><rect width="1920" height="1280" fill="#f7c6d8"/></svg>',
+    });
+  });
+
+  await mount(page, `
+    import Info from '/src/components/ProductInformation.jsx';
+    import Editor from '/src/admin/ProductInformationEditor.jsx';
+    import Settings from '/src/admin/builder/InformationTabsSettings.jsx';
+    import ConfirmProvider from '/src/admin/ConfirmDialog.jsx';
+    import '/src/styles/product-detail.css';
+    const block = (group) => ({ id: crypto.randomUUID(), group, enabled: true, showText: true, image: '', imageAlt: '', title: '', content: '', effect: 'fade' });
+    function Demo() {
+      const [sections, setSections] = R.useState(() => [
+        { id: 'd1', group: 'description', enabled: true, showText: true, image: '/slow-detail.svg', imageAlt: 'Ảnh 1', title: 'Chú thích mẫu', content: 'Nội dung chú thích.', effect: 'rise' },
+        block('specifications'),
+        block('usage'),
+      ]);
+      const [visibility, setVisibility] = R.useState({});
+      const [settings, setSettings] = R.useState({});
+      return R.createElement('main', { className: 'admin-main' },
+        R.createElement(Settings, { value: settings, onChange: (patch) => setSettings((old) => ({ ...old, ...patch })) }),
+        R.createElement(Editor, { sections, visibility, onChange: setSections, onVisibility: (group, value) => setVisibility((old) => ({ ...old, [group]: value })), onUpload: () => {}, newBlock: block }),
+        R.createElement(Info, { sections, visibility, settings, css: () => ({}), select: () => () => {}, selectedClass: () => '' })
+      );
+    }
+    ${render('R.createElement(ConfirmProvider, null, R.createElement(Demo))')}
+  `, {
+    'lib/cloudinary.js': 'export const cloudinaryConfigured=false;export const uploadImage=async()=>"";',
+  });
+
+  const infoRoot = page.locator('.product-information');
+  const firstImage = infoRoot.locator('.product-information-image').first();
+  await expect(infoRoot).toHaveAttribute('data-skeleton-effect', 'shimmer');
+  await expect(infoRoot).toHaveAttribute('data-tab-transition', 'slide-up');
+  await expect(firstImage).toHaveAttribute('data-image-state', 'loading');
+
+  releaseImage();
+  await expect(firstImage).toHaveAttribute('data-image-state', 'ready');
+
+  const editor = page.getByRole('region', { name: 'Nội dung chi tiết sản phẩm' });
+  await editor.getByText('Chỉnh chữ sau ảnh', { exact: true }).first().click();
+  await editor.getByRole('switch', { name: 'Hiển thị chú thích khối 1' }).uncheck();
+  await expect(infoRoot.getByText('Nội dung chú thích.')).toHaveCount(0);
+  await expect(firstImage).toBeVisible();
+
+  await editor.getByRole('switch', { name: 'Hiển thị mục 1' }).uncheck();
+  await expect(infoRoot.locator('.product-information-image')).toHaveCount(0);
+  await editor.getByRole('switch', { name: 'Hiển thị mục 1' }).check();
+  await expect(infoRoot.locator('.product-information-image')).toHaveCount(1);
+
+  await page.getByText('Khung ảnh nội dung', { exact: true }).click();
+  await page.getByLabel('Bo góc ảnh (px)', { exact: true }).fill('24');
+  await page.getByText('Hiệu ứng tải (Skeleton / Shimmer) & Chuyển cảnh', { exact: true }).click();
+  await page.getByRole('combobox', { name: 'Hiệu ứng tải ảnh (Skeleton)', exact: true }).selectOption('pulse');
+  await page.getByRole('combobox', { name: 'Hiệu ứng chuyển tab', exact: true }).selectOption('fade');
+  await expect(infoRoot).toHaveAttribute('data-skeleton-effect', 'pulse');
+  await expect(infoRoot).toHaveAttribute('data-tab-transition', 'fade');
+  const radius = await infoRoot.evaluate((el) => el.style.getPropertyValue('--info-img-radius'));
+  expect(radius).toBe('24px');
+  await fit(page);
+});
+
