@@ -12,26 +12,32 @@ import useProducts from "../hooks/useProducts";
 import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
 
-function usePerView(rootRef) {
-  const [perView, setPerView] = useState(3);
+function useCarouselMetrics(rootRef) {
+  const read = (w) => ({
+    perView: w <= 1000 ? 2 : 3,
+    gap: w <= 768 ? 14 : w <= 1000 ? 20 : 28,
+  });
+  const [metrics, setMetrics] = useState(() =>
+    typeof window === "undefined" ? { perView: 3, gap: 28 } : read(window.innerWidth),
+  );
 
   useEffect(() => {
     const viewport = rootRef.current?.ownerDocument.defaultView || window;
     const update = () => {
-      const w = viewport.innerWidth;
-      setPerView(w <= 1000 ? 2 : 3);
+      const next = read(viewport.innerWidth);
+      setMetrics((prev) => (prev.perView === next.perView && prev.gap === next.gap ? prev : next));
     };
     update();
     viewport.addEventListener("resize", update);
     return () => viewport.removeEventListener("resize", update);
   }, [rootRef]);
 
-  return perView;
+  return metrics;
 }
 
 function ProductCarousel({ products, cardStyles, preview, selectedElement, onSelect, keyMap = null, groupLayout = false, carouselSettings = {} }) {
   const viewRef = useRef(null);
-  const perView = usePerView(viewRef);
+  const { perView, gap } = useCarouselMetrics(viewRef);
   useEffect(()=>{
     const view=viewRef.current;if(!view)return;
     const measure=()=>{const image=view.querySelector('.gallery-image');if(!image)return;let y=image.offsetHeight/2,node=image;while(node&&node!==view){y+=node.offsetTop;node=node.offsetParent;}view.style.setProperty('--gallery-arrow-y',`${y}px`);};
@@ -62,7 +68,6 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
     while (clones.length < pad) clones.push(...products);
   }
   const slides = looping ? [...products, ...clones.slice(0, pad)] : products;
-  const gap = perView === 2 ? 20 : 30;
 
   const setSlide = useCallback((next) => {
     indexRef.current = next;
@@ -304,7 +309,7 @@ function Collection({
   const changeFilters=next=>{
     const normalized=catalogFilters(next);
     if(preview||excludeId){setLocalFilters(normalized);return;}
-    navigate({pathname:location.pathname,search:writeCatalogFilters(location.search,normalized),hash:'#shop'},{replace:true,preventScrollReset:true});
+    navigate({pathname:location.pathname,search:writeCatalogFilters(location.search,normalized),hash:'#shop'},{replace:true,preventScrollReset:true,state:{keepScroll:true}});
   };
   const setCategoryId=id=>changeFilters({...savedFilters,category:id,page:1});
   const rawProducts=preview?sampleProducts||[]:liveProducts;

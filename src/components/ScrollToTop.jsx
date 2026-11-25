@@ -2,7 +2,7 @@ import { useLayoutEffect,useRef } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
 
 export default function ScrollToTop(){
- const {pathname,hash,search,key}=useLocation(),lastPath=useRef(null);
+ const {pathname,hash,search,key,state}=useLocation(),lastPath=useRef(null);
  const navigationType = useNavigationType();
  const positions = useRef(new Map());
  useLayoutEffect(() => {
@@ -21,6 +21,7 @@ export default function ScrollToTop(){
  },[]);
  useLayoutEffect(()=>{
   const pathChanged=lastPath.current!==pathname;lastPath.current=pathname;
+  if (!pathChanged && state?.keepScroll) return;
   const saved = pathname === '/' && navigationType === 'POP' ? positions.current.get(key) : undefined;
   if (saved !== undefined) {
    const restore = () => window.scrollTo({ top: saved, behavior: 'instant' });
@@ -65,6 +66,6 @@ export default function ScrollToTop(){
   observer.observe(document.body,{childList:true,subtree:true});
   window.addEventListener('wheel',interrupt,{passive:true});window.addEventListener('touchstart',interrupt,{passive:true});window.addEventListener('keydown',interrupt);
   return stop;
- },[pathname,hash,search,key,navigationType]);
+ },[pathname,hash,search,key,state,navigationType]);
  return null;
 }

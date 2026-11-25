@@ -4,8 +4,8 @@
 .collection {
   position: relative;
   width: 100%;
-  min-height: 100vh;
-  padding: 150px 7% 120px;
+  min-height: auto;
+  padding: 72px 7% 96px;
   background: linear-gradient(180deg, var(--bg) 0%, var(--blush) 50%, var(--petal) 100%);
   color: var(--plum);
   overflow: hidden;

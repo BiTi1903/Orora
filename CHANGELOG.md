@@ -1,3 +1,17 @@
+## 25/11/2026 — Thu gọn khoảng cách Dải chữ chạy ↔ Câu chuyện ↔ Sản phẩm và chống giật khung khi đổi chế độ Lưới / Trượt ngang
+
+- **Lý do**: Chủ website phản hồi khoảng cách giữa Dải chữ chạy, Câu chuyện và Sản phẩm đang quá xa nhau, và khi bấm chuyển giữa `?view=grid#shop` và `?view=carousel#shop` thì khung ảnh sản phẩm bị nhảy.
+- **Thay đổi chính**:
+  - **Thu gọn khoảng cách các mục (`src/styles/about.css`, `src/styles/collection.css`, `src/admin/builder/defaults.js`)**:
+    - Bỏ `min-height: 100vh` khỏi `.about` và `.collection`, giảm khoảng đệm dọc mặc định từ `140px / 150px` xuống `72px` trên máy tính và `52px–64px` trên điện thoại để 3 khu vực liền mạch, cân đối (vẫn giữ tùy chỉnh padding trong Visual Builder).
+  - **Chống nhảy khung khi chuyển Lưới / Trượt ngang (`src/components/Collection.jsx`, `src/components/ScrollToTop.jsx`, `src/styles/catalog-filters.css`)**:
+    - Truyền `state: { keepScroll: true }` khi đổi bộ lọc/chế độ xem để `ScrollToTop` không cuộn giật trang mỗi lần đổi `?view=grid#shop` ↔ `?view=carousel#shop`.
+    - Khởi tạo đồng bộ số cột (`perView`) và khoảng cách cột (`gap`: `28px / 20px / 14px`) + `padding-top: 0` giữa chế độ Lưới và Trượt ngang để khung ảnh sản phẩm đứng yên, không nhảy chiều cao/bề rộng khi chuyển qua lại.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: 272/272 unit test, ESLint 0 lỗi, Vite build & giới hạn bundle đạt.
+  - Playwright (`qa/mobile-catalog.spec.js`, `qa/carousel-resilience.spec.js` tại `width-390` và `width-1440`): đạt toàn bộ.
+- **Ảnh hưởng database**: Không thay đổi database hay security rules.
+
 ## 25/11/2026 — Căn đều chiều cao khung ảnh và khung mua sản phẩm trên máy tính
 
 - **Lý do**: Chủ website phản hồi khung ảnh (`.product-detail-gallery`) và khung thông tin mua hàng (`.product-detail-info`) trên trang Chi tiết sản phẩm đang lệch đáy không đều nhau.

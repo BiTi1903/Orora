@@ -17,8 +17,8 @@ const DEFAULT_STYLE = {
 const DEFAULT_ABOUT = {
   section: {
     background: "#fffafc",
-    paddingTop: 140,
-    paddingBottom: 140,
+    paddingTop: 72,
+    paddingBottom: 72,
     gap: 7,
   },
 

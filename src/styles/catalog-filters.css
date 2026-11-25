@@ -12,7 +12,7 @@
 .catalog-price-pills button { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:40px; padding:8px 16px; border-radius:999px; font-weight:500; }
 .catalog-price-pills button[aria-pressed="true"] { background:var(--catalog-accent); color:white; border-color:var(--catalog-accent); }
 .catalog-toolbar :focus-visible,.catalog-pagination :focus-visible { outline:2px solid var(--catalog-accent,var(--rose-deep)); outline-offset:2px; }
-.catalog-product-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:28px; padding-top:12px; }
+.catalog-product-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:28px; padding-top:0; }
 .catalog-product-grid > div { display:flex; min-width:0; }
 .catalog-pagination { display:flex; justify-content:center; align-items:center; gap:14px; margin-top:28px; font-size:13px; }
 .catalog-pagination button { min-width:64px; }

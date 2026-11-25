@@ -4,8 +4,8 @@
 .about {
   position: relative;
   width: 100%;
-  min-height: 100vh;
-  padding: 140px 7%;
+  min-height: auto;
+  padding: 72px 7%;
   display: flex;
   align-items: center;
   gap: 7%;
@@ -159,7 +159,7 @@
 
 /* RESPONSIVE */
 @media (max-width: 900px) {
-  .about { flex-direction: column; align-items: stretch; padding: 110px 5% 90px; gap: 60px; }
+  .about { flex-direction: column; align-items: stretch; padding: 64px 5% 56px; gap: 40px; }
   /* !important để đè style inline width (%) do Visual Builder gắn vào */
   .about-visual { width: 100% !important; max-width: 520px; margin: 0 auto; }
   .about-image-wrapper { width: 100% !important; height: auto !important; aspect-ratio: 4 / 5; min-height: 380px; }
@@ -168,7 +168,7 @@
 }
 
 @media (max-width: 480px) {
-  .about { padding: 100px 20px 80px; }
+  .about { padding: 52px 20px 48px; }
   .about-badge { right: 8px; bottom: 30px; padding: 12px 18px 12px 14px; }
   .about-stats { gap: 26px; }
   .about-stats strong { font-size: 40px; }
