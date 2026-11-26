@@ -5,7 +5,7 @@ import { getHomeContent, saveHomeContent } from "../lib/api";
 import useAddressOptions from "../hooks/useAddressOptions";
 import useDraftGuard from "../hooks/useDraftGuard";
 import { useConfirm } from "./confirm-context";
-import { validShippingFee } from "../lib/shipping";
+import { validShippingFee, shippingPolicy } from "../lib/shipping";
 import { formatVnd } from "../lib/commerce";
 export default function ShippingAdmin() {
   const confirm = useConfirm();
@@ -60,7 +60,7 @@ export default function ShippingAdmin() {
   };
   return <section className="shipping-settings"><div className="admin-top"><div><h1>Phí vận chuyển</h1><p className="admin-muted">Địa chỉ hai cấp: tỉnh/thành phố và phường/xã theo dữ liệu mới.</p></div><button type="button" className="admin-btn" disabled={loading || busy} onClick={async () => { if (hasUnsavedChanges && !await confirm("Bạn có thay đổi phí ship chưa lưu. Tải lại và bỏ các thay đổi này?", { title: "Tải lại phí vận chuyển", confirmLabel: "Tải lại", danger: true })) return; setDrafts({}); setVersion((value) => value + 1); }}>Tải lại</button></div>
     {notice && <p role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
-    <div aria-busy={busy && savingAction === "enabled"} className="admin-card admin-form"><h2>Tính ship theo địa chỉ</h2><label className="admin-check"><input type="checkbox" role="switch" checked={enabled} disabled={loading || failed || busy} onChange={(event) => setEnabled(event.target.checked)} />Tự tính phí ship khi khách đặt hàng</label><p className="admin-muted">Nhập phí trước khi bật. Địa chỉ chưa có mức phí sẽ chưa nhận đơn khi đang bật tính ship; số 0 là miễn phí.</p><div><button className="admin-btn" aria-busy={busy && savingAction === "enabled"} disabled={loading || failed || busy} onClick={async () => {
+    <div aria-busy={busy && savingAction === "enabled"} className="admin-card admin-form"><h2>Tính ship theo địa chỉ</h2><label className="admin-check"><input type="checkbox" role="switch" checked={enabled} disabled={loading || failed || busy} onChange={(event) => setEnabled(event.target.checked)} />Tự tính phí ship khi khách đặt hàng</label><p className="admin-muted">Nhập phí trước khi bật. Địa chỉ chưa có mức phí sẽ chưa nhận đơn khi đang bật tính ship; số 0 là miễn phí.</p><p>Khách sẽ thấy sau khi lưu: {shippingPolicy(enabled)}</p><div><button className="admin-btn" aria-busy={busy && savingAction === "enabled"} disabled={loading || failed || busy} onClick={async () => {
       if (enabled && !Object.values(settings.provinces || {}).some((item) => validShippingFee(item.fee) || Object.values(item.wardFees || {}).some(validShippingFee))) return setNotice({ error: true, text: "Lưu ít nhất một mức phí trước khi bật tính ship." });
       if (await save({ enabled }, "Đã lưu trạng thái tính phí ship.","enabled")) setSettings((value) => ({ ...value, enabled }));
     }}>Lưu trạng thái tính ship</button></div></div>

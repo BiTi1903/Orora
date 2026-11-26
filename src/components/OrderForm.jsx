@@ -13,7 +13,10 @@ import { useLocale, translatePhrase } from "../lib/i18n";
 
 export default function OrderForm({ product, cartItems, home, onClose, selection, initialVariantId = "", initialQuantity = 1, onSelectionChange, fromCart = false, motionSource }) {
   const [closing, setClosing] = useState(false);
+  const dirty = useRef(false);
   const requestClose = useCallback(() => {
+    if (dirty.current && !window.confirm("Bỏ thông tin đặt hàng vừa nhập?")) return;
+    dirty.current = false;
     if (!motionSource || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       onClose?.();
     } else {
@@ -78,7 +81,7 @@ export default function OrderForm({ product, cartItems, home, onClose, selection
   const titleStyle = useMemo(() => toCss(appearance.formTitleStyle || appearance.formHeadingStyle, { responsive: true }), [appearance]);
   if (result?.code) return <ModalDialog key="success" title={tr(appearance.receiptTitle?.trim() || CHECKOUT_RECEIPT_COPY.receiptTitle)} motionSource={motionSource} motionDuration={240} motionClosing={closing} onMotionClosed={onClose} onClose={requestClose} className="order-success-modal" style={receiptModalStyle(appearance)} headingStyle={toCss(appearance.receiptTitleStyle, { responsive: true })}><OrderSuccessContent order={result} home={home} appearance={appearance} onClose={requestClose} /></ModalDialog>;
   if (!activeProduct) return null;
-  return <ModalDialog key="form" title={tr(appearance.formLabels?.title?.trim() || CHECKOUT_COPY.title)} motionSource={motionSource} motionDuration={240} motionClosing={closing} onMotionClosed={onClose} onClose={requestClose} closeDisabled={busy} className="order-form-modal" style={modalStyle} headingStyle={titleStyle}><OrderFormFields product={activeProduct} items={normalizedItems} subtotal={subtotal} options={isMulti ? [] : options} variantId={variantId} quantity={quantity} onVariantChange={changeVariant} onQuantityChange={changeQuantity} addresses={addresses} provinceCode={provinceCode} wardCode={wardCode} onProvinceChange={changeProvince} onWardChange={setWardCode} methods={methods} unitPrice={unitPrice} shipping={shippingProp} total={total} appearance={appearance} busy={busy} error={result?.error} onSubmit={async (event) => {
+  return <ModalDialog key="form" title={tr(appearance.formLabels?.title?.trim() || CHECKOUT_COPY.title)} motionSource={motionSource} motionDuration={240} motionClosing={closing} onMotionClosed={onClose} onClose={requestClose} closeDisabled={busy} className="order-form-modal" style={modalStyle} headingStyle={titleStyle}><OrderFormFields onEdit={()=>{dirty.current=true;}} product={activeProduct} items={normalizedItems} subtotal={subtotal} options={isMulti ? [] : options} variantId={variantId} quantity={quantity} onVariantChange={changeVariant} onQuantityChange={changeQuantity} addresses={addresses} provinceCode={provinceCode} wardCode={wardCode} onProvinceChange={changeProvince} onWardChange={setWardCode} methods={methods} unitPrice={unitPrice} shipping={shippingProp} total={total} appearance={appearance} busy={busy} error={result?.error} onSubmit={async (event) => {
     event.preventDefault();
     if (submitting.current || busy || !methods.length || !provinceCode || !wardCode || (home.shippingSettings?.enabled === true && shipping.fee === null)) return;
     if (!isMulti && ((options.length > 0 && !variant) || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_ORDER_QUANTITY)) return;
@@ -126,6 +129,7 @@ export default function OrderForm({ product, cartItems, home, onClose, selection
           window.dispatchEvent(new CustomEvent("orora-cart-remove", { detail: { id: activeProduct.id || activeProduct.slug, variantId, quantity } }));
         }
       }
+      dirty.current=false;
       setResult({ ...orderedProduct, ...json, recipient });
     } catch (error) { setResult({ error: error.name === "AbortError" ? appearance.orderTimeoutLabel?.trim() || "Chưa nhận được phản hồi. Bạn có thể thử gửi lại với cùng thông tin hoặc tra cứu đơn hàng để kiểm tra." : error instanceof TypeError || error instanceof SyntaxError ? "Kết nối bị gián đoạn. Hãy thử gửi lại hoặc liên hệ ORORA." : error.message || "Chưa gửi được đơn. Vui lòng thử lại." }); }
     finally { window.clearTimeout(timeout); submitting.current = false; setBusy(false); }

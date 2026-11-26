@@ -4,7 +4,7 @@ import "../styles/product-detail.css";
 import { dirtyRegistry } from "../lib/dirty-registry";
 import useOrderNotifications from "./useOrderNotifications";
 import { newsletterRequest } from "./newsletter-api";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { auth, onAuthStateChanged, signOut } from "../lib/firebaseAuth";
 import AdminLogin from "./AdminLogin";
 import { clearAdminCache, prefetchAdminTab } from "./admin-cache";
@@ -61,14 +61,16 @@ const initialAdminTab = () => {
 
 function syncAdminUrl(key, replace = false) {
   if (typeof window === "undefined") return;
+  const position = window.history.state?.adminPosition ?? 0;
+  const state = {...window.history.state, adminPosition: position + (replace ? 0 : 1)};
   const method = replace ? "replaceState" : "pushState";
   if (window.location.pathname.startsWith("/admin")) {
     const nextPath = key === "dashboard" ? "/admin" : `/admin/${key}`;
     if (window.location.pathname !== nextPath || window.location.hash) {
-      window.history[method](null, "", nextPath);
+      window.history[method](state, "", nextPath);
     }
   } else if (window.location.hash !== `#${key}`) {
-    window.history[method](null, "", `#${key}`);
+    window.history[method](state, "", `#${key}`);
   }
 }
 
@@ -77,6 +79,7 @@ function AdminWorkspace({ user }) {
   const notifications = useOrderNotifications();
   const [pendingRequest, setPendingRequest] = useState(null);
   const [signOutError, setSignOutError] = useState("");
+  const position = useRef(window.history.state?.adminPosition ?? 0);
   const [tab, setTab] = useState(initialAdminTab);
   const [orderMailDraft, setOrderMailDraft] = useState(null);
   const [orderMailVersion, setOrderMailVersion] = useState(0);
@@ -84,6 +87,7 @@ function AdminWorkspace({ user }) {
   const [storeSection, setStoreSection] = useState("links");
   const [storeVersion, setStoreVersion] = useState(0);
 
+  useEffect(()=>{document.title=GROUPS.flatMap(group=>group.items).find(([key])=>key===tab)[1]+" · Quản trị ORORA";},[tab]);
   const navigate = async (key, { force = false } = {}) => {
     if (!ALL_TABS.includes(key) || key === tab) return;
     const sameBuilder = (tab === "home" || tab === "store") && (key === "home" || key === "store");
@@ -97,17 +101,30 @@ function AdminWorkspace({ user }) {
     }
     setTab(key);
     syncAdminUrl(key);
+    position.current=window.history.state?.adminPosition ?? 0;
   };
 
   useEffect(() => {
-    const onNav = () => setTab(initialAdminTab());
+    if(window.history.state?.adminPosition==null) window.history.replaceState({...window.history.state,adminPosition:position.current},"");
+    const onNav = () => {
+      const next=initialAdminTab();
+      if(next===tab)return;
+      if(dirtyRegistry.hasChanges() && !window.confirm("Bỏ thay đổi chưa lưu và rời mục này?")) {
+        const delta=position.current-window.history.state?.adminPosition;
+        if(Number.isInteger(delta)&&delta) window.history.go(delta);
+        else syncAdminUrl(tab,true);
+        return;
+      }
+      position.current=window.history.state?.adminPosition ?? 0;
+      setTab(next);
+    };
     window.addEventListener("popstate", onNav);
-    window.addEventListener("hashchange", onNav);
+
     return () => {
       window.removeEventListener("popstate", onNav);
-      window.removeEventListener("hashchange", onNav);
+
     };
-  }, []);
+  }, [tab]);
 
   useEffect(() => {
     const open = (event) => {

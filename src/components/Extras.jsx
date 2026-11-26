@@ -430,6 +430,12 @@ export function Newsletter({
             readOnly={preview}
           />
 
+        {
+            <label className={`newsletter-consent ${selectedClass("nlConsent")}`} data-builder-key={preview ? "nlConsent" : undefined} onClick={select("nlConsent")} style={css("consent")}>
+              <input type="checkbox" name="consent" required={!preview} disabled={preview} />
+              <span>{c.newsletterConsent ?? "Tôi đồng ý nhận email về sản phẩm và ưu đãi từ ORORA. Có thể hủy đăng ký bất cứ lúc nào."}</span>
+            </label>
+        }
           <button
             type="submit"
             disabled={!preview && submission.busy}
@@ -442,12 +448,6 @@ export function Newsletter({
             {submission.busy ? "Đang lưu email…" : c.newsletterButton || "Đăng ký"}
           </button>
         </div>
-        {
-            <label className={`newsletter-consent ${selectedClass("nlConsent")}`} data-builder-key={preview ? "nlConsent" : undefined} onClick={select("nlConsent")} style={css("consent")}>
-              <input type="checkbox" name="consent" required={!preview} disabled={preview} />
-              <span>{c.newsletterConsent ?? "Tôi đồng ý nhận email về sản phẩm và ưu đãi từ ORORA. Có thể hủy đăng ký bất cứ lúc nào."}</span>
-            </label>
-        }
       </form>
       {!preview && submission.message && (
         <p role="status" className={`newsletter-result ${submission.ok ? "success" : "error"}`}>{submission.message}</p>

@@ -64,7 +64,7 @@ export default function PreviewFrame({ device, children, surfaces, zoom="fit", s
     syncStyles();
     const observer = new MutationObserver(syncStyles);
     observer.observe(document.head, { childList: true, subtree: true, characterData: true, attributes:true, attributeFilter:["rel","href"] });
-    const preventNavigation = (event) => { if (event.target.closest("a")) event.preventDefault(); };
+    const preventNavigation = (event) => { if (event.target.closest("a") && !event.target.closest('a.order-consent-link[href="/chinh-sach"]')) event.preventDefault(); };
     frameDocument.addEventListener("click", preventNavigation);
     return () => { observer.disconnect(); mirrors.forEach(({ clone }) => clone.remove()); staticStyle.remove(); frameDocument.removeEventListener("click", preventNavigation); };
   }, [frameDocument]);

@@ -326,6 +326,7 @@ export default function AnalyticsDashboard() {
     if (nextDays === days) return;
     setBusy(true);
     setError("");
+    setData(null);
     setDays(nextDays);
   };
 

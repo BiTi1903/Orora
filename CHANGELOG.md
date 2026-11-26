@@ -1,3 +1,10 @@
+## 26/11/2026 — Sửa luồng đặt hàng và quản trị sau rà soát UX
+
+- Sửa rewrite trang chính sách, xác nhận bỏ bản nhập, kiểm tra điện thoại, tạm tính giỏ, tra cứu và thứ tự đăng ký nhận tin.
+- Đồng bộ cam kết và phí giao hàng, thêm tình huống xem trước checkout, bảo vệ bản nháp khi duyệt lịch sử, sửa tiêu đề admin và số liệu theo kỳ. Cho phép tra email chính xác trên lịch sử đơn có phân trang.
+- Kiểm tra trên môi trường phát triển: 273 kiểm thử đơn vị, 8 ca Chromium ở 390 px, lint và build. Kiểm tra đường dẫn chính sách từ checkout, trực tiếp và khi tải lại. Chưa kiểm tra bản triển khai Vercel.
+- Database: bổ sung truy vấn đọc theo email, không đổi schema hoặc di chuyển dữ liệu.
+
 ## 26/11/2026 — Ẩn mặc định nhãn nhỏ "Products" ở mục Sản phẩm và thêm công tắc bật/tắt trong Visual Builder
 
 - **Lý do**: Chủ website yêu cầu bỏ phần chữ nhãn nhỏ `Products` ở mục Sản phẩm vì chiếm chỗ và không đẹp.

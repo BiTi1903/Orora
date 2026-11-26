@@ -1,3 +1,4 @@
+import {validOrderPhone} from "../src/lib/order-phone.js";
 import { MAX_ORDER_QUANTITY, productVolumeOptions, selectedVolumeOption, validateVolumeOptions, volumePriceText } from "../src/lib/product-options.js";
 import { recordOrderActivity } from "./order-activity.js";
 import { resolveDeliveryAddress } from "./addresses.js";
@@ -70,7 +71,7 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
       const rawItems = isMulti
         ? body.items
         : [{ productId: body.productId, quantity: body.quantity, variantId: body.variantId, expectedVariantLabel: body.expectedVariantLabel, expectedPriceText: body.expectedPriceText }];
-      if (!uuid(body.requestId) || !rawItems.length || rawItems.length > 50 || customer.name.length < 2 || customer.name.length > 100 || !/^\+?\d{7,15}$/.test(customer.phone) || !validOrderEmail(customer.email) || customer.address.length < 10 || customer.address.length > 500 || customer.note.length > 1000 || body.consent !== true || !Object.hasOwn(PAYMENT_LABELS, body.paymentMethod)) {
+      if (!uuid(body.requestId) || !rawItems.length || rawItems.length > 50 || customer.name.length < 2 || customer.name.length > 100 || !validOrderPhone(customer.phone) || !validOrderEmail(customer.email) || customer.address.length < 10 || customer.address.length > 500 || customer.note.length > 1000 || body.consent !== true || !Object.hasOwn(PAYMENT_LABELS, body.paymentMethod)) {
         return res.status(400).json({ message: "Kiểm tra họ tên, số điện thoại, email, địa chỉ, số lượng và xác nhận đồng ý." });
       }
       for (const item of rawItems) {
@@ -324,7 +325,9 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
           return res.status(200).json({ orders: list, nextCursor: null });
         }
         const pageSize = historyOnly || bounceOnly ? 20 : 50;
-        let query = orders.orderBy("createdAt", "desc").limit(pageSize);
+        const customerEmail = req.query?.customerEmail;
+        if (customerEmail && (typeof customerEmail !== "string" || !validOrderEmail(customerEmail))) return res.status(400).json({message:"Email chưa hợp lệ."});
+        let query = customerEmail ? orders.where("customer.email", "==", customerEmail.toLowerCase()).limit(pageSize) : orders.orderBy("createdAt", "desc").limit(pageSize);
         if (req.query?.cursor) {
           if (!uuid(req.query.cursor)) return res.status(400).json({ message: "Trang không hợp lệ." });
           const last = await orders.doc(req.query.cursor).get();

@@ -18,7 +18,7 @@ export default function Seo() {
   const serialized = JSON.stringify(seo);
   useEffect(() => {
     const current = JSON.parse(serialized);
-    document.title = current.title || "ORORA";
+    if (!pathname.startsWith("/admin")) document.title = current.title || "ORORA";
     document.documentElement.lang = "vi";
     const meta = (attribute, name, content) => {
       let element = document.head.querySelector(`meta[${attribute}="${name}"]`);
@@ -41,6 +41,6 @@ export default function Seo() {
     let data = document.getElementById("orora-structured-data");
     if (!data) { data = document.createElement("script"); data.id = "orora-structured-data"; data.type = "application/ld+json"; document.head.append(data); }
     data.textContent = JSON.stringify(current.structuredData);
-  }, [serialized]);
+  }, [serialized, pathname]);
   return null;
 }

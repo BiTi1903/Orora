@@ -1,5 +1,5 @@
 import { invalidMoneyRange } from "../lib/order-filters";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { orderRequest } from "./order-api";
 import { summarizeOrderCustomers } from "../lib/order-summary";
 import { formatVnd } from "../lib/commerce";
@@ -14,29 +14,35 @@ export default function OrderCustomers({ onViewOrders }) {
   const [error, setError] = useState("");
   const [nextCursor, setNextCursor] = useState(null);
   const [version, setVersion] = useState(0);
+  const generation=useRef(0);
+  const email = /^\S+@\S+\.\S+$/.test(search.trim()) ? search.trim().toLowerCase() : "";
   useEffect(() => {
+    generation.current++;
     let alive = true;
     async function load() {
+      setOrders([]);
       setBusy(true); setError(""); setNextCursor(null);
       try {
-        const page = await orderRequest(null, {});
+        const page = await orderRequest(null, email ? {customerEmail:email} : {});
         if (!alive) return;
         setOrders(page.orders || []);
         setNextCursor(page.nextCursor || null);
       } catch (cause) { if (alive) setError(cause.message); }
       finally { if (alive) setBusy(false); }
     }
-    load(); return () => { alive = false; };
-  }, [version]);
+    const timer=setTimeout(load,email?300:0); return () => { alive = false;clearTimeout(timer); };
+  }, [version,email]);
   const loadMore = async () => {
+    const id=generation.current;
     if (!nextCursor || busy) return;
     setBusy(true); setError("");
     try {
-      const page = await orderRequest(null, { cursor: nextCursor });
+      const page = await orderRequest(null, { cursor: nextCursor, ...(email?{customerEmail:email}:{}) });
+      if(id!==generation.current)return;
       setOrders((current) => [...new Map([...current, ...(page.orders || [])].map((order) => [order.id, order])).values()]);
       setNextCursor(page.nextCursor || null);
-    } catch (cause) { setError(cause.message); }
-    finally { setBusy(false); }
+    } catch (cause) { if(id===generation.current)setError(cause.message); }
+    finally { if(id===generation.current)setBusy(false); }
   };
   const { customers, missingEmail } = summarizeOrderCustomers(orders);
   const query = search.trim().toLowerCase();
@@ -58,7 +64,7 @@ export default function OrderCustomers({ onViewOrders }) {
       {invalidMoneyRange(min, max) && <p className="admin-error" role="alert">Khoảng tiền chưa hợp lệ.</p>}
       <div className="admin-card admin-customer-order-scroll"><table className="admin-table"><thead><tr><th>Khách hàng</th><th>Số đơn</th><th>Tổng giá trị</th><th>Đã thanh toán</th><th>Chưa thu</th><th /></tr></thead><tbody>{visible.map((item) => <tr key={item.email}>
         <td><strong>{item.email}</strong><br /><small>{item.name}</small></td><td>{item.orderCount}{item.cancelledCount > 0 && <small className="order-summary-note">{item.cancelledCount} đơn hủy</small>}{item.quoteCount > 0 && <small className="order-summary-note">{item.quoteCount} đơn chờ báo giá</small>}</td><td>{formatVnd(item.total)}</td><td>{formatVnd(item.paid)}</td><td>{formatVnd(item.awaitingPayment)}</td><td><button className="admin-btn" onClick={() => onViewOrders(item.email, orders)}>Xem đơn của {item.email}</button></td>
-      </tr>)}</tbody></table>{!visible.length && <p className="admin-muted">Không có khách hàng phù hợp.</p>}</div>
+      </tr>)}</tbody></table>{!visible.length && <p className="admin-muted">{nextCursor ? `Chưa tìm thấy trong ${orders.length} đơn đã tải.` : "Không có khách hàng phù hợp."}</p>}</div>
       {nextCursor && <button type="button" className="admin-btn" disabled={busy} style={{ marginTop: 10 }} onClick={loadMore}>{busy ? "Đang tải…" : "Tải thêm đơn cũ hơn"}</button>}
       <p className="admin-muted">Số đơn gồm cả đơn hủy. Các cột tiền chỉ tính tạm tính sản phẩm của đơn chưa hủy, chưa gồm phí giao hàng; đơn chờ báo giá chưa cộng vào tiền. COD chưa thu tiền vẫn nằm trong “Chưa thu”. “Đã thanh toán” dựa trên ô xác nhận nhận tiền của admin.</p>
     </>}

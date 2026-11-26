@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { firebaseConfigured } from "../lib/firebase";
 import { auth } from "../lib/firebaseAuth";
 import "../styles/admin.css";
 
 export default function AdminLogin({ onLoggedIn }) {
+  useEffect(()=>{document.title="Đăng nhập · Quản trị ORORA";},[]);
   const [email,setEmail]=useState("");
   const [password,setPassword]=useState("");
   const [error,setError]=useState("");

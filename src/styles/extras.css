@@ -297,3 +297,5 @@
 .newsletter-result.error { color: #9b1c32; }
 .newsletter-result.success { color: #23583b; }
 .review { position:relative; box-sizing:border-box; }
+
+.news-form .news-form-row { display:grid; grid-template-columns:minmax(0,1fr); }

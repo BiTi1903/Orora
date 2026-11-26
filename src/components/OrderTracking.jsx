@@ -86,7 +86,7 @@ export default function OrderTracking() {
       if (id === sequence.current) setLoadingCode('');
     }
   };
-  const switchMode=key=>{request.current?.abort();detailRequest.current?.abort();sequence.current++;setBusy(false);setLoadingCode('');setDetailErrors({});setOrders([]);setNextCursor(null);setSelectedCode(null);setDetailClosing(false);setStatus('all');setPage(1);setError('');setMoreError('');setMode(key);};
+  const switchMode=key=>{if(key===mode)return;request.current?.abort();detailRequest.current?.abort();sequence.current++;setBusy(false);setLoadingCode('');setDetailErrors({});setOrders([]);setNextCursor(null);setSelectedCode(null);setDetailClosing(false);setStatus('all');setPage(1);setError('');setMoreError('');setMode(key);};
   return <section className={`order-tracking-page${orders.length?" has-results":""}`} style={trackingTheme(styles)}>
   <div className="order-tracking-topbar"><Link className="order-tracking-back" to="/" style={css('help')}><span aria-hidden="true">←</span><span>{copy.backLabel}</span></Link></div>
   <header className="order-tracking-heading"><p className="product-eyebrow" style={css('eyebrow')}>{copy.eyebrow}</p><h1 style={css('title')}>{copy.title}</h1><p style={css('intro')}>{copy.intro}</p></header>

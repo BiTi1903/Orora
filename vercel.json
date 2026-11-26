@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/chinh-sach", "destination": "/index.html" },
     {
       "source": "/api/storefront-shell",
       "destination": "/api/storefront/shell"

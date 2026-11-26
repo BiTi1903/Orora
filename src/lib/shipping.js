@@ -8,3 +8,7 @@ export function shippingFeeFor(settings, provinceCode, wardCode) {
   const fee = override !== undefined && override !== null ? override : province?.fee;
   return validShippingFee(fee) ? { fee, reason: "" } : { fee: null, reason: "Chưa có phí giao hàng cho địa chỉ này. Vui lòng liên hệ ORORA." };
 }
+
+export function shippingPolicy(enabled) {
+  return enabled ? "Phí giao hàng được tính tự động theo Tỉnh/Thành phố và Phường/Xã trước khi quý khách xác nhận đặt đơn." : "Phí giao hàng sẽ được xác nhận sau.";
+}

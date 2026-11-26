@@ -1,3 +1,4 @@
+import {validOrderPhone} from "../lib/order-phone";
 import {memo,useMemo,useState} from 'react';
 import ProductPurchaseSelection from './ProductPurchaseSelection';
 import AddressSelect from './AddressSelect';
@@ -7,7 +8,8 @@ import {CHECKOUT_COPY,checkoutSubmitStyle} from '../lib/checkout-presentation';
 import {translatePhrase,useLocale} from '../lib/i18n';
 import '../styles/checkout.css';
 
-function OrderFormFields({product,items=null,subtotal,options,variantId,quantity,onVariantChange,onQuantityChange,addresses,provinceCode,wardCode,onProvinceChange,onWardChange,methods,unitPrice,shipping,total,appearance={},busy=false,error,onSubmit,preview=false,selectedElement,onSelect}){
+function OrderFormFields({onEdit,product,items=null,subtotal,options,variantId,quantity,onVariantChange,onQuantityChange,addresses,provinceCode,wardCode,onProvinceChange,onWardChange,methods,unitPrice,shipping,total,appearance={},busy=false,error,onSubmit,preview=false,selectedElement,onSelect}){
+ const [phoneError,setPhoneError]=useState(false);
  const locale=useLocale();
  const tr=(val)=>preview?val:translatePhrase(val,locale);
  const [addressError,setAddressError]=useState(false);
@@ -51,7 +53,7 @@ function OrderFormFields({product,items=null,subtotal,options,variantId,quantity
    target?.focus?.();
   }
  };
- return <form className="website-order checkout-form" aria-busy={busy} aria-label={copy.title?.trim()||CHECKOUT_COPY.title} style={formTextStyle} onKeyDown={event=>{
+ return <form onChange={onEdit} className="website-order checkout-form" aria-busy={busy} aria-label={copy.title?.trim()||CHECKOUT_COPY.title} style={formTextStyle} onKeyDown={event=>{
   if(!preview&&event.key==="Enter"&&event.target.tagName==="INPUT"&&!(event.target.getAttribute("aria-expanded")==="true"&&event.target.getAttribute("aria-activedescendant"))){
    if(!isMulti&&options.length>0&&!variantId){event.preventDefault();setVariantError(true);focusFirstMissing(event.currentTarget);return;}
    if(!provinceCode||!wardCode||shipping.blocked){event.preventDefault();setAddressError(true);focusFirstMissing(event.currentTarget);}
@@ -91,7 +93,7 @@ function OrderFormFields({product,items=null,subtotal,options,variantId,quantity
     <>
      <div {...mark('ofSelection')} style={selectionStyle}>
       <fieldset className="checkout-selection-fieldset" disabled={busy||preview}>
-       <ProductPurchaseSelection options={options} variantId={variantId} quantity={quantity} labels={{volume:label('volumeLabel'),quantity:label('quantityLabel')}} onVariantChange={next=>{setVariantError(false);onVariantChange(next);}} onQuantityChange={onQuantityChange} disabled={busy||preview} required/>
+       <ProductPurchaseSelection options={options} variantId={variantId} quantity={quantity} labels={{volume:label('volumeLabel'),quantity:label('quantityLabel')}} onVariantChange={next=>{onEdit?.();setVariantError(false);onVariantChange(next);}} onQuantityChange={next=>{onEdit?.();onQuantityChange?.(next);}} disabled={busy||preview} required/>
       </fieldset>
      </div>
      {variantError&&options.length>0&&!variantId&&<p className="order-error" role="alert">Vui lòng chọn dung tích sản phẩm để tiếp tục.</p>}
@@ -102,7 +104,7 @@ function OrderFormFields({product,items=null,subtotal,options,variantId,quantity
    <section className="checkout-section checkout-card">
     <h3 {...mark('ofRecipientHeading','checkout-step-heading')} style={headingStyle}><span className="checkout-step-num" aria-hidden="true">1</span><span>{copy.recipientHeading}</span></h3>
     <div {...mark('ofRecipientFields')}>
-     <div className="order-field-row"><label>{label('nameLabel')}<input name="name" required minLength={2} maxLength={100} autoComplete="name" readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('namePlaceholder')}/></label><label>{label('phoneLabel')}<input name="phone" type="tel" required maxLength={25} autoComplete="tel" inputMode="tel" readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('phonePlaceholder')}/></label></div>
+     <div className="order-field-row"><label>{label('nameLabel')}<input name="name" required minLength={2} maxLength={100} autoComplete="name" readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('namePlaceholder')}/></label><label>{label('phoneLabel')}<input name="phone" onInput={e=>{const invalid=!validOrderPhone(e.currentTarget.value);e.currentTarget.setCustomValidity(invalid?"Nhập số điện thoại gồm 7 đến 15 chữ số.":"");if(!invalid)setPhoneError(false);}} onInvalid={()=>setPhoneError(true)} aria-invalid={phoneError||undefined} aria-describedby={phoneError?"checkout-phone-error":undefined} type="tel" required maxLength={25} autoComplete="tel" inputMode="tel" readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('phonePlaceholder')}/>{phoneError&&<small id="checkout-phone-error" role="alert">Nhập số điện thoại gồm 7 đến 15 chữ số.</small>}</label></div>
      <label>{label('emailLabel')}<input name="email" type="email" required maxLength={254} autoComplete="email" inputMode="email" readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('emailPlaceholder')}/></label>
     </div>
    </section>
@@ -110,8 +112,8 @@ function OrderFormFields({product,items=null,subtotal,options,variantId,quantity
     <h3 {...mark('ofAddressHeading','checkout-step-heading')} style={headingStyle}><span className="checkout-step-num" aria-hidden="true">2</span><span>{copy.addressHeading}</span></h3>
     <div {...mark('ofAddressFields')}>
      <div className="order-field-row order-address-row">
-      <AddressSelect label={label('provinceLabel')} name="provinceCode" required value={provinceCode} options={addresses.provinces} disabled={preview||!addresses.provinces.length} loading={addresses.loadingProvinces} placeholder={label('provincePlaceholder')} onChange={code=>{setAddressError(false);onProvinceChange(code);}}/>
-      <AddressSelect label={label('wardLabel')} name="wardCode" required value={wardCode} options={addresses.wards} disabled={preview||!provinceCode||!addresses.wards.length} loading={addresses.loadingWards} placeholder={label('wardPlaceholder')} onChange={code=>{setAddressError(false);onWardChange(code);}}/>
+      <AddressSelect label={label('provinceLabel')} name="provinceCode" required value={provinceCode} options={addresses.provinces} disabled={preview||!addresses.provinces.length} loading={addresses.loadingProvinces} placeholder={label('provincePlaceholder')} onChange={code=>{onEdit?.();setAddressError(false);onProvinceChange(code);}}/>
+      <AddressSelect label={label('wardLabel')} name="wardCode" required value={wardCode} options={addresses.wards} disabled={preview||!provinceCode||!addresses.wards.length} loading={addresses.loadingWards} placeholder={label('wardPlaceholder')} onChange={code=>{onEdit?.();setAddressError(false);onWardChange(code);}}/>
      </div>
      {addresses.error&&<div className="order-error order-error-action" role="alert"><span>{addresses.error}</span><button type="button" className="order-retry-btn" onClick={addresses.retry}>Tải lại địa chỉ</button></div>}
      <label>{label('addressDetailLabel')}<textarea name="addressDetail" rows={2} required minLength={5} maxLength={350} autoComplete="street-address" readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('addressDetailPlaceholder')}/></label>
@@ -147,7 +149,7 @@ function OrderFormFields({product,items=null,subtotal,options,variantId,quantity
     <div className="order-summary"><span>{label('shippingFeeLabel')}</span><strong>{shipping.fee===null?tr(shipping.reason||label('shippingUnknownLabel')):formatVnd(shipping.fee)}</strong></div>
     <div className="order-summary checkout-total"><span>{shipping.fee===null?label('subtotalPendingLabel'):label('totalLabel')}</span><strong style={summaryTotalStyle}>{total===null?(effectiveSubtotal===null?'ORORA sẽ xác nhận':itemTotal):formatVnd(total)}</strong></div>
    </section>
-   <label {...mark('ofConsent','order-consent')} style={consentStyle} onClick={preview&&onSelect?event=>{event.preventDefault();pick('ofConsent',event);}:undefined}><input name="consent" type="checkbox" required tabIndex={preview?-1:undefined}/><span>{label('consentText')} {!preview&&<a href="/chinh-sach" target="_blank" rel="noopener noreferrer" className="order-consent-link" onClick={event=>event.stopPropagation()}>(Chính sách bảo mật & đổi trả)</a>}</span></label>
+   <label {...mark('ofConsent','order-consent')} style={consentStyle} onClick={preview&&onSelect?event=>{event.preventDefault();pick('ofConsent',event);}:undefined}><input name="consent" type="checkbox" required tabIndex={preview?-1:undefined}/><span>{label('consentText')} {<a href="/chinh-sach" target="_blank" rel="noopener noreferrer" className="order-consent-link" onClick={event=>event.stopPropagation()}>(Chính sách bảo mật & đổi trả)</a>}</span></label>
    {!methods.length&&<p role="status">Website đang tạm ngưng nhận đơn. Vui lòng liên hệ ORORA hoặc mua qua các kênh bên trên.</p>}
    {error&&<p className="order-error" role="alert">{error}</p>}
    <div {...mark('ofSubmit','checkout-sticky')}><div className="checkout-submit"><button type={preview?'button':'submit'} className="website-order-submit" aria-busy={busy} style={checkoutSubmitStyle(appearance,busy)} disabled={(preview&&!onSelect)||busy||!methods.length} onClick={preview&&onSelect?event=>{event.preventDefault();pick('ofSubmit',event);}:undefined}>{tr(busy?appearance.orderBusyLabel?.trim()||'Đang gửi đơn hàng…':appearance.orderSubmitLabel?.trim()||'Đặt hàng ngay')}</button></div></div>
