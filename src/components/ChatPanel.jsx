@@ -20,8 +20,8 @@ function ChatLink({ href, children, className, onNavigate }) {
   return safe.startsWith("/") ? <Link to={safe} className={className} onClick={onNavigate}>{children}</Link> : <a href={safe} className={className} target={safe.startsWith("https:") ? "_blank" : undefined} rel="noopener noreferrer">{children}</a>;
 }
 
-export default function ChatPanel({ id, settings, conversation, onClose, contactLinks = [], dockSide='right', anchorY, panelWidth=340, panelHeight=520, anchor, motion }) {
-  const { messages, sending, error, send, retry, reset, metadata } = conversation;
+export default function ChatPanel({ id, settings, conversation = {}, onClose, contactLinks = [], dockSide='right', anchorY, panelWidth=340, panelHeight=520, anchor, motion }) {
+  const { messages = [], sending, error, send, retry, reset, metadata } = conversation;
   const [input, setInput] = useState("");
   const root = useRef(null), heading = useRef(null), log = useRef(null), followLatest = useRef(true);
   const titleId = useId();
