@@ -31,7 +31,21 @@ import { DEFAULT_PRODUCT_NEEDS, DEFAULT_PRODUCT_FAQ } from "../../lib/product-di
 import { DEFAULT_CARE_GUIDE, normalizeCareGuideGroups } from "../../lib/product-care-guide";
 import { ProductNeedsView, ProductFaq } from "../../components/ProductDiscovery";
 import ProductCareGuide from "../../components/ProductCareGuide";
+import ProductSloganCard from "../../components/ProductSloganCard";
 import ProductCareBuilderPanel from "./ProductCareBuilderPanel";
+import {
+  ProductDiscoveryBuilderPanel,
+  ProductSloganBuilderPanel,
+  PoliciesPreview,
+  PoliciesBuilderPanel,
+  CategoriesBuilderPanel,
+  ShopLinksPreview,
+  ShopLinksBuilderPanel,
+  OrderTrackingBuilderPreview,
+  OrderTrackingBuilderPanel,
+} from "./SharedBuilderPanels";
+import { availablePaymentMethods } from "../../lib/commerce";
+import { DEFAULT_RETURN_POLICY } from "../../lib/return-policy";
 import useProducts from "../../hooks/useProducts";
 import { editedSectionPayload, changedValues, mergeSavedValues } from "./save-sections";
 import PreviewFrame from "./PreviewFrame";
@@ -178,6 +192,31 @@ export default function VisualBuilder({
           productCareGuide: data?.productCareGuide
             ? structuredClone(data.productCareGuide)
             : structuredClone(DEFAULT_CARE_GUIDE),
+          productSlogan: {
+            enabled: true,
+            ...(data?.productSlogan || {}),
+            title: typeof data?.productSlogan?.title === "string" ? data.productSlogan.title : "",
+            text: typeof data?.productSlogan?.text === "string" ? data.productSlogan.text : "",
+          },
+          productPolicies: Array.isArray(data?.productPolicies)
+            ? structuredClone(data.productPolicies)
+            : [
+                { id: "shipping", kind: "shipping", title: "Giao hàng", content: "", enabled: true },
+                { id: "authenticity", kind: "authenticity", title: "Cam kết sản phẩm", content: "", enabled: true },
+                { id: "returns", kind: "returns", title: "Đổi trả", content: DEFAULT_RETURN_POLICY, enabled: true },
+              ],
+          policyPageContent: {
+            returnsText: "",
+            paymentText: "",
+            privacyText: "",
+            ...(data?.policyPageContent || {}),
+          },
+          shopLinks: {
+            tiktokUrl: data?.shopLinks?.tiktokUrl || "",
+            facebookUrl: data?.shopLinks?.facebookUrl || "",
+            paymentMethods: availablePaymentMethods(data || {}),
+          },
+          orderTrackingText: data?.orderTrackingText ? structuredClone(data.orderTrackingText) : {},
         });
         setAbout(createAbout(data || {}));
         setHero(createHero(data || {}));
@@ -747,6 +786,36 @@ export default function VisualBuilder({
                   </div>
                 );
               })()
+            ) : activeSection === "productslogan" ? (
+              <div style={{ padding: "36px 20px", maxWidth: 680, margin: "0 auto" }}>
+                {discovery.productSlogan?.text?.trim() ? (
+                  <ProductSloganCard
+                    home={{ productSlogan: { ...discovery.productSlogan, enabled: true } }}
+                    styles={productDetail}
+                  />
+                ) : (
+                  <p style={{ textAlign: "center", color: "#846b77" }}>
+                    Nhập nội dung Slogan ở khung bên phải để xem trước trực tiếp.
+                  </p>
+                )}
+              </div>
+            ) : activeSection === "policies" ? (
+              <PoliciesPreview
+                policies={discovery.productPolicies}
+                pageContent={discovery.policyPageContent}
+              />
+            ) : activeSection === "categories" ? (
+              <Collection
+                preview
+                previewData={collection}
+                selectedElement={selected}
+                onSelect={selectElement}
+                sampleProducts={sampleProducts.slice(0, 3)}
+              />
+            ) : activeSection === "shoplinks" ? (
+              <ShopLinksPreview shopLinks={discovery.shopLinks} />
+            ) : activeSection === "ordertracking" ? (
+              <OrderTrackingBuilderPreview value={discovery.orderTrackingText} />
             ) : activeSection === "cartform" ? (
               <CartFormPreview
                 settings={navbar.navStyles?.cart || {}}
@@ -834,20 +903,78 @@ export default function VisualBuilder({
                 setDiscovery((current) => ({ ...current, productCareGuide: nextCare }));
               }}
             />
-          ) : SECTION_LIST.find((section) => section.key === activeSection)?.settingsKey ? (
-            <div className="admin-card">
-              <h3>{SECTION_LIST.find((section) => section.key === activeSection)?.label}</h3>
-              <p>
-                Bật/tắt mục tại danh sách bên trái hoặc ngay trên Preview. Bấm Lưu tất cả để áp dụng; nội dung
-                và giao diện vẫn được giữ.
-              </p>
-              <p>Chỉnh nội dung, sản phẩm áp dụng và kiểu chữ tại Sản phẩm → Thiết lập dùng chung.</p>
-              <p>
-                {isEnabled(activeSection)
-                  ? "Đang bật trên website"
-                  : "Đang tắt trên website · vẫn xem trước để kiểm tra"}
-              </p>
-            </div>
+          ) : activeSection === "productneeds" ? (
+            <ProductDiscoveryBuilderPanel
+              value={discovery.productNeeds}
+              products={discoveryProducts}
+              onChange={(nextNeeds) => {
+                setEditVersion((value) => value + 1);
+                dirtySections.current.add("productneeds");
+                setDiscovery((current) => ({ ...current, productNeeds: nextNeeds }));
+              }}
+            />
+          ) : activeSection === "productfaq" ? (
+            <ProductDiscoveryBuilderPanel
+              faq
+              value={discovery.productFaq}
+              products={discoveryProducts}
+              onChange={(nextFaq) => {
+                setEditVersion((value) => value + 1);
+                dirtySections.current.add("productfaq");
+                setDiscovery((current) => ({ ...current, productFaq: nextFaq }));
+              }}
+            />
+          ) : activeSection === "productslogan" ? (
+            <ProductSloganBuilderPanel
+              slogan={discovery.productSlogan}
+              styles={productDetail}
+              onChangeSlogan={(nextSlogan) => {
+                setEditVersion((value) => value + 1);
+                dirtySections.current.add("productslogan");
+                setDiscovery((current) => ({ ...current, productSlogan: nextSlogan }));
+              }}
+              onChangeStyles={(nextStyles) => {
+                setEditVersion((value) => value + 1);
+                dirtySections.current.add("productslogan");
+                dirtySections.current.add("productdetail");
+                setProductDetail(nextStyles);
+              }}
+            />
+          ) : activeSection === "policies" ? (
+            <PoliciesBuilderPanel
+              policies={discovery.productPolicies}
+              pageContent={discovery.policyPageContent}
+              onChangePolicies={(nextPolicies) => {
+                setEditVersion((value) => value + 1);
+                dirtySections.current.add("policies");
+                setDiscovery((current) => ({ ...current, productPolicies: nextPolicies }));
+              }}
+              onChangePageContent={(nextContent) => {
+                setEditVersion((value) => value + 1);
+                dirtySections.current.add("policies");
+                setDiscovery((current) => ({ ...current, policyPageContent: nextContent }));
+              }}
+            />
+          ) : activeSection === "categories" ? (
+            <CategoriesBuilderPanel />
+          ) : activeSection === "shoplinks" ? (
+            <ShopLinksBuilderPanel
+              value={discovery.shopLinks}
+              onChange={(nextLinks) => {
+                setEditVersion((value) => value + 1);
+                dirtySections.current.add("shoplinks");
+                setDiscovery((current) => ({ ...current, shopLinks: nextLinks }));
+              }}
+            />
+          ) : activeSection === "ordertracking" ? (
+            <OrderTrackingBuilderPanel
+              value={discovery.orderTrackingText}
+              onChange={(nextTracking) => {
+                setEditVersion((value) => value + 1);
+                dirtySections.current.add("ordertracking");
+                setDiscovery((current) => ({ ...current, orderTrackingText: nextTracking }));
+              }}
+            />
           ) : (
             <StylePanel
               onSelect={selectElement}

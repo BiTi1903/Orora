@@ -41,3 +41,35 @@ test('builder switches save only the enabled leaf and keep product mappings and 
   assert.deepEqual(patch,{productNeeds:{enabled:false},productFaq:{enabled:false},productCareGuide:{enabled:false}});
   assert.deepEqual(mergeSavedValues(baseline,patch),after);
 });
+
+test('shared product and store sections are registered in Visual Builder and save cleanly', () => {
+  const keys = PAGE_SECTIONS.map((s) => s.key);
+  for (const key of ['productslogan', 'policies', 'categories', 'shoplinks', 'ordertracking']) {
+    assert.ok(keys.includes(key), `Missing Visual Builder section: ${key}`);
+  }
+  const payload = editedSectionPayload(
+    {
+      productSlogan: { enabled: true, title: 'Slogan', text: 'Noi dung' },
+      productPolicies: [{ id: 'p1', title: 'Freeship', content: '499k', enabled: true }],
+      policyPageContent: { returnsText: '7 ngay' },
+      shopLinks: { tiktokUrl: 'https://www.tiktok.com/@orora', facebookUrl: '', paymentMethods: ['cod'] },
+      orderTrackingText: { title: 'Tra cuu' },
+      unrelated: 'ignored',
+    },
+    ['productslogan', 'policies', 'shoplinks', 'ordertracking'],
+  );
+  assert.ok(payload.productSlogan);
+  assert.ok(payload.productPolicies);
+  assert.ok(payload.policyPageContent);
+  assert.ok(payload.shopLinks);
+  assert.ok(payload.orderTrackingText);
+  assert.equal(payload.unrelated, undefined);
+});
+
+test('navigationLabel preserves user-entered English labels verbatim in Vietnamese locale', async () => {
+  const { navigationLabel } = await import('../src/lib/i18n.js');
+  for (const raw of ['Home', 'Products', 'About Us', 'Story', 'Contact', 'Cart', 'Discover', 'Scroll', 'Track Order']) {
+    assert.equal(navigationLabel(raw, 'vi'), raw);
+  }
+});
+

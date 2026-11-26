@@ -17,6 +17,10 @@ const FIELDS = {
   cartform: ["navStyles"],
   orderform: ["productDetailStyles"],
   ordersuccess: ["productDetailStyles"],
+  productslogan: ["productSlogan", "productDetailStyles"],
+  policies: ["productPolicies", "policyPageContent"],
+  shoplinks: ["shopLinks"],
+  ordertracking: ["orderTrackingText"],
 };
 
 export function editedSectionPayload(payload, sections) {

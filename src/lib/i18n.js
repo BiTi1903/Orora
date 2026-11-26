@@ -436,12 +436,8 @@ const PRODUCT_PHRASES = [
   ],
 ];
 
-const vietnameseNavLabels = new Map(Object.entries({
- "about us":"Về ORORA", "products":"Sản phẩm", "product":"Sản phẩm", "contact":"Liên hệ", "track order":"Tra cứu đơn hàng",
- "home":"Trang chủ", "story":"Câu chuyện", "cart":"Giỏ hàng", "discover":"Khám phá", "scroll":"Cuộn xuống",
-}));
-export function navigationLabel(value,locale=currentLocale){
- return locale==="vi" ? vietnameseNavLabels.get(String(value||"").trim().toLowerCase())||value : translatePhrase(value,locale);
+export function navigationLabel(value, locale = currentLocale) {
+  return locale === "vi" ? value : translatePhrase(value, locale);
 }
 
 export function translatePhrase(value, locale = currentLocale) {

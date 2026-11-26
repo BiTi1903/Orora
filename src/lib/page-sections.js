@@ -83,6 +83,36 @@ export const PAGE_SECTIONS = [
     icon: "✓",
     hideVisibilityToggle: true,
   },
+  {
+    key: "productslogan",
+    label: "Slogan sản phẩm",
+    icon: "✦",
+    settingsKey: "productSlogan",
+  },
+  {
+    key: "policies",
+    label: "Cam kết & chính sách",
+    icon: "✓",
+    hideVisibilityToggle: true,
+  },
+  {
+    key: "categories",
+    label: "Danh mục sản phẩm",
+    icon: "▤",
+    hideVisibilityToggle: true,
+  },
+  {
+    key: "shoplinks",
+    label: "Kênh mua & thanh toán",
+    icon: "🔗",
+    hideVisibilityToggle: true,
+  },
+  {
+    key: "ordertracking",
+    label: "Tra cứu đơn hàng",
+    icon: "⌕",
+    hideVisibilityToggle: true,
+  },
 ];
 
 export function sectionIsEnabled(settings, key) {

@@ -1,3 +1,24 @@
+## 26/11/2026 — Đưa toàn bộ Thiết lập dùng chung & Cửa hàng vào Visual Builder, vẽ lại Thống kê thực tế và giữ nguyên chữ người dùng nhập
+
+- **Lý do**: Chủ website yêu cầu đưa 2 mục Cửa hàng (`Kênh mua & thanh toán`, `Tra cứu đơn hàng`) cùng toàn bộ `Thiết lập dùng chung` (`Cam kết & chính sách`, `Danh mục`, `Slogan`, `Chọn theo nhu cầu`, `FAQ sản phẩm`) vào Visual Builder để chỉnh đầy đủ (nội dung, form, kiểu chữ, khung, bật/tắt) kèm xem trước trực tiếp; vẽ lại trang Thống kê & biểu đồ cho hợp lý; và không tự động dịch tiếng Anh sang tiếng Việt cho các nhãn người dùng tự nhập.
+- **Thay đổi chính**:
+  - **Tắt tự động dịch nhãn người dùng nhập (`src/lib/i18n.js`)**:
+    - Gỡ bỏ bảng `vietnameseNavLabels` trong `navigationLabel` để khi ngôn ngữ là tiếng Việt (`vi`), mọi nhãn người dùng tự nhập (kể cả tiếng Anh như `Home`, `Products`, `About Us`, `Story`, `Contact`, `Cart`, `Discover`, `Scroll`, `Track Order`...) được giữ nguyên đúng ký tự đã nhập.
+  - **Đưa toàn bộ Thiết lập dùng chung & Cửa hàng vào Visual Builder (`src/admin/builder/SharedBuilderPanels.jsx`, `src/admin/builder/VisualBuilder.jsx`, `src/lib/page-sections.js`, `src/admin/builder/save-sections.js`, `src/admin/builder/useBuilderDraft.js`)**:
+    - Thay thẻ thông báo tạm của `Chọn theo nhu cầu` (`productneeds`) và `FAQ sản phẩm` (`productfaq`) bằng bộ chỉnh đầy đủ ngay trong Visual Builder (nội dung, thêm/sửa/xóa/đảo thứ tự mục, gán sản phẩm, kiểu chữ, khung/nền, công tắc bật/tắt).
+    - Bổ sung 5 mục mới vào Visual Builder kèm xem trước trực tiếp trên khung Desktop/Tablet/Mobile: **Slogan sản phẩm** (`productslogan`), **Cam kết & chính sách** (`policies` — xem trước cả dải cam kết và 3 mục trang `/chinh-sach`), **Danh mục sản phẩm** (`categories`), **Kênh mua & thanh toán** (`shoplinks`), và **Tra cứu đơn hàng** (`ordertracking` — xem trước trực tiếp khung tìm kiếm + chi tiết đơn, chỉnh đầy đủ nội dung trang, nội dung kết quả, kiểu chữ và màu khung).
+    - Đồng bộ hoàn toàn với Undo/Redo, Draft Guard và nút `Lưu tất cả`.
+  - **Vẽ lại trang Thống kê & biểu đồ (`src/admin/AnalyticsDashboard.jsx`, `src/styles/admin.css`)**:
+    - Gỡ bỏ `chartDisplaySeries` (không chèn số liệu minh họa vào biểu đồ live), hiển thị 100% dữ liệu thực tế.
+    - Nâng cấp 6 thẻ KPI có chỉ số phụ (Doanh thu & TB/đơn AOV, Đơn thanh toán & số ngày có đơn, Lượt xem & TB/ngày, Khách truy cập & lượt xem/khách, Lượt bấm SP & CTR %, Tỷ lệ chuyển đổi).
+    - Vẽ lại biểu đồ **Doanh thu theo ngày** sang dạng **biểu đồ cột (Bar Chart)** với trục Y chia bước đẹp (`niceCeiling`), tooltip hiển thị ngày, doanh thu, số đơn và TB/đơn.
+    - Vẽ lại biểu đồ **Lượt truy cập & tương tác** với 3 đường (`Lượt xem`, `Khách/ngày`, `Bấm sản phẩm`) kèm **nút chú giải tương tác bật/tắt từng đường**.
+    - Nâng cấp bảng Top sản phẩm (huy hiệu hạng `#1–#3`), bảng số liệu từng ngày (hàng Tổng cộng `<tfoot>`, căn số `tabular-nums`), nút **Xuất CSV thống kê** (UTF-8 BOM, chống CSV formula injection) và trạng thái tải skeleton.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: 285/285 unit test đạt (gồm 2 kịch bản mới trong `tests/page-sections.test.js`), ESLint 0 lỗi, Vite build & ngân sách bundle đạt.
+  - Playwright (`qa/visual-builder-focus.spec.js` tại `width-390` và `width-1440`): 6/6 đạt (kịch bản 1 ở 390px đạt khi chạy lại sau cold-start Vite).
+- **Ảnh hưởng database**: Không thay đổi schema, security rules hay dữ liệu Firestore hiện có; các mục mới trong Visual Builder đọc và ghi vào đúng các khóa sẵn có trên `settings/home` (`productSlogan`, `productPolicies`, `policyPageContent`, `shopLinks`, `orderTrackingText`, `productNeeds`, `productFaq`) và `settings/productCategories`.
+
 ## 26/11/2026 — Thiết lập chuẩn mẫu email HTML cao cấp cho Thư Đăng Ký & Thư Xác Nhận Đơn Hàng (kèm VietQR & xem trước trực tiếp)
 
 - **Lý do**: Chủ website yêu cầu thiết lập thư đăng ký nhận tin và thư xác nhận đơn hàng theo form chuẩn, sang trọng đồng bộ nhận diện ORORA.

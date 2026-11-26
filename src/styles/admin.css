@@ -592,27 +592,38 @@
 .analytics-presets button { min-height:32px; padding:5px 12px; border:0; border-radius:7px; background:transparent; color:var(--ad-muted); font:500 13px/1.2 inherit; cursor:pointer; transition:background .15s, color .15s; }
 .analytics-presets button:hover { color:var(--ad-ink); }
 .analytics-presets button[aria-pressed="true"] { background:#fff; color:var(--ad-primary); font-weight:600; box-shadow:0 1px 4px rgba(58,22,40,.08); }
-.analytics-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-bottom:16px; }
-.analytics-kpis .admin-card { display:grid; gap:8px; padding:18px 20px; min-width:0; }
-.analytics-kpis .admin-card.is-primary { border-color:color-mix(in srgb,var(--ad-primary) 32%,var(--a-line)); background:#fff9fb; }
+.analytics-kpis { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-bottom:16px; }
+.analytics-kpis .admin-card { display:grid; gap:6px; padding:16px 18px; min-width:0; }
+.analytics-kpis .admin-card.is-primary { border-color:color-mix(in srgb,var(--ad-primary) 34%,var(--a-line)); background:#fff8fb; }
 .analytics-kpis .admin-card.is-primary strong { color:var(--ad-primary); }
-.analytics-kpis strong { font-size:24px; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.analytics-kpis strong { font-size:23px; line-height:1.2; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.analytics-kpi-sub { font-size:12px; color:var(--ad-muted); font-variant-numeric:tabular-nums; }
 .analytics-charts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
 .analytics-chart-card { min-width:0; padding:20px; }
-.analytics-card-head { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+.analytics-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
 .analytics-card-head h3 { margin:0; font-size:15px; }
+.analytics-card-sub { margin:3px 0 0; font-size:12.5px; color:var(--ad-muted); }
 .analytics-chart { display:block; width:100%; height:auto; overflow:visible; }
-.analytics-chart text { font:12px Arial,sans-serif; fill:var(--ad-muted); }
-.analytics-chart circle:focus { outline:2px solid var(--ad-ink); }
-.analytics-legend { display:flex; align-items:center; flex-wrap:wrap; gap:12px; font-size:12px; color:var(--ad-muted); }
+.analytics-chart text { font:12px system-ui,-apple-system,sans-serif; fill:var(--ad-muted); }
+.analytics-chart circle:focus, .analytics-chart rect:focus { outline:2px solid var(--ad-ink); }
+.analytics-legend { display:flex; align-items:center; flex-wrap:wrap; gap:8px; font-size:12px; color:var(--ad-muted); }
 .analytics-legend i { display:inline-block; width:8px; height:8px; margin-right:5px; border-radius:50%; }
+.analytics-legend-btn { display:inline-flex; align-items:center; padding:4px 10px; border:1px solid var(--a-line); border-radius:999px; background:#fff; color:var(--ad-muted); font:500 12px/1.2 inherit; cursor:pointer; opacity:0.55; transition:opacity .15s, border-color .15s, background .15s; }
+.analytics-legend-btn.is-on { opacity:1; color:var(--ad-ink); border-color:color-mix(in srgb,var(--ad-primary) 26%,var(--a-line)); background:#fff9fb; }
 .analytics-products { display:grid; gap:14px; margin-top:8px; }
-.analytics-product-title { display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; font-size:13.5px; margin-bottom:6px; }
-.analytics-product-title span { overflow-wrap:anywhere; }
+.analytics-product-title { display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; font-size:13.5px; margin-bottom:6px; }
+.analytics-product-name { display:inline-flex; align-items:center; gap:8px; overflow-wrap:anywhere; }
+.analytics-rank { display:inline-flex; align-items:center; justify-content:center; min-width:26px; padding:2px 6px; border-radius:6px; background:#f5edf1; color:var(--ad-muted); font:600 11.5px/1.2 inherit; font-style:normal; }
+.analytics-rank.is-top { background:#fde7f0; color:var(--ad-primary); }
 .analytics-product-title strong { font-size:12px; color:var(--a-deep); font-variant-numeric:tabular-nums; }
 .analytics-bar { height:7px; background:var(--ad-primary-soft); border-radius:var(--ad-r-pill); overflow:hidden; }
 .analytics-bar i { display:block; height:100%; background:linear-gradient(90deg,#ee8eae,var(--ad-primary)); border-radius:inherit; }
-.analytics-data-scroll { max-height:360px; overflow:auto; }
+.analytics-data-scroll { max-height:380px; overflow:auto; }
+.analytics-table th.num, .analytics-table td.num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.analytics-table tfoot th { background:#fdf6f9; border-top:2px solid var(--a-line); color:var(--ad-ink); }
+.analytics-skeleton-card { min-height:94px; background:linear-gradient(90deg,#faf4f7 25%,#f4e9ef 50%,#faf4f7 75%); background-size:200% 100%; animation:analyticsPulse 1.4s ease infinite; }
+.analytics-skeleton-chart { min-height:260px; background:linear-gradient(90deg,#faf4f7 25%,#f4e9ef 50%,#faf4f7 75%); background-size:200% 100%; animation:analyticsPulse 1.4s ease infinite; }
+@keyframes analyticsPulse { 0% { background-position:200% 0; } 100% { background-position:-200% 0; } }
 .analytics-notes { margin-top:12px; font-size:12.5px; color:var(--ad-muted); }
 .analytics-notes summary { cursor:pointer; user-select:none; }
 .analytics-notes p { margin:8px 0 0; line-height:1.6; }
@@ -620,7 +631,7 @@
 @media(max-width:850px) { .analytics-charts { grid-template-columns:minmax(0,1fr); } .analytics-kpis strong { font-size:20px; } }
 .analytics-dashboard > .admin-card { margin-top:16px; }
 .analytics-dashboard > .admin-filter-panel { margin-top:16px; }
-.analytics-empty { display:grid; place-items:center; min-height:200px; text-align:center; color:var(--ad-muted); font-size:13.5px; }
+.analytics-empty { display:grid; place-items:center; min-height:200px; text-align:center; color:var(--ad-muted); font-size:13.5px; padding:16px; }
 .analytics-plot { position:relative; }
 .analytics-point-target { cursor:pointer; }
 .analytics-point-target:focus { outline:none; stroke:var(--ad-ink); stroke-width:2; }

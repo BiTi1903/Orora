@@ -18,7 +18,16 @@ const defaults = () => ({
   navbar: createNav(),
   philosophy: createPhilosophy(),
   sectionVisibility: {},
-  discovery: { productNeeds: DEFAULT_PRODUCT_NEEDS, productFaq: DEFAULT_PRODUCT_FAQ, productCareGuide: DEFAULT_CARE_GUIDE },
+  discovery: {
+    productNeeds: DEFAULT_PRODUCT_NEEDS,
+    productFaq: DEFAULT_PRODUCT_FAQ,
+    productCareGuide: DEFAULT_CARE_GUIDE,
+    productSlogan: { enabled: true, title: "", text: "" },
+    productPolicies: [],
+    policyPageContent: { returnsText: "", paymentText: "", privacyText: "" },
+    shopLinks: { tiktokUrl: "", facebookUrl: "", paymentMethods: ["cod", "bank_transfer"] },
+    orderTrackingText: {},
+  },
 });
 
 // Builder setters replace their section. Find the one text field that changed.
