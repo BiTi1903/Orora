@@ -83,6 +83,7 @@ function AdminWorkspace({ user }) {
   const [signOutError, setSignOutError] = useState("");
   const position = useRef(window.history.state?.adminPosition ?? 0);
   const [tab, setTab] = useState(initialAdminTab);
+  const [menuOpen, setMenuOpen] = useState(true);
   const [orderMailDraft, setOrderMailDraft] = useState(null);
   const [orderMailVersion, setOrderMailVersion] = useState(0);
   const [emailSection, setEmailSection] = useState({ view: "contacts" });
@@ -199,9 +200,10 @@ function AdminWorkspace({ user }) {
 
   return (
     <div className="admin-shell">
-      <aside className="admin-side">
+      <aside className="admin-side" data-menu-open={menuOpen}>
         <div className="admin-brand">ORORA</div>
-        <nav className="admin-nav" aria-label="Menu quản trị">
+        <button type="button" className="admin-btn admin-menu-toggle" aria-expanded={menuOpen} aria-controls="admin-menu admin-account" onClick={() => setMenuOpen(open => !open)}>{menuOpen ? "Thu gọn menu" : "Mở menu"}</button>
+        <nav id="admin-menu" className="admin-nav" aria-label="Menu quản trị">
           {GROUPS.map(({ title, items }) => (
             <div className="admin-nav-group" key={title || "main"} role="group" aria-label={title || undefined}>
               {title && <span className="admin-nav-title" aria-hidden="true">{title}</span>}
@@ -213,7 +215,7 @@ function AdminWorkspace({ user }) {
             </div>
           ))}
         </nav>
-        <div className="admin-side-bottom">
+        <div id="admin-account" className="admin-side-bottom">
           <span className="admin-muted">{user.email}</span>
           <details className="admin-muted admin-uid"><summary>Mã tài khoản (UID)</summary><span>{user.uid}</span></details>
           <a href="/" target="_blank" rel="noopener noreferrer" className="admin-btn">Xem website</a>

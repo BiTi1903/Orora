@@ -80,6 +80,7 @@ export default function VisualBuilder({
   requestedStoreVersion = 0,
 }) {
   const confirm = useConfirm();
+  const [compactPane, setCompactPane] = useState("edit");
   const [previewDevice, setPreviewDevice] = useState("desktop");
   const [previewZoom, setPreviewZoom] = useState("fit");
   const [reloadVersion, setReloadVersion] = useState(0);
@@ -583,7 +584,11 @@ export default function VisualBuilder({
 
       {catalog.error && ["productneeds","productfaq","productcare","productdetail"].includes(activeSection) &&
         <p role="alert">Chưa tải được danh sách sản phẩm để chỉnh liên kết.</p>}
-      <div className="builder-layout">
+      <div className="builder-layout" data-pane={compactPane}>
+        <div className="builder-compact-switch" role="group" aria-label="Chế độ làm việc">
+          <button type="button" className="admin-btn" aria-pressed={compactPane === "edit"} onClick={() => setCompactPane("edit")}>Chỉnh sửa</button>
+          <button type="button" className="admin-btn" aria-pressed={compactPane === "preview"} onClick={() => setCompactPane("preview")}>Xem trước</button>
+        </div>
         <aside className="builder-sections">
           <div className="builder-panel-title">
             <span>Các mục trên trang</span>
@@ -691,7 +696,7 @@ export default function VisualBuilder({
               {!SECTION_LIST.find((section) => section.key === activeSection)?.hideVisibilityToggle &&
               !isEnabled(activeSection)
                 ? "Mục này đang tắt trên website · Vẫn có thể chỉnh sửa tại đây"
-                : "Sản phẩm mẫu · Xem trước tĩnh · Không thay đổi dữ liệu"}
+                : "Xem trước thay đổi"}
             </span>
 
             <div className="builder-preview-controls" role="group" aria-label="Điều khiển xem trước">

@@ -45,8 +45,11 @@ test('store shortcut opens tracking in the shared builder and saves both section
  await editor(page,'store','tracking');
  const title=page.getByLabel('Tiêu đề trang',{exact:true});
  await title.fill('Tra cứu mới');
+ const modes=page.getByRole('group',{name:'Chế độ làm việc'});
+ if(await modes.isVisible()) await modes.getByRole('button',{name:'Xem trước',exact:true}).click();
  await page.frameLocator('.builder-preview-frame').getByRole('button',{name:'Mã đơn',exact:true}).click();
  await expect(page.frameLocator('.builder-preview-frame').locator('#preview-lookup-code')).toBeVisible();
+ if(await modes.isVisible()) await modes.getByRole('button',{name:'Chỉnh sửa',exact:true}).click();
  const sections=page.locator('.builder-section-item');
  await sections.filter({hasText:'Kênh mua & thanh toán'}).click();
  const link=page.getByLabel('TikTok Shop',{exact:true});
@@ -89,9 +92,24 @@ test('tracking dimensions and typography update the real preview and saved setti
  await page.getByLabel('Bo góc thẻ (px)',{exact:true}).fill('31');
  await page.getByLabel('Chiều cao ô nhập / nút (px)',{exact:true}).fill('52');
  await page.getByLabel('Cỡ chữ máy tính (px)',{exact:true}).fill('35');
+ const modes=page.getByRole('group',{name:'Chế độ làm việc'});
+ if(await modes.isVisible()) await modes.getByRole('button',{name:'Xem trước',exact:true}).click();
  const preview=page.frameLocator('.builder-preview-frame').locator('.order-tracking-page');
  await expect(preview).toHaveCSS('--tracking-radius','31px');
  await expect(preview).toHaveCSS('--tracking-field-height','52px');
  await page.getByRole('button',{name:'💾 Lưu tất cả',exact:true}).click();
  await expect.poll(()=>page.evaluate(()=>window.__saved?.orderTrackingText?.styles)).toMatchObject({radius:31,fieldHeight:52,text:{title:{fontSize:35}}});
+});
+
+test('compact builder switches between editing and preview without losing the draft', async ({page}) => {
+ await page.setViewportSize({width:390,height:720});
+ await editor(page,'store','tracking');
+ const title=page.getByLabel('Tiêu đề trang',{exact:true});
+ await title.fill('Tra cứu trên điện thoại');
+ const modes=page.getByRole('group',{name:'Chế độ làm việc'});
+ await modes.getByRole('button',{name:'Xem trước',exact:true}).click();
+ await expect(title).toBeHidden();
+ await expect(page.frameLocator('.builder-preview-frame').getByRole('heading',{name:'Tra cứu trên điện thoại',exact:true})).toBeVisible();
+ await modes.getByRole('button',{name:'Chỉnh sửa',exact:true}).click();
+ await expect(title).toHaveValue('Tra cứu trên điện thoại');
 });

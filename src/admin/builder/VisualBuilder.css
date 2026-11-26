@@ -998,3 +998,12 @@
   font-size: 12px;
 }
 
+
+.builder-compact-switch { display: none; }
+@media (max-width: 1000px) {
+  .builder-compact-switch { display: flex; order: -1; gap: 8px; padding: 10px 12px; }
+  .builder-compact-switch [aria-pressed="true"] { background: var(--ad-primary-soft); color: var(--ad-primary-strong); border-color: var(--ad-primary-line); }
+  .builder-layout[data-pane="edit"] .builder-canvas,
+  .builder-layout[data-pane="preview"] .builder-settings { display: none; }
+  .builder-toolbar { position: static; }
+}

@@ -244,7 +244,7 @@ export default function ProductsAdmin() {
             <p>Chưa có sản phẩm phù hợp.</p>
           </div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
+          <div className="product-table-scroll" style={{ overflowX: "auto" }} role="region" aria-label="Danh sách sản phẩm" tabIndex={0}>
             <table className="admin-table">
               <thead>
                 <tr><th>Mã SP</th><th>Ảnh</th><th>Sản phẩm</th><th>Giá</th><th>Trạng thái</th><th>Danh mục / Thao tác</th></tr>
