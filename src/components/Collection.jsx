@@ -413,6 +413,7 @@ function Collection({
           onClick={select(k("colLabel"))}
           style={{
             ...toCss(headStyles.label, { responsive: true }),
+            ...(Number(headStyles.label?.marginTop) < 0 ? { marginTop: "0px" } : {}),
             textAlign: labelAlign,
             alignSelf: alignSelfMap[labelAlign] || "flex-start",
             ...(collectionLabel ? {} : { display: "none" }),

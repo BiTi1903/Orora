@@ -1,3 +1,18 @@
+## 26/11/2026 — Sửa nhãn Products bị đè, thu gọn tiêu đề tab Mô tả và đồng bộ thanh điều hướng dưới theo vị trí cuộn trang chủ
+
+- **Lý do**: Chủ website phản hồi trên mobile nhãn `Products` ở đầu mục sản phẩm bị phần trên đè cắt một nửa, khối nút `Mô tả` (khi bật 1 tab) đang bị to/lồng 2 lớp viền kém cân đối, và khi cuộn trang chủ xuống từng phần thì thanh điều hướng dưới (`MobileShopNav`) chưa tự chuyển mục đang chọn theo vị trí cuộn.
+- **Thay đổi chính**:
+  - **Chống đè/cắt nhãn `Products` (`src/components/Collection.jsx`)**:
+    - Giới hạn không áp dụng `marginTop` âm từ cấu hình cũ lên `.collection-label` để nhãn `Products` không bị kéo tràn lên mép trên của `.collection` (`overflow: hidden`) và bị mục Câu chuyện phía trên đè cắt.
+  - **Thu gọn & thiết kế lại khối tab đơn `Mô tả` (`src/styles/product-detail.css`, `src/styles/product-detail-mobile.css`, `src/styles/mobile-glass.css`)**:
+    - Gỡ khung kính lồng 2 lớp trên `.product-information-nav[data-tab-count="1"]`, thay bằng thanh tiêu đề gọn với 2 đường kẻ mảnh hai bên (`──── Mô tả ────`) và nút pill mảnh (`min-height: 28px–30px`, `padding: 4px 14px`) cùng khoảng cách sát gọn tới khung ảnh bên dưới (vẫn giữ nguyên tùy chỉnh màu & kiểu chữ trong Visual Builder).
+  - **Scroll-spy cho thanh điều hướng dưới trên trang chủ (`src/components/MobileShopNav.jsx`)**:
+    - Tự động theo dõi vị trí cuộn trang trên `/` và trượt ống kính chọn (`aria-current="page"` + `.mobile-nav-lens`) sang đúng mục tương ứng (`Home` → `Story` → `Product`, v.v.) khi người dùng cuộn xuống, kèm khóa chống giật ngắn khi bấm trực tiếp vào tab.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: 273/273 unit test, ESLint 0 lỗi, Vite build & giới hạn bundle đạt.
+  - Playwright (`qa/product-information-tabs.spec.js` tại `width-390` và `width-1440`: đạt toàn bộ; `qa/mobile-catalog.spec.js`: đạt 7/8 — 1 lỗi sẵn có do mock `useChatConversation` thiếu `messages` khi bấm nút Chat).
+- **Ảnh hưởng database**: Không thay đổi schema, security rules hay dữ liệu production.
+
 ## 26/11/2026 — Khôi phục bản trước đợt rà soát giao diện
 
 - Theo yêu cầu của chủ website, hoàn tác commit 0a06f29. Đã đối chiếu mã nguồn và kiểm thử với cc097bd. Chỉ nhật ký thay đổi khác bản đó. Không thao tác trên database.
