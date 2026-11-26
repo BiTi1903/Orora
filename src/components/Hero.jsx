@@ -248,7 +248,7 @@ function Hero({
           data-builder-key={preview ? "btnPrimary" : undefined}
             onClick={select("btnPrimary")}
           >
-            {!preview && locale==="vi" && c.heroButtonText?.trim().toLowerCase()==="discover" && ["#about","/#about"].includes(c.heroButtonLink||"#about") ? "Câu chuyện ORORA" : label(c.heroButtonText)}
+            {label(c.heroButtonText)}
             <ButtonIcon name="heroPrimary"/>
           </a>
 
