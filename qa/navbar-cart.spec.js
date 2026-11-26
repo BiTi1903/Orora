@@ -18,21 +18,3 @@ test('public navbar stays in Vietnamese with a previously saved locale',async({p
   await expect(page.locator('.mobile-drawer-links')).toContainText('Về Chúng Tôi');
  }
 });
-
-test('quick search keeps keyboard focus and fits a narrow viewport', async ({ page }) => {
- await mount(page, `import Navbar from '/src/components/Navbar.jsx';${render('R.createElement(Navbar)')}`, {
-  'hooks/useHomeContent.js': 'export default function home(){return {navLinks:[]}}',
-  'hooks/useProducts.js': 'export default function products(){return {loading:true,products:[]}}',
- });
- const toggle = page.getByRole('button', {name:'Tìm kiếm sản phẩm'});
- await toggle.click();
- const search = page.getByRole('search');
- await expect(search.getByRole('searchbox')).toBeFocused();
- await expect(search.getByRole('status')).toHaveText('Đang tải sản phẩm…');
- const box = await search.boundingBox();
- expect(box.x).toBeGreaterThanOrEqual(0);
- expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize().width + 1);
- await page.keyboard.press('Escape');
- await expect(search).toBeHidden();
- await expect(toggle).toBeFocused();
-});

@@ -122,7 +122,7 @@
 .orora-chat-error button { border: 0; background: transparent; color: var(--rose-deep); font: 600 12px/1.5 var(--font-body); text-decoration: underline; cursor: pointer; }
 .orora-chat-footer { min-width: 0; padding: 12px 14px; border-top: 1px solid #f0dce5; background: #fff; }
 .orora-chat-composer { display: flex; align-items: flex-end; gap: 8px; padding: 7px 8px; border: 1px solid #e5c4d2; border-radius: 14px; background: #fffafc; }
-.orora-chat-composer textarea { flex: 1; width: 0; min-width: 0; min-height: 40px; max-height: 110px; resize: none; padding: 4px 6px; border: 0 !important; box-shadow: none !important; color: var(--plum); background: transparent; font: 400 14px/1.5 var(--font-body); }
+.orora-chat-composer textarea { flex: 1; width: 0; min-width: 0; min-height: 40px; max-height: 110px; resize: none; padding: 4px 6px; border: 0 !important; outline: none !important; box-shadow: none !important; color: var(--plum); background: transparent; font: 400 14px/1.5 var(--font-body); }
 .orora-chat-composer:focus-within { border-color: #bb567c; box-shadow: 0 0 0 3px #b8446d14; }
 .orora-chat-composer button { display: grid; place-items: center; flex: 0 0 36px; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 10px; background: var(--store-button-pink); color: #fff; cursor: pointer; }
 .orora-chat-composer button:disabled { opacity: .35; cursor: default; }
@@ -132,7 +132,7 @@
 .orora-chat-arrow { flex-shrink: 0; }
 .orora-chat-links a, .orora-chat-followups button, .orora-chat-footer-note a { display: inline-flex; align-items: center; gap: 5px; }
 .orora-chat-followups button > span { min-width: 0; overflow-wrap: anywhere; }
-.orora-chat-panel :is(button, a, textarea):focus-visible, .chat-button:focus-visible { outline: 2px solid var(--rose-deep, #b8446d); outline-offset: 3px; }
+.orora-chat-panel :is(button, a):focus-visible, .chat-button:focus-visible { outline: 2px solid var(--rose-deep); outline-offset: 3px; }
 .orora-chat-panel.is-compact { top: calc(var(--chat-viewport-top, 0px) + 8px); bottom: auto; height: calc(var(--chat-viewport-height, 100dvh) - 16px); max-height: calc(var(--chat-viewport-height, 100dvh) - 16px); min-height: 0; }
 .orora-chat-panel.is-compact .orora-chat-heading { padding-block: 10px; }
 .orora-chat-panel.is-compact .orora-chat-composer textarea { height: 36px; min-height: 36px; }

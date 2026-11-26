@@ -21,7 +21,7 @@ function ChatLink({ href, children, className, onNavigate }) {
 }
 
 export default function ChatPanel({ id, settings, conversation, onClose, contactLinks = [], dockSide='right', anchorY, panelWidth=340, panelHeight=520, anchor, motion }) {
-  const { messages = [], sending, error, send, retry, reset, metadata } = conversation;
+  const { messages, sending, error, send, retry, reset, metadata } = conversation;
   const [input, setInput] = useState("");
   const root = useRef(null), heading = useRef(null), log = useRef(null), followLatest = useRef(true);
   const titleId = useId();

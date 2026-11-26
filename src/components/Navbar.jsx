@@ -100,26 +100,21 @@ function NavbarQuickSearch() {
   const [query, setQuery] = useState("");
   const wrapRef = useRef(null);
   const inputRef = useRef(null);
-  const searchToggleRef = useRef(null);
   const navigate = useNavigate();
-  const { products, loading, error, retry } = useProducts({ enabled: open });
+  const { products } = useProducts({ enabled: open });
 
   useEffect(() => {
     if (!open) return;
-    const frame = requestAnimationFrame(() => inputRef.current?.focus());
+    requestAnimationFrame(() => inputRef.current?.focus());
     const onPointerDown = (event) => {
       if (wrapRef.current && !wrapRef.current.contains(event.target)) setOpen(false);
     };
     const onKeyDown = (event) => {
-      if (event.key === "Escape" && wrapRef.current?.contains(event.target)) {
-        setOpen(false);
-        searchToggleRef.current?.focus();
-      }
+      if (event.key === "Escape") setOpen(false);
     };
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
     return () => {
-      cancelAnimationFrame(frame);
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
@@ -144,7 +139,6 @@ function NavbarQuickSearch() {
     <div ref={wrapRef} className="navbar-search-wrap">
       <button
         type="button"
-        ref={searchToggleRef}
         className="navbar-search-toggle"
         aria-label="Tìm kiếm sản phẩm"
         aria-expanded={open}
@@ -184,10 +178,8 @@ function NavbarQuickSearch() {
                 </Link>
               ))}
             </div>
-          ) : error ? (
-            <div className="navbar-search-empty" role="status">Chưa tải được danh sách sản phẩm. <button type="button" onClick={retry}>Thử lại</button></div>
           ) : (
-            <p className="navbar-search-empty" role="status">{loading ? "Đang tải sản phẩm…" : "Không tìm thấy sản phẩm phù hợp."}</p>
+            <p className="navbar-search-empty">Không tìm thấy sản phẩm phù hợp.</p>
           )}
         </div>
       )}

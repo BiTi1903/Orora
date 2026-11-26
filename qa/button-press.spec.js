@@ -2,16 +2,14 @@ import {test,expect} from '@playwright/test';
 import {mount,render,reveal} from './fixtures';
 async function chat(page,settings={}) {
  await mount(page,`import Feedback from '/src/components/ButtonPressFeedback.jsx';import Chat from '/src/components/ChatButton.jsx';import Glass from '/src/components/MobileGlass.jsx';${render(`R.createElement(R.Fragment,null,R.createElement(Glass),R.createElement(Feedback,{settings:${JSON.stringify(settings)}}),R.createElement(Chat))`)}`,{
-  'hooks/useHomeContent.js':`export default function home(){return {loading:false,footerPhone:"0900000000",chatSettings:{hintEnabled:false,...${JSON.stringify(settings)}}}}`,
+  'hooks/useHomeContent.js':`export default function home(){return {loading:false,chatSettings:{hintEnabled:false,...${JSON.stringify(settings)}}}}`,
   'hooks/useChatConversation.js':'export default function conversation(){return {metadata:{},messages:[],sending:false,error:null,send:()=>false,retry(){},reset(){}}}',
  });
  const button=page.getByRole('button',{name:'Chat với ORORA',exact:true});await expect(button).toBeVisible();return page.locator('.chat-button');
 }
 const animations=button=>button.evaluate(node=>node.getAnimations().filter(a=>a.id==='orora-chat-press').length);
 test('chat taps and keyboard activation bounce once without changing the drag transform',async({page})=>{
- const button=await chat(page);
- await button.evaluate(node => document.addEventListener('click', () => node.getAnimations().find(a => a.id === 'orora-chat-press')?.pause(), {once:true}));
- await button.click();await expect(page.getByRole('dialog')).toBeVisible();
+ const button=await chat(page);await button.click();await expect(page.getByRole('dialog')).toBeVisible();
  const sample=await button.evaluate(node=>{const a=node.getAnimations().find(a=>a.id==='orora-chat-press');if(!a)return null;a.pause();a.currentTime=a.effect.getTiming().duration*.65;return {count:node.getAnimations().filter(a=>a.id==='orora-chat-press').length,scale:parseFloat(getComputedStyle(node).scale),frames:a.effect.getKeyframes().map(f=>Object.keys(f))};});
  expect(sample.count).toBe(1);expect(sample.scale).toBeGreaterThan(1);expect(sample.frames.flat()).not.toContain('transform');
  await button.evaluate(node=>{
@@ -53,25 +51,16 @@ test('shared feedback covers website and admin buttons, SVG targets and keyboard
 });
 
 test('chat forms grow continuously from the launcher, including the AI panel, and cancel when closed early',async({page})=>{
- const button=await chat(page);
- await page.evaluate(() => {
-   // Inspect the real keyframes before a slow test runner can miss the transition.
-   new MutationObserver(() => {
-     document.getAnimations().filter(a => a.id === 'orora-chat-entrance').forEach(a => {
-       if (a.playState === 'running') a.pause();
-     });
-   }).observe(document.body, { childList: true, subtree: true });
- });
- await button.click();const chooser=page.locator('.orora-chat-channel-chooser');await expect(chooser).toBeVisible();
+ const button=await chat(page);await button.click();const chooser=page.locator('.orora-chat-channel-chooser');await expect(chooser).toBeVisible();
  const sample=await chooser.evaluate(async node=>{const a=node.getAnimations().find(a=>a.id==='orora-chat-entrance');if(!a)return null;a.pause();await a.ready;a.currentTime=0;const start=node.getBoundingClientRect();a.currentTime=a.effect.getTiming().duration/2;const mid=node.getBoundingClientRect();return {count:node.getAnimations().filter(a=>a.id==='orora-chat-entrance').length,startWidth:start.width,startHeight:start.height,startX:start.x+start.width/2,startY:start.y+start.height/2,midWidth:mid.width,finalWidth:node.offsetWidth,duration:a.effect.getTiming().duration};});
  const anchor=await button.boundingBox();expect(sample.count).toBe(1);expect(sample.duration).toBe(420);expect(sample.startWidth).toBeLessThan(sample.midWidth);expect(sample.midWidth).toBeLessThanOrEqual(sample.finalWidth+1);expect(Math.abs(sample.startX-anchor.x-anchor.width/2)).toBeLessThan(2);expect(Math.abs(sample.startY-anchor.y-anchor.height/2)).toBeLessThan(2);
  await chooser.evaluate(node=>node.getAnimations().filter(a=>a.id==='orora-chat-entrance').forEach(a=>a.finish()));await chooser.locator('.orora-chat-channel-options button').click();const panel=page.locator('.orora-chat-panel');await expect(panel).toBeVisible();expect(await panel.evaluate(node=>node.getAnimations().filter(a=>a.id==='orora-chat-entrance').length)).toBe(1);
- await button.focus();await page.keyboard.press('Enter');await expect(page.getByRole('dialog')).toHaveCount(0);expect(await page.evaluate(()=>document.getAnimations().filter(a=>a.id==='orora-chat-entrance').length)).toBe(0);
+ await button.click();await expect(page.getByRole('dialog')).toHaveCount(0);expect(await page.evaluate(()=>document.getAnimations().filter(a=>a.id==='orora-chat-entrance').length)).toBe(0);
 });
 test('chat entrance respects reduced motion and an explicit disabled setting',async({page})=>{
  await page.emulateMedia({reducedMotion:'reduce'});let button=await chat(page);await button.click();await expect(page.getByRole('dialog')).toBeVisible();expect(await page.evaluate(()=>document.getAnimations().filter(a=>a.id==='orora-chat-entrance').length)).toBe(0);
  await page.emulateMedia({reducedMotion:'no-preference'});
- await mount(page,`import Chat from '/src/components/ChatButton.jsx';${render('R.createElement(Chat)')}`,{'hooks/useHomeContent.js':'export default function home(){return {loading:false,footerPhone:"0900000000",navStyles:{surfaces:{chatPopupAnimation:false}},chatSettings:{hintEnabled:false}}}','hooks/useChatConversation.js':'export default function conversation(){return {metadata:{}}}'});
+ await mount(page,`import Chat from '/src/components/ChatButton.jsx';${render('R.createElement(Chat)')}`,{'hooks/useHomeContent.js':'export default function home(){return {loading:false,navStyles:{surfaces:{chatPopupAnimation:false}},chatSettings:{hintEnabled:false}}}','hooks/useChatConversation.js':'export default function conversation(){return {metadata:{}}}'});
  button=page.locator('.chat-button');await expect(button).toBeVisible();await button.click();await expect(page.getByRole('dialog')).toBeVisible();expect(await page.evaluate(()=>document.getAnimations().filter(a=>a.id==='orora-chat-entrance').length)).toBe(0);
 });
 

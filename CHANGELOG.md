@@ -1,3 +1,7 @@
+## 26/11/2026 — Khôi phục bản trước đợt rà soát giao diện
+
+- Theo yêu cầu của chủ website, hoàn tác commit 0a06f29. Đã đối chiếu mã nguồn và kiểm thử với cc097bd. Chỉ nhật ký thay đổi khác bản đó. Không thao tác trên database.
+
 ## 26/11/2026 — Rà soát trải nghiệm mua hàng, tìm kiếm và quản trị
 
 - Khung mua trên PC cao theo nội dung. Mã sản phẩm vừa chữ, dung tích và số lượng xếp cạnh nhau khi đủ chỗ. Nút thêm giỏ và mua ngay có nhãn riêng. Tổng tiền xuất hiện khi đổi số lượng, cả hai thanh mua dùng chung lựa chọn và kiểu nút từ Visual Builder.
