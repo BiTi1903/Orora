@@ -4,7 +4,7 @@ const mocks={
  'hooks/useHomeContent.js':'export default function home(){return {loading:false}}',
  'hooks/useProducts.js':'export default function products(){return {products:[],loading:false}}',
  'hooks/useCategories.js':'export default function categories(){return {categories:[]}}',
- 'lib/api.js':'export const explainError=e=>e.message;export const getProduct=async()=>null;export const getHomeContent=async()=>({navLogo:"ORORA",navStyles:{future:"keep",cart:{copy:{label:"Giỏ cũ"}}},productDetailStyles:{future:"keep",purchaseOptions:{websiteLabel:"Đặt hàng ngay"}},heroTitle:"Tiêu đề ban đầu"});export const saveHomeContent=async value=>{window.__saved=value};',
+ 'lib/api.js':'export const getProducts=async()=>[{id:"p1",name:"Sản phẩm ẩn",active:false}];export const saveCategory=async value=>{window.__category=value};export const explainError=e=>e.message;export const getProduct=async()=>null;export const getHomeContent=async()=>({navLogo:"ORORA",navStyles:{future:"keep",cart:{copy:{label:"Giỏ cũ"}}},productDetailStyles:{future:"keep",purchaseOptions:{websiteLabel:"Đặt hàng ngay"}},heroTitle:"Tiêu đề ban đầu"});export const saveHomeContent=async value=>{window.__saved=value};',
 };
 async function editor(page,workspace='home',section='links'){
  await mount(page,`import Editor from '/src/admin/HomeAdmin.jsx';function Fixture(){const [mode,set]=R.useState('${workspace}');const [request,setRequest]=R.useState({section:'${section}',version:0});R.useEffect(()=>{const on=e=>{set('store');setRequest(r=>({section:e.detail.section,version:r.version+1}))};window.addEventListener('orora-admin-store',on);return()=>window.removeEventListener('orora-admin-store',on)},[]);return R.createElement('main',{className:'admin-main'},R.createElement('button',{onClick:()=>set('home')},'Về Trang chủ'),R.createElement(Editor,{workspace:mode,storeSection:request.section,storeVersion:request.version}))};${render('R.createElement(Fixture)')}`,mocks);
@@ -41,9 +41,57 @@ test('information tabs and purchase channels are separate editable selections',a
  await expect.poll(()=>page.evaluate(()=>window.__saved)).toEqual({productDetailStyles:{informationTabs:{labels:{usage:'Cách dùng mới'}},purchaseOptions:{facebookLabel:'Mua qua Facebook',customFacebookLabel:true}}});await fit(page);
 });
 
-test('tracking draft lives in the store and its own save is isolated',async({page})=>{
- await editor(page,'store','tracking');await expect(page.getByRole('button',{name:'💾 Lưu tất cả',exact:true})).toBeHidden();const title=page.getByLabel('Tiêu đề trang',{exact:true});await title.fill('Tra cứu mới');
- const nav=page.getByRole('navigation',{name:'Thiết lập cửa hàng'});await expect(nav.getByRole('button')).toHaveCount(2);await nav.getByRole('button',{name:'Kênh mua và thanh toán',exact:true}).click();await nav.getByRole('button',{name:'Tra cứu đơn',exact:true}).click();await expect(title).toHaveValue('Tra cứu mới');
- await page.getByRole('button',{name:'Lưu tra cứu',exact:true}).click();await expect.poll(()=>page.evaluate(()=>window.__saved)).toEqual({orderTrackingText:{title:'Tra cứu mới'}});
- await nav.getByRole('button',{name:'Kênh mua và thanh toán',exact:true}).click();await expect(page.getByLabel('TikTok Shop',{exact:true})).toBeVisible();await expect(page.getByLabel('Facebook fanpage / shop',{exact:true})).toBeVisible();await fit(page);
+test('store shortcut opens tracking in the shared builder and saves both sections together',async({page})=>{
+ await editor(page,'store','tracking');
+ const title=page.getByLabel('Tiêu đề trang',{exact:true});
+ await title.fill('Tra cứu mới');
+ await page.frameLocator('.builder-preview-frame').getByRole('button',{name:'Mã đơn',exact:true}).click();
+ await expect(page.frameLocator('.builder-preview-frame').locator('#preview-lookup-code')).toBeVisible();
+ const sections=page.locator('.builder-section-item');
+ await sections.filter({hasText:'Kênh mua & thanh toán'}).click();
+ const link=page.getByLabel('TikTok Shop',{exact:true});
+ await link.fill('https://example.com');
+ const save=page.getByRole('button',{name:'💾 Lưu tất cả',exact:true});
+ await save.click();
+ expect(await page.evaluate(()=>window.__saved)).toBeUndefined();
+ await link.fill('https://www.tiktok.com/@orora');
+ await sections.filter({hasText:'Tra cứu đơn hàng'}).click();
+ await expect(title).toHaveValue('Tra cứu mới');
+ await save.click();
+ await expect.poll(()=>page.evaluate(()=>window.__saved)).toEqual({orderTrackingText:{title:'Tra cứu mới'},shopLinks:{tiktokUrl:'https://www.tiktok.com/@orora'}});
+});
+
+test('shared sections persist their own fields and categories use the catalog writer',async({page})=>{
+ await editor(page);
+ const open=name=>page.locator('.builder-section-item').filter({hasText:name}).click();
+ await open('Chọn theo nhu cầu');
+ await page.getByLabel('Tiêu đề',{exact:true}).fill('Nhu cầu mới');
+ await open('FAQ sản phẩm');
+ await page.getByLabel('Tiêu đề',{exact:true}).fill('Câu hỏi mới');
+ await open('Slogan sản phẩm');
+ await page.getByLabel('Nội dung Slogan',{exact:true}).fill('Slogan mới');
+ await open('Cam kết & chính sách');
+ await page.getByLabel('3. Bảo mật thông tin',{exact:true}).fill('Nội dung bảo mật mới');
+ await open('Danh mục sản phẩm');
+ await page.getByLabel('Tên danh mục mới').fill('Chăm sóc da');
+ await page.getByRole('button',{name:'+ Thêm danh mục',exact:true}).click();
+ await expect.poll(()=>page.evaluate(()=>window.__category?.name)).toBe('Chăm sóc da');
+ await page.getByRole('button',{name:'💾 Lưu tất cả',exact:true}).click();
+ await expect.poll(()=>page.evaluate(()=>window.__saved)).toEqual({
+  productNeeds:{title:'Nhu cầu mới'},productFaq:{title:'Câu hỏi mới'},
+  productSlogan:{text:'Slogan mới'},policyPageContent:{privacyText:'Nội dung bảo mật mới'}
+ });
+});
+
+test('tracking dimensions and typography update the real preview and saved settings',async({page})=>{
+ await editor(page,'store','tracking');
+ await page.getByRole('button',{name:'Kiểu chữ & khung'}).click();
+ await page.getByLabel('Bo góc thẻ (px)',{exact:true}).fill('31');
+ await page.getByLabel('Chiều cao ô nhập / nút (px)',{exact:true}).fill('52');
+ await page.getByLabel('Cỡ chữ máy tính (px)',{exact:true}).fill('35');
+ const preview=page.frameLocator('.builder-preview-frame').locator('.order-tracking-page');
+ await expect(preview).toHaveCSS('--tracking-radius','31px');
+ await expect(preview).toHaveCSS('--tracking-field-height','52px');
+ await page.getByRole('button',{name:'💾 Lưu tất cả',exact:true}).click();
+ await expect.poll(()=>page.evaluate(()=>window.__saved?.orderTrackingText?.styles)).toMatchObject({radius:31,fieldHeight:52,text:{title:{fontSize:35}}});
 });

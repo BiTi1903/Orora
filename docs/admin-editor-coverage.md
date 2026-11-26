@@ -7,7 +7,7 @@ Các khóa cũ giữ nguyên; không di chuyển/xóa dữ liệu production. Bu
 | Editfooter.jsx | footerLogo, footerDescription, footerInfoTitle, footerAboutText, footerShopText, footerTermsText, footerPrivacyText, footerContactTitle, footerPhone, footerEmail, footerAddress, footerSocialTitle, footerInstagram, footerFacebook, footerTikTok, footerYouTube, footerCopyright, footerCompanyNumber | Chân trang |
 | Editticker.jsx | marqueeWords, marqueeStyles | Dải chữ chạy |
 | Editfeatures.jsx | featuresLabel, featuresTitle, features | Nâng cấp BT |
-| Editproductdetail.jsx | productDetailStyles | Chi tiết SP; Cửa hàng cho form đặt hàng |
+| Editproductdetail.jsx | productDetailStyles | Chi tiết SP và Form đặt hàng trong Visual Builder |
 | Editsteps.jsx | ritualLabel, ritualTitle, ritualHighlight, steps | Không còn phần hiển thị trên website; giữ nguyên dữ liệu đã lưu |
 | Editreviews.jsx | testimonialsLabel, testimonialsTitle, testimonialsHighlight, testimonialsTitleEnd, reviews, testimonialsStyles | Cảm nhận |
 | Editnewletter.jsx | newsletterTitle, newsletterHighlight, newsletterText | Nhận tin |
@@ -19,6 +19,6 @@ Các khóa cũ giữ nguyên; không di chuyển/xóa dữ liệu production. Bu
 
 Các trường style nằm trong map (productDetailStyles, productCardStyles, aboutStyles, philosophyStyles...) vẫn giữ bộ chỉnh màu/kiểu chữ/khung. Kiểu chữ và khung thu vào Nâng cao; không bị bỏ đi. Nhãn tab sản phẩm có mục riêng, kiểu chữ navigation vẫn dùng chung theo cấu hình hiện tại.
 
-Giỏ và form đặt hàng dùng cùng một instance VisualBuilder khi đổi Trang chủ/Cửa hàng, do đó không có hai bản nhập độc lập. Link mua và phương thức thanh toán dùng ShopLinksSettings; tra cứu dùng OrderTrackingSettings; các vị trí cũ chỉ có đường dẫn đến Cửa hàng, không mount bộ chỉnh thứ hai.
+Visual Builder tập trung cam kết và chính sách, danh mục, slogan, nhu cầu, FAQ, kênh mua và thanh toán, tra cứu đơn. Danh mục có nút lưu riêng. Các mục còn lại dùng Lưu tất cả. Đường dẫn /admin/store mở mục kênh mua trong Builder.
 
 EditSteps từng ghi ritualLabel/ritualTitle/ritualHighlight/steps; kiểm tra src/components và page-sections không có nơi hiển thị nhóm này. Việc bỏ form không xóa các khóa này và không gửi patch cho chúng. Không khôi phục nội dung đã ngừng dùng lên website.

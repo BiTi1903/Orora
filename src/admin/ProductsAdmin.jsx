@@ -1,18 +1,15 @@
 import { useConfirm } from "./confirm-context";
 import useDraftGuard from "../hooks/useDraftGuard";
-import ProductDiscoverySettings from "./ProductDiscoverySettings";
 import PriceInput from "./PriceInput";
 import { formatProductPrice, parseVndPrice } from "../lib/commerce";
-import ProductSloganSettings from "./ProductSloganSettings";
 import { nextProductSequence, productNumber, productPath, productSlug } from "../lib/product-identity";
 import ProductVolumeEditor from "./ProductVolumeEditor";
 import { validateVolumeOptions } from "../lib/product-options";
-import ProductPoliciesSettings from "./ProductPoliciesSettings";
 import ProductReviewsEditor from "./ProductReviewsEditor";
 import ProductInformationEditor from "./ProductInformationEditor";
 import { normalizeProductDetailVisibility, productInformationBlocks, productSectionGroup, PRODUCT_CONTENT_GROUPS, secondaryProductImages } from "../lib/product-content";
 import { useEffect, useRef, useState } from "react";
-import { explainError, getProducts, removeProduct, saveProduct, saveCategory, setProductCategory } from "../lib/api";
+import { explainError, getProducts, removeProduct, saveProduct, setProductCategory } from "../lib/api";
 import useCategories from "../hooks/useCategories";
 import ImageField from "./ImageField";
 import { cdnSrc, THUMB } from "../lib/image-cdn";
@@ -24,14 +21,6 @@ const empty = {
   detailVisibility: { description: false, specifications: false, usage: false },
   active: true, categoryId: "",
 };
-
-const SHARED_SETTINGS = [
-  ['policies','Cam kết & chính sách','Nội dung cam kết hiển thị cạnh phần mua hàng.'],
-  ['categories','Danh mục','Thêm hoặc đổi tên nhóm sản phẩm.'],
-  ['slogan','Slogan','Nội dung, kiểu chữ và khung Slogan.'],
-  ['needs','Nhu cầu','Gợi ý sản phẩm theo từng nhu cầu.'],
-  ['faq','Câu hỏi thường gặp','Câu hỏi, câu trả lời và sản phẩm áp dụng.'],
-];
 
 const newProductInformationBlock = (group) => ({
   id: crypto.randomUUID(), group, enabled: true, showText: true, image: "", title: "", content: "",
@@ -51,9 +40,6 @@ const imageSlots = (product = {}) => {
 export default function ProductsAdmin() {
   const confirm = useConfirm();
   const { categories, error: categoriesError } = useCategories();
-  const [categoryName, setCategoryName] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [categoryBusy, setCategoryBusy] = useState(false);
   const [categorySaving, setCategorySaving] = useState("");
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,8 +51,6 @@ export default function ProductsAdmin() {
   const [uploads, setUploads] = useState({});
   const uploading = Object.values(uploads).some(Boolean);
   const uploadState = (id, value) => setUploads((current) => ({ ...current, [id]: value }));
-  const [view, setView] = useState("products");
-  const [sharedPanel,setSharedPanel]=useState("policies");
   const [editorPanel, setEditorPanel] = useState("basics");
   const editorRef = useRef(null);
   const changePanel = (key) => { setEditorPanel(key); requestAnimationFrame(() => editorRef.current?.scrollIntoView({ block: "start", behavior: "auto" })); };
@@ -101,7 +85,7 @@ export default function ProductsAdmin() {
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const startNew = () => {
-    setView("products"); setEditorPanel("basics");
+    setEditorPanel("basics");
     setVolumeOptions([]); setReviews([]); setSections(withInformationSlots()); setMedia(imageSlots()); setUploads({});
     setForm({ ...empty, number: String(nextProductSequence(items)).padStart(2, "0") });
     setIsNew(true);
@@ -207,45 +191,8 @@ export default function ProductsAdmin() {
   const visibleItems = items.filter((product) => (status === "all" || (product.active !== false) === (status === "active")) && (!query || [product.name, productNumber(product, items), String(Number(productNumber(product, items)))].some((value) => String(value || "").toLocaleLowerCase("vi-VN").includes(query))));
   const panels = [["basics", "Thông tin"], ["pricing", "Giá & dung tích"], ["images", "Hình ảnh"], ["content", "Nội dung"], ["reviews", "Đánh giá"]];
   return <section className="products-admin">
-    <div className="admin-top"><div><h1>Sản phẩm</h1><p className="admin-muted">Quản lý sản phẩm, giá và nội dung hiển thị.</p></div>{!editing && view === "products" && <button className="admin-btn primary" onClick={startNew} disabled={loading || busy || uploading}>+ Thêm sản phẩm</button>}</div>
-    {!editing && <nav className="product-admin-views" aria-label="Quản lý sản phẩm"><button type="button" aria-pressed={view === "products"} onClick={() => setView("products")}>Danh sách sản phẩm</button><button type="button" aria-pressed={view === "settings"} onClick={() => setView("settings")}>Thiết lập dùng chung</button></nav>}
+    <div className="admin-top"><div><h1>Sản phẩm</h1><p className="admin-muted">Quản lý sản phẩm, giá và nội dung hiển thị.</p></div>{!editing && <button className="admin-btn primary" onClick={startNew} disabled={loading || busy || uploading}>+ Thêm sản phẩm</button>}</div>
     {message && !editing && <div role="status" className={`admin-${message.type}`} style={{ marginBottom: 16 }}>{message.text}</div>}
-    {!editing && view === "settings" && <div className="product-common-settings">
-      <div className="product-shared-header"><div><h2>Thiết lập dùng chung</h2><p className="admin-muted">Chọn nhóm bên dưới để chỉnh. Mỗi nhóm có nút lưu riêng.</p></div><button type="button" className="admin-btn" onClick={()=>setView("products")}>← Danh sách sản phẩm</button></div>
-      <div className="product-shared-layout"><nav className="product-shared-nav" aria-label="Nhóm thiết lập dùng chung">{SHARED_SETTINGS.map(([id,title,description])=><button type="button" key={id} aria-pressed={sharedPanel===id} onClick={()=>setSharedPanel(id)}><strong>{title}</strong><small>{description}</small></button>)}</nav><div className="product-shared-panels">
-
-      {sharedPanel === "policies" && <section aria-label="Cam kết và chính sách" className="product-shared-panel"><ProductPoliciesSettings /></section>}
-      {sharedPanel === "categories" && <section aria-label="Danh mục sản phẩm" className="product-shared-panel">
-      {categoriesError && <div className="admin-error">Không tải được danh mục: {explainError(categoriesError)}</div>}
-      <form aria-busy={categoryBusy} className="admin-card admin-form" style={{ marginBottom: 20 }} onSubmit={async (event) => {
-        event.preventDefault();
-        setCategoryBusy(true);
-        try {
-          await saveCategory({ id: categoryId, name: categoryName });
-          setCategoryName(""); setCategoryId("");
-          say("success", "Đã lưu danh mục.");
-        } catch (err) { say("error", explainError(err)); }
-        finally { setCategoryBusy(false); }
-      }}>
-        <h2>Danh mục sản phẩm</h2>
-        <div className="admin-field">
-          <label htmlFor="category-name">{categoryId ? "Đổi tên danh mục" : "Thêm danh mục"}</label>
-          <input id="category-name" required maxLength={80} value={categoryName} disabled={categoryBusy} onChange={(event) => setCategoryName(event.target.value)} />
-        </div>
-        <div className="admin-actions">
-          <button className="admin-btn primary" aria-busy={categoryBusy} disabled={categoryBusy}>{categoryBusy ? "Đang lưu…" : categoryId ? "Lưu tên" : "Thêm danh mục"}</button>
-          {categoryId && <button type="button" className="admin-btn" disabled={categoryBusy} onClick={() => { setCategoryId(""); setCategoryName(""); }}>Hủy</button>}
-        </div>
-        <div className="admin-actions" style={{ marginTop: 12, flexWrap: "wrap" }}>
-          {categories.map((category) => <button type="button" className="admin-btn" key={category.id} disabled={categoryBusy} onClick={() => { setCategoryId(category.id); setCategoryName(category.name); }}>{category.name} · Sửa tên</button>)}
-        </div>
-      </form>
-      </section>}
-      {sharedPanel === "slogan" && <section aria-label="Slogan trên chi tiết sản phẩm" className="product-shared-panel"><ProductSloganSettings /></section>}
-      {sharedPanel === "needs" && <section aria-label="Chọn sản phẩm theo nhu cầu" className="product-shared-panel"><ProductDiscoverySettings /></section>}
-      {sharedPanel === "faq" && <section aria-label="Câu hỏi thường gặp theo sản phẩm" className="product-shared-panel"><ProductDiscoverySettings faq /></section>}
-      </div></div>
-    </div>}
     {editing && <form aria-busy={busy} ref={editorRef} className="admin-card admin-form product-editor-form" noValidate onSubmit={save}>
       <div className="product-editor-toolbar">
         <div className="product-editor-toolbar-top"><div><h2>{isNew ? "Thêm sản phẩm" : "Chỉnh sửa sản phẩm"}</h2><p className="admin-muted">Mã SP #{form.number} · {form.name || "Sản phẩm mới"}</p></div><div className="admin-actions">{!isNew && form.id && <a className="admin-btn" href={productPath(form, items)} target="_blank" rel="noopener noreferrer">Xem trang sản phẩm ↗</a>}<button type="submit" className="admin-btn primary" aria-busy={busy} disabled={busy || uploading || !!categorySaving}>{busy ? "Đang lưu..." : "Lưu"}</button><button type="button" className="admin-btn" disabled={busy || uploading} onClick={async () => {if(!draftGuard.hasChanges()||await confirm("Đóng phần chỉnh sửa? Thay đổi chưa lưu sẽ bị bỏ.", { title: "Bỏ thay đổi sản phẩm", confirmLabel: "Bỏ thay đổi", danger: true }))setEditing(false);}}>Hủy</button></div></div>
@@ -290,7 +237,7 @@ export default function ProductsAdmin() {
       </div>}
       {editorPanel === "reviews" && <div className="product-editor-panel"><ProductReviewsEditor reviews={reviews} onChange={setReviews} disabled={busy} /></div>}
     </form>}
-      {!editing && view === "products" && <div className="admin-card">
+      {!editing && <div className="admin-card">
         <div className="product-list-tools"><div className="admin-field"><label htmlFor="products-search">Tìm sản phẩm</label><input id="products-search" type="search" placeholder="Tên hoặc mã sản phẩm…" value={search} onChange={(event) => setSearch(event.target.value)} /></div><div className="admin-field"><label htmlFor="products-status">Hiển thị</label><select id="products-status" value={status} onChange={(event) => setStatus(event.target.value)}><option value="all">Tất cả</option><option value="active">Đang hiện</option><option value="hidden">Đang ẩn</option></select></div><span className="admin-muted">{visibleItems.length} / {items.length} sản phẩm</span></div>
         {!loading && visibleItems.length === 0 ? (
           <div className="admin-empty">

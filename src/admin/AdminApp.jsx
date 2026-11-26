@@ -25,13 +25,13 @@ const EmailExport = lazy(() => import("./EmailExport"));
 const GROUPS = [
   { title: null, items: [["dashboard", "Tổng quan"], ["analytics", "Thống kê"]] },
   { title: "Bán hàng", items: [["orders", "Đơn hàng"], ["inventory", "Kiểm kho"], ["shipping", "Phí vận chuyển"]] },
-  { title: "Giao diện và nội dung", items: [["home", "Trang chủ"], ["products", "Sản phẩm"], ["store", "Cửa hàng"]] },
+  { title: "Giao diện và nội dung", items: [["home", "Trang chủ"], ["products", "Sản phẩm"]] },
   { title: "Khách hàng", items: [["newsletter", "Email"], ["chat", "Chat AI"], ["export", "Xuất danh sách email"]] },
 ];
 
 const sharesBuilder = (from,to) => [from,to].every(key => key === "home" || key === "store");
 
-const ALL_TABS = GROUPS.flatMap((group) => group.items.map(([key]) => key));
+const ALL_TABS = [...GROUPS.flatMap((group) => group.items.map(([key]) => key)), "store"]; // Legacy store URLs open the builder.
 
 export default function AdminApp() {
   const [user, setUser] = useState(() => auth ? undefined : null);
@@ -89,7 +89,7 @@ function AdminWorkspace({ user }) {
   const [storeSection, setStoreSection] = useState("links");
   const [storeVersion, setStoreVersion] = useState(0);
 
-  useEffect(()=>{document.title=GROUPS.flatMap(group=>group.items).find(([key])=>key===tab)[1]+" · Quản trị ORORA";},[tab]);
+  useEffect(()=>{document.title=GROUPS.flatMap(group=>group.items).find(([key])=>key===(tab==="store"?"home":tab))[1]+" · Quản trị ORORA";},[tab]);
   const navigate = async (key, { force = false } = {}) => {
     if (!ALL_TABS.includes(key) || key === tab) return;
     const sameBuilder = sharesBuilder(tab,key);
@@ -130,14 +130,16 @@ function AdminWorkspace({ user }) {
 
   useEffect(() => {
     const open = (event) => {
+      if (!sharesBuilder(tab,"store") && dirtyRegistry.hasChanges() && !window.confirm("Bỏ thay đổi chưa lưu và mở Visual Builder?")) return;
       setStoreVersion((v) => v + 1);
       setStoreSection(event.detail?.section || "links");
       setTab("store");
-      syncAdminUrl("store", true);
+      syncAdminUrl("store");
+      position.current=window.history.state?.adminPosition ?? 0;
     };
     window.addEventListener("orora-admin-store", open);
     return () => window.removeEventListener("orora-admin-store", open);
-  }, []);
+  }, [tab]);
 
   const orderBadgeShown = notifications.snapshot?.pendingCount > 0 || notifications.error;
 
@@ -204,7 +206,7 @@ function AdminWorkspace({ user }) {
             <div className="admin-nav-group" key={title || "main"} role="group" aria-label={title || undefined}>
               {title && <span className="admin-nav-title" aria-hidden="true">{title}</span>}
               {items.map(([key, label]) => (
-                <button key={key} aria-label={label} aria-describedby={key === "orders" && orderBadgeShown ? "admin-pending-order-count" : undefined} aria-current={tab === key ? "page" : undefined} className={tab === key ? "active" : ""} onPointerEnter={() => prefetchAdminTab(key)} onFocus={() => prefetchAdminTab(key)} onClick={() => navigate(key)}>
+                <button key={key} aria-label={label} aria-describedby={key === "orders" && orderBadgeShown ? "admin-pending-order-count" : undefined} aria-current={(tab === key || (tab === "store" && key === "home")) ? "page" : undefined} className={(tab === key || (tab === "store" && key === "home")) ? "active" : ""} onPointerEnter={() => prefetchAdminTab(key)} onFocus={() => prefetchAdminTab(key)} onClick={() => navigate(key)}>
                   {label}{key === "orders" && <OrderBadge notifications={notifications} />}
                 </button>
               ))}

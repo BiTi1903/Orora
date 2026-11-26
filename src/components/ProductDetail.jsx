@@ -89,6 +89,7 @@ function ProductNotFoundView() {
 function ProductDetail({
   preview = false,
   previewStyles = null,
+  previewSettings = null,
   previewProduct = null,
   previewProducts = [],
   selectedElement = "",
@@ -115,7 +116,8 @@ function ProductDetail({
   const [consultationOpen, setConsultationOpen] = useState(false);
   const [consultationSource, setConsultationSource] = useState(null);
 
-  const home = useHomeContent();
+  const savedHome = useHomeContent();
+  const home = preview && previewSettings ? {...savedHome,...previewSettings} : savedHome;
   const ps = preview && previewStyles
     ? previewStyles
     : {

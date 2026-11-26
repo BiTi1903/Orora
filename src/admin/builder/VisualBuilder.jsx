@@ -1,7 +1,6 @@
 import { useConfirm } from "../confirm-context";
 import useBuilderDraft from "./useBuilderDraft";
 import { inspectorElements, matchesInspectorSearch } from "./element-options";
-import StoreWorkspace from "./StoreWorkspace";
 import {
   DEFAULT_HERO,
   DEFAULT_COLLECTION,
@@ -44,9 +43,8 @@ import {
   OrderTrackingBuilderPreview,
   OrderTrackingBuilderPanel,
 } from "./SharedBuilderPanels";
-import { availablePaymentMethods } from "../../lib/commerce";
+import { availablePaymentMethods, socialShopUrl } from "../../lib/commerce";
 import { DEFAULT_RETURN_POLICY } from "../../lib/return-policy";
-import useProducts from "../../hooks/useProducts";
 import { editedSectionPayload, changedValues, mergeSavedValues } from "./save-sections";
 import PreviewFrame from "./PreviewFrame";
 import { PREVIEW_PRODUCTS } from "./preview-products";
@@ -82,16 +80,6 @@ export default function VisualBuilder({
   requestedStoreVersion = 0,
 }) {
   const confirm = useConfirm();
-  const [storeTab, setStoreTab] = useState(requestedStoreSection);
-  const [previousStoreRequest, setPreviousStoreRequest] = useState(
-    `${requestedStoreSection}:${requestedStoreVersion}`,
-  );
-  const [storeOpened, setStoreOpened] = useState(workspace === "store");
-  if (previousStoreRequest !== `${requestedStoreSection}:${requestedStoreVersion}`) {
-    setPreviousStoreRequest(`${requestedStoreSection}:${requestedStoreVersion}`);
-    setStoreTab(requestedStoreSection);
-  }
-  if (workspace === "store" && !storeOpened) setStoreOpened(true);
   const [previewDevice, setPreviewDevice] = useState("desktop");
   const [previewZoom, setPreviewZoom] = useState("fit");
   const [reloadVersion, setReloadVersion] = useState(0);
@@ -127,7 +115,17 @@ export default function VisualBuilder({
     setDiscovery,
     undo, redo, clearHistory, resetField, canUndo, canRedo,
   } = useBuilderDraft();
-  const { products: discoveryProducts, loading: discoveryLoading } = useProducts();
+  const [catalog,setCatalog] = useState({products:[],loading:true,error:false});
+  const {products:discoveryProducts,loading:discoveryLoading} = catalog;
+  useEffect(()=>{
+    let alive=true;
+    import("../../lib/api").then(api=>api.getProducts()).then(products=>{
+      if(alive) setCatalog({products,loading:false,error:false});
+    }).catch(()=>{
+      if(alive) setCatalog({products:[],loading:false,error:true});
+    });
+    return ()=>{alive=false;};
+  },[reloadVersion]);
   const [previewProductId, setPreviewProductId] = useState("");
   const sampleProducts = PREVIEW_PRODUCTS;
   const detailProduct = (previewProductId && discoveryProducts.find((item) => item.id === previewProductId)) || PREVIEW_PRODUCTS[0];
@@ -143,11 +141,22 @@ export default function VisualBuilder({
       }));
     else setSectionVisibility((current) => ({ ...current, [key]: current[key] === false }));
   };
-  const [activeSection, setActiveSection] = useState("about");
+  const storeTarget = requestedStoreSection === "tracking" ? "ordertracking" : "shoplinks";
+  const storeRequest = workspace === "store" ? storeTarget + requestedStoreVersion : "";
+  const [lastRequest, setLastRequest] = useState(storeRequest);
+  const [activeSection, setActiveSection] = useState(storeRequest ? storeTarget : "about");
   const [activeCareGroupId, setActiveCareGroupId] = useState("");
   const [selected, setSelected] = useState("title");
   const [sectionSearch, setSectionSearch] = useState("");
   const [selectionVersion, setSelectionVersion] = useState(0);
+  if (lastRequest !== storeRequest) {
+    setLastRequest(storeRequest);
+    if (storeRequest) {
+      setActiveSection(storeTarget);
+      setSelected(SECTION_DEFAULT_SELECTED[storeTarget] || "title");
+      setSectionSearch("");
+    }
+  }
   const selectElement = (key) => {
     setSelected(key);
     setSelectionVersion((value) => value + 1);
@@ -174,7 +183,7 @@ export default function VisualBuilder({
     const observer = new ResizeObserver(measure);
     observer.observe(bar);
     return () => observer.disconnect();
-  }, [loading, workspace, storeTab]);
+  }, [loading]);
 
   useEffect(() => {
     let alive = true;
@@ -404,8 +413,7 @@ export default function VisualBuilder({
     setEditVersion(value => value + 1);
   };
   const canResetActive =
-    workspace !== "store" &&
-    !["productneeds", "productfaq", "productcare", "cartform", "orderform", "ordersuccess"].includes(activeSection);
+    !["productneeds", "productfaq", "productcare", "cartform", "orderform", "ordersuccess","productslogan","categories","shoplinks","ordertracking","policies"].includes(activeSection);
   const resetActive = async () => {
     if (!canResetActive) return;
     if (!await confirm("Khôi phục các giá trị mặc định của mục hiện tại? Thay đổi áp dụng khi bạn lưu.", {
@@ -421,6 +429,21 @@ export default function VisualBuilder({
   const save = async () => {
     if (loading || loadError || saving) return;
     if (!dirtySections.current.size && !resetSections.current.size) return setMessage({ type: "success", text: "Chưa có thay đổi để lưu." });
+    if (dirtySections.current.has("shoplinks")) {
+      if (!discovery.shopLinks.paymentMethods.length) {
+        switchSection("shoplinks");
+        setMessage({type:"error",text:"Chọn ít nhất một phương thức thanh toán."});
+        return;
+      }
+      for (const [field, platform] of [["facebookUrl","facebook"], ["tiktokUrl","tiktok"]]) {
+        const url = discovery.shopLinks[field].trim();
+        if (url && !socialShopUrl(url, platform)) {
+          switchSection("shoplinks");
+          setMessage({type:"error", text:`Đường dẫn ${platform} phải dùng HTTPS của đúng nền tảng.`});
+          return;
+        }
+      }
+    }
     const pendingSections = dirtySections.current;
     const pendingResets = resetSections.current;
     dirtySections.current = new Set();
@@ -508,23 +531,10 @@ export default function VisualBuilder({
     return <div className="builder-loading">Đang tải Visual Builder...</div>;
   }
 
-  const hideStoreToolbar = workspace === "store" && !isDirty && !loadError;
-
   return (
-    <div ref={builderRoot} className={`visual-builder${workspace === "store" ? " is-store-workspace" : ""}`}>
-      <div
-        className="builder-toolbar"
-        hidden={hideStoreToolbar}
-        style={hideStoreToolbar ? { display: "none" } : undefined}
-      >
-        <div>
-          <strong>{workspace === "store" ? "Cài đặt cửa hàng" : "Chỉnh sửa giao diện"}</strong>
-          <span>
-            {workspace === "store"
-              ? "Chọn kênh mua hàng, thanh toán hoặc tra cứu đơn."
-              : "Chọn một phần trên preview để chỉnh sửa."}
-          </span>
-        </div>
+    <div ref={builderRoot} className="visual-builder">
+      <div className="builder-toolbar">
+        <div><strong>Chỉnh sửa giao diện</strong><span>Chọn một mục để chỉnh sửa và xem trước.</span></div>
 
         <div className="builder-history-actions" aria-label="Hoàn tác và khôi phục">
           <button type="button" className="admin-btn" disabled={!canUndo || saving || loadError} onClick={() => replayEdit(undo)}>Hoàn tác</button>
@@ -571,17 +581,9 @@ export default function VisualBuilder({
         </div>
       </div>
 
-      {storeOpened && (
-        <div hidden={workspace !== "store"}>
-          <StoreWorkspace tab={storeTab} onTab={setStoreTab} />
-        </div>
-      )}
-      <div
-        className="builder-layout"
-        hidden={workspace === "store"}
-        inert={workspace === "store"}
-        style={workspace === "store" ? { display: "none" } : undefined}
-      >
+      {catalog.error && ["productneeds","productfaq","productcare","productdetail"].includes(activeSection) &&
+        <p role="alert">Chưa tải được danh sách sản phẩm để chỉnh liên kết.</p>}
+      <div className="builder-layout">
         <aside className="builder-sections">
           <div className="builder-panel-title">
             <span>Các mục trên trang</span>
@@ -825,6 +827,7 @@ export default function VisualBuilder({
               />
             ) : activeSection === "orderform" ? (
               <OrderFormPreview
+                shopLinks={discovery.shopLinks}
                 canvas
                 appearance={productDetail.purchaseOptions || {}}
                 selectedElement={selected}
@@ -860,6 +863,7 @@ export default function VisualBuilder({
             ) : activeSection === "productdetail" ? (
               <ProductDetail
                 preview
+                previewSettings={discovery}
                 previewStyles={productDetail}
                 previewProduct={detailProduct}
                 previewProducts={sampleProducts}

@@ -5,7 +5,7 @@ import OrderFormFields from './OrderFormFields';
 import {checkoutStyle,CHECKOUT_COPY} from '../lib/checkout-presentation';
 import {toCss} from '../lib/typography';
 
-export default function OrderFormPreview({appearance={},canvas=false,selectedElement,onSelect}){
+export default function OrderFormPreview({appearance={},shopLinks,canvas=false,selectedElement,onSelect}){
  const home=useHomeContent();
  const [multiple,setMultiple]=useState(false);
  const [zone,setZone]=useState("pending");
@@ -35,7 +35,7 @@ export default function OrderFormPreview({appearance={},canvas=false,selectedEle
      addresses={{provinces:[{code:"01",name:"Hà Nội"}],wards:[{code:"sample",name:"Phường Ba Đình"}]}}
      provinceCode={zone==="pending"?"":"01"}
      wardCode={zone==="pending"?"":"sample"}
-     methods={availablePaymentMethods(home)} items={items} subtotal={multiple?599000:349000}
+     methods={availablePaymentMethods(shopLinks ? {shopLinks} : home)} items={items} subtotal={multiple?599000:349000}
      unitPrice={349000}
      shipping={{fee,blocked:zone==="blocked",reason:zone==="blocked"?"Chưa có phí giao hàng cho địa chỉ này.":zone==="pending"?"Chọn địa chỉ để tính phí giao hàng.":""}}
      total={fee===null?null:(multiple?599000:349000)+fee}

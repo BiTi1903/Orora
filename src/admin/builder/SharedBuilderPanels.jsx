@@ -1,6 +1,9 @@
+import PolicyPage from "../../components/PolicyPage";
+import ProductAssurances from "../../components/ProductAssurances";
+import useHomeContent from "../../hooks/useHomeContent";
 import { useState } from "react";
 import { SloganAppearanceEditor, SloganTypographyEditor } from "../ProductSloganDesign";
-import { ColorField, NumberField, TypographyEditor } from "../controls";
+import { ColorField, NumberField } from "../controls";
 import { ORDER_TRACKING_COLOR_DEFAULTS } from "../controls/color-defaults";
 import {
   ORDER_TRACKING_FIELDS,
@@ -9,9 +12,9 @@ import {
   trackingCopy,
   trackingStyle,
   trackingTheme,
+  trackingTextSettings,
 } from "../../lib/order-tracking-copy";
 import { PAYMENT_LABELS, availablePaymentMethods, socialShopUrl } from "../../lib/commerce";
-import { DEFAULT_RETURN_POLICY } from "../../lib/return-policy";
 import * as api from "../../lib/api";
 import useCategories from "../../hooks/useCategories";
 import OrderTrackingDetails from "../../components/OrderTrackingDetails";
@@ -24,7 +27,7 @@ const SAMPLE_TRACKING_ORDER = {
   paymentMethod: "cod",
   paymentStatus: "unpaid",
   createdAt: new Date().toISOString(),
-  product: { name: "Gel dưỡng ORORA", variantLabel: "100 ml" },
+  productName: "Gel dưỡng ORORA", variantLabel: "100 ml",
   quantity: 1,
   subtotal: 250000,
   shippingFee: 30000,
@@ -353,72 +356,11 @@ export function ProductSloganBuilderPanel({ slogan, styles, onChangeSlogan, onCh
 }
 
 export function PoliciesPreview({ policies = [], pageContent = {} }) {
-  const activePolicies = (Array.isArray(policies) ? policies : []).filter(
-    (item) => item?.enabled !== false && (item?.title?.trim() || item?.content?.trim()),
-  );
-  return (
-    <div style={{ padding: "32px 24px", maxWidth: 820, margin: "0 auto", fontFamily: "var(--font-body, sans-serif)" }}>
-      <h2 style={{ fontFamily: "var(--font-display, Georgia, serif)", color: "#3a1526", margin: "0 0 12px" }}>
-        Dải cam kết cạnh nút mua hàng
-      </h2>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, marginBottom: 28 }}>
-        {activePolicies.length ? (
-          activePolicies.map((item) => (
-            <div
-              key={item.id}
-              style={{
-                padding: "14px 16px",
-                borderRadius: 14,
-                border: "1px solid #f0d7e3",
-                background: "#fff8fb",
-              }}
-            >
-              <strong style={{ display: "block", color: "#3a1526", fontSize: 14, marginBottom: 4 }}>
-                {item.title || "Cam kết"}
-              </strong>
-              <p style={{ margin: 0, color: "#684e5b", fontSize: 13, lineHeight: 1.55 }}>{item.content}</p>
-            </div>
-          ))
-        ) : (
-          <p style={{ color: "#846b77", fontSize: 13 }}>Chưa có cam kết nào được bật.</p>
-        )}
-      </div>
-
-      <h2 style={{ fontFamily: "var(--font-display, Georgia, serif)", color: "#3a1526", margin: "0 0 12px" }}>
-        Trang Chính sách mua hàng (/chinh-sach)
-      </h2>
-      <div style={{ display: "grid", gap: 14 }}>
-        {[
-          ["1. Chính sách kiểm hàng & đổi trả", pageContent.returnsText || DEFAULT_RETURN_POLICY],
-          [
-            "2. Đặt hàng, thanh toán & vận chuyển",
-            pageContent.paymentText ||
-              "Khách hàng có thể chọn thanh toán khi nhận hàng (COD) hoặc chuyển khoản ngân hàng. Phí giao hàng và mức miễn phí vận chuyển áp dụng theo cấu hình giao hàng hiện hành.",
-          ],
-          [
-            "3. Chính sách bảo mật thông tin",
-            pageContent.privacyText ||
-              "ORORA chỉ sử dụng họ tên, số điện thoại, địa chỉ và email để xác nhận đơn hàng, giao nhận và hỗ trợ sau bán.",
-          ],
-        ].map(([heading, body]) => (
-          <div
-            key={heading}
-            style={{
-              padding: "16px 18px",
-              borderRadius: 14,
-              border: "1px solid #efe0e7",
-              background: "#ffffff",
-            }}
-          >
-            <strong style={{ display: "block", color: "#b8446d", fontSize: 14, marginBottom: 6 }}>{heading}</strong>
-            <p style={{ margin: 0, color: "#4a313d", fontSize: 13.5, lineHeight: 1.65, whiteSpace: "pre-wrap" }}>
-              {body}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  const home = useHomeContent();
+  return <div data-admin-preview>
+    <ProductAssurances policies={policies} shippingSettings={home.shippingSettings}/>
+    <PolicyPage preview={{productPolicies:policies, policyPageContent:pageContent}}/>
+  </div>;
 }
 
 export function PoliciesBuilderPanel({ policies, pageContent, onChangePolicies, onChangePageContent }) {
@@ -557,7 +499,7 @@ export function CategoriesBuilderPanel() {
     setBusy(true);
     setNotice(null);
     try {
-      await api.saveCategory?.({ id: editId || undefined, name: trimmed });
+      await api.saveCategory({ id: editId || undefined, name: trimmed });
       setName("");
       setEditId("");
       setNotice({ text: editId ? "Đã cập nhật tên danh mục." : "Đã thêm danh mục mới." });
@@ -666,17 +608,17 @@ export function ShopLinksPreview({ shopLinks }) {
           Nút mua qua kênh ngoài (dưới nút Mua ngay)
         </strong>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-          {shopLinks?.facebookUrl?.trim() && (
+          {socialShopUrl(shopLinks?.facebookUrl, "facebook") && (
             <span style={{ padding: "9px 18px", borderRadius: 999, background: "#3a1526", color: "#fff", fontSize: 13 }}>
               Facebook
             </span>
           )}
-          {shopLinks?.tiktokUrl?.trim() && (
+          {socialShopUrl(shopLinks?.tiktokUrl, "tiktok") && (
             <span style={{ padding: "9px 18px", borderRadius: 999, background: "#b8446d", color: "#fff", fontSize: 13 }}>
               TikTok Shop
             </span>
           )}
-          {!shopLinks?.facebookUrl?.trim() && !shopLinks?.tiktokUrl?.trim() && (
+          {!socialShopUrl(shopLinks?.facebookUrl, "facebook") && !socialShopUrl(shopLinks?.tiktokUrl, "tiktok") && (
             <span style={{ color: "#846b77", fontSize: 13 }}>Đang ẩn cả 2 nút kênh ngoài (chưa nhập link).</span>
           )}
         </div>
@@ -767,14 +709,16 @@ export function ShopLinksBuilderPanel({ value, onChange }) {
 
 export function OrderTrackingBuilderPreview({ value }) {
   const [mode, setMode] = useState("phone");
+  const [phone,setPhone] = useState("0901234567");
+  const [code,setCode] = useState("OW_1024C");
   const form = value || {};
   const styles = form.styles || {};
   const copy = trackingCopy(form);
   return (
     <div className="order-tracking-page" style={{ ...trackingTheme(styles), minHeight: "100%", padding: "24px 16px" }}>
       <div className="order-tracking-shell">
-        <div className="order-tracking-hero">
-          <span className="order-tracking-eyebrow" style={trackingStyle(styles, "eyebrow")}>
+        <div className="order-tracking-heading">
+          <span className="product-eyebrow" style={trackingStyle(styles, "eyebrow")}>
             {copy.eyebrow}
           </span>
           <h1 style={trackingStyle(styles, "title")}>{copy.title}</h1>
@@ -784,13 +728,12 @@ export function OrderTrackingBuilderPreview({ value }) {
           copy={copy}
           styles={styles}
           mode={mode}
-          onModeChange={setMode}
-          phone="0901234567"
-          onPhoneChange={() => {}}
-          code="OW_1024C"
-          onCodeChange={() => {}}
-          verifyPhone="4567"
-          onVerifyPhoneChange={() => {}}
+          preview
+          onMode={setMode}
+          phone={phone}
+          onPhone={event=>setPhone(event.target.value)}
+          code={code}
+          onCode={event=>setCode(event.target.value)}
           busy={false}
           error=""
           onSubmit={(e) => e.preventDefault()}
@@ -842,15 +785,15 @@ export function OrderTrackingBuilderPanel({ value, onChange }) {
             <div className="admin-field" key={key}>
               <label>
                 {label}
-                {["intro", "help", "phoneHint", "codeHint", "guideStep1Body", "guideStep2Body", "guideStep3Body", "emptyNote"].includes(key) ? (
+                {["intro", "help", "phoneHint", "codeHint", "guideFirstBody", "guideSecondBody", "guideThirdBody", "statusHelp", "resultSummary", "moreHelp"].includes(key) ? (
                   <textarea
-                    rows={2}
+                    rows={2} maxLength={2000}
                     value={form[key] || ""}
                     placeholder={fallback}
                     onChange={(e) => set(key, e.target.value)}
                   />
                 ) : (
-                  <input
+                  <input maxLength={240}
                     value={form[key] || ""}
                     placeholder={fallback}
                     onChange={(e) => set(key, e.target.value)}
@@ -876,35 +819,59 @@ export function OrderTrackingBuilderPanel({ value, onChange }) {
               </select>
             </label>
           </div>
-          <TypographyEditor
-            title={TRACKING_STYLE_GROUPS.find(([key]) => key === group)?.[1] || "Kiểu chữ"}
-            value={styles[group] || {}}
-            onChange={(next) => patchStyle({ [group]: { ...(styles[group] || {}), ...next } })}
-          />
-          <div className="product-content-section" style={{ marginTop: 12 }}>
-            <strong>Màu nền &amp; khung trang tra cứu</strong>
-            {[
-              ["accent", "Màu nhấn", ORDER_TRACKING_COLOR_DEFAULTS.accent],
-              ["background", "Nền trang", ORDER_TRACKING_COLOR_DEFAULTS.background],
-              ["surface", "Nền khung", ORDER_TRACKING_COLOR_DEFAULTS.surface],
-              ["border", "Viền khung", ORDER_TRACKING_COLOR_DEFAULTS.border],
-            ].map(([key, label, fallback]) => (
-              <ColorField
-                key={key}
-                label={label}
-                value={styles[key] || ""}
-                fallback={fallback}
-                onChange={(val) => patchStyle({ [key]: val })}
-              />
-            ))}
-            <NumberField
-              label="Bo góc khung (px)"
-              value={styles.cardRadius ?? 18}
-              min={0}
-              max={36}
-              onChange={(val) => patchStyle({ cardRadius: val })}
+            <SloganTypographyEditor
+              title={TRACKING_STYLE_GROUPS.find(([key]) => key === group)[1]}
+              body
+              value={trackingTextSettings(styles,group)}
+              onChange={(patch) =>
+                patchStyle({ text: { ...styles.text, [group]: { ...trackingTextSettings(styles,group), ...patch } } })
+              }
             />
-          </div>
+            <fieldset className="slogan-design-editor">
+              <legend>Kích thước form</legend>
+              <div className="admin-form-grid">
+                {[
+                  ["formPadding", "Khoảng đệm form (px)", 24, 8, 40],
+                  ["fieldHeight", "Chiều cao ô nhập / nút (px)", 46, 44, 60],
+                ].map(([key, label, fallback, min, max]) => (
+                  <NumberField
+                    key={key}
+                    label={label}
+                    min={min}
+                    max={max}
+                    fallback={fallback}
+                    value={styles[key] ?? fallback}
+                    onChange={(next) => patchStyle({ [key]: next === "" ? 0 : next })}
+                  />
+                ))}
+              </div>
+            </fieldset>
+            <fieldset className="slogan-design-editor">
+              <legend>Màu và khung thẻ</legend>
+              <div className="admin-form-grid">
+                {[
+                  ["accent", "Màu nhấn / nút"],
+                  ["background", "Màu nền thẻ chính"],
+                  ["surface", "Màu nền phụ (tab / hộp gợi ý)"],
+                  ["border", "Màu viền"],
+                ].map(([key, label]) => (
+                  <ColorField
+                    key={key}
+                    label={label}
+                    value={styles[key]}
+                    fallback={ORDER_TRACKING_COLOR_DEFAULTS[key]}
+                    onChange={(next) => patchStyle({ [key]: next })}
+                  />
+                ))}
+                <NumberField
+                  label="Bo góc thẻ (px)"
+                  max={40}
+                  fallback={24}
+                  value={styles.radius ?? styles.cardRadius}
+                  onChange={(next) => patchStyle({ radius: next })}
+                />
+              </div>
+            </fieldset>
         </div>
       )}
     </div>

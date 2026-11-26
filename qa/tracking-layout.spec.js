@@ -23,11 +23,10 @@ test('receipt keeps cancelled and pending orders truthful and honors editable la
 });
 
 test('admin previews edited receipt labels without looking up a real order',async({page})=>{
- await mount(page,`import Settings from '/src/admin/OrderTrackingSettings.jsx';import '/src/styles/product-detail.css';${render("R.createElement(Settings)")}`,{'lib/api.js':'export const getHomeContent=async()=>({});export const saveHomeContent=async()=>{};export const explainError=()=>"Lỗi thử";'});
- await page.getByRole('button',{name:'Nội dung kết quả',exact:true}).click();
+ await mount(page,`import {OrderTrackingBuilderPanel,OrderTrackingBuilderPreview} from '/src/admin/builder/SharedBuilderPanels.jsx';function Settings(){const [value,onChange]=R.useState({});return R.createElement(R.Fragment,null,R.createElement(OrderTrackingBuilderPanel,{value,onChange}),R.createElement(OrderTrackingBuilderPreview,{value}))};${render("R.createElement(Settings)")}`);
+ await page.getByRole('button',{name:'Kết quả',exact:true}).click();
  await page.getByLabel('Chi tiết — nhóm sản phẩm',{exact:true}).fill('Sản phẩm trong đơn của bạn');
- await page.getByRole('button',{name:'Xem trước',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Sản phẩm trong đơn của bạn',exact:true})).toBeVisible();
- await expect(page.locator('.tracking-order-code')).toHaveText('OW_DEMO');
- await expect(page.locator('.is-total dd')).toContainText('320.000');
+ await expect(page.locator('.tracking-order-code')).toHaveText('OW_1024C');
+ await expect(page.locator('.is-total dd')).toContainText('280.000');
 });

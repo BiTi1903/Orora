@@ -50,11 +50,15 @@ export function trackingCopy(value = {}, locale = getLocale()) {
   }));
 }
 export function trackingTemplate(value,fields){return value.replace(/\{(\w+)\}/g,(token,key)=>fields[key]??token);}
-export function trackingStyle(value,key){const style=value?.text?.[key]||{};return {...toCss(style),textDecoration:style.textDecoration};}
+export function trackingTextSettings(value,key){
+ return {...value?.[key],...value?.text?.[key]};
+}
+export function trackingStyle(value,key){const style=trackingTextSettings(value,key);return {...toCss(style),textDecoration:style.textDecoration};}
 export function trackingTheme(value={}){
  const vars={};
  for(const [key,fallback,min,max] of [['formPadding',24,8,40],['fieldHeight',46,44,60]]){const n=Number(value[key]??fallback);vars[key==='formPadding'?'--tracking-form-padding':'--tracking-field-height']=`${Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback}px`;} 
  for(const [key,name] of [['accent','--tracking-accent'],['background','--tracking-card'],['surface','--tracking-surface'],['border','--tracking-border']])if(value[key])vars[name]=value[key];
- if(value.radius!==''&&Number.isFinite(Number(value.radius)))vars['--tracking-radius']=`${Math.max(0,Math.min(40,Number(value.radius)))}px`;
+ const radius=value.radius ?? value.cardRadius;
+ if(radius!==''&&Number.isFinite(Number(radius)))vars['--tracking-radius']=`${Math.max(0,Math.min(40,Number(radius)))}px`;
  return vars;
 }

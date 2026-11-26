@@ -45,7 +45,7 @@ test('all ten real admin pages use styled controls and fit the viewport',async({
  test.setTimeout(90000);const errors=await admin(page);
  await expect(page.getByRole('button',{name:'Đăng xuất'})).toHaveCSS('min-height','44px');
  const nav=page.getByRole('navigation',{name:'Menu quản trị'});
- for(const name of ['Tổng quan','Đơn hàng','Kiểm kho','Phí vận chuyển','Trang chủ','Sản phẩm','Cửa hàng','Email','Chat AI','Xuất danh sách email']){
+ for(const name of ['Tổng quan','Đơn hàng','Kiểm kho','Phí vận chuyển','Trang chủ','Sản phẩm','Thống kê','Email','Chat AI','Xuất danh sách email']){
   await nav.getByRole('button',{name,exact:true}).click();
   await expect(nav.getByRole('button',{name,exact:true})).toHaveAttribute('aria-current','page');
   await audit(page);await shot(page,testInfo,name);
@@ -64,10 +64,8 @@ test('builder cart/checkout controls and store payment/lookup tabs are usable',a
  await page.locator('.builder-sections').getByRole('button',{name:/Chi tiết SP/}).click();
  await page.getByLabel('Chọn thành phần cần sửa',{exact:true}).selectOption('pdPurchaseOptions');
  await audit(page);await shot(page,testInfo,'builder-checkout');
- await nav.getByRole('button',{name:'Cửa hàng',exact:true}).click();
- const tabs=page.getByRole('navigation',{name:'Thiết lập cửa hàng'});
- await expect(tabs.getByRole('button')).toHaveCount(2);
- for(const name of ['Kênh mua và thanh toán','Tra cứu đơn']){await tabs.getByRole('button',{name,exact:true}).click();await audit(page);await shot(page,testInfo,`store-${name}`);}
+ await expect(nav.getByRole('button',{name:'Cửa hàng',exact:true})).toHaveCount(0);
+ for(const name of ['Kênh mua & thanh toán','Tra cứu đơn hàng']){await page.locator('.builder-section-item').filter({hasText:name}).click();await audit(page);await shot(page,testInfo,`store-${name}`);}
  expect(errors).toEqual([]);
 });
 test('product editor and chat details keep coherent fields and compact choice controls',async({page},testInfo)=>{
@@ -96,8 +94,9 @@ test('email workflows, order details and radio choices share the theme without w
 });
 test('shared product settings and image forms fit without unstyled fields',async({page},testInfo)=>{
  test.setTimeout(90000);const errors=await admin(page);
- await page.getByRole('navigation',{name:'Menu quản trị'}).getByRole('button',{name:'Sản phẩm',exact:true}).click();await page.getByRole('button',{name:'Thiết lập dùng chung',exact:true}).click();
- for(const button of await page.getByRole('navigation',{name:'Nhóm thiết lập dùng chung'}).getByRole('button').all()){await button.click();await audit(page);}
+ await page.getByRole('navigation',{name:'Menu quản trị'}).getByRole('button',{name:'Sản phẩm',exact:true}).click();await expect(page.getByRole('button',{name:'Thiết lập dùng chung',exact:true})).toHaveCount(0);
+ await page.getByRole('navigation',{name:'Menu quản trị'}).getByRole('button',{name:'Trang chủ',exact:true}).click();
+ for(const name of ['Cam kết & chính sách','Danh mục sản phẩm','Slogan sản phẩm','Chọn theo nhu cầu','FAQ sản phẩm']){await page.locator('.builder-section-item').filter({hasText:name}).click();await audit(page);}
  await shot(page,testInfo,'shared-products');expect(errors).toEqual([]);
 });
 test('login labels, autofill and mobile field sizes stay usable',async({page},testInfo)=>{
@@ -108,7 +107,7 @@ test('login labels, autofill and mobile field sizes stay usable',async({page},te
 });
 
 test('customer checkout and FAQ previews keep website controls instead of admin controls',async({page})=>{
- await mount(page,`import Settings from '/src/admin/builder/CheckoutSettings.jsx';import Preview from '/src/components/OrderFormPreview.jsx';import Discovery from '/src/admin/ProductDiscoverySettings.jsx';${render("R.createElement(R.Fragment,null,R.createElement('div',{'data-baseline':''},R.createElement(Preview)),R.createElement('main',{className:'admin-main'},R.createElement(Settings,{value:{},onChange:()=>{}}),R.createElement(Discovery,{faq:true})))")}`,{'lib/api.js':`export const getHomeContent=async()=>({});export const getProducts=async()=>[];export const saveHomeContent=async()=>{};export const explainError=e=>e.message;`});
+ await mount(page,`import Settings from '/src/admin/builder/CheckoutSettings.jsx';import Preview from '/src/components/OrderFormPreview.jsx';import {ProductFaq} from '/src/components/ProductDiscovery.jsx';import {DEFAULT_PRODUCT_FAQ} from '/src/lib/product-discovery.js';${render("R.createElement(R.Fragment,null,R.createElement('div',{'data-baseline':''},R.createElement(Preview)),R.createElement('main',{className:'admin-main'},R.createElement(Settings,{value:{},onChange:()=>{}}),R.createElement('div',{'data-admin-preview':''},R.createElement(ProductFaq,{preview:true,value:DEFAULT_PRODUCT_FAQ}))))")}`,{'lib/api.js':`export const getHomeContent=async()=>({});export const getProducts=async()=>[];export const saveHomeContent=async()=>{};export const explainError=e=>e.message;`});
  await page.getByText('Xem trước form đặt hàng',{exact:true}).click();
  const baseline=page.locator('[data-baseline] .website-order input[name=name]'),embedded=page.locator('.admin-main [data-admin-preview] .website-order input[name=name]');
  for(const property of ['padding','border-radius','font-size','line-height','opacity','background-color'])await expect(embedded).toHaveCSS(property,await baseline.evaluate((el,key)=>getComputedStyle(el).getPropertyValue(key),property));

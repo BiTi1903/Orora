@@ -5,8 +5,9 @@ import useHomeContent from "../hooks/useHomeContent";
 import { footerCopy } from "../lib/footer-copy";
 import "../styles/order-tracking.css";
 
-export default function PolicyPage() {
-  const home = useHomeContent();
+export default function PolicyPage({preview} = {}) {
+  const saved = useHomeContent();
+  const home = preview ? {...saved,...preview} : saved;
   const footer = footerCopy(home || {});
   const items = Array.isArray(home?.productPolicies)
     ? home.productPolicies.filter((item) => item && item.enabled !== false && typeof item.title==="string" && item.title.trim() && typeof item.content==="string" && item.content.trim())
@@ -26,7 +27,7 @@ export default function PolicyPage() {
 
   return (
     <section className="policy-page">
-      <Link to="/" className="order-tracking-back">← Về trang chủ</Link>
+      {!preview && <Link to="/" className="order-tracking-back">← Về trang chủ</Link>}
       <header className="policy-header">
         <p className="product-eyebrow">ORORA · CHÍNH SÁCH & BẢO MẬT</p>
         <h1 className="page-heading">Điều khoản, Chính sách đổi trả & Bảo mật</h1>

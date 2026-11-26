@@ -1,3 +1,4 @@
+import StoreSettingsLink from "../StoreSettingsLink";
 import CheckoutSettings from "./CheckoutSettings";
 import { InspectorGroup } from "./Inspector";
 import { useId } from "react";
@@ -58,9 +59,7 @@ export default function PurchaseOptionsSettings({ value = {}, onChange, initialG
       </InspectorGroup>
       <InspectorGroup title="Nội dung các kênh mua hàng">
         <SettingGroup title="Nút chọn kênh mua hàng">
-          <small className="builder-help">
-            Gán link TikTok/Facebook và chọn phương thức thanh toán ở Cửa hàng → Kênh mua và thanh toán.
-          </small>
+          <StoreSettingsLink>Chỉnh liên kết TikTok, Facebook và phương thức thanh toán.</StoreSettingsLink>
           {[
             ["heading", "Tiêu đề", "Chọn cách mua hàng"],
             ["addToCartLabel", "Nút Thêm vào giỏ", "Thêm vào giỏ"],
