@@ -858,7 +858,7 @@ function ProductDetail({
 
 
           {(stock === "out" || stock === "low") && <p className={`product-stock-badge is-${stock}`}>{tr(soldOut ? "Hết hàng" : "Còn ít")}</p>}
-          <ProductPurchaseSelection options={options} variantId={variantId} quantity={choice.quantity} onVariantChange={(variantId) => changeSelection({ variantId })} onQuantityChange={(quantity) => changeSelection({ quantity })} disabled={soldOut} textProps={textProps} />
+          <ProductPurchaseSelection product={product} options={options} variantId={variantId} quantity={choice.quantity} onVariantChange={(variantId) => changeSelection({ variantId })} onQuantityChange={(quantity) => changeSelection({ quantity })} disabled={soldOut} textProps={textProps} />
           <section ref={purchaseSectionRef} className={`purchase-options ${selectedClass("pdPurchaseOptions")}`} aria-label="Chọn kênh mua hàng" data-builder-key={preview ? "pdPurchaseOptions" : undefined} onClick={preview ? select("pdPurchaseOptions") : undefined}>
             {!pinBuyBar && mobileBuyBar}
             {(preview || (!soldOut && (tiktokShop || facebookShop)) || (contactSettings.showTrigger === true && (showZalo || showCall || home.chatSettings?.enabled !== false || (!contact.zalo && contact.email && contactSettings.showZalo !== false)))) && (

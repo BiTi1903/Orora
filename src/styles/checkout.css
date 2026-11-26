@@ -559,3 +559,11 @@
 .order-vietqr { display: grid; justify-items: center; gap: 8px; padding: 14px; margin: 0 0 14px; border: 1px solid #ece4e8; border-radius: 14px; background: #fff; text-align: center; }
 .order-vietqr img { width: min(220px, 100%); height: auto; border-radius: 10px; display: block; }
 .order-vietqr span { font-size: 12px; line-height: 1.45; color: #5b4d54; }
+
+.checkout-mobile-total { display:none; }
+.checkout-form label.checkout-remember { display:flex; flex-direction:row; align-items:center; gap:8px; }
+.checkout-form .checkout-remember input { width:auto; min-height:0; }
+@media (max-width:768px) {
+  .checkout-form .checkout-submit { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:center; gap:10px; }
+  .checkout-mobile-total { display:grid; line-height:1.3; }
+}

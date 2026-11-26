@@ -13,7 +13,7 @@ test('checkout waits for durable acknowledgment, prevents duplicate submits and 
  await province.press('Escape');
  await province.press('Enter');
  await expect(page.getByRole('alert')).toHaveText('Vui lòng chọn tỉnh/thành và phường/xã để tiếp tục.');
- await page.getByRole('combobox',{name:'Tỉnh / Thành phố',exact:true}).click();await page.getByRole('option',{name:'Hà Nội',exact:true}).click();await page.getByRole('combobox',{name:'Phường / Xã',exact:true}).click();await page.getByRole('option',{name:'Phường Hoàn Kiếm',exact:true}).click();await page.getByLabel('Số nhà, tên đường',{exact:true}).fill('Địa chỉ thử nghiệm');await page.getByRole('checkbox').check();
+ await page.getByRole('combobox',{name:'Tỉnh / Thành phố',exact:true}).click();await page.getByRole('option',{name:'Hà Nội',exact:true}).click();await page.getByRole('combobox',{name:'Phường / Xã',exact:true}).click();await page.getByRole('option',{name:'Phường Hoàn Kiếm',exact:true}).click();await page.getByLabel('Số nhà, tên đường',{exact:true}).fill('Địa chỉ thử nghiệm');await page.locator('input[name=consent]').check();
  await page.getByRole('button',{name:'Đặt hàng ngay',exact:true}).click();const busy=page.locator('.website-order-submit');await expect(busy).toHaveAttribute('aria-busy','true');await expect(busy).toBeDisabled();await expect(page.getByRole('dialog',{name:'Đã nhận đơn hàng',exact:true})).toHaveCount(0);
  await page.locator('.website-order').evaluate(form=>form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));await expect.poll(()=>calls).toBe(1);release();await expect(page.getByRole('alert')).toHaveText('Máy chủ thử nghiệm tạm bận');await expect(busy).toBeEnabled();await expect(page.locator('input[name=name]')).toHaveValue('Khách kiểm tra');await page.getByRole('button',{name:'Đặt hàng ngay',exact:true}).click();await expect.poll(()=>calls).toBe(2);await expect(page.getByRole('dialog',{name:'Đã nhận đơn hàng',exact:true})).toHaveCount(0);release();await expect(page.getByRole('dialog',{name:'Đã nhận đơn hàng',exact:true})).toBeVisible();await expect(page.getByRole('dialog')).not.toContainText('NaN');await expect(page.getByRole('dialog')).toContainText('ORORA sẽ báo giá khi xác nhận');await fit(page);
 });
@@ -38,4 +38,30 @@ test('navigation and product links remain usable at each viewport',async({page})
  await mount(page,`import Nav from '/src/components/Navbar.jsx';${render('R.createElement(Nav)')}`,{'hooks/useHomeContent.js':'export default function useHome(){return {loading:false,navLogo:"ORORA",navLinks:[{label:"Sản phẩm",href:"/#shop"},{label:"Liên hệ",href:"/#contact"}]}}','hooks/useCategories.js':'export default function useCategories(){return {categories:[]}}'});
  if(page.viewportSize().width<=768){await page.getByRole('button',{name:'Mở menu',exact:true}).click();await expect(page.locator('.mobile-drawer.is-open')).toBeVisible();await expect(page.locator('.drawer-close')).toBeVisible();await page.locator('.drawer-close').click();await expect(page.locator('.mobile-drawer')).not.toHaveClass(/is-open/);await page.getByRole('button',{name:'Mở menu',exact:true}).click();await page.locator('.mobile-overlay').click({position:{x:8,y:200}});await expect(page.locator('.mobile-drawer')).not.toHaveClass(/is-open/);await page.getByRole('button',{name:'Mở menu',exact:true}).click();await page.keyboard.press('Escape');await expect(page.getByRole('button',{name:'Mở menu',exact:true})).toBeFocused();}
  else await expect(page.locator('.nav-links').getByRole('link',{name:'Tra cứu đơn hàng',exact:true})).toBeVisible();await fit(page);
+});
+
+test('checkout keeps a tab draft and remembers contact details only by choice',async({page})=>{
+ await mount(page,`import Order from '/src/components/OrderForm.jsx';${render("R.createElement(Order,{product:{id:'1',name:'Mist',price:'349000',volumeOptions:[{id:'small',label:'180 ml'},{id:'large',label:'220 ml',price:'399000'}]},home:{},onClose:()=>{}})")}`);
+ const name=page.locator('input[name=name]');
+ await name.fill('Khách thử');
+ const saved=()=>page.evaluate(()=>localStorage.getItem('orora_checkout_profile_remembered'));
+ expect(await saved()).toBeNull();
+ await page.reload();
+ await expect(name).toHaveValue('Khách thử');
+ const remember=page.getByLabel('Ghi nhớ thông tin trên thiết bị này');
+ await remember.check();
+ expect(JSON.parse(await saved()).name).toBe('Khách thử');
+ await remember.uncheck();
+ expect(await saved()).toBeNull();
+ await page.locator('label.product-volume-choice').filter({hasText:/180 ml.*349.000/}).click();
+ await page.locator('label.product-volume-choice').filter({hasText:/220 ml.*399.000/}).click();
+ if(page.viewportSize().width<=768) await expect(page.locator('.checkout-mobile-total')).toContainText('399.000');
+});
+
+test('address list scrolls beyond the first forty without typing',async({page})=>{
+ await mount(page,`import Address from '/src/components/AddressSelect.jsx';${render("R.createElement(Address,{label:'Địa chỉ',options:Array.from({length:80},(_,i)=>({name:'Phường '+i,code:String(i)})),onChange:()=>{}})")}`);
+ await page.getByRole('combobox').click();
+ await expect(page.getByRole('option')).toHaveCount(40);
+ await page.getByRole('listbox').evaluate(list=>{list.scrollTop=list.scrollHeight;});
+ await expect(page.getByRole('option',{name:'Phường 79',exact:true})).toHaveCount(1);
 });

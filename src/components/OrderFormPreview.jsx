@@ -28,7 +28,7 @@ export default function OrderFormPreview({appearance={},canvas=false,selectedEle
    <div className="orora-modal-content">
     <OrderFormFields
      preview
-     product={{name:'Deodorant Mist - Bodyplex'}}
+     product={{name:'Deodorant Mist - Bodyplex',price:'349000'}}
      options={[{id:'180ml',label:'180ml'},{id:'220ml',label:'220ml'}]}
      variantId="180ml"
      quantity={1}
