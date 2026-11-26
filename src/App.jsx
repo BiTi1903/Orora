@@ -36,6 +36,29 @@ const ProductDetail=lazy(()=>import("./components/ProductDetail"));
 const OrderTracking=lazy(()=>import("./components/OrderTracking"));
 const PolicyPage=lazy(()=>import("./components/PolicyPage"));
 function RouteLoading(){return <section className="route-loading" role="status" aria-label="Đang tải trang"><div className="loading-placeholder"/><div className="loading-placeholder loading-line"/></section>;}
+function ProductRouteLoading(){
+  return (
+    <section className="product-route-skeleton" role="status" aria-live="polite" aria-label="Đang tải sản phẩm">
+      <div className="product-route-skeleton-media">
+        <div className="loading-placeholder product-route-skeleton-image" />
+        <div className="product-route-skeleton-thumbs">
+          <div className="loading-placeholder product-route-skeleton-thumb" />
+          <div className="loading-placeholder product-route-skeleton-thumb" />
+          <div className="loading-placeholder product-route-skeleton-thumb" />
+        </div>
+      </div>
+      <div className="product-route-skeleton-info">
+        <div className="loading-placeholder product-route-skeleton-eyebrow" />
+        <div className="loading-placeholder product-route-skeleton-title" />
+        <div className="loading-placeholder product-route-skeleton-price" />
+        <div className="loading-placeholder product-route-skeleton-line" />
+        <div className="loading-placeholder product-route-skeleton-line is-short" />
+        <div className="loading-placeholder product-route-skeleton-cta" />
+      </div>
+      <span className="sr-only">Đang tải thông tin sản phẩm…</span>
+    </section>
+  );
+}
 const AdminApp = lazy(() => import("./admin/AdminApp"));
 
 
@@ -133,7 +156,18 @@ function App() {
 
               {visible("navbar") && <Navbar />}
 
-              {visible("productdetail") ? <Suspense fallback={<RouteLoading/>}><ProductDetail /></Suspense> : !home.loading && <section className="product-not-found"><h1>Trang chi tiết sản phẩm đang tạm ẩn</h1><Link to="/">← Về trang chủ</Link></section>}
+              {home.loading ? (
+                <ProductRouteLoading />
+              ) : visible("productdetail") ? (
+                <Suspense fallback={<ProductRouteLoading />}>
+                  <ProductDetail />
+                </Suspense>
+              ) : (
+                <section className="product-not-found">
+                  <h1>Trang chi tiết sản phẩm đang tạm ẩn</h1>
+                  <Link to="/">← Về trang chủ</Link>
+                </section>
+              )}
 
               {visible("footer") && <Footer />}
             </main>

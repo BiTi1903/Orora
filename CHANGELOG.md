@@ -1,3 +1,22 @@
+## 26/11/2026 — Khắc phục 4 vấn đề ưu tiên cao: Chống mời chuyển khoản trùng trong email, làm rõ chỉ số thống kê, ghi nguyên tử analytics & khung chờ ngay khi mở thẳng trang sản phẩm
+
+- **Lý do**: Xử lý triệt để 4 phát hiện ưu tiên cao sau kiểm toán thực tế trên email xác nhận đơn, dashboard thống kê, luồng ghi Firestore analytics và tải trực tiếp trang chi tiết sản phẩm.
+- **Thay đổi chính**:
+  - **Email xác nhận đơn & VietQR (`src/lib/mail-html.js`, `src/lib/vietqr.js`, `tests/mail-html.test.js`)**:
+    - `renderBankTransferBlock`: khi đơn chuyển khoản đã `paymentStatus === "paid"`, chỉ hiển thị thẻ xanh **Đã nhận thanh toán** (tuyệt đối không hiện STK/QR hay mời chuyển tiền lại khi admin gửi lại email).
+    - Khi đơn chưa chốt tổng tiền (`totalAmount == null` hoặc `<= 0`), hiển thị thông báo chờ ORORA xác nhận tổng tiền trước khi chuyển khoản; yêu cầu `amount > 0` trong `vietQrUrl` để không bao giờ tạo mã QR bỏ trống số tiền.
+    - Chỉ hiển thị STK & QR khi đơn còn phải thu, có tổng tiền hợp lệ và đủ tên ngân hàng, STK, chủ tài khoản.
+  - **Làm rõ chỉ số Dashboard Thống kê (`src/admin/AnalyticsDashboard.jsx`)**:
+    - Đổi nhãn KPI `"Khách truy cập"` thành **`Tổng lượt khách theo ngày`** (ghi rõ cộng theo từng ngày, có thể lặp qua nhiều ngày) và `"Tỷ lệ chuyển đổi"` thành **`Đơn đã thanh toán / lượt khách theo ngày`** (ghi chú rõ phụ thuộc thời điểm thu tiền, đặc biệt với COD).
+  - **Ghi nguyên tử sự kiện Analytics (`server/analytics.js`, `tests/analytics.test.js`)**:
+    - Đưa toàn bộ dấu chống trùng (`siteAnalyticsEvents`), dấu khách (`siteAnalyticsVisitors`), bộ đếm ngày (`siteAnalyticsDaily`) và bộ đếm sản phẩm (`siteAnalyticsProducts`) vào **cùng một `db.runTransaction(...)`** để không bao giờ xảy ra lệch số giữa hai bảng khi lỗi giữa chừng.
+    - Bổ sung unit test mô phỏng lỗi giữa transaction rồi gửi lại cùng `eventId`, xác nhận cả hai bảng chỉ cộng đúng 1 lần.
+  - **Khung chờ tức thì khi mở thẳng URL sản phẩm (`src/App.jsx`, `src/styles/global.css`)**:
+    - Thêm `ProductRouteLoading` (khung chờ ảnh, ảnh phụ, tiêu đề, giá, mô tả, nút mua) và hiển thị ngay trên route `/product/:id` trong lúc `home.loading` lẫn `<Suspense>` fallback; bổ sung `.sr-only` vào `global.css` để không lộ chữ trợ năng.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: 287/287 unit test đạt (gồm 2 kịch bản mới cho email QR/đã thanh toán và retry transaction analytics), ESLint 0 lỗi, Vite build & ngân sách bundle đạt.
+- **Ảnh hưởng database**: Không thay đổi schema hay dữ liệu hiện có; mọi lượt ghi sự kiện analytics từ nay thực thi nguyên tử trong 1 transaction Firestore.
+
 ## 26/11/2026 — Đưa toàn bộ Thiết lập dùng chung & Cửa hàng vào Visual Builder, vẽ lại Thống kê thực tế và giữ nguyên chữ người dùng nhập
 
 - **Lý do**: Chủ website yêu cầu đưa 2 mục Cửa hàng (`Kênh mua & thanh toán`, `Tra cứu đơn hàng`) cùng toàn bộ `Thiết lập dùng chung` (`Cam kết & chính sách`, `Danh mục`, `Slogan`, `Chọn theo nhu cầu`, `FAQ sản phẩm`) vào Visual Builder để chỉnh đầy đủ (nội dung, form, kiểu chữ, khung, bật/tắt) kèm xem trước trực tiếp; vẽ lại trang Thống kê & biểu đồ cho hợp lý; và không tự động dịch tiếng Anh sang tiếng Việt cho các nhãn người dùng tự nhập.

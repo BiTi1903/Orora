@@ -133,3 +133,61 @@ test("createMicrosoftSmtpMailer passes multipart text and html to Nodemailer", a
   assert.equal(sent[0].html, welcome.html);
   assert.ok(sent[0].headers["List-Unsubscribe"].includes(welcome.unsubscribeUrl));
 });
+
+test("bank transfer email never invites second payment when paid and never renders blank-amount QR", async () => {
+  const { vietQrUrl } = await import("../src/lib/vietqr.js");
+  const bankInfo = {
+    bankHeading: "Chuyển khoản ngân hàng",
+    bankName: "Vietcombank",
+    bankAccountNumber: "0011001234567",
+    bankAccountName: "CONG TY ORORA",
+    bankTransferNote: "Thanh toan don {{code}}",
+  };
+  assert.equal(vietQrUrl({ bankName: "Vietcombank", accountNumber: "0011001234567", amount: null }), "");
+  assert.equal(vietQrUrl({ bankName: "Vietcombank", accountNumber: "0011001234567", amount: 0 }), "");
+  assert.match(vietQrUrl({ bankName: "Vietcombank", accountNumber: "0011001234567", amount: 250000 }), /amount=250000/);
+
+  const paidHtml = renderOrderEmailHtml({
+    subject: "Gửi lại xác nhận đơn OW_PAID",
+    text: "Cảm ơn bạn đã đặt hàng.",
+    order: {
+      code: "OW_PAID",
+      customer: { name: "An", phone: "0901234567", email: "an@example.com", address: "HCM" },
+      product: { name: "Serum ORORA", unitPrice: 450000 },
+      quantity: 1,
+      subtotal: 450000,
+      shippingFee: 0,
+      totalAmount: 450000,
+      paymentMethod: "bank_transfer",
+      paymentStatus: "paid",
+      createdAt: "2026-11-26T08:00:00.000Z",
+    },
+    siteOrigin: "https://ororavn.com",
+    bankInfo,
+  });
+  assert.ok(paidHtml.includes("Đã nhận thanh toán"));
+  assert.ok(!paidHtml.includes("img.vietqr.io"));
+  assert.ok(!paidHtml.includes("0011001234567"));
+
+  const unpricedHtml = renderOrderEmailHtml({
+    subject: "Xác nhận đơn OW_QUOTE",
+    text: "Đơn chờ báo giá.",
+    order: {
+      code: "OW_QUOTE",
+      customer: { name: "An", phone: "0901234567", email: "an@example.com", address: "HCM" },
+      product: { name: "Serum ORORA" },
+      quantity: 1,
+      subtotal: null,
+      shippingFee: null,
+      totalAmount: null,
+      paymentMethod: "bank_transfer",
+      paymentStatus: "unpaid",
+      createdAt: "2026-11-26T08:00:00.000Z",
+    },
+    siteOrigin: "https://ororavn.com",
+    bankInfo,
+  });
+  assert.ok(unpricedHtml.includes("chờ ORORA xác nhận tổng tiền chính xác"));
+  assert.ok(!unpricedHtml.includes("img.vietqr.io"));
+  assert.ok(!unpricedHtml.includes("0011001234567"));
+});

@@ -66,3 +66,31 @@ test('analytics accepts slider ranges from one through ninety days and rejects i
  for(const days of [0,-1,91,1.5,'invalid']){const res=await call(null,{query:{days:String(days)}});assert.equal(res.statusCode,400);}
  const res=await call(null,{query:{}});assert.equal(res.body.series.length,7);
 });
+
+test('analytics retries after a mid-transaction failure without double-counting or dropping daily/product metrics',async()=>{
+  const {db,call}=setup();
+  const originalRunTx=db.runTransaction.bind(db);
+  let failOnce=true;
+  db.runTransaction=async(fn)=>{
+    if(failOnce){
+      failOnce=false;
+      await originalRunTx(async(tx)=>{
+        await fn(tx);
+        throw new Error('simulated_mid_transaction_abort');
+      });
+    }
+    return originalRunTx(fn);
+  };
+  const payload=event(undefined,'/product/white-gel','product_click');
+  const first=await call(payload);
+  assert.equal(first.statusCode,503);
+  const retry=await call(payload);
+  assert.equal(retry.statusCode,200);
+  const duplicate=await call(payload);
+  assert.equal(duplicate.statusCode,200);
+  const report=(await call()).body;
+  assert.equal(report.series.at(-1).productClicks,1);
+  assert.equal(report.series.at(-1).visitors,1);
+  assert.equal(report.products.length,1);
+  assert.equal(report.products[0].clicks,1);
+});

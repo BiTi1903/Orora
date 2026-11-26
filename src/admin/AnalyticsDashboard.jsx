@@ -700,9 +700,11 @@ export default function AnalyticsDashboard() {
                 false,
               ],
               [
-                "Khách truy cập",
+                "Tổng lượt khách theo ngày",
                 hasTraffic ? visitors.toLocaleString("vi-VN") : "—",
-                hasTraffic && visitors > 0 ? `${viewsPerVisitor} lượt xem/khách` : "Tính theo ngày Việt Nam",
+                hasTraffic && visitors > 0
+                  ? `${viewsPerVisitor} lượt xem/lượt khách · có thể lặp qua nhiều ngày`
+                  : "Cộng số khách mỗi ngày (giờ Việt Nam)",
                 false,
               ],
               [
@@ -712,9 +714,9 @@ export default function AnalyticsDashboard() {
                 false,
               ],
               [
-                "Tỷ lệ chuyển đổi",
+                "Đơn đã thanh toán / lượt khách theo ngày",
                 conversionRate !== null ? `${conversionRate}%` : "—",
-                "Đơn thanh toán / Khách",
+                "Phụ thuộc thời điểm thu tiền (nhất là COD)",
                 false,
               ],
             ].map(([label, value, sub, highlight]) => (

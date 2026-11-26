@@ -289,15 +289,36 @@ function formatOrderDate(order) {
 
 function renderBankTransferBlock(order, bankInfo) {
   if (order?.paymentMethod !== "bank_transfer") return "";
+  if (order?.paymentStatus === "paid") {
+    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 0 0;background-color:#eef8f2;border:1px solid #b7e2c7;border-radius:14px;">
+      <tr>
+        <td style="padding:18px 20px;">
+          <div style="font-family:${FONT_SANS};font-size:12px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:#1f6e43;margin-bottom:6px;">Đã nhận thanh toán</div>
+          <p style="margin:0;font-family:${FONT_SANS};font-size:13.5px;line-height:1.6;color:#27533a;">ORORA đã xác nhận nhận thanh toán cho đơn hàng <strong>${escapeHtml(order?.code || "")}</strong>. Bạn không cần chuyển khoản thêm.</p>
+        </td>
+      </tr>
+    </table>`;
+  }
+  const heading = String(bankInfo?.bankHeading || "").trim() || "Thông tin chuyển khoản";
+  const amount = Number(order?.totalAmount);
+  if (order?.totalAmount == null || !Number.isFinite(amount) || amount <= 0) {
+    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 0 0;background-color:#fff8fb;border:1px solid #f2d8e3;border-radius:14px;">
+      <tr>
+        <td style="padding:18px 20px;">
+          <div style="font-family:${FONT_SANS};font-size:12px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:#b8446d;margin-bottom:6px;">${escapeHtml(heading)}</div>
+          <p style="margin:0;font-family:${FONT_SANS};font-size:13.5px;line-height:1.6;color:#5e4450;">Đơn hàng <strong>${escapeHtml(order?.code || "")}</strong> đang chờ ORORA xác nhận tổng tiền chính xác. Vui lòng chờ thông báo xác nhận từ ORORA trước khi chuyển khoản.</p>
+        </td>
+      </tr>
+    </table>`;
+  }
   const bankName = String(bankInfo?.bankName || "").trim();
   const accountNumber = String(bankInfo?.bankAccountNumber || "").trim();
   const accountName = String(bankInfo?.bankAccountName || "").trim();
-  const heading = String(bankInfo?.bankHeading || "").trim() || "Thông tin chuyển khoản";
   const transferNoteTemplate = String(bankInfo?.bankTransferNote || "").trim() || "Thanh toán đơn {{code}}";
   const transferNote = transferNoteTemplate.replace(/\{\{code\}\}/g, order?.code || "");
-  const hasBankDetails = Boolean(bankName || accountNumber || accountName);
+  const hasBankDetails = Boolean(bankName && accountNumber && accountName);
   const qrUrl = hasBankDetails
-    ? vietQrUrl({ bankName, accountNumber, accountName, amount: order?.totalAmount, transferNote })
+    ? vietQrUrl({ bankName, accountNumber, accountName, amount, transferNote })
     : "";
 
   if (!hasBankDetails) {
@@ -316,10 +337,10 @@ function renderBankTransferBlock(order, bankInfo) {
       <td style="padding:18px 20px;">
         <div style="font-family:${FONT_SANS};font-size:12px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:#b8446d;margin-bottom:12px;">${escapeHtml(heading)}</div>
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-          ${bankName ? `<tr><td style="padding:4px 0;font-size:13px;color:#7a606c;width:130px;">Ngân hàng</td><td style="padding:4px 0;font-size:13.5px;font-weight:600;color:#3a1526;">${escapeHtml(bankName)}</td></tr>` : ""}
-          ${accountNumber ? `<tr><td style="padding:4px 0;font-size:13px;color:#7a606c;">Số tài khoản</td><td style="padding:4px 0;font-size:14px;font-weight:700;font-family:${FONT_MONO};color:#b8446d;">${escapeHtml(accountNumber)}</td></tr>` : ""}
-          ${accountName ? `<tr><td style="padding:4px 0;font-size:13px;color:#7a606c;">Chủ tài khoản</td><td style="padding:4px 0;font-size:13.5px;font-weight:600;color:#3a1526;">${escapeHtml(accountName)}</td></tr>` : ""}
-          ${order?.totalAmount != null ? `<tr><td style="padding:4px 0;font-size:13px;color:#7a606c;">Số tiền</td><td style="padding:4px 0;font-size:14px;font-weight:700;color:#3a1526;">${escapeHtml(formatVnd(order.totalAmount))}</td></tr>` : ""}
+          <tr><td style="padding:4px 0;font-size:13px;color:#7a606c;width:130px;">Ngân hàng</td><td style="padding:4px 0;font-size:13.5px;font-weight:600;color:#3a1526;">${escapeHtml(bankName)}</td></tr>
+          <tr><td style="padding:4px 0;font-size:13px;color:#7a606c;">Số tài khoản</td><td style="padding:4px 0;font-size:14px;font-weight:700;font-family:${FONT_MONO};color:#b8446d;">${escapeHtml(accountNumber)}</td></tr>
+          <tr><td style="padding:4px 0;font-size:13px;color:#7a606c;">Chủ tài khoản</td><td style="padding:4px 0;font-size:13.5px;font-weight:600;color:#3a1526;">${escapeHtml(accountName)}</td></tr>
+          <tr><td style="padding:4px 0;font-size:13px;color:#7a606c;">Số tiền</td><td style="padding:4px 0;font-size:14px;font-weight:700;color:#3a1526;">${escapeHtml(formatVnd(amount))}</td></tr>
           <tr><td style="padding:4px 0;font-size:13px;color:#7a606c;">Nội dung CK</td><td style="padding:4px 0;font-size:13.5px;font-weight:700;font-family:${FONT_MONO};color:#3a1526;">${escapeHtml(transferNote)}</td></tr>
         </table>
         ${qrUrl ? `<div style="margin-top:14px;text-align:center;">

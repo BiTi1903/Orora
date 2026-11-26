@@ -1,5 +1,4 @@
 import { createHash, createHmac } from 'node:crypto';
-import { FieldValue } from 'firebase-admin/firestore';
 import { analyticsDay,analyticsWindow,analyticsPath,paidOrderSummary } from '../src/lib/analytics.js';
 import { withProductIdentity } from '../src/lib/product-identity.js';
 import { requireAdmin } from './admin-auth.js';
@@ -20,33 +19,35 @@ async function collect(db,req,body,time,env){
   const event=db.collection('siteAnalyticsEvents').doc(digest(`${day}:${body.visitorId}:${body.eventId}`));
   const limit=db.collection('siteAnalyticsLimits').doc(keyed(salt,`${day}:${ip}`));
   const metric=product?db.collection('siteAnalyticsProducts').doc(`${day}-${digest(path)}`):null;
-  const accepted=await db.runTransaction(async tx=>{
-    const [visitorDoc,eventDoc,limitDoc]=await tx.getAll(visitor,event,limit);
-    const prior=limitDoc.data()||{},inWindow=time>=prior.windowStart&&time-prior.windowStart<600000;
-    if((inWindow&&prior.windowCount>=150)||prior.count>=2000)throw fail(429,'Vui lòng thử lại sau.');
-    tx.set(limit,{count:(prior.count||0)+1,windowStart:inWindow?prior.windowStart:time,windowCount:inWindow?(prior.windowCount||0)+1:1,expiresAt});
-    if(eventDoc.exists)return null;
-    tx.set(visitor,{day,expiresAt});tx.set(event,{day,expiresAt});
-    return {newVisitor:!visitorDoc.exists};
+  await db.runTransaction(async (tx) => {
+    const refs = metric ? [visitor, event, limit, daily, metric] : [visitor, event, limit, daily];
+    const [visitorDoc, eventDoc, limitDoc, dailyDoc, metricDoc] = await tx.getAll(...refs);
+    const prior = limitDoc.data() || {}, inWindow = time >= prior.windowStart && time - prior.windowStart < 600000;
+    if ((inWindow && prior.windowCount >= 150) || prior.count >= 2000) throw fail(429, 'Vui lòng thử lại sau.');
+    tx.set(limit, { count: (prior.count || 0) + 1, windowStart: inWindow ? prior.windowStart : time, windowCount: inWindow ? (prior.windowCount || 0) + 1 : 1, expiresAt });
+    if (eventDoc.exists) return;
+    const isNewVisitor = !visitorDoc.exists;
+    const isPageView = body.type === 'page_view';
+    const isProductClick = body.type === 'product_click';
+    tx.set(visitor, { day, expiresAt });
+    tx.set(event, { day, expiresAt });
+    const prevDaily = dailyDoc.data() || {};
+    tx.set(daily, {
+      day,
+      pageViews: (prevDaily.pageViews || 0) + (isPageView ? 1 : 0),
+      visitors: (prevDaily.visitors || 0) + (isNewVisitor ? 1 : 0),
+      productClicks: (prevDaily.productClicks || 0) + (isProductClick ? 1 : 0),
+    }, { merge: true });
+    if (metric) {
+      const prevMetric = metricDoc?.data?.() || {};
+      tx.set(metric, {
+        day,
+        path,
+        clicks: (prevMetric.clicks || 0) + (isProductClick ? 1 : 0),
+        views: (prevMetric.views || 0) + (isPageView ? 1 : 0),
+      }, { merge: true });
+    }
   });
-  if(!accepted)return;
-  const writes=[
-    daily.set({
-      day,
-      pageViews:FieldValue.increment(body.type==='page_view'?1:0),
-      visitors:FieldValue.increment(accepted.newVisitor?1:0),
-      productClicks:FieldValue.increment(body.type==='product_click'?1:0),
-    },{merge:true}),
-  ];
-  if(metric){
-    writes.push(metric.set({
-      day,
-      path,
-      clicks:FieldValue.increment(body.type==='product_click'?1:0),
-      views:FieldValue.increment(body.type==='page_view'?1:0),
-    },{merge:true}));
-  }
-  await Promise.all(writes);
 }
 async function report(db,time,days){
   const window=analyticsWindow(time,days);
