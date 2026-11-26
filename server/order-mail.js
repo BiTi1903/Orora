@@ -8,8 +8,36 @@ import { PAYMENT_LABELS, formatProductPrice, formatVnd } from "../src/lib/commer
 import { ORDER_TOKENS } from "../src/lib/template-kinds.js";
 export { ORDER_TOKENS };
 export const DEFAULT_ORDER_MESSAGE = {
-  subject: "ORORA xác nhận đã nhận đơn {{orderCode}}",
-  text: "Chào {{customerName}},\n\nORORA đã nhận đơn hàng {{orderCode}} của bạn.\n\nSản phẩm: {{productName}}\nSố lượng: {{quantity}}\nTạm tính: {{subtotal}}\nPhí giao hàng: {{shippingFee}}\nTổng dự kiến: {{totalAmount}}\nPhương thức thanh toán: {{paymentMethod}}\nĐịa chỉ nhận hàng: {{address}}\nSố điện thoại: {{phone}}\n\nTra cứu trạng thái đơn hàng: {{trackingUrl}} (nhập 4 số cuối số điện thoại để xem chi tiết)\n\nBước tiếp theo:\n- ORORA sẽ liên hệ xác nhận đơn, phí giao hàng và hướng dẫn thanh toán (nếu chuyển khoản).\n- Thư này xác nhận đã nhận yêu cầu đặt hàng, chưa xác nhận thanh toán.\n- Nếu cần hỗ trợ nhanh, bạn có thể trả lời trực tiếp email này kèm mã đơn {{orderCode}}.\n\nCảm ơn bạn đã chọn ORORA!",
+  subject: "ORORA đã nhận đơn hàng {{orderCode}}",
+  text: `Chào {{customerName}},
+
+Cảm ơn bạn đã đặt hàng tại ORORA. Chúng mình đã nhận đơn {{orderCode}} vào {{createdAt}} và sẽ liên hệ với bạn để xác nhận thông tin giao hàng.
+Thư này ghi nhận yêu cầu đặt hàng, chưa xác nhận thanh toán.
+
+Chi tiết đơn hàng
+{{productName}}
+Tổng số lượng: {{quantity}}
+Tạm tính: {{subtotal}}
+Phí giao hàng: {{shippingFee}}
+Tổng dự kiến: {{totalAmount}}
+
+Thanh toán
+Phương thức: {{paymentMethod}}
+Trạng thái: {{paymentStatus}}
+
+Thông tin giao hàng
+Người nhận: {{customerName}}
+Điện thoại: {{phone}}
+Địa chỉ: {{address}}
+
+Theo dõi đơn hàng tại {{trackingUrl}}
+Bạn có thể dùng 4 số cuối của số điện thoại đặt hàng để xem chi tiết.
+
+Nếu cần điều chỉnh thông tin, hãy trả lời email này và ghi mã đơn {{orderCode}} để ORORA hỗ trợ.
+
+Thân mến,
+Đội ngũ ORORA
+sales@ororavn.com`,
 };
 export const validOrderEmail = (value) => typeof value === "string" && value.length <= 254 && /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/.test(value);
 export function validateOrderTemplate(value) {

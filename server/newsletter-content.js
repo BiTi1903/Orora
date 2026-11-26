@@ -2,8 +2,18 @@ import { recordTemplateUse } from "./template-snapshot.js";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
 export const DEFAULT_WELCOME = {
-  subject: "ORORA – Chào mừng bạn đến với thế giới chăm sóc làn da",
-  text: "Chào bạn,\n\nCảm ơn bạn đã đăng ký nhận tin từ ORORA!\n\nKhám phá các sản phẩm chăm sóc da và cập nhật ưu đãi mới nhất tại website của chúng mình. ORORA sẽ gửi đến bạn những thông tin về sản phẩm mới và chương trình dành riêng cho người đăng ký.\n\nThân mến,\nORORA\nsales@ororavn.com",
+  subject: "Bạn đã đăng ký nhận tin từ ORORA",
+  text: `Chào bạn,
+
+Cảm ơn bạn đã đăng ký nhận tin từ ORORA. Từ nay, bạn sẽ nhận được thông tin về sản phẩm chăm sóc cơ thể mới và các chương trình ưu đãi qua địa chỉ email này.
+
+Ghé thăm ORORA tại https://ororavn.com để khám phá các sản phẩm hiện có.
+
+Nếu có câu hỏi về sản phẩm, bạn có thể trả lời email này để được hỗ trợ.
+
+Thân mến,
+Đội ngũ ORORA
+sales@ororavn.com`,
 };
 
 export const subscriberId = (email) => createHash("sha256").update(email).digest("hex");
