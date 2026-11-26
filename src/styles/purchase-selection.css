@@ -50,4 +50,4 @@
 }
 .product-quantity-control input::-webkit-inner-spin-button, .product-quantity-control input::-webkit-outer-spin-button { appearance: none; margin: 0; }
 .order-form-modal .product-purchase-selection { margin: 0 0 22px; }
-@media (max-width: 600px) { .product-volume-choice, .website-order label.product-volume-choice:not([hidden]) { min-height: 44px; } .product-quantity-control { height: 44px; } .product-quantity-control button { width: 40px; } }
+@media (max-width: 600px) { .product-quantity-control input { font-size: 16px; } .product-volume-choice, .website-order label.product-volume-choice:not([hidden]) { min-height: 44px; } .product-quantity-control { height: 44px; } .product-quantity-control button { width: 40px; } }

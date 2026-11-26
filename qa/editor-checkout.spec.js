@@ -8,18 +8,35 @@ const base={
  'lib/api.js':`export const getProduct=async()=>(${JSON.stringify(product)});`,
  'hooks/useAddressOptions.js':`const provinces=[{code:'01',name:'Đồng Nai'}],wards=[{code:'001',name:'Phường Tân Mai'}];export default function useAddress(){return {provinces,wards,loadingProvinces:false,loadingWards:false}}`,
 };
-async function detail(page,state,overrides={},withMobileControls=false){
- await mount(page,`import Detail from '/src/components/ProductDetail.jsx';import Chat from '/src/components/ChatButton.jsx';import MobileNav from '/src/components/MobileShopNav.jsx';import {Routes,Route} from '/qa/runtime.js';D.createRoot(document.getElementById('root')).render(R.createElement(MemoryRouter,{initialEntries:[{pathname:'/product/gel',state:${JSON.stringify(state||null)}}]},R.createElement(Routes,null,R.createElement(Route,{path:'/product/:id',element:R.createElement(R.Fragment,null,R.createElement(Detail),${withMobileControls ? "R.createElement(Chat),R.createElement(MobileNav)" : "null"})}))));`,{...base,...overrides});
+async function detail(page, state, overrides = {}, { withMobileControls = false, withCart = false } = {}) {
+ const entry = { pathname: '/product/gel', state: state ?? null };
+ await mount(page, `
+  import Detail from '/src/components/ProductDetail.jsx';
+  import { Routes, Route } from '/qa/runtime.js';
+  ${withCart ? "import ShopCart from '/src/components/ShopCart.jsx';" : ""}
+  ${withMobileControls ? "import Chat from '/src/components/ChatButton.jsx'; import MobileNav from '/src/components/MobileShopNav.jsx';" : ""}
+  const element = R.createElement(R.Fragment, null,
+   R.createElement(Detail),
+   ${withCart ? "R.createElement(ShopCart)," : ""}
+   ${withMobileControls ? "R.createElement(Chat), R.createElement(MobileNav)," : ""}
+  );
+  D.createRoot(document.getElementById('root')).render(R.createElement(MemoryRouter,
+   { initialEntries: [${JSON.stringify(entry)}] },
+   R.createElement(Routes, null, R.createElement(Route, { path: '/product/:id', element }))
+  ));
+ `, { ...base, ...overrides });
  await expect(page.locator('.product-detail-info h1')).toHaveText(product.name);
 }
 test('detail selects the catalog price by default, keeps totals compact and isolates checkout edits',async({page},testInfo)=>{
  await detail(page);
  await expect(page.getByLabel('180ml',{exact:true})).toBeChecked();await expect(page.locator('.product-detail-price')).toContainText('450.000');
  await expect(page.locator('.product-price-variant')).toHaveCount(0);
- await expect(page.locator('.product-mobile-buy-total')).toContainText('180ml');
+ if (page.viewportSize().width >= 901) await expect(page.locator('.product-mobile-buy-total')).toBeHidden();
+ else await expect(page.locator('.product-mobile-buy-total')).toContainText('180ml');
  await expect(page.locator('.purchase-subtotal')).toHaveCount(0);
  if (page.viewportSize().width > 768) await expect(page.locator('.purchase-options .product-mobile-buy')).toBeVisible();
- const buyBar=page.locator('.product-mobile-buy');await expect(buyBar).toBeVisible();expect((await buyBar.boundingBox()).height).toBeLessThan(95);
+ const buyBar=page.locator('.product-mobile-buy');await expect(buyBar).toBeVisible();
+ if (page.viewportSize().width <= 768) expect((await buyBar.boundingBox()).height).toBeLessThan(95);
  await page.locator('.product-volume-choice').filter({hasText:'220ml'}).click();await expect(page.getByLabel('220ml',{exact:true})).toBeChecked();await expect(page.locator('.product-detail-price')).toContainText('600.000');
  const purchase = page.getByRole('button',{name:'Mua ngay',exact:true});
  if (page.viewportSize().width <= 768) await expect(purchase).toBeInViewport();
@@ -45,6 +62,105 @@ test('detail selects the catalog price by default, keeps totals compact and isol
 test('explicit cart volume and quantity take priority over the default catalog choice',async({page})=>{
  await detail(page,{cartSelection:{productId:'gel',variantId:'large',quantity:3}});await expect(page.getByLabel('220ml',{exact:true})).toBeChecked();await expect(page.getByRole('spinbutton')).toHaveValue('3');await expect(page.locator('.product-mobile-buy-total strong')).toContainText('1.800.000');
  await page.getByRole('button',{name:'Mua ngay',exact:true}).click();const dialog=page.getByRole('dialog');await expect(dialog.getByRole('spinbutton')).toHaveValue('3');await expect(dialog.getByLabel('220ml',{exact:true})).toBeChecked();
+});
+test('desktop purchase controls fit the card on both wide and narrow laptops', async ({ page }, testInfo) => {
+ test.skip(page.viewportSize().width < 901, 'Desktop purchase panel');
+ const numbered = {
+  ...product, number: 1, price: '349000', image: '/preview/product.svg',
+  description: 'Xịt khử mùi dịu nhẹ, chăm sóc vùng da nhạy cảm – cho cảm giác khô thoáng, dễ chịu suốt ngày.',
+  volumeOptions: [{ id: 'small', label: '180ml', price: '349000' }, { id: 'large', label: '220ml', price: '600000' }],
+ };
+ const home = {
+  loading: false, shopLinks: { facebookUrl: 'https://www.facebook.com/orora', tiktokUrl: 'https://www.tiktok.com/@orora' },
+  productDetailStyles: { purchaseOptions: { facebookLabel: 'Facebook', tiktokLabel: 'TikTok' } },
+  productPolicies: [
+   { title: 'Freeship', content: 'Giao hàng miễn phí cho đơn từ 499k', kind: 'shipping' },
+   { title: 'Tạm dừng', content: 'Chính sách chưa áp dụng', enabled: false },
+   { title: '100% chính hãng', content: 'Cam kết hàng chính hãng' },
+   { title: 'Đổi trả', content: 'Đổi trả trong vòng 14 ngày', kind: 'returns' },
+  ],
+ };
+ await detail(page, null, {
+  'lib/api.js': `export const getProduct=async()=>(${JSON.stringify(numbered)});`,
+  'hooks/useHomeContent.js': `export default function home(){return ${JSON.stringify(home)}}`,
+ });
+ const panel = page.locator('.product-detail-info');
+ const number = panel.locator('.product-detail-number');
+ await expect(number).toHaveText('01');
+ expect((await number.boundingBox()).width).toBeLessThan(90);
+
+ const variants = panel.locator('.product-volume-choices');
+ const quantity = panel.locator('.product-quantity-control');
+ const choices = await variants.boundingBox();
+ const stepper = await quantity.boundingBox();
+ expect(Math.abs(choices.y - stepper.y)).toBeLessThan(8);
+ expect(choices.x + choices.width).toBeLessThanOrEqual(stepper.x + 1);
+ const add = panel.getByRole('button', { name: 'Thêm vào giỏ', exact: true });
+ const buy = panel.getByRole('button', { name: 'Mua ngay', exact: true });
+ await expect(add.getByText('Thêm vào giỏ', { exact: true })).toBeVisible();
+ expect(Math.abs((await add.boundingBox()).y - (await buy.boundingBox()).y)).toBeLessThan(4);
+
+ await expect(panel.locator('.product-trust-chip')).toHaveText(['Freeship', '100% chính hãng', 'Đổi trả']);
+ await expect(panel.getByRole('link', { name: 'Facebook' })).toBeVisible();
+ await expect(panel.getByRole('link', { name: /tiktok/i })).toBeVisible();
+ await page.evaluate(() => document.fonts.ready);
+ await panel.screenshot({ path: testInfo.outputPath('desktop-purchase-card.png') });
+ await panel.getByRole('button', { name: 'Tăng số lượng', exact: true }).click();
+ await expect(panel.locator('.product-mobile-buy-total')).toContainText('698.000');
+ await panel.screenshot({ path: testInfo.outputPath('desktop-purchase-two.png') });
+ await page.setViewportSize({ width: 1024, height: 768 });
+ const bounds = await panel.boundingBox();
+ for (const control of [variants, quantity, add, buy]) {
+  const box = await control.boundingBox();
+  expect(box.x).toBeGreaterThanOrEqual(bounds.x);
+  expect(box.x + box.width).toBeLessThanOrEqual(bounds.x + bounds.width + 1);
+  expect(await control.evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+ }
+ const narrowVariants = await variants.boundingBox();
+ const narrowQuantity = await quantity.boundingBox();
+ expect(narrowQuantity.y >= narrowVariants.y + narrowVariants.height - 1 ||
+   narrowQuantity.x >= narrowVariants.x + narrowVariants.width - 1).toBe(true);
+ await fit(page);
+});
+
+test('desktop shoppers can switch away from a sold-out size and purchase the same selection in both bars', async ({ page }) => {
+ test.skip(page.viewportSize().width < 901, 'Desktop purchase panel');
+ await page.setViewportSize({ width: 1440, height: 650 });
+ await page.route('**/api/storefront/stock?**', route => route.fulfill({
+  json: { availability: { gel: 'available', gel__small: 'out', gel__large: 'available' } },
+ }));
+ const purchaseOptions = { websiteLabel: 'Đặt mua', addToCartLabel: 'Cho vào giỏ', websiteBackground: '#614461', addToCartBackground: '#efd9e2' };
+ await detail(page, null, {
+  'hooks/useHomeContent.js': `export default function home(){return {loading:false,productDetailStyles:{purchaseOptions:${JSON.stringify(purchaseOptions)}}}}`,
+  'hooks/useProducts.js': `export default function products(){return {products:[${JSON.stringify(product)}],loading:false}}`,
+ }, { withCart: true });
+ const panel = page.locator('.product-detail-info');
+ await expect(panel.locator('.product-stock-badge')).toHaveText('Hết hàng');
+ await expect(panel.locator('.product-mobile-buy-cta')).toBeDisabled();
+ await expect(panel.locator('.product-buy-cart-btn')).toBeDisabled();
+ await panel.getByLabel('220ml', { exact: true }).check();
+ await expect(panel.locator('.product-detail-price')).toContainText('600.000');
+ await panel.getByRole('button', { name: 'Tăng số lượng', exact: true }).click();
+ const subtotal = panel.locator('.product-mobile-buy-total');
+ await expect(subtotal).toBeVisible();
+ await expect(subtotal).toContainText('1.200.000');
+ await expect(subtotal).toContainText('220ml');
+ const cartLabel = { name: 'Cho vào giỏ', exact: true };
+ const orderLabel = { name: 'Đặt mua', exact: true };
+ await panel.getByRole('button', cartLabel).click();
+ await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('orora-cart-v1')))).toEqual([{ id: 'gel', variantId: 'large', quantity: 2 }]);
+ await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }));
+ const sticky = page.locator('.product-desktop-sticky-buy');
+ await expect(sticky).toHaveAttribute('aria-hidden', 'false');
+ await expect(sticky).toContainText('1.200.000');
+ await expect(sticky).toContainText('220ml');
+ await expect(sticky.getByRole('button', cartLabel)).toHaveCSS('background-color', 'rgb(239, 217, 226)');
+ const buy = sticky.getByRole('button', orderLabel);
+ await expect(buy).toHaveCSS('background-color', 'rgb(97, 68, 97)');
+ await buy.click();
+ const checkout = page.getByRole('dialog', { name: 'Đặt hàng trên website', exact: true });
+ await expect(checkout.getByRole('spinbutton')).toHaveValue('2');
+ await expect(checkout.getByLabel('220ml', { exact: true })).toBeChecked();
 });
 test('inspector separates selected fields and section settings and keeps drafts while switching tabs',async({page},testInfo)=>{
  await mount(page,`import Builder from '/src/admin/builder/VisualBuilder.jsx';${render("R.createElement('main',{className:'admin-main'},R.createElement(Builder))")}`,{...base,'lib/api.js':`export const getProduct=async()=>null;export const getHomeContent=async()=>({navLogo:'ORORA',navStyles:{surfaces:{chatPanelWidth:310}}});export const saveHomeContent=async value=>window.__saved=value;`});
@@ -106,7 +222,7 @@ test('mobile buy bar shares purchase settings and leaves room for chat and navig
  await detail(page, null, {
   'hooks/useHomeContent.js': 'export default function home(){return {loading:false,productDetailStyles:{purchaseOptions:{websiteBackground:"#654321",fontSize:18}},navStyles:{mobile:{afterTicker:false}},chatSettings:{hintEnabled:false}}}',
   'hooks/useChatConversation.js': 'export default function chat(){return {metadata:{}}}',
- }, true);
+ }, {withMobileControls: true});
  const sticky = page.getByRole('button', { name: 'Mua ngay', exact: true });
  await expect(sticky).toHaveCSS('background-color', 'rgb(101, 67, 33)');
  await expect(sticky).toHaveCSS('font-size', '18px');

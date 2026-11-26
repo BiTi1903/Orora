@@ -37,7 +37,7 @@ async function sample(cart,progress){
  },progress);
 }
 
-test('cart expands from its trigger in one continuous spring without a second acceleration',async({page})=>{
+test('cart expands continuously from its trigger without overshooting or accelerating twice',async({page})=>{
  const {cart,source}=await mountPausedCart(page);
  const first=await sample(cart,0);
  expect(first.animations).toBe(1);expect(first.cssScale).toBe('none');
@@ -46,10 +46,9 @@ test('cart expands from its trigger in one continuous spring without a second ac
  expect(first.scale).toBeLessThan(.2);
  const samples=[];
  for(let index=0;index<=50;index++)samples.push(await sample(cart,index/50));
- const scales=samples.map(frame=>frame.scale),peak=Math.max(...scales),peakIndex=scales.indexOf(peak);
- expect(peak).toBeGreaterThan(1);expect(peak).toBeLessThan(1.035);
- for(let index=1;index<=peakIndex;index++)expect(scales[index]-scales[index-1]).toBeGreaterThanOrEqual(-.00001);
- for(let index=peakIndex+1;index<scales.length;index++)expect(scales[index]-scales[index-1]).toBeLessThanOrEqual(.00001);
+ const scales=samples.map(frame=>frame.scale);
+ expect(Math.max(...scales)).toBeLessThanOrEqual(1.00001);
+ for(let index=1;index<scales.length;index++)expect(scales[index]-scales[index-1]).toBeGreaterThanOrEqual(-.00001);
  // The old animation nearly stopped at 62%, then abruptly accelerated again.
  const increments=scales.slice(1).map((value,index)=>value-scales[index]);
  const largestIncrement=Math.max(...increments.map(Math.abs));
@@ -65,7 +64,11 @@ for(const progress of [.38,1])test(`cart reverses the same motion back to its tr
  await sample(cart,progress);
  if(progress===1)await cart.evaluate(dialog=>dialog.getAnimations()[0].finish());
  // Calling the real close control in-page also covers closing mid-animation.
- await cart.getByRole('button',{name:'Đóng cửa sổ',exact:true}).evaluate(button=>button.click());
+ await cart.getByRole('button',{name:'Đóng cửa sổ',exact:true}).evaluate(button=>{
+   const animation=button.closest('dialog').getAnimations()[0];
+   button.click();
+   queueMicrotask(()=>{ if(animation.playbackRate < 0) animation.pause(); });
+ });
  await expect.poll(()=>cart.evaluate(dialog=>dialog.getAnimations()[0]?.playbackRate)).toBe(-1);
  // A queued forward finish event must not remove the dialog during its return.
  await cart.evaluate(dialog=>{const animation=dialog.getAnimations()[0];animation.pause();animation.dispatchEvent(new Event('finish'));});

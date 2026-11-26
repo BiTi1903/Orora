@@ -457,7 +457,8 @@
   color: var(--plum, #3a1526);
   transition: background-color .14s ease;
 }
-.navbar-search-item:hover {
+.navbar-search-item:hover,
+.navbar-search-item:focus-visible {
   background: #fff1f6;
 }
 .navbar-search-item img {
@@ -488,3 +489,12 @@
 }
 
 
+
+.navbar-search-empty button { border: 0; background: transparent; color: var(--rose-deep); text-decoration: underline; cursor: pointer; font: inherit; }
+
+@media (max-width: 600px) {
+  .navbar-search-wrap { position: static; }
+  .navbar-search-popover { top: calc(100% + 6px); inset-inline: 12px; width: auto; }
+  .navbar-search-toggle { width: 44px; height: 44px; }
+  .navbar-search-form input { min-height: 44px; font-size: 16px; }
+}

@@ -5,7 +5,7 @@ const categories=[{id:'care',name:'Dưỡng da'},{id:'clean',name:'Làm sạch'}
 const categoryMock=`export default function cats(){return {categories:${JSON.stringify(categories)},error:null,retry:()=>{}}}`;
 test('mobile bottom navigation links to Story and scrolls home to the top, links to lookup and clears the floating chat button',async({page})=>{
  await mount(page,`import Nav from '/src/components/MobileShopNav.jsx';import Chat from '/src/components/ChatButton.jsx';import {useLocation} from '/qa/runtime.js';function Route(){const l=useLocation();return R.createElement('output',{'data-testid':'route'},l.pathname+l.search+l.hash)};${render("R.createElement(R.Fragment,null,R.createElement('main',{style:{height:2400}}),R.createElement(Nav),R.createElement(Chat),R.createElement(Route))")}`,{
-  'hooks/useHomeContent.js':'export default function home(){return {loading:false,navStyles:{mobile:{safariLayout:"bar",afterTicker:false}},chatSettings:{hintEnabled:false}}}',
+  'hooks/useHomeContent.js':'export default function home(){return {loading:false,footerPhone:"0900000000",navStyles:{mobile:{safariLayout:"bar",afterTicker:false}},chatSettings:{hintEnabled:false}}}',
   'hooks/useCategories.js':categoryMock,
   'hooks/useChatConversation.js':'export default function chat(){return {metadata:{}}}',
  });

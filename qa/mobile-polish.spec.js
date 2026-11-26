@@ -25,7 +25,7 @@ test('chat hint repeats after hiding or dismissal and resumes when chat closes',
  await page.clock.install();
  await page.clock.pauseAt(new Date(Date.now()+60000));
  await mount(page,`import ChatButton from '/src/components/ChatButton.jsx';${render('R.createElement(ChatButton)')}`,{
-  'hooks/useHomeContent.js':`export default function home(){return {loading:false,chatSettings:{hintDelay:1,hintDuration:1,hintRepeatDelay:2,hintText:'Bạn cần tư vấn?'}}}`,
+  'hooks/useHomeContent.js':`export default function home(){return {loading:false,footerPhone:"0900000000",chatSettings:{hintDelay:1,hintDuration:1,hintRepeatDelay:2,hintText:'Bạn cần tư vấn?'}}}`,
   'hooks/useChatConversation.js':'export default function conversation(){return {metadata:{}}}',
  });
  // The launcher measures its fixed dock on its first animation frame.

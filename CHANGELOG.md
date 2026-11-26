@@ -1,3 +1,12 @@
+## 26/11/2026 — Rà soát trải nghiệm mua hàng, tìm kiếm và quản trị
+
+- Khung mua trên PC cao theo nội dung. Mã sản phẩm vừa chữ, dung tích và số lượng xếp cạnh nhau khi đủ chỗ. Nút thêm giỏ và mua ngay có nhãn riêng. Tổng tiền xuất hiện khi đổi số lượng, cả hai thanh mua dùng chung lựa chọn và kiểu nút từ Visual Builder.
+- Khách có thể đổi dung tích sau khi chọn loại hết hàng. Cam kết đã tắt được loại khỏi danh sách tự động. Thu gọn liên kết mua ngoài, đồng bộ kiểu chữ mặc định trong Builder và làm rõ nhãn nhóm trên thanh quản trị.
+- Tìm kiếm trên navbar phân biệt đang tải, lỗi và kết quả rỗng, hỗ trợ thử lại và trả focus về nút tìm kiếm khi nhấn Escape. Trên điện thoại, ô tìm kiếm và ô số lượng dùng cỡ chữ dễ nhập, khung giỏ có khoảng đệm hai bên. Tăng cỡ chữ thông tin pháp lý ở chân trang.
+- Sửa vòng focus khi nhập chat, xử lý lịch sử chat chưa có tin và cho Hero nhận phông tải xong sau khi đã hiển thị phông dự phòng.
+- Kiểm tra gồm 273 bài Node, lint, build và ngân sách bundle. Playwright đã xác nhận bố cục mua ở 1024 và 1440 px, đổi dung tích, tồn kho, thêm giỏ, tổng tiền, checkout và tìm kiếm bàn phím. Cập nhật dữ liệu giả lập cho luồng có Zalo và cách đo hoạt ảnh. Lần chạy diện rộng trong quá trình sửa có lỗi ở các phép đo hoạt ảnh; kết quả toàn bộ ma trận cần đối chiếu với CI của commit.
+- Phạm vi dữ liệu chỉ gồm mã giao diện và kiểm thử. Database, rules và dữ liệu production giữ nguyên.
+
 ## 25/11/2026 — Thiết kế lại giao diện khung mua sản phẩm trên PC và form chỉnh sửa Admin
 
 - **Lý do**: Chủ website phản hồi khung thông tin & mua sản phẩm trên PC đang bố cục xấu (nhãn số thứ tự `01` bị kéo dài 100% chiều ngang thành thanh trống, khoảng cách giữa Dung tích và Số lượng bị hở do dòng trợ giúp ẩn vẫn chiếm chỗ, cỡ chữ và khung nút Mua ngay chưa hài hòa) và cần chỉnh lại đồng bộ cả giao diện Chi tiết sản phẩm lẫn form Admin.

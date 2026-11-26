@@ -261,6 +261,7 @@ function ProductDetail({
     return <ProductNotFoundView />;
   }
 
+  const numberLabel = productNumber(product);
   const options = productVolumeOptions(product);
   const selectionKey = JSON.stringify([product.id || product.slug || id, options, cartLocation.key]);
   const incoming=cartLocation.state?.cartSelection;
@@ -429,10 +430,71 @@ function ProductDetail({
     setThumbStart((s) => (s + 1) % thumbPool.length);
   };
 
-  const websiteButtonStyle = { ...css("purchaseOptions"), background: purchase.websiteBackground };
+  const websiteLabel = purchase.websiteLabel?.trim();
+  const buyLabel = tr(soldOut ? "Hết hàng" : purchase.mobileBuyLabel?.trim() || (
+    websiteLabel && !["Đặt hàng trên website", "Đặt hàng ngay"].includes(websiteLabel) ? websiteLabel : "Mua ngay"
+  ));
+  const cartLabel = tr(purchase.addToCartLabel?.trim() || "Thêm vào giỏ");
+  const cartButton = home.navStyles?.cart?.enabled !== false && (
+    <button
+      type="button"
+      className={`product-buy-cart-btn ${selectedClass("pdAddToCart")}`}
+      data-builder-key={preview ? "pdAddToCart" : undefined}
+      aria-label={cartLabel}
+      data-tooltip={cartLabel}
+      style={{
+        background: purchase.addToCartBackground,
+        borderColor: purchase.addToCartBorderColor,
+        ...toCss(purchase.addToCartStyle),
+      }}
+      disabled={soldOut || choice.quantity === ""}
+      onClick={(event) => {
+        event.stopPropagation();
+        if (preview) { select("pdAddToCart")(event); return; }
+        window.dispatchEvent(new CustomEvent("orora-cart-confirm", {
+          detail: { product, variantId, quantity: Number(choice.quantity), source: event.currentTarget.getBoundingClientRect().toJSON() },
+        }));
+      }}
+    >
+      <ButtonIcon name="productCart" defaultSize={18} allowHidden={false}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="9" cy="20" r="1.5" />
+          <circle cx="18" cy="20" r="1.5" />
+          <path d="M2.5 3.5h2.6l2.2 11.2a1.6 1.6 0 0 0 1.6 1.3h9.8a1.6 1.6 0 0 0 1.6-1.2L22 7.5H6.2" />
+        </svg>
+      </ButtonIcon>
+      <span className="product-buy-cart-label">{cartLabel}</span>
+    </button>
+  );
+
+  const preloadAddressOptions = () => { if (!preview) getAddressOptions().catch(() => {}); };
+  const buyButtonProps = {
+    type: "button",
+    style: { ...css("purchaseOptions"), background: purchase.websiteBackground },
+    "aria-haspopup": "dialog",
+    "aria-expanded": !preview && acceptsWebsiteOrders && !soldOut && orderProductId === (product.id || product.slug),
+    disabled: soldOut,
+    onPointerEnter: preloadAddressOptions,
+    onFocus: preloadAddressOptions,
+    onClick: (event) => {
+      if (preview) { select("pdWebsiteText")(event); return; }
+      const button = event.currentTarget;
+      animateButtonPress(button, true, home.navStyles?.surfaces);
+      const pressEnabled = home.navStyles?.surfaces?.pressFeedback !== false && document.documentElement.dataset.buttonPress !== "off";
+      if (pressEnabled && !window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
+        const pulseColor = purchase.websiteBackground || getComputedStyle(button).backgroundColor || "var(--rose-deep)";
+        button.animate?.([
+          { boxShadow: `0 6px 18px color-mix(in srgb, ${pulseColor} 28%, transparent), 0 0 0 0 color-mix(in srgb, ${pulseColor} 45%, transparent)` },
+          { boxShadow: `0 10px 26px color-mix(in srgb, ${pulseColor} 38%, transparent), 0 0 0 12px color-mix(in srgb, ${pulseColor} 0%, transparent)` },
+        ], { duration: 420, easing: "cubic-bezier(0.22, 1, 0.36, 1)" });
+      }
+      setOrderSource(button.getBoundingClientRect().toJSON());
+      setOrderProductId(product.id || product.slug);
+    },
+  };
   // Keep the live fixed bar outside the product content stacking contexts.
   const mobileBuyBar = showMobileBuy && (
-    <div ref={mobileBuyRef} className={`product-mobile-buy ${preview ? "is-preview " : ""}${selectedClass("pdWebsiteText")}`} data-builder-key={preview ? "pdWebsiteText" : undefined} onClick={preview ? select("pdWebsiteText") : undefined} style={{
+    <div ref={mobileBuyRef} data-single-item={Number(choice.quantity) === 1 ? "true" : undefined} className={`product-mobile-buy ${preview ? "is-preview " : ""}${selectedClass("pdWebsiteText")}`} data-builder-key={preview ? "pdWebsiteText" : undefined} onClick={preview ? select("pdWebsiteText") : undefined} style={{
       ...mobileNavTheme(mobileNavSettings(home.navStyles?.mobile)),
       ...(purchase.websiteBackground ? { "--quick-buy-cta-bg": purchase.websiteBackground } : {}),
       ...(purchase.subtotalBackground ? { "--quick-buy-bg": purchase.subtotalBackground } : {}),
@@ -447,54 +509,10 @@ function ProductDetail({
         {choice.quantity !== "" && <small style={toCss(purchase.subtotalLabelStyle)}>{variant ? `${variant.label} · ` : ""}{choice.quantity} {tr("sản phẩm")}</small>}
       </div>
       <div className="product-mobile-buy-actions">
-        {home.navStyles?.cart?.enabled !== false && (
-          <button
-            type="button"
-            className={`product-buy-cart-btn ${selectedClass("pdAddToCart")}`}
-            data-builder-key={preview ? "pdAddToCart" : undefined}
-            aria-label={tr(soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ"))}
-            data-tooltip={tr(soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ"))}
-            style={{
-              ...(purchase.addToCartBackground ? { background: purchase.addToCartBackground } : {}),
-              ...(purchase.addToCartBorderColor ? { borderColor: purchase.addToCartBorderColor } : {}),
-              ...toCss(purchase.addToCartStyle, { responsive: true }),
-            }}
-            disabled={soldOut || choice.quantity === ""}
-            onClick={(event) => {
-              event.stopPropagation();
-              if (preview) { select("pdAddToCart")(event); return; }
-              window.dispatchEvent(new CustomEvent("orora-cart-confirm", {
-                detail: { product, variantId, quantity: Number(choice.quantity) || 1, source: event.currentTarget.getBoundingClientRect().toJSON() },
-              }));
-            }}
-          >
-            <ButtonIcon name="productCart" defaultSize={18} allowHidden={false}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <circle cx="9" cy="20" r="1.5" />
-                <circle cx="18" cy="20" r="1.5" />
-                <path d="M2.5 3.5h2.6l2.2 11.2a1.6 1.6 0 0 0 1.6 1.3h9.8a1.6 1.6 0 0 0 1.6-1.2L22 7.5H6.2" />
-              </svg>
-            </ButtonIcon>
-          </button>
-        )}
-        <button type="button" className="purchase-website product-mobile-buy-cta" style={websiteButtonStyle} aria-haspopup="dialog" aria-expanded={!preview && acceptsWebsiteOrders && !soldOut && orderProductId === (product.id || product.slug)} disabled={soldOut}
-          onPointerEnter={() => { if (!preview) getAddressOptions().catch(() => {}); }}
-          onFocus={() => { if (!preview) getAddressOptions().catch(() => {}); }}
-          onClick={(event) => {
-            if (preview) { select("pdWebsiteText")(event); return; }
-            const btn = event.currentTarget;
-            animateButtonPress(btn, true, home.navStyles?.surfaces);
-            const pressEnabled = home.navStyles?.surfaces?.pressFeedback !== false && document.documentElement.dataset.buttonPress !== "off";
-            if (pressEnabled && !window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
-              const pulseColor = purchase.websiteBackground || getComputedStyle(btn).backgroundColor || "var(--rose-deep)";
-              btn.animate?.([
-                { boxShadow: `0 6px 18px color-mix(in srgb, ${pulseColor} 28%, transparent), 0 0 0 0 color-mix(in srgb, ${pulseColor} 45%, transparent)` },
-                { boxShadow: `0 10px 26px color-mix(in srgb, ${pulseColor} 38%, transparent), 0 0 0 12px color-mix(in srgb, ${pulseColor} 0%, transparent)` },
-              ], { duration: 420, easing: "cubic-bezier(0.22, 1, 0.36, 1)" });
-            }
-            setOrderSource(btn.getBoundingClientRect().toJSON());
-            setOrderProductId(product.id || product.slug);
-          }}><ButtonIcon name="orderNow" defaultSize={16}/><span>{tr(soldOut ? "Hết hàng" : (purchase.mobileBuyLabel?.trim() || (purchase.websiteLabel?.trim() && !["Đặt hàng trên website", "Đặt hàng ngay"].includes(purchase.websiteLabel.trim()) ? purchase.websiteLabel.trim() : "Mua ngay")))}</span><ButtonIcon name="orderArrow" defaultSize={15}/></button>
+        {cartButton}
+        <button className="purchase-website product-mobile-buy-cta" {...buyButtonProps}>
+          <ButtonIcon name="orderNow" defaultSize={16}/><span>{buyLabel}</span><ButtonIcon name="orderArrow" defaultSize={15}/>
+        </button>
       </div>
     </div>
   );
@@ -790,14 +808,11 @@ function ProductDetail({
         </div>
 
         <div className="product-detail-info"><div className="product-purchase-content">
-          <p
-            className={`product-detail-number ${selectedClass("pdNumber")}`}
-            data-builder-key={preview ? "pdNumber" : undefined}
-            onClick={select("pdNumber")}
-            style={css("number")}
-          >
-            {productNumber(product)}
-          </p>
+          {(numberLabel || preview) && (
+            <p {...textProps("pdNumber", "number")} className={`product-detail-number ${selectedClass("pdNumber")}`}>
+              {numberLabel}
+            </p>
+          )}
 
           <h1
             className={selectedClass("pdName")}
@@ -844,19 +859,19 @@ function ProductDetail({
             );
           })()}
 
-          <p
-            className={`product-detail-description ${selectedClass("pdDescription")}`}
-            data-builder-key={preview ? "pdDescription" : undefined}
-            onClick={select("pdDescription")}
-            style={css("description")}
-          >
-            {renderLines(product.description)}
-          </p>
-
-
+          {(preview || String(product.description ?? "").trim()) && (
+            <p
+              className={`product-detail-description ${selectedClass("pdDescription")}`}
+              data-builder-key={preview ? "pdDescription" : undefined}
+              onClick={select("pdDescription")}
+              style={css("description")}
+            >
+              {renderLines(product.description)}
+            </p>
+          )}
 
           {(stock === "out" || stock === "low") && <p className={`product-stock-badge is-${stock}`}>{tr(soldOut ? "Hết hàng" : "Còn ít")}</p>}
-          <ProductPurchaseSelection options={options} variantId={variantId} quantity={choice.quantity} onVariantChange={(variantId) => changeSelection({ variantId })} onQuantityChange={(quantity) => changeSelection({ quantity })} disabled={soldOut} textProps={textProps} />
+          <ProductPurchaseSelection options={options} variantId={variantId} quantity={choice.quantity} onVariantChange={(variantId) => changeSelection({ variantId })} onQuantityChange={(quantity) => changeSelection({ quantity })} quantityDisabled={soldOut} textProps={textProps} />
           <section ref={purchaseSectionRef} className={`purchase-options ${selectedClass("pdPurchaseOptions")}`} aria-label="Chọn kênh mua hàng" data-builder-key={preview ? "pdPurchaseOptions" : undefined} onClick={preview ? select("pdPurchaseOptions") : undefined}>
             {!pinBuyBar && mobileBuyBar}
             {(preview || (!soldOut && (tiktokShop || facebookShop)) || (contactSettings.showTrigger === true && (showZalo || showCall || home.chatSettings?.enabled !== false || (!contact.zalo && contact.email && contactSettings.showZalo !== false)))) && (
@@ -909,7 +924,7 @@ function ProductDetail({
                 ? trustStrip.customText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
                 : [];
               const policyTitles = Array.isArray(home.productPolicies)
-                ? home.productPolicies.filter((policy) => policy?.title?.trim()).map((policy) => policy.title.trim())
+                ? home.productPolicies.filter((policy) => policy?.enabled !== false && policy?.title?.trim()).map((policy) => policy.title.trim())
                 : [];
               const sourceLabels = customLines.length
                 ? customLines
@@ -1006,40 +1021,8 @@ function ProductDetail({
             </div>
           </div>
           <div className="product-desktop-sticky-actions">
-            {home.navStyles?.cart?.enabled !== false && (
-              <button
-                type="button"
-                className="product-buy-cart-btn"
-                aria-label={tr(soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ"))}
-                data-tooltip={tr(soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ"))}
-                disabled={soldOut || choice.quantity === ""}
-                onClick={(event) => {
-                  window.dispatchEvent(new CustomEvent("orora-cart-confirm", {
-                    detail: { product, variantId, quantity: Number(choice.quantity) || 1, source: event.currentTarget.getBoundingClientRect().toJSON() },
-                  }));
-                }}
-              >
-                <ButtonIcon name="productCart" defaultSize={18} allowHidden={false}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <circle cx="9" cy="20" r="1.5" />
-                    <circle cx="18" cy="20" r="1.5" />
-                    <path d="M2.5 3.5h2.6l2.2 11.2a1.6 1.6 0 0 0 1.6 1.3h9.8a1.6 1.6 0 0 0 1.6-1.2L22 7.5H6.2" />
-                  </svg>
-                </ButtonIcon>
-              </button>
-            )}
-            <button
-              type="button"
-              className="product-desktop-sticky-cta"
-              disabled={soldOut}
-              onClick={(event) => {
-                if (soldOut) return;
-                setOrderSource(event.currentTarget.getBoundingClientRect().toJSON());
-                setOrderProductId(product.id || product.slug);
-              }}
-            >
-              {tr(soldOut ? "Hết hàng" : (purchase.mobileBuyLabel?.trim() || "Mua ngay"))}
-            </button>
+            {cartButton}
+            <button className="product-desktop-sticky-cta" {...buyButtonProps}>{buyLabel}</button>
           </div>
         </div>,
         document.body,
