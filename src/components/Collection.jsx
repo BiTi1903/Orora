@@ -407,20 +407,23 @@ function Collection({
         data-builder-key={preview && isRelated ? k("colHeader") : undefined}
         onClick={isRelated ? select(k("colHeader")) : undefined}
       >
-        <p
-          className={`collection-label ${selectedClass(k("colLabel"))}`}
-          data-builder-key={preview ? k("colLabel") : undefined}
-          onClick={select(k("colLabel"))}
-          style={{
-            ...toCss(headStyles.label, { responsive: true }),
-            ...(Number(headStyles.label?.marginTop) < 0 ? { marginTop: "0px" } : {}),
-            textAlign: labelAlign,
-            alignSelf: alignSelfMap[labelAlign] || "flex-start",
-            ...(collectionLabel ? {} : { display: "none" }),
-          }}
-        >
-          {collectionLabel}
-        </p>
+        {((Boolean(collectionLabel) && headStyles.label?.enabled === true) ||
+          (preview && selectedElement === k("colLabel"))) && (
+          <p
+            className={`collection-label ${selectedClass(k("colLabel"))}`}
+            data-builder-key={preview ? k("colLabel") : undefined}
+            onClick={select(k("colLabel"))}
+            style={{
+              ...toCss(headStyles.label, { responsive: true }),
+              ...(Number(headStyles.label?.marginTop) < 0 ? { marginTop: "0px" } : {}),
+              textAlign: labelAlign,
+              alignSelf: alignSelfMap[labelAlign] || "flex-start",
+              ...(preview && headStyles.label?.enabled !== true ? { opacity: 0.42 } : {}),
+            }}
+          >
+            {collectionLabel || "Products"}
+          </p>
+        )}
 
         <h2>
           <span

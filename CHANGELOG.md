@@ -1,3 +1,13 @@
+## 26/11/2026 — Ẩn mặc định nhãn nhỏ "Products" ở mục Sản phẩm và thêm công tắc bật/tắt trong Visual Builder
+
+- **Lý do**: Chủ website yêu cầu bỏ phần chữ nhãn nhỏ `Products` ở mục Sản phẩm vì chiếm chỗ và không đẹp.
+- **Thay đổi chính**:
+  - **`src/components/Collection.jsx`**: Ẩn mặc định `.collection-label` trên trang thật (không render và không chiếm khoảng trống), chỉ hiển thị khi quản trị viên chủ động bật (`collectionStyles.label.enabled === true`).
+  - **`src/admin/builder/CollectionPanels.jsx`**: Thêm công tắc bật/tắt `Hiển thị nhãn nhỏ trên website` ngay trong Visual Builder → Sản phẩm → Nhãn nhỏ để chủ website vẫn có thể bật lại bất cứ lúc nào.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: 273/273 unit test, ESLint 0 lỗi, Vite build & giới hạn bundle đạt.
+- **Ảnh hưởng database**: Không thay đổi schema, security rules hay dữ liệu production.
+
 ## 26/11/2026 — Sửa nhãn Products bị đè, thu gọn tiêu đề tab Mô tả và đồng bộ thanh điều hướng dưới theo vị trí cuộn trang chủ
 
 - **Lý do**: Chủ website phản hồi trên mobile nhãn `Products` ở đầu mục sản phẩm bị phần trên đè cắt một nửa, khối nút `Mô tả` (khi bật 1 tab) đang bị to/lồng 2 lớp viền kém cân đối, và khi cuộn trang chủ xuống từng phần thì thanh điều hướng dưới (`MobileShopNav`) chưa tự chuyển mục đang chọn theo vị trí cuộn.

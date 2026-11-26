@@ -105,6 +105,17 @@ export function CollectionSettings({
     <>
       {meta.textKey && (
         <SettingGroup title="Nội dung">
+          {meta.group === "collectionStyles" && meta.styleKey === "label" && (
+            <label className="admin-check">
+              <input
+                type="checkbox"
+                role="switch"
+                checked={style.enabled === true}
+                onChange={(e) => onStyleChange({ enabled: e.target.checked })}
+              />
+              Hiển thị nhãn nhỏ trên website
+            </label>
+          )}
           <div className="builder-field">
             <label>{meta.label}</label>
             <input
