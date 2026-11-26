@@ -80,7 +80,7 @@ export function createMicrosoftSmtpMailer(env = process.env, request = fetch, cr
         from: { name: "ORORA", address: sender },
         to: [{ address: email }],
         envelope: { from: sender, to: [email] },
-        subject: message.subject, text: message.text, messageId: tracking.internetMessageId,
+        subject: message.subject, text: message.text, ...(message.html ? { html: message.html } : {}), messageId: tracking.internetMessageId,
         headers: {
           "X-Orora-Mail-Id": tracking.trackingId,
           ...(message.unsubscribeUrl ? { "List-Unsubscribe": `<${message.unsubscribeUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } : {}),

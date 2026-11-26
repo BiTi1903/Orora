@@ -19,6 +19,7 @@ export const ORDER_TOKENS = [
   "createdAt",
   "paymentStatus",
   "trackingUrl",
+  "trackingCode",
 ];
 const ORDER_TOKEN_PATTERN = new RegExp(`\\{\\{(?:${ORDER_TOKENS.join("|")})\\}\\}`);
 export const hasOrderTokens = (message) => ORDER_TOKEN_PATTERN.test(`${message?.subject || ""}\n${message?.text || ""}`);

@@ -800,6 +800,32 @@
   border-color: var(--ad-primary-line);
   color: var(--ad-primary-strong);
 }
+.mail-preview-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.mail-preview-stage {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid var(--ad-line);
+  border-radius: var(--ad-r-md);
+  background: #f3eaf0;
+  display: flex;
+  justify-content: center;
+}
+.mail-preview-frame {
+  width: 100%;
+  min-height: 540px;
+  border: 1px solid var(--ad-line);
+  border-radius: 12px;
+  background: #f9f3f6;
+}
+.mail-preview-stage.is-mobile .mail-preview-frame {
+  max-width: 390px;
+  min-height: 600px;
+}
 @media (max-width: 900px) {
   .admin-order-detail-columns,
   .mail-writer-grid {

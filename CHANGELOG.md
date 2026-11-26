@@ -1,3 +1,21 @@
+## 26/11/2026 — Thiết lập chuẩn mẫu email HTML cao cấp cho Thư Đăng Ký & Thư Xác Nhận Đơn Hàng (kèm VietQR & xem trước trực tiếp)
+
+- **Lý do**: Chủ website yêu cầu thiết lập thư đăng ký nhận tin và thư xác nhận đơn hàng theo form chuẩn, sang trọng đồng bộ nhận diện ORORA.
+- **Thay đổi chính**:
+  - **Bộ dựng email HTML chuẩn thương hiệu (`src/lib/mail-html.js`, `src/lib/vietqr.js`)**:
+    - Thiết kế bố cục email dạng bảng (table-based responsive), inline CSS tương thích Gmail/Outlook/Apple Mail, có preheader ẩn và thoát mã HTML chống XSS toàn bộ dữ liệu động.
+    - **Thư đăng ký (`renderWelcomeEmailHtml`)**: Header nền mận tím `#3a1526` viền hồng ánh kim kèm wordmark `ORORA`, huy hiệu `Chào mừng thành viên mới`, nội dung tùy biến từ admin (hỗ trợ đoạn văn, danh sách gạch đầu dòng, tự động gắn liên kết an toàn), khối 3 giá trị thương hiệu, nút CTA `Khám phá bộ sưu tập ORORA` và chân trang có liên kết `Hủy đăng ký nhận tin` đồng bộ header RFC 8058.
+    - **Thư xác nhận đơn hàng (`renderOrderEmailHtml`)**: Thẻ mã đơn hàng, ngày đặt (giờ Việt Nam), huy hiệu trạng thái thanh toán, thanh tiến trình 3 bước (`1. Đã tiếp nhận ✓` → `2. Xác nhận & đóng gói` → `3. Giao hàng tận nơi`), bảng chi tiết nhiều sản phẩm (tên, phân loại, số lượng, thành tiền), tổng kết tạm tính/phí giao/tổng thanh toán, khối thông tin giao nhận (kèm mã vận đơn `trackingCode` nếu có), khối **Chuyển khoản & mã VietQR động** (dùng chung `resolveBank`/`vietQrUrl` trong `src/lib/vietqr.js`, tự đọc thông tin ngân hàng từ cấu hình `settings/home` khi khách chọn chuyển khoản) và nút CTA `Tra cứu trạng thái đơn hàng`.
+  - **Nâng cấp mẫu mặc định & gửi đa định dạng (`server/newsletter-content.js`, `server/order-mail.js`, `server/newsletter-admin.js`, `server/microsoft-smtp.js`, `server/microsoft-mail.js`, `src/lib/template-kinds.js`)**:
+    - Cập nhật `DEFAULT_WELCOME` và `DEFAULT_ORDER_MESSAGE` theo văn phong chuẩn thương hiệu; bổ sung biến `{{trackingCode}}` (Mã vận đơn).
+    - Nâng cấp SMTP (`microsoft-smtp.js`) gửi chuẩn `multipart/alternative` (cả `text` và `html`) và Graph fallback (`microsoft-mail.js`) hỗ trợ `contentType: "HTML"`; áp dụng luôn cho tính năng `Gửi thử` trong Admin. Giữ nguyên `mailEvents` chỉ lưu `subject`/`text` để không phình dung lượng Firestore.
+  - **Xem trước trực tiếp trong Admin (`src/admin/MailWriter.jsx`, `src/styles/admin.css`)**:
+    - Thêm khung xem trước email HTML trong iframe sandbox (`HTML · Máy tính`, `HTML · Điện thoại 390px`, `Văn bản thuần`), nút chèn nhanh `{{trackingCode}}` và nút `Nạp mẫu chuẩn ORORA` (nạp nhanh văn bản chuẩn mà không tự ghi đè cấu hình đã lưu cho tới khi bấm Lưu).
+- **Kiểm tra đã chạy**:
+  - `npm run check`: toàn bộ unit test đạt (gồm 4 kịch bản mới trong `tests/mail-html.test.js`), ESLint 0 lỗi, Vite build & ngân sách bundle đạt (0 byte tăng thêm cho bundle trang chủ).
+  - Playwright (`qa/admin-appearance.spec.js --grep "email workflows"` tại `width-390` và `width-1440`): 2/2 đạt.
+- **Ảnh hưởng database**: Không thay đổi schema, security rules hay dữ liệu Firestore hiện có; các mẫu thư đã lưu trong `newsletterSettings` và `newsletterTemplates` vẫn tương thích hoàn toàn và tự động được bọc trong khung email HTML chuẩn ORORA khi gửi.
+
 ## 26/11/2026 — Thanh toán, freeship, danh mục và vận hành
 
 - Tạo VietQR ngay trên thiết bị từ mã BIN đã chọn. Admin xem trước bằng cùng bộ tạo mã với khách. Dùng tạm thông tin pháp nhân theo chủ cửa hàng, chỉ hiển thị số liệu thương hiệu có nguồn, Việt hóa các nhãn điều hướng mẫu và bổ sung hướng dẫn chọn sản phẩm.

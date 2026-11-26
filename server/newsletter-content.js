@@ -1,19 +1,10 @@
 import { recordTemplateUse } from "./template-snapshot.js";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
+import { renderBrandedEmailHtml, renderWelcomeEmailHtml } from "../src/lib/mail-html.js";
 
 export const DEFAULT_WELCOME = {
-  subject: "Bạn đã đăng ký nhận tin từ ORORA",
-  text: `Chào bạn,
-
-Cảm ơn bạn đã đăng ký nhận tin từ ORORA. Từ nay, bạn sẽ nhận được thông tin về sản phẩm chăm sóc cơ thể mới và các chương trình ưu đãi qua địa chỉ email này.
-
-Ghé thăm ORORA tại https://ororavn.com để khám phá các sản phẩm hiện có.
-
-Nếu có câu hỏi về sản phẩm, bạn có thể trả lời email này để được hỗ trợ.
-
-Thân mến,
-Đội ngũ ORORA
-sales@ororavn.com`,
+  subject: "Chào mừng bạn đến với ORORA – Hành trình nâng niu làn da",
+  text: "Chào bạn,\n\nCảm ơn bạn đã đăng ký nhận bản tin từ ORORA. Chúng mình rất vui được đồng hành cùng bạn trên hành trình chăm sóc làn da dịu nhẹ và tinh tế mỗi ngày.\n\nKhi là thành viên nhận tin từ ORORA, bạn sẽ nhận được:\n- Thông tin sớm nhất về các dòng sản phẩm chăm sóc da mới ra mắt\n- Ưu đãi và quà tặng dành riêng cho người đăng ký\n- Gợi ý chu trình dưỡng da và hướng dẫn chăm sóc phù hợp\n\nNếu bạn cần tư vấn chọn sản phẩm phù hợp với làn da của mình, chỉ cần trả lời trực tiếp email này — đội ngũ ORORA luôn sẵn sàng lắng nghe.\n\nThân mến,\nORORA Vietnam\nsales@ororavn.com",
 };
 
 export const subscriberId = (email) => createHash("sha256").update(email).digest("hex");
@@ -44,21 +35,29 @@ export function validUnsubscribe(id, token, env = process.env) {
   return timingSafeEqual(Buffer.from(signature(id, env), "hex"), Buffer.from(token, "hex"));
 }
 
-export function withUnsubscribe(message, id, env = process.env) {
+export function withUnsubscribe(message, id, env = process.env, { kind = "campaign" } = {}) {
   if (!id || !env?.NEWSLETTER_UNSUBSCRIBE_SECRET || env.NEWSLETTER_UNSUBSCRIBE_SECRET.length < 32 || !env?.NEWSLETTER_SITE_ORIGIN) {
     throw new Error("unsubscribe_configuration_missing");
   }
   let link;
-  try { link = unsubscribeLink(id, env); } catch { throw new Error("unsubscribe_configuration_missing"); }
+  let origin;
+  try {
+    origin = new URL(env.NEWSLETTER_SITE_ORIGIN).origin;
+    link = unsubscribeLink(id, env);
+  } catch { throw new Error("unsubscribe_configuration_missing"); }
   const text = message.text.includes(link) ? message.text : `${message.text.trimEnd()}\n\n---\nHủy đăng ký nhận tin từ ORORA: ${link}`;
-  return { ...message, text, unsubscribeUrl: link };
+  const contactEmail = env.MS_SENDER_EMAIL || "sales@ororavn.com";
+  const html = message.html || (kind === "welcome"
+    ? renderWelcomeEmailHtml({ subject: message.subject, text: message.text, unsubscribeUrl: link, siteOrigin: origin, contactEmail })
+    : renderBrandedEmailHtml({ subject: message.subject, text: message.text, unsubscribeUrl: link, siteOrigin: origin, contactEmail }));
+  return { ...message, text, html, unsubscribeUrl: link };
 }
 
 export async function sendWelcomeMessage(email, { getDb, sendMail, env = process.env }) {
   const db = await getDb();
   const saved = await db.collection("newsletterSettings").doc("welcome").get();
   const base = saved.exists ? validateMessage(saved.data()) : DEFAULT_WELCOME;
-  const message = withUnsubscribe(base, subscriberId(String(email || "").trim().toLowerCase()), env);
+  const message = withUnsubscribe(base, subscriberId(String(email || "").trim().toLowerCase()), env, { kind: "welcome" });
   const result = await sendMail(email, message);
   if (saved.data()?.templateId) {
     try { await db.runTransaction((tx) => recordTemplateUse(tx, db, saved.data())); }

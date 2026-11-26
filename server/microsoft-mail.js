@@ -85,8 +85,8 @@ function createGraphMailer(
             ],
             subject: message.subject,
             body: {
-              contentType: "Text",
-              content: message.text,
+              contentType: message.html ? "HTML" : "Text",
+              content: message.html || message.text,
             },
             toRecipients: [
               {

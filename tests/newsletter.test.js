@@ -166,7 +166,9 @@ test("test send defaults to authenticated admin and preserves the message body",
   const { call, sent } = admin(memoryDb());
   assert.equal((await call({ action: "sendTest", ...message, email: "unrelated@example.com" })).statusCode, 200);
   assert.equal(sent[0][0], "owner@example.com");
-  assert.deepEqual(sent[0][1], message);
+  assert.equal(sent[0][1].subject, message.subject);
+  assert.equal(sent[0][1].text, message.text);
+  assert.ok(sent[0][1].html.includes("ORORA"));
 });
 
 test("campaign scans past a full page of inactive contacts and resumes at the saved cursor", async () => {
@@ -298,7 +300,9 @@ test("welcome, test and campaign messages preserve custom body spacing and fail 
   assert.equal((await call({ action: "createCampaign", id: "with-footer", ...custom })).statusCode, 200);
   await call({ action: "sendBatch", id: "with-footer" });
   assert.equal(sent.length, 3);
-  assert.deepEqual(sent[1][1], custom);
+  assert.equal(sent[1][1].subject, custom.subject);
+  assert.equal(sent[1][1].text, custom.text);
+  assert.ok(sent[1][1].html.includes("ORORA"));
   assert.ok(sent[0][1].text.startsWith(custom.text.trimEnd()) && sent[0][1].unsubscribeUrl);
   assert.ok(sent[2][1].text.startsWith(custom.text.trimEnd()) && sent[2][1].unsubscribeUrl);
 

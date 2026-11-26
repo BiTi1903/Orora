@@ -267,3 +267,16 @@ export function transferPayload(bank,account,amount,note) {
  }
  return body+crc.toString(16).toUpperCase().padStart(4,"0");
 }
+
+export function vietQrUrl({ bankName, accountNumber, accountName, amount, transferNote } = {}) {
+ const bank = resolveBank(bankName);
+ const digits = String(accountNumber || "").replace(/[^a-zA-Z0-9]/g, "");
+ if (!bank || digits.length < 6) return "";
+ const params = new URLSearchParams();
+ if (Number.isFinite(Number(amount)) && Number(amount) > 0) params.set("amount", String(Math.round(Number(amount))));
+ if (transferNote) params.set("addInfo", String(transferNote).slice(0, 80));
+ if (accountName) params.set("accountName", String(accountName).trim().slice(0, 80));
+ const qs = params.toString();
+ return `https://img.vietqr.io/image/${encodeURIComponent(bank.code || bank.bin)}-${encodeURIComponent(digits)}-compact2.png${qs ? `?${qs}` : ""}`;
+}
+

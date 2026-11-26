@@ -1,10 +1,41 @@
 import { useConfirm } from "./confirm-context";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { auth } from "../lib/firebaseAuth";
 import { PAYMENT_LABELS, formatProductPrice, formatVnd } from "../lib/commerce";
 import { orderProductName } from "../lib/product-options";
 import { effectiveMailState } from "../lib/mail-state";
+import { renderBrandedEmailHtml, renderOrderEmailHtml, renderWelcomeEmailHtml } from "../lib/mail-html";
 import { orderRequest, MAIL_STATES } from "./order-api";
+
+const STANDARD_WELCOME_DRAFT = {
+  subject: "Chào mừng bạn đến với ORORA – Hành trình nâng niu làn da",
+  text: "Chào bạn,\n\nCảm ơn bạn đã đăng ký nhận bản tin từ ORORA. Chúng mình rất vui được đồng hành cùng bạn trên hành trình chăm sóc làn da dịu nhẹ và tinh tế mỗi ngày.\n\nKhi là thành viên nhận tin từ ORORA, bạn sẽ nhận được:\n- Thông tin sớm nhất về các dòng sản phẩm chăm sóc da mới ra mắt\n- Ưu đãi và quà tặng dành riêng cho người đăng ký\n- Gợi ý chu trình dưỡng da và hướng dẫn chăm sóc phù hợp\n\nNếu bạn cần tư vấn chọn sản phẩm phù hợp với làn da của mình, chỉ cần trả lời trực tiếp email này — đội ngũ ORORA luôn sẵn sàng lắng nghe.\n\nThân mến,\nORORA Vietnam\nsales@ororavn.com",
+};
+
+const STANDARD_ORDER_DRAFT = {
+  subject: "ORORA xác nhận đã tiếp nhận đơn hàng {{orderCode}}",
+  text: "Chào {{customerName}},\n\nCảm ơn bạn đã tin chọn ORORA. Đơn hàng {{orderCode}} của bạn đã được hệ thống tiếp nhận thành công.\n\nTHÔNG TIN ĐƠN HÀNG\n- Sản phẩm: {{productName}}\n- Số lượng: {{quantity}}\n- Tạm tính: {{subtotal}}\n- Phí giao hàng: {{shippingFee}}\n- Tổng thanh toán dự kiến: {{totalAmount}}\n- Thanh toán: {{paymentMethod}} ({{paymentStatus}})\n- Người nhận: {{customerName}} · {{phone}}\n- Địa chỉ giao hàng: {{address}}\n\nTra cứu trạng thái đơn hàng: {{trackingUrl}}\n(Nhập 4 số cuối số điện thoại đặt hàng để xem tiến trình chi tiết)\n\nBƯỚC TIẾP THEO\n- Đội ngũ ORORA sẽ liên hệ xác nhận đơn hàng, phí giao hàng và thời gian giao dự kiến.\n- Email này xác nhận đã tiếp nhận yêu cầu đặt hàng, chưa xác nhận thanh toán.\n- Nếu cần điều chỉnh thông tin hoặc hỗ trợ nhanh, bạn chỉ cần trả lời trực tiếp email này kèm mã đơn {{orderCode}}.\n\nTrân trọng,\nORORA Vietnam\nsales@ororavn.com",
+};
+
+const SAMPLE_PREVIEW_ORDER = {
+  code: "OW_1024C",
+  customer: {
+    name: "Nguyễn Minh Anh",
+    email: "khachhang@example.com",
+    phone: "0901234567",
+    address: "12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh",
+    note: "Giao giờ hành chính giúp mình nhé.",
+  },
+  product: { name: "Gel dưỡng ORORA", variantLabel: "100 ml", unitPrice: 250000, priceText: "250000" },
+  quantity: 1,
+  subtotal: 250000,
+  shippingFee: 30000,
+  totalAmount: 280000,
+  paymentMethod: "cod",
+  paymentStatus: "unpaid",
+  trackingCode: "",
+  createdAt: new Date().toISOString(),
+};
 
 const ORDER_QUICK_TOKENS = [
   ["{{customerName}}", "Tên khách"],
@@ -24,6 +55,7 @@ const ORDER_QUICK_TOKENS = [
   ["{{note}}", "Ghi chú"],
   ["{{createdAt}}", "Ngày đặt"],
   ["{{trackingUrl}}", "Link tra cứu"],
+  ["{{trackingCode}}", "Mã vận đơn"],
 ];
 
 function previewOrderVariables(text, order) {
@@ -59,6 +91,7 @@ function previewOrderVariables(text, order) {
     "{{note}}": order?.customer?.note || "Không có",
     "{{createdAt}}": createdAtFormatted,
     "{{trackingUrl}}": `${typeof window !== "undefined" ? window.location.origin : "https://ororavn.com"}/tra-cuu-don-hang?code=${encodeURIComponent(order?.code || "OW_1024C")}`,
+    "{{trackingCode}}": order?.trackingCode || "",
   };
   return Object.entries(map).reduce((acc, [token, val]) => acc.replaceAll(token, val), text);
 }
@@ -77,6 +110,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
   const [cursor, setCursor] = useState(null);
   const [orderId, setOrderId] = useState(initialOrderId);
   const [orderError, setOrderError] = useState("");
+  const [previewMode, setPreviewMode] = useState("desktop");
   const attempt = useRef(null);
   const subjectRef = useRef(null);
   const textRef = useRef(null);
@@ -86,6 +120,34 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
   const selectedOrder = orders.find((order) => order.id === orderId);
   const mailState = effectiveMailState(selectedOrder?.confirmationMail, checkedAt);
   const recovering = mailState === "stuck";
+
+  const previewSubject = mode === "order_auto" ? previewOrderVariables(value.subject, selectedOrder) : value.subject;
+  const previewText = mode === "order_auto" ? previewOrderVariables(value.text, selectedOrder) : value.text;
+  const previewHtml = useMemo(() => {
+    const siteOrigin = typeof window !== "undefined" ? window.location.origin : "https://ororavn.com";
+    if (mode === "order_auto") {
+      return renderOrderEmailHtml({
+        subject: previewSubject,
+        text: previewText,
+        order: selectedOrder || SAMPLE_PREVIEW_ORDER,
+        siteOrigin,
+      });
+    }
+    if (mode === "welcome_auto") {
+      return renderWelcomeEmailHtml({
+        subject: previewSubject,
+        text: previewText,
+        unsubscribeUrl: `${siteOrigin}/api/unsubscribe?id=preview&token=preview`,
+        siteOrigin,
+      });
+    }
+    return renderBrandedEmailHtml({
+      subject: previewSubject,
+      text: previewText,
+      unsubscribeUrl: `${siteOrigin}/api/unsubscribe?id=preview&token=preview`,
+      siteOrigin,
+    });
+  }, [mode, previewSubject, previewText, selectedOrder]);
 
   useEffect(() => {
     if (!canSendOrder || selectedOrder?.confirmationMail?.state !== "sending") return;
@@ -130,26 +192,41 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
       <div className="mail-writer-grid">
         <div className="mail-writer-main">
           {allowedModes.length > 1 && <div className="admin-field"><label htmlFor={`${fieldId}-writer-mode`}>Loại thư muốn viết</label><select id={`${fieldId}-writer-mode`} className="mail-template-select" value={mode} onChange={(event) => { onModeChange(event.target.value); setNotice(null); }}>{[["welcome_auto", "Thư Đăng Ký"], ["order_auto", "Thư Đơn Hàng"], ["private", "Gửi riêng"]].filter(([key]) => allowedModes.includes(key)).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>}
-          {onChooseTemplate && <div className="admin-actions"><button type="button" className="admin-btn" onClick={onChooseTemplate}>Chọn mẫu từ Mẫu Thư</button></div>}
+          {(onChooseTemplate || mode === "welcome_auto" || mode === "order_auto") && <div className="admin-actions">
+            {onChooseTemplate && <button type="button" className="admin-btn" onClick={onChooseTemplate}>Chọn mẫu từ Mẫu Thư</button>}
+            {(mode === "welcome_auto" || mode === "order_auto") && <button type="button" className="admin-btn" onClick={() => {
+              onChange(mode === "order_auto" ? { ...STANDARD_ORDER_DRAFT } : { ...STANDARD_WELCOME_DRAFT });
+              setNotice({ text: "Đã nạp nội dung mẫu chuẩn ORORA. Hãy xem trước rồi bấm Lưu để áp dụng." });
+            }}>Nạp mẫu chuẩn ORORA</button>}
+          </div>}
           <div className="admin-field"><label htmlFor={`${fieldId}-writer-subject`}>Tiêu đề thư</label><input ref={subjectRef} id={`${fieldId}-writer-subject`} required maxLength={200} value={value.subject} onFocus={() => { activeFieldRef.current = "subject"; }} onChange={(event) => onChange({ subject: event.target.value, text: value.text })} /></div>
           <div className="admin-field"><label htmlFor={`${fieldId}-writer-text`}>Nội dung thư</label><textarea ref={textRef} id={`${fieldId}-writer-text`} required rows={11} maxLength={20000} value={value.text} onFocus={() => { activeFieldRef.current = "text"; }} onChange={(event) => onChange({ subject: value.subject, text: event.target.value })} /></div>
-          {mode === "order_auto" && <>
-            <div className="admin-detail-box">
-              <h3>Chèn nhanh thông tin đơn hàng (tại vị trí con trỏ)</h3>
-              <div className="mail-token-bar">
-                {ORDER_QUICK_TOKENS.map(([token, label]) => (
-                  <button type="button" className="mail-token-chip" key={token} title={token} onMouseDown={(e) => e.preventDefault()} onClick={() => insertToken(token)}>+ {label}</button>
-                ))}
-              </div>
+          {mode === "order_auto" && <div className="admin-detail-box">
+            <h3>Chèn nhanh thông tin đơn hàng (tại vị trí con trỏ)</h3>
+            <div className="mail-token-bar">
+              {ORDER_QUICK_TOKENS.map(([token, label]) => (
+                <button type="button" className="mail-token-chip" key={token} title={token} onMouseDown={(e) => e.preventDefault()} onClick={() => insertToken(token)}>+ {label}</button>
+              ))}
             </div>
-            <details className="admin-filter-panel">
-              <summary>Xem trước thư thực tế{selectedOrder ? ` (${selectedOrder.code})` : " (dữ liệu minh họa)"}</summary>
+          </div>}
+          <details className="admin-filter-panel" open>
+            <summary>Xem trước email chuẩn gửi khách{mode === "order_auto" ? (selectedOrder ? ` (${selectedOrder.code})` : " (dữ liệu minh họa)") : ""}</summary>
+            <div className="mail-preview-toolbar">
+              <button type="button" className={`admin-btn${previewMode === "desktop" ? " primary" : ""}`} onClick={() => setPreviewMode("desktop")}>HTML · Máy tính</button>
+              <button type="button" className={`admin-btn${previewMode === "mobile" ? " primary" : ""}`} onClick={() => setPreviewMode("mobile")}>HTML · Điện thoại</button>
+              <button type="button" className={`admin-btn${previewMode === "text" ? " primary" : ""}`} onClick={() => setPreviewMode("text")}>Văn bản thuần</button>
+            </div>
+            {previewMode === "text" ? (
               <div className="admin-detail-box" style={{ marginTop: 8 }}>
-                <p><strong>Tiêu đề:</strong> {previewOrderVariables(value.subject, selectedOrder)}</p>
-                <p style={{ whiteSpace: "pre-wrap", marginTop: 6 }}>{previewOrderVariables(value.text, selectedOrder)}</p>
+                <p><strong>Tiêu đề:</strong> {previewSubject}</p>
+                <p style={{ whiteSpace: "pre-wrap", marginTop: 6 }}>{previewText}</p>
               </div>
-            </details>
-          </>}
+            ) : (
+              <div className={`mail-preview-stage${previewMode === "mobile" ? " is-mobile" : ""}`}>
+                <iframe className="mail-preview-frame" sandbox="" title="Xem trước giao diện email ORORA" srcDoc={previewHtml} />
+              </div>
+            )}
+          </details>
         </div>
 
         <div className="mail-writer-side">

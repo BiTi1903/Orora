@@ -10,6 +10,7 @@ import { DEFAULT_ORDER_MESSAGE, validateOrderTemplate, renderOrderMessage } from
 import { requireAdmin, hasOrderAdminAccess } from "./admin-auth.js";
 import { randomUUID, createHash } from "node:crypto";
 import { DEFAULT_WELCOME, validateMessage, withUnsubscribe } from "./newsletter-content.js";
+import { renderBrandedEmailHtml, renderWelcomeEmailHtml } from "../src/lib/mail-html.js";
 
 const millis = (value) => value?.toMillis?.() ?? (value ? new Date(value).getTime() : 0);
 const publicContact = (doc) => ({
@@ -272,6 +273,8 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
           return reply(400, { message: "Nhập một địa chỉ email hợp lệ để nhận thư." });
         }
         let message = validateMessage(body);
+        const siteOrigin = env?.NEWSLETTER_SITE_ORIGIN || "https://ororavn.com";
+        const contactEmail = env?.MS_SENDER_EMAIL || "sales@ororavn.com";
         if (body.mailType === "order") {
           let order;
           if (body.orderId) {
@@ -281,8 +284,21 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
             if (!saved.exists) return reply(404, { message: "Không tìm thấy đơn gửi thử." });
             order = saved.data();
           } else order = { code: "OR-GUI-THU", customer: { name: "Khách thử nghiệm", email, phone: "0900000000", address: "123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh" }, product: { name: "Sản phẩm minh họa", priceText: "250000", unitPrice: 250000 }, quantity: 1, subtotal: 250000, shippingFee: 25000, totalAmount: 275000, paymentMethod: "cod", paymentStatus: "unpaid", createdAt: new Date() };
-          message = renderOrderMessage(validateOrderTemplate(body), order, env);
-        } else if (body.mailType && hasOrderTokens(message)) throw new Error("order_context_required");
+          let bankInfo = null;
+          if (order?.paymentMethod === "bank_transfer") {
+            try {
+              const homeSnap = await db.collection("settings").doc("home").get();
+              bankInfo = homeSnap?.exists ? homeSnap.data()?.productDetailStyles?.purchaseOptions || null : null;
+            } catch { /* ignore */ }
+          }
+          message = renderOrderMessage(validateOrderTemplate(body), order, env, { bankInfo });
+        } else if (body.mailType && hasOrderTokens(message)) {
+          throw new Error("order_context_required");
+        } else if (body.mailType === "registration") {
+          message = { ...message, html: renderWelcomeEmailHtml({ subject: message.subject, text: message.text, siteOrigin, contactEmail }) };
+        } else {
+          message = { ...message, html: renderBrandedEmailHtml({ subject: message.subject, text: message.text, siteOrigin, contactEmail }) };
+        }
         await sendMail(email, message);
         return reply(200, { message: `MS đã nhận thư gửi tới ${email}. Kiểm tra cả mục thư rác.` });
       }

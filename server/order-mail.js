@@ -6,38 +6,11 @@ import { randomUUID } from "node:crypto";
 import { validateMessage } from "./newsletter-content.js";
 import { PAYMENT_LABELS, formatProductPrice, formatVnd } from "../src/lib/commerce.js";
 import { ORDER_TOKENS } from "../src/lib/template-kinds.js";
+import { renderOrderEmailHtml } from "../src/lib/mail-html.js";
 export { ORDER_TOKENS };
 export const DEFAULT_ORDER_MESSAGE = {
-  subject: "ORORA đã nhận đơn hàng {{orderCode}}",
-  text: `Chào {{customerName}},
-
-Cảm ơn bạn đã đặt hàng tại ORORA. Chúng mình đã nhận đơn {{orderCode}} vào {{createdAt}} và sẽ liên hệ với bạn để xác nhận thông tin giao hàng.
-Thư này ghi nhận yêu cầu đặt hàng, chưa xác nhận thanh toán.
-
-Chi tiết đơn hàng
-{{productName}}
-Tổng số lượng: {{quantity}}
-Tạm tính: {{subtotal}}
-Phí giao hàng: {{shippingFee}}
-Tổng dự kiến: {{totalAmount}}
-
-Thanh toán
-Phương thức: {{paymentMethod}}
-Trạng thái: {{paymentStatus}}
-
-Thông tin giao hàng
-Người nhận: {{customerName}}
-Điện thoại: {{phone}}
-Địa chỉ: {{address}}
-
-Theo dõi đơn hàng tại {{trackingUrl}}
-Bạn có thể dùng 4 số cuối của số điện thoại đặt hàng để xem chi tiết.
-
-Nếu cần điều chỉnh thông tin, hãy trả lời email này và ghi mã đơn {{orderCode}} để ORORA hỗ trợ.
-
-Thân mến,
-Đội ngũ ORORA
-sales@ororavn.com`,
+  subject: "ORORA xác nhận đã tiếp nhận đơn hàng {{orderCode}}",
+  text: "Chào {{customerName}},\n\nCảm ơn bạn đã tin chọn ORORA. Đơn hàng {{orderCode}} của bạn đã được hệ thống tiếp nhận thành công.\n\nTHÔNG TIN ĐƠN HÀNG\n- Sản phẩm: {{productName}}\n- Số lượng: {{quantity}}\n- Tạm tính: {{subtotal}}\n- Phí giao hàng: {{shippingFee}}\n- Tổng thanh toán dự kiến: {{totalAmount}}\n- Thanh toán: {{paymentMethod}} ({{paymentStatus}})\n- Người nhận: {{customerName}} · {{phone}}\n- Địa chỉ giao hàng: {{address}}\n\nTra cứu trạng thái đơn hàng: {{trackingUrl}}\n(Nhập 4 số cuối số điện thoại đặt hàng để xem tiến trình chi tiết)\n\nBƯỚC TIẾP THEO\n- Đội ngũ ORORA sẽ liên hệ xác nhận đơn hàng, phí giao hàng và thời gian giao dự kiến.\n- Email này xác nhận đã tiếp nhận yêu cầu đặt hàng, chưa xác nhận thanh toán.\n- Nếu cần điều chỉnh thông tin hoặc hỗ trợ nhanh, bạn chỉ cần trả lời trực tiếp email này kèm mã đơn {{orderCode}}.\n\nTrân trọng,\nORORA Vietnam\nsales@ororavn.com",
 };
 export const validOrderEmail = (value) => typeof value === "string" && value.length <= 254 && /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/.test(value);
 export function validateOrderTemplate(value) {
@@ -45,7 +18,7 @@ export function validateOrderTemplate(value) {
   if ([...`${message.subject}\n${message.text}`.matchAll(/\{\{(\w+)\}\}/g)].some((match) => !ORDER_TOKENS.includes(match[1]))) throw new Error("invalid_order_token");
   return message;
 }
-export function renderOrderMessage(template, order, env = process.env) {
+export function renderOrderMessage(template, order, env = process.env, { bankInfo = null } = {}) {
   const orderedAt = order.createdAt?.toDate?.() ?? order.createdAt;
   const orderedDate = orderedAt ? new Date(orderedAt) : null;
   const multiProductSummary = Array.isArray(order.items) && order.items.length > 1
@@ -57,11 +30,21 @@ export function renderOrderMessage(template, order, env = process.env) {
   const trackingUrl = order.code
     ? `${origin}/tra-cuu-don-hang?code=${encodeURIComponent(order.code)}`
     : `${origin}/tra-cuu-don-hang`;
-  const values = { customerName: order.customer.name, orderCode: order.code, productName: multiProductSummary, variantLabel: order.product.variantLabel || "", quantity: order.quantity, subtotal: order.subtotal == null ? "ORORA sẽ báo giá" : formatVnd(order.subtotal), unitPrice: order.product.unitPrice == null ? formatProductPrice(order.product.priceText) || "ORORA sẽ báo giá" : formatVnd(order.product.unitPrice), shippingFee: order.shippingFee == null ? "ORORA sẽ xác nhận" : formatVnd(order.shippingFee), totalAmount: totalFormatted, total: totalFormatted, paymentMethod: PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod, paymentStatus: order.paymentStatus === "paid" ? "Đã thanh toán" : "Chưa thanh toán", address: order.customer.address, phone: order.customer.phone, email: order.customer.email, note: order.customer.note || "Không có", createdAt: orderedDate && Number.isFinite(orderedDate.getTime()) ? orderedDate.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "Chưa lưu ngày đặt", trackingUrl };
+  const values = { customerName: order.customer.name, orderCode: order.code, productName: multiProductSummary, variantLabel: order.product.variantLabel || "", quantity: order.quantity, subtotal: order.subtotal == null ? "ORORA sẽ báo giá" : formatVnd(order.subtotal), unitPrice: order.product.unitPrice == null ? formatProductPrice(order.product.priceText) || "ORORA sẽ báo giá" : formatVnd(order.product.unitPrice), shippingFee: order.shippingFee == null ? "ORORA sẽ xác nhận" : formatVnd(order.shippingFee), totalAmount: totalFormatted, total: totalFormatted, paymentMethod: PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod, paymentStatus: order.paymentStatus === "paid" ? "Đã thanh toán" : "Chưa thanh toán", address: order.customer.address, phone: order.customer.phone, email: order.customer.email, note: order.customer.note || "Không có", createdAt: orderedDate && Number.isFinite(orderedDate.getTime()) ? orderedDate.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "Chưa lưu ngày đặt", trackingUrl, trackingCode: order.trackingCode || "" };
   const fill = (text, subject = false) => text.replace(/\{\{(\w+)\}\}/g, (_, key) => subject ? String(values[key] ?? "").replace(/[\r\n]/g, " ") : String(values[key] ?? ""));
-  return validateMessage({ subject: fill(template.subject, true), text: fill(template.text) });
+  const validated = validateMessage({ subject: fill(template.subject, true), text: fill(template.text) });
+  const html = renderOrderEmailHtml({
+    subject: validated.subject,
+    text: validated.text,
+    order,
+    siteOrigin: origin,
+    bankInfo,
+    contactEmail: env?.MS_SENDER_EMAIL || "sales@ororavn.com",
+    trackingUrl,
+  });
+  return { ...validated, html };
 }
-export async function sendOrderConfirmation({ db, orderId, sendMail, manual = false, requestId, confirmResend = false, recoverOnly = false, actor = "automatic", actorName = "", actorEmail = "", message: customMessage, templateRef }) {
+export async function sendOrderConfirmation({ db, orderId, sendMail, manual = false, requestId, confirmResend = false, recoverOnly = false, actor = "automatic", actorName = "", actorEmail = "", message: customMessage, templateRef, env = process.env }) {
   const orderRef = db.collection("orders").doc(orderId);
   const eventRef = orderRef.collection("mailEvents").doc(manual ? `manual-${requestId || randomUUID()}` : "confirmation-auto");
   const claimed = await db.runTransaction(async (tx) => {
@@ -86,13 +69,13 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
     if (previous === "sending" || (previous === "unknown" && !(manual && confirmResend))) throw Object.assign(new Error("Kết quả gửi trước chưa rõ hoặc đang xử lý. Kiểm tra thư đã gửi trên Microsoft trước khi gửi lại."), { status: 409 });
     if (manual && previous === "accepted" && !confirmResend) throw Object.assign(new Error("Thư đã được Microsoft nhận. Cần xác nhận gửi lại để tránh gửi trùng."), { status: 409 });
     let message; let sourceTemplate; let templateError = false;
-    try { sourceTemplate = manual && customMessage ? validateOrderTemplate(customMessage) : template.exists ? validateOrderTemplate(template.data()) : DEFAULT_ORDER_MESSAGE; message = renderOrderMessage(sourceTemplate, data); }
+    try { sourceTemplate = manual && customMessage ? validateOrderTemplate(customMessage) : template.exists ? validateOrderTemplate(template.data()) : DEFAULT_ORDER_MESSAGE; message = renderOrderMessage(sourceTemplate, data, env); }
     catch { message = { subject: "Không tạo được thư xác nhận đơn", text: "" }; templateError = true; }
     const snapshot = manual && customMessage ? await captureTemplate(tx, db, templateRef, sourceTemplate || {}, ["private", "order_auto"]) : template.exists ? templateIdentity(template.data()) : {};
     const createdAt = new Date();
-    tx.set(eventRef, { type: "orderConfirmation", recipient: data.customer.email, ...message, ...snapshot, templateName: snapshot.templateName || (manual && customMessage ? "Nội dung soạn riêng cho đơn" : "Xác nhận đơn tự động"), state: templateError ? "failed" : "sending", errorCode: templateError ? "mail_template_invalid" : "", createdAt, updatedAt: createdAt, actor, actorName, actorEmail, manual, ...(sourceTemplate ? { templateSubject: sourceTemplate.subject, templateText: sourceTemplate.text } : {}) });
+    tx.set(eventRef, { type: "orderConfirmation", recipient: data.customer.email, subject: message.subject, text: message.text, ...snapshot, templateName: snapshot.templateName || (manual && customMessage ? "Nội dung soạn riêng cho đơn" : "Xác nhận đơn tự động"), state: templateError ? "failed" : "sending", errorCode: templateError ? "mail_template_invalid" : "", createdAt, updatedAt: createdAt, actor, actorName, actorEmail, manual, ...(sourceTemplate ? { templateSubject: sourceTemplate.subject, templateText: sourceTemplate.text } : {}) });
     tx.set(orderRef, { confirmationMail: { state: templateError ? "failed" : "sending", eventId: eventRef.id, updatedAt: createdAt } }, { merge: true });
-    return { recipient: data.customer.email, message, templateError, snapshot };
+    return { recipient: data.customer.email, message, sourceTemplate, orderData: data, templateError, snapshot };
   });
   if (!claimed) return { duplicate: true };
   if (claimed.recoverySkipped) return { state: "unchanged", errorMessage: "Trạng thái đã thay đổi. Hãy xem lại kết quả trước khi gửi." };
@@ -101,16 +84,26 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
     errorMessage: "Đã chuyển lần gửi bị gián đoạn sang Chưa rõ kết quả. Chưa gửi thêm email. Hãy kiểm tra Outlook trước khi xác nhận gửi lại.",
   };
   if (claimed.templateError) return { state: "failed" };
+  let deliveryMessage = claimed.message;
+  if (claimed.orderData?.paymentMethod === "bank_transfer" && claimed.sourceTemplate) {
+    try {
+      const homeSnap = await db.collection("settings").doc("home").get();
+      const bankInfo = homeSnap?.exists ? homeSnap.data()?.productDetailStyles?.purchaseOptions || null : null;
+      if (bankInfo && (bankInfo.bankName || bankInfo.bankAccountNumber || bankInfo.bankAccountName)) {
+        deliveryMessage = renderOrderMessage(claimed.sourceTemplate, claimed.orderData, env, { bankInfo });
+      }
+    } catch { /* fall back to message without bankInfo */ }
+  }
   let state = "accepted"; let errorCode = ""; let errorMessage = ""; let tracking = {};
   try {
     if (typeof sendMail !== "function") throw new Error("mail_configuration_missing");
     const started = Date.now();
-    try { tracking = safeMailTracking(await sendMail(claimed.recipient, claimed.message)); }
+    try { tracking = safeMailTracking(await sendMail(claimed.recipient, deliveryMessage)); }
     catch (error) {
       if (error.message !== "mail_smtp_connection_failed" || Date.now() - started > 10000) throw error;
       // A single proven pre-submission retry, leaving time for the final write.
       await new Promise((resolve) => setTimeout(resolve, 750));
-      tracking = safeMailTracking(await sendMail(claimed.recipient, claimed.message));
+      tracking = safeMailTracking(await sendMail(claimed.recipient, deliveryMessage));
     }
   } catch (error) {
     tracking = safeMailTracking(error.mailTracking);
