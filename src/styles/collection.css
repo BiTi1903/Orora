@@ -70,7 +70,7 @@
   font-family: var(--font-display);
   font-size: var(--text-section-title);
   line-height: var(--text-section-leading);
-  letter-spacing: -3px;
+  letter-spacing: -0.02em;
   font-weight: 600;
 }
 
@@ -143,6 +143,22 @@
   transition: transform 1.2s var(--ease), filter 0.8s ease;
 }
 
+.gallery-image-secondary {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: var(--pc-object-fit, cover);
+  opacity: 0;
+  z-index: 2;
+  pointer-events: none;
+  transition: opacity 0.45s ease, transform 1.2s var(--ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .gallery-item:hover .gallery-image-secondary { opacity: 1; }
+}
+
 /* lớp sáng dịu phía trên ảnh */
 .gallery-image::after {
   content: "";
@@ -174,7 +190,8 @@
   color: var(--rose-deep);
 }
 
-.gallery-info p {
+.gallery-info p,
+.gallery-info h3 {
   margin: 0;
   font-family: var(--font-display);
   font-size: 22px;
@@ -183,7 +200,14 @@
   transition: color 0.4s ease;
 }
 
-.gallery-item:hover .gallery-info p { color: var(--rose-deep); }
+.gallery-name-link {
+  color: inherit;
+  text-decoration: none;
+  display: block;
+}
+
+.gallery-item:hover .gallery-info p,
+.gallery-item:hover .gallery-info h3 { color: var(--rose-deep); }
 
 /* BOTTOM */
 .collection-bottom {
@@ -223,7 +247,7 @@
   .gallery { gap: 24px 14px; }
   .gallery-image { border-width: 4px; border-radius: 20px; }
   .gallery-info { flex-direction: column; gap: 2px; }
-  .gallery-info p { font-size: 18px; }
+  .gallery-info p, .gallery-info h3 { font-size: 18px; }
   .collection-bottom { margin-top: 70px; }
 }
 /* =====================================================

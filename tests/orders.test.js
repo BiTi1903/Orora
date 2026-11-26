@@ -193,7 +193,7 @@ test("random order codes include the correct payment suffix and remain stable ac
   assert.equal((await db.collection("orderCodePools").doc("C").get()).data().remaining, 9998);
 });
 
-test("legacy codes survive retries; exhausted pools do not create orders or reserve inventory", async () => {
+test("legacy codes survive retries; exhausted 4-digit pools roll over to 5-digit codes and invalid pools never reserve inventory", async () => {
   const db = memoryDb(); await db.collection("products").doc("serum").set({ name: "Serum", price: "250.000đ", active: true });
   const handler = createOrderHandler({ getDb: () => db, env, sendMail: async () => {} });
   const call = async (data) => { const res = response(); await handler({ method: "POST", headers, body: data }, res); return res; };
@@ -201,9 +201,13 @@ test("legacy codes survive retries; exhausted pools do not create orders or rese
   await db.collection("orders").doc(original.requestId).set({ code: "OW22910" }, { merge: true });
   await db.collection("orderCodePools").doc("C").set({ remaining: 0, swaps: {} });
   assert.equal((await call(original)).body.code, "OW22910");
+  const overflow = await call(body());
+  assert.equal(overflow.statusCode, 201);
+  assert.equal(overflow.body.code, "OW_10000C");
+  await db.collection("orderCodePools").doc("C").set({ remaining: -1, swaps: {} });
   const inventoryBefore = (await db.collection("inventory").doc("serum").get()).data();
   assert.equal((await call(body())).statusCode, 503);
-  assert.equal((await db.collection("orders").get()).docs.length, 1);
+  assert.equal((await db.collection("orders").get()).docs.length, 2);
   assert.deepEqual((await db.collection("inventory").doc("serum").get()).data(), inventoryBefore);
 });
 

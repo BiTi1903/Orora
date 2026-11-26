@@ -5,12 +5,12 @@ const loaded=()=>!document.fonts||faces.every(face=>document.fonts.check(face,sa
 export default function useHeroFonts(){
  const [state,setState]=useState(()=>loaded()?'ready':'pending');
  useEffect(()=>{
-  if(state!=='pending')return;
+  if(loaded())return;
   let alive=true;
   // A failed font request must not leave the hero hidden indefinitely.
-  const timer=setTimeout(()=>{if(alive)setState('fallback');},1000);
+  const timer=setTimeout(()=>{if(alive)setState(current=>current==='pending'?'fallback':current);},1000);
   Promise.all(faces.map(face=>document.fonts.load(face,sample))).then(()=>{if(alive){clearTimeout(timer);setState(loaded()?'ready':'fallback');}}).catch(()=>{if(alive){clearTimeout(timer);setState('fallback');}});
   return()=>{alive=false;clearTimeout(timer);};
- },[state]);
+ },[]);
  return state;
 }

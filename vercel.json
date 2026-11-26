@@ -34,6 +34,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/chinh-sach",
+      "destination": "/index.html"
+    },
+    {
       "source": "/product/(.*)",
       "destination": "/index.html"
     },
@@ -47,6 +51,27 @@
     }
   ],
   "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        }
+      ]
+    },
     {
       "source": "/(.*)\\.(jpg|jpeg|png|webp|svg|ico)",
       "headers": [

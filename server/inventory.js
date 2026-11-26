@@ -35,7 +35,8 @@ async function countWaitingForStockKey(tx, db, stockKey) {
   const pending = await tx.get(
     db.collection("orders")
       .where("status", "in", ["new", "confirmed"])
-      .select("product", "items", "quantity", "status", "paymentStatus", "inventory"),
+      .select("product", "items", "quantity", "status", "paymentStatus", "inventory")
+      .limit(500),
   );
   return pending.docs.reduce((sum, doc) => {
     const order = doc.data();
@@ -72,6 +73,7 @@ export async function prepareOrderInventoryReservation(tx, db, productId, quanti
   }
   return {
     targetKey,
+    reservedQty: nextReserved !== null ? quantity : 0,
     ref,
     data: { quantity: current.quantity ?? null, ...(nextReserved !== null ? { reserved: nextReserved + quantity } : {}), version: (current.version || 0) + 1, updatedAt: new Date() },
   };
@@ -90,19 +92,29 @@ export async function settleOrderInventory(tx, db, order, nextPaymentStatus, ord
     if (nextPaymentStatus === "paid" || nextStatus === "shipping") throw fail("Đơn thiếu ID sản phẩm hoặc số lượng hợp lệ. Kiểm tra đơn trước khi xác nhận.");
     return {};
   }
+  const recordedTargets = order.reservedTargets && typeof order.reservedTargets === "object"
+    ? Object.entries(order.reservedTargets).filter(([id, qty]) => id && Number.isSafeInteger(qty) && qty > 0)
+    : [];
   // Resolve each entry to variant doc if counted, else legacy product doc.
-  const candidateIds = [...new Set(rawEntries.flatMap((e) => (e.variantId ? [inventoryDocId(e.productId, e.variantId), e.productId] : [e.productId])))];
+  const candidateIds = [...new Set([
+    ...recordedTargets.map(([id]) => id),
+    ...rawEntries.flatMap((e) => (e.variantId ? [inventoryDocId(e.productId, e.variantId), e.productId] : [e.productId])),
+  ])];
   const candidateRefs = candidateIds.map((id) => db.collection("inventory").doc(id));
   const candidateSnaps = await tx.getAll(...candidateRefs);
   const snapById = new Map(candidateIds.map((id, i) => [id, candidateSnaps[i]]));
   const resolvedByDoc = new Map();
-  for (const entry of rawEntries) {
-    const vKey = entry.variantId ? inventoryDocId(entry.productId, entry.variantId) : entry.productId;
-    const vSnap = snapById.get(vKey);
-    const chosenId = entry.variantId && vSnap?.exists && (validQuantity(vSnap.data()?.quantity) || Number.isSafeInteger(vSnap.data()?.reserved))
-      ? vKey
-      : entry.productId;
-    resolvedByDoc.set(chosenId, (resolvedByDoc.get(chosenId) || 0) + entry.quantity);
+  if (recordedTargets.length && nextStatus === "cancelled") {
+    for (const [docId, qty] of recordedTargets) resolvedByDoc.set(docId, qty);
+  } else {
+    for (const entry of rawEntries) {
+      const vKey = entry.variantId ? inventoryDocId(entry.productId, entry.variantId) : entry.productId;
+      const vSnap = snapById.get(vKey);
+      const chosenId = entry.variantId && vSnap?.exists && (validQuantity(vSnap.data()?.quantity) || Number.isSafeInteger(vSnap.data()?.reserved))
+        ? vKey
+        : entry.productId;
+      resolvedByDoc.set(chosenId, (resolvedByDoc.get(chosenId) || 0) + entry.quantity);
+    }
   }
   const entries = [...resolvedByDoc.entries()];
   if (nextStatus === "cancelled") {

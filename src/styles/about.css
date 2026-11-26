@@ -127,7 +127,7 @@
   font-family: var(--font-display);
   font-size: var(--text-section-title);
   line-height: var(--text-section-leading);
-  letter-spacing: -2px;
+  letter-spacing: -0.02em;
   font-weight: 600;
   color: var(--plum);
 }

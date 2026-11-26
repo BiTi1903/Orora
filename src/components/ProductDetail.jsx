@@ -297,7 +297,8 @@ function ProductDetail({
 
   const promoteToMain = (src) => {
     const idx = allImages.indexOf(src);
-    if (idx >= 0) setActiveImageIndex(idx);
+    if (idx < 0) return;
+    setActiveImageIndex((current) => (current === idx && idx > 0 ? 0 : idx));
   };
   const stepMainImage = (delta) => {
     if (allImages.length <= 1) return;
@@ -909,7 +910,7 @@ function ProductDetail({
                 ? trustStrip.customText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
                 : [];
               const policyTitles = Array.isArray(home.productPolicies)
-                ? home.productPolicies.filter((policy) => policy?.title?.trim()).map((policy) => policy.title.trim())
+                ? home.productPolicies.filter((policy) => policy?.enabled !== false && policy?.title?.trim()).map((policy) => policy.title.trim())
                 : [];
               const sourceLabels = customLines.length
                 ? customLines
@@ -1012,6 +1013,11 @@ function ProductDetail({
                 className="product-buy-cart-btn"
                 aria-label={tr(soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ"))}
                 data-tooltip={tr(soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ"))}
+                style={{
+                  ...(purchase.addToCartBackground ? { background: purchase.addToCartBackground } : {}),
+                  ...(purchase.addToCartBorderColor ? { borderColor: purchase.addToCartBorderColor } : {}),
+                  ...toCss(purchase.addToCartStyle, { responsive: true }),
+                }}
                 disabled={soldOut || choice.quantity === ""}
                 onClick={(event) => {
                   window.dispatchEvent(new CustomEvent("orora-cart-confirm", {
@@ -1031,6 +1037,7 @@ function ProductDetail({
             <button
               type="button"
               className="product-desktop-sticky-cta"
+              style={websiteButtonStyle}
               disabled={soldOut}
               onClick={(event) => {
                 if (soldOut) return;

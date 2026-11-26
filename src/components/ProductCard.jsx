@@ -14,6 +14,7 @@ function ProductCard({
   productId,
   stock,
   image,
+  secondaryImage = "",
   number,
   name,
   description,
@@ -232,10 +233,20 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
           {...imageProps}
         >
           <ProductSlideshow
-  images={[cdnSrc(image, CARD)]}
-  alt={name}
-  showDots={false}
-/>
+            images={[cdnSrc(image, CARD)]}
+            alt={name}
+            showDots={false}
+          />
+          {!preview && secondaryImage && secondaryImage !== image && (
+            <img
+              className="gallery-image-secondary"
+              src={cdnSrc(secondaryImage, CARD)}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              aria-hidden="true"
+            />
+          )}
         </ImageWrap>
       </div>
 
@@ -248,14 +259,20 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
         >
           {number}
         </span>
-        <p
+        <h3
           className={selectedClass(k("cardName"))}
           data-builder-key={preview ? k("cardName") : undefined}
           onClick={select(k("cardName"))}
           style={nameStyle}
         >
-          {name}
-        </p>
+          {preview ? (
+            name
+          ) : (
+            <Link to={`/product/${slug}`} state={catalogState} {...intentProps} className="gallery-name-link">
+              {name}
+            </Link>
+          )}
+        </h3>
       </div>
 
       <div className="product-details">

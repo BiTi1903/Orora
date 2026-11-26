@@ -317,6 +317,9 @@
     border: 0;
     border-radius: 0;
   }
+  .website-order input:not([type="checkbox"]):not([type="radio"]),
+  .website-order textarea,
+  .website-order select,
   .order-field input, .order-field textarea, .order-field select, .address-picker input { font-size: 16px; }
   .order-form-modal [style*="--mobile-font-size"],
   .order-success-modal [style*="--mobile-font-size"] { font-size: var(--mobile-font-size) !important; }
@@ -552,3 +555,7 @@
 .checkout-card > div[style*="font-size"] .checkout-payment-option-body strong,
 .checkout-card > div[style*="color"] .checkout-payment-option-body strong { font-size: inherit; color: inherit; }
 
+/* Dynamic VietQR payment card */
+.order-vietqr { display: grid; justify-items: center; gap: 8px; padding: 14px; margin: 0 0 14px; border: 1px solid #ece4e8; border-radius: 14px; background: #fff; text-align: center; }
+.order-vietqr img { width: min(220px, 100%); height: auto; border-radius: 10px; display: block; }
+.order-vietqr span { font-size: 12px; line-height: 1.45; color: #5b4d54; }

@@ -229,6 +229,7 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
           >
             <ProductCard productId={product.id} stock={carouselStock[product.id]}
               image={product.image}
+              secondaryImage={product.image2 || product.images?.[1] || ""}
               number={productNumber(product, products)}
               name={product.name}
               description={product.description}
@@ -391,7 +392,7 @@ function Collection({
     ? toCss(headStyles.header, { responsive: true })
     : undefined;
 
-  const card=product=><ProductCard productId={product.id} image={product.image} number={productNumber(product,catalog)} name={product.name} description={product.description} price={catalogPriceLabel(product,filterSettings)} slug={productSlug(product,catalog)} styles={cardStyles} preview={preview} selectedElement={selectedElement} onSelect={onSelect} keyMap={keyMap} groupLayout stock={stock[product.id]}/>;
+  const card=product=><ProductCard productId={product.id} image={product.image} secondaryImage={product.image2 || product.images?.[1] || ""} number={productNumber(product,catalog)} name={product.name} description={product.description} price={catalogPriceLabel(product,filterSettings)} slug={productSlug(product,catalog)} styles={cardStyles} preview={preview} selectedElement={selectedElement} onSelect={onSelect} keyMap={keyMap} groupLayout stock={stock[product.id]}/>;
   return (
     <section
       className={`collection ${preview ? "collection--preview" : ""} ${className} ${selectedClass(k("colSection"))}`.trim()}
@@ -460,6 +461,12 @@ function Collection({
           <button type="button" aria-pressed={filtering ? !effectiveFilters.category : !categoryId} onClick={() => filtering ? changeFilters({ ...savedFilters, category: "", page: 1 }) : setCategoryId("")}>Tất cả</button>
           {categories.map((category) => <button type="button" key={category.id} aria-pressed={filtering ? effectiveFilters.category === category.id : categoryId === category.id} onClick={() => filtering ? changeFilters({ ...savedFilters, category: category.id, page: 1 }) : setCategoryId(category.id)}>{category.name}</button>)}
         </nav>
+      )}
+      {!preview && !isRelated && effectiveFilters.q && (
+        <div className="catalog-search-active" role="status">
+          <span>Đang tìm: <strong>“{effectiveFilters.q}”</strong> · {products.length} sản phẩm</span>
+          <button type="button" onClick={() => changeFilters({ ...savedFilters, q: "", page: 1 })}>Xóa tìm kiếm ×</button>
+        </div>
       )}
       {/* PRODUCTS */}
       {!preview && error ? (

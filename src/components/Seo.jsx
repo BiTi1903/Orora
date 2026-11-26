@@ -5,8 +5,10 @@ import useProducts from "../hooks/useProducts";
 import useStorefrontStock from "../hooks/useStorefrontStock";
 import { findProductByRoute } from "../lib/product-identity";
 import { pageSeo } from "../lib/seo";
+import { useLocale } from "../lib/i18n";
 
 export default function Seo() {
+  const locale = useLocale();
   const { pathname } = useLocation();
   const home = useHomeContent();
   const isProductRoute = pathname.startsWith("/product/");
@@ -19,7 +21,7 @@ export default function Seo() {
   useEffect(() => {
     const current = JSON.parse(serialized);
     if (!pathname.startsWith("/admin")) document.title = current.title || "ORORA";
-    document.documentElement.lang = "vi";
+    document.documentElement.lang = locale || "vi";
     const meta = (attribute, name, content) => {
       let element = document.head.querySelector(`meta[${attribute}="${name}"]`);
       if (!element) { element = document.createElement("meta"); element.setAttribute(attribute, name); document.head.append(element); }
@@ -41,6 +43,6 @@ export default function Seo() {
     let data = document.getElementById("orora-structured-data");
     if (!data) { data = document.createElement("script"); data.id = "orora-structured-data"; data.type = "application/ld+json"; document.head.append(data); }
     data.textContent = JSON.stringify(current.structuredData);
-  }, [serialized, pathname]);
+  }, [serialized, pathname, locale]);
   return null;
 }

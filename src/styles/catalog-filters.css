@@ -27,3 +27,7 @@
  .catalog-product-grid { gap:14px; }
 }
 @media(prefers-reduced-motion:reduce) { .catalog-product-grid .gallery-item { transition:none; } }
+.catalog-search-active { position:relative; z-index:2; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin:0 0 18px; padding:10px 14px; border:1px solid color-mix(in srgb,var(--rose-deep,#b8446d) 24%,transparent); border-radius:12px; background:#fff; font-size:13.5px; color:var(--plum,#3a1526); }
+.catalog-search-active strong { color:var(--rose-deep,#b8446d); }
+.catalog-search-active button { min-height:34px; padding:6px 12px; border:1px solid color-mix(in srgb,var(--rose-deep,#b8446d) 28%,transparent); border-radius:999px; background:#fff7fa; color:var(--rose-deep,#b8446d); font:600 12.5px/1.2 var(--font-body); cursor:pointer; }
+.catalog-search-active button:hover { background:var(--rose-deep,#b8446d); color:#fff; }

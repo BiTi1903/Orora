@@ -187,9 +187,12 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
         for (const entry of qtyByStockTarget.values()) {
           reservationPlans.push(await prepareOrderInventoryReservation(tx, db, entry.productId, entry.quantity, stockSnaps.get(entry.productId), entry.variantId, entry.variantSnap));
         }
+        const reservedTargets = {};
         for (const plan of reservationPlans) {
+          if (plan.targetKey && plan.reservedQty > 0) reservedTargets[plan.targetKey] = (reservedTargets[plan.targetKey] || 0) + plan.reservedQty;
           tx.set(plan.ref, plan.data, { merge: true });
         }
+        if (Object.keys(reservedTargets).length) record.reservedTargets = reservedTargets;
         tx.set(order, record); tx.set(codePool, { ...allocated.pool, updatedAt: createdAt });
         return record;
       });
@@ -444,6 +447,17 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
           return recordOrderActivity(tx, ref, { before: order, after: { ...order, inventory: nextInventory }, user, createdAt: now, action: "stock_returned", quantity: totalReturned });
         });
         return res.status(200).json({ activity: activity || null, message: "Đã ghi nhận nhận lại hàng và hoàn kho." });
+      }
+      if (body.action === "updateOrderMeta") {
+        if (!uuid(body.id)) return res.status(400).json({ message: "Đơn hàng không hợp lệ." });
+        const internalNote = typeof body.internalNote === "string" ? body.internalNote.trim().slice(0, 1000) : "";
+        const trackingCode = typeof body.trackingCode === "string" ? body.trackingCode.trim().slice(0, 120) : "";
+        const ref = orders.doc(body.id);
+        const snap = await ref.get();
+        if (!snap.exists) return res.status(404).json({ message: "Không tìm thấy đơn hàng." });
+        const updatedAt = new Date(clock());
+        await ref.set({ internalNote, trackingCode, updatedAt, updatedBy: user.uid }, { merge: true });
+        return res.status(200).json({ internalNote, trackingCode, message: "Đã lưu mã vận đơn và ghi chú nội bộ." });
       }
       if (!uuid(body.id) || (body.status !== undefined ? !ORDER_STATUSES.includes(body.status) : !["unpaid", "paid"].includes(body.paymentStatus))) return res.status(400).json({ message: "Đơn hàng hoặc trạng thái không hợp lệ." });
       const result = await db.runTransaction(async (tx) => {

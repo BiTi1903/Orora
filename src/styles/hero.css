@@ -116,34 +116,34 @@
   border-radius: 50%;
   background: linear-gradient(
     90deg,
-    #38bdf8, #34d399, #a78bfa, #f472b6, #38bdf8
+    #f7b8d0, #e89bb8, #f2ccb4, #d982a4, #f7b8d0
   );
   background-size: 200% 100%;
   filter: blur(55px);
-  opacity: 0.45;
+  opacity: 0.42;
   pointer-events: none;
   animation: auroraDrift 9s linear infinite;
 }
 
-/* màu cực quang chạy qua từng chữ cái */
+/* màu cực quang hồng trầm · rượu vang · champagne chạy qua từng chữ cái */
 .hero-letter {
   display: inline-block;
   color: transparent;
   background: linear-gradient(
     90deg,
-    #0ea5e9 0%,
-    #06b6d4 14%,
-    #10b981 30%,
-    #8b5cf6 50%,
-    #ec4899 68%,
-    #d946ef 82%,
-    #0ea5e9 100%
+    #8f2d52 0%,
+    #b8446d 18%,
+    #d96b92 36%,
+    #c88a65 54%,
+    #a83b65 72%,
+    #742343 88%,
+    #8f2d52 100%
   );
   background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.5));
+  filter: drop-shadow(0 2px 14px rgba(184, 68, 109, 0.28));
 
   animation:
     letterUp 1.1s var(--ease) both,
@@ -180,11 +180,10 @@
 }
 
 @keyframes auroraGlow {
-  0%   { filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.55)); }
-  25%  { filter: drop-shadow(0 0 18px rgba(52, 211, 153, 0.55)); }
-  50%  { filter: drop-shadow(0 0 16px rgba(167, 139, 250, 0.6)); }
-  75%  { filter: drop-shadow(0 0 18px rgba(244, 114, 182, 0.55)); }
-  100% { filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.55)); }
+  0%   { filter: drop-shadow(0 2px 14px rgba(184, 68, 109, 0.28)); }
+  33%  { filter: drop-shadow(0 2px 16px rgba(217, 107, 146, 0.34)); }
+  66%  { filter: drop-shadow(0 2px 16px rgba(200, 138, 101, 0.3)); }
+  100% { filter: drop-shadow(0 2px 14px rgba(184, 68, 109, 0.28)); }
 }
 
 @keyframes auroraDrift {

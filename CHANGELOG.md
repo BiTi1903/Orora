@@ -1,3 +1,32 @@
+## 26/11/2026 — Nâng cấp toàn diện A→Z: Storefront, Checkout VietQR, SEO/Bảo mật, Backend Tồn kho/Mã đơn & Admin/Visual Builder
+
+- **Lý do**: Thực hiện toàn bộ các cải tiến và sửa lỗi từ đợt rà soát tổng thể A→Z (giao diện, trải nghiệm mua hàng, SEO, bảo mật, tồn kho/mã đơn, vận hành đơn hàng và Visual Builder).
+- **Thay đổi chính**:
+  - **Hạ tầng, SEO & Bảo mật (`vercel.json`, `server/sitemap.js`, `src/components/Seo.jsx`)**:
+    - Bổ sung `/chinh-sach` vào sitemap động và gắn security headers chuẩn (`X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Strict-Transport-Security`).
+    - Giữ đúng ngôn ngữ đang chọn (`useLocale()`) trên `document.documentElement.lang` thay vì cố định `"vi"`.
+  - **Storefront UI/UX, A11y & Chuyển đổi (`src/hooks/useHeroFonts.js`, `src/components/Navbar.jsx`, `src/components/ProductCard.jsx`, `src/components/Collection.jsx`, `src/components/ProductDetail.jsx`, `src/components/ProductPurchaseSelection.jsx`, `src/components/ShopCart.jsx`, `src/components/Hero.jsx`, `src/components/Extras.jsx`, `src/components/ChatPanel.jsx`, `src/styles/*.css`)**:
+    - Sửa kẹt phông chữ dự phòng ở `useHeroFonts`; thay dải màu chữ Hero neon sang bảng màu Rose–Plum–Champagne đồng bộ thương hiệu; nới nhẹ `letter-spacing` tiêu đề để không dính dấu tiếng Việt.
+    - Bổ sung trạng thái đang tải/lỗi/thử lại cho tìm kiếm nhanh trên Navbar, sửa cắt mép popover tìm kiếm trên mobile, trả focus khi nhấn Escape, chống auto-zoom trên iOS (`font-size: 16px`) cho các ô nhập và mở rộng `.mobile-drawer`.
+    - Thẻ sản phẩm hỗ trợ chuyển ảnh phụ mượt khi rê chuột trên máy tính, tên sản phẩm là thẻ `<h3>` bấm được vào trang chi tiết; thêm thanh hiển thị từ khóa đang tìm kèm nút xóa nhanh ở `Collection`.
+    - Cho phép bấm lại ảnh phụ đang xem để quay về ảnh chính #1 ở PDP; tách `volumeDisabled` khỏi `disabled` để chọn phân loại hết hàng không bị khóa nút chọn dung tích khác; lọc sạch cam kết đã tắt trên `.product-trust-strip`; đồng bộ màu/kiểu nút từ Visual Builder sang thanh mua dính trên desktop.
+    - Giỏ hàng sticky chân tổng tiền và cho phép bấm ảnh/tên sản phẩm quay lại PDP; hoàn thiện thuộc tính trợ năng (`aria-hidden`, `role="img"`, `aria-modal="true"`).
+  - **Checkout & VietQR (`src/components/OrderFormFields.jsx`, `src/components/OrderSuccessView.jsx`, `src/styles/checkout.css`)**:
+    - Dùng `cdnSrc(THUMB)` cho ảnh sản phẩm trong checkout; tự động lưu và điền lại thông tin người nhận (`orora_checkout_profile` trong `localStorage`) cho khách quay lại.
+    - Tự động tạo mã **VietQR động** (điền sẵn số tiền & nội dung chuyển khoản) trong biên nhận đơn hàng chuyển khoản ngân hàng.
+  - **Backend Quy mô & Toàn vẹn dữ liệu (`server/orders.js`, `server/inventory.js`, `server/order-code.js`, `tests/order-code.test.js`, `tests/orders.test.js`)**:
+    - Ghi nhận chính xác `reservedTargets` khi tạo đơn và hoàn đúng kho đã giữ khi hủy đơn (chống rò rỉ `reserved` khi thêm tồn kho theo dung tích về sau); giới hạn `.limit(500)` cho truy vấn `countWaitingForStockKey`.
+    - Gỡ trần cứng 10.000 đơn ở `allocateOrderCode`: tự động chuyển tiếp mượt sang mã 5 chữ số (`OW_10000C`+) thay vì báo lỗi 503.
+    - Thêm hành động `updateOrderMeta` trong `server/orders.js` để lưu mã vận đơn (`trackingCode`) và ghi chú nội bộ (`internalNote`).
+  - **Admin & Visual Builder (`src/admin/OrdersAdmin.jsx`, `src/admin/builder/VisualBuilder.jsx`, `src/admin/builder/PreviewFrame.jsx`, `src/components/PolicyPage.jsx`, `src/admin/ProductPoliciesSettings.jsx`)**:
+    - Thêm nút **Xuất CSV đơn hàng** (UTF-8 BOM cho Excel) và khung chỉnh sửa **Mã vận đơn & Ghi chú nội bộ** trong chi tiết đơn hàng.
+    - Nâng cấp Visual Builder: phím tắt `Ctrl/Cmd+S` (Lưu), `Ctrl/Cmd+Z` (Hoàn tác), `Ctrl/Cmd+Shift+Z` / `Ctrl+Y` (Làm lại), thêm chế độ xem trước **Tablet (768px)** và bộ chọn **xem trước sản phẩm thật từ kho** ở mục Chi tiết SP.
+    - Cho phép chỉnh sửa trực tiếp 3 mục nội dung trang `/chinh-sach` trong `ProductPoliciesSettings.jsx` (lưu vào `policyPageContent`, có mặc định an toàn).
+- **Kiểm tra đã chạy**:
+  - `npm run check`: 273/273 unit test đạt, ESLint 0 lỗi & 0 cảnh báo, Vite build & ngân sách bundle đạt.
+  - Playwright (`qa/editor-checkout.spec.js`, `qa/mobile-catalog.spec.js`, `qa/navbar-cart.spec.js`, `qa/product-information-tabs.spec.js`, `qa/admin-appearance.spec.js`, `qa/visual-builder-focus.spec.js` tại `width-390` và `width-1440`): toàn bộ 57 kịch bản đều đạt.
+- **Ảnh hưởng database**: Tương thích ngược hoàn toàn với dữ liệu Firestore hiện tại; bổ sung các trường tùy chọn mới (`reservedTargets`, `trackingCode`, `internalNote` trên `orders`; `overflowSeq` trên `orderCodePools`; `policyPageContent` trên cấu hình trang chủ) không làm ảnh hưởng tài liệu cũ.
+
 ## 26/11/2026 — Hoàn thiện chính sách, tìm khách hàng và xem trước giao hàng
 
 - Giữ chính sách đổi trả mặc định 7 ngày, cho chọn loại cam kết trong admin. Giữ focus khi tìm email, dùng địa chỉ mẫu phù hợp với phí và dùng chung điều kiện bảo vệ bản nháp trong Visual Builder.
@@ -9,7 +38,6 @@
 - Đồng bộ cam kết và phí giao hàng, thêm tình huống xem trước checkout, bảo vệ bản nháp khi duyệt lịch sử, sửa tiêu đề admin và số liệu theo kỳ. Cho phép tra email chính xác trên lịch sử đơn có phân trang.
 - Kiểm tra trên môi trường phát triển: 273 kiểm thử đơn vị, 8 ca Chromium ở 390 px, lint và build. Kiểm tra đường dẫn chính sách từ checkout, trực tiếp và khi tải lại. Chưa kiểm tra bản triển khai Vercel.
 - Database: bổ sung truy vấn đọc theo email, không đổi schema hoặc di chuyển dữ liệu.
-
 
 ## 26/11/2026 — Ẩn mặc định nhãn nhỏ "Products" ở mục Sản phẩm, thêm công tắc bật/tắt và rà soát an toàn code
 

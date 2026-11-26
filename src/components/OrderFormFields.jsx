@@ -5,13 +5,30 @@ import AddressSelect from './AddressSelect';
 import {PAYMENT_LABELS,formatVnd} from '../lib/commerce';
 import {toCss} from '../lib/typography';
 import {CHECKOUT_COPY,checkoutSubmitStyle} from '../lib/checkout-presentation';
+import {cdnSrc,THUMB} from '../lib/image-cdn';
 import {translatePhrase,useLocale} from '../lib/i18n';
 import '../styles/checkout.css';
+
+const PROFILE_KEY='orora_checkout_profile';
+function readSavedProfile(preview){
+ if(preview)return {};
+ try{
+  const parsed=JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}');
+  return parsed&&typeof parsed==='object'?parsed:{};
+ }catch{return {};}
+}
+function saveProfileField(key,value){
+ try{
+  const current=readSavedProfile(false);
+  localStorage.setItem(PROFILE_KEY,JSON.stringify({...current,[key]:String(value||'').trim().slice(0,350)}));
+ }catch{/* Storage optional */}
+}
 
 function OrderFormFields({onEdit,product,items=null,subtotal,options,variantId,quantity,onVariantChange,onQuantityChange,addresses,provinceCode,wardCode,onProvinceChange,onWardChange,methods,unitPrice,shipping,total,appearance={},busy=false,error,onSubmit,preview=false,selectedElement,onSelect}){
  const [phoneError,setPhoneError]=useState(false);
  const locale=useLocale();
  const tr=(val)=>preview?val:translatePhrase(val,locale);
+ const [savedProfile]=useState(()=>readSavedProfile(preview));
  const [addressError,setAddressError]=useState(false);
  const [variantError,setVariantError]=useState(false);
  const [selectedMethod,setSelectedMethod]=useState(()=>methods[0]||'');
@@ -71,7 +88,7 @@ function OrderFormFields({onEdit,product,items=null,subtotal,options,variantId,q
     <div className="checkout-product-lead">
      {!isMulti && product?.image && (
       <div className="checkout-product-thumb">
-       <img src={product.image} alt="" loading="lazy" />
+       <img src={cdnSrc(product.image,THUMB)} alt="" loading="lazy" decoding="async" />
        <span className="checkout-product-qty-badge" aria-hidden="true">{quantity}</span>
       </div>
      )}
@@ -104,8 +121,8 @@ function OrderFormFields({onEdit,product,items=null,subtotal,options,variantId,q
    <section className="checkout-section checkout-card">
     <h3 {...mark('ofRecipientHeading','checkout-step-heading')} style={headingStyle}><span className="checkout-step-num" aria-hidden="true">1</span><span>{copy.recipientHeading}</span></h3>
     <div {...mark('ofRecipientFields')}>
-     <div className="order-field-row"><label>{label('nameLabel')}<input name="name" required minLength={2} maxLength={100} autoComplete="name" readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('namePlaceholder')}/></label><label>{label('phoneLabel')}<input name="phone" onInput={e=>{const invalid=!validOrderPhone(e.currentTarget.value);e.currentTarget.setCustomValidity(invalid?"Nhập số điện thoại gồm 7 đến 15 chữ số.":"");if(!invalid)setPhoneError(false);}} onInvalid={()=>setPhoneError(true)} aria-invalid={phoneError||undefined} aria-describedby={phoneError?"checkout-phone-error":undefined} type="tel" required maxLength={25} autoComplete="tel" inputMode="tel" readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('phonePlaceholder')}/>{phoneError&&<small id="checkout-phone-error" role="alert">Nhập số điện thoại gồm 7 đến 15 chữ số.</small>}</label></div>
-     <label>{label('emailLabel')}<input name="email" type="email" required maxLength={254} autoComplete="email" inputMode="email" readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('emailPlaceholder')}/></label>
+     <div className="order-field-row"><label>{label('nameLabel')}<input name="name" defaultValue={savedProfile.name||''} onBlur={e=>{if(!preview)saveProfileField('name',e.target.value);}} required minLength={2} maxLength={100} autoComplete="name" readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('namePlaceholder')}/></label><label>{label('phoneLabel')}<input name="phone" defaultValue={savedProfile.phone||''} onBlur={e=>{if(!preview)saveProfileField('phone',e.target.value);}} onInput={e=>{const invalid=!validOrderPhone(e.currentTarget.value);e.currentTarget.setCustomValidity(invalid?"Nhập số điện thoại gồm 7 đến 15 chữ số.":"");if(!invalid)setPhoneError(false);}} onInvalid={()=>setPhoneError(true)} aria-invalid={phoneError||undefined} aria-describedby={phoneError?"checkout-phone-error":undefined} type="tel" required maxLength={25} autoComplete="tel" inputMode="tel" readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('phonePlaceholder')}/>{phoneError&&<small id="checkout-phone-error" role="alert">Nhập số điện thoại gồm 7 đến 15 chữ số.</small>}</label></div>
+     <label>{label('emailLabel')}<input name="email" type="email" defaultValue={savedProfile.email||''} onBlur={e=>{if(!preview)saveProfileField('email',e.target.value);}} required maxLength={254} autoComplete="email" inputMode="email" readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('emailPlaceholder')}/></label>
     </div>
    </section>
    <section className="checkout-section checkout-card">
@@ -116,7 +133,7 @@ function OrderFormFields({onEdit,product,items=null,subtotal,options,variantId,q
       <AddressSelect label={label('wardLabel')} name="wardCode" required value={wardCode} options={addresses.wards} disabled={preview||!provinceCode||!addresses.wards.length} loading={addresses.loadingWards} placeholder={label('wardPlaceholder')} onChange={code=>{onEdit?.();setAddressError(false);onWardChange(code);}}/>
      </div>
      {addresses.error&&<div className="order-error order-error-action" role="alert"><span>{addresses.error}</span><button type="button" className="order-retry-btn" onClick={addresses.retry}>Tải lại địa chỉ</button></div>}
-     <label>{label('addressDetailLabel')}<textarea name="addressDetail" rows={2} required minLength={5} maxLength={350} autoComplete="street-address" readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('addressDetailPlaceholder')}/></label>
+     <label>{label('addressDetailLabel')}<textarea name="addressDetail" rows={2} defaultValue={savedProfile.addressDetail||''} onBlur={e=>{if(!preview)saveProfileField('addressDetail',e.target.value);}} required minLength={5} maxLength={350} autoComplete="street-address" readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('addressDetailPlaceholder')}/></label>
      {addressError&&(!provinceCode||!wardCode||shipping.blocked)&&<p className="order-error" role="alert">{!provinceCode||!wardCode?"Vui lòng chọn tỉnh/thành và phường/xã để tiếp tục.":shipping.reason||"Chưa tính được phí giao hàng cho địa chỉ này."}</p>}
      {(shipping.reason||(preview&&!provinceCode&&label('addressHint')))&&!addressError&&<p className="order-help checkout-shipping-note" style={helpTextStyle}>{shipping.reason||label('addressHint')}</p>}
     </div>

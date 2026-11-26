@@ -236,6 +236,54 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
   ];
   const [checkingAllMails, setCheckingAllMails] = useState(false);
   const [mailScanSummary, setMailScanSummary] = useState(null);
+  const [metaDraft, setMetaDraft] = useState({ id: "", trackingCode: "", internalNote: "" });
+  const activeMeta = selected
+    ? (metaDraft.id === selected.id ? metaDraft : { id: selected.id, trackingCode: selected.trackingCode || "", internalNote: selected.internalNote || "" })
+    : { id: "", trackingCode: "", internalNote: "" };
+  const saveOrderMeta = () => {
+    if (!selected) return;
+    perform(async () => {
+      const result = await orderRequest({ action: "updateOrderMeta", id: selected.id, trackingCode: activeMeta.trackingCode, internalNote: activeMeta.internalNote });
+      patchLocal(selected.id, { trackingCode: result.trackingCode, internalNote: result.internalNote });
+      setMetaDraft({ id: selected.id, trackingCode: result.trackingCode, internalNote: result.internalNote });
+      setNotice({ text: result.message || "Đã lưu mã vận đơn và ghi chú nội bộ." });
+    });
+  };
+  const exportCsv = () => {
+    if (!visibleOrders.length) return setNotice({ error: true, text: "Không có đơn hàng nào để xuất CSV." });
+    const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const headers = ["Mã đơn", "Ngày đặt", "Trạng thái", "Khách hàng", "SĐT", "Email", "Địa chỉ", "Sản phẩm", "SL", "Tạm tính", "Phí ship", "Tổng tiền", "Phương thức", "Thanh toán", "Mã vận đơn", "Ghi chú khách", "Ghi chú nội bộ"];
+    const rows = visibleOrders.map((o) => [
+      o.code,
+      date(o.createdAt),
+      STATUSES[o.status] || o.status,
+      o.customer?.name || "",
+      o.customer?.phone || "",
+      o.customer?.email || "",
+      o.customer?.address || "",
+      Array.isArray(o.items) && o.items.length > 1 ? o.items.map((it) => `${orderProductName(it)} x${it.quantity}`).join(" | ") : orderProductName(o.product),
+      o.quantity ?? "",
+      o.subtotal ?? "",
+      o.shippingFee ?? "",
+      o.totalAmount ?? "",
+      PAYMENT_LABELS[o.paymentMethod] || o.paymentMethod || "",
+      orderPaymentLabel(o),
+      o.trackingCode || "",
+      o.customer?.note || "",
+      o.internalNote || "",
+    ].map(esc).join(","));
+    const csv = `\uFEFF${headers.map(esc).join(",")}\r\n${rows.join("\r\n")}`;
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `orora-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setNotice({ text: `Đã xuất ${visibleOrders.length} đơn hàng ra file CSV.` });
+  };
   const checkAllMails = async () => {
     if (checkingAllMails || busy) return;
     setCheckingAllMails(true);
@@ -256,7 +304,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
     }
   };
   return <section aria-busy={busy || checkingAllMails}>
-    <div className="admin-top"><div><h1>Đơn hàng</h1><p className="admin-muted">Tìm đơn theo mã, SĐT hoặc email; bấm vào tiêu đề cột để sắp xếp nhanh.</p></div>{view === "orders" && <div className="admin-actions"><button type="button" className="admin-btn" aria-busy={checkingAllMails} disabled={busy || checkingAllMails} onClick={checkAllMails}>{checkingAllMails ? "Đang kiểm tra mail…" : "Kiểm tra toàn bộ mail"}</button><button className="admin-btn" disabled={busy || checkingAllMails} onClick={() => perform(async () => { const data = await fetchOrdersCached({ force: true }); extended.current = false; setOrders(data.orders); setCursor(data.nextCursor); setReady(true); onOrderChanged?.(); })}>Tải lại</button></div>}</div>
+    <div className="admin-top"><div><h1>Đơn hàng</h1><p className="admin-muted">Tìm đơn theo mã, SĐT hoặc email; bấm vào tiêu đề cột để sắp xếp nhanh.</p></div>{view === "orders" && <div className="admin-actions"><button type="button" className="admin-btn" disabled={busy || !visibleOrders.length} onClick={exportCsv}>Xuất CSV ({visibleOrders.length})</button><button type="button" className="admin-btn" aria-busy={checkingAllMails} disabled={busy || checkingAllMails} onClick={checkAllMails}>{checkingAllMails ? "Đang kiểm tra mail…" : "Kiểm tra toàn bộ mail"}</button><button className="admin-btn" disabled={busy || checkingAllMails} onClick={() => perform(async () => { const data = await fetchOrdersCached({ force: true }); extended.current = false; setOrders(data.orders); setCursor(data.nextCursor); setReady(true); onOrderChanged?.(); })}>Tải lại</button></div>}</div>
     <nav className="admin-section-tabs" aria-label="Các mục đơn hàng">{sectionTabs.map(([key, label]) => <button key={key} type="button" aria-current={view === key ? "page" : undefined} onClick={() => navigate(key)}>{label}</button>)}</nav>
     {view === "automation" && canUseNewsletter && <OrderEmails canUseNewsletter={canUseNewsletter} initialDraft={initialMailDraft?.purpose === "automation" ? initialMailDraft : null} onManageTemplates={onOpenEmailTemplates} />}
     {view === "history" && <OrderMailHistory refreshKey={mailRevision} onReuse={(draft, original) => setComposer({ draft, reused: true, original })} />}
@@ -321,6 +369,18 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
               perform(async () => { const result = await orderRequest({ action: "restockOrder", id: selected.id }); await showDetail(selected); onOrderChanged?.(); setNotice({ text: result.message }); });
             }}>Đã nhận hàng trả — Hoàn kho</button>}
             {selected.inventory?.state === "restocked" && <p className="admin-muted">Đã nhận hàng trả và hoàn kho.</p>}
+          </div>
+          <div className="admin-detail-box">
+            <h3>Vận đơn & ghi chú nội bộ</h3>
+            <div className="admin-field" style={{ marginBottom: 10 }}>
+              <label htmlFor="order-tracking-code">Mã vận đơn (GHTK / GHN / J&T / ViettelPost…)</label>
+              <input id="order-tracking-code" maxLength={120} value={activeMeta.trackingCode} onChange={(event) => setMetaDraft({ ...activeMeta, id: selected.id, trackingCode: event.target.value })} placeholder="Nhập mã vận đơn để tra cứu…" />
+            </div>
+            <div className="admin-field" style={{ marginBottom: 10 }}>
+              <label htmlFor="order-internal-note">Ghi chú nội bộ (chỉ admin thấy)</label>
+              <textarea id="order-internal-note" rows={3} maxLength={1000} value={activeMeta.internalNote} onChange={(event) => setMetaDraft({ ...activeMeta, id: selected.id, internalNote: event.target.value })} placeholder="Ghi chú xác nhận, hẹn giao lại, khách VIP…" />
+            </div>
+            <button type="button" className="admin-btn primary" disabled={busy || detail.loading} onClick={saveOrderMeta}>Lưu vận đơn & ghi chú</button>
           </div>
         </div>
         <div className="admin-order-detail-col">

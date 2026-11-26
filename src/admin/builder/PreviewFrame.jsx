@@ -21,7 +21,7 @@ export default function PreviewFrame({ device, children, surfaces, zoom="fit", s
   const host = useRef(null);
   const [frameDocument, setFrameDocument] = useState(null);
   const [availableWidth, setAvailableWidth] = useState(0);
-  const width = device === "mobile" ? 390 : 1440;
+  const width = device === "mobile" ? 390 : device === "tablet" ? 768 : 1440;
   const height = 900;
   const scale = zoom==="actual" ? 1 : availableWidth > 0 ? Math.min(1, availableWidth / width) : 1;
 
@@ -89,7 +89,7 @@ export default function PreviewFrame({ device, children, surfaces, zoom="fit", s
   return (
     <div className="builder-frame-host" ref={host}>
       <div style={{ width: width * scale, height: height * scale, margin: "0 auto", position: "relative", overflow: "hidden", flexShrink: 0 }}>
-        <iframe title={`Xem trước ${device === "mobile" ? "Mobile 390px" : "Desktop 1440px"}`} className="builder-preview-frame"
+        <iframe title={`Xem trước ${device === "mobile" ? "Mobile 390px" : device === "tablet" ? "Tablet 768px" : "Desktop 1440px"}`} className="builder-preview-frame"
           style={{ position: "absolute", top: 0, left: 0, width, height, transform: `scale(${scale})`, transformOrigin: "top left" }}
           srcDoc={'<!doctype html><html lang="vi"><head><meta name="viewport" content="width=device-width,initial-scale=1" /></head><body><div id="root"><main id="preview-root"></main></div></body></html>'}
           onLoad={(event) => setFrameDocument(event.currentTarget.contentDocument)} />

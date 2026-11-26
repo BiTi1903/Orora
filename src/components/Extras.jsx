@@ -297,7 +297,7 @@ export function Testimonials({
               data-builder-key={preview ? cardKey : undefined}
               onClick={select(cardKey)}
             >
-              <div className="stars">★★★★★</div>
+              <div className="stars" role="img" aria-label="5 trên 5 sao">★★★★★</div>
 
               <p style={css("reviewText")}>“{r.text}”</p>
 

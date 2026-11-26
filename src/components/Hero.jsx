@@ -112,7 +112,7 @@ function Hero({
         onClick={select("chip1")}
       >
         <span className="chip-in" style={toCss(hs.chip1,{responsive:true})}>
-          <b>✦</b> {c.heroChip1}
+          <b aria-hidden="true">✦</b> {c.heroChip1}
         </span>
       </div>}
 
@@ -123,7 +123,7 @@ function Hero({
         onClick={select("chip2")}
       >
         <span className="chip-in" style={toCss(hs.chip2,{responsive:true})}>
-          <b>♡</b> {c.heroChip2}
+          <b aria-hidden="true">♡</b> {c.heroChip2}
         </span>
       </div>}
 
@@ -134,7 +134,7 @@ function Hero({
         onClick={select("chip3")}
       >
         <span className="chip-in" style={toCss(hs.chip3,{responsive:true})}>
-          <b>✧</b> {c.heroChip3}
+          <b aria-hidden="true">✧</b> {c.heroChip3}
         </span>
       </div>}
 
@@ -150,7 +150,7 @@ function Hero({
         data-builder-key={preview ? "ring" : undefined}
         onClick={select("ring")}
       >
-        <svg viewBox="0 0 120 120">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
           <defs>
             <path
               id={preview ? "ringPathPreview" : "ringPath"}
@@ -165,7 +165,7 @@ function Hero({
           </text>
         </svg>
 
-        <b>✿</b>
+        <b aria-hidden="true">✿</b>
       </a>}
 
       {/* =========================

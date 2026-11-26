@@ -99,9 +99,10 @@ function NavbarQuickSearch() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const wrapRef = useRef(null);
+  const toggleRef = useRef(null);
   const inputRef = useRef(null);
   const navigate = useNavigate();
-  const { products } = useProducts({ enabled: open });
+  const { products, loading, error, retry } = useProducts({ enabled: open });
 
   useEffect(() => {
     if (!open) return;
@@ -110,7 +111,10 @@ function NavbarQuickSearch() {
       if (wrapRef.current && !wrapRef.current.contains(event.target)) setOpen(false);
     };
     const onKeyDown = (event) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        setOpen(false);
+        requestAnimationFrame(() => toggleRef.current?.focus());
+      }
     };
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
@@ -138,6 +142,7 @@ function NavbarQuickSearch() {
   return (
     <div ref={wrapRef} className="navbar-search-wrap">
       <button
+        ref={toggleRef}
         type="button"
         className="navbar-search-toggle"
         aria-label="Tìm kiếm sản phẩm"
@@ -161,7 +166,14 @@ function NavbarQuickSearch() {
               aria-label="Nhập tên sản phẩm cần tìm"
             />
           </form>
-          {matches.length > 0 ? (
+          {loading && !products.length ? (
+            <p className="navbar-search-empty" role="status">Đang tải sản phẩm…</p>
+          ) : error && !products.length ? (
+            <div className="navbar-search-empty" role="alert">
+              <p style={{ margin: "0 0 8px" }}>Chưa tải được danh sách sản phẩm.</p>
+              <button type="button" className="navbar-search-retry" onClick={retry}>Thử lại</button>
+            </div>
+          ) : matches.length > 0 ? (
             <div className="navbar-search-results">
               {matches.map((item) => (
                 <Link

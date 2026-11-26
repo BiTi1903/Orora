@@ -113,9 +113,10 @@ export default function VisualBuilder({
     setDiscovery,
     undo, redo, clearHistory, resetField, canUndo, canRedo,
   } = useBuilderDraft();
-  const sampleProducts = PREVIEW_PRODUCTS,
-    detailProduct = PREVIEW_PRODUCTS[0];
   const { products: discoveryProducts, loading: discoveryLoading } = useProducts();
+  const [previewProductId, setPreviewProductId] = useState("");
+  const sampleProducts = PREVIEW_PRODUCTS;
+  const detailProduct = (previewProductId && discoveryProducts.find((item) => item.id === previewProductId)) || PREVIEW_PRODUCTS[0];
   const isEnabled = (key) => sectionIsEnabled({ ...discovery, sectionVisibility }, key);
   const toggleSection = (key) => {
     setEditVersion((value) => value + 1);
@@ -432,6 +433,38 @@ export default function VisualBuilder({
     }
   };
 
+  const shortcutRef = useRef({ save, replayEdit, undo, redo, canUndo, canRedo, saving, loadError, loading });
+  useEffect(() => {
+    shortcutRef.current = { save, replayEdit, undo, redo, canUndo, canRedo, saving, loadError, loading };
+  });
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (!(event.metaKey || event.ctrlKey)) return;
+      const key = event.key.toLowerCase();
+      const s = shortcutRef.current;
+      if (key === "s") {
+        event.preventDefault();
+        if (!s.loading && !s.loadError && !s.saving) s.save();
+        return;
+      }
+      const tag = event.target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || event.target?.isContentEditable) return;
+      if (key === "z" && !event.shiftKey) {
+        if (s.canUndo && !s.saving && !s.loadError) {
+          event.preventDefault();
+          s.replayEdit(s.undo);
+        }
+      } else if ((key === "z" && event.shiftKey) || key === "y") {
+        if (s.canRedo && !s.saving && !s.loadError) {
+          event.preventDefault();
+          s.replayEdit(s.redo);
+        }
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   if (loading) {
     return <div className="builder-loading">Đang tải Visual Builder...</div>;
   }
@@ -636,12 +669,34 @@ export default function VisualBuilder({
                 </div>
               )}
               <div className="builder-device" role="group" aria-label="Thiết bị và tỉ lệ">
+                {activeSection === "productdetail" && discoveryProducts.length > 0 && (
+                  <label className="builder-zoom-label">
+                    SP xem trước
+                    <select
+                      aria-label="Chọn sản phẩm xem trước"
+                      value={previewProductId}
+                      onChange={(event) => setPreviewProductId(event.target.value)}
+                    >
+                      <option value="">Mẫu: {PREVIEW_PRODUCTS[0].name}</option>
+                      {discoveryProducts.map((item) => (
+                        <option key={item.id} value={item.id}>{item.name}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
                 <button
                   type="button"
                   aria-pressed={previewDevice === "desktop"}
                   onClick={() => setPreviewDevice("desktop")}
                 >
                   Desktop
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={previewDevice === "tablet"}
+                  onClick={() => setPreviewDevice("tablet")}
+                >
+                  Tablet
                 </button>
                 <button
                   type="button"
