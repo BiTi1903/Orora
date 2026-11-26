@@ -355,10 +355,10 @@ export function ProductSloganBuilderPanel({ slogan, styles, onChangeSlogan, onCh
   );
 }
 
-export function PoliciesPreview({ policies = [], pageContent = {} }) {
+export function PoliciesPreview({ policies = [], pageContent = {}, showAssurances = true }) {
   const home = useHomeContent();
   return <div data-admin-preview>
-    <ProductAssurances policies={policies} shippingSettings={home.shippingSettings}/>
+    {showAssurances && <ProductAssurances policies={policies} shippingSettings={home.shippingSettings}/>}
     <PolicyPage preview={{productPolicies:policies, policyPageContent:pageContent}}/>
   </div>;
 }
@@ -573,7 +573,7 @@ export function CategoriesBuilderPanel() {
   );
 }
 
-export function ShopLinksPreview({ shopLinks }) {
+export function ShopLinksPreview({ shopLinks, showChannels = true }) {
   const methods = availablePaymentMethods({ shopLinks });
   return (
     <div style={{ padding: "32px 24px", maxWidth: 640, margin: "0 auto", fontFamily: "var(--font-body, sans-serif)" }}>
@@ -603,6 +603,7 @@ export function ShopLinksPreview({ shopLinks }) {
           ))}
         </div>
       </div>
+      {showChannels ? (
       <div style={{ padding: 20, borderRadius: 16, border: "1px solid #f0dde5", background: "#ffffff" }}>
         <strong style={{ display: "block", color: "#3a1526", fontSize: 14, marginBottom: 10 }}>
           Nút mua qua kênh ngoài (dưới nút Mua ngay)
@@ -623,6 +624,7 @@ export function ShopLinksPreview({ shopLinks }) {
           )}
         </div>
       </div>
+      ) : <p>Kênh mua ngoài đang ẩn. Thanh toán trên web vẫn áp dụng.</p>}
     </div>
   );
 }

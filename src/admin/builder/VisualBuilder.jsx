@@ -285,7 +285,15 @@ export default function VisualBuilder({
     setDiscovery,
   ]);
 
+  const inspector = useRef(null);
   const switchSection = (key) => {
+    setCompactPane("edit");
+    requestAnimationFrame(() => {
+      inspector.current?.focus({preventScroll:true});
+      if (window.matchMedia("(max-width: 1000px)").matches) {
+        inspector.current?.scrollIntoView({block:"start"});
+      }
+    });
     setActiveSection(key);
     setSelected(SECTION_DEFAULT_SELECTED[key] || "title");
   };
@@ -660,7 +668,7 @@ export default function VisualBuilder({
                           ? "Đang ẩn trên website"
                           : activeSection === section.key
                             ? "Đang chỉnh sửa"
-                            : "Sẵn sàng"}
+                            : "Bấm để chỉnh sửa"}
                     </small>
                   </span>
 
@@ -672,6 +680,7 @@ export default function VisualBuilder({
                     role="switch"
                     className="builder-section-visibility"
                     aria-label={`Hiển thị ${section.label} trên website`}
+                    title={section.visibilityHint}
                     aria-checked={isEnabled(section.key)}
                     disabled={loading || loadError || saving || section.disabled}
                     onClick={() => toggleSection(section.key)}
@@ -699,6 +708,8 @@ export default function VisualBuilder({
                 : "Xem trước thay đổi"}
             </span>
 
+            {["policies","categories","shoplinks","ordertracking"].includes(activeSection) &&
+              <button type="button" className="admin-btn" onClick={() => switchSection(activeSection)}>Chỉnh mục này</button>}
             <div className="builder-preview-controls" role="group" aria-label="Điều khiển xem trước">
               {!SECTION_LIST.find((section) => section.key === activeSection)?.hideVisibilityToggle && (
                 <div className="builder-preview-visibility">
@@ -808,21 +819,23 @@ export default function VisualBuilder({
               </div>
             ) : activeSection === "policies" ? (
               <PoliciesPreview
+                showAssurances={isEnabled("policies")}
                 policies={discovery.productPolicies}
                 pageContent={discovery.policyPageContent}
               />
             ) : activeSection === "categories" ? (
               <Collection
                 preview
-                previewData={collection}
+                previewData={{...collection,sectionVisibility}}
                 selectedElement={selected}
                 onSelect={selectElement}
-                sampleProducts={sampleProducts.slice(0, 3)}
+                sampleProducts={discoveryProducts.filter(product=>product.active!==false)}
               />
             ) : activeSection === "shoplinks" ? (
-              <ShopLinksPreview shopLinks={discovery.shopLinks} />
+              <ShopLinksPreview shopLinks={discovery.shopLinks} showChannels={isEnabled("shoplinks")} />
             ) : activeSection === "ordertracking" ? (
-              <OrderTrackingBuilderPreview value={discovery.orderTrackingText} />
+              isEnabled("ordertracking") ? <OrderTrackingBuilderPreview value={discovery.orderTrackingText} /> :
+                <section className="product-not-found"><h2>Tra cứu đơn hàng đang tạm tắt</h2></section>
             ) : activeSection === "cartform" ? (
               <CartFormPreview
                 settings={navbar.navStyles?.cart || {}}
@@ -868,7 +881,7 @@ export default function VisualBuilder({
             ) : activeSection === "productdetail" ? (
               <ProductDetail
                 preview
-                previewSettings={discovery}
+                previewSettings={{...discovery,sectionVisibility}}
                 previewStyles={productDetail}
                 previewProduct={detailProduct}
                 previewProducts={sampleProducts}
@@ -899,7 +912,7 @@ export default function VisualBuilder({
           </PreviewFrame>
         </div>
 
-        <aside className="builder-settings">
+        <aside className="builder-settings" ref={inspector} tabIndex={-1} aria-label="Chỉnh sửa mục đang chọn">
           {activeSection === "productcare" ? (
             <ProductCareBuilderPanel
               value={discovery.productCareGuide}

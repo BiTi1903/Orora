@@ -91,27 +91,27 @@ export const PAGE_SECTIONS = [
   },
   {
     key: "policies",
+    visibilityHint: "Bật hoặc tắt cam kết cạnh nút mua. Trang chính sách vẫn mở được.",
     label: "Cam kết & chính sách",
     icon: "✓",
-    hideVisibilityToggle: true,
   },
   {
     key: "categories",
+    visibilityHint: "Bật hoặc tắt bộ chọn danh mục ở danh sách sản phẩm.",
     label: "Danh mục sản phẩm",
     icon: "▤",
-    hideVisibilityToggle: true,
   },
   {
     key: "shoplinks",
+    visibilityHint: "Bật hoặc tắt nút mua qua TikTok và Facebook. Checkout vẫn hoạt động.",
     label: "Kênh mua & thanh toán",
     icon: "🔗",
-    hideVisibilityToggle: true,
   },
   {
     key: "ordertracking",
+    visibilityHint: "Bật hoặc tắt form tra cứu đơn công khai.",
     label: "Tra cứu đơn hàng",
     icon: "⌕",
-    hideVisibilityToggle: true,
   },
 ];
 

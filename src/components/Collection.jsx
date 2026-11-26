@@ -1,3 +1,4 @@
+import { sectionIsEnabled } from "../lib/page-sections";
 import useStorefrontStock from '../hooks/useStorefrontStock';
 import CatalogFilters from "./CatalogFilters";
 import {catalogFilters,readCatalogFilters,writeCatalogFilters,filterCatalog,catalogPriceLabel,catalogFilterSettings,activeCatalogFilters} from "../lib/catalog-filters";
@@ -306,7 +307,8 @@ function Collection({
   const filterSettings=catalogFilterSettings(home.collectionStyles?.filters);
   const filtering=filterSettings.enabled!==false&&!excludeId&&!headStylesOverride;
   const savedFilters=preview||excludeId?localFilters:readCatalogFilters(location.search);
-  const categoryId=savedFilters.category;
+  const showCategories=sectionIsEnabled(preview ? home : liveHome,"categories");
+  const categoryId=showCategories?savedFilters.category:"";
   const changeFilters=next=>{
     const normalized=catalogFilters(next);
     if(preview||excludeId){setLocalFilters(normalized);return;}
@@ -316,7 +318,7 @@ function Collection({
   const rawProducts=preview?sampleProducts||[]:liveProducts;
   const availableProducts=excludeId?rawProducts.filter(product=>product.id!==excludeId&&product.slug!==excludeId):rawProducts;
   const catalog=withProductIdentity(availableProducts);
-  const effectiveFilters=filtering?catalogFilters({...savedFilters,...(filterSettings.showSearch===false?{q:''}:{}),...(filterSettings.showPrice===false?{min:'',max:'',price:'all'}:{}),...(filterSettings.showVolume===false?{volume:''}:{})}):catalogFilters({category:categoryId});
+  const effectiveFilters=filtering?catalogFilters({...savedFilters,category:categoryId,...(filterSettings.showSearch===false?{q:''}:{}),...(filterSettings.showPrice===false?{min:'',max:'',price:'all'}:{}),...(filterSettings.showVolume===false?{volume:''}:{})}):catalogFilters({category:categoryId});
   const products=filterCatalog(catalog,effectiveFilters);
   const requestedView=savedFilters.view==='auto'?(filterSettings.layout||'auto'):savedFilters.view;
   const grid=filtering&&(requestedView==='grid'||(requestedView==='auto'&&(activeCatalogFilters(effectiveFilters)>0||availableProducts.length>12)));
@@ -456,7 +458,7 @@ function Collection({
       </div>
 
       {filtering && <CatalogFilters value={effectiveFilters} activeView={grid?'grid':'carousel'} settings={filterSettings} onApply={changeFilters}/>}
-      {!preview && !isRelated && categories.length > 0 && (
+      {showCategories && !isRelated && categories.length > 0 && (
         <nav className="collection-categories" aria-label="Danh mục sản phẩm">
           <button type="button" aria-pressed={filtering ? !effectiveFilters.category : !categoryId} onClick={() => filtering ? changeFilters({ ...savedFilters, category: "", page: 1 }) : setCategoryId("")}>Tất cả</button>
           {categories.map((category) => <button type="button" key={category.id} aria-pressed={filtering ? effectiveFilters.category === category.id : categoryId === category.id} onClick={() => filtering ? changeFilters({ ...savedFilters, category: category.id, page: 1 }) : setCategoryId(category.id)}>{category.name}</button>)}

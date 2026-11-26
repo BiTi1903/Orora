@@ -1,3 +1,4 @@
+import { sectionIsEnabled } from "../lib/page-sections";
 import useStorefrontStock from "../hooks/useStorefrontStock";
 import ButtonIcon from "./ButtonIcon";
 import {createPortal} from "react-dom";
@@ -278,8 +279,8 @@ function ProductDetail({
   const mobileSubtotal = choice.quantity === "" ? "Chọn số lượng" : unitPrice === null ? formatProductPrice(displayedPrice) : formatVnd(unitPrice * choice.quantity);
   const purchase = ps.purchaseOptions || {};
   const channelLabels = purchaseChannelLabels(purchase);
-  const tiktokShop = socialShopUrl(home.shopLinks?.tiktokUrl, "tiktok");
-  const facebookShop = socialShopUrl(home.shopLinks?.facebookUrl, "facebook");
+  const tiktokShop = sectionIsEnabled(home,"shoplinks") && socialShopUrl(home.shopLinks?.tiktokUrl, "tiktok");
+  const facebookShop = sectionIsEnabled(home,"shoplinks") && socialShopUrl(home.shopLinks?.facebookUrl, "facebook");
   const contactSettings = ps.contactActions || {};
   const contact = contactLinks(home, product.name, contactSettings);
   const showZalo = contactSettings.showZalo !== false && !!contact.zalo;
@@ -979,7 +980,7 @@ function ProductDetail({
       {!home.loading && <><ProductCareGuide value={careGuideForProduct(home.productCareGuide, product)} /><ProductFaq value={home.productFaq} product={product} /></>}
       </div>
       <div className="product-side-column">
-        <ProductAssurances policies={home.productPolicies} shippingSettings={home.shippingSettings} textProps={textProps} />
+        {sectionIsEnabled(home,"policies") && <ProductAssurances policies={home.productPolicies} shippingSettings={home.shippingSettings} textProps={textProps} />}
         <ProductSloganCard home={home} styles={ps} textProps={textProps} cardProps={{ className: selectedClass("pdSloganCard"), "data-builder-key": preview ? "pdSloganCard" : undefined, onClick: preview ? select("pdSloganCard") : undefined }} />
         <RelatedProductsSidebar product={product} preview={preview} previewProducts={previewProducts} styles={ps} selectedElement={selectedElement} onSelect={onSelect} />
       </div>
