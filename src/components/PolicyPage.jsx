@@ -1,3 +1,4 @@
+import {DEFAULT_RETURN_POLICY} from "../lib/return-policy";
 import {shippingPolicy} from "../lib/shipping";
 import { Link } from "react-router-dom";
 import useHomeContent from "../hooks/useHomeContent";
@@ -41,7 +42,7 @@ export default function PolicyPage() {
         <section id="doi-tra" className="policy-card" aria-labelledby="policy-return">
           <h2 id="policy-return">1. Chính sách kiểm hàng & đổi trả</h2>
           <p>
-            {returns.length ? returns.map(item=>item.content).join(" ") : "Liên hệ ORORA kèm mã đơn để được hướng dẫn kiểm hàng và đổi trả."}
+            {returns.length ? returns.map(item=>item.content).join(" ") : DEFAULT_RETURN_POLICY}
           </p>
         </section>
 

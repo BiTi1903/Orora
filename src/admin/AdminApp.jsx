@@ -29,6 +29,8 @@ const GROUPS = [
   { title: "Khách hàng", items: [["newsletter", "Email"], ["chat", "Chat AI"], ["export", "Xuất danh sách email"]] },
 ];
 
+const sharesBuilder = (from,to) => [from,to].every(key => key === "home" || key === "store");
+
 const ALL_TABS = GROUPS.flatMap((group) => group.items.map(([key]) => key));
 
 export default function AdminApp() {
@@ -90,7 +92,7 @@ function AdminWorkspace({ user }) {
   useEffect(()=>{document.title=GROUPS.flatMap(group=>group.items).find(([key])=>key===tab)[1]+" · Quản trị ORORA";},[tab]);
   const navigate = async (key, { force = false } = {}) => {
     if (!ALL_TABS.includes(key) || key === tab) return;
-    const sameBuilder = (tab === "home" || tab === "store") && (key === "home" || key === "store");
+    const sameBuilder = sharesBuilder(tab,key);
     if (!force && !sameBuilder && dirtyRegistry.hasChanges()) {
       const ok = await confirm("Bạn có thay đổi chưa lưu. Chuyển sang mục khác và bỏ các thay đổi này?", {
         title: "Thay đổi chưa lưu",
@@ -109,7 +111,7 @@ function AdminWorkspace({ user }) {
     const onNav = () => {
       const next=initialAdminTab();
       if(next===tab)return;
-      if(dirtyRegistry.hasChanges() && !window.confirm("Bỏ thay đổi chưa lưu và rời mục này?")) {
+      if(!sharesBuilder(tab,next) && dirtyRegistry.hasChanges() && !window.confirm("Bỏ thay đổi chưa lưu và rời mục này?")) {
         const delta=position.current-window.history.state?.adminPosition;
         if(Number.isInteger(delta)&&delta) window.history.go(delta);
         else syncAdminUrl(tab,true);

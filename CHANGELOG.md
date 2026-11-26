@@ -1,3 +1,8 @@
+## 26/11/2026 — Hoàn thiện chính sách, tìm khách hàng và xem trước giao hàng
+
+- Giữ chính sách đổi trả mặc định 7 ngày, cho chọn loại cam kết trong admin. Giữ focus khi tìm email, dùng địa chỉ mẫu phù hợp với phí và dùng chung điều kiện bảo vệ bản nháp trong Visual Builder.
+- Kiểm tra: npm run check đạt; kiểm thử Chromium cho mua hàng, điều hướng admin, chính sách và trình chỉnh sửa. Không thay đổi dữ liệu hoặc schema database.
+
 ## 26/11/2026 — Sửa luồng đặt hàng và quản trị sau rà soát UX
 
 - Sửa rewrite trang chính sách, xác nhận bỏ bản nhập, kiểm tra điện thoại, tạm tính giỏ, tra cứu và thứ tự đăng ký nhận tin.
@@ -5,14 +10,17 @@
 - Kiểm tra trên môi trường phát triển: 273 kiểm thử đơn vị, 8 ca Chromium ở 390 px, lint và build. Kiểm tra đường dẫn chính sách từ checkout, trực tiếp và khi tải lại. Chưa kiểm tra bản triển khai Vercel.
 - Database: bổ sung truy vấn đọc theo email, không đổi schema hoặc di chuyển dữ liệu.
 
-## 26/11/2026 — Ẩn mặc định nhãn nhỏ "Products" ở mục Sản phẩm và thêm công tắc bật/tắt trong Visual Builder
 
-- **Lý do**: Chủ website yêu cầu bỏ phần chữ nhãn nhỏ `Products` ở mục Sản phẩm vì chiếm chỗ và không đẹp.
+## 26/11/2026 — Ẩn mặc định nhãn nhỏ "Products" ở mục Sản phẩm, thêm công tắc bật/tắt và rà soát an toàn code
+
+- **Lý do**: Chủ website yêu cầu bỏ phần chữ nhãn nhỏ `Products` ở mục Sản phẩm vì chiếm chỗ không đẹp, sau đó rà soát lại toàn bộ code vừa sửa.
 - **Thay đổi chính**:
-  - **`src/components/Collection.jsx`**: Ẩn mặc định `.collection-label` trên trang thật (không render và không chiếm khoảng trống), chỉ hiển thị khi quản trị viên chủ động bật (`collectionStyles.label.enabled === true`).
-  - **`src/admin/builder/CollectionPanels.jsx`**: Thêm công tắc bật/tắt `Hiển thị nhãn nhỏ trên website` ngay trong Visual Builder → Sản phẩm → Nhãn nhỏ để chủ website vẫn có thể bật lại bất cứ lúc nào.
+  - **`src/components/Collection.jsx`**: Ẩn mặc định `.collection-label` ở mục Sản phẩm trang chủ (chỉ hiển thị khi bật `collectionStyles.label.enabled === true`), đồng thời giữ nguyên hiển thị khi tái sử dụng cho khối sản phẩm liên quan (`isRelated`).
+  - **`src/admin/builder/CollectionPanels.jsx`**: Thêm công tắc bật/tắt `Hiển thị nhãn nhỏ trên website` trong Visual Builder → Sản phẩm → Nhãn nhỏ.
+  - **`src/components/ChatPanel.jsx` & `qa/mobile-catalog.spec.js`**: Gán giá trị mặc định `messages = []` trong `ChatPanel` để chống lỗi runtime `Cannot read properties of undefined (reading 'at')` khi dữ liệu hội thoại chưa khởi tạo mảng tin nhắn, và đồng bộ bộ chọn nút đóng chat trong bài test Playwright.
 - **Kiểm tra đã chạy**:
   - `npm run check`: 273/273 unit test, ESLint 0 lỗi, Vite build & giới hạn bundle đạt.
+  - Playwright (`qa/mobile-catalog.spec.js`, `qa/product-information-tabs.spec.js` tại `width-390` và `width-1440`): 16/16 đạt tuyệt đối.
 - **Ảnh hưởng database**: Không thay đổi schema, security rules hay dữ liệu production.
 
 ## 26/11/2026 — Sửa nhãn Products bị đè, thu gọn tiêu đề tab Mô tả và đồng bộ thanh điều hướng dưới theo vị trí cuộn trang chủ
@@ -27,7 +35,7 @@
     - Tự động theo dõi vị trí cuộn trang trên `/` và trượt ống kính chọn (`aria-current="page"` + `.mobile-nav-lens`) sang đúng mục tương ứng (`Home` → `Story` → `Product`, v.v.) khi người dùng cuộn xuống, kèm khóa chống giật ngắn khi bấm trực tiếp vào tab.
 - **Kiểm tra đã chạy**:
   - `npm run check`: 273/273 unit test, ESLint 0 lỗi, Vite build & giới hạn bundle đạt.
-  - Playwright (`qa/product-information-tabs.spec.js` tại `width-390` và `width-1440`: đạt toàn bộ; `qa/mobile-catalog.spec.js`: đạt 7/8 — 1 lỗi sẵn có do mock `useChatConversation` thiếu `messages` khi bấm nút Chat).
+  - Playwright (`qa/product-information-tabs.spec.js`, `qa/mobile-catalog.spec.js` tại `width-390` và `width-1440`): 16/16 đạt.
 - **Ảnh hưởng database**: Không thay đổi schema, security rules hay dữ liệu production.
 
 ## 26/11/2026 — Khôi phục bản trước đợt rà soát giao diện

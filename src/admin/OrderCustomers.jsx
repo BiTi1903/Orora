@@ -50,7 +50,7 @@ export default function OrderCustomers({ onViewOrders }) {
   return <div>
     <div className="admin-top"><div><h2>Khách hàng theo email</h2><p className="admin-muted">Mặc định tổng hợp từ 50 đơn gần nhất; bấm Tải thêm đơn cũ hơn nếu cần thống kê sâu hơn.</p></div><button className="admin-btn" aria-busy={busy} disabled={busy} onClick={() => setVersion((value) => value + 1)}>Cập nhật thống kê</button></div>
     {error && <p className="admin-error" role="alert">{error} Thống kê chưa đầy đủ.</p>}
-    {busy && !orders.length ? <p className="admin-muted" role="status">Đang tải danh sách khách hàng…</p> : <>
+
       <p className="admin-muted">{customers.length} email · {orders.length} đơn đã tải{missingEmail ? ` · ${missingEmail} đơn cũ chưa có email, chưa được gộp vào khách hàng` : ""}.</p>
       <div className="admin-order-filter-bar">
         <div className="admin-field"><label htmlFor="customer-order-search">Tìm khách hàng theo email hoặc tên</label><input id="customer-order-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nhập email hoặc tên…" /></div>
@@ -62,6 +62,7 @@ export default function OrderCustomers({ onViewOrders }) {
         <div className="admin-field"><label htmlFor="customer-total-max">Tổng giá trị đến (đ)</label><input id="customer-total-max" type="number" min="0" value={max} onChange={(event) => setMax(event.target.value)} /></div>
       </div></details>
       {invalidMoneyRange(min, max) && <p className="admin-error" role="alert">Khoảng tiền chưa hợp lệ.</p>}
+      {busy && !orders.length ? <p className="admin-muted" role="status">Đang tải danh sách khách hàng…</p> : <>
       <div className="admin-card admin-customer-order-scroll"><table className="admin-table"><thead><tr><th>Khách hàng</th><th>Số đơn</th><th>Tổng giá trị</th><th>Đã thanh toán</th><th>Chưa thu</th><th /></tr></thead><tbody>{visible.map((item) => <tr key={item.email}>
         <td><strong>{item.email}</strong><br /><small>{item.name}</small></td><td>{item.orderCount}{item.cancelledCount > 0 && <small className="order-summary-note">{item.cancelledCount} đơn hủy</small>}{item.quoteCount > 0 && <small className="order-summary-note">{item.quoteCount} đơn chờ báo giá</small>}</td><td>{formatVnd(item.total)}</td><td>{formatVnd(item.paid)}</td><td>{formatVnd(item.awaitingPayment)}</td><td><button className="admin-btn" onClick={() => onViewOrders(item.email, orders)}>Xem đơn của {item.email}</button></td>
       </tr>)}</tbody></table>{!visible.length && <p className="admin-muted">{nextCursor ? `Chưa tìm thấy trong ${orders.length} đơn đã tải.` : "Không có khách hàng phù hợp."}</p>}</div>

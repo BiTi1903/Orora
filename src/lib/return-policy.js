@@ -1,0 +1,1 @@
+export const DEFAULT_RETURN_POLICY = "Quý khách được kiểm tra ngoại quan kiện hàng khi nhận. Nếu sản phẩm bị lỗi từ nhà sản xuất, hư hỏng do vận chuyển hoặc giao sai phân loại, vui lòng liên hệ ORORA trong vòng 7 ngày kể từ ngày nhận hàng kèm mã đơn để được hỗ trợ đổi mới hoặc hoàn tiền.";

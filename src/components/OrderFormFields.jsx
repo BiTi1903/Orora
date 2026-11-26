@@ -118,7 +118,7 @@ function OrderFormFields({onEdit,product,items=null,subtotal,options,variantId,q
      {addresses.error&&<div className="order-error order-error-action" role="alert"><span>{addresses.error}</span><button type="button" className="order-retry-btn" onClick={addresses.retry}>Tải lại địa chỉ</button></div>}
      <label>{label('addressDetailLabel')}<textarea name="addressDetail" rows={2} required minLength={5} maxLength={350} autoComplete="street-address" readOnly={preview} tabIndex={preview?-1:undefined} placeholder={label('addressDetailPlaceholder')}/></label>
      {addressError&&(!provinceCode||!wardCode||shipping.blocked)&&<p className="order-error" role="alert">{!provinceCode||!wardCode?"Vui lòng chọn tỉnh/thành và phường/xã để tiếp tục.":shipping.reason||"Chưa tính được phí giao hàng cho địa chỉ này."}</p>}
-     {(shipping.reason||(preview&&label('addressHint')))&&!addressError&&<p className="order-help checkout-shipping-note" style={helpTextStyle}>{shipping.reason||label('addressHint')}</p>}
+     {(shipping.reason||(preview&&!provinceCode&&label('addressHint')))&&!addressError&&<p className="order-help checkout-shipping-note" style={helpTextStyle}>{shipping.reason||label('addressHint')}</p>}
     </div>
    </section>
    <section className="checkout-section checkout-card">

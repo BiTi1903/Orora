@@ -407,7 +407,7 @@ function Collection({
         data-builder-key={preview && isRelated ? k("colHeader") : undefined}
         onClick={isRelated ? select(k("colHeader")) : undefined}
       >
-        {((Boolean(collectionLabel) && headStyles.label?.enabled === true) ||
+        {((Boolean(collectionLabel) && (isRelated || headStyles.label?.enabled === true)) ||
           (preview && selectedElement === k("colLabel"))) && (
           <p
             className={`collection-label ${selectedClass(k("colLabel"))}`}
@@ -418,7 +418,7 @@ function Collection({
               ...(Number(headStyles.label?.marginTop) < 0 ? { marginTop: "0px" } : {}),
               textAlign: labelAlign,
               alignSelf: alignSelfMap[labelAlign] || "flex-start",
-              ...(preview && headStyles.label?.enabled !== true ? { opacity: 0.42 } : {}),
+              ...(preview && !isRelated && headStyles.label?.enabled !== true ? { opacity: 0.42 } : {}),
             }}
           >
             {collectionLabel || "Products"}

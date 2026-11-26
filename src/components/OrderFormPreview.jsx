@@ -32,12 +32,12 @@ export default function OrderFormPreview({appearance={},canvas=false,selectedEle
      options={[{id:'180ml',label:'180ml'},{id:'220ml',label:'220ml'}]}
      variantId="180ml"
      quantity={1}
-     addresses={{provinces:[],wards:[]}}
-     provinceCode=""
-     wardCode=""
+     addresses={{provinces:[{code:"01",name:"Hà Nội"}],wards:[{code:"sample",name:"Phường Ba Đình"}]}}
+     provinceCode={zone==="pending"?"":"01"}
+     wardCode={zone==="pending"?"":"sample"}
      methods={availablePaymentMethods(home)} items={items} subtotal={multiple?599000:349000}
      unitPrice={349000}
-     shipping={{fee,blocked:zone==="blocked",reason:zone==="blocked"?"Chưa có phí giao hàng cho địa chỉ này.":"Chọn địa chỉ để tính phí giao hàng."}}
+     shipping={{fee,blocked:zone==="blocked",reason:zone==="blocked"?"Chưa có phí giao hàng cho địa chỉ này.":zone==="pending"?"Chọn địa chỉ để tính phí giao hàng.":""}}
      total={fee===null?null:(multiple?599000:349000)+fee}
      appearance={appearance}
      selectedElement={selectedElement}
