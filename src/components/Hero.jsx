@@ -1,3 +1,4 @@
+import {navigationLabel,useLocale} from "../lib/i18n";
 import ButtonIcon from "./ButtonIcon";
 import useHeroFonts from "../hooks/useHeroFonts";
 import {toCss} from "../lib/typography";
@@ -12,6 +13,8 @@ function Hero({
   selectedElement = "",
   onSelect,
 }) {
+  const locale=useLocale();
+  const label=value=>preview?value:navigationLabel(value,locale);
   const live = useHomeContent();
   const c = preview && previewData ? previewData : live;
 
@@ -245,7 +248,7 @@ function Hero({
           data-builder-key={preview ? "btnPrimary" : undefined}
             onClick={select("btnPrimary")}
           >
-            {c.heroButtonText}
+            {!preview && locale==="vi" && c.heroButtonText?.trim().toLowerCase()==="discover" && ["#about","/#about"].includes(c.heroButtonLink||"#about") ? "Câu chuyện ORORA" : label(c.heroButtonText)}
             <ButtonIcon name="heroPrimary"/>
           </a>
 
@@ -256,7 +259,7 @@ function Hero({
           data-builder-key={preview ? "btnSecondary" : undefined}
             onClick={select("btnSecondary")}
           >
-            {c.shopButtonText || "Xem sản phẩm"}
+            {label(c.shopButtonText || "Xem sản phẩm")}
           </a>
         </div>
       </div>
@@ -270,7 +273,7 @@ function Hero({
           data-builder-key={preview ? "scroll" : undefined}
         onClick={select("scroll")}
       >
-        <span>{c.heroScrollText}</span>
+        <span>{label(c.heroScrollText)}</span>
         <div />
       </div>}
       </>}

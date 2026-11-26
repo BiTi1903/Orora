@@ -1,0 +1,31 @@
+name: Sao lưu Firestore
+on:
+  schedule:
+    - cron: '30 19 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: firestore-backup
+  cancel-in-progress: false
+jobs:
+  export:
+    if: vars.ORORA_BACKUP_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.ORORA_BACKUP_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.ORORA_BACKUP_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v3
+      - name: Export documents to the private backup bucket
+        env:
+          PROJECT_ID: ${{ vars.ORORA_BACKUP_PROJECT }}
+          BACKUP_BUCKET: ${{ vars.ORORA_BACKUP_BUCKET }}
+        run: |
+          set -eu
+          test -n "$PROJECT_ID"
+          test -n "$BACKUP_BUCKET"
+          gcloud firestore export "gs://$BACKUP_BUCKET/orora/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --project="$PROJECT_ID" --database='(default)' --quiet

@@ -20,7 +20,7 @@ import { cdnSrc, THUMB } from "../lib/image-cdn";
 const empty = {
   id: "", number: "", name: "", slug: "", price: "", image: "",
   image2: "", image3: "", image4: "", image5: "", image6: "",
-  description: "", story: "", material: "", size: "", color: "", origin: "",
+  shoppingGuide: "", description: "", story: "", material: "", size: "", color: "", origin: "",
   detailVisibility: { description: false, specifications: false, usage: false },
   active: true, categoryId: "",
 };
@@ -267,6 +267,7 @@ export default function ProductsAdmin() {
               {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
             </select>
           </div>
+          <div className="admin-field"><label htmlFor="shopping-guide">Gợi ý chọn sản phẩm</label><textarea id="shopping-guide" name="shoppingGuide" rows={2} maxLength={240} value={form.shoppingGuide||""} onChange={change} disabled={busy} placeholder="Phù hợp với nhu cầu nào, dùng khi nào, khác sản phẩm cùng nhóm ở đâu?"/></div>
           <div className="admin-field"><label htmlFor="product-description">Mô tả ngắn</label><textarea id="product-description" name="description" rows={3} value={form.description || ""} onChange={change} disabled={busy} /></div>
           <label className="admin-check">
             <input type="checkbox" role="switch" disabled={busy} checked={form.active !== false} onChange={(e) => setForm({ ...form, active: e.target.checked })} />

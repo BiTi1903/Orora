@@ -44,6 +44,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
   const [search, setSearch] = useState("");
   const [bouncedIds, setBouncedIds] = useState([]);
   const [mailFilter, setMailFilter] = useState("all");
+  const [statusPage,setStatusPage]=useState(null);
   const [statusFilter, setStatusFilter] = useState(pendingRequest && !pendingRequest.allStatuses ? "new" : "all");
   const [lastPendingRequest, setLastPendingRequest] = useState(pendingRequest);
   const [orders, setOrders] = useState(() => cachedOrders?.orders || []);
@@ -88,8 +89,8 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
     if (statusFilter === "all") return;
     const controller = new AbortController();
     orderRequest(null, { status: statusFilter }, { signal: controller.signal }).then((data) => {
-      if (!controller.signal.aborted && Array.isArray(data?.orders)) mergeOrders(data.orders);
-    }).catch(() => {});
+      if (!controller.signal.aborted && Array.isArray(data?.orders)) {mergeOrders(data.orders);setStatusPage({status:statusFilter,cursor:data.nextCursor});}
+    }).catch(error => {if(!controller.signal.aborted)setNotice({error:true,text:error.message});});
     return () => controller.abort();
   }, [statusFilter]);
   useEffect(() => {
@@ -331,12 +332,17 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
         </div>
       </details>
       {(invalidMoneyRange(filters.min, filters.max) || (filters.from && filters.to && filters.from > filters.to)) && <p className="admin-error" role="alert">Khoảng tiền hoặc khoảng ngày chưa hợp lệ.</p>}
-      <p className="admin-muted">Hiển thị {visibleOrders.length} / {orders.length} đơn đã tải{cursor ? ". Nhập mã đơn/SĐT rồi bấm Enter để tìm trực tiếp trên máy chủ, hoặc bấm Tải thêm đơn ở cuối bảng." : "."}</p>
+      <p className="admin-muted">Tìm theo tên khách hoặc tên sản phẩm trên máy chủ trong 200 đơn gần nhất. Hiển thị {visibleOrders.length} / {orders.length} đơn đã tải{cursor ? ". Nhập mã đơn/SĐT rồi bấm Enter để tìm trực tiếp trên máy chủ, hoặc bấm Tải thêm đơn ở cuối bảng." : "."}</p>
       <div className="admin-card admin-order-list-scroll"><table className="admin-table"><thead><tr>{sortColumns.map(([key, label]) => <th key={key} aria-sort={sortCol === key ? (sortDir === "asc" ? "ascending" : "descending") : "none"}><button type="button" className={`admin-sort-btn${sortCol === key ? " is-active" : ""}`} onClick={() => toggleSort(key)}><span>{label}</span><span className="admin-sort-icon" aria-hidden="true">{sortCol === key ? (sortDir === "asc" ? "↑" : "↓") : "↕"}</span></button></th>)}<th /></tr></thead><tbody>
         {pageOrders.map((order) => { const mailState = effectiveMailState(order.confirmationMail); return <tr key={order.id}><td data-label="Mã đơn"><strong>{order.code}</strong><br /><small>{date(order.createdAt)}</small></td><td data-label="Người mua">{order.customer.name}{order.customer.phone && <small className="order-summary-note"><a href={`tel:${order.customer.phone}`}>{order.customer.phone}</a></small>}</td><td data-label="Sản phẩm"><span>{orderProductName(order.product)}</span><small className="order-summary-note">SL: {order.quantity}</small></td><td data-label="Giá trị đơn">{order.totalAmount != null ? formatVnd(order.totalAmount) : order.subtotal != null ? <>{formatVnd(order.subtotal)}<small className="order-summary-note">Chưa chốt phí ship</small></> : "Cần báo giá"}</td><td data-label="Trạng thái"><span className={`order-state-badge ${order.status}`}>{STATUSES[order.status] || order.status}</span></td><td data-label="Thanh toán">{orderPaymentLabel(order)}</td><td data-label="Thư xác nhận"><span>{MAIL_STATES[mailState] || "Chưa có lịch sử"}</span>{order.customer?.email && ["failed", "unknown", "stuck"].includes(mailState) && <div className="admin-order-phone"><button type="button" className="admin-btn" disabled={busy} onClick={() => quickResendMail(order)}>{mailState === "stuck" ? "Gỡ kẹt mail" : "Gửi lại mail"}</button></div>}</td><td><button className="admin-btn" type="button" aria-label={`Xem đơn ${order.code}`} aria-expanded={selected?.id === order.id} onClick={() => showDetail(order)}>Xem chi tiết</button></td></tr>; })}
       </tbody></table>{!visibleOrders.length && <p className="admin-muted">{orders.length ? "Không có đơn phù hợp với bộ lọc." : "Chưa có đơn hàng."}</p>}</div>
       {pageCount > 1 && <div className="admin-pagination" aria-label="Phân trang đơn hàng"><span>Trang {activePage} / {pageCount} · {visibleOrders.length} đơn phù hợp</span><div className="admin-actions"><button type="button" className="admin-btn" disabled={activePage <= 1} onClick={() => setPage(activePage - 1)}>Trang trước</button><button type="button" className="admin-btn" disabled={activePage >= pageCount} onClick={() => setPage(activePage + 1)}>Trang sau</button></div></div>}
-      {cursor && <button className="admin-btn" disabled={busy} onClick={() => perform(async () => { extended.current = true; const data = await orderRequest(null, { cursor }); setOrders((items) => [...new Map([...items, ...data.orders].map((item) => [item.id, item])).values()]); setCursor(data.nextCursor); })}>Tải thêm đơn</button>}
+      {statusPage?.status===statusFilter && statusPage.cursor && <button className="admin-btn" disabled={busy} onClick={()=>perform(async()=>{
+        const data=await orderRequest(null,{status:statusFilter,cursor:statusPage.cursor});
+        mergeOrders(data.orders);
+        setStatusPage(current=>current===statusPage?{status:statusFilter,cursor:data.nextCursor}:current);
+      })}>Tải thêm đơn cùng trạng thái</button>}
+      {statusFilter==="all" && cursor && <button className="admin-btn" disabled={busy} onClick={() => perform(async () => { extended.current = true; const data = await orderRequest(null, { cursor }); setOrders((items) => [...new Map([...items, ...data.orders].map((item) => [item.id, item])).values()]); setCursor(data.nextCursor); })}>Tải thêm đơn</button>}
     </>}
     {selected && <ModalDialog title={`Đơn ${selected.code}`} className="admin-order-modal admin-order-fullscreen" onClose={() => { sequence.current.value++; setDetail(null); }}><article aria-busy={busy || detail.loading} className="admin-order-detail" aria-label={`Chi tiết đơn ${selected.code}`}>
       {notice && <p role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}

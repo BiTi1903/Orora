@@ -7,7 +7,7 @@ import {join} from 'node:path';
 const run=promisify(execFile),base=new URL(process.argv[2]||'https://ororavn.com');
 if(!['http:','https:'].includes(base.protocol))throw Error('Only HTTP(S) origins are supported');
 const origin=base.origin,checks=[];
-for(const path of ['/','/robots.txt','/sitemap.xml','/tra-cuu-don-hang','/admin','/api/addresses','/api/chat']){
+for(const path of ['/','/robots.txt','/chinh-sach','/sitemap.xml','/tra-cuu-don-hang','/admin','/api/addresses','/api/chat']){
  const dir=await mkdtemp(join(tmpdir(),'orora-check-'));
  try{
   const {stdout}=await run('curl',['--proto','=https,http','--proto-redir','=https,http','--location','--max-redirs','3','--max-time','20','--max-filesize','2097152','--silent','--show-error','--dump-header',join(dir,'headers'),'--output',join(dir,'body'),'--write-out','%{json}',origin+path]);

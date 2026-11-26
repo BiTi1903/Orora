@@ -56,6 +56,7 @@ async function report(db,time,days){
     db.collection('products').select('name','number','publicId','slug','slugAliases','canonicalSlug').limit(2000).get(),db.collection('siteAnalyticsDaily').orderBy('day','asc').limit(1).get(),
   ]);
   if(metrics.docs.length>10000)throw fail(422,'Có nhiều dữ liệu, vui lòng chọn khoảng thời gian ngắn hơn.');
+  let documentsRead=daily.docs.length+metrics.docs.length+catalog.docs.length+first.docs.length;
   const visits=new Map(daily.docs.map(doc=>[doc.data().day,doc.data()]));
   const untrackedDays=window.days.filter(day=>visits.get(day)?.revenueTracked!==true);
   const paid=new Map(window.days.map(day=>{
@@ -70,10 +71,27 @@ async function report(db,time,days){
     return [day,{paidAmount:0,paidOrders:0,unpricedPaid:0}];
   }));
   if(untrackedDays.length){
-    const scanStart=new Date(`${untrackedDays[0]}T00:00:00+07:00`).getTime();
-    const scanEnd=new Date(`${untrackedDays.at(-1)}T00:00:00+07:00`).getTime()+86400000;
-    const orders=[];let cursor=null;
-    do{let query=db.collection('orders').select('createdAt','paymentStatus','status','totalAmount').where('createdAt','>=',new Date(scanStart)).where('createdAt','<',new Date(scanEnd)).orderBy('createdAt','asc').limit(500);if(cursor)query=query.startAfter(cursor);const batch=await query.get();orders.push(...batch.docs.map(doc=>doc.data()));if(orders.length>10000)throw fail(422,'Có nhiều đơn hàng, vui lòng chọn khoảng thời gian ngắn hơn.');cursor=batch.docs.length===500?batch.docs.at(-1):null;}while(cursor);
+    const ranges=[];
+    for(const day of untrackedDays){
+      const start=new Date(`${day}T00:00:00+07:00`).getTime(),end=start+86400000;
+      const last=ranges.at(-1);
+      if(last?.end===start)last.end=end;
+      else ranges.push({start,end});
+    }
+    const orders=[];
+    for(const {start,end} of ranges){
+      let cursor=null;
+      do{
+        let query=db.collection('orders').select('createdAt','paymentStatus','status','totalAmount')
+          .where('createdAt','>=',new Date(start)).where('createdAt','<',new Date(end)).orderBy('createdAt','asc').limit(500);
+        if(cursor)query=query.startAfter(cursor);
+        const batch=await query.get();
+        documentsRead+=batch.docs.length;
+        orders.push(...batch.docs.map(doc=>doc.data()));
+        if(orders.length>10000)throw fail(422,'Có nhiều đơn hàng, vui lòng chọn khoảng thời gian ngắn hơn.');
+        cursor=batch.docs.length===500?batch.docs.at(-1):null;
+      }while(cursor);
+    }
     const scanned=paidOrderSummary(orders,untrackedDays);
     for(const day of untrackedDays)paid.set(day,scanned.get(day));
   }
@@ -91,7 +109,7 @@ async function report(db,time,days){
   for(const product of products){bind(product.publicId,product);bind(String(product.publicId||'').padStart(2,'0'),product);}
   const ranking=new Map();
   for(const doc of metrics.docs){const metric=doc.data();let route;try{route=decodeURIComponent(metric.path.slice(9));}catch{continue;}const product=routes.get(route);const key=product?.id||metric.path;if(!ranking.has(key))ranking.set(key,{id:product?.id||null,name:product?.name||route,path:metric.path,clicks:0,views:0});const entry=ranking.get(key);entry.clicks+=metric.clicks||0;entry.views+=metric.views||0;}
-  return {series,products:[...ranking.values()].sort((a,b)=>b.clicks-a.clicks||b.views-a.views).slice(0,20),recordedSince,updatedAt:time};
+  return {series,documentsRead,products:[...ranking.values()].sort((a,b)=>b.clicks-a.clicks||b.views-a.views).slice(0,20),recordedSince,updatedAt:time};
 }
 export function createAnalyticsHandler({getDb,verifyToken,env=process.env,now=()=>Date.now()}){
   return async(req,res)=>{

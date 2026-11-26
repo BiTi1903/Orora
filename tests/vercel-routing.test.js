@@ -31,3 +31,12 @@ test('merged function rejects unknown routes before reading the database and sup
  assert.equal(reads,0);
  for(const resource of ['shell','share-image','sitemap']){const res=reply();await handler({method:'HEAD',query:{resource}},res);assert.ok([200,302].includes(res.statusCode));assert.ok(!res.body);}
 });
+
+test('public catalog omits hidden products and unpublished reviews',async()=>{
+ const db=memoryDb();
+ await db.collection('products').doc('one').set({name:'Visible',productReviews:[{name:'Draft',text:'private',published:false}]});
+ await db.collection('products').doc('two').set({name:'Unlisted',active:false});
+ const res=reply();
+ await createStorefrontHandler({getDb:()=>db})({method:'GET',query:{resource:'catalog'}},res);
+ assert.equal(res.statusCode,200);assert.deepEqual(res.body.products.map(item=>item.id),['one']);assert.deepEqual(res.body.products[0].productReviews,[]);
+});

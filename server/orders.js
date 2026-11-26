@@ -159,12 +159,12 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
             variantSnap: hasVariantStock ? vSnap : null,
           });
         }
-        const shipping = shippingFeeFor(settings.data()?.shippingSettings, delivery?.provinceCode, delivery?.wardCode);
-        if (settings.data()?.shippingSettings?.enabled === true && shipping.fee === null) throw Object.assign(new Error(shipping.reason), { status: 400 });
-        if (body.expectedShippingFee !== undefined && body.expectedShippingFee !== shipping.fee) throw Object.assign(new Error("Phí giao hàng vừa thay đổi. Hãy tải lại trang để kiểm tra tổng tiền trước khi đặt."), { status: 409 });
         const subtotal = resolvedItems.some((item) => item.unitPrice === null)
           ? null
           : resolvedItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+        const shipping = shippingFeeFor(settings.data()?.shippingSettings, delivery?.provinceCode, delivery?.wardCode,subtotal);
+        if (settings.data()?.shippingSettings?.enabled === true && shipping.fee === null) throw Object.assign(new Error(shipping.reason), { status: 400 });
+        if (body.expectedShippingFee !== undefined && body.expectedShippingFee !== shipping.fee) throw Object.assign(new Error("Phí giao hàng vừa thay đổi. Hãy tải lại trang để kiểm tra tổng tiền trước khi đặt."), { status: 409 });
         const totalQuantity = resolvedItems.reduce((sum, item) => sum + item.quantity, 0);
         const totalAmount = subtotal === null || shipping.fee === null ? null : subtotal + shipping.fee;
         const allocated = allocateOrderCode(pool.data(), body.paymentMethod, chooseCodeIndex);
@@ -316,21 +316,11 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
           const list = [...found.values()].sort((a, b) => b.createdAt - a.createdAt || a.id.localeCompare(b.id));
           return res.status(200).json({ orders: list, nextCursor: null, serverSearch: true });
         }
-        if (!historyOnly && !bounceOnly && rawStatus && ORDER_STATUSES.includes(rawStatus)) {
-          let page;
-          try {
-            page = await orders.where("status", "==", rawStatus).orderBy("createdAt", "desc").limit(100).get();
-          } catch (indexError) {
-            if (indexError?.code !== 9 && !/index|FAILED_PRECONDITION/i.test(String(indexError?.message || ""))) throw indexError;
-            page = await orders.where("status", "==", rawStatus).limit(100).get();
-          }
-          const list = page.docs.map(formatOrderDoc).sort((a, b) => b.createdAt - a.createdAt || a.id.localeCompare(b.id));
-          return res.status(200).json({ orders: list, nextCursor: null });
-        }
         const pageSize = historyOnly || bounceOnly ? 20 : 50;
         const customerEmail = req.query?.customerEmail;
         if (customerEmail && (typeof customerEmail !== "string" || !validOrderEmail(customerEmail))) return res.status(400).json({message:"Email chưa hợp lệ."});
         let query = customerEmail ? orders.where("customer.email", "==", customerEmail.toLowerCase()).limit(pageSize) : orders.orderBy("createdAt", "desc").limit(pageSize);
+        if (!historyOnly && !bounceOnly && ORDER_STATUSES.includes(rawStatus)) query=orders.where("status","==",rawStatus).orderBy("createdAt","desc").limit(pageSize);
         if (req.query?.cursor) {
           if (!uuid(req.query.cursor)) return res.status(400).json({ message: "Trang không hợp lệ." });
           const last = await orders.doc(req.query.cursor).get();

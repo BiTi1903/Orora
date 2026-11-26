@@ -35,7 +35,7 @@ test('production HTTP checker only reads and rejects a broken robots configurati
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  try{
   const args=['scripts/check-production.mjs',`http://127.0.0.1:${server.address().port}`],run=promisify(execFile);
-  const result=JSON.parse((await run(process.execPath,args)).stdout);assert.equal(result.passed,true);assert.equal(result.checks.length,7);
+  const result=JSON.parse((await run(process.execPath,args)).stdout);assert.equal(result.passed,true);assert.equal(result.checks.length,8);
   broken=true;await assert.rejects(()=>run(process.execPath,args),error=>error.code===1&&JSON.parse(error.stdout).passed===false);
   assert.ok(methods.every(([method,path])=>method==='GET'&&path!=='/api/orders'));
  }finally{await new Promise(resolve=>server.close(resolve));}

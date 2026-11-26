@@ -28,6 +28,8 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run test:ui
+      - run: npx playwright install --with-deps webkit
+      - run: npm run test:ui:browsers -- --project=webkit-ios qa/shopping.spec.js qa/order-receipt.spec.js
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

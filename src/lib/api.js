@@ -1,5 +1,5 @@
 import { createReadFlight } from "./read-flight.js";
-import { findProductByRoute, nextProductSequence, productSlug, withProductIdentity } from "./product-identity.js";
+import { findProductByRoute, nextProductSequence, productSlug } from "./product-identity.js";
 import {
   collection,
   deleteDoc,
@@ -42,7 +42,12 @@ export function getPublicProducts() {
   if (!db) return Promise.reject(new Error("Firebase chưa được cấu hình."));
   if (productCatalogCache && Date.now() - productCatalogCache.at < 30_000) return productCatalogCache.promise;
   const entry = { at: Date.now() };
-  entry.promise = getProducts().then(withProductIdentity).catch((error) => { if (productCatalogCache === entry) productCatalogCache = null; throw error; });
+  entry.promise = fetch("/api/storefront/catalog").then(async response=>{
+    if(!response.ok)throw new Error("Chưa tải được danh mục sản phẩm.");
+    const data=await response.json();
+    if(!Array.isArray(data.products))throw new Error("Danh mục sản phẩm không hợp lệ.");
+    return data.products;
+  }).catch((error) => { if (productCatalogCache === entry) productCatalogCache = null; throw error; });
   productCatalogCache = entry;
   return entry.promise;
 }

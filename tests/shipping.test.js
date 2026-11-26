@@ -12,7 +12,7 @@ const headers = { origin: env.NEWSLETTER_SITE_ORIGIN, "content-type": "applicati
 const body = () => ({ requestId: randomUUID(), productId: "serum", quantity: 2, name: "Buyer", email: "buyer@example.com", phone: "0900000000", provinceCode: "79", wardCode: "25747", addressDetail: "123 Đường thử nghiệm", paymentMethod: "bank_transfer", consent: true, expectedShippingFee: 15000 });
 async function setup() {
   const db = memoryDb(); await db.collection("products").doc("serum").set({ name: "Serum", price: "250.000đ", active: true });
-  await db.collection("settings").doc("home").set({ shippingSettings: { enabled: true, provinces: { "79": { fee: 30000, wardFees: { "25747": 15000 } } } } });
+  await db.collection("settings").doc("home").set({ shippingSettings: { enabled: true, freeAbove: null, provinces: { "79": { fee: 30000, wardFees: { "25747": 15000 } } } } });
   const handler = createOrderHandler({ getDb: () => db, env, sendMail: async () => {} });
   const call = async (data) => { const res = response(); await handler({ method: "POST", headers, body: data }, res); return res; };
   return { db, call };
@@ -57,4 +57,12 @@ test("receipt templates can use shipping and grand total without altering previo
   assert.equal(hasOrderTokens(template), true);
   const message = renderOrderMessage(template, { code: "OW_1234B", customer: {}, product: {}, quantity: 2, subtotal: 500000, shippingFee: 15000, totalAmount: 515000, paymentMethod: "bank_transfer" });
   assert.match(message.text, /15\.000/); assert.match(message.text, /515\.000/);
+});
+
+test("hosted order uses ORORA free delivery above 400000, including the amount on the receipt",async()=>{
+ const {db,call}=await setup();
+ await db.collection("settings").doc("home").set({shippingSettings:{enabled:true,provinces:{"79":{fee:15000}}}});
+ const data={...body(),expectedShippingFee:0};
+ const res=await call(data);
+ assert.equal(res.statusCode,201);assert.equal(res.body.totalAmount,500000);assert.equal(res.body.shippingFee,0);
 });

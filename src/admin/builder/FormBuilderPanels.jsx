@@ -1,3 +1,4 @@
+import {banks,resolveBank} from '../../lib/vietqr';
 import {CART_COPY} from '../../lib/cart-copy';
 import {CART_MODAL_FIELDS} from '../../lib/cart-presentation';
 import {CHECKOUT_COPY,CHECKOUT_RECEIPT_COPY,CHECKOUT_FRAME_FIELDS,CHECKOUT_EXTRA_FIELDS,RECEIPT_FRAME_FIELDS} from '../../lib/checkout-presentation';
@@ -450,7 +451,8 @@ export function OrderSuccessBuilderSettings({selected,productDetail,onChange}){
   return <>
    <SettingGroup title="Thông tin chuyển khoản">
     {field('bankHeading','Tiêu đề khối chuyển khoản')}
-    {field('bankName','Tên ngân hàng')}
+    <label className="builder-field">Ngân hàng nhận tiền<select value={resolveBank(value.bankCode||value.bankName)?.bin||""} onChange={e=>{const bank=resolveBank(e.target.value);patch({bankCode:bank?.bin||"",bankName:bank?.name||""});}}><option value="">Chọn ngân hàng</option>{banks.map(bank=><option key={bank.bin} value={bank.bin}>{bank.name} · {bank.bin}</option>)}</select></label>
+    {value.bankName&&!resolveBank(value.bankCode||value.bankName)&&<p>Đang hiển thị {value.bankName}. Chọn ngân hàng để tạo mã QR.</p>}
     {field('bankAccountNumber','Số tài khoản')}
     {field('bankAccountName','Tên chủ tài khoản')}
     {field('bankTransferNote','Mẫu nội dung chuyển khoản (dùng {{code}} cho mã đơn)')}

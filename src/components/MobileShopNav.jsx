@@ -1,3 +1,4 @@
+import {navigationLabel} from "../lib/i18n";
 import useMobileSafari from "../hooks/useMobileSafari";
 import {useEffect,useState,useLayoutEffect,useRef,useId} from 'react';
 import {Link,useLocation} from 'react-router-dom';
@@ -27,7 +28,7 @@ export default function MobileShopNav({preview=false,previewData}){
   return()=>{window.removeEventListener('orora-cart-count',update);window.removeEventListener('storage',sync);};
  },[]);
  const nav=useRef(null),gesture=useRef(null),suppressClick=useRef(0);
- const items=mobileNavItems(s).map(item=>({...item,label:tr(item.label)}));
+ const items=mobileNavItems(s).map(item=>({...item,label:preview?item.label:navigationLabel(item.label,locale)}));
  if(home.navStyles?.cart?.enabled!==false)items.push({id:'cart',icon:'products',to:'/#cart',label:tr(home.navStyles?.cart?.copy?.label||'Giỏ hàng')});
  const [passedTicker,setPassedTicker]=useState(false);
  const gated=!safari&&!preview&&location.pathname==='/'&&s.afterTicker!==false;

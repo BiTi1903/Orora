@@ -852,6 +852,7 @@ function ProductDetail({
             style={css("description")}
           >
             {renderLines(product.description)}
+            {product.shoppingGuide?.trim()&&<><br/>{renderLines(product.shoppingGuide)}</>}
           </p>
 
 
@@ -976,7 +977,7 @@ function ProductDetail({
       {!home.loading && <><ProductCareGuide value={careGuideForProduct(home.productCareGuide, product)} /><ProductFaq value={home.productFaq} product={product} /></>}
       </div>
       <div className="product-side-column">
-        <ProductAssurances policies={home.productPolicies} textProps={textProps} />
+        <ProductAssurances policies={home.productPolicies} shippingSettings={home.shippingSettings} textProps={textProps} />
         <ProductSloganCard home={home} styles={ps} textProps={textProps} cardProps={{ className: selectedClass("pdSloganCard"), "data-builder-key": preview ? "pdSloganCard" : undefined, onClick: preview ? select("pdSloganCard") : undefined }} />
         <RelatedProductsSidebar product={product} preview={preview} previewProducts={previewProducts} styles={ps} selectedElement={selectedElement} onSelect={onSelect} />
       </div>

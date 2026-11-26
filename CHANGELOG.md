@@ -1,3 +1,11 @@
+## 26/11/2026 — Thanh toán, freeship, danh mục và vận hành
+
+- Tạo VietQR ngay trên thiết bị từ mã BIN đã chọn. Admin xem trước bằng cùng bộ tạo mã với khách. Dùng tạm thông tin pháp nhân theo chủ cửa hàng, chỉ hiển thị số liệu thương hiệu có nguồn, Việt hóa các nhãn điều hướng mẫu và bổ sung hướng dẫn chọn sản phẩm.
+- Miễn phí tại khu vực phục vụ khi tạm tính lớn hơn 400.000 đ. Giỏ hàng, checkout, API đơn hàng, cam kết và trang chính sách dùng chung cấu hình. Admin có thể đổi ngưỡng.
+- Phân trang hàng đợi đơn theo trạng thái, quét hết kho theo lô, đo số tài liệu báo cáo và tránh quét những khoảng ngày đã tổng hợp. Danh mục công khai đi qua API; bộ rules mới yêu cầu admin khi đọc trực tiếp collection sản phẩm.
+- Bổ sung workflow backup có thể kích hoạt qua OIDC, diễn tập khôi phục emulator và kiểm tra WebKit iOS trong CI. Không di chuyển dữ liệu production.
+- Kiểm tra cục bộ: 279 unit test đạt; ESLint, build, bundle đạt; 44 ca Chromium về mua hàng/admin và 2 ca QR đạt, 8 ca WebKit iOS đạt. Khôi phục đơn và nhật ký mẫu đạt. Hai ca Storage emulator cho tài khoản admin thành viên bị từ chối, đã tái hiện cả trên main trước thay đổi. Chưa xác minh quyền lưu ảnh, cấu hình ngân hàng, backup và Firestore Rules trên production.
+
 ## 26/11/2026 — Nâng cấp toàn diện A→Z: Storefront, Checkout VietQR, SEO/Bảo mật, Backend Tồn kho/Mã đơn & Admin/Visual Builder
 
 - **Lý do**: Thực hiện toàn bộ các cải tiến và sửa lỗi từ đợt rà soát tổng thể A→Z (giao diện, trải nghiệm mua hàng, SEO, bảo mật, tồn kho/mã đơn, vận hành đơn hàng và Visual Builder).

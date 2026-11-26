@@ -1,3 +1,4 @@
+import {companyLabel,DEFAULT_COMPANY} from "../../lib/company";
 import {footerCopy,FOOTER_LABELS} from "../../lib/footer-copy";
 import {DEFAULT_ABOUT,DEFAULT_TICKER} from "./defaults";
 
@@ -359,7 +360,7 @@ const DEFAULT_FOOTER = {
   footerTikTok: "#",
   footerYouTube: "#",
   footerCopyright: "© 2026 ORORA. Bảo lưu mọi quyền.",
-  footerCompanyNumber: "CTY TNHH ORORA No. 0123456789",
+  footerCompanyNumber: DEFAULT_COMPANY,
   footerStyles: {
     logo: {
       fontFamily: '"Cormorant Garamond", serif',
@@ -673,6 +674,7 @@ function createReviews(data = {}) {
 
 function createFooter(data = {}) {
   data=footerCopy(data);
+  data.footerCompanyNumber=companyLabel(data.footerCompanyNumber);
   const result = { ...DEFAULT_FOOTER };
   for (const key of Object.keys(DEFAULT_FOOTER)) {
     if (key === "footerStyles") continue;

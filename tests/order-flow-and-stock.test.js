@@ -575,3 +575,25 @@ test("bounced subscriber is auto-suppressed and per-recipient rejection does not
 
 
 
+
+test("status queue includes order 101 across successive pages",async()=>{
+ const {db,adminOrdersHandler}=await seedOrderEnv();
+ for(let i=0;i<101;i++)await db.collection("orders").doc(crypto.randomUUID()).set({status:"new",createdAt:new Date(1700000000000+i)});
+ const seen=new Set();let cursor;
+ do{
+  const res=makeRes();await adminOrdersHandler(makeReq({method:"GET",query:{status:"new",...(cursor?{cursor}:{})}}),res);
+  assert.equal(res.statusCode,200);
+  for(const order of res.body.orders){assert.ok(!seen.has(order.id));seen.add(order.id);}
+  cursor=res.body.nextCursor;
+ }while(cursor);
+ assert.equal(seen.size,101);
+});
+
+test("inventory warning includes a low-stock product beyond the first 200 records",async()=>{
+ const {db,inventoryHandler}=await seedOrderEnv();
+ for(let i=0;i<205;i++)await db.collection("inventory").doc("a"+i).set({quantity:100});
+ await db.collection("products").doc("z-last").set({name:"Last",active:true});
+ await db.collection("inventory").doc("z-last").set({quantity:10,reserved:10});
+ const res=makeRes();await inventoryHandler(makeReq({method:"GET",query:{lowStock:"1"}}),res);
+ assert.equal(res.statusCode,200);assert.ok(res.body.items.some(item=>item.id==="z-last"&&item.available===0));
+});

@@ -1,3 +1,4 @@
+import {createCatalogHandler} from './storefront-catalog.js';
 import {createStorefrontStockHandler} from "./storefront-stock.js";
 import {createStorefrontShellHandler} from './storefront-shell.js';
 import {createShareImageHandler} from './share-image.js';
@@ -6,6 +7,7 @@ import {createSitemapHandler} from './sitemap.js';
 // Public read-only routes share one deployed function; each keeps its own headers.
 export function createStorefrontHandler(dependencies) {
  const handlers={
+  catalog:createCatalogHandler(dependencies),
   shell:createStorefrontShellHandler(dependencies),
   stock:createStorefrontStockHandler(dependencies),
   'share-image':createShareImageHandler(dependencies),

@@ -194,32 +194,35 @@ export function createInventoryHandler({ getDb, verifyToken, env = process.env }
         return res.status(200).json({ pending, nextCursor: page.docs.length === 100 ? page.docs.at(-1).id : null });
       }
       if (req.method === "GET" && req.query?.lowStock === "1") {
-        const invSnap = await db.collection("inventory").limit(200).get();
-        const lowDocs = invSnap.docs
-          .map((doc) => {
-            const data = doc.data() || {};
-            if (!validQuantity(data.quantity)) return null;
-            const reserved = Number.isSafeInteger(data.reserved) && data.reserved > 0 ? data.reserved : 0;
-            const available = Math.max(0, data.quantity - reserved);
-            if (available > LOW_STOCK_THRESHOLD) return null;
-            const { productId, variantId } = parseInventoryId(doc.id);
-            return { id: doc.id, productId, variantId, quantity: data.quantity, reserved, available };
-          })
-          .filter(Boolean)
-          .sort((a, b) => a.available - b.available || a.quantity - b.quantity || a.id.localeCompare(b.id))
-          .slice(0, 20);
-        const uniqueProdIds = [...new Set(lowDocs.map((entry) => entry.productId))];
-        const prodRefs = uniqueProdIds.map((id) => db.collection("products").doc(id));
-        const prodDocs = !prodRefs.length ? [] : typeof db.getAll === "function" ? await db.getAll(...prodRefs) : await Promise.all(prodRefs.map((ref) => ref.get()));
-        const prodById = new Map(uniqueProdIds.map((id, i) => [id, prodDocs[i]]));
-        const items = lowDocs.flatMap((entry) => {
-          const prod = prodById.get(entry.productId);
-          if (!prod?.exists) return [];
-          const pData = prod.data();
-          const variant = entry.variantId ? productVolumeOptions(pData).find((v) => v.id === entry.variantId) : null;
-          const name = variant ? `${String(pData.name || "")} (${variant.label})` : String(pData.name || "");
-          return [{ id: entry.id, name, quantity: entry.quantity, ...(entry.reserved > 0 ? { reserved: entry.reserved, available: entry.available } : {}) }];
-        });
+        let cursor = null;
+        let items = [];
+        do {
+          let query = db.collection("inventory").orderBy("__name__").select("quantity","reserved").limit(200);
+          if (cursor) query = query.startAfter(cursor);
+          const page = await query.get();
+          const candidates = page.docs.flatMap(doc => {
+            const {quantity,reserved: rawReserved} = doc.data();
+            if (!validQuantity(quantity)) return [];
+            const reserved = validQuantity(rawReserved) ? rawReserved : 0;
+            const available = Math.max(0, quantity - reserved);
+            return available <= LOW_STOCK_THRESHOLD ? [{id:doc.id,...parseInventoryId(doc.id),quantity,reserved,available}] : [];
+          });
+          const ids = [...new Set(candidates.map(entry=>entry.productId))];
+          const refs = ids.map(id=>db.collection("products").doc(id));
+          const products = refs.length ? (typeof db.getAll==="function" ? await db.getAll(...refs) : await Promise.all(refs.map(ref=>ref.get()))) : [];
+          const byId = new Map(products.filter(doc=>doc.exists).map(doc=>[doc.id,doc.data()]));
+          for (const entry of candidates) {
+            const product = byId.get(entry.productId);
+            if (!product || product.active===false) continue;
+            const variant = entry.variantId && productVolumeOptions(product).find(option=>option.id===entry.variantId);
+            if (entry.variantId && !variant) continue;
+            items.push({...entry,name:variant ? `${product.name} (${variant.label})` : product.name});
+          }
+          items.sort((a,b)=>a.available-b.available || a.quantity-b.quantity || a.id.localeCompare(b.id));
+          items = items.slice(0,20);
+          cursor = page.docs.length===200 ? page.docs.at(-1).id : null;
+        } while (cursor);
+        items=items.map(({id,name,quantity,reserved,available})=>({id,name,quantity,...(reserved?{reserved,available}:{})}));
         return res.status(200).json({ items });
       }
       if (req.method === "GET") {

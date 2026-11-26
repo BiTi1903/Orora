@@ -29,7 +29,7 @@ test('builder previews petals and icon changes and saves only their changed leav
 
 test('custom icons keep real card actions and preserve an icon-only cart when hiding is requested',async({page})=>{
  await mount(page,`import Card from '/src/components/ProductCard.jsx';import {ButtonIconProvider} from '/src/components/ButtonIcon.jsx';${render("R.createElement(ButtonIconProvider,{value:{productView:{kind:'none'},productCart:{kind:'none'}}},R.createElement('section',{className:'collection'},R.createElement(Card,{productId:'sample',name:'Sản phẩm mẫu',price:'100000',slug:'san-pham-mau'})))")}`,{'hooks/useHomeContent.js':'export default function home(){return {loading:false}}'});
- await expect(page.locator('[data-button-icon=productView]')).toHaveCount(0);await expect(page.getByRole('link',{name:'Xem',exact:true})).toHaveAttribute('href','/product/san-pham-mau');await expect(page.locator('[data-button-icon=productCart] svg')).toHaveCount(1);
+ await expect(page.locator('[data-button-icon=productView]')).toHaveCount(0);await expect(page.getByRole('link',{name:'Xem sản phẩm',exact:true})).toHaveAttribute('href','/product/san-pham-mau');await expect(page.locator('[data-button-icon=productCart] svg')).toHaveCount(1);
  await page.evaluate(()=>window.addEventListener('orora-cart-add',e=>window.__cartAdded=e.detail));await page.getByRole('button',{name:'Thêm vào giỏ',exact:true}).click();await expect.poll(()=>page.evaluate(()=>window.__cartAdded?.id)).toBe('sample');await fit(page);
 });
 

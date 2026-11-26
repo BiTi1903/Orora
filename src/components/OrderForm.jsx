@@ -72,7 +72,7 @@ export default function OrderForm({ product, cartItems, home, onClose, selection
   const subtotal = isMulti
     ? (normalizedItems.some((item) => item.unitPrice === null) ? null : normalizedItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0))
     : (unitPrice === null ? null : unitPrice * (Number(quantity) || 0));
-  const shipping = useMemo(() => shippingFeeFor(home.shippingSettings, provinceCode, wardCode), [home.shippingSettings, provinceCode, wardCode]);
+  const shipping = useMemo(() => shippingFeeFor(home.shippingSettings, provinceCode, wardCode,subtotal), [home.shippingSettings, provinceCode, wardCode,subtotal]);
   const shippingProp = useMemo(() => ({ ...shipping, blocked: home.shippingSettings?.enabled === true && shipping.fee === null }), [shipping, home.shippingSettings?.enabled]);
   const total = subtotal === null || shipping.fee === null ? null : subtotal + shipping.fee;
   const locale = useLocale();

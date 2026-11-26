@@ -75,10 +75,7 @@ export function createOrderTrackingHandler({ getDb, env = process.env, now = () 
           documents = (await query.get()).docs;
         } catch (indexError) {
           if (indexError?.code !== 9 && !/index|FAILED_PRECONDITION/i.test(String(indexError?.message || ''))) throw indexError;
-          const allDocs = (await db.collection('orders').where('customer.phone','in',uniqueVariants).get()).docs
-            .sort((a,b) => (timestamp(b.data().createdAt) || 0) - (timestamp(a.data().createdAt) || 0) || a.id.localeCompare(b.id));
-          const startAt = cursorDoc ? allDocs.findIndex(doc => doc.id === cursorDoc.id) + 1 : 0;
-          documents = startAt > 0 ? allDocs.slice(startAt, startAt + 21) : allDocs.slice(0, 21);
+          throw failure(503,'Danh sách đang cập nhật. Vui lòng tra cứu bằng mã đơn hoặc thử lại sau.');
         }
       }
       if (!documents.length && !body.cursor) return res.status(404).json({message:missing});

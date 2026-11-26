@@ -353,8 +353,11 @@ export function Newsletter({
     const form = event.currentTarget;
     const fields = new FormData(form);
     setSubmission({ busy: true, ok: false, message: "" });
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),15000);
     try {
       const response = await fetch("/api/subscribe", {
+        signal:controller.signal,
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: fields.get("email"), consent: fields.get("consent") === "on" }),
@@ -363,8 +366,8 @@ export function Newsletter({
       setSubmission({ busy: false, ok: response.ok, message: result.message || "Chưa thực hiện được. Vui lòng thử lại." });
       if (response.ok) form.reset();
     } catch {
-      setSubmission({ busy: false, ok: false, message: "Chưa kết nối được máy chủ. Vui lòng thử lại sau." });
-    }
+      setSubmission({ busy: false, ok: false, message: "Chưa nhận được phản hồi. Vui lòng thử lại." });
+    } finally {clearTimeout(timeout);}
   };
 
   const select = (key) => (e) => {

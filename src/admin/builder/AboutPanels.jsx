@@ -187,6 +187,7 @@ export function StatTextSettings({ data, onChange, onStyleChange }) {
 export function StatsSettings({ stats, about, onChange }) {
   const list = Array.isArray(stats)
     ? stats.map((item) => ({
+        source: item?.source || "",
         value: item?.value ?? 0,
         suffix: item?.suffix || "",
         label: item?.label || "",
@@ -243,6 +244,8 @@ export function StatsSettings({ stats, about, onChange }) {
         {list.map((item, index) => (
           <div className="builder-stat-edit" key={index}>
             <div className="builder-stat-number">#{index + 1}</div>
+            <label>Nguồn kiểm chứng (HTTPS)<input type="url" value={item.source||""} onChange={event=>patchList(list.map((entry,i)=>i===index?{...entry,source:event.target.value}:entry))}/></label>
+            <p>Website chỉ hiển thị số liệu có liên kết nguồn.</p>
 
             <div className="builder-field-row">
               <div className="builder-field">

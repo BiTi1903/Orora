@@ -1,3 +1,4 @@
+import {companyLabel} from "../lib/company";
 import { Link } from "react-router-dom";
 import {footerCopy} from "../lib/footer-copy";
 import { contactLinks } from "../lib/contact";
@@ -69,7 +70,7 @@ function Footer({
   const copyright =
     data.footerCopyright || "";
   const companyNumber =
-    data.footerCompanyNumber || "";
+    companyLabel(data.footerCompanyNumber);
 
   const select = (key) => (e) => {
     if (!preview || !onSelect) return;

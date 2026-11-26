@@ -5,9 +5,10 @@ import { getHomeContent, saveHomeContent } from "../lib/api";
 import useAddressOptions from "../hooks/useAddressOptions";
 import useDraftGuard from "../hooks/useDraftGuard";
 import { useConfirm } from "./confirm-context";
-import { validShippingFee, shippingPolicy } from "../lib/shipping";
+import { validShippingFee, shippingPolicy, freeShippingThreshold } from "../lib/shipping";
 import { formatVnd } from "../lib/commerce";
 export default function ShippingAdmin() {
+  const [freeFrom,setFreeFrom]=useState("");
   const confirm = useConfirm();
   const [settings, setSettings] = useState({ enabled: false, provinces: {} }); const [enabled, setEnabled] = useState(false); const [provinceCode, setProvinceCode] = useState(""); const [wardCode, setWardCode] = useState(""); const [drafts, setDrafts] = useState({}); const [loading, setLoading] = useState(true); const [failed, setFailed] = useState(false); const [busy, setBusy] = useState(false); const [notice, setNotice] = useState(null);
   const [savingAction,setSavingAction]=useState("");
@@ -33,14 +34,14 @@ export default function ShippingAdmin() {
       setLoading(true); setNotice(null);
       try {
         const home = await getHomeContent();
-        if (alive) { const saved = home?.shippingSettings || { enabled: false, provinces: {} }; setSettings(saved); setEnabled(saved.enabled === true); setDrafts({}); setFailed(false); }
+        if (alive) { const saved = home?.shippingSettings || { enabled: false, provinces: {} }; setSettings(saved);setFreeFrom(String(freeShippingThreshold(saved)??"")); setEnabled(saved.enabled === true); setDrafts({}); setFailed(false); }
       } catch { if (alive) { setFailed(true); setNotice({ error: true, text: "Không tải được cấu hình phí ship. Chưa thể lưu; hãy bấm Tải lại." }); } }
       finally { if (alive) setLoading(false); }
     }
     load();
     return () => { alive = false; };
   }, [version]);
-  const hasUnsavedChanges = enabled !== (settings.enabled === true) || Object.entries(drafts).some(([code, regionDraft]) => {
+  const hasUnsavedChanges = freeFrom!==String(freeShippingThreshold(settings)??"") || enabled !== (settings.enabled === true) || Object.entries(drafts).some(([code, regionDraft]) => {
     const savedRegion = settings.provinces?.[code] || {};
     if (regionDraft.fee !== undefined && regionDraft.fee !== (savedRegion.fee == null ? "" : String(savedRegion.fee))) return true;
     return Object.entries(regionDraft.wardFees || {}).some(([wCode, wVal]) => wVal !== undefined && wVal !== (savedRegion.wardFees?.[wCode] == null ? "" : String(savedRegion.wardFees[wCode])));
@@ -60,9 +61,11 @@ export default function ShippingAdmin() {
   };
   return <section className="shipping-settings"><div className="admin-top"><div><h1>Phí vận chuyển</h1><p className="admin-muted">Địa chỉ hai cấp: tỉnh/thành phố và phường/xã theo dữ liệu mới.</p></div><button type="button" className="admin-btn" disabled={loading || busy} onClick={async () => { if (hasUnsavedChanges && !await confirm("Bạn có thay đổi phí ship chưa lưu. Tải lại và bỏ các thay đổi này?", { title: "Tải lại phí vận chuyển", confirmLabel: "Tải lại", danger: true })) return; setDrafts({}); setVersion((value) => value + 1); }}>Tải lại</button></div>
     {notice && <p role="status" className={notice.error ? "admin-error" : "admin-success"}>{notice.text}</p>}
-    <div aria-busy={busy && savingAction === "enabled"} className="admin-card admin-form"><h2>Tính ship theo địa chỉ</h2><label className="admin-check"><input type="checkbox" role="switch" checked={enabled} disabled={loading || failed || busy} onChange={(event) => setEnabled(event.target.checked)} />Tự tính phí ship khi khách đặt hàng</label><p className="admin-muted">Nhập phí trước khi bật. Địa chỉ chưa có mức phí sẽ chưa nhận đơn khi đang bật tính ship; số 0 là miễn phí.</p><p>Khách sẽ thấy sau khi lưu: {shippingPolicy(enabled)}</p><div><button className="admin-btn" aria-busy={busy && savingAction === "enabled"} disabled={loading || failed || busy} onClick={async () => {
+    <div aria-busy={busy && savingAction === "enabled"} className="admin-card admin-form"><h2>Tính ship theo địa chỉ</h2><label className="admin-check"><input type="checkbox" role="switch" checked={enabled} disabled={loading || failed || busy} onChange={(event) => setEnabled(event.target.checked)} />Tự tính phí ship khi khách đặt hàng</label><p className="admin-muted">Nhập phí trước khi bật. Địa chỉ chưa có mức phí sẽ chưa nhận đơn khi đang bật tính ship; số 0 là miễn phí.</p><label>Miễn phí khi tạm tính lớn hơn (đ)<input type="number" min="1" step="1" disabled={busy||failed||loading} value={freeFrom} onChange={event=>setFreeFrom(event.target.value)} placeholder="Để trống để tắt"/></label><p>Áp dụng trên tạm tính sản phẩm cho địa chỉ có hỗ trợ giao hàng.</p><p>Khách sẽ thấy sau khi lưu: {shippingPolicy(enabled)}</p><div><button className="admin-btn" aria-busy={busy && savingAction === "enabled"} disabled={loading || failed || busy} onClick={async () => {
       if (enabled && !Object.values(settings.provinces || {}).some((item) => validShippingFee(item.fee) || Object.values(item.wardFees || {}).some(validShippingFee))) return setNotice({ error: true, text: "Lưu ít nhất một mức phí trước khi bật tính ship." });
-      if (await save({ enabled }, "Đã lưu trạng thái tính phí ship.","enabled")) setSettings((value) => ({ ...value, enabled }));
+      const threshold=freeFrom===""?null:Number(freeFrom);
+      if(threshold!==null&&(!validShippingFee(threshold)||threshold<=0))return setNotice({error:true,text:"Nhập ngưỡng miễn phí là số nguyên dương."});
+      if (await save({ enabled,freeAbove:threshold }, "Đã lưu trạng thái tính phí ship.","enabled")) setSettings((value) => ({ ...value, enabled,freeAbove:threshold }));
     }}>Lưu trạng thái tính ship</button></div></div>
     <div className="admin-card admin-form"><h2>Phí theo khu vực</h2>
       <AddressSelect label="Tỉnh / Thành phố" value={provinceCode} options={addresses.provinces.map((item) => ({ ...item, meta: validShippingFee(settings.provinces?.[item.code]?.fee) ? formatVnd(settings.provinces[item.code].fee) : "Chưa có phí chung" }))} disabled={loading || failed || busy} loading={addresses.loadingProvinces} placeholder="Tìm và chọn tỉnh/thành" onChange={(code) => { setProvinceCode(code); setWardCode(""); }} />

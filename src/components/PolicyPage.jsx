@@ -1,5 +1,5 @@
 import {DEFAULT_RETURN_POLICY} from "../lib/return-policy";
-import {shippingPolicy} from "../lib/shipping";
+import {shippingPolicy,shippingOffer,policyDescription} from "../lib/shipping";
 import { Link } from "react-router-dom";
 import useHomeContent from "../hooks/useHomeContent";
 import { footerCopy } from "../lib/footer-copy";
@@ -43,7 +43,7 @@ export default function PolicyPage() {
               {items.filter((item) => item.kind !== "returns").map((item, index) => (
                 <li key={item.id || index}>
                   {item.title && <strong>{item.title}: </strong>}
-                  <span>{item.content}</span>
+                  <span>{policyDescription(item,home.shippingSettings)}</span>
                 </li>
               ))}
             </ul>
@@ -66,9 +66,10 @@ export default function PolicyPage() {
           )}
         </section>
 
+        {shippingOffer(home.shippingSettings)&&<p>{shippingOffer(home.shippingSettings)}</p>}
         <section id="bao-mat" className="policy-card" aria-labelledby="policy-privacy">
           <h2 id="policy-privacy">3. Chính sách bảo mật thông tin</h2>
-          <p style={{ whiteSpace: "pre-line" }}>{privacyText}</p>
+          <p style={{ whiteSpace: "pre-line" }}>{privacyText}</p><p>Mã QR chuyển khoản được tạo trên thiết bị từ thông tin tài khoản nhận, số tiền và nội dung thanh toán.</p>
         </section>
 
         <section className="policy-card policy-contact-card" aria-labelledby="policy-contact">

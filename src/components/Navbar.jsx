@@ -1,3 +1,4 @@
+import {navigationLabel} from "../lib/i18n";
 import ButtonIcon from "./ButtonIcon";
 import {mountNavbarCartSlot} from "../lib/navbar-cart-slot";
 import CartButton from "./CartButton";
@@ -316,8 +317,8 @@ function Navbar({
         <div className="nav-links">
           {links.map((item, index) => {
             const entries = submenu(item, index);
-            const link = <Link to={resolveHref(item, index)} className={selectedClass(`navLink:${index}`)} data-builder-key={preview ? `navLink:${index}` : undefined} onClick={select(`navLink:${index}`)} style={toCss(styles.link, { responsive: true })}>{tr(item.label)}</Link>;
-            return entries.length && !preview ? <NavDropdown key={index} label={tr(item.label)} items={entries}>{link}</NavDropdown> : <span key={index}>{link}</span>;
+            const link = <Link to={resolveHref(item, index)} className={selectedClass(`navLink:${index}`)} data-builder-key={preview ? `navLink:${index}` : undefined} onClick={select(`navLink:${index}`)} style={toCss(styles.link, { responsive: true })}>{preview?item.label:navigationLabel(item.label,locale)}</Link>;
+            return entries.length && !preview ? <NavDropdown key={index} label={preview?item.label:navigationLabel(item.label,locale)} items={entries}>{link}</NavDropdown> : <span key={index}>{link}</span>;
           })}
         </div>
 
@@ -360,8 +361,8 @@ function Navbar({
         <nav key={menuOpen ? "open" : "closed"} className="mobile-drawer-links">
           {links.map((item, index) => {
             const entries = submenu(item, index);
-            if (!entries.length) return <Link key={index} to={resolveHref(item, index)} onClick={closeMenu}>{tr(item.label)}</Link>;
-            return <details className="mobile-nav-group" key={index}><summary>{tr(item.label)}<ButtonIcon name="navMobileDropdown" defaultSize={14} allowHidden={false}/></summary><div className="mobile-nav-submenu">{entries.map((entry) => entry.external ? <a key={entry.href} href={entry.href} target="_blank" rel="noreferrer" onClick={closeMenu}>{entry.label}</a> : <Link key={entry.href} to={entry.href} onClick={closeMenu}>{entry.label}</Link>)}</div></details>;
+            if (!entries.length) return <Link key={index} to={resolveHref(item, index)} onClick={closeMenu}>{preview?item.label:navigationLabel(item.label,locale)}</Link>;
+            return <details className="mobile-nav-group" key={index}><summary>{preview?item.label:navigationLabel(item.label,locale)}<ButtonIcon name="navMobileDropdown" defaultSize={14} allowHidden={false}/></summary><div className="mobile-nav-submenu">{entries.map((entry) => entry.external ? <a key={entry.href} href={entry.href} target="_blank" rel="noreferrer" onClick={closeMenu}>{entry.label}</a> : <Link key={entry.href} to={entry.href} onClick={closeMenu}>{entry.label}</Link>)}</div></details>;
           })}
         </nav>
       </aside>

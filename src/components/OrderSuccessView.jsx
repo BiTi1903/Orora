@@ -1,4 +1,5 @@
-import {useState} from 'react';
+import {resolveBank,transferPayload} from '../lib/vietqr';
+import {useState,useEffect} from 'react';
 import {Link} from 'react-router-dom';
 import OrderReceiptActions from './OrderReceiptActions';
 import {PAYMENT_LABELS,formatVnd} from '../lib/commerce';
@@ -31,54 +32,19 @@ const SAMPLE_ORDER={
  },
 };
 
-const VIETQR_BANKS=[
- ['vietcombank','VCB'],['vcb','VCB'],
- ['techcombank','TCB'],['tcb','TCB'],
- ['mbbank','MB'],['mb bank','MB'],['quan doi','MB'],['mb','MB'],
- ['acb','ACB'],['a chau','ACB'],
- ['vpbank','VPB'],['vpb','VPB'],
- ['bidv','BIDV'],['dau tu va phat trien','BIDV'],
- ['vietinbank','ICB'],['ctg','ICB'],['icb','ICB'],['cong thuong','ICB'],
- ['tpbank','TPB'],['tien phong','TPB'],['tpb','TPB'],
- ['sacombank','STB'],['stb','STB'],
- ['vib','VIB'],
- ['hdbank','HDB'],['hdb','HDB'],
- ['ocb','OCB'],['phuong dong','OCB'],
- ['msb','MSB'],['hang hai','MSB'],
- ['shb','SHB'],
- ['eximbank','EIB'],['eib','EIB'],
- ['agribank','VBA'],['vba','VBA'],
- ['lpbank','LPB'],['lienviet','LPB'],['lpb','LPB'],
- ['seabank','SEAB'],['namabank','NAB'],['abbank','ABB'],['bacabank','BAB'],
- ['pvcombank','PVCB'],['cake','CAKE'],['timo','TIMO'],['shinhan','SHBVN'],
- ['hsbc','HSBC'],['uob','UOB'],['woori','WVN'],
-];
-
-function vietQrUrl({bankName,accountNumber,accountName,amount,transferNote}){
- const normalizedBank=String(bankName||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
- const digits=String(accountNumber||'').replace(/[^a-zA-Z0-9]/g,'');
- if(!normalizedBank||digits.length<6)return '';
- const matched=VIETQR_BANKS.find(([needle])=>normalizedBank===needle||normalizedBank.includes(needle));
- if(!matched)return '';
- const params=new URLSearchParams();
- if(Number.isFinite(Number(amount))&&Number(amount)>0)params.set('amount',String(Math.round(Number(amount))));
- if(transferNote)params.set('addInfo',String(transferNote).slice(0,80));
- if(accountName)params.set('accountName',String(accountName).trim().slice(0,80));
- const qs=params.toString();
- return `https://img.vietqr.io/image/${matched[1]}-${encodeURIComponent(digits)}-compact2.png${qs?`?${qs}`:''}`;
-}
-
 export function OrderSuccessContent({order,home={},appearance={},onClose,preview=false,selectedElement,onSelect}){
  const locale=useLocale();
  const tr=val=>(!preview&&locale!=='vi')?translatePhrase(val,locale):val;
  const [copiedKey,setCopiedKey]=useState('');
- const [qrFailed,setQrFailed]=useState(false);
- const copyValue=(key,val)=>{
+ const [qr,setQr]=useState(null);
+ const [copyError,setCopyError]=useState("");
+ const copyValue=async(key,val)=>{
   if(preview||!val)return;
-  navigator.clipboard?.writeText(String(val)).then(()=>{
-   setCopiedKey(key);
+  try {
+   await navigator.clipboard.writeText(String(val));
+   setCopyError("");setCopiedKey(key);
    window.setTimeout(()=>setCopiedKey(cur=>cur===key?'':cur),2200);
-  }).catch(()=>{});
+  } catch {setCopyError("Chưa sao chép được. Hãy chọn nội dung và sao chép thủ công.");}
  };
  const copy={...CHECKOUT_RECEIPT_COPY};
  const text=(key)=>tr(appearance[key]?.trim()||copy[key]);
@@ -99,7 +65,14 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
  const closeStyle=toCss(appearance.receiptCloseStyle,{responsive:true});
  const displayMessage=tr(appearance.receiptMessage?.trim()||order.message||SAMPLE_ORDER.message);
  const transferNote=(appearance.bankTransferNote||copy.bankTransferNote).replace(/\{\{code\}\}/g,order.code);
- const qrUrl=!preview&&!qrFailed?vietQrUrl({bankName:appearance.bankName,accountNumber:appearance.bankAccountNumber,accountName:appearance.bankAccountName,amount:order.totalAmount,transferNote}):'';
+ const bank=resolveBank(appearance.bankCode||appearance.bankName);
+ const payload=(preview||order.paymentMethod==="bank_transfer")?transferPayload(bank,appearance.bankAccountNumber,order.totalAmount,transferNote):"";
+ useEffect(()=>{
+  let active=true;
+  if(payload)import("qrcode").then(({default:encoder})=>encoder.toDataURL(payload,{width:280})).then(url=>{if(active)setQr({payload,url});}).catch(()=>{if(active)setQr(null);});
+  return ()=>{active=false;};
+ },[payload]);
+ const qrUrl=qr?.payload===payload?qr.url:"";
  const mailNote=tr(appearance.receiptEmailNote?.trim()
   ||(order.mailStatus==='accepted'
    ?'Vui lòng kiểm tra email xác nhận và mục thư rác.'
@@ -138,9 +111,11 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
      <h3 style={cardHeadingStyle}>{text('bankHeading')}</h3>
      {appearance.bankName||appearance.bankAccountNumber||appearance.bankAccountName?(
       <>
+       {preview && !payload && <p>Chọn ngân hàng và nhập số tài khoản hợp lệ để xem mã QR mẫu.</p>}
+       {copyError&&<p role="status">{copyError}</p>}
        {qrUrl&&(
         <div className="order-vietqr">
-         <img src={qrUrl} alt="Mã QR chuyển khoản VietQR" loading="lazy" decoding="async" onError={()=>setQrFailed(true)}/>
+         <img src={qrUrl} alt="Mã QR chuyển khoản VietQR" loading="lazy" decoding="async"/>
          <span>Quét mã VietQR bằng app ngân hàng — tự điền số tiền & nội dung</span>
         </div>
        )}

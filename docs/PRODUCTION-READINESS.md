@@ -91,3 +91,13 @@ Dự án có 11 entrypoint serverless trong `api/`, dưới mức tối đa 12 c
 Các rewrite giữ nguyên URL mà website, email và công cụ tìm kiếm đang dùng. Mỗi handler vẫn giữ phương thức HTTP, header cache và xử lý lỗi riêng. Không gộp quyền truy cập API quản trị vào nhóm công khai và không thay đổi database. `tests/vercel-routing.test.js` kiểm tra giới hạn function, rewrite và phản hồi của các route này.
 
 Nếu đang thấy deployment bị chặn do giới hạn function, triển khai commit mới chứa cấu trúc này; Redeploy commit cũ có 13 entrypoint sẽ vẫn bị chặn. Số entrypoint trong mã nguồn đã được kiểm tra; trạng thái Ready của Vercel cần xác nhận trên deployment mới.
+
+### Bản sao lưu quản lý trên Google Cloud
+
+Workflow `firestore-backup.yml` sử dụng Workload Identity Federation để xuất Firestore vào bucket riêng lúc 02:30 giờ Việt Nam. Chủ dự án cấu hình các repository variable `ORORA_BACKUP_PROJECT`, `ORORA_BACKUP_BUCKET` (tên bucket), `ORORA_BACKUP_IDENTITY_PROVIDER` và `ORORA_BACKUP_SERVICE_ACCOUNT`. Tài khoản chạy cần quyền export Firestore và service agent Firestore cần ghi được vào bucket. Giới hạn quyền nhận dạng theo repo và nhánh main, bật chặn truy cập công khai của bucket và chọn thời hạn lưu phù hợp. Khi đã chấp nhận chi phí đọc/lưu trữ và cấu hình đủ, đặt `ORORA_BACKUP_ENABLED=true`, chạy workflow thủ công một lần và kiểm tra kết quả trong bucket. Lịch GitHub Actions có thể chạy muộn.
+
+Diễn tập khôi phục dữ liệu giả trong Firestore emulator có trong `rules-tests/restore-drill.mjs`. Với bản managed export thật, diễn tập import vào **database kiểm thử riêng** và đối chiếu đơn, nhật ký và tồn kho trước khi sử dụng trong quy trình phục hồi.
+
+### Triển khai danh mục công khai
+
+Triển khai API và storefront trước. Kiểm tra `/api/storefront/catalog` trả JSON gồm sản phẩm đang bán, rồi triển khai `firestore.rules` qua project Firebase đã xác nhận. Frontend mới đọc danh mục qua API; giao diện quản trị tiếp tục đọc Firestore bằng tài khoản có quyền. Tài liệu `settings/home` vẫn là nội dung công khai, chỉ lưu nội dung và cấu hình dành cho khách.

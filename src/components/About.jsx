@@ -552,7 +552,7 @@ function About({
 
         <RevealBox preview={preview} delay={240}>
           <div className="about-stats">
-            {(Array.isArray(stats) ? stats : []).map((item, index) => (
+            {(Array.isArray(stats) ? stats : []).filter(item=>preview||/^https:\/\/[^\s]+$/i.test(item?.source||"")).map((item, index) => (
               <div key={index}>
                 <strong
                   className={selectedClass(`statValue:${index}`)}
@@ -590,6 +590,7 @@ function About({
                 >
                   {item?.label}
                 </span>
+                {!preview&&<a href={item.source} target="_blank" rel="noreferrer">Nguồn số liệu</a>}
               </div>
             ))}
           </div>

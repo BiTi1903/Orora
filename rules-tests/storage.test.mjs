@@ -36,3 +36,13 @@ test('normal users cannot self-grant admin; admins can delete existing images wi
  await assertFails(env.authenticatedContext('reader').firestore().doc('adminUsers/reader').set({enabled:true}));
  await assertSucceeds(object('member').delete());
 });
+
+test('catalog documents require admin access; customer orders remain server-only',async()=>{
+ const publicDb=env.unauthenticatedContext().firestore();
+ const admin=env.authenticatedContext('member').firestore();
+ await assertFails(publicDb.collection('products').get());
+ await assertFails(publicDb.doc('orders/example').get());
+ await assertFails(admin.doc('orders/example').get());
+ await assertSucceeds(admin.collection('products').get());
+ await assertSucceeds(publicDb.doc('settings/home').get());
+});

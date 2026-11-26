@@ -232,7 +232,7 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
               secondaryImage={product.image2 || product.images?.[1] || ""}
               number={productNumber(product, products)}
               name={product.name}
-              description={product.description}
+              description={product.shoppingGuide?.trim()||product.description}
               price={product.price}
               slug={productSlug(product, products)}
               styles={cardStyles}

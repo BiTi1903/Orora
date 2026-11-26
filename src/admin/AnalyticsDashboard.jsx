@@ -337,7 +337,7 @@ export default function AnalyticsDashboard() {
           {busy
             ? "Đang tổng hợp thống kê…"
             : data
-              ? `Cập nhật ${new Date(data.updatedAt).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })} · Giờ Việt Nam`
+              ? `Cập nhật ${new Date(data.updatedAt).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })} · Giờ Việt Nam${Number.isInteger(data.documentsRead) ? ` · ${data.documentsRead} tài liệu đã tải` : ""}`
               : "Theo ngày Việt Nam"}
         </p>
         <div className="analytics-controls">
