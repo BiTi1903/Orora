@@ -22,24 +22,18 @@
 .order-tracking-back {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  min-height: 40px;
-  padding: 6px 14px 6px 12px;
-  border: 1px solid var(--tracking-border);
-  border-radius: 999px;
-  background: var(--tracking-card);
+  min-height: 44px;
   color: var(--plum-soft, #6e4e5c);
   font-size: 13px;
   font-weight: 500;
   text-decoration: none;
-  transition: border-color .2s ease, color .2s ease, background-color .2s ease, transform .2s ease;
 }
 
-.order-tracking-back:hover {
-  border-color: var(--tracking-accent);
+.order-tracking-back:hover,
+.order-tracking-back:focus-visible {
   color: var(--tracking-accent);
-  background: var(--tracking-surface);
-  transform: translateX(-2px);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .order-tracking-heading {

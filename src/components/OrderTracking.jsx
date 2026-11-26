@@ -88,7 +88,7 @@ export default function OrderTracking() {
   };
   const switchMode=key=>{if(key===mode)return;request.current?.abort();detailRequest.current?.abort();sequence.current++;setBusy(false);setLoadingCode('');setDetailErrors({});setOrders([]);setNextCursor(null);setSelectedCode(null);setDetailClosing(false);setStatus('all');setPage(1);setError('');setMoreError('');setMode(key);};
   return <section className={`order-tracking-page${orders.length?" has-results":""}`} style={trackingTheme(styles)}>
-  <div className="order-tracking-topbar"><Link className="order-tracking-back" to="/" style={css('help')}><span aria-hidden="true">←</span><span>{copy.backLabel}</span></Link></div>
+  <div className="order-tracking-topbar"><Link className="order-tracking-back" to="/" style={css('help')}>{copy.backLabel}</Link></div>
   <header className="order-tracking-heading"><p className="product-eyebrow" style={css('eyebrow')}>{copy.eyebrow}</p><h1 style={css('title')}>{copy.title}</h1><p style={css('intro')}>{copy.intro}</p></header>
   <OrderTrackingSearch copy={copy} styles={styles} mode={mode} code={code} phone={phone} busy={busy} error={error} onMode={switchMode} onCode={edit(setCode)} onPhone={edit(setPhone)} onSubmit={event=>{event.preventDefault();if(mode==='code'){if(!code.trim()||!phone.trim()){setError('Nhập mã đơn và số điện thoại (hoặc 4 số cuối) để tra cứu.');return;}}else if(!phone.trim()){setError('Nhập số điện thoại để tra cứu.');return;}lookup();}}/>
   {orders.length > 0 && <div ref={result} tabIndex={-1} className="order-tracking-list" style={css("resultBody")}>
