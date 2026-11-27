@@ -1,3 +1,4 @@
+import { orderTrackingMail } from "./order-tracking-mail.js";
 import { PAYMENT_LABELS, formatProductPrice, formatVnd } from "./commerce.js";
 import { orderProductName } from "./product-options.js";
 import { vietQrUrl } from "./vietqr.js";
@@ -29,6 +30,7 @@ function safeOrigin(value) {
 function safeHref(value) {
   if (typeof value !== "string") return "";
   const trimmed = value.trim();
+  if (/^mailto:sales@ororavn\.com\?subject=[A-Za-z0-9%_.!~*'()-]*$/i.test(trimmed)) return trimmed;
   if (!/^https?:\/\//i.test(trimmed)) return "";
   try {
     const parsed = new URL(trimmed);
@@ -364,9 +366,8 @@ export function renderOrderEmailHtml({
   trackingEnabled = true,
 } = {}) {
   const origin = safeOrigin(siteOrigin);
-  const resolvedTrackingUrl = trackingUrl || (order?.code
-    ? `${origin}/tra-cuu-don-hang?code=${encodeURIComponent(order.code)}`
-    : `${origin}/tra-cuu-don-hang`);
+  const tracking = orderTrackingMail(origin, order?.code, trackingEnabled);
+  const resolvedTrackingUrl = trackingUrl || tracking.url;
   const items = normalizeOrderItems(order);
   const isPaid = order?.paymentStatus === "paid";
   const paymentBadgeBg = isPaid ? "#eef8f2" : "#fff6ea";
@@ -473,7 +474,7 @@ export function renderOrderEmailHtml({
 
     <!-- Tracking CTA -->
     ${renderButton(trackingEnabled ? "Tra cứu trạng thái đơn hàng" : "Liên hệ ORORA", resolvedTrackingUrl)}
-    <p style="margin:6px 0 0 0;text-align:center;font-family:${FONT_SANS};font-size:12px;color:#846b77;">Nhập 4 số cuối số điện thoại đặt hàng để xem tiến trình chi tiết.</p>
+    <p style="margin:6px 0 0 0;text-align:center;font-family:${FONT_SANS};font-size:12px;color:#846b77;">${tracking.hint}</p>
   `;
 
   return renderEmailShell({

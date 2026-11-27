@@ -204,7 +204,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
   const foldText = (v) => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
   const foldPhone = (v) => String(v || "").replace(/\D+/g, "").replace(/^84/, "0");
   const foldedQuery = foldText(query);
-  const digitQuery = foldPhone(query);
+  const digitQuery = /^\+?[\d\s().-]+$/.test(query.trim()) ? foldPhone(query) : "";
   const filteredOrders = filterOrderDetails(orders.filter((order) => {
     if (!matchesMail(order) || (statusFilter !== "all" && order.status !== statusFilter)) return false;
     if (customerEmail && String(order.customer.email || "").trim().toLowerCase() !== customerEmail) return false;

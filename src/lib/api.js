@@ -8,7 +8,7 @@ import {
   getDocs,
   setDoc,
   runTransaction,
-  updateDoc,
+  query, where, increment,
 } from "firebase/firestore";
 
 import { db } from "./firebase";
@@ -63,6 +63,17 @@ export async function getProduct(identifier) {
 // tên khác của getProduct, để các file gọi bằng tên nào cũng chạy
 export const getProductBySlug = getProduct;
 
+async function checkCategoryAssignment(transaction, categoryId) {
+  if (!categoryId) return;
+  const ref = doc(db, "settings", "productCategories");
+  const snapshot = await transaction.get(ref);
+  if (!snapshot.data()?.items?.some(item => item.id === categoryId)) {
+    throw new Error("Danh mục đã bị xóa. Hãy chọn lại danh mục.");
+  }
+  // Serialize assignments with deletion, including products added after its query.
+  transaction.set(ref, { assignmentVersion: increment(1) }, { merge: true });
+}
+
 export async function saveProduct(product, { create = false } = {}) {
   needDb();
   if (create) {
@@ -76,6 +87,7 @@ export async function saveProduct(product, { create = false } = {}) {
       if ((await transaction.get(target)).exists()) throw new Error("Mã sản phẩm vừa được dùng. Tải lại danh sách rồi thử lại.");
       const record = { ...product, id, number: id.padStart(2, "0") };
       record.slug = productSlug(record, catalog);
+      await checkCategoryAssignment(transaction, product.categoryId);
       transaction.set(target, record);
       transaction.set(counter, { lastNumber: number }, { merge: true });
       return id;
@@ -86,7 +98,10 @@ export async function saveProduct(product, { create = false } = {}) {
   }
   const id = product.id;
   if (!id) throw new Error("Sản phẩm cần có mã dữ liệu.");
-  await setDoc(doc(db, "products", id), { ...product, id }, { merge: true });
+  await runTransaction(db, async transaction => {
+    await checkCategoryAssignment(transaction, product.categoryId);
+    transaction.set(doc(db, "products", id), { ...product, id }, { merge: true });
+  });
   productsRead.invalidate();
   productCatalogCache = null;
   return id;
@@ -143,21 +158,42 @@ export async function saveCategory({ id, name }) {
   return categoryId;
 }
 
-export async function deleteCategory(id) {
+function categoryProducts(id) {
+  return getDocs(query(collection(db, "products"), where("categoryId", "==", id)));
+}
+
+export async function categoryProductCount(id) {
+  needDb();
+  return (await categoryProducts(id)).size;
+}
+
+export async function deleteCategory(id, expectedCount) {
   needDb();
   if (!id || typeof id !== "string") throw new Error("Danh mục không hợp lệ.");
   await runTransaction(db, async (transaction) => {
     const ref = doc(db, "settings", "productCategories");
     const snapshot = await transaction.get(ref);
     const items = snapshot.data()?.items || [];
+    const products = await categoryProducts(id);
+    if (products.size !== expectedCount) throw new Error("Số sản phẩm vừa thay đổi. Vui lòng xác nhận lại.");
+    if (products.size > 499) throw new Error("Hãy chuyển bớt sản phẩm sang danh mục khác trước khi xóa.");
+    const snapshots = await Promise.all(products.docs.map(product => transaction.get(product.ref)));
+    for (const product of snapshots) {
+      if (product.data()?.categoryId === id) transaction.update(product.ref, { categoryId: "" });
+    }
     transaction.set(ref, { items: items.filter((item) => item.id !== id) }, { merge: true });
   });
+  productsRead.invalidate();
+  productCatalogCache = null;
 }
 
 export async function setProductCategory(id, categoryId) {
   needDb();
   if (!id || typeof categoryId !== "string") throw new Error("Danh mục không hợp lệ.");
-  await updateDoc(doc(db, "products", id), { categoryId });
+  await runTransaction(db, async transaction => {
+    await checkCategoryAssignment(transaction, categoryId);
+    transaction.update(doc(db, "products", id), { categoryId });
+  });
   productsRead.invalidate();
   productCatalogCache = null;
 }

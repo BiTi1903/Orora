@@ -19,6 +19,7 @@ export const ORDER_TOKENS = [
   "createdAt",
   "paymentStatus",
   "trackingUrl",
+  "trackingInstructions",
   "trackingCode",
 ];
 const ORDER_TOKEN_PATTERN = new RegExp(`\\{\\{(?:${ORDER_TOKENS.join("|")})\\}\\}`);

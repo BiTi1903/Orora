@@ -1,3 +1,4 @@
+import { orderTrackingMail, trackingTemplate } from "../lib/order-tracking-mail.js";
 import { useConfirm } from "./confirm-context";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { auth } from "../lib/firebaseAuth";
@@ -5,6 +6,7 @@ import { PAYMENT_LABELS, formatProductPrice, formatVnd } from "../lib/commerce";
 import { orderProductName } from "../lib/product-options";
 import { effectiveMailState } from "../lib/mail-state";
 import { renderBrandedEmailHtml, renderOrderEmailHtml, renderWelcomeEmailHtml } from "../lib/mail-html";
+import { sectionIsEnabled } from "../lib/page-sections";
 import * as api from "../lib/api";
 import { orderRequest, MAIL_STATES } from "./order-api";
 
@@ -15,7 +17,7 @@ const STANDARD_WELCOME_DRAFT = {
 
 const STANDARD_ORDER_DRAFT = {
   subject: "ORORA xác nhận đã tiếp nhận đơn hàng {{orderCode}}",
-  text: "Chào {{customerName}},\n\nCảm ơn bạn đã tin chọn ORORA. Đơn hàng {{orderCode}} của bạn đã được hệ thống tiếp nhận thành công.\n\nTHÔNG TIN ĐƠN HÀNG\n- Sản phẩm: {{productName}}\n- Số lượng: {{quantity}}\n- Tạm tính: {{subtotal}}\n- Phí giao hàng: {{shippingFee}}\n- Tổng thanh toán dự kiến: {{totalAmount}}\n- Thanh toán: {{paymentMethod}} ({{paymentStatus}})\n- Người nhận: {{customerName}} · {{phone}}\n- Địa chỉ giao hàng: {{address}}\n\nTra cứu trạng thái đơn hàng: {{trackingUrl}}\n(Nhập 4 số cuối số điện thoại đặt hàng để xem tiến trình chi tiết)\n\nBƯỚC TIẾP THEO\n- Đội ngũ ORORA sẽ liên hệ xác nhận đơn hàng, phí giao hàng và thời gian giao dự kiến.\n- Email này xác nhận đã tiếp nhận yêu cầu đặt hàng, chưa xác nhận thanh toán.\n- Nếu cần điều chỉnh thông tin hoặc hỗ trợ nhanh, bạn chỉ cần trả lời trực tiếp email này kèm mã đơn {{orderCode}}.\n\nTrân trọng,\nORORA Vietnam\nsales@ororavn.com",
+  text: "Chào {{customerName}},\n\nCảm ơn bạn đã tin chọn ORORA. Đơn hàng {{orderCode}} của bạn đã được hệ thống tiếp nhận thành công.\n\nTHÔNG TIN ĐƠN HÀNG\n- Sản phẩm: {{productName}}\n- Số lượng: {{quantity}}\n- Tạm tính: {{subtotal}}\n- Phí giao hàng: {{shippingFee}}\n- Tổng thanh toán dự kiến: {{totalAmount}}\n- Thanh toán: {{paymentMethod}} ({{paymentStatus}})\n- Người nhận: {{customerName}} · {{phone}}\n- Địa chỉ giao hàng: {{address}}\n\n{{trackingInstructions}}\n\nBƯỚC TIẾP THEO\n- Đội ngũ ORORA sẽ liên hệ xác nhận đơn hàng, phí giao hàng và thời gian giao dự kiến.\n- Email này xác nhận đã tiếp nhận yêu cầu đặt hàng, chưa xác nhận thanh toán.\n- Nếu cần điều chỉnh thông tin hoặc hỗ trợ nhanh, bạn chỉ cần trả lời trực tiếp email này kèm mã đơn {{orderCode}}.\n\nTrân trọng,\nORORA Vietnam\nsales@ororavn.com",
 };
 
 const SAMPLE_PREVIEW_ORDER = {
@@ -55,11 +57,12 @@ const ORDER_QUICK_TOKENS = [
   ["{{email}}", "Email"],
   ["{{note}}", "Ghi chú"],
   ["{{createdAt}}", "Ngày đặt"],
+  ["{{trackingInstructions}}", "Hướng dẫn theo trạng thái tra cứu"],
   ["{{trackingUrl}}", "Link tra cứu"],
   ["{{trackingCode}}", "Mã vận đơn"],
 ];
 
-function previewOrderVariables(text, order) {
+function previewOrderVariables(text, order, tracking) {
   if (!text) return "";
   const multiProductSummary = Array.isArray(order?.items) && order.items.length > 1
     ? order.items.map((item) => `${orderProductName(item)} × ${item.quantity}`).join("; ")
@@ -91,7 +94,8 @@ function previewOrderVariables(text, order) {
     "{{email}}": order?.customer?.email || "khachhang@example.com",
     "{{note}}": order?.customer?.note || "Không có",
     "{{createdAt}}": createdAtFormatted,
-    "{{trackingUrl}}": `${typeof window !== "undefined" ? window.location.origin : "https://ororavn.com"}/tra-cuu-don-hang?code=${encodeURIComponent(order?.code || "OW_1024C")}`,
+    "{{trackingUrl}}": tracking.url,
+    "{{trackingInstructions}}": tracking.instructions,
     "{{trackingCode}}": order?.trackingCode || "",
   };
   return Object.entries(map).reduce((acc, [token, val]) => acc.replaceAll(token, val), text);
@@ -122,18 +126,22 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
   const mailState = effectiveMailState(selectedOrder?.confirmationMail, checkedAt);
   const recovering = mailState === "stuck";
 
-  const [bankInfo, setBankInfo] = useState(null);
+  const [mailHome, setMailHome] = useState(null);
+  const bankInfo = mailHome?.productDetailStyles?.purchaseOptions;
+  const [previewTracking, setPreviewTracking] = useState("current");
+  const trackingEnabled = previewTracking === "current" ? sectionIsEnabled(mailHome, "ordertracking") : previewTracking === "on";
+  const tracking = orderTrackingMail(globalThis.location?.origin || "https://ororavn.com", selectedOrder?.code || "OW_1024C", trackingEnabled);
   useEffect(() => {
     if (mode !== "order_auto" || typeof api.getHomeContent !== "function") return;
     let alive = true;
     api.getHomeContent().then((home) => {
-      if (alive) setBankInfo(home?.productDetailStyles?.purchaseOptions || null);
+      if (alive) setMailHome(home);
     }).catch(() => {});
     return () => { alive = false; };
   }, [mode]);
 
-  const previewSubject = mode === "order_auto" ? previewOrderVariables(value.subject, selectedOrder) : value.subject;
-  const previewText = mode === "order_auto" ? previewOrderVariables(value.text, selectedOrder) : value.text;
+  const previewSubject = mode === "order_auto" ? previewOrderVariables(value.subject, selectedOrder, tracking) : value.subject;
+  const previewText = mode === "order_auto" ? previewOrderVariables(trackingTemplate(value.text, trackingEnabled), selectedOrder, tracking) : value.text;
   const previewHtml = useMemo(() => {
     const siteOrigin = typeof window !== "undefined" ? window.location.origin : "https://ororavn.com";
     if (mode === "order_auto") {
@@ -142,7 +150,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
         text: previewText,
         order: selectedOrder || SAMPLE_PREVIEW_ORDER,
         siteOrigin,
-        bankInfo,
+        bankInfo, trackingEnabled, trackingUrl: tracking.url,
       });
     }
     if (mode === "welcome_auto") {
@@ -159,7 +167,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
       unsubscribeUrl: `${siteOrigin}/api/unsubscribe?id=preview&token=preview`,
       siteOrigin,
     });
-  }, [mode, previewSubject, previewText, selectedOrder, bankInfo]);
+  }, [mode, previewSubject, previewText, selectedOrder, bankInfo, trackingEnabled, tracking.url]);
 
   useEffect(() => {
     if (!canSendOrder || selectedOrder?.confirmationMail?.state !== "sending") return;
@@ -223,6 +231,13 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
           </div>}
           <details className="admin-filter-panel" open>
             <summary>Xem trước email chuẩn gửi khách{mode === "order_auto" ? (selectedOrder ? ` (${selectedOrder.code})` : " (dữ liệu minh họa)") : ""}</summary>
+            {mode === "order_auto" && <label>Tra cứu đơn trong bản xem trước
+              <select value={previewTracking} onChange={event => setPreviewTracking(event.target.value)}>
+                <option value="current">Theo cấu hình cửa hàng</option>
+                <option value="on">Bật tra cứu</option>
+                <option value="off">Tắt tra cứu</option>
+              </select>
+            </label>}
             <div className="mail-preview-toolbar">
               <button type="button" className={`admin-btn${previewMode === "desktop" ? " primary" : ""}`} onClick={() => setPreviewMode("desktop")}>HTML · Máy tính</button>
               <button type="button" className={`admin-btn${previewMode === "mobile" ? " primary" : ""}`} onClick={() => setPreviewMode("mobile")}>HTML · Điện thoại</button>

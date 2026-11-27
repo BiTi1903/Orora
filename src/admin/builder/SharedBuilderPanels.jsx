@@ -573,11 +573,12 @@ export function CategoriesBuilderPanel() {
                   aria-label={`Xóa danh mục ${cat.name}`}
                   disabled={busy}
                   onClick={async () => {
-                    if (!window.confirm(`Xóa danh mục "${cat.name}"? Sản phẩm thuộc danh mục này vẫn được giữ.`)) return;
                     setBusy(true);
                     setNotice(null);
                     try {
-                      await api.deleteCategory(cat.id);
+                      const count = await api.categoryProductCount(cat.id);
+                      if (!window.confirm(`Xóa danh mục "${cat.name}" và chuyển ${count} sản phẩm sang Chưa phân loại?`)) return;
+                      await api.deleteCategory(cat.id, count);
                       if (editId === cat.id) { setEditId(""); setName(""); }
                       setNotice({ text: `Đã xóa danh mục "${cat.name}".` });
                     } catch (cause) {

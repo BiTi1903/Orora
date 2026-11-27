@@ -1,3 +1,10 @@
+## 27/11/2026 — Tìm đơn, xóa danh mục và thư xác nhận
+
+- Sửa lỗi tìm mã đơn khớp nhầm số điện thoại trong OrdersAdmin.
+- Visual Builder hiển thị số sản phẩm trước khi xóa danh mục và đưa chúng về Chưa phân loại trong cùng giao dịch. Việc gán danh mục cập nhật assignmentVersion trên settings/productCategories để phát hiện cập nhật đồng thời. Danh mục trên 499 sản phẩm cần chuyển bớt trước khi xóa.
+- Thư xác nhận dùng chung hướng dẫn với bản xem trước. Khi tắt tra cứu, liên kết mở email hỗ trợ với mã đơn trong tiêu đề. MailWriter cho thử cả hai trạng thái.
+- Đã chạy lint, 289 kiểm thử và build thành công. Chưa gửi email hoặc thao tác trên Firestore thật.
+
 ## 27/11/2026 — Khắc phục toàn bộ lỗi Mức độ Cao & Trung bình sau rà soát toàn diện (Backend, Visual Builder, Admin & Storefront)
 
 - **Lý do**: Thực hiện khắc phục toàn bộ các vấn đề mức độ Cao (H1–H6) và Trung bình (M1–M6) phát hiện trong đợt `/review` tổng thể trên nhánh `main` (`7f64a48`).

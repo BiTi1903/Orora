@@ -1,3 +1,4 @@
+import { orderTrackingMail, trackingTemplate } from "../src/lib/order-tracking-mail.js";
 import { sectionIsEnabled } from "../src/lib/page-sections.js";
 import { orderProductName } from "../src/lib/product-options.js";
 import { describeMailError } from "./mail-error.js";
@@ -11,7 +12,7 @@ import { renderOrderEmailHtml } from "../src/lib/mail-html.js";
 export { ORDER_TOKENS };
 export const DEFAULT_ORDER_MESSAGE = {
   subject: "ORORA xác nhận đã tiếp nhận đơn hàng {{orderCode}}",
-  text: "Chào {{customerName}},\n\nCảm ơn bạn đã tin chọn ORORA. Đơn hàng {{orderCode}} của bạn đã được hệ thống tiếp nhận thành công.\n\nTHÔNG TIN ĐƠN HÀNG\n- Sản phẩm: {{productName}}\n- Số lượng: {{quantity}}\n- Tạm tính: {{subtotal}}\n- Phí giao hàng: {{shippingFee}}\n- Tổng thanh toán dự kiến: {{totalAmount}}\n- Thanh toán: {{paymentMethod}} ({{paymentStatus}})\n- Người nhận: {{customerName}} · {{phone}}\n- Địa chỉ giao hàng: {{address}}\n\nTra cứu trạng thái đơn hàng: {{trackingUrl}}\n(Nhập 4 số cuối số điện thoại đặt hàng để xem tiến trình chi tiết)\n\nBƯỚC TIẾP THEO\n- Đội ngũ ORORA sẽ liên hệ xác nhận đơn hàng, phí giao hàng và thời gian giao dự kiến.\n- Email này xác nhận đã tiếp nhận yêu cầu đặt hàng, chưa xác nhận thanh toán.\n- Nếu cần điều chỉnh thông tin hoặc hỗ trợ nhanh, bạn chỉ cần trả lời trực tiếp email này kèm mã đơn {{orderCode}}.\n\nTrân trọng,\nORORA Vietnam\nsales@ororavn.com",
+  text: "Chào {{customerName}},\n\nCảm ơn bạn đã tin chọn ORORA. Đơn hàng {{orderCode}} của bạn đã được hệ thống tiếp nhận thành công.\n\nTHÔNG TIN ĐƠN HÀNG\n- Sản phẩm: {{productName}}\n- Số lượng: {{quantity}}\n- Tạm tính: {{subtotal}}\n- Phí giao hàng: {{shippingFee}}\n- Tổng thanh toán dự kiến: {{totalAmount}}\n- Thanh toán: {{paymentMethod}} ({{paymentStatus}})\n- Người nhận: {{customerName}} · {{phone}}\n- Địa chỉ giao hàng: {{address}}\n\n{{trackingInstructions}}\n\nBƯỚC TIẾP THEO\n- Đội ngũ ORORA sẽ liên hệ xác nhận đơn hàng, phí giao hàng và thời gian giao dự kiến.\n- Email này xác nhận đã tiếp nhận yêu cầu đặt hàng, chưa xác nhận thanh toán.\n- Nếu cần điều chỉnh thông tin hoặc hỗ trợ nhanh, bạn chỉ cần trả lời trực tiếp email này kèm mã đơn {{orderCode}}.\n\nTrân trọng,\nORORA Vietnam\nsales@ororavn.com",
 };
 export const validOrderEmail = (value) => typeof value === "string" && value.length <= 254 && /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/.test(value);
 export function validateOrderTemplate(value) {
@@ -28,15 +29,11 @@ export function renderOrderMessage(template, order, env = process.env, { bankInf
   const totalFormatted = order.totalAmount == null ? "ORORA sẽ xác nhận" : formatVnd(order.totalAmount);
   let origin = "https://ororavn.com";
   try { if (env?.NEWSLETTER_SITE_ORIGIN) origin = new URL(env.NEWSLETTER_SITE_ORIGIN).origin; } catch { /* fallback to default */ }
-  const trackingUrl = !trackingEnabled ? `${origin}/#contact` : order.code
-    ? `${origin}/tra-cuu-don-hang?code=${encodeURIComponent(order.code)}`
-    : `${origin}/tra-cuu-don-hang`;
-  const values = { customerName: order.customer.name, orderCode: order.code, productName: multiProductSummary, variantLabel: order.product.variantLabel || "", quantity: order.quantity, subtotal: order.subtotal == null ? "ORORA sẽ báo giá" : formatVnd(order.subtotal), unitPrice: order.product.unitPrice == null ? formatProductPrice(order.product.priceText) || "ORORA sẽ báo giá" : formatVnd(order.product.unitPrice), shippingFee: order.shippingFee == null ? "ORORA sẽ xác nhận" : formatVnd(order.shippingFee), totalAmount: totalFormatted, total: totalFormatted, paymentMethod: PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod, paymentStatus: order.paymentStatus === "paid" ? "Đã thanh toán" : "Chưa thanh toán", address: order.customer.address, phone: order.customer.phone, email: order.customer.email, note: order.customer.note || "Không có", createdAt: orderedDate && Number.isFinite(orderedDate.getTime()) ? orderedDate.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "Chưa lưu ngày đặt", trackingUrl, trackingCode: order.trackingCode || "" };
+  const tracking = orderTrackingMail(origin, order.code, trackingEnabled);
+  const trackingUrl = tracking.url;
+  const values = { customerName: order.customer.name, orderCode: order.code, productName: multiProductSummary, variantLabel: order.product.variantLabel || "", quantity: order.quantity, subtotal: order.subtotal == null ? "ORORA sẽ báo giá" : formatVnd(order.subtotal), unitPrice: order.product.unitPrice == null ? formatProductPrice(order.product.priceText) || "ORORA sẽ báo giá" : formatVnd(order.product.unitPrice), shippingFee: order.shippingFee == null ? "ORORA sẽ xác nhận" : formatVnd(order.shippingFee), totalAmount: totalFormatted, total: totalFormatted, paymentMethod: PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod, paymentStatus: order.paymentStatus === "paid" ? "Đã thanh toán" : "Chưa thanh toán", address: order.customer.address, phone: order.customer.phone, email: order.customer.email, note: order.customer.note || "Không có", createdAt: orderedDate && Number.isFinite(orderedDate.getTime()) ? orderedDate.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "Chưa lưu ngày đặt", trackingInstructions: tracking.instructions, trackingUrl, trackingCode: order.trackingCode || "" };
   const fill = (text, subject = false) => text.replace(/\{\{(\w+)\}\}/g, (_, key) => subject ? String(values[key] ?? "").replace(/[\r\n]/g, " ") : String(values[key] ?? ""));
-  const text = trackingEnabled ? template.text : template.text.replace(
-    "Tra cứu trạng thái đơn hàng: {{trackingUrl}}\n(Nhập 4 số cuối số điện thoại đặt hàng để xem tiến trình chi tiết)",
-    "Liên hệ ORORA để kiểm tra tình trạng đơn: {{trackingUrl}}",
-  );
+  const text = trackingTemplate(template.text, trackingEnabled);
   const validated = validateMessage({ subject: fill(template.subject, true), text: fill(text) });
   const html = renderOrderEmailHtml({
     subject: validated.subject,

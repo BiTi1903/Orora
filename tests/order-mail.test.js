@@ -211,5 +211,14 @@ test("confirmation offers support when storefront tracking is disabled", async (
   await sendOrderConfirmation({db,orderId,env,sendMail:async (_,message)=>{delivered=message;}});
   assert.match(delivered.text,/Liên hệ ORORA để kiểm tra tình trạng đơn/);
   assert.match(delivered.html,/Liên hệ ORORA/);
-  assert.doesNotMatch(delivered.html,/\/tra-cuu-don-hang/);
+  assert.match(delivered.html,/href="mailto:sales@ororavn\.com\?subject=[^"]*OR-TEST"/);
+  assert.doesNotMatch(delivered.html,/\/tra-cuu-don-hang|Nhập 4 số cuối/);
+});
+
+test("custom tracking copy keeps the order code and surrounding text when disabled", () => {
+  const template = { subject: "Đơn {{orderCode}}", text: "Đơn {{orderCode}}. Tra cứu tại đây: {{trackingUrl}}\nCảm ơn bạn." };
+  const message = renderOrderMessage(template, record(), env, { trackingEnabled: false });
+  assert.match(message.text, /Đơn OR-TEST\. Liên hệ ORORA/);
+  assert.match(message.text, /Cảm ơn bạn\./);
+  assert.doesNotMatch(message.text, /Tra cứu tại đây|4 số cuối/);
 });
