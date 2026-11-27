@@ -1673,21 +1673,21 @@
   width: min(94vw, 980px);
   max-height: 92dvh;
 }
-.product-lightbox-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
+.product-lightbox .orora-modal-heading h2 {
+  position: absolute;
+  clip-path: inset(50%);
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
 }
-.product-lightbox-tools,
+.product-lightbox .orora-modal-heading {
+  justify-content: flex-end;
+}
 .product-lightbox-nav-group {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
-.product-lightbox-tools button,
 .product-lightbox-nav-group button {
   min-width: 38px;
   min-height: 38px;
@@ -1700,20 +1700,9 @@
   cursor: pointer;
   transition: border-color .15s ease, background .15s ease;
 }
-.product-lightbox-tools button:hover:not(:disabled),
 .product-lightbox-nav-group button:hover:not(:disabled) {
   border-color: var(--rose-deep);
   color: var(--rose-deep);
-}
-.product-lightbox-tools button:disabled {
-  opacity: .42;
-  cursor: not-allowed;
-}
-.product-lightbox-counter {
-  font: 500 13px/1 var(--font-body);
-  color: var(--plum-soft);
-  padding: 0 6px;
-  font-variant-numeric: tabular-nums;
 }
 .product-lightbox-view {
   position: relative;
@@ -1746,13 +1735,6 @@
 .product-lightbox-view[data-zoomed="true"] img {
   max-height: none;
 }
-.product-lightbox-hint {
-  margin: 10px 0 0;
-  text-align: center;
-  font-size: 12.5px;
-  color: var(--plum-soft);
-}
-
 /* Compact policy trust strip under buy actions */
 .product-trust-strip {
   display: flex;

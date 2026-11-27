@@ -98,32 +98,24 @@ export default function ProductImageLightbox({ src, images, initialIndex = 0, na
 
   return (
     <ModalDialog title={name} onClose={onClose} className="product-lightbox">
-      <div className="product-lightbox-bar">
-        <div className="product-lightbox-tools" aria-label="Điều khiển phóng to">
-          <button type="button" aria-label="Thu nhỏ" disabled={zoom <= 1} onClick={() => changeZoom(zoom - 0.5)}>
-            −
-          </button>
-          <button type="button" className="product-lightbox-zoom-level" disabled={zoom === 1} onClick={() => setZoom(1)}>
-            {Math.round(zoom * 100)}%
-          </button>
-          <button type="button" aria-label="Phóng to" disabled={zoom >= 4} onClick={() => changeZoom(zoom + 0.5)}>
-            +
-          </button>
+      {hasMultiple && (
+        <div className="product-lightbox-nav-group">
+          <button type="button" aria-label="Ảnh trước" onClick={() => stepImage(-1)}>‹</button>
+          <button type="button" aria-label="Ảnh sau" onClick={() => stepImage(1)}>›</button>
         </div>
-        {hasMultiple && (
-          <div className="product-lightbox-nav-group">
-            <button type="button" aria-label="Ảnh trước" onClick={() => stepImage(-1)}>‹</button>
-            <span className="product-lightbox-counter">{index + 1} / {gallery.length}</span>
-            <button type="button" aria-label="Ảnh sau" onClick={() => stepImage(1)}>›</button>
-          </div>
-        )}
-      </div>
+      )}
       <div
         ref={viewRef}
         className="product-lightbox-view"
         tabIndex={0}
-        role="region"
-        aria-label="Ảnh sản phẩm phóng to"
+        role="button"
+        onKeyDown={event => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            changeZoom(zoom > 1 ? 1 : 2);
+          }
+        }}
+        aria-label={zoom > 1 ? "Thu nhỏ ảnh" : "Phóng to ảnh"}
         data-zoomed={zoom > 1}
         onPointerDown={(event) => {
           if (event.pointerType !== "touch" && event.button !== 0) return;
@@ -166,9 +158,6 @@ export default function ProductImageLightbox({ src, images, initialIndex = 0, na
           style={{ width: fitWidth ? fitWidth * zoom : "100%" }}
         />
       </div>
-      <p className="product-lightbox-hint">
-        {zoom > 1 ? "Kéo để xem chi tiết · Chạm ảnh để thu về 100%" : `Chạm ảnh để phóng to${hasMultiple ? " · Vuốt hoặc dùng phím ← → đổi ảnh" : ""}`}
-      </p>
     </ModalDialog>
   );
 }

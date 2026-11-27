@@ -1,3 +1,8 @@
+## 27/11/2026 — Tối giản trình xem ảnh sản phẩm
+
+- Bỏ tiêu đề hiển thị, số thứ tự, thanh zoom và hướng dẫn trong ProductImageLightbox. Chạm trực tiếp để đổi mức thu phóng.
+- Playwright kiểm tra ảnh tăng gấp đôi và đóng bằng Escape ở bốn chiều rộng, cả bốn lượt đạt. Không thay đổi database.
+
 ## 27/11/2026 — Sửa thao tác phóng to ảnh sản phẩm
 
 - Ảnh vừa khung theo cả chiều rộng và chiều cao. Khi phóng to, trình xem giữ điểm đang chạm và cho kéo để xem chi tiết.
