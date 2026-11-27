@@ -1,3 +1,8 @@
+## 27/11/2026 — Xem lớn ảnh trong nội dung chi tiết sản phẩm
+
+- Mở ảnh của các khối nội dung bằng trình xem ảnh sản phẩm hiện có. Dùng tên mô tả của ảnh cho nút mở và hộp thoại. Visual Builder giữ thao tác chọn khối để chỉnh sửa.
+- Kiểm tra mở ảnh, phóng to, đóng bằng Escape và trả focus về ảnh. 16 lượt Playwright trên bốn chiều rộng đạt, lint các tệp sửa và build thành công. Không thay đổi database.
+
 ## 27/11/2026 — Khắc phục lỗi Chromium và kiểm tra lại WebKit
 
 - Visual Builder cho phép chọn phần tử trong liên kết preview và mở bảng chỉnh trên màn hình nhỏ. Khôi phục viền focus của ô chat, lề giỏ hàng, cỡ chữ ô số lượng và thu gọn thanh mua nhanh ở 320 px.

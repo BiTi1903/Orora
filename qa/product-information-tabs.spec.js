@@ -144,6 +144,16 @@ test('block and caption switches, skeleton shimmer, and Visual Builder frame/mot
   releaseImage();
   await expect(firstImage).toHaveAttribute('data-image-state', 'ready');
 
+  const trigger = firstImage.getByRole('button', {name:/Xem ảnh lớn/});
+  await trigger.click();
+  const viewer = page.getByRole('dialog');
+  await expect(viewer.getByRole('img')).toHaveAttribute('src', /slow-detail/);
+  await viewer.getByRole('button', {name:'Phóng to', exact:true}).click();
+  await expect(viewer.getByRole('button', {name:'150%'})).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(viewer).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+
   const editor = page.getByRole('region', { name: 'Nội dung chi tiết sản phẩm' });
   await editor.getByRole('switch', { name: 'Hiển thị chú thích khối 1' }).uncheck();
   await expect(infoRoot.getByText('Nội dung chú thích.')).toHaveCount(0);

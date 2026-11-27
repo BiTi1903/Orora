@@ -1,4 +1,6 @@
+import { createPortal } from "react-dom";
 import { useEffect, useId, useRef, useState } from "react";
+import ProductImageLightbox from "./ProductImageLightbox";
 import ProductContent from "./ProductContent";
 import { informationMediaShadow, informationTabSettings, isLongSpecification } from "../lib/product-information";
 import { groupedProductSections, isProductContentGroupVisible, normalizeProductBlockText, PRODUCT_CONTENT_GROUPS } from "../lib/product-content";
@@ -12,8 +14,9 @@ const tabKeys = {
   usage: "pdTabUsage",
 };
 
-function InformationImage({ src, alt, preview, selectedClass, onSelect, forceLoading = false }) {
+function InformationImage({ src, alt, imageName, preview, selectedClass, onSelect, forceLoading = false }) {
   const [state, setState] = useState("loading");
+  const [open, setOpen] = useState(false);
   const imgRef = useRef(null);
 
   useEffect(() => {
@@ -49,6 +52,11 @@ function InformationImage({ src, alt, preview, selectedClass, onSelect, forceLoa
           onError={() => setState("error")}
         />
       )}
+      {!preview && effectiveState === "ready" && (
+        <button type="button" className="product-information-zoom" aria-label={`Xem ảnh lớn: ${imageName}`}
+          aria-haspopup="dialog" onClick={() => setOpen(true)} />
+      )}
+      {open && createPortal(<ProductImageLightbox src={src} name={imageName} onClose={() => setOpen(false)} />, document.body)}
     </div>
   );
 }
@@ -294,7 +302,8 @@ export default function ProductInformation({
                             <InformationImage
                               key={image}
                               src={image}
-                              alt={showTitle ? tr(title) : ""}
+                              alt={section.imageAlt?.trim() || (showTitle ? tr(title) : "")}
+                              imageName={section.imageAlt?.trim() || (showTitle ? tr(title) : `${tr(PRODUCT_CONTENT_GROUPS[key])} · Ảnh ${index + 1}`)}
                               preview={preview}
                               selectedClass={selectedClass}
                               onSelect={select}
