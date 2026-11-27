@@ -1,3 +1,8 @@
+## 27/11/2026 — Biên tập bản dịch bằng Excel
+
+- Admin Bản dịch đọc nội dung trang chủ và sản phẩm, nhập hoặc xuất Excel, cho sửa tiếng Anh và lưu sau khi kiểm tra nội dung gốc. Ghi bản dịch riêng khi quản trị viên bấm lưu.
+- Build và lint đạt. Đã đọc lại 219 dòng từ file Excel xuất cho nội dung công khai và kiểm tra khóa khối khi đổi thứ tự. Chưa thử ghi lên database thật.
+
 ## 27/11/2026 — Chạm để phóng to và chọn ảnh phụ
 
 - Ảnh trong nội dung chi tiết mở với mức phóng to 2× quanh điểm chạm và đóng khi chạm lại. Ảnh phụ mờ đổi ảnh chính ngay khi chọn.

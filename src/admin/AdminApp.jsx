@@ -21,13 +21,14 @@ const ShippingAdmin = lazy(() => import("./ShippingAdmin"));
 const InventoryAdmin = lazy(() => import("./InventoryAdmin"));
 const ChatSettings = lazy(() => import("./ChatSettings"));
 const MailReview = lazy(() => import("./MailReview"));
+const TranslationAdmin = lazy(() => import("./TranslationAdmin"));
 const EmailExport = lazy(() => import("./EmailExport"));
 
 /* Menu chia nhóm theo công việc; mỗi mục là [khóa, nhãn]. */
 const GROUPS = [
   { title: null, items: [["dashboard", "Tổng quan"], ["analytics", "Thống kê"]] },
   { title: "Bán hàng", items: [["orders", "Đơn hàng"], ["inventory", "Kiểm kho"], ["shipping", "Phí vận chuyển"]] },
-  { title: "Giao diện và nội dung", items: [["home", "Trang chủ"], ["products", "Sản phẩm"]] },
+  { title: "Giao diện và nội dung", items: [["home", "Trang chủ"], ["products", "Sản phẩm"], ["translations", "Bản dịch"]] },
   { title: "Khách hàng", items: [["newsletter", "Email"], ["mail-review", "Thư cần xử lý"], ["chat", "Chat AI"], ["export", "Xuất danh sách email"]] },
 ];
 
@@ -185,6 +186,7 @@ function AdminWorkspace({ user }) {
     if (tab === "home" || tab === "store") {
       return <HomeAdmin workspace={tab === "store" ? "store" : "home"} storeSection={storeSection} storeVersion={storeVersion} />;
     }
+    if (tab === "translations") return <TranslationAdmin />;
     if (tab === "products") return <ProductsAdmin />;
     if (tab === "chat") return <ChatSettings />;
     if (tab === "orders") {

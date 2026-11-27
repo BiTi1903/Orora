@@ -1,3 +1,4 @@
+import { applySheet } from "./translation-rows.js";
 import { useSyncExternalStore } from "react";
 
 // Pause public language switching without discarding saved preferences or translations.
@@ -499,7 +500,7 @@ function applyTranslationsDeep(base, overrideMap, locale) {
   const result = { ...base };
   for (const [key, val] of Object.entries(base)) {
     if (
-      key === "translations" ||
+      key === "translationSheet" || key === "translations" ||
       key.endsWith("Styles") ||
       key === "styles" ||
       key === "style" ||
@@ -534,14 +535,14 @@ function applyTranslationsDeep(base, overrideMap, locale) {
 export function localizeHomeContent(home, locale = currentLocale) {
   if (!home || typeof home !== "object" || locale === "vi") return home;
   const custom = home.translations?.[locale] || {};
-  return applyTranslationsDeep(home, custom, locale);
+  return applySheet(applyTranslationsDeep(home, custom, locale), home, "home", locale);
 }
 
 export function localizeProduct(product, locale = currentLocale, productTranslations = {}) {
   if (!product || typeof product !== "object" || locale === "vi") return product;
   const pid = product.id || product.slug || "";
   const ov = (pid && productTranslations?.[pid]) || product.translations?.[locale] || {};
-  return {
+  return applySheet({
     ...product,
     name: (typeof ov.name === "string" && ov.name.trim()) ? ov.name : translatePhrase(product.name, locale),
     category:
@@ -558,5 +559,5 @@ export function localizeProduct(product, locale = currentLocale, productTranslat
       (typeof ov.details === "string" && ov.details.trim())
         ? ov.details
         : translatePhrase(product.details, locale),
-  };
+  }, product, pid, locale);
 }
