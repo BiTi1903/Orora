@@ -1,10 +1,9 @@
-## 27/11/2026 — Bổ sung tài liệu hướng dẫn sử dụng trang Quản trị (Admin) cho nhân viên
+## 27/11/2026 — Gỡ file hướng dẫn nhân viên khỏi repo
 
-- **Lý do**: Cung cấp tài liệu hướng dẫn chi tiết (cả bản Markdown và bản Excel `.xlsx`), chuẩn xác theo đúng giao diện và luồng vận hành thực tế để chủ website gửi cho nhân viên thao tác.
+- **Lý do**: Tài liệu hướng dẫn quản trị nội bộ chỉ cần xuất file Excel gửi nhân viên, không lưu trong repo mã nguồn.
 - **Thay đổi chính**:
-  - `docs/HUONG-DAN-QUAN-TRI-ADMIN.md`: Tạo hướng dẫn đầy đủ cho toàn bộ 12 mục quản trị (`Tổng quan`, `Thống kê`, `Đơn hàng`, `Kiểm kho`, `Phí vận chuyển`, `Trang chủ / Visual Builder` gồm đủ 22 khu vực, `Sản phẩm`, `Bản dịch`, `Email`, `Thư cần xử lý`, `Chat AI`, `Xuất danh sách email`), kèm nguyên tắc thao tác an toàn, checklist hằng ngày và bảng xử lý tình huống thường gặp.
-  - `docs/HUONG-DAN-QUAN-TRI-ADMIN.xlsx`: Xuất bản Excel 5 sheet (`1. Tong quan & Nguyen tac`, `2. Huong dan 12 muc`, `3. Visual Builder (22 muc)`, `4. Checklist hang ngay`, `5. Xu ly loi thuong gap`) có định dạng bảng, cố định dòng tiêu đề, xuống dòng tự động và màu sắc chuẩn ORORA.
-- **Kiểm tra đã chạy**: Đối chiếu trực tiếp mã nguồn `src/admin/` và `src/lib/page-sections.js`; kiểm tra đọc lại toàn bộ 5 sheet của file `.xlsx` bằng `read-excel-file/node` thành công (9 / 14 / 24 / 11 / 11 dòng). Không thay đổi mã chạy.
+  - Xóa `docs/HUONG-DAN-QUAN-TRI-ADMIN.md` và `docs/HUONG-DAN-QUAN-TRI-ADMIN.xlsx` khỏi repo (giữ bản xuất Excel ngoài repo để người dùng tải trực tiếp).
+- **Kiểm tra đã chạy**: Kiểm tra `git status` sạch, không ảnh hưởng mã nguồn hay build.
 - **Ảnh hưởng database**: Không ảnh hưởng.
 
 ## 27/11/2026 — Sửa lỗi chức năng, đồng bộ UI/UX và mở rộng danh mục cho Bản dịch
