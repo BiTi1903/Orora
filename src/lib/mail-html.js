@@ -360,6 +360,7 @@ export function renderOrderEmailHtml({
   bankInfo = null,
   contactEmail = DEFAULT_CONTACT_EMAIL,
   trackingUrl = "",
+  trackingEnabled = true,
 } = {}) {
   const origin = safeOrigin(siteOrigin);
   const resolvedTrackingUrl = trackingUrl || (order?.code
@@ -470,7 +471,7 @@ export function renderOrderEmailHtml({
     ${renderBankTransferBlock(order, bankInfo)}
 
     <!-- Tracking CTA -->
-    ${renderButton("Tra cứu trạng thái đơn hàng", resolvedTrackingUrl)}
+    ${renderButton(trackingEnabled ? "Tra cứu trạng thái đơn hàng" : "Liên hệ ORORA", resolvedTrackingUrl)}
     <p style="margin:6px 0 0 0;text-align:center;font-family:${FONT_SANS};font-size:12px;color:#846b77;">Nhập 4 số cuối số điện thoại đặt hàng để xem tiến trình chi tiết.</p>
   `;
 

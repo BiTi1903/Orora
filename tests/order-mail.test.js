@@ -203,3 +203,13 @@ test("recovery-only requests never submit mail if the state changed in another s
   const events = await db.collection("orders").doc(orderId).collection("mailEvents").get();
   assert.equal(events.docs.length, 0);
 });
+
+test("confirmation offers support when storefront tracking is disabled", async () => {
+  const {db, orderId} = await setup();
+  await db.collection("settings").doc("home").set({sectionVisibility:{ordertracking:false}});
+  let delivered;
+  await sendOrderConfirmation({db,orderId,env,sendMail:async (_,message)=>{delivered=message;}});
+  assert.match(delivered.text,/Liên hệ ORORA để kiểm tra tình trạng đơn/);
+  assert.match(delivered.html,/Liên hệ ORORA/);
+  assert.doesNotMatch(delivered.html,/\/tra-cuu-don-hang/);
+});

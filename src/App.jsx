@@ -138,7 +138,7 @@ function App() {
         />
 
 
-        <Route path="/tra-cuu-don-hang" element={<main>{visible("navbar") && <Navbar />}{home.loading ? <RouteLoading/> : visible("ordertracking") ? <Suspense fallback={<RouteLoading/>}><OrderTracking /></Suspense> : <section className="product-not-found"><h1>Tra cứu đơn hàng đang tạm tắt</h1><Link to="/">Về trang chủ</Link></section>}{visible("footer") && <Footer />}</main>} />
+        <Route path="/tra-cuu-don-hang" element={<main>{visible("navbar") && <Navbar />}{home.loading ? <RouteLoading/> : visible("ordertracking") ? <Suspense fallback={<RouteLoading/>}><OrderTracking /></Suspense> : <section className="product-not-found"><h1>Tra cứu đơn hàng đang tạm tắt</h1><p>Gửi mã đơn qua <a href="mailto:sales@ororavn.com">sales@ororavn.com</a> để ORORA kiểm tra tình trạng đơn.</p><Link to="/">Về trang chủ</Link></section>}{visible("footer") && <Footer />}</main>} />
         <Route path="/chinh-sach" element={<main>{visible("navbar") && <Navbar />}<Suspense fallback={<RouteLoading/>}><PolicyPage /></Suspense>{visible("footer") && <Footer />}</main>} />
         <Route path="/san-pham" element={<Navigate to={{ pathname: "/", search: location.search, hash: "#shop" }} replace />} />
         <Route path="/ve-orora" element={<Navigate to="/#about" replace />} />

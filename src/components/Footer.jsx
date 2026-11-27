@@ -1,3 +1,4 @@
+import { sectionIsEnabled } from "../lib/page-sections";
 import {companyLabel} from "../lib/company";
 import { Link } from "react-router-dom";
 import {footerCopy} from "../lib/footer-copy";
@@ -127,7 +128,7 @@ function Footer({
           <LinkOrSpan preview={preview} selectedClass={selectedClass} select={select} style={css("link")} href="/#shop" sel="ftShop">
             {shopText}
           </LinkOrSpan>
-          {(data.footerTrackingText ?? 'Tra cứu đơn hàng') && <LinkOrSpan preview={preview} selectedClass={selectedClass} select={select} style={css("link")} href="/tra-cuu-don-hang" sel="ftTracking">{data.footerTrackingText ?? 'Tra cứu đơn hàng'}</LinkOrSpan>}
+          {(preview || sectionIsEnabled(home,'ordertracking')) && (data.footerTrackingText ?? 'Tra cứu đơn hàng') && <LinkOrSpan preview={preview} selectedClass={selectedClass} select={select} style={css("link")} href="/tra-cuu-don-hang" sel="ftTracking">{data.footerTrackingText ?? 'Tra cứu đơn hàng'}</LinkOrSpan>}
           <LinkOrSpan preview={preview} selectedClass={selectedClass} select={select} style={css("link")} href="/chinh-sach" sel="ftTerms">
             {termsText}
           </LinkOrSpan>

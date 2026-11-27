@@ -279,7 +279,8 @@ function ProductDetail({
   const mobileSubtotal = choice.quantity === "" ? "Chọn số lượng" : unitPrice === null ? formatProductPrice(displayedPrice) : formatVnd(unitPrice * choice.quantity);
   const purchase = ps.purchaseOptions || {};
   const channelLabels = purchaseChannelLabels(purchase);
-  const tiktokShop = sectionIsEnabled(home,"shoplinks") && socialShopUrl(home.shopLinks?.tiktokUrl, "tiktok");
+  const showExternalChannels = sectionIsEnabled(home,"shoplinks");
+  const tiktokShop = showExternalChannels && socialShopUrl(home.shopLinks?.tiktokUrl, "tiktok");
   const facebookShop = sectionIsEnabled(home,"shoplinks") && socialShopUrl(home.shopLinks?.facebookUrl, "facebook");
   const contactSettings = ps.contactActions || {};
   const contact = contactLinks(home, product.name, contactSettings);
@@ -868,7 +869,7 @@ function ProductDetail({
               <div className="purchase-channels-block">
                 <h2 {...textProps("pdPurchaseHeading", "purchaseHeading")}>{tr(purchase.heading?.trim() || "Hoặc mua qua")}</h2>
                 <div className="purchase-channels-row">
-                  {!soldOut && (preview || tiktokShop || facebookShop) && (
+                  {!soldOut && showExternalChannels && (preview || tiktokShop || facebookShop) && (
                     <div className="purchase-social" aria-label="Đặt hàng trên mạng xã hội">
                       {(preview || facebookShop) && <a className="purchase-facebook" href={preview ? undefined : facebookShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.facebookBackground, ...(purchase.facebookBackground ? { color: "#fff" } : {}), ...toCss(purchase.facebookStyle) }}><ButtonIcon name="facebook" defaultSize={15}/><span className={selectedClass("pdFacebookText")} data-builder-key={preview ? "pdFacebookText" : undefined} onClick={preview ? select("pdFacebookText") : undefined}>{channelLabels.facebookLabel}</span><svg className="purchase-external" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8" /></svg></a>}
                       {(preview || tiktokShop) && <a className="purchase-tiktok" href={preview ? undefined : tiktokShop} target="_blank" rel="noreferrer" style={{ ...css("purchaseOptions"), background: purchase.tiktokBackground, ...(purchase.tiktokBackground ? { color: "#fff" } : {}), ...toCss(purchase.tiktokStyle) }}><ButtonIcon name="tiktok" defaultSize={15}/><span className={selectedClass("pdTiktokText")} data-builder-key={preview ? "pdTiktokText" : undefined} onClick={preview ? select("pdTiktokText") : undefined}>{channelLabels.tiktokLabel}</span><svg className="purchase-external" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 12 12 4M4 4h8v8" /></svg></a>}

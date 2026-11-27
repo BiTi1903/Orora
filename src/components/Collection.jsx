@@ -308,7 +308,7 @@ function Collection({
   const filtering=filterSettings.enabled!==false&&!excludeId&&!headStylesOverride;
   const savedFilters=preview||excludeId?localFilters:readCatalogFilters(location.search);
   const showCategories=sectionIsEnabled(preview ? home : liveHome,"categories");
-  const categoryId=showCategories?savedFilters.category:"";
+  const categoryId=savedFilters.category;
   const changeFilters=next=>{
     const normalized=catalogFilters(next);
     if(preview||excludeId){setLocalFilters(normalized);return;}

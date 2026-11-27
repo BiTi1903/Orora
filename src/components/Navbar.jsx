@@ -1,3 +1,4 @@
+import { sectionIsEnabled } from "../lib/page-sections";
 import {navigationLabel} from "../lib/i18n";
 import ButtonIcon from "./ButtonIcon";
 import {mountNavbarCartSlot} from "../lib/navbar-cart-slot";
@@ -223,6 +224,7 @@ function Navbar({
   const data = preview && previewData ? previewData : home || {};
   const logo = data.navLogo || "";
   const links = withTrackingNavLink(Array.isArray(data.navLinks) ? data.navLinks : []);
+  const showTracking = preview || sectionIsEnabled(home, "ordertracking");
   const styles = data.navStyles || {};
   const showLanguages = preview || STOREFRONT_LANGUAGES_ENABLED;
   const langSettings = styles.languageSwitcher || {};
@@ -316,6 +318,7 @@ function Navbar({
 
         <div className="nav-links">
           {links.map((item, index) => {
+            if (!showTracking && (item.kind === "order-tracking" || /^\/tra-cuu-don-hang(?:[/?#]|$)/.test(resolveHref(item,index)))) return null;
             const entries = submenu(item, index);
             const link = <Link to={resolveHref(item, index)} className={selectedClass(`navLink:${index}`)} data-builder-key={preview ? `navLink:${index}` : undefined} onClick={select(`navLink:${index}`)} style={toCss(styles.link, { responsive: true })}>{preview?item.label:navigationLabel(item.label,locale)}</Link>;
             return entries.length && !preview ? <NavDropdown key={index} label={preview?item.label:navigationLabel(item.label,locale)} items={entries}>{link}</NavDropdown> : <span key={index}>{link}</span>;
@@ -360,6 +363,7 @@ function Navbar({
 
         <nav key={menuOpen ? "open" : "closed"} className="mobile-drawer-links">
           {links.map((item, index) => {
+            if (!showTracking && (item.kind === "order-tracking" || /^\/tra-cuu-don-hang(?:[/?#]|$)/.test(resolveHref(item,index)))) return null;
             const entries = submenu(item, index);
             if (!entries.length) return <Link key={index} to={resolveHref(item, index)} onClick={closeMenu}>{preview?item.label:navigationLabel(item.label,locale)}</Link>;
             return <details className="mobile-nav-group" key={index}><summary>{preview?item.label:navigationLabel(item.label,locale)}<ButtonIcon name="navMobileDropdown" defaultSize={14} allowHidden={false}/></summary><div className="mobile-nav-submenu">{entries.map((entry) => entry.external ? <a key={entry.href} href={entry.href} target="_blank" rel="noreferrer" onClick={closeMenu}>{entry.label}</a> : <Link key={entry.href} to={entry.href} onClick={closeMenu}>{entry.label}</Link>)}</div></details>;

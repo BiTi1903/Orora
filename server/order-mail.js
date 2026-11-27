@@ -1,3 +1,4 @@
+import { sectionIsEnabled } from "../src/lib/page-sections.js";
 import { orderProductName } from "../src/lib/product-options.js";
 import { describeMailError } from "./mail-error.js";
 import { safeMailTracking } from "./mail-tracking.js";
@@ -18,7 +19,7 @@ export function validateOrderTemplate(value) {
   if ([...`${message.subject}\n${message.text}`.matchAll(/\{\{(\w+)\}\}/g)].some((match) => !ORDER_TOKENS.includes(match[1]))) throw new Error("invalid_order_token");
   return message;
 }
-export function renderOrderMessage(template, order, env = process.env, { bankInfo = null } = {}) {
+export function renderOrderMessage(template, order, env = process.env, { bankInfo = null, trackingEnabled = true } = {}) {
   const orderedAt = order.createdAt?.toDate?.() ?? order.createdAt;
   const orderedDate = orderedAt ? new Date(orderedAt) : null;
   const multiProductSummary = Array.isArray(order.items) && order.items.length > 1
@@ -27,12 +28,16 @@ export function renderOrderMessage(template, order, env = process.env, { bankInf
   const totalFormatted = order.totalAmount == null ? "ORORA sẽ xác nhận" : formatVnd(order.totalAmount);
   let origin = "https://ororavn.com";
   try { if (env?.NEWSLETTER_SITE_ORIGIN) origin = new URL(env.NEWSLETTER_SITE_ORIGIN).origin; } catch { /* fallback to default */ }
-  const trackingUrl = order.code
+  const trackingUrl = !trackingEnabled ? `${origin}/#contact` : order.code
     ? `${origin}/tra-cuu-don-hang?code=${encodeURIComponent(order.code)}`
     : `${origin}/tra-cuu-don-hang`;
   const values = { customerName: order.customer.name, orderCode: order.code, productName: multiProductSummary, variantLabel: order.product.variantLabel || "", quantity: order.quantity, subtotal: order.subtotal == null ? "ORORA sẽ báo giá" : formatVnd(order.subtotal), unitPrice: order.product.unitPrice == null ? formatProductPrice(order.product.priceText) || "ORORA sẽ báo giá" : formatVnd(order.product.unitPrice), shippingFee: order.shippingFee == null ? "ORORA sẽ xác nhận" : formatVnd(order.shippingFee), totalAmount: totalFormatted, total: totalFormatted, paymentMethod: PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod, paymentStatus: order.paymentStatus === "paid" ? "Đã thanh toán" : "Chưa thanh toán", address: order.customer.address, phone: order.customer.phone, email: order.customer.email, note: order.customer.note || "Không có", createdAt: orderedDate && Number.isFinite(orderedDate.getTime()) ? orderedDate.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) : "Chưa lưu ngày đặt", trackingUrl, trackingCode: order.trackingCode || "" };
   const fill = (text, subject = false) => text.replace(/\{\{(\w+)\}\}/g, (_, key) => subject ? String(values[key] ?? "").replace(/[\r\n]/g, " ") : String(values[key] ?? ""));
-  const validated = validateMessage({ subject: fill(template.subject, true), text: fill(template.text) });
+  const text = trackingEnabled ? template.text : template.text.replace(
+    "Tra cứu trạng thái đơn hàng: {{trackingUrl}}\n(Nhập 4 số cuối số điện thoại đặt hàng để xem tiến trình chi tiết)",
+    "Liên hệ ORORA để kiểm tra tình trạng đơn: {{trackingUrl}}",
+  );
+  const validated = validateMessage({ subject: fill(template.subject, true), text: fill(text) });
   const html = renderOrderEmailHtml({
     subject: validated.subject,
     text: validated.text,
@@ -41,6 +46,7 @@ export function renderOrderMessage(template, order, env = process.env, { bankInf
     bankInfo,
     contactEmail: env?.MS_SENDER_EMAIL || "sales@ororavn.com",
     trackingUrl,
+    trackingEnabled,
   });
   return { ...validated, html };
 }
@@ -68,14 +74,17 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
     if (event.exists) return null;
     if (previous === "sending" || (previous === "unknown" && !(manual && confirmResend))) throw Object.assign(new Error("Kết quả gửi trước chưa rõ hoặc đang xử lý. Kiểm tra thư đã gửi trên Microsoft trước khi gửi lại."), { status: 409 });
     if (manual && previous === "accepted" && !confirmResend) throw Object.assign(new Error("Thư đã được Microsoft nhận. Cần xác nhận gửi lại để tránh gửi trùng."), { status: 409 });
+    const home = (await tx.get(db.collection("settings").doc("home"))).data();
+    const trackingEnabled = sectionIsEnabled(home, "ordertracking");
+    const bankInfo = data.paymentMethod === "bank_transfer" ? home?.productDetailStyles?.purchaseOptions : null;
     let message; let sourceTemplate; let templateError = false;
-    try { sourceTemplate = manual && customMessage ? validateOrderTemplate(customMessage) : template.exists ? validateOrderTemplate(template.data()) : DEFAULT_ORDER_MESSAGE; message = renderOrderMessage(sourceTemplate, data, env); }
+    try { sourceTemplate = manual && customMessage ? validateOrderTemplate(customMessage) : template.exists ? validateOrderTemplate(template.data()) : DEFAULT_ORDER_MESSAGE; message = renderOrderMessage(sourceTemplate, data, env, {bankInfo,trackingEnabled}); }
     catch { message = { subject: "Không tạo được thư xác nhận đơn", text: "" }; templateError = true; }
     const snapshot = manual && customMessage ? await captureTemplate(tx, db, templateRef, sourceTemplate || {}, ["private", "order_auto"]) : template.exists ? templateIdentity(template.data()) : {};
     const createdAt = new Date();
     tx.set(eventRef, { type: "orderConfirmation", recipient: data.customer.email, subject: message.subject, text: message.text, ...snapshot, templateName: snapshot.templateName || (manual && customMessage ? "Nội dung soạn riêng cho đơn" : "Xác nhận đơn tự động"), state: templateError ? "failed" : "sending", errorCode: templateError ? "mail_template_invalid" : "", createdAt, updatedAt: createdAt, actor, actorName, actorEmail, manual, ...(sourceTemplate ? { templateSubject: sourceTemplate.subject, templateText: sourceTemplate.text } : {}) });
     tx.set(orderRef, { confirmationMail: { state: templateError ? "failed" : "sending", eventId: eventRef.id, updatedAt: createdAt } }, { merge: true });
-    return { recipient: data.customer.email, message, sourceTemplate, orderData: data, templateError, snapshot };
+    return { recipient: data.customer.email, message, templateError, snapshot };
   });
   if (!claimed) return { duplicate: true };
   if (claimed.recoverySkipped) return { state: "unchanged", errorMessage: "Trạng thái đã thay đổi. Hãy xem lại kết quả trước khi gửi." };
@@ -84,26 +93,16 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
     errorMessage: "Đã chuyển lần gửi bị gián đoạn sang Chưa rõ kết quả. Chưa gửi thêm email. Hãy kiểm tra Outlook trước khi xác nhận gửi lại.",
   };
   if (claimed.templateError) return { state: "failed" };
-  let deliveryMessage = claimed.message;
-  if (claimed.orderData?.paymentMethod === "bank_transfer" && claimed.sourceTemplate) {
-    try {
-      const homeSnap = await db.collection("settings").doc("home").get();
-      const bankInfo = homeSnap?.exists ? homeSnap.data()?.productDetailStyles?.purchaseOptions || null : null;
-      if (bankInfo && (bankInfo.bankName || bankInfo.bankAccountNumber || bankInfo.bankAccountName)) {
-        deliveryMessage = renderOrderMessage(claimed.sourceTemplate, claimed.orderData, env, { bankInfo });
-      }
-    } catch { /* fall back to message without bankInfo */ }
-  }
   let state = "accepted"; let errorCode = ""; let errorMessage = ""; let tracking = {};
   try {
     if (typeof sendMail !== "function") throw new Error("mail_configuration_missing");
     const started = Date.now();
-    try { tracking = safeMailTracking(await sendMail(claimed.recipient, deliveryMessage)); }
+    try { tracking = safeMailTracking(await sendMail(claimed.recipient, claimed.message)); }
     catch (error) {
       if (error.message !== "mail_smtp_connection_failed" || Date.now() - started > 10000) throw error;
       // A single proven pre-submission retry, leaving time for the final write.
       await new Promise((resolve) => setTimeout(resolve, 750));
-      tracking = safeMailTracking(await sendMail(claimed.recipient, deliveryMessage));
+      tracking = safeMailTracking(await sendMail(claimed.recipient, claimed.message));
     }
   } catch (error) {
     tracking = safeMailTracking(error.mailTracking);

@@ -1,3 +1,4 @@
+import { sectionIsEnabled } from "../lib/page-sections";
 import {resolveBank,transferPayload} from '../lib/vietqr';
 import {useState,useEffect} from 'react';
 import {Link} from 'react-router-dom';
@@ -154,7 +155,7 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
    <div className="order-received-footer">
     {preview
      ?<a href="#tra-cuu-don-hang" style={trackingStyle} {...mark('osTracking','order-tracking-link')}>{text('receiptTrackingLabel')}</a>
-     :<Link className="order-tracking-link" to={`/tra-cuu-don-hang?code=${encodeURIComponent(order.code)}`} state={{code:order.code,phone:order.recipient.phone}} style={trackingStyle} onClick={onClose}>{text('receiptTrackingLabel')}</Link>}
+     :sectionIsEnabled(home,"ordertracking") && <Link className="order-tracking-link" to={`/tra-cuu-don-hang?code=${encodeURIComponent(order.code)}`} state={{code:order.code,phone:order.recipient.phone}} style={trackingStyle} onClick={onClose}>{text('receiptTrackingLabel')}</Link>}
     <button type="button" className="order-received-close-btn" style={closeStyle} {...(preview?mark('osCloseBtn','order-received-close-btn'):{onClick:onClose})}>{text('receiptCloseLabel')}</button>
    </div>
   </section>
