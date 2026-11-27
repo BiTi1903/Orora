@@ -1,3 +1,8 @@
+## 27/11/2026 — Tải lại bản dịch trong admin
+
+- Thêm nút đọc bản dịch mới nhất từ máy chủ. Hỏi trước khi bỏ sửa đổi chưa lưu và chỉ xóa bản nháp sau khi tải thành công.
+- Lint và bốn lượt Playwright đạt với dữ liệu máy chủ giả lập. Không thay đổi database.
+
 ## 27/11/2026 — Bổ sung nội dung đa ngôn ngữ
 
 - Thêm nhãn tab kỹ thuật và hướng dẫn, địa chỉ, tiêu đề và CTA vào bảng dịch nếu đã nhập. Bổ sung EN và JP cho trình xem ảnh và các nhãn trang chính sách.

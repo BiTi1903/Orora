@@ -41,6 +41,17 @@ export default function TranslationAdmin() {
     setMessage("");
     try { await action(); } catch (error) { setMessage(error.message); } finally { setBusy(false); }
   }
+  function reload() {
+    if (changes.length && !window.confirm("Tải lại bản dịch từ máy chủ và bỏ các thay đổi chưa lưu?")) return;
+    run(async () => {
+      const latest = await readCurrentRows();
+      setRows(latest);
+      setDraft({});
+      setPage(0);
+      if (filter === "changed") setFilter("all");
+      setMessage("Đã tải bản dịch mới nhất từ máy chủ.");
+    });
+  }
   async function download() {
     const {default: write} = await import("write-excel-file/browser");
     const saved = await readCurrentRows();
@@ -104,6 +115,7 @@ export default function TranslationAdmin() {
   const current = Math.min(page, Math.max(0, pages - 1));
   return <section className="translations-admin">
     <header><h1>Bản dịch</h1><div className="translation-actions">
+      <button className="admin-btn" disabled={busy} onClick={reload}>Tải lại bản dịch</button>
       <button className="admin-btn" disabled={busy} onClick={()=>run(download)}>Xuất Excel</button>
       <button className="admin-btn" disabled={busy} onClick={()=>fileInput.current.click()}>Nhập Excel</button>
       <input ref={fileInput} hidden type="file" accept=".xlsx" onChange={event=>{

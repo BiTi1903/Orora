@@ -6,7 +6,8 @@ test('translation drafts survive paging and filtering', async ({page}) => {
     contentType:'application/javascript',
     body:`export const collection=()=>null,doc=()=>null,runTransaction=()=>null;
       export const getDocFromServer=async()=>({data:()=>({})});
-      export const getDocsFromServer=async()=>({docs:Array.from({length:12},(_,i)=>({id:String(i),data:()=>({name:'Sản phẩm '+i})}))});`
+      let reads=0;
+      export const getDocsFromServer=async()=>{const prefix=++reads===1?'Sản phẩm ':'Mới ';return {docs:Array.from({length:12},(_,i)=>({id:String(i),data:()=>({name:prefix+i})}))}};`
   }));
   await mount(page, `import Editor from '/src/admin/TranslationAdmin.jsx';${render("R.createElement(Editor)")}`, {
     'lib/firebase.js':'export const db={};'
@@ -20,5 +21,14 @@ test('translation drafts survive paging and filtering', async ({page}) => {
   await page.getByLabel('Lọc bản dịch').selectOption('changed');
   await expect(items).toHaveCount(1);
   await expect(page.getByRole('textbox',{name:'Tiếng Anh',exact:true})).toHaveValue('First product');
+  const reload = page.getByRole('button',{name:'Tải lại bản dịch',exact:true});
+  page.once('dialog', dialog => dialog.dismiss());
+  await reload.click();
+  await expect(page.getByRole('textbox',{name:'Tiếng Anh',exact:true})).toHaveValue('First product');
+  page.once('dialog', dialog => dialog.accept());
+  await reload.click();
+  await expect(page.getByRole('status')).toHaveText('Đã tải bản dịch mới nhất từ máy chủ.');
+  await expect(items.first()).toContainText('Mới 0');
+  await expect(page.getByRole('textbox',{name:'Tiếng Anh',exact:true})).toHaveValue('');
   await fit(page);
 });
