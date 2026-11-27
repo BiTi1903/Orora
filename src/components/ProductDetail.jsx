@@ -111,6 +111,7 @@ function ProductDetail({
   const [orderSource, setOrderSource] = useState(null);
   const [purchaseSelection, setPurchaseSelection] = useState(null);
   const [zoomActive, setZoomActive] = useState(false);
+  const [zoomHiRes, setZoomHiRes] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [desktopStickyBuy, setDesktopStickyBuy] = useState(false);
   const [consultationOpen, setConsultationOpen] = useState(false);
@@ -556,6 +557,7 @@ function ProductDetail({
                       event.currentTarget.style.setProperty("--zoom-x", `${px.toFixed(2)}%`);
                       event.currentTarget.style.setProperty("--zoom-y", `${py.toFixed(2)}%`);
                     }
+                    setZoomHiRes(true);
                     setZoomActive(true);
                   }
                 : undefined
@@ -572,6 +574,7 @@ function ProductDetail({
                       event.currentTarget.style.setProperty("--zoom-x", `${px.toFixed(2)}%`);
                       event.currentTarget.style.setProperty("--zoom-y", `${py.toFixed(2)}%`);
                     }
+                    if (!zoomHiRes) setZoomHiRes(true);
                     if (!zoomActive) setZoomActive(true);
                   }
                 : undefined
@@ -585,6 +588,7 @@ function ProductDetail({
                 ? (event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
+                      setZoomHiRes(true);
                       setZoomActive((current) => !current);
                     } else if (event.key === "Escape" && zoomActive) {
                       setZoomActive(false);
@@ -653,6 +657,7 @@ function ProductDetail({
                   event.currentTarget.style.setProperty("--zoom-x", `${px.toFixed(2)}%`);
                   event.currentTarget.style.setProperty("--zoom-y", `${py.toFixed(2)}%`);
                 }
+                setZoomHiRes(true);
                 setZoomActive((current) => !current);
               }
             } : undefined}
@@ -660,7 +665,7 @@ function ProductDetail({
             {displaySrc ? (
               <img
                 key={displaySrc}
-                src={productMainImage(displaySrc, window.innerWidth)}
+                src={zoomHiRes ? cdnSrc(displaySrc, { w: 1600, q: "auto:best" }) : productMainImage(displaySrc, window.innerWidth)}
                 loading="eager"
                 fetchPriority="high"
                 decoding="async"

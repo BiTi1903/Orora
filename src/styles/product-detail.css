@@ -124,6 +124,7 @@
 .product-detail-image:hover .product-detail-main-img,
 .product-detail-image:hover .product-slideshow img.is-active {
   transform: scale(1.03);
+  filter: saturate(1.04);
 }
 
 .product-detail-image-placeholder {
@@ -1044,6 +1045,7 @@
 .product-detail-image.is-interactive .product-detail-main-img {
   transform-origin:var(--zoom-x, 50%) var(--zoom-y, 50%);
   transition:transform .24s cubic-bezier(.22,1,.36,1);
+  will-change:transform;
 }
 .product-detail-image.is-interactive[data-zooming="true"] { cursor:zoom-out; }
 .product-detail-image.is-interactive[data-zooming="true"] .product-detail-main-img {
@@ -1057,6 +1059,7 @@
   width:38px; height:38px; padding:0; border-radius:999px;
   background:rgba(255,255,255,.9); color:var(--plum);
   border:1px solid var(--line); box-shadow:0 4px 14px rgba(58,22,40,.12);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
   cursor:pointer; opacity:.88; transition:opacity .18s ease, transform .18s ease, color .18s ease, border-color .18s ease;
 }
 .product-image-zoom-hint:hover { opacity:1; color:var(--rose-deep); border-color:var(--rose-deep); transform:scale(1.06); }
@@ -1067,6 +1070,7 @@
   padding:4px 10px; border-radius:999px;
   background:rgba(36,18,28,.62); color:#fff;
   font:500 12px/1.2 var(--font-body); font-variant-numeric:tabular-nums;
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
   pointer-events:none;
 }
 .product-image-nav {
@@ -1372,8 +1376,6 @@
     max-width: 460px;
     margin: 0 auto;
     padding: 8px 12px;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
     background: color-mix(in srgb, var(--quick-buy-bg, var(--shop-nav-bg, #fffafc)) var(--quick-buy-opacity, var(--shop-nav-opacity, 74%)), #fffafc);
   }
   html.has-mobile-shop-nav:has(.mobile-shop-nav:not(.is-preview,.is-waiting)) .product-mobile-buy:not(.is-preview) {
@@ -1402,6 +1404,51 @@
   box-shadow: var(--info-img-shadow, 0 10px 28px rgba(102, 56, 76, 0.08));
   transition: box-shadow .3s ease, border-color .3s ease, transform .35s ease;
 }
+.product-information-image[data-image-state="loading"] {
+  background: var(--info-skeleton-base, #fcebf1);
+}
+.product-information-image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .35s ease;
+}
+.product-information-image[data-image-state="loading"]::after {
+  opacity: 1;
+}
+.product-information[data-skeleton-effect="shimmer"] .product-information-image[data-image-state="loading"]::after {
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    var(--info-skeleton-highlight, #fff8fb) 45%,
+    transparent 70%
+  );
+  background-size: 220% 100%;
+  animation: product-info-shimmer 1.4s ease-in-out infinite;
+}
+.product-information[data-skeleton-effect="shimmer-rose"] .product-information-image[data-image-state="loading"]::after {
+  background: linear-gradient(
+    115deg,
+    transparent 15%,
+    rgba(232, 166, 190, 0.28) 38%,
+    var(--info-skeleton-highlight, #fff8fb) 52%,
+    rgba(232, 166, 190, 0.22) 66%,
+    transparent 85%
+  );
+  background-size: 240% 100%;
+  animation: product-info-shimmer 1.65s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.product-information[data-skeleton-effect="pulse"] .product-information-image[data-image-state="loading"]::after {
+  background: var(--info-skeleton-highlight, #fff8fb);
+  animation: product-info-pulse 1.5s ease-in-out infinite;
+}
+.product-information[data-skeleton-effect="wave"] .product-information-image[data-image-state="loading"]::after {
+  background: radial-gradient(circle at 50% 50%, var(--info-skeleton-highlight, #fff8fb) 0%, transparent 65%);
+  background-size: 180% 180%;
+  animation: product-info-wave 1.8s ease-in-out infinite;
+}
 .product-information-image img {
   position: absolute;
   inset: 0;
@@ -1409,7 +1456,30 @@
   width: 100%;
   height: 100%;
   object-fit: var(--info-img-fit, cover);
+  transition: opacity var(--info-motion-ms, 450ms) ease-out, transform var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1);
 }
+.product-information-image[data-image-state="loading"] img {
+  opacity: 0;
+}
+.product-information[data-reveal-effect="rise"] .product-information-image[data-image-state="ready"][data-revealed="true"]:not([data-steady-image]) img {
+  animation: product-media-rise var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.product-information[data-reveal-effect="fade"] .product-information-image[data-image-state="ready"][data-revealed="true"]:not([data-steady-image]) img {
+  animation: product-media-fade var(--info-motion-ms, 450ms) ease-out both;
+}
+.product-information[data-reveal-effect="zoom"] .product-information-image[data-image-state="ready"][data-revealed="true"]:not([data-steady-image]) img {
+  animation: product-media-zoom var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.product-information[data-reveal-effect="blur-in"] .product-information-image[data-image-state="ready"][data-revealed="true"]:not([data-steady-image]) img {
+  animation: product-media-blur var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.product-information[data-reveal-effect="curtain"] .product-information-image[data-image-state="ready"][data-revealed="true"]:not([data-steady-image]) img {
+  animation: product-media-curtain var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.product-information[data-reveal-effect="slide-left"] .product-information-image[data-image-state="ready"][data-revealed="true"]:not([data-steady-image]) img {
+  animation: product-media-slide-left var(--info-motion-ms, 450ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.product-information-image[data-steady-image] img { transition: none; }
 .product-information-image p {
   padding: 16px;
   text-align: center;
@@ -1477,8 +1547,11 @@
 @keyframes product-media-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes product-media-zoom { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
 @keyframes product-media-blur { from { opacity: 0; filter: blur(8px); transform: translateY(8px); } to { opacity: 1; filter: blur(0); transform: translateY(0); } }
+@keyframes product-media-curtain { from { opacity: 0.3; clip-path: inset(0 0 100% 0); } to { opacity: 1; clip-path: inset(0 0 0 0); } }
 @keyframes product-media-slide-left { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: translateX(0); } }
 @media (prefers-reduced-motion: reduce) {
+  .product-information-image[data-image-state="loading"]::after,
+  .product-information-image[data-image-state="ready"][data-revealed="true"] img,
   .product-information-media-text[data-revealed="true"][data-text-effect],
   .product-information-media-text[data-revealed="true"][data-text-effect="stagger"] h3,
   .product-information-media-text[data-revealed="true"][data-text-effect="stagger"] .product-section-content,
@@ -1693,6 +1766,8 @@
   border: 1px solid color-mix(in srgb, var(--rose-deep) 24%, white);
   background: linear-gradient(135deg, #fffcfd, #fff3f8);
   box-shadow: 0 18px 44px rgba(58, 21, 38, .16), inset 0 1px 0 rgba(255, 255, 255, .9);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
   transition: opacity .22s ease, transform .24s cubic-bezier(.22, 1, .36, 1);
 }
 .product-desktop-sticky-buy.is-visible {

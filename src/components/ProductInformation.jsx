@@ -14,7 +14,7 @@ const tabKeys = {
   usage: "pdTabUsage",
 };
 
-function InformationImage({ src, alt, imageName, preview, selectedClass, onSelect, eager = false }) {
+function InformationImage({ src, alt, imageName, preview, selectedClass, onSelect, forceLoading = false, steady = false }) {
   const [state, setState] = useState("loading");
   const [open, setOpen] = useState(null);
   const imgRef = useRef(null);
@@ -27,22 +27,26 @@ function InformationImage({ src, alt, imageName, preview, selectedClass, onSelec
     }
   }, [src]);
 
+  const effectiveState = forceLoading ? "loading" : state;
+
   return (
     <div
       className={`product-information-image ${selectedClass("pdInfoMedia")}`}
-      data-image-state={state}
+      data-image-state={effectiveState}
+      data-image-reveal=""
+      data-steady-image={steady ? "" : undefined}
       data-builder-key={preview ? "pdInfoMedia" : undefined}
       onClick={preview ? onSelect("pdInfoMedia") : undefined}
-      aria-busy={state === "loading" ? "true" : undefined}
+      aria-busy={effectiveState === "loading" ? "true" : undefined}
     >
-      {state === "error" ? (
+      {effectiveState === "error" ? (
         <p>Chưa tải được ảnh.</p>
       ) : (
         <img
           ref={imgRef}
           {...responsiveImage(src, { width: 1920, widths: [480, 960, 1440, 1920], sizes: "(max-width: 768px) 100vw, 75vw" })}
           alt={alt}
-          loading={eager ? "eager" : "lazy"}
+          loading={steady ? "eager" : "lazy"}
           decoding="async"
           width={1920}
           height={1280}
@@ -50,7 +54,7 @@ function InformationImage({ src, alt, imageName, preview, selectedClass, onSelec
           onError={() => setState("error")}
         />
       )}
-      {!preview && state === "ready" && (
+      {!preview && effectiveState === "ready" && (
         <button type="button" className="product-information-zoom" aria-label={`Xem ảnh lớn: ${imageName}`}
           aria-haspopup="dialog"
           onPointerDown={(event) => { touchInput.current = event.pointerType === "touch"; }}
@@ -96,6 +100,7 @@ export default function ProductInformation({
   const [active, setActive] = useState(config.defaultTab);
   const [tabSwitches, setTabSwitches] = useState(0);
   const [replayTick, setReplayTick] = useState(0);
+  const [replayingSkeleton, setReplayingSkeleton] = useState(false);
   const keys = Object.keys(PRODUCT_CONTENT_GROUPS).filter((key) =>
     preview ? visibility?.[key] !== false : isProductContentGroupVisible(visibility, key),
   );
@@ -109,18 +114,28 @@ export default function ProductInformation({
 
   useEffect(() => {
     if (!preview) return;
+    let timer = 0;
     const onReplay = () => {
+      window.clearTimeout(timer);
       setTabSwitches((count) => count + 1);
+      setReplayingSkeleton(true);
       setReplayTick((tick) => tick + 1);
+      timer = window.setTimeout(() => {
+        setReplayingSkeleton(false);
+        setReplayTick((tick) => tick + 1);
+      }, 750);
     };
     window.addEventListener("orora:replay-info-motion", onReplay);
-    return () => window.removeEventListener("orora:replay-info-motion", onReplay);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("orora:replay-info-motion", onReplay);
+    };
   }, [preview]);
 
   useEffect(() => {
     const root = panel.current;
     if (!root) return;
-    const targets = [...root.querySelectorAll("[data-text-effect]")];
+    const targets = [...root.querySelectorAll("[data-text-effect], [data-image-reveal]")];
     if (!targets.length) return;
     if (!window.IntersectionObserver || preview) {
       targets.forEach((element) => {
@@ -182,6 +197,8 @@ export default function ProductInformation({
     "--info-caption-px": `${config.captionPaddingX}px`,
     "--info-caption-py": `${config.captionPaddingY}px`,
     "--info-caption-align": config.captionAlign,
+    "--info-skeleton-base": config.skeletonBaseColor,
+    "--info-skeleton-highlight": config.skeletonHighlightColor,
     "--info-motion-ms": `${config.motionDuration}ms`,
     ...(config.tabBarBg ? { "--info-tab-bar-bg": config.tabBarBg } : {}),
     ...(config.tabActiveBg ? { "--info-tab-active-bg": config.tabActiveBg } : {}),
@@ -193,7 +210,9 @@ export default function ProductInformation({
     <div
       className="product-detail-sections product-information"
       aria-label="Thông tin chi tiết sản phẩm"
+      data-skeleton-effect={config.skeletonEffect}
       data-tab-transition={config.tabTransition}
+      data-reveal-effect={config.revealEffect}
       style={containerVars}
     >
       <div
@@ -310,7 +329,8 @@ export default function ProductInformation({
                               preview={preview}
                               selectedClass={selectedClass}
                               onSelect={select}
-                              eager={!preview && index === groups[key].findIndex(item => item.image?.trim?.())}
+                              steady={!preview && index === groups[key].findIndex(item => item.image?.trim?.())}
+                              forceLoading={replayingSkeleton}
                             />
                           )}
                           {showCaption && (
