@@ -1,3 +1,4 @@
+import { checkReview, reviewPage, reviewCollection } from "./mail-review.js";
 import {validOrderPhone} from "../src/lib/order-phone.js";
 import { MAX_ORDER_QUANTITY, productVolumeOptions, selectedVolumeOption, validateVolumeOptions, volumePriceText } from "../src/lib/product-options.js";
 import { recordOrderActivity } from "./order-activity.js";
@@ -232,6 +233,11 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
     try {
       const db = await getDb();
       const orders = db.collection("orders");
+      if (req.method === "GET" && req.query?.mailReviewCount === "1") {
+        const snapshot = await db.collection(reviewCollection("orders")).where("issueAt", ">", 0).count().get();
+        return res.status(200).json({count:snapshot.data().count});
+      }
+      if (req.method === "GET" && req.query?.mailReview === "1") return res.status(200).json(await reviewPage(db.collection(reviewCollection("orders")), req.query));
       if (req.method === "GET" && req.query?.summary === "1") {
         const statuses = ["new", "confirmed", "shipping", "completed", "cancelled"];
         const [statusCounts, latest] = await Promise.all([
@@ -346,6 +352,7 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
         return res.status(200).json({ orders: page.docs.map(formatOrderDoc), nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
       }
       const body = readBody(req, env, 40000);
+      if (body.action === "checkReview") return res.status(200).json(await checkReview(db, "orders", body.ids, checkOutlook));
       if (body.action === "checkOrderOutlook") {
         if (!uuid(body.id) || !/^(confirmation-auto|manual-[a-f0-9-]{36})$/i.test(body.eventId || "")) return res.status(400).json({ message: "Bản ghi gửi thư không hợp lệ." });
         const outlook = await syncOutlookStatus(orders.doc(body.id).collection("mailEvents").doc(body.eventId), checkOutlook);

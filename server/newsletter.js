@@ -1,3 +1,4 @@
+import { reviewRecord } from "./mail-review.js";
 import { createHash, randomUUID } from "node:crypto";
 import { safeMailTracking } from "./mail-tracking.js";
 import { rateLimitSalt, reserveBudgetOrAllow } from "./request-limits.js";
@@ -56,6 +57,7 @@ export function createSubscribeHandler({ getDb, sendWelcome, notifyStore, schedu
       await db.runTransaction(async (tx) => {
         const saved = await tx.get(subscriber);
         if (!saved.exists || saved.data()?.attempt !== attempt) return;
+        tx.set(db.collection("newsletterMailReview").doc("welcome-" + attempt), reviewRecord("welcome", email, patch.mailStatus, patch.welcomeTracking, subscriber.path));
         tx.set(subscriber, patch, { merge: true });
       });
     };

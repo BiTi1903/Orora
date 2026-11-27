@@ -1,3 +1,10 @@
+## 27/11/2026 — Thư cần xử lý trong admin
+
+- Gom thư xác nhận đơn, chào mừng và thông báo cửa hàng mới vào hai bộ sưu tập Firestore orderMailReview và newsletterMailReview, dùng quyền admin theo từng nguồn.
+- Menu hiện số thư cần xử lý. Admin có thể chọn nhiều dòng hoặc chọn theo bộ lọc, đối chiếu Outlook và mở trang vận hành liên quan.
+- Vercel Cron chạy hằng ngày (08 giờ Việt Nam), mỗi lượt tối đa 30 thư đến hạn cho mỗi nguồn. Cần CRON_SECRET và quyền Microsoft Graph đọc hộp thư. Bản ghi cũ tiếp tục tra ở lịch sử hiện có.
+- Lint, build và 290 kiểm thử đạt. Chưa chạy cron hoặc đối chiếu Outlook trên production.
+
 ## 27/11/2026 — Báo cho cửa hàng khi có đơn hoặc đăng ký nhận tin mới
 
 - API đặt đơn và đăng ký nhận tin gửi email nội bộ qua Microsoft khi vừa tạo bản ghi. Thư chứa liên kết đến khu vực xử lý trong admin. Có thể chọn hộp thư nhận qua STORE_NOTIFICATION_EMAIL.

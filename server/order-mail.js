@@ -1,3 +1,4 @@
+import { reviewRecord } from "./mail-review.js";
 import { orderTrackingMail, trackingTemplate } from "../src/lib/order-tracking-mail.js";
 import { sectionIsEnabled } from "../src/lib/page-sections.js";
 import { orderProductName } from "../src/lib/product-options.js";
@@ -81,7 +82,9 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
     const createdAt = new Date();
     tx.set(eventRef, { type: "orderConfirmation", recipient: data.customer.email, subject: message.subject, text: message.text, ...snapshot, templateName: snapshot.templateName || (manual && customMessage ? "Nội dung soạn riêng cho đơn" : "Xác nhận đơn tự động"), state: templateError ? "failed" : "sending", errorCode: templateError ? "mail_template_invalid" : "", createdAt, updatedAt: createdAt, actor, actorName, actorEmail, manual, ...(sourceTemplate ? { templateSubject: sourceTemplate.subject, templateText: sourceTemplate.text } : {}) });
     tx.set(orderRef, { confirmationMail: { state: templateError ? "failed" : "sending", eventId: eventRef.id, updatedAt: createdAt } }, { merge: true });
-    return { recipient: data.customer.email, message, templateError, snapshot };
+    const reviewRef = db.collection("orderMailReview").doc(orderId + "-" + eventRef.id);
+    if (templateError) tx.set(reviewRef, reviewRecord("order", data.customer.email, "failed", {}, eventRef.path, data.code));
+    return { recipient: data.customer.email, code:data.code, message, templateError, snapshot };
   });
   if (!claimed) return { duplicate: true };
   if (claimed.recoverySkipped) return { state: "unchanged", errorMessage: "Trạng thái đã thay đổi. Hãy xem lại kết quả trước khi gửi." };
@@ -112,6 +115,7 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
   await db.runTransaction(async (tx) => {
     const latest = await tx.get(orderRef);
     if (state === "accepted") await recordTemplateUse(tx, db, claimed.snapshot);
+    tx.set(db.collection("orderMailReview").doc(orderId + "-" + eventRef.id), reviewRecord("order", claimed.recipient, state, tracking, eventRef.path, claimed.code));
     tx.set(eventRef, { state, errorCode, errorMessage, ...tracking, updatedAt }, { merge: true });
     if (latest.data()?.confirmationMail?.eventId === eventRef.id) tx.set(orderRef, { confirmationMail: { state, eventId: eventRef.id, updatedAt } }, { merge: true });
   });

@@ -1,3 +1,4 @@
+import { checkReview, reviewPage, reviewCollection } from "./mail-review.js";
 import { mailTransport } from "./mail-transport.js";
 import { describeMailError } from "./mail-error.js";
 import { safeMailTracking } from "./mail-tracking.js";
@@ -55,6 +56,11 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
       const settings = db.collection("newsletterSettings").doc("welcome");
       const campaigns = db.collection("newsletterCampaigns");
       const contacts = db.collection("newsletterSubscribers");
+      if (req.method === "GET" && req.query?.mailReviewCount === "1") {
+        const snapshot = await db.collection(reviewCollection("newsletter")).where("issueAt", ">", 0).count().get();
+        return reply(200, {count:snapshot.data().count});
+      }
+      if (req.method === "GET" && req.query?.mailReview === "1") return reply(200, await reviewPage(db.collection(reviewCollection("newsletter")), req.query));
       if (req.method === "GET" && req.query?.templates === "1") {
         const cursor = req.query.cursor;
         if (cursor && !validId(cursor)) return reply(400, { message: "Trang mẫu thư không hợp lệ." });
@@ -111,6 +117,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
       try { body = typeof req.body === "string" ? JSON.parse(req.body) : req.body; }
       catch { return reply(400, { message: "Dữ liệu không hợp lệ." }); }
       if (!body || typeof body !== "object" || Buffer.byteLength(JSON.stringify(body)) > 40000) return reply(400, { message: "Dữ liệu không hợp lệ." });
+      if (body.action === "checkReview") return reply(200, await checkReview(db, "newsletter", body.ids, checkOutlook));
       if (body.action === "campaignDeliveryStatuses") {
         if (!validId(body.id) || (body.cursor && !/^[a-f0-9]{64}$/.test(body.cursor))) return reply(400, { message: "Thư hoặc trang không hợp lệ." });
         let query = campaigns.doc(body.id).collection("deliveries").orderBy("__name__").limit(50);

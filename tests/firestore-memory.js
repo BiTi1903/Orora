@@ -3,7 +3,7 @@
 export function memoryDb() {
   const records = new Map();
   let queue = Promise.resolve();
-  const snap = (ref) => ({ id: ref.id, exists: records.has(ref.path), data: () => structuredClone(records.get(ref.path)) });
+  const snap = (ref) => ({ ref, id: ref.id, exists: records.has(ref.path), data: () => structuredClone(records.get(ref.path)) });
   const applyFields = (existing, incoming, merge) => {
     const base = merge && existing ? structuredClone(existing) : {};
     for (const [k, v] of Object.entries(incoming || {})) {
@@ -50,6 +50,7 @@ export function memoryDb() {
     },
   });
   const db = {
+    doc: ref,
     collection: (name) => query(name),
     runTransaction: (work) => {
       const run = queue.then(async () => {
@@ -58,6 +59,7 @@ export function memoryDb() {
           get: async (reference) => reference.path ? snap(reference) : reference.get(),
           getAll: async (...refs) => refs.map(snap),
           set: (reference, value, options) => writes.push(() => reference.set(value, options)),
+          update: (reference, value) => writes.push(() => reference.set(value, {merge:true})),
           delete: (reference) => writes.push(() => reference.delete()),
         };
         const result = await work(tx);

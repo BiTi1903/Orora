@@ -3,6 +3,7 @@ import { useConfirm } from "./confirm-context";
 import "../styles/product-detail.css";
 import { dirtyRegistry } from "../lib/dirty-registry";
 import useOrderNotifications from "./useOrderNotifications";
+import { orderRequest } from "./order-api";
 import { newsletterRequest } from "./newsletter-api";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { auth, onAuthStateChanged, signOut } from "../lib/firebaseAuth";
@@ -19,6 +20,7 @@ const NewsletterAdmin = lazy(() => import("./NewsletterAdmin"));
 const ShippingAdmin = lazy(() => import("./ShippingAdmin"));
 const InventoryAdmin = lazy(() => import("./InventoryAdmin"));
 const ChatSettings = lazy(() => import("./ChatSettings"));
+const MailReview = lazy(() => import("./MailReview"));
 const EmailExport = lazy(() => import("./EmailExport"));
 
 /* Menu chia nhóm theo công việc; mỗi mục là [khóa, nhãn]. */
@@ -26,7 +28,7 @@ const GROUPS = [
   { title: null, items: [["dashboard", "Tổng quan"], ["analytics", "Thống kê"]] },
   { title: "Bán hàng", items: [["orders", "Đơn hàng"], ["inventory", "Kiểm kho"], ["shipping", "Phí vận chuyển"]] },
   { title: "Giao diện và nội dung", items: [["home", "Trang chủ"], ["products", "Sản phẩm"]] },
-  { title: "Khách hàng", items: [["newsletter", "Email"], ["chat", "Chat AI"], ["export", "Xuất danh sách email"]] },
+  { title: "Khách hàng", items: [["newsletter", "Email"], ["mail-review", "Thư cần xử lý"], ["chat", "Chat AI"], ["export", "Xuất danh sách email"]] },
 ];
 
 const sharesBuilder = (from,to) => [from,to].every(key => key === "home" || key === "store");
@@ -79,6 +81,24 @@ function syncAdminUrl(key, replace = false) {
 function AdminWorkspace({ user }) {
   const confirm = useConfirm();
   const notifications = useOrderNotifications();
+  const [reviewCount,setReviewCount] = useState(null);
+  useEffect(() => {
+    let active = true, pending = false;
+    async function refresh() {
+      if (pending || document.hidden) return;
+      pending = true;
+      const counts = await Promise.allSettled([orderRequest,newsletterRequest].map(request=>request(null,{mailReviewCount:"1"})));
+      if (active) {
+        const available = counts.filter(result=>result.status === "fulfilled");
+        setReviewCount(available.length ? available.reduce((total,result)=>total+result.value.count,0) : null);
+      }
+      pending = false;
+    }
+    refresh();
+    const timer = setInterval(refresh,60000);
+    window.addEventListener("focus",refresh);
+    return () => {active=false;clearInterval(timer);window.removeEventListener("focus",refresh);};
+  },[]);
   const [pendingRequest, setPendingRequest] = useState(null);
   const [signOutError, setSignOutError] = useState("");
   const position = useRef(window.history.state?.adminPosition ?? 0);
@@ -194,6 +214,7 @@ function AdminWorkspace({ user }) {
         />
       );
     }
+    if (tab === "mail-review") return <MailReview onOpenOrder={id=>{setPendingRequest({id,allStatuses:true});navigate("orders");}} onOpenNewsletter={()=>navigate("newsletter")}/>;
     if (tab === "export") return <EmailExport key={user.uid} request={newsletterRequest} />;
     return null;
   };
@@ -209,7 +230,7 @@ function AdminWorkspace({ user }) {
               {title && <span className="admin-nav-title" aria-hidden="true">{title}</span>}
               {items.map(([key, label]) => (
                 <button key={key} aria-label={label} aria-describedby={key === "orders" && orderBadgeShown ? "admin-pending-order-count" : undefined} aria-current={(tab === key || (tab === "store" && key === "home")) ? "page" : undefined} className={(tab === key || (tab === "store" && key === "home")) ? "active" : ""} onPointerEnter={() => prefetchAdminTab(key)} onFocus={() => prefetchAdminTab(key)} onClick={() => navigate(key)}>
-                  {label}{key === "orders" && <OrderBadge notifications={notifications} />}
+                  {label}{key === "mail-review" && reviewCount > 0 && <span className="admin-order-count" aria-label={reviewCount+" thư cần xử lý"}>{reviewCount}</span>}{key === "orders" && <OrderBadge notifications={notifications} />}
                 </button>
               ))}
             </div>

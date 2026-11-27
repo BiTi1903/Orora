@@ -1,5 +1,7 @@
 {
+  "crons": [{ "path": "/scheduled/mail-review", "schedule": "0 1 * * *" }],
   "rewrites": [
+    { "source": "/scheduled/mail-review", "destination": "/api/admin-orders?scheduledReview=1" },
     { "source": "/chinh-sach", "destination": "/index.html" },
     {
       "source": "/api/storefront-shell",
