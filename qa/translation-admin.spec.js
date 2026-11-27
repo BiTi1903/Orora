@@ -53,3 +53,50 @@ test('published phrases match whole text and restore Vietnamese', async ({page})
   await expect(page.locator('#label')).toHaveText('Cần tư vấn');
   await expect(page.locator('#late')).toHaveText('Cần tư vấn');
 });
+
+test('clearing a saved translation and deleting a phrase both persist', async ({page}) => {
+  await page.route('**/*firebase_firestore.js*', route => route.fulfill({
+    contentType: 'application/javascript',
+    body: `
+      const docs = {
+        home: {
+          heroTitle: 'ORORA',
+          translationSheet: { '["home","heroTitle"]': { vi: 'ORORA', en: 'Wrong EN', ja: '' } },
+          phraseOverrides: { '"Cần tư vấn"': { vi: 'Cần tư vấn', en: 'Need advice', ja: 'ご相談' } },
+        },
+        productCategories: { items: [{ id: 'cat-1', name: 'Dưỡng môi' }] },
+      };
+      export const collection = () => ({ kind: 'products' });
+      export const doc = (_db, col, id) => ({ col, id });
+      export const getDocFromServer = async (ref) => ({ data: () => structuredClone(docs[ref.id] || {}) });
+      export const getDocsFromServer = async () => ({ docs: [] });
+      export const runTransaction = async (_db, fn) => fn({
+        get: async (ref) => ({ data: () => structuredClone(docs[ref.id] || {}) }),
+        update: (ref, patch) => { Object.assign(docs[ref.id], patch); },
+        set: (ref, patch) => { Object.assign(docs[ref.id], patch); },
+      });
+      window.__savedDocs = docs;
+    `,
+  }));
+  await mount(page, `import Editor from '/src/admin/TranslationAdmin.jsx';${render("R.createElement(Editor)")}`, {
+    'lib/firebase.js': 'export const db={};',
+  });
+  await expect(page.locator('.translation-row')).toHaveCount(2);
+  await expect(page.locator('.translation-row').nth(1)).toContainText('Danh mục sản phẩm › Danh mục #1 › Tên danh mục');
+  await page.locator('.translation-row').first().click();
+  await expect(page.getByRole('textbox', { name: 'Tiếng Anh', exact: true })).toHaveValue('Wrong EN');
+  await page.getByRole('button', { name: 'Xóa về mặc định' }).click();
+  const saveBtn = page.getByRole('button', { name: 'Lưu 1 mục' });
+  await expect(saveBtn).toBeEnabled();
+  await saveBtn.click();
+  await expect(page.getByRole('status')).toContainText('Đã lưu 1 bản dịch.');
+  const sheet = await page.evaluate(() => window.__savedDocs.home.translationSheet);
+  expect(sheet['["home","heroTitle"]']).toBeUndefined();
+
+  await page.getByRole('button', { name: 'Dịch theo cụm từ', exact: true }).click();
+  await expect(page.getByText('Need advice', { exact: true })).toBeVisible();
+  page.once('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: 'Xóa', exact: true }).click();
+  await expect(page.getByText('Need advice', { exact: true })).toHaveCount(0);
+  await fit(page);
+});

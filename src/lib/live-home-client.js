@@ -5,6 +5,6 @@ export function listenHome(next,error){
  return onSnapshot(doc(db,'settings','home'),snapshot=>{window.__ororaLiveHomeReady=true;next(snapshot.exists()?snapshot.data():{});},error);
 }
 export function listenCategories(next,error){
- if(!db){next([]);return()=>{};}
- return onSnapshot(doc(db,'settings','productCategories'),snapshot=>next(Array.isArray(snapshot.data()?.items)?snapshot.data().items:[]),error);
+ if(!db){next([],{});return()=>{};}
+ return onSnapshot(doc(db,'settings','productCategories'),snapshot=>{const data=snapshot.exists()?snapshot.data():{};next(Array.isArray(data?.items)?data.items:[],data);},error);
 }

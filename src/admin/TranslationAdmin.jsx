@@ -1,6 +1,7 @@
 import PhraseTranslationForm from "./PhraseTranslationForm";
 import "./translations.css";
 import {normalizeSearch} from "../lib/catalog-filters";
+import {translatePhrase} from "../lib/i18n";
 import {useEffect, useRef, useState} from "react";
 import {dirtyRegistry} from "../lib/dirty-registry";
 import {collection, doc, getDocFromServer, getDocsFromServer, runTransaction} from "firebase/firestore";
@@ -10,13 +11,35 @@ import {translationHeaders, translationRows} from "../lib/translation-rows";
 import {excelCells} from "./email-export";
 
 const languages = ["en", "ja"];
+const SAVE_BATCH_SIZE = 5;
+
+function hasLangChange(row, draftRow, lang) {
+  if (!draftRow || !Object.hasOwn(draftRow, lang)) return false;
+  return draftRow[lang].trim() !== row[lang];
+}
+
+function targetDocRef(id) {
+  if (id === "home") return doc(db, "settings", "home");
+  if (id === "categories") return doc(db, "settings", "productCategories");
+  return doc(db, "products", id);
+}
+
+function autoSuggestion(vi, lang) {
+  const translated = translatePhrase(vi, lang);
+  return translated && translated !== vi ? translated : "";
+}
+
 async function readCurrentRows() {
-  const [home, products] = await Promise.all([
+  const [home, categories, products] = await Promise.all([
     getDocFromServer(doc(db, "settings", "home")),
+    getDocFromServer(doc(db, "settings", "productCategories")),
     getDocsFromServer(collection(db, "products")),
   ]);
-  return [...translationRows("home", home.data() || {}),
-    ...products.docs.flatMap(product => translationRows(product.id, product.data()))];
+  return [
+    ...translationRows("home", home.data() || {}),
+    ...translationRows("categories", categories.data() || {}),
+    ...products.docs.flatMap(product => translationRows(product.id, product.data())),
+  ];
 }
 
 export default function TranslationAdmin() {
@@ -25,26 +48,40 @@ export default function TranslationAdmin() {
   const [area, setArea] = useState("all");
   const [rows, setRows] = useState([]);
   const [draft, setDraft] = useState({});
-  const [message, setMessage] = useState("");
+  const [notice, setNotice] = useState({ text: "", kind: "status" });
   const [busy, setBusy] = useState(true);
   const fileInput = useRef(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const [page, setPage] = useState(0);
   const [expanded, setExpanded] = useState(null);
+
   useEffect(() => {
-    readCurrentRows().then(setRows).catch(error => setMessage(error.message)).finally(() => setBusy(false));
+    readCurrentRows()
+      .then(setRows)
+      .catch(error => setNotice({ text: error.message || "Không tải được danh sách bản dịch.", kind: "error" }))
+      .finally(() => setBusy(false));
   }, []);
-  const changes = rows.filter(r => languages.some(lang => draft[r.key]?.[lang]?.trim() && draft[r.key][lang].trim() !== r[lang]));
+
+  const changes = rows.filter(r => languages.some(lang => hasLangChange(r, draft[r.key], lang)));
+
   useEffect(() => {
     dirtyRegistry.set("translations", changes.length > 0);
     return () => dirtyRegistry.set("translations", false);
   }, [changes.length]);
+
   async function run(action) {
     setBusy(true);
-    setMessage("");
-    try { await action(); } catch (error) { setMessage(error.message); } finally { setBusy(false); }
+    setNotice({ text: "", kind: "status" });
+    try {
+      await action();
+    } catch (error) {
+      setNotice({ text: error.message || "Đã xảy ra lỗi khi xử lý.", kind: "error" });
+    } finally {
+      setBusy(false);
+    }
   }
+
   function reload() {
     if (changes.length && !window.confirm("Tải lại bản dịch từ máy chủ và bỏ các thay đổi chưa lưu?")) return;
     run(async () => {
@@ -52,34 +89,42 @@ export default function TranslationAdmin() {
       setRows(latest);
       setDraft({});
       setPage(0);
-    if (filter === "changed") setFilter("all");
-      setMessage("Đã tải bản dịch mới nhất từ máy chủ.");
+      if (filter === "changed") setFilter("all");
+      setNotice({ text: "Đã tải bản dịch mới nhất từ máy chủ.", kind: "success" });
     });
   }
+
   async function download() {
     const {default: write} = await import("write-excel-file/browser");
     const saved = await readCurrentRows();
     const values = saved.map(r => [r.key, r.where, r.vi, r.en, r.ja]);
-    await write(excelCells({headers:translationHeaders, rows:values}), {columns:[34,42,70,70,70].map(width=>({width}))}).toFile("ORORA-ban-dich.xlsx");
+    await write(excelCells({headers: translationHeaders, rows: values}), {columns: [34, 42, 70, 70, 70].map(width => ({width}))}).toFile("ORORA-ban-dich.xlsx");
+    setNotice({ text: `Đã xuất ${saved.length} mục ra file ORORA-ban-dich.xlsx.`, kind: "success" });
   }
+
   async function load(file) {
     const {readSheet} = await import("read-excel-file/browser");
-    const [header, ...lines] = await readSheet(file, {trim:false});
-    if ((header?.length !== 4 && header?.length !== 5) || !translationHeaders.slice(0, header.length).every((h,i)=>header?.[i] === h)) throw Error("Sai tiêu đề cột. Hãy dùng file xuất từ ORORA.");
-    const current = new Map(rows.map(r => [r.key,r]));
+    const [header, ...lines] = await readSheet(file, {trim: false});
+    if ((header?.length !== 4 && header?.length !== 5) || !translationHeaders.slice(0, header.length).every((h, i) => header?.[i] === h)) {
+      throw Error("Sai tiêu đề cột. Hãy dùng file xuất từ ORORA.");
+    }
+    const current = new Map(rows.map(r => [r.key, r]));
     const seen = new Set();
     const edits = {...draft};
-    for (const [key,,vi,en,ja] of lines) {
-      if (![en,ja].some(value => String(value ?? "").trim())) continue;
-      if (!current.has(key) || current.get(key).vi !== vi || seen.has(key)) throw Error("Mã bị trùng hoặc nội dung gốc đã đổi: " + key);
+    for (const [key, , vi, en, ja] of lines) {
+      if (![en, ja].some(value => String(value ?? "").trim())) continue;
+      if (!current.has(key) || current.get(key).vi !== vi || seen.has(key)) {
+        throw Error("Mã bị trùng hoặc nội dung gốc đã đổi: " + key);
+      }
       seen.add(key);
       edits[key] = {...edits[key]};
       if (String(en ?? "").trim()) edits[key].en = String(en);
       if (String(ja ?? "").trim()) edits[key].ja = String(ja);
     }
-    setDraft(previous => ({...previous,...edits}));
-    setMessage("Đã nhập để xem lại. Bấm Lưu bản dịch khi hoàn tất.");
+    setDraft(previous => ({...previous, ...edits}));
+    setNotice({ text: "Đã nhập để xem lại. Bấm Lưu bản dịch khi hoàn tất.", kind: "success" });
   }
+
   async function save() {
     const groups = new Map();
     for (const row of changes) {
@@ -87,97 +132,199 @@ export default function TranslationAdmin() {
       if (!groups.has(id)) groups.set(id, []);
       groups.get(id).push(row);
     }
-    await runTransaction(db, async tx => {
-      const docs = await Promise.all([...groups.keys()].map(id => tx.get(id === "home" ? doc(db,"settings","home") : doc(db,"products",id))));
-      for (const snap of docs) {
-        const data = snap.data();
-        if (!data) throw Error("Nội dung đã bị xóa.");
-        const current = new Map(translationRows(snap.id,data).map(r=>[r.key,r]));
-        const sheet = {...data.translationSheet};
-        for (const row of groups.get(snap.id)) {
-          const live = current.get(row.key);
-          if (live?.vi !== row.vi || languages.some(lang => live[lang] !== row[lang])) throw Error("Nội dung đã thay đổi. Hãy tải lại trước khi lưu.");
-          sheet[row.key] = {vi:row.vi};
-          for (const lang of languages) sheet[row.key][lang] = draft[row.key]?.[lang]?.trim() || live[lang];
+    const entries = [...groups.entries()];
+    const savedKeys = new Set();
+    const errors = [];
+
+    for (let i = 0; i < entries.length; i += SAVE_BATCH_SIZE) {
+      const batch = entries.slice(i, i + SAVE_BATCH_SIZE);
+      await Promise.all(batch.map(async ([id, groupRows]) => {
+        try {
+          await runTransaction(db, async tx => {
+            const ref = targetDocRef(id);
+            const snap = await tx.get(ref);
+            const data = snap.data();
+            if (!data) throw Error("Nội dung đã bị xóa.");
+            const current = new Map(translationRows(id, data).map(r => [r.key, r]));
+            const sheet = {...data.translationSheet};
+            for (const row of groupRows) {
+              const live = current.get(row.key);
+              if (live?.vi !== row.vi || languages.some(lang => live[lang] !== row[lang])) {
+                throw Error("Nội dung đã thay đổi. Hãy tải lại trước khi lưu.");
+              }
+              const nextEntry = { vi: row.vi };
+              for (const lang of languages) {
+                nextEntry[lang] = hasLangChange(row, draft[row.key], lang)
+                  ? draft[row.key][lang].trim()
+                  : live[lang];
+              }
+              if (!nextEntry.en && !nextEntry.ja) delete sheet[row.key];
+              else sheet[row.key] = nextEntry;
+            }
+            tx.update(ref, { translationSheet: sheet });
+          });
+          for (const row of groupRows) savedKeys.add(row.key);
+        } catch (err) {
+          errors.push(err?.message || `Không thể lưu mục ${id}.`);
         }
-        tx.update(snap.ref,{translationSheet:sheet});
-      }
-    });
-    setRows(rows.map(row => ({...row, en:draft[row.key]?.en?.trim() || row.en, ja:draft[row.key]?.ja?.trim() || row.ja})));
-    setDraft({});
-    setMessage("Đã lưu bản dịch.");
+      }));
+    }
+
+    if (savedKeys.size > 0) {
+      setRows(prev => prev.map(row => {
+        if (!savedKeys.has(row.key)) return row;
+        const d = draft[row.key];
+        return {
+          ...row,
+          en: hasLangChange(row, d, "en") ? d.en.trim() : row.en,
+          ja: hasLangChange(row, d, "ja") ? d.ja.trim() : row.ja,
+        };
+      }));
+      setDraft(prev => {
+        const next = { ...prev };
+        for (const k of savedKeys) delete next[k];
+        return next;
+      });
+    }
+
+    if (errors.length > 0) {
+      const prefix = savedKeys.size > 0 ? `Đã lưu ${savedKeys.size} mục, nhưng có ${errors.length} nhóm bị lỗi: ` : "";
+      throw Error(prefix + errors[0]);
+    }
+    setNotice({ text: `Đã lưu ${savedKeys.size} bản dịch.`, kind: "success" });
   }
+
   const changedKeys = new Set(changes.map(row => row.key));
   const search = normalizeSearch(query);
   const filtered = rows.filter(row => {
-    if (area !== "all" && (JSON.parse(row.key)[0] === "home") !== (area === "home")) return false;
+    const docId = JSON.parse(row.key)[0];
+    if (area === "home" && docId !== "home") return false;
+    if (area === "categories" && docId !== "categories") return false;
+    if (area === "products" && (docId === "home" || docId === "categories")) return false;
     if (filter === "changed" && !changedKeys.has(row.key)) return false;
     if (languages.includes(filter) && row[filter]) return false;
     return normalizeSearch([row.vi, row.where, row.en, row.ja].join(" ")).includes(search);
   });
+
+  const total = rows.length;
+  const enDone = rows.filter(row => Boolean(row.en)).length;
+  const jaDone = rows.filter(row => Boolean(row.ja)).length;
+  const enPct = total ? Math.round((enDone / total) * 100) : 0;
+  const jaPct = total ? Math.round((jaDone / total) * 100) : 0;
+
   const pageSize = 8;
   const pages = Math.ceil(filtered.length / pageSize);
   const current = Math.min(page, Math.max(0, pages - 1));
+
   return <section className="translations-admin">
     <header><h1>Bản dịch</h1></header>
     <nav className="translation-tabs" aria-label="Khu vực bản dịch">
-      <button type="button" aria-pressed={view === "content"} onClick={()=>setView("content")}>Nội dung website</button>
-      <button type="button" aria-pressed={view === "phrases"} onClick={()=>{setOpenedPhrases(true); setView("phrases");}}>Dịch theo cụm từ</button>
+      <button type="button" aria-pressed={view === "content"} onClick={() => setView("content")}>Nội dung website</button>
+      <button type="button" aria-pressed={view === "phrases"} onClick={() => { setOpenedPhrases(true); setView("phrases"); }}>Dịch theo cụm từ</button>
     </nav>
     {openedPhrases && <div hidden={view !== "phrases"}><PhraseTranslationForm /></div>}
-    <div hidden={view !== "content"} className="translation-panel">
-    <div className="translation-toolbar">
-    <div className="translation-counts">
-      <span><strong>{rows.length}</strong> nội dung</span>
-      <span><strong>{rows.filter(row=>!row.en).length}</strong> thiếu EN</span>
-      <span><strong>{rows.filter(row=>!row.ja).length}</strong> thiếu JP</span>
-    </div>
-    <div className="translation-actions">
-      <button className="admin-btn" disabled={busy} onClick={reload}>Tải lại bản dịch</button>
-      <button className="admin-btn" disabled={busy} onClick={()=>run(download)}>Xuất Excel</button>
-      <button className="admin-btn" disabled={busy} onClick={()=>fileInput.current.click()}>Nhập Excel</button>
-      <input ref={fileInput} hidden type="file" accept=".xlsx" onChange={event=>{
-        const file = event.target.files[0];
-        event.target.value = "";
-        if (file) run(()=>load(file));
-      }}/>
-      <button className="admin-btn primary" disabled={busy || !changes.length} onClick={()=>run(save)}>
-        {changes.length ? `Lưu ${changes.length} mục` : "Lưu thay đổi"}
-      </button>
-    </div></div>
-    <div className="translation-filters">
-      <input type="search" aria-label="Tìm bản dịch" placeholder="Tìm câu, tên sản phẩm hoặc vị trí…" value={query}
-        onChange={event=>{setQuery(event.target.value); setPage(0);}}/>
-      <select aria-label="Khu vực nội dung" value={area} onChange={event=>{setArea(event.target.value); setPage(0);}}>
-        <option value="all">Mọi khu vực</option><option value="home">Trang chủ và cấu hình</option><option value="products">Sản phẩm</option>
-      </select>
-      <select aria-label="Lọc bản dịch" value={filter} onChange={event=>{setFilter(event.target.value); setPage(0);}}>
-        <option value="all">Tất cả trạng thái</option><option value="en">Chưa lưu tiếng Anh</option>
-        <option value="ja">Chưa lưu tiếng Nhật</option><option value="changed">Đã sửa, chưa lưu</option>
-      </select>
-    </div>
-    <p role="status">{busy ? "Đang xử lý…" : message}</p>
-    {filtered.slice(current * pageSize, (current + 1) * pageSize).map(row => {
-      const open = expanded === row.key;
-      return <article key={row.key}>
-        <button className="translation-row" aria-expanded={open} onClick={()=>setExpanded(open ? null : row.key)}>
-          <span><small>{row.where}</small><strong>{row.vi}</strong></span>
-          <span>{changedKeys.has(row.key) ? "Chưa lưu" : open ? "Thu gọn" : "Sửa"}</span>
-        </button>
-        {open && <div className="translation-editor">
-          <div className="translation-original"><b>Tiếng Việt</b><p>{row.vi}</p></div>
-          {languages.map(lang => <label key={lang}>{lang === "en" ? "Tiếng Anh" : "Tiếng Nhật"}
-            <textarea lang={lang} rows={4} disabled={busy} value={draft[row.key]?.[lang] ?? row[lang]}
-              onChange={event=>setDraft({...draft,[row.key]:{...draft[row.key],[lang]:event.target.value}})}/>
-          </label>)}
-        </div>}
-      </article>;
-    })}
-    {!busy && !filtered.length && <p>Không tìm thấy nội dung phù hợp.</p>}
-    {pages > 0 && <footer><span>{current * pageSize + 1}–{Math.min((current + 1) * pageSize, filtered.length)} / {filtered.length} mục</span>
-      <button className="admin-btn" disabled={!current} onClick={()=>setPage(current-1)}>Trước</button>
-      <button className="admin-btn" disabled={current+1 >= pages} onClick={()=>setPage(current+1)}>Sau</button>
-    </footer>}
+    <div hidden={view !== "content"} className="admin-card translation-panel">
+      <div className="translation-toolbar">
+        <div className="translation-progress">
+          <div className="translation-counts">
+            <span>Đã dịch <strong>{enDone}/{total}</strong> mục EN ({enPct}%)</span>
+            <span>Đã dịch <strong>{jaDone}/{total}</strong> mục JP ({jaPct}%)</span>
+          </div>
+          <div className="translation-bars" aria-hidden="true">
+            <div className="translation-bar"><span style={{ width: `${enPct}%` }} /></div>
+            <div className="translation-bar is-jp"><span style={{ width: `${jaPct}%` }} /></div>
+          </div>
+        </div>
+        <div className="translation-actions">
+          <button type="button" className="admin-btn" disabled={busy} onClick={reload}>Tải lại bản dịch</button>
+          <button type="button" className="admin-btn" disabled={busy} onClick={() => run(download)}>Xuất Excel</button>
+          <button type="button" className="admin-btn" disabled={busy} onClick={() => fileInput.current.click()}>Nhập Excel</button>
+          <input ref={fileInput} hidden type="file" accept=".xlsx" onChange={event => {
+            const file = event.target.files[0];
+            event.target.value = "";
+            if (file) run(() => load(file));
+          }}/>
+          <button type="button" className="admin-btn primary" disabled={busy || !changes.length} onClick={() => run(save)}>
+            {changes.length ? `Lưu ${changes.length} mục` : "Lưu thay đổi"}
+          </button>
+        </div>
+      </div>
+
+      <div className="translation-filters">
+        <input type="search" aria-label="Tìm bản dịch" placeholder="Tìm câu, tên sản phẩm hoặc vị trí…" value={query}
+          onChange={event => { setQuery(event.target.value); setPage(0); }}/>
+        <select aria-label="Khu vực nội dung" value={area} onChange={event => { setArea(event.target.value); setPage(0); }}>
+          <option value="all">Mọi khu vực</option>
+          <option value="home">Trang chủ và cấu hình</option>
+          <option value="categories">Danh mục sản phẩm</option>
+          <option value="products">Sản phẩm</option>
+        </select>
+        <select aria-label="Lọc bản dịch" value={filter} onChange={event => { setFilter(event.target.value); setPage(0); }}>
+          <option value="all">Tất cả trạng thái</option>
+          <option value="en">Chưa có bản dịch EN</option>
+          <option value="ja">Chưa có bản dịch JP</option>
+          <option value="changed">Đã sửa, chưa lưu</option>
+        </select>
+      </div>
+
+      {!busy && notice.kind === "error" && notice.text
+        ? <p className="admin-error translation-notice" role="alert">{notice.text}</p>
+        : <p className={notice.kind === "success" && !busy ? "admin-success translation-notice" : "translation-notice"} role="status">{busy ? "Đang xử lý…" : notice.text}</p>}
+
+      {filtered.slice(current * pageSize, (current + 1) * pageSize).map(row => {
+        const open = expanded === row.key;
+        const dirty = changedKeys.has(row.key);
+        const enAuto = !row.en && Boolean(autoSuggestion(row.vi, "en"));
+        const jaAuto = !row.ja && Boolean(autoSuggestion(row.vi, "ja"));
+        return <article key={row.key}>
+          <button type="button" className="translation-row" aria-expanded={open} onClick={() => setExpanded(open ? null : row.key)}>
+            <span className="translation-row-text"><small>{row.where}</small><strong>{row.vi}</strong></span>
+            <span className="translation-row-meta">
+              <span className={`translation-badge ${row.en ? "is-saved" : enAuto ? "is-auto" : "is-missing"}`}>
+                {row.en ? "EN ✓" : enAuto ? "EN Tự động" : "EN —"}
+              </span>
+              <span className={`translation-badge ${row.ja ? "is-saved" : jaAuto ? "is-auto" : "is-missing"}`}>
+                {row.ja ? "JP ✓" : jaAuto ? "JP Tự động" : "JP —"}
+              </span>
+              {dirty && <span className="translation-badge is-dirty">Chưa lưu</span>}
+              <span className="translation-row-toggle">{open ? "Thu gọn" : "Sửa"}</span>
+            </span>
+          </button>
+          {open && <div className="translation-editor">
+            <div className="translation-original"><b>Tiếng Việt</b><p>{row.vi}</p></div>
+            {languages.map(lang => {
+              const auto = autoSuggestion(row.vi, lang);
+              const val = draft[row.key]?.[lang] ?? row[lang];
+              return <div className="translation-field" key={lang}>
+                <label>{lang === "en" ? "Tiếng Anh" : "Tiếng Nhật"}
+                  <textarea
+                    lang={lang}
+                    rows={4}
+                    disabled={busy}
+                    value={val}
+                    placeholder={auto ? `Mặc định tự động: ${auto}` : `Nhập bản dịch ${lang === "en" ? "EN" : "JP"}…`}
+                    onChange={event => setDraft({ ...draft, [row.key]: { ...draft[row.key], [lang]: event.target.value } })}
+                  />
+                </label>
+                {val && <button
+                  type="button"
+                  className="translation-clear-btn"
+                  disabled={busy}
+                  onClick={() => setDraft({ ...draft, [row.key]: { ...draft[row.key], [lang]: "" } })}
+                >
+                  Xóa về mặc định
+                </button>}
+              </div>;
+            })}
+          </div>}
+        </article>;
+      })}
+      {!busy && !filtered.length && <p className="admin-muted">Không tìm thấy nội dung phù hợp.</p>}
+      {pages > 0 && <footer>
+        <span>{current * pageSize + 1}–{Math.min((current + 1) * pageSize, filtered.length)} / {filtered.length} mục</span>
+        <button type="button" className="admin-btn" disabled={!current} onClick={() => setPage(current - 1)}>Trước</button>
+        <button type="button" className="admin-btn" disabled={current + 1 >= pages} onClick={() => setPage(current + 1)}>Sau</button>
+      </footer>}
     </div>
   </section>;
 }

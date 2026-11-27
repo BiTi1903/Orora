@@ -163,6 +163,17 @@ function AdminWorkspace({ user }) {
     return () => window.removeEventListener("orora-admin-store", open);
   }, [tab]);
 
+  const navigateRef = useRef(navigate);
+  useEffect(() => { navigateRef.current = navigate; });
+  useEffect(() => {
+    const onNavigate = (event) => {
+      const target = event.detail?.tab;
+      if (target) navigateRef.current(target);
+    };
+    window.addEventListener("orora-admin-navigate", onNavigate);
+    return () => window.removeEventListener("orora-admin-navigate", onNavigate);
+  }, []);
+
   const orderBadgeShown = notifications.snapshot?.pendingCount > 0 || notifications.error;
 
   const renderActiveTab = () => {

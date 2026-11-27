@@ -1,3 +1,17 @@
+## 27/11/2026 — Sửa lỗi chức năng, đồng bộ UI/UX và mở rộng danh mục cho Bản dịch
+
+- **Lý do**: Khắc phục lỗi không xóa được bản dịch đã lưu, tránh nháy tiếng Việt khi tải trang EN/JP, loại bỏ nơi chỉnh bản dịch trùng lặp ở Visual Builder, bổ sung dịch Danh mục sản phẩm, tránh giới hạn 500 document/transaction và đồng bộ giao diện/nội dung theo thiết kế Admin ORORA.
+- **Thay đổi chính**:
+  - `src/admin/TranslationAdmin.jsx`: Cho phép xóa trắng ô EN/JP (và thêm nút "Xóa về mặc định") để gỡ bản dịch đã lưu và kích hoạt nút Lưu; đọc và lưu bản dịch cho `settings/productCategories` kèm bộ lọc khu vực "Danh mục sản phẩm"; chia transaction lưu theo từng document theo lô 5 mục thay vì gộp 1 transaction lớn; thêm thanh tiến độ dịch EN/JP, huy hiệu trạng thái từng dòng (`EN ✓ / Tự động / —`, `JP ✓ / Tự động / —`), placeholder gợi ý bản dịch tự động từ từ điển, đổi nhãn lọc thành "Chưa có bản dịch EN/JP" và phân biệt thông báo lỗi (`.admin-error`) với thành công (`.admin-success`).
+  - `src/admin/PhraseTranslationForm.jsx`: Cho phép xóa trắng một ngôn ngữ khi sửa cụm từ, bổ sung nút **Xóa** cụm từ đã lưu khỏi `phraseOverrides`, đồng bộ nhãn `EN`/`JP` và kiểu thông báo lỗi/thành công.
+  - `src/admin/translations.css`: Bọc panel trong `.admin-card`, thay toàn bộ mã màu cứng sang token `admin-theme.css` và bổ sung kiểu hiển thị thanh tiến độ, huy hiệu trạng thái, nút xóa.
+  - `src/lib/home-shell.js`: Đưa `translations`, `phraseOverrides` và các mục `translationSheet` thuộc phần khung đầu trang (Navbar/Hero/Marquee) vào `/api/storefront-shell` để loại bỏ hiện tượng nháy tiếng Việt khi khách tải lại trang ở EN/JP.
+  - `src/lib/translation-rows.js`: Chuyển đường dẫn vị trí (`row.where`) sang tiếng Việt thân thiện (loại bỏ `@uuid` và tên biến kỹ thuật) nhưng giữ nguyên hoàn toàn `row.key` để tương thích dữ liệu và file Excel cũ.
+  - `src/lib/live-home-client.js`, `src/hooks/useCategories.js`: Truyền kèm `translationSheet` của `settings/productCategories` để áp dụng bản dịch danh mục tùy chỉnh trước khi fallback sang từ điển.
+  - `src/admin/builder/LanguageSwitcherSettings.jsx`, `src/admin/AdminApp.jsx`: Gỡ form nhập câu dịch cũ trùng lặp trong Visual Builder, thống nhất nhãn `Tiếng Nhật (JP)` và thêm nút chuyển thẳng sang mục **Bản dịch** (qua sự kiện `orora-admin-navigate`, vẫn giữ cảnh báo thay đổi chưa lưu).
+- **Kiểm tra đã chạy**: `npm run check` (293/293 unit test đạt, ESLint 0 lỗi/0 cảnh báo, Vite build và giới hạn bundle đạt), Playwright `qa/translation-admin.spec.js` (12/12 lượt trên 4 kích thước màn hình `320px/390px/768px/1440px` đạt). Chưa ghi trực tiếp trên Firestore sản xuất.
+- **Ảnh hưởng database**: Không cần migrate. Chỉ có thể lưu thêm trường `translationSheet` (tùy chọn) trên document `settings/productCategories` khi quản trị viên dịch danh mục.
+
 ## 27/11/2026 — Thiết kế lại khu vực Bản dịch
 
 - Chia nội dung website và cụm từ thành hai tab. Thêm thống kê thiếu bản dịch, lọc khu vực, danh sách cụm đã lưu có tìm kiếm và sửa trực tiếp.
