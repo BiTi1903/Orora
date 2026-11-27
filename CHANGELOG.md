@@ -1,3 +1,8 @@
+## 27/11/2026 — Chọn VI / EN / JP
+
+- Bật chuyển ngôn ngữ trên thanh điều hướng và menu điện thoại, dùng mã ja cho tiếng Nhật và hiển thị JP. Khôi phục lựa chọn đã lưu.
+- Build và 8 lượt Playwright trên bốn chiều rộng đạt. Không thay đổi database.
+
 ## 27/11/2026 — Tải bảng dịch hiện tại
 
 - Admin đọc lại trang chủ và sản phẩm từ máy chủ khi xuất Excel. Hỗ trợ sửa, nhập và lưu cả tiếng Anh lẫn tiếng Nhật, đọc được file cũ bốn cột.

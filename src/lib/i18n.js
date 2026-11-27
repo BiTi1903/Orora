@@ -1,13 +1,12 @@
 import { applySheet } from "./translation-rows.js";
 import { useSyncExternalStore } from "react";
 
-// Pause public language switching without discarding saved preferences or translations.
-export const STOREFRONT_LANGUAGES_ENABLED = false;
+export const STOREFRONT_LANGUAGES_ENABLED = true;
 
 export const SUPPORTED_LOCALES = [
   { code: "vi", short: "VI", label: "Tiếng Việt" },
   { code: "en", short: "EN", label: "English" },
-  { code: "ja", short: "JA", label: "日本語" },
+  { code: "ja", short: "JP", label: "日本語" },
 ];
 
 export const LOCALE_STORAGE_KEY = "orora_locale";
@@ -17,6 +16,7 @@ if (STOREFRONT_LANGUAGES_ENABLED && typeof window !== "undefined") {
   try {
     const saved = window.localStorage.getItem(LOCALE_STORAGE_KEY);
     if (saved === "en" || saved === "ja" || saved === "vi") currentLocale = saved;
+    document.documentElement.lang = currentLocale;
   } catch {
     // Storage unavailable
   }

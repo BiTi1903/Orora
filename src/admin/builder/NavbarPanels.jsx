@@ -95,7 +95,7 @@ export function NavbarSectionSettings({ navbar, onChange, includeCart = true, in
   return (
     <>
       {includeLang && (
-        <InspectorGroup title="Đa ngôn ngữ (VI / EN / JA)">
+        <InspectorGroup title="Đa ngôn ngữ (VI / EN / JP)">
           <LanguageSwitcherSettings navbar={navbar} onChange={onChange} />
         </InspectorGroup>
       )}

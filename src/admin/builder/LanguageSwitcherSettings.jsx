@@ -150,7 +150,7 @@ export default function LanguageSwitcherSettings({ navbar, onChange }) {
             checked={langSettings.enabled !== false}
             onChange={(e) => updateLangSettings({ enabled: e.target.checked })}
           />
-          <span>Hiển thị nút chọn ngôn ngữ (VI / EN / JA) trên Navbar</span>
+          <span>Hiển thị nút chọn ngôn ngữ (VI / EN / JP) trên Navbar</span>
         </label>
         <div className="builder-field-row">
           <label className="builder-checkbox">
@@ -190,10 +190,10 @@ export default function LanguageSwitcherSettings({ navbar, onChange }) {
             />
           </label>
           <label>
-            Nhãn JA
+            Nhãn JP
             <input
               value={langSettings.jaLabel ?? ""}
-              placeholder="JA"
+              placeholder="JP"
               maxLength={12}
               onChange={(e) => updateLangSettings({ jaLabel: e.target.value })}
             />

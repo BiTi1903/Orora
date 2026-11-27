@@ -52,7 +52,7 @@ function LanguageSwitcher({ settings = {}, preview = false, className = "", onSe
   const labels = {
     vi: settings.viLabel?.trim() || "VI",
     en: settings.enLabel?.trim() || "EN",
-    ja: settings.jaLabel?.trim() || "JA",
+    ja: settings.jaLabel?.trim() || "JP",
   };
   const boxVars = {
     ...(settings.background ? { "--lang-bg": settings.background } : {}),
