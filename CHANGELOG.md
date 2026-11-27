@@ -1,3 +1,8 @@
+## 27/11/2026 — Gọn hiệu ứng hover và chọn dung tích
+
+- Bỏ vệt sáng rê chuột trên ảnh thẻ và nhãn nổi bị cắt ở thanh mua. Chỉ hiện dung tích ở trang chi tiết, giá vẫn cập nhật theo lựa chọn.
+- Tải ảnh nội dung đầu tiên sớm hơn và bỏ hiệu ứng xuất hiện trên ảnh đó ở trang khách. Lint, build và chín lượt Playwright đạt. Không thay đổi database.
+
 ## 27/11/2026 — Làm rõ ảnh phụ trên thẻ sản phẩm
 
 - Thẻ trang chủ chọn ảnh theo thứ tự bộ ảnh sản phẩm và dùng ảnh CDN chất lượng cao theo kích thước hiển thị. Khi rê chuột, giữ ảnh chính đến khi ảnh phụ tải xong, bỏ phóng lớn và lớp phủ sáng trên ảnh phụ.

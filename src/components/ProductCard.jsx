@@ -225,8 +225,6 @@ function ProductCard({
 style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined}
         onClick={select(k("cardImage"))}
       >
-        <span className="tilt-shine" aria-hidden="true" />
-
         <ImageWrap
           className="product-slideshow-link"
           style={mediaInsetStyle}

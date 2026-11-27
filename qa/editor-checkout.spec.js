@@ -14,13 +14,13 @@ async function detail(page,state,overrides={},withMobileControls=false){
 }
 test('detail selects the catalog price by default, keeps totals compact and isolates checkout edits',async({page},testInfo)=>{
  await detail(page);
- await expect(page.getByRole('radio',{name:/^180ml(?: ·|$)/})).toBeChecked();await expect(page.locator('.product-detail-price')).toContainText('450.000');
+ await expect(page.getByRole('radio',{name:'180ml',exact:true})).toBeChecked();await expect(page.locator('.product-detail-price')).toContainText('450.000');
  await expect(page.locator('.product-price-variant')).toHaveCount(0);
  await expect(page.locator('.product-mobile-buy-total')).toContainText('180ml');
  await expect(page.locator('.purchase-subtotal')).toHaveCount(0);
  if (page.viewportSize().width > 768) await expect(page.locator('.purchase-options .product-mobile-buy')).toBeVisible();
  const buyBar=page.locator('.product-mobile-buy');await expect(buyBar).toBeVisible();expect((await buyBar.boundingBox()).height).toBeLessThan(95);
- await page.locator('.product-volume-choice').filter({hasText:'220ml'}).click();await expect(page.getByRole('radio',{name:/^220ml(?: ·|$)/})).toBeChecked();await expect(page.locator('.product-detail-price')).toContainText('600.000');
+ await page.locator('.product-volume-choice').filter({hasText:'220ml'}).click();await expect(page.getByRole('radio',{name:'220ml',exact:true})).toBeChecked();await expect(page.locator('.product-detail-price')).toContainText('600.000');
  const purchase = page.getByRole('button',{name:'Mua ngay',exact:true});
  if (page.viewportSize().width <= 768) await expect(purchase).toBeInViewport();
  await purchase.click();const dialog=page.getByRole('dialog',{name:'Đặt hàng trên website',exact:true});await expect(dialog).toBeVisible();

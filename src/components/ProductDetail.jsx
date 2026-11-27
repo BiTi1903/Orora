@@ -460,7 +460,6 @@ function ProductDetail({
             className={`product-buy-cart-btn ${selectedClass("pdAddToCart")}`}
             data-builder-key={preview ? "pdAddToCart" : undefined}
             aria-label={tr(soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ"))}
-            data-tooltip={tr(soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ"))}
             style={{
               ...(purchase.addToCartBackground ? { background: purchase.addToCartBackground } : {}),
               ...(purchase.addToCartBorderColor ? { borderColor: purchase.addToCartBorderColor } : {}),
@@ -881,7 +880,7 @@ function ProductDetail({
           </p>}
 
           {(stock === "out" || stock === "low") && <p className={`product-stock-badge is-${stock}`}>{tr(soldOut ? "Hết hàng" : "Còn ít")}</p>}
-          <ProductPurchaseSelection product={product} options={options} variantId={variantId} quantity={choice.quantity} onVariantChange={(variantId) => changeSelection({ variantId })} onQuantityChange={(quantity) => changeSelection({ quantity })} disabled={soldOut} textProps={textProps} />
+          <ProductPurchaseSelection showVolumePrice={false} product={product} options={options} variantId={variantId} quantity={choice.quantity} onVariantChange={(variantId) => changeSelection({ variantId })} onQuantityChange={(quantity) => changeSelection({ quantity })} disabled={soldOut} textProps={textProps} />
           <section ref={purchaseSectionRef} className={`purchase-options ${selectedClass("pdPurchaseOptions")}`} aria-label="Chọn kênh mua hàng" data-builder-key={preview ? "pdPurchaseOptions" : undefined} onClick={preview ? select("pdPurchaseOptions") : undefined}>
             {!pinBuyBar && mobileBuyBar}
             {(preview || (!soldOut && (tiktokShop || facebookShop)) || (contactSettings.showTrigger === true && (showZalo || showCall || home.chatSettings?.enabled !== false || (!contact.zalo && contact.email && contactSettings.showZalo !== false)))) && (
@@ -1037,7 +1036,6 @@ function ProductDetail({
                 type="button"
                 className="product-buy-cart-btn"
                 aria-label={tr(soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ"))}
-                data-tooltip={tr(soldOut ? "Hết hàng" : (purchase.addToCartLabel?.trim() || "Thêm vào giỏ"))}
                 style={{
                   ...(purchase.addToCartBackground ? { background: purchase.addToCartBackground } : {}),
                   ...(purchase.addToCartBorderColor ? { borderColor: purchase.addToCartBorderColor } : {}),

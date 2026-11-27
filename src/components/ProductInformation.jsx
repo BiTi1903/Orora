@@ -14,7 +14,7 @@ const tabKeys = {
   usage: "pdTabUsage",
 };
 
-function InformationImage({ src, alt, imageName, preview, selectedClass, onSelect, forceLoading = false }) {
+function InformationImage({ src, alt, imageName, preview, selectedClass, onSelect, forceLoading = false, steady = false }) {
   const [state, setState] = useState("loading");
   const [open, setOpen] = useState(null);
   const imgRef = useRef(null);
@@ -34,6 +34,7 @@ function InformationImage({ src, alt, imageName, preview, selectedClass, onSelec
       className={`product-information-image ${selectedClass("pdInfoMedia")}`}
       data-image-state={effectiveState}
       data-image-reveal=""
+      data-steady-image={steady ? "" : undefined}
       data-builder-key={preview ? "pdInfoMedia" : undefined}
       onClick={preview ? onSelect("pdInfoMedia") : undefined}
       aria-busy={effectiveState === "loading" ? "true" : undefined}
@@ -45,7 +46,7 @@ function InformationImage({ src, alt, imageName, preview, selectedClass, onSelec
           ref={imgRef}
           {...responsiveImage(src, { width: 1920, widths: [480, 960, 1440, 1920], sizes: "(max-width: 768px) 100vw, 75vw" })}
           alt={alt}
-          loading="lazy"
+          loading={steady ? "eager" : "lazy"}
           decoding="async"
           width={1920}
           height={1280}
@@ -328,6 +329,7 @@ export default function ProductInformation({
                               preview={preview}
                               selectedClass={selectedClass}
                               onSelect={select}
+                              steady={!preview && index === groups[key].findIndex(item => item.image?.trim?.())}
                               forceLoading={replayingSkeleton}
                             />
                           )}
