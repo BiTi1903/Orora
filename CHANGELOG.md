@@ -1,3 +1,15 @@
+## 27/11/2026 — Nâng cấp bộ chỉnh mẫu email (Email Studio) theo từng phần và Click-to-Select
+
+- **Lý do**: Cho phép quản trị viên chỉnh chi tiết từng phần trong email (Đầu thư, Tiêu đề, Nội dung, Các khối chuyên biệt, Nút hành động, Chân thư) gồm kiểu chữ máy tính/điện thoại, màu sắc, bật/tắt khối, định dạng văn bản giàu và bấm trực tiếp trên bản xem trước để chỉnh nhanh.
+- **Thay đổi chính**:
+  - `src/lib/mail-design.js`, `src/lib/mail-html.js`: Mở rộng schema `mailDesign` (tương thích ngược hoàn toàn) với 6 phông chữ nội dung, phông/cỡ chữ riêng cho Thương hiệu & Tiêu đề (máy tính/điện thoại), màu sắc riêng từng khu vực, logo ảnh/banner HTTPS, hộp mã ưu đãi, 3 ô giá trị thương hiệu, nhãn & thứ tự các khối đơn hàng, chân thư tùy chỉnh và công tắc bật/tắt từng khối; hỗ trợ định dạng nhanh an toàn (`**đậm**`, `*nghiêng*`, `==nhấn màu==`, `## tiêu đề phụ`, `> hộp nổi bật`, danh sách, kẻ ngang).
+  - `src/admin/MailFormatToolbar.jsx`: Thêm thanh công cụ định dạng nhanh ngay trên ô soạn nội dung ở `MailWriter` và `MailTemplateLibrary`.
+  - `src/admin/MailDesignFields.jsx`, `src/admin/MailPreviewPane.jsx`: Mở rộng thành 7 nhóm chỉnh sửa (`Khung thư`, `Đầu thư`, `Tiêu đề`, `Nội dung`, `Các khối`, `Nút hành động`, `Chân thư`) đồng bộ trực tiếp khi bấm vào từng phần trên khung Xem trước (`Click-to-Select`).
+  - `src/admin/MailPreviewDialog.jsx`: Nâng cấp hộp thoại xem mẫu & lịch sử thư hiển thị giao diện HTML thật kèm nút chuyển Văn bản thuần.
+  - `src/admin/MailWriter.jsx`, `src/admin/NewsletterAdmin.jsx`: Giữ nguyên thiết kế khung/màu khi bấm *Nạp mẫu chuẩn ORORA*, sửa cảnh báo thay đổi chưa lưu (`dirtyGuard`) nhận diện cả thay đổi `design` của Thư Đăng Ký.
+- **Kiểm tra đã chạy**: `npm run check` (unit tests, ESLint, Vite build, bundle budget) và Playwright `qa/admin-confirm.spec.js`. Chưa gửi thử trên hộp thư sản xuất.
+- **Ảnh hưởng database**: Không cần migrate. Các thuộc tính thiết kế mới lưu trong trường `design` hiện có với giá trị mặc định tương thích ngược cho mọi mẫu cũ.
+
 ## 27/11/2026 — Bố trí lại màn hình soạn thư và kho mẫu
 
 - Đặt bản xem trước cạnh vùng soạn trên desktop. Kho mẫu hiển thị toàn bộ mẫu khi mở, cho tìm, xem trước HTML hoặc văn bản và nhân bản mẫu. Thư đơn hàng dùng dữ liệu minh họa để hiện biến trong bản xem trước.

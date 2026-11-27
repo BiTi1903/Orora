@@ -12,6 +12,19 @@ const FONT_SERIF = "Georgia, 'Times New Roman', serif";
 const FONT_SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 const FONT_MONO = "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace";
 
+const FONT_MAP = {
+  system: FONT_SANS,
+  arial: "Arial, Helvetica, sans-serif",
+  georgia: FONT_SERIF,
+  times: "'Times New Roman', Times, serif",
+  trebuchet: "'Trebuchet MS', Helvetica, sans-serif",
+  verdana: "Verdana, Geneva, sans-serif",
+};
+
+function resolveFont(key, fallback = FONT_SANS) {
+  return FONT_MAP[key] || fallback;
+}
+
 export function escapeHtml(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -41,16 +54,30 @@ function safeHref(value) {
   return "";
 }
 
-function linkifyEscaped(escapedText) {
+function safeHttpsUrl(value) {
+  const url = safeHref(value);
+  return url.startsWith("https://") ? url : "";
+}
+
+function linkifyEscaped(escapedText, accentColor = "#b8446d") {
   return escapedText
     .replace(/(https?:\/\/[^\s<>"')]+)/gi, (url) => {
       const clean = url.replace(/[.,;:!?]+$/, "");
       const suffix = url.slice(clean.length);
-      return `<a href="${clean}" target="_blank" rel="noopener noreferrer" style="color:#b8446d;text-decoration:underline;word-break:break-word;">${clean}</a>${suffix}`;
+      return `<a href="${clean}" target="_blank" rel="noopener noreferrer" style="color:${accentColor};text-decoration:underline;word-break:break-word;">${clean}</a>${suffix}`;
     })
     .replace(/(^|[\s(>])([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g, (match, prefix, email) => (
-      `${prefix}<a href="mailto:${email}" style="color:#b8446d;text-decoration:underline;">${email}</a>`
+      `${prefix}<a href="mailto:${email}" style="color:${accentColor};text-decoration:underline;">${email}</a>`
     ));
+}
+
+function formatInlineText(rawText, accentColor = "#b8446d") {
+  const escaped = escapeHtml(rawText);
+  const linked = linkifyEscaped(escaped, accentColor);
+  return linked
+    .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/==([^=\n]+)==/g, `<span style="color:${accentColor};font-weight:600;">$1</span>`)
+    .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s.,;:!?)]|$)/g, "$1<em>$2</em>");
 }
 
 function stripUnsubscribeFooter(text, unsubscribeUrl) {
@@ -66,30 +93,41 @@ function stripUnsubscribeFooter(text, unsubscribeUrl) {
 
 export function formatBodyHtml(text, { unsubscribeUrl = "", design } = {}) {
   const frame = mailDesign(design);
-  const font = { system: FONT_SANS, arial: "Arial, sans-serif", georgia: FONT_SERIF }[frame.font];
+  const font = resolveFont(frame.font, FONT_SANS);
+  const headingFont = resolveFont(frame.headingFont, FONT_SERIF);
   const typography = `font-family:${font};text-align:${frame.align};font-weight:${frame.weight};`;
   const cleaned = stripUnsubscribeFooter(text, unsubscribeUrl);
 
   const blocks = cleaned.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
   const formatted = blocks.map((block) => {
     const lines = block.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const isSubheading = lines.length === 1 && /^##\s+/.test(lines[0]);
+    if (isSubheading) {
+      const content = formatInlineText(lines[0].replace(/^##\s+/, ""), frame.accent);
+      return `<h2 style="margin:18px 0 10px 0;font-family:${headingFont};font-size:${Math.min(22, frame.fontSize + 4)}px;font-weight:600;line-height:1.35;color:${frame.headingColor};text-align:${frame.align};">${content}</h2>`;
+    }
+    const isCallout = lines.length > 0 && lines.every((line) => /^>\s?/.test(line));
+    if (isCallout) {
+      const rendered = lines.map((line) => formatInlineText(line.replace(/^>\s?/, ""), frame.accent)).join("<br />");
+      return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px 0;background-color:${frame.cardBg};border-left:3px solid ${frame.accent};border-radius:0 10px 10px 0;"><tr><td class="mail-body-text" style="padding:12px 16px;color:${frame.text};font-size:${frame.fontSize}px;line-height:1.68;${typography}">${rendered}</td></tr></table>`;
+    }
     const isBulletList = lines.length > 0 && lines.every((line) => /^[-•*]\s+/.test(line));
     if (isBulletList) {
       const items = lines.map((line) => {
-        const content = linkifyEscaped(escapeHtml(line.replace(/^[-•*]\s+/, "")));
+        const content = formatInlineText(line.replace(/^[-•*]\s+/, ""), frame.accent);
         return `<tr>
-          <td valign="top" width="18" style="padding:3px 0;color:#b8446d;font-size:15px;line-height:1.6;font-family:${FONT_SANS};">&bull;</td>
-          <td valign="top" style="padding:3px 0;color:${design ? frame.text : "#4a313d"};font-size:${design ? frame.fontSize : 14}px;line-height:1.65;${typography}">${content}</td>
+          <td valign="top" width="18" style="padding:3px 0;color:${frame.accent};font-size:15px;line-height:1.6;font-family:${font};">&bull;</td>
+          <td valign="top" class="mail-body-text" style="padding:3px 0;color:${design ? frame.text : "#4a313d"};font-size:${design ? frame.fontSize : 14}px;line-height:1.65;${typography}">${content}</td>
         </tr>`;
       }).join("");
       return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px 0;">${items}</table>`;
     }
     const isDivider = lines.length === 1 && /^[-_=]{3,}$/.test(lines[0]);
     if (isDivider) {
-      return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:14px 0;"><tr><td style="border-top:1px solid #f0dde5;font-size:0;line-height:0;">&nbsp;</td></tr></table>`;
+      return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:14px 0;"><tr><td style="border-top:1px solid ${frame.border};font-size:0;line-height:0;">&nbsp;</td></tr></table>`;
     }
-    const renderedLines = lines.map((line) => linkifyEscaped(escapeHtml(line))).join("<br />");
-    return `<p style="margin:0 0 14px 0;color:${frame.text};font-size:${frame.fontSize}px;line-height:1.72;${typography}">${renderedLines}</p>`;
+    const renderedLines = lines.map((line) => formatInlineText(line, frame.accent)).join("<br />");
+    return `<p class="mail-body-text" style="margin:0 0 14px 0;color:${frame.text};font-size:${frame.fontSize}px;line-height:1.72;${typography}">${renderedLines}</p>`;
   }).join("");
   return frame.useHtml ? renderMailCode(frame.htmlSource, formatted) : formatted;
 }
@@ -100,13 +138,61 @@ function buildPreheader(text) {
   return `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f9f3f6;opacity:0;">${escapeHtml(preview)}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>`;
 }
 
-function renderEmailShell({ design, subject, preheader, eyebrow, bodyHtml, siteOrigin, contactEmail, unsubscribeUrl, footerNote }) {
+function sectionAttr(name, interactive) {
+  return interactive ? ` data-mail-section="${name}"` : "";
+}
+
+function previewInteractiveHead(interactive, selectedSection) {
+  if (!interactive) return "";
+  const activeSel = selectedSection ? `[data-mail-section="${escapeHtml(selectedSection)}"] { outline: 2px solid #b8446d !important; outline-offset: -2px; }` : "";
+  return `<style>
+    [data-mail-section] { cursor: pointer; transition: outline-color .15s ease; }
+    [data-mail-section]:hover { outline: 2px dashed #b8446d; outline-offset: -2px; }
+    ${activeSel}
+  </style>`;
+}
+
+function previewInteractiveScript(interactive) {
+  if (!interactive) return "";
+  return `<script>
+    document.addEventListener("click", function(e) {
+      var el = e.target && e.target.closest ? e.target.closest("[data-mail-section]") : null;
+      if (el) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.parent.postMessage({ type: "orora-mail-select", section: el.getAttribute("data-mail-section") }, "*");
+      }
+    }, true);
+  </script>`;
+}
+
+function renderEmailShell({
+  design,
+  subject,
+  preheader,
+  eyebrow,
+  bodyHtml,
+  siteOrigin,
+  contactEmail,
+  unsubscribeUrl,
+  footerNote,
+  interactivePreview = false,
+  selectedSection = "",
+}) {
   const origin = safeOrigin(siteOrigin);
   const email = contactEmail || DEFAULT_CONTACT_EMAIL;
   const policyUrl = `${origin}/chinh-sach`;
   const safeUnsub = safeHref(unsubscribeUrl);
   const frame = mailDesign(design);
+  const headerFont = resolveFont(frame.headerFont, FONT_SERIF);
+  const bodyFont = resolveFont(frame.font, FONT_SANS);
   const year = new Date().getFullYear();
+  const resolvedEyebrow = frame.eyebrow.trim() || eyebrow;
+  const logoSrc = safeHttpsUrl(frame.logoUrl);
+  const resolvedFooterNote = frame.footerNote.trim() ? escapeHtml(frame.footerNote.trim()) : footerNote;
+  const resolvedCopyright = frame.footerCopyright.trim()
+    ? escapeHtml(frame.footerCopyright.trim())
+    : `&copy; ${year} ${escapeHtml(frame.brand || "ORORA")} Vietnam. All rights reserved.`;
 
   return `<!DOCTYPE html>
 <html lang="vi" xmlns="http://www.w3.org/1999/xhtml">
@@ -116,69 +202,142 @@ function renderEmailShell({ design, subject, preheader, eyebrow, bodyHtml, siteO
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="color-scheme" content="light" />
   <meta name="supported-color-schemes" content="light" />
-  <title>${escapeHtml(subject || "ORORA")}</title>
+  <title>${escapeHtml(subject || frame.brand || "ORORA")}</title>
+  <style>
+    @media only screen and (max-width: 600px) {
+      .mail-body-text { font-size: ${frame.mobileFontSize}px !important; }
+      .mail-hero-heading { font-size: ${frame.headingMobileSize}px !important; }
+    }
+  </style>
+  ${previewInteractiveHead(interactivePreview, selectedSection)}
 </head>
-<body style="margin:0;padding:0;background-color:${frame.background};color:#331c27;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;font-family:${FONT_SANS};">
+<body style="margin:0;padding:0;background-color:${frame.background};color:#331c27;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;font-family:${bodyFont};">
   ${buildPreheader(frame.preheader.trim() || preheader || subject)}
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${frame.background};margin:0;padding:0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${frame.background};margin:0;padding:0;"${sectionAttr("Khung thư", interactivePreview)}>
     <tr>
       <td align="center" style="padding:28px 14px 36px 14px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:${frame.width}px;width:100%;background-color:${frame.surface};border:${frame.thickness}px solid ${frame.border};border-radius:${frame.radius}px;overflow:hidden;box-shadow:0 12px 32px rgba(58,21,38,0.06);">
-          <!-- Luxury Plum Header -->
+          ${frame.showHeader ? `<!-- Luxury Plum Header -->
           <tr>
-            <td align="center" style="background-color:${frame.header};padding:30px 28px 26px 28px;border-bottom:2px solid #d98ca7;">
+            <td align="center"${sectionAttr("Đầu thư", interactivePreview)} style="background-color:${frame.header};padding:30px 28px 26px 28px;border-bottom:2px solid ${frame.headerBorder};">
               <a href="${escapeHtml(origin)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-block;">
-                <span style="display:block;font-family:${FONT_SERIF};font-size:30px;font-weight:600;letter-spacing:8px;color:#fff8fb;line-height:1.15;">${escapeHtml(frame.brand)}</span>
-                <span style="display:block;margin-top:6px;font-family:${FONT_SANS};font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#f3c4d6;">${escapeHtml(frame.tagline)}</span>
+                ${logoSrc
+                  ? `<img src="${escapeHtml(logoSrc)}" alt="${escapeHtml(frame.brand || "ORORA")}" width="${frame.logoWidth}" style="display:block;width:${frame.logoWidth}px;max-width:100%;height:auto;margin:0 auto;" />`
+                  : `<span style="display:block;font-family:${headerFont};font-size:${frame.brandSize}px;font-weight:600;letter-spacing:8px;color:${frame.headerText};line-height:1.15;">${escapeHtml(frame.brand)}</span>`}
+                ${frame.tagline.trim() ? `<span style="display:block;margin-top:6px;font-family:${FONT_SANS};font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:${frame.taglineColor};">${escapeHtml(frame.tagline)}</span>` : ""}
               </a>
-              ${eyebrow ? `<div style="margin-top:16px;"><span style="display:inline-block;padding:5px 14px;border-radius:999px;background-color:rgba(255,248,251,0.12);border:1px solid rgba(243,196,214,0.35);font-family:${FONT_SANS};font-size:11px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:#fde8f0;">${escapeHtml(eyebrow)}</span></div>` : ""}
+              ${frame.showEyebrow && resolvedEyebrow ? `<div style="margin-top:16px;"><span style="display:inline-block;padding:5px 14px;border-radius:999px;background-color:rgba(255,248,251,0.12);border:1px solid rgba(243,196,214,0.35);font-family:${FONT_SANS};font-size:11px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:${frame.headerText};">${escapeHtml(resolvedEyebrow)}</span></div>` : ""}
             </td>
-          </tr>
+          </tr>` : ""}
           <!-- Main Content -->
           <tr>
             <td style="padding:32px 28px 28px 28px;">
               ${bodyHtml}
             </td>
           </tr>
-          <!-- Footer -->
+          ${frame.showFooter ? `<!-- Footer -->
           <tr>
-            <td style="background-color:${frame.footer};border-top:1px solid #f0dde5;padding:24px 28px 26px 28px;text-align:center;">
-              ${footerNote ? `<p style="margin:0 0 12px 0;font-family:${FONT_SANS};font-size:13px;line-height:1.6;color:#6c515e;">${footerNote}</p>` : ""}
-              <p style="margin:0 0 10px 0;font-family:${FONT_SANS};font-size:12px;line-height:1.7;color:#846b77;">
-                <a href="${escapeHtml(origin)}" target="_blank" rel="noopener noreferrer" style="color:#b8446d;text-decoration:none;font-weight:600;">Website ORORA</a>
+            <td${sectionAttr("Chân thư", interactivePreview)} style="background-color:${frame.footer};border-top:1px solid ${frame.border};padding:24px 28px 26px 28px;text-align:center;">
+              ${resolvedFooterNote ? `<p style="margin:0 0 12px 0;font-family:${bodyFont};font-size:13px;line-height:1.6;color:${frame.footerText};">${resolvedFooterNote}</p>` : ""}
+              <p style="margin:0 0 10px 0;font-family:${bodyFont};font-size:12px;line-height:1.7;color:${frame.footerText};">
+                <a href="${escapeHtml(origin)}" target="_blank" rel="noopener noreferrer" style="color:${frame.accent};text-decoration:none;font-weight:600;">${escapeHtml(frame.footerSiteLabel || "Website ORORA")}</a>
                 &nbsp;&middot;&nbsp;
-                <a href="${escapeHtml(policyUrl)}" target="_blank" rel="noopener noreferrer" style="color:#846b77;text-decoration:underline;">Chính sách mua hàng</a>
+                <a href="${escapeHtml(policyUrl)}" target="_blank" rel="noopener noreferrer" style="color:${frame.footerText};text-decoration:underline;">${escapeHtml(frame.footerPolicyLabel || "Chính sách mua hàng")}</a>
                 &nbsp;&middot;&nbsp;
-                <a href="mailto:${escapeHtml(email)}" style="color:#846b77;text-decoration:underline;">${escapeHtml(email)}</a>
+                <a href="mailto:${escapeHtml(email)}" style="color:${frame.footerText};text-decoration:underline;">${escapeHtml(email)}</a>
               </p>
-              ${safeUnsub ? `<p style="margin:0 0 10px 0;font-family:${FONT_SANS};font-size:12px;line-height:1.6;color:#9b828e;">Bạn nhận được email này vì đã đăng ký nhận tin từ ORORA. <a href="${escapeHtml(safeUnsub)}" target="_blank" rel="noopener noreferrer" style="color:#846b77;text-decoration:underline;">Hủy đăng ký nhận tin</a></p>` : ""}
-              <p style="margin:0;font-family:${FONT_SANS};font-size:11px;letter-spacing:0.6px;color:#a58e99;">&copy; ${year} ORORA Vietnam. All rights reserved.</p>
+              ${frame.footerAddress.trim() ? `<p style="margin:0 0 8px 0;font-family:${bodyFont};font-size:12px;line-height:1.6;color:${frame.footerText};">${escapeHtml(frame.footerAddress.trim())}</p>` : ""}
+              ${safeUnsub ? `<p style="margin:0 0 10px 0;font-family:${bodyFont};font-size:12px;line-height:1.6;color:${frame.footerText};">Bạn nhận được email này vì đã đăng ký nhận tin từ ${escapeHtml(frame.brand || "ORORA")}. <a href="${escapeHtml(safeUnsub)}" target="_blank" rel="noopener noreferrer" style="color:${frame.footerText};text-decoration:underline;">Hủy đăng ký nhận tin</a></p>` : ""}
+              <p style="margin:0;font-family:${bodyFont};font-size:11px;letter-spacing:0.6px;color:${frame.footerText};opacity:0.85;">${resolvedCopyright}</p>
             </td>
-          </tr>
+          </tr>` : ""}
         </table>
       </td>
     </tr>
   </table>
+  ${previewInteractiveScript(interactivePreview)}
 </body>
 </html>`;
 }
 
 function marketingButtonUrl(design) {
-  const url = safeHref(design?.buttonUrl);
-  return url.startsWith("https://") ? url : "";
+  return safeHttpsUrl(design?.buttonUrl);
 }
 
-function renderButton(label, url, design) {
+function renderButton(label, url, design, interactivePreview = false) {
   const frame = mailDesign(design);
+  if (!frame.showButton) return "";
   const href = safeHref(url);
   if (!href) return "";
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:22px auto 6px auto;">
+  const bodyFont = resolveFont(frame.font, FONT_SANS);
+  const align = frame.buttonAlign || "center";
+  const radius = frame.buttonRadius;
+  const margin = align === "center" ? "22px auto 6px auto" : align === "right" ? "22px 0 6px auto" : "22px auto 6px 0";
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="${align}"${sectionAttr("Nút hành động", interactivePreview)} style="margin:${margin};">
     <tr>
-      <td align="center" bgcolor="${frame.button}" style="border-radius:999px;background-color:${frame.button};">
-        <a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:13px 28px;font-family:${FONT_SANS};font-size:14px;font-weight:600;letter-spacing:0.4px;color:${frame.buttonText};text-decoration:none;border-radius:999px;">${escapeHtml(frame.buttonLabel.trim() || label)}</a>
+      <td align="center" bgcolor="${frame.button}" style="border-radius:${radius}px;background-color:${frame.button};">
+        <a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:13px 28px;font-family:${bodyFont};font-size:${frame.buttonFontSize}px;font-weight:600;letter-spacing:0.4px;color:${frame.buttonText};text-decoration:none;border-radius:${radius}px;">${escapeHtml(frame.buttonLabel.trim() || label)}</a>
       </td>
     </tr>
   </table>`;
+}
+
+function renderBanner(frame, interactivePreview = false) {
+  const src = safeHttpsUrl(frame.bannerUrl);
+  if (!src) return "";
+  return `<div${sectionAttr("Nội dung", interactivePreview)} style="margin:0 0 20px 0;text-align:center;">
+    <img src="${escapeHtml(src)}" alt="${escapeHtml(frame.bannerAlt || frame.brand || "ORORA")}" width="${Math.min(544, frame.width - 56)}" style="display:block;width:100%;max-width:100%;height:auto;border-radius:12px;border:1px solid ${frame.border};" />
+  </div>`;
+}
+
+function renderCouponBox(frame, interactivePreview = false) {
+  if (!frame.showCoupon) return "";
+  const code = frame.couponCode.trim() || "ORORA10";
+  const bodyFont = resolveFont(frame.font, FONT_SANS);
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${sectionAttr("Các khối", interactivePreview)} style="margin:20px 0 8px 0;background-color:${frame.cardBg};border:1px dashed ${frame.accent};border-radius:14px;">
+    <tr>
+      <td align="center" style="padding:18px 20px;">
+        <div style="font-family:${bodyFont};font-size:11px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:${frame.accent};margin-bottom:8px;">${escapeHtml(frame.couponTitle || "Quà tặng thành viên mới")}</div>
+        <div style="display:inline-block;padding:8px 20px;border-radius:8px;background-color:${frame.surface};border:1px solid ${frame.cardBorder};font-family:${FONT_MONO};font-size:20px;font-weight:700;letter-spacing:2px;color:${frame.headingColor};">${escapeHtml(code)}</div>
+        ${frame.couponNote.trim() ? `<div style="margin-top:8px;font-family:${bodyFont};font-size:12.5px;line-height:1.5;color:${frame.footerText};">${escapeHtml(frame.couponNote)}</div>` : ""}
+      </td>
+    </tr>
+  </table>`;
+}
+
+function renderPillars(frame, interactivePreview = false) {
+  if (!frame.showPillars) return "";
+  const headingFont = resolveFont(frame.headingFont, FONT_SERIF);
+  const bodyFont = resolveFont(frame.font, FONT_SANS);
+  const items = [
+    [frame.pillar1Title, frame.pillar1Desc],
+    [frame.pillar2Title, frame.pillar2Desc],
+    [frame.pillar3Title, frame.pillar3Desc],
+  ].filter(([t, d]) => t.trim() || d.trim());
+  if (!items.length) return "";
+  const colWidth = `${(100 / items.length).toFixed(2)}%`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${sectionAttr("Các khối", interactivePreview)} style="margin:22px 0 8px 0;background-color:${frame.cardBg};border:1px solid ${frame.cardBorder};border-radius:14px;">
+    <tr>
+      ${items.map(([t, d], idx) => `<td width="${colWidth}" valign="top" style="padding:16px 12px;text-align:center;${idx < items.length - 1 ? `border-right:1px solid ${frame.cardBorder};` : ""}">
+        <div style="font-family:${headingFont};font-size:16px;font-weight:600;color:${frame.accent};margin-bottom:4px;">${escapeHtml(t)}</div>
+        <div style="font-family:${bodyFont};font-size:12px;line-height:1.5;color:${frame.footerText};">${escapeHtml(d)}</div>
+      </td>`).join("")}
+    </tr>
+  </table>`;
+}
+
+function renderHeroHeading(frame, fallbackText, defaultAlign = "center", interactivePreview = false) {
+  if (!frame.showHeading) return "";
+  const headingFont = resolveFont(frame.headingFont, FONT_SERIF);
+  const align = frame.headingAlign === "auto" ? defaultAlign : frame.headingAlign;
+  const text = frame.heading.trim() || fallbackText;
+  const dividerAlign = align === "center" ? "center" : align === "right" ? "right" : "left";
+  return `<div${sectionAttr("Tiêu đề", interactivePreview)}>
+    <h1 class="mail-hero-heading" style="margin:0 0 18px 0;font-family:${headingFont};font-size:${frame.headingSize}px;font-weight:${frame.headingWeight};line-height:1.3;color:${frame.headingColor};text-align:${align};">${escapeHtml(text)}</h1>
+    ${frame.showDivider ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px 0;">
+      <tr><td align="${dividerAlign}"><div style="width:48px;height:2px;background-color:${frame.headerBorder};font-size:0;line-height:0;">&nbsp;</div></td></tr>
+    </table>` : ""}
+  </div>`;
 }
 
 export function renderWelcomeEmailHtml({
@@ -188,34 +347,20 @@ export function renderWelcomeEmailHtml({
   design,
   siteOrigin = DEFAULT_ORIGIN,
   contactEmail = DEFAULT_CONTACT_EMAIL,
+  interactivePreview = false,
+  selectedSection = "",
 } = {}) {
   const origin = safeOrigin(siteOrigin);
+  const frame = mailDesign(design);
   const bodyCopy = formatBodyHtml(text, { unsubscribeUrl, design });
 
   const bodyHtml = `
-    <h1 style="margin:0 0 18px 0;font-family:${FONT_SERIF};font-size:26px;font-weight:600;line-height:1.3;color:#3a1526;text-align:center;">${escapeHtml(subject || "Chào mừng bạn đến với ORORA")}</h1>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 22px 0;">
-      <tr><td align="center"><div style="width:48px;height:2px;background-color:#d98ca7;font-size:0;line-height:0;">&nbsp;</div></td></tr>
-    </table>
-    <div>${bodyCopy}</div>
-    <!-- Brand Pillars -->
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0 8px 0;background-color:#fff8fb;border:1px solid #f2d8e3;border-radius:14px;">
-      <tr>
-        <td width="33.33%" valign="top" style="padding:16px 12px;text-align:center;border-right:1px solid #f2d8e3;">
-          <div style="font-family:${FONT_SERIF};font-size:16px;font-weight:600;color:#b8446d;margin-bottom:4px;">Dịu nhẹ</div>
-          <div style="font-family:${FONT_SANS};font-size:12px;line-height:1.5;color:#6c515e;">Tuyển chọn công thức lành tính cho làn da</div>
-        </td>
-        <td width="33.33%" valign="top" style="padding:16px 12px;text-align:center;border-right:1px solid #f2d8e3;">
-          <div style="font-family:${FONT_SERIF};font-size:16px;font-weight:600;color:#b8446d;margin-bottom:4px;">Đặc quyền</div>
-          <div style="font-family:${FONT_SANS};font-size:12px;line-height:1.5;color:#6c515e;">Nhận sớm thông tin ra mắt &amp; ưu đãi riêng</div>
-        </td>
-        <td width="33.33%" valign="top" style="padding:16px 12px;text-align:center;">
-          <div style="font-family:${FONT_SERIF};font-size:16px;font-weight:600;color:#b8446d;margin-bottom:4px;">Tận tâm</div>
-          <div style="font-family:${FONT_SANS};font-size:12px;line-height:1.5;color:#6c515e;">Tư vấn 1-1 phù hợp với chu trình của bạn</div>
-        </td>
-      </tr>
-    </table>
-    ${renderButton("Khám phá bộ sưu tập ORORA", marketingButtonUrl(design) || origin, design)}
+    ${renderHeroHeading(frame, subject || "Chào mừng bạn đến với ORORA", "center", interactivePreview)}
+    ${renderBanner(frame, interactivePreview)}
+    <div${sectionAttr("Nội dung", interactivePreview)}>${bodyCopy}</div>
+    ${renderCouponBox(frame, interactivePreview)}
+    ${renderPillars(frame, interactivePreview)}
+    ${renderButton("Khám phá bộ sưu tập ORORA", marketingButtonUrl(design) || origin, design, interactivePreview)}
   `;
 
   return renderEmailShell({
@@ -228,6 +373,8 @@ export function renderWelcomeEmailHtml({
     contactEmail,
     unsubscribeUrl,
     footerNote: "Cần tư vấn chọn sản phẩm? Trả lời trực tiếp email này, đội ngũ ORORA luôn sẵn sàng hỗ trợ bạn.",
+    interactivePreview,
+    selectedSection,
   });
 }
 
@@ -241,16 +388,18 @@ export function renderBrandedEmailHtml({
   eyebrow = "Bản tin ORORA",
   ctaLabel = "",
   ctaUrl = "",
+  interactivePreview = false,
+  selectedSection = "",
 } = {}) {
   const origin = safeOrigin(siteOrigin);
+  const frame = mailDesign(design);
   const bodyCopy = formatBodyHtml(text, { unsubscribeUrl, design });
   const bodyHtml = `
-    <h1 style="margin:0 0 18px 0;font-family:${FONT_SERIF};font-size:25px;font-weight:600;line-height:1.32;color:#3a1526;">${escapeHtml(subject || "Thông báo từ ORORA")}</h1>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px 0;">
-      <tr><td><div style="width:44px;height:2px;background-color:#d98ca7;font-size:0;line-height:0;">&nbsp;</div></td></tr>
-    </table>
-    <div>${bodyCopy}</div>
-    ${(design?.buttonLabel?.trim() || ctaLabel) && (marketingButtonUrl(design) || ctaUrl) ? renderButton(ctaLabel, marketingButtonUrl(design) || ctaUrl, design) : ""}
+    ${renderHeroHeading(frame, subject || "Thông báo từ ORORA", "left", interactivePreview)}
+    ${renderBanner(frame, interactivePreview)}
+    <div${sectionAttr("Nội dung", interactivePreview)}>${bodyCopy}</div>
+    ${renderCouponBox(frame, interactivePreview)}
+    ${(design?.buttonLabel?.trim() || ctaLabel) && (marketingButtonUrl(design) || ctaUrl) ? renderButton(ctaLabel, marketingButtonUrl(design) || ctaUrl, design, interactivePreview) : ""}
   `;
 
   return renderEmailShell({
@@ -262,6 +411,8 @@ export function renderBrandedEmailHtml({
     siteOrigin: origin,
     contactEmail,
     unsubscribeUrl,
+    interactivePreview,
+    selectedSection,
   });
 }
 
@@ -306,14 +457,15 @@ function formatOrderDate(order) {
   return date.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
 }
 
-function renderBankTransferBlock(order, bankInfo) {
-  if (order?.paymentMethod !== "bank_transfer") return "";
+function renderBankTransferBlock(order, bankInfo, frame, interactivePreview = false) {
+  if (!frame.showOrderBank || order?.paymentMethod !== "bank_transfer") return "";
+  const bodyFont = resolveFont(frame.font, FONT_SANS);
   if (order?.paymentStatus === "paid") {
-    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 0 0;background-color:#eef8f2;border:1px solid #b7e2c7;border-radius:14px;">
+    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${sectionAttr("Các khối", interactivePreview)} style="margin:20px 0 0 0;background-color:#eef8f2;border:1px solid #b7e2c7;border-radius:14px;">
       <tr>
         <td style="padding:18px 20px;">
-          <div style="font-family:${FONT_SANS};font-size:12px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:#1f6e43;margin-bottom:6px;">Đã nhận thanh toán</div>
-          <p style="margin:0;font-family:${FONT_SANS};font-size:13.5px;line-height:1.6;color:#27533a;">ORORA đã xác nhận nhận thanh toán cho đơn hàng <strong>${escapeHtml(order?.code || "")}</strong>. Bạn không cần chuyển khoản thêm.</p>
+          <div style="font-family:${bodyFont};font-size:12px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:#1f6e43;margin-bottom:6px;">Đã nhận thanh toán</div>
+          <p style="margin:0;font-family:${bodyFont};font-size:13.5px;line-height:1.6;color:#27533a;">ORORA đã xác nhận nhận thanh toán cho đơn hàng <strong>${escapeHtml(order?.code || "")}</strong>. Bạn không cần chuyển khoản thêm.</p>
         </td>
       </tr>
     </table>`;
@@ -321,11 +473,11 @@ function renderBankTransferBlock(order, bankInfo) {
   const heading = String(bankInfo?.bankHeading || "").trim() || "Thông tin chuyển khoản";
   const amount = Number(order?.totalAmount);
   if (order?.totalAmount == null || !Number.isFinite(amount) || amount <= 0) {
-    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 0 0;background-color:#fff8fb;border:1px solid #f2d8e3;border-radius:14px;">
+    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${sectionAttr("Các khối", interactivePreview)} style="margin:20px 0 0 0;background-color:${frame.cardBg};border:1px solid ${frame.cardBorder};border-radius:14px;">
       <tr>
         <td style="padding:18px 20px;">
-          <div style="font-family:${FONT_SANS};font-size:12px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:#b8446d;margin-bottom:6px;">${escapeHtml(heading)}</div>
-          <p style="margin:0;font-family:${FONT_SANS};font-size:13.5px;line-height:1.6;color:#5e4450;">Đơn hàng <strong>${escapeHtml(order?.code || "")}</strong> đang chờ ORORA xác nhận tổng tiền chính xác. Vui lòng chờ thông báo xác nhận từ ORORA trước khi chuyển khoản.</p>
+          <div style="font-family:${bodyFont};font-size:12px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:${frame.accent};margin-bottom:6px;">${escapeHtml(heading)}</div>
+          <p style="margin:0;font-family:${bodyFont};font-size:13.5px;line-height:1.6;color:${frame.text};">Đơn hàng <strong>${escapeHtml(order?.code || "")}</strong> đang chờ ORORA xác nhận tổng tiền chính xác. Vui lòng chờ thông báo xác nhận từ ORORA trước khi chuyển khoản.</p>
         </td>
       </tr>
     </table>`;
@@ -342,30 +494,30 @@ function renderBankTransferBlock(order, bankInfo) {
     : "";
 
   if (!hasBankDetails) {
-    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 0 0;background-color:#fff8fb;border:1px solid #f2d8e3;border-radius:14px;">
+    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${sectionAttr("Các khối", interactivePreview)} style="margin:20px 0 0 0;background-color:${frame.cardBg};border:1px solid ${frame.cardBorder};border-radius:14px;">
       <tr>
         <td style="padding:18px 20px;">
-          <div style="font-family:${FONT_SANS};font-size:12px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:#b8446d;margin-bottom:6px;">${escapeHtml(heading)}</div>
-          <p style="margin:0;font-family:${FONT_SANS};font-size:13.5px;line-height:1.6;color:#5e4450;">ORORA sẽ liên hệ xác nhận tổng tiền chính xác và gửi thông tin chuyển khoản kèm mã đơn <strong>${escapeHtml(order?.code || "")}</strong> cho bạn trong thời gian sớm nhất.</p>
+          <div style="font-family:${bodyFont};font-size:12px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:${frame.accent};margin-bottom:6px;">${escapeHtml(heading)}</div>
+          <p style="margin:0;font-family:${bodyFont};font-size:13.5px;line-height:1.6;color:${frame.text};">ORORA sẽ liên hệ xác nhận tổng tiền chính xác và gửi thông tin chuyển khoản kèm mã đơn <strong>${escapeHtml(order?.code || "")}</strong> cho bạn trong thời gian sớm nhất.</p>
         </td>
       </tr>
     </table>`;
   }
 
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 0 0;background-color:#fff8fb;border:1px solid #f2d8e3;border-radius:14px;">
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${sectionAttr("Các khối", interactivePreview)} style="margin:20px 0 0 0;background-color:${frame.cardBg};border:1px solid ${frame.cardBorder};border-radius:14px;">
     <tr>
       <td style="padding:18px 20px;">
-        <div style="font-family:${FONT_SANS};font-size:12px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:#b8446d;margin-bottom:12px;">${escapeHtml(heading)}</div>
+        <div style="font-family:${bodyFont};font-size:12px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:${frame.accent};margin-bottom:12px;">${escapeHtml(heading)}</div>
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-          <tr><td style="padding:4px 0;font-size:13px;color:#7a606c;width:130px;">Ngân hàng</td><td style="padding:4px 0;font-size:13.5px;font-weight:600;color:#3a1526;">${escapeHtml(bankName)}</td></tr>
-          <tr><td style="padding:4px 0;font-size:13px;color:#7a606c;">Số tài khoản</td><td style="padding:4px 0;font-size:14px;font-weight:700;font-family:${FONT_MONO};color:#b8446d;">${escapeHtml(accountNumber)}</td></tr>
-          <tr><td style="padding:4px 0;font-size:13px;color:#7a606c;">Chủ tài khoản</td><td style="padding:4px 0;font-size:13.5px;font-weight:600;color:#3a1526;">${escapeHtml(accountName)}</td></tr>
-          <tr><td style="padding:4px 0;font-size:13px;color:#7a606c;">Số tiền</td><td style="padding:4px 0;font-size:14px;font-weight:700;color:#3a1526;">${escapeHtml(formatVnd(amount))}</td></tr>
-          <tr><td style="padding:4px 0;font-size:13px;color:#7a606c;">Nội dung CK</td><td style="padding:4px 0;font-size:13.5px;font-weight:700;font-family:${FONT_MONO};color:#3a1526;">${escapeHtml(transferNote)}</td></tr>
+          <tr><td style="padding:4px 0;font-size:13px;color:${frame.footerText};width:130px;">Ngân hàng</td><td style="padding:4px 0;font-size:13.5px;font-weight:600;color:${frame.headingColor};">${escapeHtml(bankName)}</td></tr>
+          <tr><td style="padding:4px 0;font-size:13px;color:${frame.footerText};">Số tài khoản</td><td style="padding:4px 0;font-size:14px;font-weight:700;font-family:${FONT_MONO};color:${frame.accent};">${escapeHtml(accountNumber)}</td></tr>
+          <tr><td style="padding:4px 0;font-size:13px;color:${frame.footerText};">Chủ tài khoản</td><td style="padding:4px 0;font-size:13.5px;font-weight:600;color:${frame.headingColor};">${escapeHtml(accountName)}</td></tr>
+          <tr><td style="padding:4px 0;font-size:13px;color:${frame.footerText};">Số tiền</td><td style="padding:4px 0;font-size:14px;font-weight:700;color:${frame.headingColor};">${escapeHtml(formatVnd(amount))}</td></tr>
+          <tr><td style="padding:4px 0;font-size:13px;color:${frame.footerText};">Nội dung CK</td><td style="padding:4px 0;font-size:13.5px;font-weight:700;font-family:${FONT_MONO};color:${frame.headingColor};">${escapeHtml(transferNote)}</td></tr>
         </table>
         ${qrUrl ? `<div style="margin-top:14px;text-align:center;">
-          <img src="${escapeHtml(qrUrl)}" alt="Mã VietQR thanh toán đơn ${escapeHtml(order?.code || "")}" width="180" style="display:inline-block;width:180px;max-width:100%;height:auto;border-radius:10px;border:1px solid #f0dde5;background:#ffffff;padding:6px;" />
-          <div style="margin-top:6px;font-size:11.5px;color:#846b77;">Quét mã VietQR bằng ứng dụng ngân hàng để chuyển khoản nhanh</div>
+          <img src="${escapeHtml(qrUrl)}" alt="Mã VietQR thanh toán đơn ${escapeHtml(order?.code || "")}" width="180" style="display:inline-block;width:180px;max-width:100%;height:auto;border-radius:10px;border:1px solid ${frame.border};background:#ffffff;padding:6px;" />
+          <div style="margin-top:6px;font-size:11.5px;color:${frame.footerText};">Quét mã VietQR bằng ứng dụng ngân hàng để chuyển khoản nhanh</div>
         </div>` : ""}
       </td>
     </tr>
@@ -382,8 +534,12 @@ export function renderOrderEmailHtml({
   contactEmail = DEFAULT_CONTACT_EMAIL,
   trackingUrl = "",
   trackingEnabled = true,
+  interactivePreview = false,
+  selectedSection = "",
 } = {}) {
   const origin = safeOrigin(siteOrigin);
+  const frame = mailDesign(design);
+  const bodyFont = resolveFont(frame.font, FONT_SANS);
   const tracking = orderTrackingMail(origin, order?.code, trackingEnabled);
   const resolvedTrackingUrl = trackingUrl || tracking.url;
   const items = normalizeOrderItems(order);
@@ -401,98 +557,105 @@ export function renderOrderEmailHtml({
 
   const itemRows = items.map((item) => `
     <tr>
-      <td style="padding:12px 0;border-bottom:1px solid #f3e4eb;font-family:${FONT_SANS};">
-        <div style="font-size:14px;font-weight:600;color:#3a1526;line-height:1.4;">${escapeHtml(item.name)}</div>
-        ${item.variant && !item.name.includes(item.variant) ? `<div style="margin-top:2px;font-size:12px;color:#846b77;">Phân loại: ${escapeHtml(item.variant)}</div>` : ""}
+      <td style="padding:12px 0;border-bottom:1px solid ${frame.border};font-family:${bodyFont};">
+        <div style="font-size:14px;font-weight:600;color:${frame.headingColor};line-height:1.4;">${escapeHtml(item.name)}</div>
+        ${item.variant && !item.name.includes(item.variant) ? `<div style="margin-top:2px;font-size:12px;color:${frame.footerText};">Phân loại: ${escapeHtml(item.variant)}</div>` : ""}
       </td>
-      <td align="center" style="padding:12px 8px;border-bottom:1px solid #f3e4eb;font-family:${FONT_SANS};font-size:13.5px;color:#5e4450;white-space:nowrap;">&times;${escapeHtml(item.quantity)}</td>
-      <td align="right" style="padding:12px 0;border-bottom:1px solid #f3e4eb;font-family:${FONT_SANS};font-size:14px;font-weight:600;color:#3a1526;white-space:nowrap;">${escapeHtml(item.priceText)}</td>
+      <td align="center" style="padding:12px 8px;border-bottom:1px solid ${frame.border};font-family:${bodyFont};font-size:13.5px;color:${frame.text};white-space:nowrap;">&times;${escapeHtml(item.quantity)}</td>
+      <td align="right" style="padding:12px 0;border-bottom:1px solid ${frame.border};font-family:${bodyFont};font-size:14px;font-weight:600;color:${frame.headingColor};white-space:nowrap;">${escapeHtml(item.priceText)}</td>
     </tr>
   `).join("");
 
-  const bodyHtml = `
+  const heroCardHtml = frame.showOrderHero ? `
     <!-- Order Hero Card -->
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#fff8fb;border:1px solid #f2d8e3;border-radius:14px;margin:0 0 22px 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${sectionAttr("Các khối", interactivePreview)} style="background-color:${frame.cardBg};border:1px solid ${frame.cardBorder};border-radius:14px;margin:0 0 22px 0;">
       <tr>
         <td style="padding:20px 22px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
             <tr>
               <td valign="top">
-                <div style="font-family:${FONT_SANS};font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#846b77;">Mã đơn hàng</div>
-                <div style="margin-top:4px;font-family:${FONT_MONO};font-size:22px;font-weight:700;color:#3a1526;letter-spacing:0.6px;">${escapeHtml(order?.code || "ORORA")}</div>
-                <div style="margin-top:4px;font-family:${FONT_SANS};font-size:12.5px;color:#7a606c;">Đặt lúc: ${escapeHtml(formatOrderDate(order))}</div>
+                <div style="font-family:${bodyFont};font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:${frame.footerText};">Mã đơn hàng</div>
+                <div style="margin-top:4px;font-family:${FONT_MONO};font-size:22px;font-weight:700;color:${frame.headingColor};letter-spacing:0.6px;">${escapeHtml(order?.code || "ORORA")}</div>
+                <div style="margin-top:4px;font-family:${bodyFont};font-size:12.5px;color:${frame.footerText};">Đặt lúc: ${escapeHtml(formatOrderDate(order))}</div>
               </td>
               <td valign="top" align="right">
-                <span style="display:inline-block;padding:5px 12px;border-radius:999px;background-color:${paymentBadgeBg};border:1px solid ${paymentBadgeBorder};font-family:${FONT_SANS};font-size:12px;font-weight:600;color:${paymentBadgeColor};white-space:nowrap;">${paymentBadgeLabel}</span>
+                <span style="display:inline-block;padding:5px 12px;border-radius:999px;background-color:${paymentBadgeBg};border:1px solid ${paymentBadgeBorder};font-family:${bodyFont};font-size:12px;font-weight:600;color:${paymentBadgeColor};white-space:nowrap;">${paymentBadgeLabel}</span>
               </td>
             </tr>
           </table>
-          <!-- 3-Step Order Journey -->
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:16px;padding-top:14px;border-top:1px dashed #ebd0dc;">
+          ${frame.showOrderSteps ? `<!-- 3-Step Order Journey -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:16px;padding-top:14px;border-top:1px dashed ${frame.cardBorder};">
             <tr>
-              <td width="33.33%" align="center" style="font-family:${FONT_SANS};font-size:11.5px;font-weight:700;color:#b8446d;">&#10003; 1. Đã tiếp nhận</td>
-              <td width="33.33%" align="center" style="font-family:${FONT_SANS};font-size:11.5px;color:#846b77;">2. Xác nhận &amp; đóng gói</td>
-              <td width="33.33%" align="center" style="font-family:${FONT_SANS};font-size:11.5px;color:#846b77;">3. Giao hàng tận nơi</td>
+              <td width="33.33%" align="center" style="font-family:${bodyFont};font-size:11.5px;font-weight:700;color:${frame.accent};">&#10003; ${escapeHtml(frame.orderStep1 || "1. Đã tiếp nhận")}</td>
+              <td width="33.33%" align="center" style="font-family:${bodyFont};font-size:11.5px;color:${frame.footerText};">${escapeHtml(frame.orderStep2 || "2. Xác nhận & đóng gói")}</td>
+              <td width="33.33%" align="center" style="font-family:${bodyFont};font-size:11.5px;color:${frame.footerText};">${escapeHtml(frame.orderStep3 || "3. Giao hàng tận nơi")}</td>
             </tr>
-          </table>
+          </table>` : ""}
         </td>
       </tr>
-    </table>
+    </table>` : "";
 
-    <!-- Personalized / Admin Message -->
-    ${bodyCopy ? `<div style="margin:0 0 22px 0;">${bodyCopy}</div>` : ""}
+  const messageBlockHtml = bodyCopy ? `<div${sectionAttr("Nội dung", interactivePreview)} style="margin:0 0 22px 0;">${bodyCopy}</div>` : "";
+  const headingBlockHtml = frame.heading.trim() ? renderHeroHeading(frame, frame.heading.trim(), "left", interactivePreview) : "";
 
-    <!-- Itemized Order Summary -->
-    <div style="font-family:${FONT_SANS};font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#b8446d;margin:0 0 8px 0;">Chi tiết đơn hàng</div>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:2px solid #3a1526;margin:0 0 14px 0;">
-      <tr>
-        <th align="left" style="padding:10px 0;border-bottom:1px solid #f0dde5;font-family:${FONT_SANS};font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:#846b77;">Sản phẩm</th>
-        <th align="center" style="padding:10px 8px;border-bottom:1px solid #f0dde5;font-family:${FONT_SANS};font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:#846b77;">SL</th>
-        <th align="right" style="padding:10px 0;border-bottom:1px solid #f0dde5;font-family:${FONT_SANS};font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:#846b77;">Thành tiền</th>
-      </tr>
-      ${itemRows}
-    </table>
+  const itemsBlockHtml = frame.showOrderItems ? `
+    <div${sectionAttr("Các khối", interactivePreview)}>
+      <!-- Itemized Order Summary -->
+      <div style="font-family:${bodyFont};font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:${frame.accent};margin:0 0 8px 0;">${escapeHtml(frame.orderItemsHeading || "Chi tiết đơn hàng")}</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:2px solid ${frame.headingColor};margin:0 0 14px 0;">
+        <tr>
+          <th align="left" style="padding:10px 0;border-bottom:1px solid ${frame.border};font-family:${bodyFont};font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:${frame.footerText};">Sản phẩm</th>
+          <th align="center" style="padding:10px 8px;border-bottom:1px solid ${frame.border};font-family:${bodyFont};font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:${frame.footerText};">SL</th>
+          <th align="right" style="padding:10px 0;border-bottom:1px solid ${frame.border};font-family:${bodyFont};font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:${frame.footerText};">Thành tiền</th>
+        </tr>
+        ${itemRows}
+      </table>
 
-    <!-- Pricing Breakdown -->
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 22px 0;">
-      <tr>
-        <td style="padding:4px 0;font-family:${FONT_SANS};font-size:13.5px;color:#7a606c;">Tạm tính</td>
-        <td align="right" style="padding:4px 0;font-family:${FONT_SANS};font-size:13.5px;color:#3a1526;">${escapeHtml(subtotalText)}</td>
-      </tr>
-      <tr>
-        <td style="padding:4px 0;font-family:${FONT_SANS};font-size:13.5px;color:#7a606c;">Phí giao hàng</td>
-        <td align="right" style="padding:4px 0;font-family:${FONT_SANS};font-size:13.5px;color:#3a1526;">${escapeHtml(shippingText)}</td>
-      </tr>
-      <tr>
-        <td style="padding:12px 0 4px 0;border-top:1px solid #f0dde5;font-family:${FONT_SANS};font-size:15px;font-weight:700;color:#3a1526;">Tổng thanh toán</td>
-        <td align="right" style="padding:12px 0 4px 0;border-top:1px solid #f0dde5;font-family:${FONT_SANS};font-size:17px;font-weight:700;color:#b8446d;">${escapeHtml(totalText)}</td>
-      </tr>
-    </table>
+      <!-- Pricing Breakdown -->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 22px 0;">
+        <tr>
+          <td style="padding:4px 0;font-family:${bodyFont};font-size:13.5px;color:${frame.footerText};">Tạm tính</td>
+          <td align="right" style="padding:4px 0;font-family:${bodyFont};font-size:13.5px;color:${frame.headingColor};">${escapeHtml(subtotalText)}</td>
+        </tr>
+        <tr>
+          <td style="padding:4px 0;font-family:${bodyFont};font-size:13.5px;color:${frame.footerText};">Phí giao hàng</td>
+          <td align="right" style="padding:4px 0;font-family:${bodyFont};font-size:13.5px;color:${frame.headingColor};">${escapeHtml(shippingText)}</td>
+        </tr>
+        <tr>
+          <td style="padding:12px 0 4px 0;border-top:1px solid ${frame.border};font-family:${bodyFont};font-size:15px;font-weight:700;color:${frame.headingColor};">Tổng thanh toán</td>
+          <td align="right" style="padding:12px 0 4px 0;border-top:1px solid ${frame.border};font-family:${bodyFont};font-size:17px;font-weight:700;color:${frame.accent};">${escapeHtml(totalText)}</td>
+        </tr>
+      </table>
+    </div>` : "";
 
+  const deliveryBlockHtml = frame.showOrderDelivery ? `
     <!-- Recipient & Delivery Details -->
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#fdf9fb;border:1px solid #f0dde5;border-radius:14px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${sectionAttr("Các khối", interactivePreview)} style="background-color:${frame.footer};border:1px solid ${frame.border};border-radius:14px;">
       <tr>
         <td style="padding:18px 20px;">
-          <div style="font-family:${FONT_SANS};font-size:12px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:#b8446d;margin-bottom:10px;">Thông tin giao nhận</div>
+          <div style="font-family:${bodyFont};font-size:12px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:${frame.accent};margin-bottom:10px;">${escapeHtml(frame.orderDeliveryHeading || "Thông tin giao nhận")}</div>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-            ${customer.name ? `<tr><td valign="top" style="padding:4px 0;font-size:13px;color:#7a606c;width:130px;">Người nhận</td><td style="padding:4px 0;font-size:13.5px;font-weight:600;color:#3a1526;">${escapeHtml(customer.name)}</td></tr>` : ""}
-            ${customer.phone ? `<tr><td valign="top" style="padding:4px 0;font-size:13px;color:#7a606c;">Số điện thoại</td><td style="padding:4px 0;font-size:13.5px;color:#3a1526;">${escapeHtml(customer.phone)}</td></tr>` : ""}
-            ${customer.email ? `<tr><td valign="top" style="padding:4px 0;font-size:13px;color:#7a606c;">Email</td><td style="padding:4px 0;font-size:13.5px;color:#3a1526;">${escapeHtml(customer.email)}</td></tr>` : ""}
-            ${customer.address ? `<tr><td valign="top" style="padding:4px 0;font-size:13px;color:#7a606c;">Địa chỉ</td><td style="padding:4px 0;font-size:13.5px;line-height:1.55;color:#3a1526;">${escapeHtml(customer.address)}</td></tr>` : ""}
-            <tr><td valign="top" style="padding:4px 0;font-size:13px;color:#7a606c;">Thanh toán</td><td style="padding:4px 0;font-size:13.5px;color:#3a1526;">${escapeHtml(paymentMethodLabel)}</td></tr>
-            ${order?.trackingCode ? `<tr><td valign="top" style="padding:4px 0;font-size:13px;color:#7a606c;">Mã vận đơn</td><td style="padding:4px 0;font-size:13.5px;font-weight:700;font-family:${FONT_MONO};color:#b8446d;">${escapeHtml(order.trackingCode)}</td></tr>` : ""}
-            ${customer.note ? `<tr><td valign="top" style="padding:4px 0;font-size:13px;color:#7a606c;">Ghi chú</td><td style="padding:4px 0;font-size:13.5px;line-height:1.55;color:#5e4450;">${escapeHtml(customer.note)}</td></tr>` : ""}
+            ${customer.name ? `<tr><td valign="top" style="padding:4px 0;font-size:13px;color:${frame.footerText};width:130px;">Người nhận</td><td style="padding:4px 0;font-size:13.5px;font-weight:600;color:${frame.headingColor};">${escapeHtml(customer.name)}</td></tr>` : ""}
+            ${customer.phone ? `<tr><td valign="top" style="padding:4px 0;font-size:13px;color:${frame.footerText};">Số điện thoại</td><td style="padding:4px 0;font-size:13.5px;color:${frame.headingColor};">${escapeHtml(customer.phone)}</td></tr>` : ""}
+            ${customer.email ? `<tr><td valign="top" style="padding:4px 0;font-size:13px;color:${frame.footerText};">Email</td><td style="padding:4px 0;font-size:13.5px;color:${frame.headingColor};">${escapeHtml(customer.email)}</td></tr>` : ""}
+            ${customer.address ? `<tr><td valign="top" style="padding:4px 0;font-size:13px;color:${frame.footerText};">Địa chỉ</td><td style="padding:4px 0;font-size:13.5px;line-height:1.55;color:${frame.headingColor};">${escapeHtml(customer.address)}</td></tr>` : ""}
+            <tr><td valign="top" style="padding:4px 0;font-size:13px;color:${frame.footerText};">Thanh toán</td><td style="padding:4px 0;font-size:13.5px;color:${frame.headingColor};">${escapeHtml(paymentMethodLabel)}</td></tr>
+            ${order?.trackingCode ? `<tr><td valign="top" style="padding:4px 0;font-size:13px;color:${frame.footerText};">Mã vận đơn</td><td style="padding:4px 0;font-size:13.5px;font-weight:700;font-family:${FONT_MONO};color:${frame.accent};">${escapeHtml(order.trackingCode)}</td></tr>` : ""}
+            ${customer.note ? `<tr><td valign="top" style="padding:4px 0;font-size:13px;color:${frame.footerText};">Ghi chú</td><td style="padding:4px 0;font-size:13.5px;line-height:1.55;color:${frame.text};">${escapeHtml(customer.note)}</td></tr>` : ""}
           </table>
         </td>
       </tr>
-    </table>
+    </table>` : "";
 
-    <!-- Bank Transfer & VietQR (if applicable) -->
-    ${renderBankTransferBlock(order, bankInfo)}
-
-    <!-- Tracking CTA -->
-    ${renderButton(trackingEnabled ? "Tra cứu trạng thái đơn hàng" : "Liên hệ ORORA", resolvedTrackingUrl, design)}
-    <p style="margin:6px 0 0 0;text-align:center;font-family:${FONT_SANS};font-size:12px;color:#846b77;">${tracking.hint}</p>
+  const bodyHtml = `
+    ${headingBlockHtml}
+    ${renderBanner(frame, interactivePreview)}
+    ${frame.orderLayout === "message-first" ? `${messageBlockHtml}${heroCardHtml}` : `${heroCardHtml}${messageBlockHtml}`}
+    ${itemsBlockHtml}
+    ${deliveryBlockHtml}
+    ${renderBankTransferBlock(order, bankInfo, frame, interactivePreview)}
+    ${renderButton(trackingEnabled ? "Tra cứu trạng thái đơn hàng" : "Liên hệ ORORA", resolvedTrackingUrl, design, interactivePreview)}
+    ${frame.showButton ? `<p style="margin:6px 0 0 0;text-align:center;font-family:${bodyFont};font-size:12px;color:${frame.footerText};">${tracking.hint}</p>` : ""}
   `;
 
   return renderEmailShell({
@@ -504,5 +667,7 @@ export function renderOrderEmailHtml({
     siteOrigin: origin,
     contactEmail,
     footerNote: `Nếu cần thay đổi thông tin hoặc hỗ trợ nhanh, bạn chỉ cần trả lời trực tiếp email này kèm mã đơn <strong>${escapeHtml(order?.code || "")}</strong>.`,
+    interactivePreview,
+    selectedSection,
   });
 }

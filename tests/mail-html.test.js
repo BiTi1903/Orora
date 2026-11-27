@@ -247,3 +247,47 @@ test("mail code formats personalized copy and retains the delivery footer", () =
   assert.match(result.text, /Xin chào <An>/);
   assert.doesNotMatch(renderBrandedEmailHtml({...message,design:{...design,useHtml:false}}), /<h2>Ưu đãi/);
 });
+
+test("Email Studio supports inline formatting, per-section typography/colors, coupon box, toggles and order layout", () => {
+  const welcomeHtml = renderWelcomeEmailHtml({
+    subject: "Subject ngoài hộp thư",
+    text: "## Tiêu đề mục\n\nChào **bạn**, nhận ==ưu đãi 15%== và *quà tặng*.\n\n> Lưu ý đặc biệt cho thành viên mới",
+    design: {
+      heading: "Tiêu đề riêng bên trong",
+      headingFont: "arial",
+      headingSize: 30,
+      headingMobileSize: 22,
+      headingColor: "#221122",
+      accent: "#cc2255",
+      showPillars: false,
+      showCoupon: true,
+      couponTitle: "Mã quà tặng",
+      couponCode: "WELCOME15",
+      showFooter: false,
+    },
+  });
+  assert.match(welcomeHtml, /Tiêu đề riêng bên trong/);
+  assert.match(welcomeHtml, /<h2[^>]*>Tiêu đề mục<\/h2>/);
+  assert.match(welcomeHtml, /<strong>bạn<\/strong>/);
+  assert.match(welcomeHtml, /color:#cc2255;font-weight:600;">ưu đãi 15%<\/span>/);
+  assert.match(welcomeHtml, /<em>quà tặng<\/em>/);
+  assert.match(welcomeHtml, /WELCOME15/);
+  assert.doesNotMatch(welcomeHtml, /Tuyển chọn công thức lành tính/);
+  assert.doesNotMatch(welcomeHtml, /Chính sách mua hàng/);
+
+  const orderHtml = renderOrderEmailHtml({
+    subject: "Đơn OW_99",
+    text: "Lời nhắn đặt lên đầu",
+    order: { code: "OW_99", customer: { name: "An" }, product: { name: "Serum" }, quantity: 1 },
+    design: {
+      orderLayout: "message-first",
+      showOrderSteps: false,
+      showOrderDelivery: false,
+      orderItemsHeading: "Danh sách món đã đặt",
+    },
+  });
+  assert.ok(orderHtml.indexOf("Lời nhắn đặt lên đầu") < orderHtml.indexOf("Mã đơn hàng"));
+  assert.match(orderHtml, /Danh sách món đã đặt/);
+  assert.doesNotMatch(orderHtml, /2\. Xác nhận &amp; đóng gói/);
+  assert.doesNotMatch(orderHtml, /Thông tin giao nhận/);
+});

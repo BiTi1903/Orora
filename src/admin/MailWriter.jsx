@@ -3,6 +3,7 @@ import MailPreviewPane from "./MailPreviewPane";
 import MailHtmlEditor from "./MailHtmlEditor";
 import MailBodyBlocks from "./MailBodyBlocks";
 import MailDesignFields from "./MailDesignFields";
+import MailFormatToolbar from "./MailFormatToolbar";
 import { useConfirm } from "./confirm-context";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { auth } from "../lib/firebaseAuth";
@@ -15,12 +16,12 @@ import { orderRequest, MAIL_STATES } from "./order-api";
 
 const STANDARD_WELCOME_DRAFT = {
   subject: "Chào mừng bạn đến với ORORA – Hành trình nâng niu làn da",
-  text: "Chào bạn,\n\nCảm ơn bạn đã đăng ký nhận bản tin từ ORORA. Chúng mình rất vui được đồng hành cùng bạn trên hành trình chăm sóc làn da dịu nhẹ và tinh tế mỗi ngày.\n\nKhi là thành viên nhận tin từ ORORA, bạn sẽ nhận được:\n- Thông tin sớm nhất về các dòng sản phẩm chăm sóc da mới ra mắt\n- Ưu đãi và quà tặng dành riêng cho người đăng ký\n- Gợi ý chu trình dưỡng da và hướng dẫn chăm sóc phù hợp\n\nNếu bạn cần tư vấn chọn sản phẩm phù hợp với làn da của mình, chỉ cần trả lời trực tiếp email này — đội ngũ ORORA luôn sẵn sàng lắng nghe.\n\nThân mến,\nORORA Vietnam\nsales@ororavn.com",
+  text: "Chào bạn,\n\nCảm ơn bạn đã đăng ký nhận bản tin từ **ORORA**. Chúng mình rất vui được đồng hành cùng bạn trên hành trình chăm sóc làn da dịu nhẹ và tinh tế mỗi ngày.\n\n## Quyền lợi thành viên ORORA\n\n- Thông tin sớm nhất về các dòng sản phẩm chăm sóc da mới ra mắt\n- Ưu đãi và quà tặng dành riêng cho người đăng ký\n- Gợi ý chu trình dưỡng da và hướng dẫn chăm sóc phù hợp\n\n> Nếu bạn cần tư vấn chọn sản phẩm phù hợp với làn da của mình, chỉ cần trả lời trực tiếp email này — đội ngũ ORORA luôn sẵn sàng lắng nghe.\n\nThân mến,\nORORA Vietnam\nsales@ororavn.com",
 };
 
 const STANDARD_ORDER_DRAFT = {
   subject: "ORORA xác nhận đã tiếp nhận đơn hàng {{orderCode}}",
-  text: "Chào {{customerName}},\n\nCảm ơn bạn đã tin chọn ORORA. Đơn hàng {{orderCode}} của bạn đã được hệ thống tiếp nhận thành công.\n\nTHÔNG TIN ĐƠN HÀNG\n- Sản phẩm: {{productName}}\n- Số lượng: {{quantity}}\n- Tạm tính: {{subtotal}}\n- Phí giao hàng: {{shippingFee}}\n- Tổng thanh toán dự kiến: {{totalAmount}}\n- Thanh toán: {{paymentMethod}} ({{paymentStatus}})\n- Người nhận: {{customerName}} · {{phone}}\n- Địa chỉ giao hàng: {{address}}\n\n{{trackingInstructions}}\n\nBƯỚC TIẾP THEO\n- Đội ngũ ORORA sẽ liên hệ xác nhận đơn hàng, phí giao hàng và thời gian giao dự kiến.\n- Email này xác nhận đã tiếp nhận yêu cầu đặt hàng, chưa xác nhận thanh toán.\n- Nếu cần điều chỉnh thông tin hoặc hỗ trợ nhanh, bạn chỉ cần trả lời trực tiếp email này kèm mã đơn {{orderCode}}.\n\nTrân trọng,\nORORA Vietnam\nsales@ororavn.com",
+  text: "Chào **{{customerName}}**,\n\nCảm ơn bạn đã tin chọn ORORA. Đơn hàng **{{orderCode}}** của bạn đã được hệ thống tiếp nhận thành công. Chi tiết sản phẩm, tổng tiền và thông tin giao nhận đã được tổng hợp đầy đủ ngay bên dưới.\n\n{{trackingInstructions}}\n\n## Bước tiếp theo\n\n- Đội ngũ ORORA sẽ liên hệ xác nhận đơn hàng, phí giao hàng và thời gian giao dự kiến.\n- Email này xác nhận đã tiếp nhận yêu cầu đặt hàng, chưa xác nhận thanh toán.\n- Nếu cần điều chỉnh thông tin hoặc hỗ trợ nhanh, bạn chỉ cần trả lời trực tiếp email này kèm mã đơn **{{orderCode}}**.\n\nTrân trọng,\nORORA Vietnam\nsales@ororavn.com",
 };
 
 const ORDER_QUICK_TOKENS = [
@@ -60,6 +61,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
   const [orderId, setOrderId] = useState(initialOrderId);
   const [orderError, setOrderError] = useState("");
   const [previousDraft, setPreviousDraft] = useState(null);
+  const [designSection, setDesignSection] = useState("");
   const attempt = useRef(null);
   const subjectRef = useRef(null);
   const textRef = useRef(null);
@@ -95,6 +97,8 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
         order: selectedOrder || SAMPLE_PREVIEW_ORDER,
         siteOrigin,
         bankInfo, trackingEnabled, trackingUrl: tracking.url,
+        interactivePreview: true,
+        selectedSection: designSection,
       });
     }
     if (mode === "welcome_auto") {
@@ -103,6 +107,8 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
         text: previewText,
         unsubscribeUrl: `${siteOrigin}/api/unsubscribe?id=preview&token=preview`,
         siteOrigin,
+        interactivePreview: true,
+        selectedSection: designSection,
       });
     }
     return renderBrandedEmailHtml({
@@ -110,8 +116,10 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
       text: previewText,
       unsubscribeUrl: `${siteOrigin}/api/unsubscribe?id=preview&token=preview`,
       siteOrigin,
+      interactivePreview: true,
+      selectedSection: designSection,
     });
-  }, [value.design, mode, previewSubject, previewText, selectedOrder, bankInfo, trackingEnabled, tracking.url]);
+  }, [value.design, mode, previewSubject, previewText, selectedOrder, bankInfo, trackingEnabled, tracking.url, designSection]);
 
   useEffect(() => {
     if (!canSendOrder || selectedOrder?.confirmationMail?.state !== "sending") return;
@@ -160,13 +168,18 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
             {onChooseTemplate && <button type="button" className="admin-btn" onClick={onChooseTemplate}>Chọn mẫu từ Mẫu Thư</button>}
             {(mode === "welcome_auto" || mode === "order_auto") && <button type="button" className="admin-btn" onClick={() => {
               setPreviousDraft(value);
-              onChange(mode === "order_auto" ? { ...STANDARD_ORDER_DRAFT } : { ...STANDARD_WELCOME_DRAFT });
-              setNotice({ text: "Đã nạp nội dung mẫu chuẩn ORORA. Hãy xem trước rồi bấm Lưu để áp dụng." });
+              const preset = mode === "order_auto" ? STANDARD_ORDER_DRAFT : STANDARD_WELCOME_DRAFT;
+              onChange({ design: value.design, ...preset });
+              setNotice({ text: "Đã nạp nội dung mẫu chuẩn ORORA (giữ nguyên thiết kế khung & màu). Hãy xem trước rồi bấm Lưu." });
             }}>Nạp mẫu chuẩn ORORA</button>}
             {previousDraft && <button type="button" className="admin-btn" onClick={() => { onChange(previousDraft); setPreviousDraft(null); setNotice(null); }}>Hoàn tác nạp mẫu</button>}
           </div>}
           <div className="admin-field"><label htmlFor={`${fieldId}-writer-subject`}>Tiêu đề thư</label><input ref={subjectRef} id={`${fieldId}-writer-subject`} required maxLength={200} value={value.subject} onFocus={() => { activeFieldRef.current = "subject"; }} onChange={(event) => onChange({ design: value.design, subject: event.target.value, text: value.text })} /></div>
-          <div className="admin-field"><label htmlFor={`${fieldId}-writer-text`}>Nội dung thư</label><textarea ref={textRef} id={`${fieldId}-writer-text`} required rows={11} maxLength={20000} value={value.text} onFocus={() => { activeFieldRef.current = "text"; }} onChange={(event) => onChange({ design: value.design, subject: value.subject, text: event.target.value })} /></div>
+          <div className="admin-field">
+            <label htmlFor={`${fieldId}-writer-text`}>Nội dung thư</label>
+            <MailFormatToolbar textRef={textRef} value={value.text} disabled={working} onChange={(text) => onChange({ design: value.design, subject: value.subject, text })} />
+            <textarea ref={textRef} id={`${fieldId}-writer-text`} required rows={11} maxLength={20000} value={value.text} onFocus={() => { activeFieldRef.current = "text"; }} onChange={(event) => onChange({ design: value.design, subject: value.subject, text: event.target.value })} />
+          </div>
           {mode === "order_auto" && <div className="admin-detail-box">
             <h3>Chèn nhanh thông tin đơn hàng (tại vị trí con trỏ)</h3>
             <div className="mail-token-bar">
@@ -177,9 +190,10 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
           </div>}
           <MailHtmlEditor value={value.design} onChange={design => onChange({ subject: value.subject, text: value.text, design })} />
           <MailBodyBlocks text={value.text} onChange={text => onChange({ design: value.design, subject: value.subject, text })} />
-          <MailDesignFields kind={mode} value={value.design} onChange={design => onChange({ subject: value.subject, text: value.text, design })} />
+          <MailDesignFields kind={mode} value={value.design} activeSection={designSection} onSectionChange={setDesignSection} onChange={design => onChange({ subject: value.subject, text: value.text, design })} />
         </div>
         <MailPreviewPane html={previewHtml} subject={previewSubject} text={previewText}
+          onSelectSection={setDesignSection}
           title={mode === "order_auto" ? `Xem trước · ${selectedOrder?.code || "Đơn minh họa"}` : "Xem trước thư"}>
             {mode === "order_auto" && <label>Tra cứu đơn trong bản xem trước
               <select value={previewTracking} onChange={event => setPreviewTracking(event.target.value)}>

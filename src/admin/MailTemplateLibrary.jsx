@@ -6,26 +6,37 @@ import MailPreviewPane from "./MailPreviewPane";
 import MailHtmlEditor from "./MailHtmlEditor";
 import MailBodyBlocks from "./MailBodyBlocks";
 import MailDesignFields from "./MailDesignFields";
+import MailFormatToolbar from "./MailFormatToolbar";
 import { TEMPLATE_KINDS, templateUsageLabel } from "../lib/mail-templates";
 import { useEffect, useRef, useState } from "react";
 import MailPreviewDialog from "./MailPreviewDialog";
-function TemplatePreview({ draft }) {
+function TemplatePreview({ draft, onSelectSection, selectedSection }) {
   const order = SAMPLE_PREVIEW_ORDER;
   const tracking = orderTrackingMail(window.location.origin, order.code, true);
   const isOrder = draft.kind === "order_auto";
   const subject = isOrder ? previewOrderVariables(draft.subject, order, tracking) : draft.subject;
   const text = isOrder ? previewOrderVariables(trackingTemplate(draft.text, true), order, tracking) : draft.text;
   const render = isOrder ? renderOrderEmailHtml : draft.kind === "welcome_auto" ? renderWelcomeEmailHtml : renderBrandedEmailHtml;
-  const html = render({ ...draft, subject, text, order, siteOrigin:window.location.origin,
-    unsubscribeUrl:isOrder ? "" : window.location.origin + "/api/unsubscribe?id=preview&token=preview" });
-  return <MailPreviewPane title={isOrder ? "Xem trước · Đơn minh họa" : "Xem trước giao diện mẫu"} html={html} subject={subject} text={text} />;
+  const html = render({
+    ...draft,
+    subject,
+    text,
+    order,
+    siteOrigin: window.location.origin,
+    unsubscribeUrl: isOrder ? "" : window.location.origin + "/api/unsubscribe?id=preview&token=preview",
+    interactivePreview: Boolean(onSelectSection),
+    selectedSection: selectedSection || "",
+  });
+  return <MailPreviewPane onSelectSection={onSelectSection} title={isOrder ? "Xem trước · Đơn minh họa" : "Xem trước giao diện mẫu"} html={html} subject={subject} text={text} />;
 }
 const empty = { categoryId: "", name: "", kind: "private", subject: "", text: "" };
 export default function MailTemplateLibrary({ request, onUse, active = true }) {
   const confirm = useConfirm();
   const pendingId = useRef(null);
   const nameField = useRef(null);
+  const textField = useRef(null);
   const [draft, setDraft] = useState(empty);
+  const [designSection, setDesignSection] = useState("");
   const [id, setId] = useState(null);
   const [types, setTypes] = useState([]);
   const [selectedType, setSelectedType] = useState("");
@@ -90,11 +101,15 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
         <div className="admin-field"><label htmlFor="library-kind">Loại mẫu thư</label><select id="library-kind" className="mail-template-select" disabled={busy} value={draft.categoryId ? `custom:${draft.categoryId}` : draft.kind} onChange={(event) => setDraft({ ...draft, kind: event.target.value.startsWith("custom:") ? "private" : event.target.value, categoryId: event.target.value.startsWith("custom:") ? event.target.value.slice(7) : "" })}>{Object.entries(TEMPLATE_KINDS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}{types.map((type) => <option key={type.id} value={`custom:${type.id}`}>{type.name}</option>)}</select></div>
         <details><summary>Thêm loại mẫu</summary><div className="admin-field"><label htmlFor="library-new-type">Tên loại mẫu mới</label><input id="library-new-type" maxLength={60} disabled={busy} value={newType} onChange={(event) => setNewType(event.target.value)} /></div><button type="button" className="admin-btn" aria-busy={busy && busyAction === "type"} disabled={busy || !newType.trim()} onClick={async () => { setBusy(true);setBusyAction("type");try { const result = await request({ action: "addTemplateType", name: newType }); setTypes((items) => [...new Map([...items, result.type].map((item) => [item.id, item])).values()]); setDraft({ ...draft, kind: "private", categoryId: result.type.id }); setNewType(""); setNotice({ text: result.message }); } catch (error) { setNotice({ error: true, text: error.message }); } finally { setBusy(false);setBusyAction(""); } }}>Thêm loại</button></details>
         <div className="admin-field"><label htmlFor="library-subject">Tiêu đề mẫu thư</label><input id="library-subject" required maxLength={200} disabled={busy} value={draft.subject} onChange={(event) => setDraft({ ...draft, subject: event.target.value })} /></div>
-        <div className="admin-field"><label htmlFor="library-text">Nội dung mẫu thư</label><textarea id="library-text" required rows={10} maxLength={20000} disabled={busy} value={draft.text} onChange={(event) => setDraft({ ...draft, text: event.target.value })} /></div>
+        <div className="admin-field">
+          <label htmlFor="library-text">Nội dung mẫu thư</label>
+          <MailFormatToolbar textRef={textField} value={draft.text} disabled={busy} onChange={(text) => setDraft({ ...draft, text })} />
+          <textarea ref={textField} id="library-text" required rows={10} maxLength={20000} disabled={busy} value={draft.text} onChange={(event) => setDraft({ ...draft, text: event.target.value })} />
+        </div>
         <MailHtmlEditor value={draft.design} disabled={busy} onChange={design => setDraft({ ...draft, design })} />
-          <MailBodyBlocks text={draft.text} disabled={busy} onChange={text => setDraft({ ...draft, text })} />
-          <MailDesignFields kind={draft.kind} value={draft.design} disabled={busy} onChange={design => setDraft({ ...draft, design })} />
-        <TemplatePreview draft={draft} />
+        <MailBodyBlocks text={draft.text} disabled={busy} onChange={text => setDraft({ ...draft, text })} />
+        <MailDesignFields kind={draft.kind} value={draft.design} disabled={busy} activeSection={designSection} onSectionChange={setDesignSection} onChange={design => setDraft({ ...draft, design })} />
+        <TemplatePreview draft={draft} onSelectSection={setDesignSection} selectedSection={designSection} />
         {draft.kind !== "welcome_auto" && <p className="admin-muted">Biến đơn hàng: {"{{customerName}}, {{orderCode}}, {{productName}}, {{variantLabel}}, {{quantity}}, {{subtotal}}, {{paymentMethod}}, {{address}}, {{phone}}, {{email}}"}.</p>}
         <div className="admin-actions"><button className="admin-btn primary" aria-busy={busy && busyAction === "save"} disabled={busy}>{id ? "Lưu thay đổi mẫu" : "Lưu mẫu thư"}</button><button type="button" className="admin-btn" disabled={busy} onClick={() => { pendingId.current = null; setId(null); setDraft(empty); }}>Tạo mẫu mới</button></div>
       </form>

@@ -12,6 +12,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { newsletterRequest as request } from "./newsletter-api";
 import { ensureNewsletterTemplatesOnce, fetchNewsletterCached, getAdminCache } from "./admin-cache";
 import useDraftGuard from "../hooks/useDraftGuard";
+import { sameMailDesign } from "../lib/mail-design";
 
 const EMPTY = { subject: "", text: "" };
 const CONTACT_STATUS = { active: "Hoạt động", paused: "Tạm ngưng", unsubscribed: "Đã hủy đăng ký", bounced: "Bị trả lại" };
@@ -68,9 +69,11 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
   const stop = useRef(false);
   const alive = useRef(true);
 
+  const welcomeDraft = writerDrafts.welcome_auto;
   const hasUnsavedDrafts = sending
-    || Object.values(writerDrafts).some((item) => Boolean(item?.subject?.trim() || item?.text?.trim()))
-    || (ready && (welcome.subject !== savedWelcome.subject || welcome.text !== savedWelcome.text));
+    || Boolean(writerDrafts.private?.subject?.trim() || writerDrafts.private?.text?.trim())
+    || (ready && welcomeDraft && (welcomeDraft.subject !== savedWelcome.subject || welcomeDraft.text !== savedWelcome.text || !sameMailDesign(welcomeDraft.design, savedWelcome.design)))
+    || (ready && (welcome.subject !== savedWelcome.subject || welcome.text !== savedWelcome.text || !sameMailDesign(welcome.design, savedWelcome.design)));
   useDraftGuard({ writerDrafts, welcome }, { enabled: ready, busy: sending, dirty: hasUnsavedDrafts });
 
   const load = useCallback(async ({ force = false } = {}) => {
@@ -213,6 +216,8 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
           <MailWriter key={writerMode} title={writerMode === "private" ? "Gửi thư cho người đăng ký" : "Thư Đăng Ký tự động"} allowedModes={[writerMode]} mode={writerMode} onModeChange={setWriterMode} value={currentMessage} onChange={(message) => setWriterDrafts((drafts) => ({ ...drafts, [writerMode]: message }))} onChooseTemplate={() => setPicker(writerMode)} request={request} disabled={busy} onApply={async (_mode, message) => {
             const result = await request({ action: "saveWelcome", ...message });
             setWelcome({ ...message });
+            setSavedWelcome({ ...message });
+            setWriterDrafts((drafts) => { const next = { ...drafts }; delete next.welcome_auto; return next; });
             return result;
           }} onSendPrivate={sendCampaign} privateSendLabel={recipientMode === "selected" ? `Gửi tới ${eligibleIds.length} email đã chọn` : "Gửi đến toàn bộ email hoạt động"} privateSendDisabled={recipientMode === "selected" && !eligibleIds.length} privateRecipients={
             <fieldset className="newsletter-recipient-picker" disabled={busy}>
