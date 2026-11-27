@@ -82,8 +82,8 @@ test('clearing a saved translation and deleting a phrase both persist', async ({
     'lib/firebase.js': 'export const db={};',
   });
   await expect(page.locator('.translation-row')).toHaveCount(2);
-  await expect(page.locator('.translation-row').nth(1)).toContainText('Danh mục sản phẩm › Danh mục #1 › Tên danh mục');
-  await page.locator('.translation-row').first().click();
+  await expect(page.locator('.translation-row').first()).toContainText('Danh mục sản phẩm › Danh mục #1 › Tên danh mục');
+  await page.locator('.translation-row').filter({hasText:'ORORA'}).click();
   await expect(page.getByRole('textbox', { name: 'Tiếng Anh', exact: true })).toHaveValue('Wrong EN');
   await page.getByRole('button', { name: 'Xóa về mặc định' }).click();
   const saveBtn = page.getByRole('button', { name: 'Lưu 1 mục' });
@@ -99,4 +99,19 @@ test('clearing a saved translation and deleting a phrase both persist', async ({
   await page.getByRole('button', { name: 'Xóa', exact: true }).click();
   await expect(page.getByText('Need advice', { exact: true })).toHaveCount(0);
   await fit(page);
+});
+
+test('admin help opens on hover or tap', async ({page}) => {
+  await mount(page, `import Help from '/src/admin/TranslationHelp.jsx';${render("R.createElement(Help,{label:'nhập Excel'},'Điền bản dịch rồi bấm Lưu.')")}`);
+  const help = page.getByRole('button',{name:'Hướng dẫn nhập Excel'});
+  const tooltip = page.getByRole('tooltip');
+  if (page.viewportSize().width > 900) {
+    await help.hover();
+    await expect(tooltip).toBeVisible();
+    await page.mouse.move(400,400);
+  }
+  await help.click();
+  await expect(tooltip).toBeVisible();
+  await help.press('Escape');
+  await expect(help).toHaveAttribute('aria-expanded','false');
 });

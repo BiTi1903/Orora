@@ -1,3 +1,4 @@
+import TranslationHelp from "./TranslationHelp";
 import { useEffect, useState } from "react";
 import { orderRequest } from "./order-api";
 import { newsletterRequest } from "./newsletter-api";
@@ -52,6 +53,7 @@ function ReviewList({domain,filter,onOpenOrder,onOpenNewsletter}) {
   return <div aria-busy={busy}><div className="admin-actions">
     <label><input type="checkbox" disabled={busy||!checkable.length} checked={!!checkable.length && selected.length===checkable.length} onChange={e=>setSelected(e.target.checked?checkable:[])}/> Chọn thư có thể kiểm tra trong danh sách</label>
     {cursor && <button className="admin-btn" disabled={busy} onClick={()=>more(true)}>Chọn tất cả thư có thể kiểm tra theo bộ lọc</button>}
+    <TranslationHelp label="kiểm tra thư hàng loạt">Chọn theo bộ lọc có thể bao gồm thư ở các trang chưa hiển thị. Kiểm tra lại nguồn và trạng thái trước khi chọn.</TranslationHelp>
     <button className="admin-btn" disabled={busy||!selected.length} onClick={check}>Kiểm tra {selected.length} thư đã chọn</button>
     <button className="admin-btn" disabled={busy} onClick={()=>{setBusy(true);setNotice("");reload(v=>v+1);}}>Làm mới</button>
   </div>{notice && <p role="status">{notice}</p>}

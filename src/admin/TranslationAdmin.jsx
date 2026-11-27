@@ -1,3 +1,4 @@
+import TranslationHelp from "./TranslationHelp";
 import PhraseTranslationForm from "./PhraseTranslationForm";
 import "./translations.css";
 import {normalizeSearch} from "../lib/catalog-filters";
@@ -205,6 +206,12 @@ export default function TranslationAdmin() {
     if (languages.includes(filter) && row[filter]) return false;
     return normalizeSearch([row.vi, row.where, row.en, row.ja].join(" ")).includes(search);
   });
+  const priority = row => languages.reduce((score, lang) => {
+    if (row[lang]?.trim()) return score;
+    return score + (autoSuggestion(row.vi, lang) ? 1 : 3);
+  }, 0);
+  const priorities = new Map(filtered.map(row => [row.key, priority(row)]));
+  filtered.sort((a, b) => priorities.get(b.key) - priorities.get(a.key));
 
   const total = rows.length;
   const enDone = rows.filter(row => Boolean(row.en)).length;
@@ -237,8 +244,11 @@ export default function TranslationAdmin() {
         </div>
         <div className="translation-actions">
           <button type="button" className="admin-btn" disabled={busy} onClick={reload}>Tải lại bản dịch</button>
+          <TranslationHelp label="tải lại bản dịch">Lấy nội dung mới đã lưu từ máy chủ. Nếu vừa đổi câu tiếng Việt ở Sản phẩm, dùng nút này để thấy câu mới.</TranslationHelp>
           <button type="button" className="admin-btn" disabled={busy} onClick={() => run(download)}>Xuất Excel</button>
+          <TranslationHelp label="xuất excel">Tải nội dung và bản dịch đã lưu. Giữ nguyên mã và câu tiếng Việt trong file.</TranslationHelp>
           <button type="button" className="admin-btn" disabled={busy} onClick={() => fileInput.current.click()}>Nhập Excel</button>
+          <TranslationHelp label="nhập excel">Điền English hoặc 日本語 trong file xuất từ admin. Sau khi nhập, xem lại rồi bấm Lưu để áp dụng. Ô trống sẽ được bỏ qua.</TranslationHelp>
           <input ref={fileInput} hidden type="file" accept=".xlsx" onChange={event => {
             const file = event.target.files[0];
             event.target.value = "";

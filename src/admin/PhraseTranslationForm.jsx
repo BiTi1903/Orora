@@ -1,3 +1,4 @@
+import TranslationHelp from "./TranslationHelp";
 import {normalizeSearch} from "../lib/catalog-filters";
 import {useEffect, useState} from "react";
 import {doc, getDocFromServer, runTransaction} from "firebase/firestore";
@@ -92,11 +93,14 @@ export default function PhraseTranslationForm() {
     }
   }
 
+  const missing = entry => Number(!entry.en?.trim()) + Number(!entry.ja?.trim());
   const matches = Object.values(entries || {}).filter(entry =>
-    normalizeSearch([entry.vi, entry.en, entry.ja].join(" ")).includes(normalizeSearch(query)));
+    normalizeSearch([entry.vi, entry.en, entry.ja].join(" ")).includes(normalizeSearch(query)))
+    .sort((a, b) => missing(b) - missing(a));
   return <div className="admin-card translation-panel">
     <div className="translation-toolbar">
       <h2>Cụm từ đã lưu ({Object.keys(entries || {}).length})</h2>
+      <TranslationHelp label="dịch theo cụm từ">Dùng khi trang EN hoặc JP vẫn hiện nguyên câu tiếng Việt. Dán đúng cả dấu câu. Bản dịch riêng của từng vị trí được áp dụng trước.</TranslationHelp>
       <button type="button" className="admin-btn primary" disabled={busy || editing !== null} onClick={() => setEditing({})}>Thêm cụm từ</button>
     </div>
     {editing && <form className="translation-phrase-editor" key={editing.vi || "new"} onSubmit={save}>

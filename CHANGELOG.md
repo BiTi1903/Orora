@@ -1,3 +1,8 @@
+## 27/11/2026 — Ưu tiên dòng thiếu bản dịch và thêm gợi ý admin
+
+- Đưa dòng thiếu EN/JP lên trước trong Bản dịch. Thêm gợi ý cạnh thao tác khó của Bản dịch, Đơn hàng, Kiểm kho, Phí vận chuyển, Email và Thư cần xử lý.
+- Build, lint và 16 lượt Playwright đạt. Không thay đổi dữ liệu.
+
 ## 27/11/2026 — Dịch phần đầu trang và danh mục
 
 - Dịch cụm mỗi ngày mặc định trong Hero và các nhãn lọc Tất cả, Trắng Da, Dưỡng Da sang EN/JP.

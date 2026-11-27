@@ -1,3 +1,4 @@
+import TranslationHelp from "./TranslationHelp";
 import { NEXT_ORDER_STATUSES } from "../lib/order-flow";
 import { useConfirm } from "./confirm-context";
 import { ORDER_STATUSES as STATUSES } from "../lib/order-tracking";
@@ -440,7 +441,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
           });
         }} />
       </details>
-      <details className="admin-filter-panel"><summary>Quy tắc tồn kho & mã lưu trữ</summary><p className="admin-muted">ID: {selected.id}</p><p className="admin-muted">Đơn chờ giữ số lượng, chưa trừ tồn thực tế. Xác nhận thanh toán, bắt đầu giao hoặc Hoàn tất sẽ trừ kho một lần. Hủy đơn chưa xuất giải phóng hàng chờ; đơn đã xuất chỉ hoàn kho khi xác nhận nhận lại hàng.</p></details>
+      <details className="admin-filter-panel"><summary>Quy tắc tồn kho & mã lưu trữ</summary><TranslationHelp label="hoàn kho">Chỉ hoàn kho sau khi đã nhận lại hàng. Kiểm tra trạng thái đơn trước khi thao tác để tránh cộng tồn hai lần.</TranslationHelp><p className="admin-muted">ID: {selected.id}</p><p className="admin-muted">Đơn chờ giữ số lượng, chưa trừ tồn thực tế. Xác nhận thanh toán, bắt đầu giao hoặc Hoàn tất sẽ trừ kho một lần. Hủy đơn chưa xuất giải phóng hàng chờ; đơn đã xuất chỉ hoàn kho khi xác nhận nhận lại hàng.</p></details>
     </article></ModalDialog>}
     </>}
     {composer && <ModalDialog title="Gửi email đơn hàng" className="admin-order-modal" onClose={() => setComposer(null)}>{composer.reused && <p className="admin-context-note">{composer.original ? "Đã chép mẫu vào thư mới. Chọn đơn và kiểm tra nội dung trước khi gửi." : "Nội dung được chép từ thư cũ. Kiểm tra lại tên khách, mã đơn, địa chỉ và số tiền trước khi gửi."}</p>}<OrderEmails purpose="send" canUseNewsletter={canUseNewsletter} initialDraft={composer.draft} initialOrderId={composer.orderId || ""} onSent={(order) => { patchLocal(order.id, order); setMailRevision((value) => value + 1); }} onManageTemplates={onOpenEmailTemplates ? () => { setComposer(null); onOpenEmailTemplates(); } : undefined} /></ModalDialog>}

@@ -1,3 +1,4 @@
+import TranslationHelp from "./TranslationHelp";
 import { useConfirm } from "./confirm-context";
 import OutlookCheck from "./OutlookCheck";
 import CampaignOutlookStatus from "./CampaignOutlookStatus";
@@ -218,6 +219,7 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
               <legend>Người nhận thư</legend>
               <label className="admin-check"><input type="radio" name="recipient-mode" checked={recipientMode === "selected"} onChange={() => setRecipientMode("selected")} />Chọn email cụ thể</label>
               <label className="admin-check"><input type="radio" name="recipient-mode" checked={recipientMode === "all"} onChange={() => setRecipientMode("all")} />Toàn bộ email đang hoạt động</label>
+              <TranslationHelp label="chọn người nhận email">Chọn mục này khi muốn gửi cho toàn bộ danh sách đang hoạt động. Chọn email cụ thể nếu chỉ gửi cho một nhóm nhỏ.</TranslationHelp>
               {recipientMode === "selected" ? <>
                 <div className="admin-field"><label htmlFor="recipient-search">Tìm người nhận</label><input id="recipient-search" type="search" placeholder="Nhập email…" value={recipientSearch} onChange={(event) => setRecipientSearch(event.target.value)} /></div>
                 <label className="admin-check"><input type="checkbox" checked={recipientOptions.length > 0 && recipientOptions.every((item) => eligibleIds.includes(item.id))} disabled={!recipientOptions.length} onChange={(event) => chooseRecipients(recipientOptions.map((item) => item.id), event.target.checked)} />Chọn tất cả email đang hiển thị</label>
