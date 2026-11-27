@@ -1,4 +1,6 @@
-import {useEffect, useState} from "react";
+import "./translations.css";
+import {normalizeSearch} from "../lib/catalog-filters";
+import {useEffect, useRef, useState} from "react";
 import {dirtyRegistry} from "../lib/dirty-registry";
 import {collection, doc, getDocFromServer, getDocsFromServer, runTransaction} from "firebase/firestore";
 import {db} from "../lib/firebase";
@@ -21,6 +23,11 @@ export default function TranslationAdmin() {
   const [draft, setDraft] = useState({});
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(true);
+  const fileInput = useRef(null);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [page, setPage] = useState(0);
+  const [expanded, setExpanded] = useState(null);
   useEffect(() => {
     readCurrentRows().then(setRows).catch(error => setMessage(error.message)).finally(() => setBusy(false));
   }, []);
@@ -85,14 +92,58 @@ export default function TranslationAdmin() {
     setDraft({});
     setMessage("Đã lưu bản dịch.");
   }
-  return <section><h1>Bản dịch</h1><p>Điền cột English và 日本語 trong Excel hoặc sửa trực tiếp bên dưới. Ô trống sẽ được bỏ qua.</p>
-    <fieldset disabled={busy}><button onClick={()=>run(download)}>Tải dữ liệu đã lưu (.xlsx)</button>
-    <label> Nhập Excel <input type="file" accept=".xlsx" onChange={e=>{const f=e.target.files[0];e.target.value="";if(f)run(()=>load(f));}}/></label>
-    <button disabled={!changes.length} onClick={()=>run(save)}>Lưu bản dịch ({changes.length})</button></fieldset>
+  const changedKeys = new Set(changes.map(row => row.key));
+  const search = normalizeSearch(query);
+  const filtered = rows.filter(row => {
+    if (filter === "changed" && !changedKeys.has(row.key)) return false;
+    if (languages.includes(filter) && row[filter]) return false;
+    return normalizeSearch([row.vi, row.where, row.en, row.ja].join(" ")).includes(search);
+  });
+  const pageSize = 8;
+  const pages = Math.ceil(filtered.length / pageSize);
+  const current = Math.min(page, Math.max(0, pages - 1));
+  return <section className="translations-admin">
+    <header><h1>Bản dịch</h1><div className="translation-actions">
+      <button className="admin-btn" disabled={busy} onClick={()=>run(download)}>Xuất Excel</button>
+      <button className="admin-btn" disabled={busy} onClick={()=>fileInput.current.click()}>Nhập Excel</button>
+      <input ref={fileInput} hidden type="file" accept=".xlsx" onChange={event=>{
+        const file = event.target.files[0];
+        event.target.value = "";
+        if (file) run(()=>load(file));
+      }}/>
+      <button className="admin-btn primary" disabled={busy || !changes.length} onClick={()=>run(save)}>
+        {changes.length ? `Lưu ${changes.length} mục` : "Lưu thay đổi"}
+      </button>
+    </div></header>
+    <div className="translation-filters">
+      <input type="search" aria-label="Tìm bản dịch" placeholder="Tìm câu, tên sản phẩm hoặc vị trí…" value={query}
+        onChange={event=>{setQuery(event.target.value); setPage(0);}}/>
+      <select aria-label="Lọc bản dịch" value={filter} onChange={event=>{setFilter(event.target.value); setPage(0);}}>
+        <option value="all">Tất cả trạng thái</option><option value="en">Chưa lưu tiếng Anh</option>
+        <option value="ja">Chưa lưu tiếng Nhật</option><option value="changed">Đã sửa, chưa lưu</option>
+      </select>
+    </div>
     <p role="status">{busy ? "Đang xử lý…" : message}</p>
-    {rows.map(row=><div className="builder-field" key={row.key}><small>{row.where}</small><span>{row.vi}</span>
-      {languages.map(lang => <label key={lang}>{lang === "en" ? "English" : "日本語"}
-        <textarea disabled={busy} value={draft[row.key]?.[lang] ?? row[lang]} onChange={e=>setDraft({...draft,[row.key]:{...draft[row.key],[lang]:e.target.value}})}/>
-      </label>)}</div>)}
+    {filtered.slice(current * pageSize, (current + 1) * pageSize).map(row => {
+      const open = expanded === row.key;
+      return <article key={row.key}>
+        <button className="translation-row" aria-expanded={open} onClick={()=>setExpanded(open ? null : row.key)}>
+          <span><small>{row.where}</small><strong>{row.vi}</strong></span>
+          <span>{changedKeys.has(row.key) ? "Chưa lưu" : open ? "Thu gọn" : "Sửa"}</span>
+        </button>
+        {open && <div className="translation-editor">
+          <div className="translation-original"><b>Tiếng Việt</b><p>{row.vi}</p></div>
+          {languages.map(lang => <label key={lang}>{lang === "en" ? "Tiếng Anh" : "Tiếng Nhật"}
+            <textarea lang={lang} rows={4} disabled={busy} value={draft[row.key]?.[lang] ?? row[lang]}
+              onChange={event=>setDraft({...draft,[row.key]:{...draft[row.key],[lang]:event.target.value}})}/>
+          </label>)}
+        </div>}
+      </article>;
+    })}
+    {!busy && !filtered.length && <p>Không tìm thấy nội dung phù hợp.</p>}
+    {pages > 0 && <footer><span>{current * pageSize + 1}–{Math.min((current + 1) * pageSize, filtered.length)} / {filtered.length} mục</span>
+      <button className="admin-btn" disabled={!current} onClick={()=>setPage(current-1)}>Trước</button>
+      <button className="admin-btn" disabled={current+1 >= pages} onClick={()=>setPage(current+1)}>Sau</button>
+    </footer>}
   </section>;
 }

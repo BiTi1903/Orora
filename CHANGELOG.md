@@ -1,3 +1,8 @@
+## 27/11/2026 — Thu gọn form bản dịch
+
+- Admin hiển thị tám câu mỗi trang, tìm kiếm không dấu, lọc theo ngôn ngữ thiếu hoặc bản nháp. Chỉ mở trình sửa của câu được chọn.
+- Lint, build và bốn lượt Playwright kiểm tra phân trang, lọc, giữ bản nháp và chiều rộng đều đạt. Không thay đổi database.
+
 ## 27/11/2026 — Chọn VI / EN / JP
 
 - Bật chuyển ngôn ngữ trên thanh điều hướng và menu điện thoại, dùng mã ja cho tiếng Nhật và hiển thị JP. Khôi phục lựa chọn đã lưu.
