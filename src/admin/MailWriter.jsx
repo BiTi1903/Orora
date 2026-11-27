@@ -1,4 +1,5 @@
 import { orderTrackingMail, trackingTemplate } from "../lib/order-tracking-mail.js";
+import MailHtmlEditor from "./MailHtmlEditor";
 import MailBodyBlocks from "./MailBodyBlocks";
 import MailDesignFields from "./MailDesignFields";
 import { useConfirm } from "./confirm-context";
@@ -231,6 +232,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
               ))}
             </div>
           </div>}
+          <MailHtmlEditor value={value.design} onChange={design => onChange({ subject: value.subject, text: value.text, design })} />
           <MailBodyBlocks text={value.text} onChange={text => onChange({ design: value.design, subject: value.subject, text })} />
           <MailDesignFields kind={mode} value={value.design} onChange={design => onChange({ subject: value.subject, text: value.text, design })} />
           <details className="admin-filter-panel" open>

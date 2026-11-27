@@ -118,6 +118,15 @@ test('mail writer previews frame edits and saves them with the welcome template'
   await page.getByText('Sắp xếp các đoạn nội dung').click();
   await page.getByRole('button', {name:'Đưa đoạn 2 lên'}).click();
   await expect(page.getByLabel('Nội dung thư', {exact:true})).toHaveValue('Đoạn sau\n\nĐoạn đầu');
+  await page.getByText('Sửa mã HTML', {exact:true}).click();
+  await page.getByLabel('Dùng HTML cho phần nội dung thư').check();
+  const code = '<div><h2>Bộ sưu tập</h2>{{content}}</div>';
+  await page.getByLabel('Mã HTML nội dung').fill(code);
+  await expect(page.frameLocator('.mail-preview-frame').getByRole('heading', {name:'Bộ sưu tập'})).toBeVisible();
+  await page.getByLabel('Dùng HTML cho phần nội dung thư').uncheck();
+  await expect(page.frameLocator('.mail-preview-frame').getByRole('heading', {name:'Bộ sưu tập'})).toHaveCount(0);
+  await page.getByLabel('Dùng HTML cho phần nội dung thư').check();
+  await expect(page.getByLabel('Mã HTML nội dung')).toHaveValue(code);
   await page.getByLabel('Tiêu đề thư', {exact:true}).fill('Chào bạn');
   await expect(page.frameLocator('.mail-preview-frame').locator('body')).toHaveCSS('background-color', 'rgb(18, 52, 86)');
   await page.getByRole('button', {name:'Lưu làm thư đăng ký tự động'}).click();

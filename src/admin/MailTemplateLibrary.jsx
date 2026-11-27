@@ -1,5 +1,6 @@
 import { useConfirm } from "./confirm-context";
 import { renderWelcomeEmailHtml, renderOrderEmailHtml, renderBrandedEmailHtml } from "../lib/mail-html";
+import MailHtmlEditor from "./MailHtmlEditor";
 import MailBodyBlocks from "./MailBodyBlocks";
 import MailDesignFields from "./MailDesignFields";
 import { TEMPLATE_KINDS, templateUsageLabel } from "../lib/mail-templates";
@@ -75,7 +76,8 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
         <details><summary>Thêm loại mẫu</summary><div className="admin-field"><label htmlFor="library-new-type">Tên loại mẫu mới</label><input id="library-new-type" maxLength={60} disabled={busy} value={newType} onChange={(event) => setNewType(event.target.value)} /></div><button type="button" className="admin-btn" aria-busy={busy && busyAction === "type"} disabled={busy || !newType.trim()} onClick={async () => { setBusy(true);setBusyAction("type");try { const result = await request({ action: "addTemplateType", name: newType }); setTypes((items) => [...new Map([...items, result.type].map((item) => [item.id, item])).values()]); setDraft({ ...draft, kind: "private", categoryId: result.type.id }); setNewType(""); setNotice({ text: result.message }); } catch (error) { setNotice({ error: true, text: error.message }); } finally { setBusy(false);setBusyAction(""); } }}>Thêm loại</button></details>
         <div className="admin-field"><label htmlFor="library-subject">Tiêu đề mẫu thư</label><input id="library-subject" required maxLength={200} disabled={busy} value={draft.subject} onChange={(event) => setDraft({ ...draft, subject: event.target.value })} /></div>
         <div className="admin-field"><label htmlFor="library-text">Nội dung mẫu thư</label><textarea id="library-text" required rows={10} maxLength={20000} disabled={busy} value={draft.text} onChange={(event) => setDraft({ ...draft, text: event.target.value })} /></div>
-        <MailBodyBlocks text={draft.text} disabled={busy} onChange={text => setDraft({ ...draft, text })} />
+        <MailHtmlEditor value={draft.design} disabled={busy} onChange={design => setDraft({ ...draft, design })} />
+          <MailBodyBlocks text={draft.text} disabled={busy} onChange={text => setDraft({ ...draft, text })} />
           <MailDesignFields kind={draft.kind} value={draft.design} disabled={busy} onChange={design => setDraft({ ...draft, design })} />
         <details className="admin-filter-panel"><summary>Xem trước giao diện mẫu</summary>
           <iframe className="mail-preview-frame" sandbox="" title="Giao diện mẫu thư đang chỉnh" srcDoc={

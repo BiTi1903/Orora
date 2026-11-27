@@ -1,3 +1,8 @@
+## 27/11/2026 — Chỉnh HTML phần nội dung email
+
+- Thêm chế độ mã nguồn ở trình soạn và kho mẫu. Xem trước và tạo thư gửi dùng chung bộ lọc HTML và biến {{content}}. Tắt chế độ vẫn giữ mã để chỉnh tiếp.
+- Lưu mã cùng thiết kế của mẫu, không cần chuyển đổi database. Kiểm tra 80 bài mail/newsletter, lint, build và Playwright 390/1440 px đạt. Chưa gửi thư thật.
+
 ## 27/11/2026 — Mở rộng trình soạn email cho admin
 
 - Chia thiết kế thành bốn phần. Cho chỉnh tên thương hiệu, dòng phụ, dòng xem trước hộp thư, font, độ đậm, căn đoạn và nút hành động. Thư đơn hàng dùng đường dẫn tra cứu hoặc hỗ trợ của đơn.

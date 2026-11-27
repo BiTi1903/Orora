@@ -1,3 +1,6 @@
+export const MAIL_CODE_LIMIT = 30000;
+export const DEFAULT_MAIL_CODE = '<div style="padding:16px; background-color:#fff8fb;">\n  {{content}}\n</div>';
+
 export const FRAME_COLORS = {
   background: ["Nền ngoài thư", "#f9f3f6"],
   surface: ["Nền nội dung", "#ffffff"],
@@ -44,6 +47,8 @@ export function mailDesign(input) {
   for (const [key, [, options]] of Object.entries(MAIL_OPTIONS)) {
     result[key] = Object.hasOwn(options, input?.[key]) ? input[key] : Object.keys(options)[0];
   }
+  result.useHtml = input?.useHtml === true;
+  result.htmlSource = typeof input?.htmlSource === "string" ? input.htmlSource.slice(0, MAIL_CODE_LIMIT) : DEFAULT_MAIL_CODE;
   return result;
 }
 

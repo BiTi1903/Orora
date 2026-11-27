@@ -1,3 +1,4 @@
+import { renderMailCode } from "./mail-code.js";
 import { mailDesign } from "./mail-design.js";
 import { orderTrackingMail } from "./order-tracking-mail.js";
 import { PAYMENT_LABELS, formatProductPrice, formatVnd } from "./commerce.js";
@@ -68,9 +69,9 @@ export function formatBodyHtml(text, { unsubscribeUrl = "", design } = {}) {
   const font = { system: FONT_SANS, arial: "Arial, sans-serif", georgia: FONT_SERIF }[frame.font];
   const typography = `font-family:${font};text-align:${frame.align};font-weight:${frame.weight};`;
   const cleaned = stripUnsubscribeFooter(text, unsubscribeUrl);
-  if (!cleaned) return "";
+
   const blocks = cleaned.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
-  return blocks.map((block) => {
+  const formatted = blocks.map((block) => {
     const lines = block.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
     const isBulletList = lines.length > 0 && lines.every((line) => /^[-•*]\s+/.test(line));
     if (isBulletList) {
@@ -90,6 +91,7 @@ export function formatBodyHtml(text, { unsubscribeUrl = "", design } = {}) {
     const renderedLines = lines.map((line) => linkifyEscaped(escapeHtml(line))).join("<br />");
     return `<p style="margin:0 0 14px 0;color:${frame.text};font-size:${frame.fontSize}px;line-height:1.72;${typography}">${renderedLines}</p>`;
   }).join("");
+  return frame.useHtml ? renderMailCode(frame.htmlSource, formatted) : formatted;
 }
 
 function buildPreheader(text) {

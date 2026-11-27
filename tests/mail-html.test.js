@@ -236,3 +236,14 @@ test("custom inbox preview, brand and button reach marketing HTML while order tr
     assert.equal(html.includes(design.buttonUrl), render !== renderOrderEmailHtml);
   }
 });
+
+test("mail code formats personalized copy and retains the delivery footer", () => {
+  const design = {useHtml:true,htmlSource:'<table><tr><td style="color:#123456">{{content}}</td></tr></table><h2>Ưu đãi</h2>'};
+  const message = {subject:"ORORA",text:"Xin chào <An>",design};
+  const result = withUnsubscribe(message,subscriberId("mail@example.com"),ENV,{kind:"welcome"});
+  assert.match(result.html, /<h2>Ưu đãi<\/h2>/);
+  assert.match(result.html, /Xin chào &lt;An&gt;/);
+  assert.match(result.html, /Hủy đăng ký nhận tin/);
+  assert.match(result.text, /Xin chào <An>/);
+  assert.doesNotMatch(renderBrandedEmailHtml({...message,design:{...design,useHtml:false}}), /<h2>Ưu đãi/);
+});
