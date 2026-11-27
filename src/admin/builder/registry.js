@@ -143,7 +143,7 @@ const PRODUCT_DETAIL_FIELD_MAP = {
   pdInfoCaption: { styleKey: "informationTabs", label: "Nội dung · Chú thích (Đầu mục & Nội dung)" },
 
   /* ---- 6. Đánh giá ---- */
-  pdReviewTitle: { styleKey: "reviewTitle", label: "Đánh giá — Tiêu đề", sample: "Đánh giá — Tiêu đề" },
+  pdReviewTitle: { styleKey: "reviewTitle", textKey: "text", label: "Đánh giá — Tiêu đề", sample: "Đánh giá sản phẩm" },
   pdReviewName: { styleKey: "reviewName", label: "Đánh giá — Tên hiển thị", sample: "Đánh giá — Tên hiển thị" },
   pdReviewBody: { styleKey: "reviewBody", label: "Đánh giá — Nội dung", sample: "Đánh giá — Nội dung" },
 

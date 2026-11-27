@@ -193,3 +193,15 @@ test('the compact thumbnail strip shows two square images with borderless previe
  await expect(tiles.first()).toHaveAccessibleName('Ảnh phụ 2');
  await fit(page);
 });
+
+test('detail builder exposes review styling without publishing sample reviews', async ({page}) => {
+ await mount(page, `import Detail from '/src/components/ProductDetail.jsx';${render(
+   `R.createElement(Detail,{preview:true,previewProduct:${JSON.stringify(product)},previewStyles:{reviewTitle:{text:'Khách nói gì'},reviewCard:{radius:12}}})`
+ )}`, base);
+ const reviews = page.locator('#product-reviews');
+ await expect(reviews.getByRole('heading',{name:'Khách nói gì'})).toHaveAttribute('data-builder-key','pdReviewTitle');
+ await expect(reviews.locator('[data-builder-key="pdReviewName"]')).toHaveText('Khách hàng mẫu');
+ await expect(reviews.locator('.product-review-card')).toHaveCSS('border-radius','12px');
+ await detail(page);
+ await expect(page.locator('#product-reviews')).toContainText('Chưa có đánh giá từ khách hàng.');
+});

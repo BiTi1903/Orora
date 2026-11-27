@@ -1403,6 +1403,7 @@
     max-width: 460px;
     margin: 0 auto;
     padding: 8px 12px;
+    background: color-mix(in srgb, var(--quick-buy-bg, var(--shop-nav-bg, #fffafc)) var(--quick-buy-opacity, var(--shop-nav-opacity, 74%)), #fffafc);
   }
   html.has-mobile-shop-nav:has(.mobile-shop-nav:not(.is-preview,.is-waiting)) .product-mobile-buy:not(.is-preview) {
     bottom: calc(var(--mobile-shop-nav-height, 64px) + 6px);
@@ -1789,7 +1790,7 @@
   padding: 10px 14px;
   border-radius: 18px;
   border: 1px solid color-mix(in srgb, var(--rose-deep) 24%, white);
-  background: linear-gradient(135deg, rgba(255, 252, 253, .95), rgba(255, 243, 248, .92));
+  background: linear-gradient(135deg, #fffcfd, #fff3f8);
   box-shadow: 0 18px 44px rgba(58, 21, 38, .16), inset 0 1px 0 rgba(255, 255, 255, .9);
   backdrop-filter: blur(18px) saturate(150%);
   -webkit-backdrop-filter: blur(18px) saturate(150%);

@@ -1,3 +1,8 @@
+## 27/11/2026 — Thanh mua nhanh và đánh giá trong Builder
+
+- Dùng nền đục cho thanh mua nổi để nội dung bên dưới không xuyên qua. Visual Builder hỗ trợ chọn đánh giá và chỉnh tiêu đề, kiểu chữ, khung thẻ.
+- Lint, build và bảy lượt Playwright đạt, một lượt cấu hình desktop bỏ qua bài dành cho mobile. Không thay đổi dữ liệu sản xuất.
+
 ## 27/11/2026 — Gỡ file hướng dẫn nhân viên khỏi repo
 
 - **Lý do**: Tài liệu hướng dẫn quản trị nội bộ chỉ cần xuất file Excel gửi nhân viên, không lưu trong repo mã nguồn.
@@ -19,7 +24,6 @@
   - `src/admin/builder/LanguageSwitcherSettings.jsx`, `src/admin/AdminApp.jsx`: Gỡ form nhập câu dịch cũ trùng lặp trong Visual Builder, thống nhất nhãn `Tiếng Nhật (JP)` và thêm nút chuyển thẳng sang mục **Bản dịch** (qua sự kiện `orora-admin-navigate`, vẫn giữ cảnh báo thay đổi chưa lưu).
 - **Kiểm tra đã chạy**: `npm run check` (293/293 unit test đạt, ESLint 0 lỗi/0 cảnh báo, Vite build và giới hạn bundle đạt), Playwright `qa/translation-admin.spec.js` (12/12 lượt trên 4 kích thước màn hình `320px/390px/768px/1440px` đạt). Chưa ghi trực tiếp trên Firestore sản xuất.
 - **Ảnh hưởng database**: Không cần migrate. Chỉ có thể lưu thêm trường `translationSheet` (tùy chọn) trên document `settings/productCategories` khi quản trị viên dịch danh mục.
-
 ## 27/11/2026 — Thiết kế lại khu vực Bản dịch
 
 - Chia nội dung website và cụm từ thành hai tab. Thêm thống kê thiếu bản dịch, lọc khu vực, danh sách cụm đã lưu có tìm kiếm và sửa trực tiếp.

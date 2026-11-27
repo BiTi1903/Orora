@@ -166,7 +166,7 @@ export function applySelectedPatch(
   }
 
   if (activeSection === "productdetail") {
-    if (patch.informationTabs || patch.mobileLayout || patch.visibility) {
+    if (patch.informationTabs || patch.mobileLayout || patch.visibility || patch.reviewCard) {
       setProductDetail((c) => ({ ...c, ...patch }));
       return;
     }

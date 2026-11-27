@@ -997,7 +997,7 @@ function ProductDetail({
       {visible("information") && (preview || Object.keys(PRODUCT_CONTENT_GROUPS).some((group) => isProductContentGroupVisible(product.detailVisibility, group))) && <div className="product-detail-lower">
         <ProductInformation key={`${product.id||product.slug}:${ps.informationTabs?.defaultTab||"description"}`} settings={ps.informationTabs} sections={sections} visibility={product.detailVisibility} preview={preview} select={select} selectedClass={selectedClass} textProps={textProps} />
       </div>}
-      {visible("reviews") && <ProductReviews product={product} textProps={textProps} />}
+      {(preview || visible("reviews")) && <ProductReviews product={product} preview={preview} styles={ps} textProps={textProps} />}
       {!home.loading && <><ProductCareGuide value={careGuideForProduct(home.productCareGuide, product)} /><ProductFaq value={home.productFaq} product={product} /></>}
       </div>
       <div className="product-side-column">
