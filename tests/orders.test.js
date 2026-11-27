@@ -51,12 +51,14 @@ test("invalid input, cross-origin requests, inactive products and disabled payme
 test("repeated names, phones, emails and IPs do not block new orders or their emails", async () => {
   const { db } = await setup(); let sent = 0;
   await db.collection("orderRateLimits").doc("global").set({ count: 999999, windowStart: new Date() });
-  const handler = createOrderHandler({ getDb: () => db, env, sendMail: async () => { sent++; } });
+  const alerts = [];
+  const handler = createOrderHandler({ notifyStore: async (_ref, event) => alerts.push(event), getDb: () => db, env, sendMail: async () => { sent++; } });
   const original = body();
   const call = async (data) => { const res = response(); await handler({ method: "POST", headers, body: data }, res); return res; };
   for (let i = 0; i < 8; i++) assert.equal((await call(i === 0 ? original : { ...body(), website: "ignored legacy field" })).statusCode, 201);
   assert.equal(sent, 8);
   assert.equal((await call(original)).statusCode, 201); assert.equal(sent, 8);
+  assert.equal(alerts.length, 8);
   assert.equal((await db.collection("orders").get()).docs.length, 8);
   assert.equal((await db.collection("orderRateLimits").doc("global").get()).data().count, 999999);
 });

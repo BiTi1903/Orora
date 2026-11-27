@@ -1,3 +1,9 @@
+## 27/11/2026 — Báo cho cửa hàng khi có đơn hoặc đăng ký nhận tin mới
+
+- API đặt đơn và đăng ký nhận tin gửi email nội bộ qua Microsoft khi vừa tạo bản ghi. Thư chứa liên kết đến khu vực xử lý trong admin. Có thể chọn hộp thư nhận qua STORE_NOTIFICATION_EMAIL.
+- Ghi kết quả gửi tại storeNotification trên bản ghi tương ứng trong Firestore. Yêu cầu trùng và lần thử lại gửi thư chào mừng không phát sinh thông báo mới.
+- 289 kiểm thử đạt, lint và build thành công. Chưa kiểm tra nhận thư qua hộp thư thật.
+
 ## 27/11/2026 — Tìm đơn, xóa danh mục và thư xác nhận
 
 - Sửa lỗi tìm mã đơn khớp nhầm số điện thoại trong OrdersAdmin.

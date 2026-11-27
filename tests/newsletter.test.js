@@ -131,12 +131,14 @@ test("unsubscribe GET requires confirmation; POST disables contact; tampered sig
 
 test("subscription stores consent, deduplicates welcome delivery and validates consent/origin", async () => {
   const db = memoryDb(); let sent = 0;
-  const handler = createSubscribeHandler({ getDb: async () => db, sendWelcome: async () => { sent++; }, env });
+  const alerts = [];
+  const handler = createSubscribeHandler({ notifyStore: async (_ref, event) => alerts.push(event), getDb: async () => db, sendWelcome: async () => { sent++; }, env });
   const req = { method: "POST", headers, body: { email: " CUSTOMER@example.com ", consent: true }, socket: { remoteAddress: "127.0.0.1" } };
   const one = response(); await handler(req, one); assert.equal(one.statusCode, 200);
   const saved = (await db.collection("newsletterSubscribers").doc(subscriberId("customer@example.com")).get()).data();
   assert.equal(saved.status, "active"); assert.equal(saved.consentVersion, "newsletter-v1");
   const two = response(); await handler(req, two); assert.equal(two.statusCode, 200); assert.equal(sent, 1);
+  assert.equal(alerts.length, 1);
   const noConsent = response(); await handler({ ...req, body: { email: "other@example.com" } }, noConsent); assert.equal(noConsent.statusCode, 400);
   const badOrigin = response(); await handler({ ...req, headers: { ...headers, origin: "https://evil.example" } }, badOrigin); assert.equal(badOrigin.statusCode, 403);
 });

@@ -56,7 +56,7 @@ const orderCreatedPayload = (result, mailStatus) => ({
   paymentMethod: result.paymentMethod,
   message: result.shippingFee == null ? "Đã nhận đơn hàng. ORORA sẽ liên hệ xác nhận sản phẩm, phí giao hàng và cách thanh toán." : "Đã nhận đơn hàng. ORORA sẽ liên hệ xác nhận và hỗ trợ thanh toán.",
 });
-export function createOrderHandler({ getDb, sendMail, schedule, env = process.env, now = () => Date.now(), chooseCodeIndex }) {
+export function createOrderHandler({ getDb, sendMail, notifyStore, schedule, env = process.env, now = () => Date.now(), chooseCodeIndex }) {
   return async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
     if (req.method !== "POST") { res.setHeader("Allow", "POST"); return res.status(405).json({ message: "Chỉ nhận đơn bằng POST." }); }
@@ -106,7 +106,7 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
       const codePool = db.collection("orderCodePools").doc(body.paymentMethod === "cod" ? "C" : "B");
       const uniqueProductIds = [...new Set(rawItems.map((item) => item.productId))];
       const uniqueVariantStockKeys = [...new Set(rawItems.filter((item) => item.variantId).map((item) => inventoryDocId(item.productId, item.variantId)))];
-      const result = await db.runTransaction(async (tx) => {
+      const { record: result, created } = await db.runTransaction(async (tx) => {
         const productRefs = uniqueProductIds.map((pid) => db.collection("products").doc(pid));
         const stockRefs = uniqueProductIds.map((pid) => db.collection("inventory").doc(pid));
         const variantStockRefs = uniqueVariantStockKeys.map((key) => db.collection("inventory").doc(key));
@@ -117,7 +117,7 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
         const variantStockSnaps = new Map(uniqueVariantStockKeys.map((key, idx) => [key, snaps[3 + uniqueProductIds.length * 2 + idx]]));
         if (existing.exists) {
           if (existing.data().requestHash !== digest) throw Object.assign(new Error("Đơn này đã được tiếp nhận. Vui lòng liên hệ ORORA nếu muốn thay đổi thông tin."), { status: 409 });
-          return existing.data();
+          return { record: existing.data(), created: false };
         }
         const resolvedItems = [];
         const qtyByStockTarget = new Map();
@@ -194,14 +194,14 @@ export function createOrderHandler({ getDb, sendMail, schedule, env = process.en
         }
         if (Object.keys(reservedTargets).length) record.reservedTargets = reservedTargets;
         tx.set(order, record); tx.set(codePool, { ...allocated.pool, updatedAt: createdAt });
-        return record;
+        return { record, created: true };
       });
       let mailStatus = result.confirmationMail?.state || "pending";
       const completeMail = async () => {
         try { const outcome = await sendOrderConfirmation({ db, orderId: body.requestId, sendMail }); mailStatus = outcome.state || mailStatus; }
         catch { console.error("Order accepted; confirmation mail processing did not finish"); }
       };
-      const task = completeMail();
+      const task = Promise.all([completeMail(), created && notifyStore?.(order, { code: result.code })]);
       if (schedule) {
         try { schedule(task); } catch { await task; }
       } else await task;
