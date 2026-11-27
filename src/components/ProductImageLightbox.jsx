@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import ModalDialog from "./ModalDialog";
 import { cdnSrc } from "../lib/image-cdn";
 
@@ -13,11 +13,45 @@ export default function ProductImageLightbox({ src, images, initialIndex = 0, na
   const currentSrc = gallery[index] || src;
   const hasMultiple = gallery.length > 1;
 
-  function changeZoom(value) {
+  const viewRef = useRef(null);
+  const imageRef = useRef(null);
+  const anchor = useRef(null);
+  const [fitWidth, setFitWidth] = useState(null);
+
+  useLayoutEffect(() => {
+    const view = viewRef.current;
+    const image = imageRef.current;
+    function measure() {
+      if (image.naturalWidth && image.naturalHeight) {
+        setFitWidth(Math.min(view.clientWidth, view.clientHeight * image.naturalWidth / image.naturalHeight));
+      }
+    }
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(view);
+    image.addEventListener("load", measure);
+    return () => { observer.disconnect(); image.removeEventListener("load", measure); };
+  }, [currentSrc]);
+
+  function changeZoom(value, point) {
     const next = clampZoom(value);
+    if (next === zoom) return;
+    const box = viewRef.current.getBoundingClientRect();
+    const image = imageRef.current.getBoundingClientRect();
+    const x = point?.x ?? box.left + box.width / 2;
+    const y = point?.y ?? box.top + box.height / 2;
+    anchor.current = { x, y, fx: (x-image.left)/image.width, fy: (y-image.top)/image.height };
     if (next >= 2) setLoadLarge(true);
     setZoom(next);
   }
+
+  useLayoutEffect(() => {
+    const target = anchor.current;
+    if (!target) return;
+    anchor.current = null;
+    const image = imageRef.current.getBoundingClientRect();
+    viewRef.current.scrollBy(image.left + target.fx * image.width - target.x, image.top + target.fy * image.height - target.y);
+  }, [zoom]);
 
   const stepImage = (delta) => {
     if (!hasMultiple) return;
@@ -56,7 +90,7 @@ export default function ProductImageLightbox({ src, images, initialIndex = 0, na
       if (zoom === 1 && hasMultiple && Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.2) {
         stepImage(dx < 0 ? 1 : -1);
       } else if (!start.moved && Math.hypot(dx, dy) < 8) {
-        changeZoom(zoom > 1 ? 1 : 2);
+        changeZoom(zoom > 1 ? 1 : 2, {x:event.clientX,y:event.clientY});
       }
       gesture.current = null;
     }
@@ -85,6 +119,7 @@ export default function ProductImageLightbox({ src, images, initialIndex = 0, na
         )}
       </div>
       <div
+        ref={viewRef}
         className="product-lightbox-view"
         tabIndex={0}
         role="region"
@@ -112,18 +147,23 @@ export default function ProductImageLightbox({ src, images, initialIndex = 0, na
             event.currentTarget.scrollBy(previous.x - event.clientX, previous.y - event.clientY);
           }
           if (pinch.current?.length && pointers.current.size === 2) {
-            changeZoom((pinch.current.zoom * distance([...pointers.current.values()])) / pinch.current.length);
+            const points = [...pointers.current.values()];
+            changeZoom((pinch.current.zoom * distance(points)) / pinch.current.length, {x:(points[0].x+points[1].x)/2,y:(points[0].y+points[1].y)/2});
           }
         }}
         onPointerUp={release}
-        onPointerCancel={release}
-        onLostPointerCapture={release}
+        onLostPointerCapture={event => {
+          pointers.current.delete(event.pointerId);
+          pinch.current = null;
+          gesture.current = null;
+        }}
       >
         <img
+          ref={imageRef}
           src={cdnSrc(currentSrc, { w: loadLarge ? 2400 : 1600, q: "auto:best" })}
           alt={name}
           draggable={false}
-          style={{ width: `${zoom * 100}%` }}
+          style={{ width: fitWidth ? fitWidth * zoom : "100%" }}
         />
       </div>
       <p className="product-lightbox-hint">

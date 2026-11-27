@@ -1,3 +1,8 @@
+## 27/11/2026 — Sửa thao tác phóng to ảnh sản phẩm
+
+- Ảnh vừa khung theo cả chiều rộng và chiều cao. Khi phóng to, trình xem giữ điểm đang chạm và cho kéo để xem chi tiết.
+- Playwright kiểm tra kích thước ảnh thực tế ở mức 150%.
+
 ## 27/11/2026 — Xem lớn ảnh trong nội dung chi tiết sản phẩm
 
 - Mở ảnh của các khối nội dung bằng trình xem ảnh sản phẩm hiện có. Dùng tên mô tả của ảnh cho nút mở và hộp thoại. Visual Builder giữ thao tác chọn khối để chỉnh sửa.

@@ -148,7 +148,11 @@ test('block and caption switches, skeleton shimmer, and Visual Builder frame/mot
   await trigger.click();
   const viewer = page.getByRole('dialog');
   await expect(viewer.getByRole('img')).toHaveAttribute('src', /slow-detail/);
+  const image = viewer.getByRole('img');
+  await expect.poll(()=>image.evaluate(el=>el.complete && el.naturalWidth > 0)).toBe(true);
+  const originalWidth = (await image.boundingBox()).width;
   await viewer.getByRole('button', {name:'Phóng to', exact:true}).click();
+  await expect.poll(async ()=>(await image.boundingBox()).width / originalWidth).toBeCloseTo(1.5, 2);
   await expect(viewer.getByRole('button', {name:'150%'})).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(viewer).toHaveCount(0);
