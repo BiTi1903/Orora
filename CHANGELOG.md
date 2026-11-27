@@ -1,3 +1,8 @@
+## 27/11/2026 — Sửa chớp trang chi tiết sản phẩm ở EN và JP
+
+- ProductDetail giữ lại sản phẩm đã dịch giữa các lần rê chuột và cuộn để tránh khởi động lại đo kích thước và hiệu ứng xuất hiện.
+- Playwright desktop tái hiện lỗi ở EN/JP trước khi sửa, VI đạt. Sau sửa cả ba ngôn ngữ và bài kiểm tra zoom đều đạt. Lint và build đạt. Không thay đổi database.
+
 ## 27/11/2026 — Ưu tiên dòng thiếu bản dịch và thêm gợi ý admin
 
 - Đưa dòng thiếu EN/JP lên trước trong Bản dịch. Thêm gợi ý cạnh thao tác khó của Bản dịch, Đơn hàng, Kiểm kho, Phí vận chuyển, Email và Thư cần xử lý.

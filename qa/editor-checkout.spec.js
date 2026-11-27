@@ -76,6 +76,41 @@ test('known stock blocks orders', async ({ page }) => {
  await expect(page.locator('.product-mobile-buy .product-mobile-buy-cta')).toBeDisabled();
 });
 
+for (const locale of ['vi', 'en', 'ja']) {
+ test(`product gallery stays mounted during hover and scroll in ${locale}`, async ({ page }) => {
+  test.skip(page.viewportSize().width < 901, 'Desktop pointer interaction');
+  await page.addInitScript(lang => {
+   localStorage.setItem('orora_locale', lang);
+   window.galleryDisconnects = 0;
+   window.ResizeObserver = class extends ResizeObserver {
+    observe(target, options) {
+     if (target.matches('.product-detail-gallery')) this.gallery = true;
+     super.observe(target, options);
+    }
+    disconnect() {
+     if (this.gallery) window.galleryDisconnects++;
+     super.disconnect();
+    }
+   };
+  }, locale);
+  await detail(page, null, {
+   'lib/api.js': `export const getProduct=async()=>(${JSON.stringify({...product, image:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"/>'})});`,
+  });
+  await expect(page.locator('html')).toHaveAttribute('lang', locale);
+  const frame = page.locator('.product-detail-image.is-interactive');
+  await frame.scrollIntoViewIfNeeded();
+  const baseline = await page.evaluate(() => window.galleryDisconnects);
+  await frame.hover();
+  await expect(frame).toHaveAttribute('data-zooming', 'true');
+  await page.mouse.move(1, 1);
+  await expect(frame).toHaveAttribute('data-zooming', 'false');
+  const start = await page.evaluate(() => scrollY);
+  await page.mouse.wheel(0, 700);
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(start);
+  expect(await page.evaluate(() => window.galleryDisconnects)).toBe(baseline);
+ });
+}
+
 test('product image zooms inline at cursor position without opening a popup', async ({ page }) => {
  await page.route('https://res.cloudinary.com/**', route => route.fulfill({
   contentType: 'image/svg+xml',

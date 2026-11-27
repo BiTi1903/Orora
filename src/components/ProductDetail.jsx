@@ -29,7 +29,7 @@ import ConsultationDialog from "./ConsultationDialog";
 import OrderForm from "./OrderForm";
 import { availablePaymentMethods, formatProductPrice, formatVnd, parseVndPrice, purchaseChannelLabels, socialShopUrl } from "../lib/commerce";
 import { mobileImageVars } from "../lib/image-layout";
-import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { getProduct } from "../lib/api";
 import useHomeContent from "../hooks/useHomeContent";
@@ -135,7 +135,10 @@ function ProductDetail({
   const rawProduct = preview
     ? previewProduct || null
     : loadedProduct && (loadedProduct.id === id || (loadedProduct.product && matchesProductRoute(loadedProduct.product, id))) ? loadedProduct.product : undefined;
-  const product = !preview && rawProduct && locale !== "vi" ? localizeProduct(rawProduct, locale) : rawProduct;
+  const product = useMemo(
+    () => !preview && rawProduct && locale !== "vi" ? localizeProduct(rawProduct, locale) : rawProduct,
+    [rawProduct, locale, preview],
+  );
 
   const stockMap = useStorefrontStock([product?.id], !preview);
   const acceptsWebsiteOrders = availablePaymentMethods(home).length > 0;
