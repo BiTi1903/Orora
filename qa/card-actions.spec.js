@@ -12,3 +12,19 @@ test('mobile chat hint stays out of product price and action areas',async({page}
  await page.clock.install();await mount(page,`import Hint from '/src/components/ChatHint.jsx';import '/src/styles/chat-button.css';function Fixture(){const anchor=R.useRef(null);return R.createElement(R.Fragment,null,R.createElement('div',{className:'product-card-actions',id:'obstacle',style:{position:'fixed',top:0,left:0,width:100,height:44}}),R.createElement('div',{className:'orora-chat-launcher',style:{bottom:200}},R.createElement('button',{ref:anchor,style:{width:52,height:52}},'Chat'),R.createElement(Hint,{anchor,settings:{hintEnabled:true,hintDelay:0,hintDuration:30,hintText:'Bạn cần tư vấn? Nhắn ORORA nhé!'}})))};${render('R.createElement(Fixture)')}`);
  const hint=page.locator('.orora-chat-hint');await expect(hint).toBeVisible();await page.evaluate(()=>{const r=document.querySelector('.orora-chat-hint').getBoundingClientRect(),box=document.getElementById('obstacle');Object.assign(box.style,{left:r.x+'px',top:r.y+'px',width:r.width+'px',height:r.height+'px'});window.dispatchEvent(new Event('scroll'));});await page.clock.runFor(30);if(page.viewportSize().width<=768)await expect(hint).toBeHidden();else await expect(hint).toBeVisible();await page.evaluate(()=>{document.getElementById('obstacle').style.top='0px';window.dispatchEvent(new Event('scroll'));});await page.clock.runFor(30);await expect(hint).toBeVisible();
 });
+
+test('desktop hover reveals the sharp loaded alternate product image', async ({page}) => {
+ test.skip(page.viewportSize().width < 1200, 'Desktop image sizing');
+ await page.route('https://res.cloudinary.com/**', route => route.fulfill({
+  contentType:'image/svg+xml',
+  body:'<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200"><rect width="1200" height="1200" fill="pink"/></svg>',
+ }));
+ await mount(page, `import Card from '/src/components/ProductCard.jsx';${render('R.createElement(Card,{image:"/gallery1.jpg",secondaryImage:"https://res.cloudinary.com/orora/image/upload/v1/alternate.jpg",name:"ORORA",slug:"gel"})')}`);
+ const alternate = page.locator('.gallery-image-secondary');
+ await expect(alternate).toHaveAttribute('data-ready','true');
+ await expect(alternate).toHaveCSS('opacity','0');
+ await page.locator('.gallery-image').hover();
+ await expect(alternate).toHaveCSS('opacity','1');
+ await expect(alternate).toHaveCSS('transform','none');
+ expect(await alternate.evaluate(img => img.currentSrc)).toContain('q_auto:best');
+});

@@ -1,3 +1,4 @@
+import {secondaryProductImages} from "../lib/product-content";
 import { sectionIsEnabled } from "../lib/page-sections";
 import useStorefrontStock from '../hooks/useStorefrontStock';
 import CatalogFilters from "./CatalogFilters";
@@ -230,7 +231,7 @@ function ProductCarousel({ products, cardStyles, preview, selectedElement, onSel
           >
             <ProductCard productId={product.id} stock={carouselStock[product.id]}
               image={product.image}
-              secondaryImage={product.image2 || product.images?.[1] || ""}
+              secondaryImage={cardSecondaryImage(product)}
               number={productNumber(product, products)}
               name={product.name}
               description={product.shoppingGuide?.trim()||product.description}
@@ -394,7 +395,7 @@ function Collection({
     ? toCss(headStyles.header, { responsive: true })
     : undefined;
 
-  const card=product=><ProductCard productId={product.id} image={product.image} secondaryImage={product.image2 || product.images?.[1] || ""} number={productNumber(product,catalog)} name={product.name} description={product.description} price={catalogPriceLabel(product,filterSettings)} slug={productSlug(product,catalog)} styles={cardStyles} preview={preview} selectedElement={selectedElement} onSelect={onSelect} keyMap={keyMap} groupLayout stock={stock[product.id]}/>;
+  const card=product=><ProductCard productId={product.id} image={product.image} secondaryImage={cardSecondaryImage(product)} number={productNumber(product,catalog)} name={product.name} description={product.description} price={catalogPriceLabel(product,filterSettings)} slug={productSlug(product,catalog)} styles={cardStyles} preview={preview} selectedElement={selectedElement} onSelect={onSelect} keyMap={keyMap} groupLayout stock={stock[product.id]}/>;
   return (
     <section
       className={`collection ${preview ? "collection--preview" : ""} ${className} ${selectedClass(k("colSection"))}`.trim()}
@@ -511,3 +512,8 @@ function Collection({
 }
 
 export default Collection;
+
+function cardSecondaryImage(product) {
+  return [...secondaryProductImages(product), product.images?.[1]]
+    .find(src => typeof src === "string" && src.trim() && src.trim() !== product.image?.trim())?.trim() || "";
+}

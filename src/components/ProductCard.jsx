@@ -6,7 +6,7 @@ import { memo, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { splitColor, toCss } from "../lib/typography";
 import ProductSlideshow from "./ProductSlideshow";
-import { cdnSrc, CARD } from "../lib/image-cdn";
+import { cdnSrc, CARD, responsiveImage } from "../lib/image-cdn";
 import { prepareProductDetail } from "../lib/product-navigation";
 import { useLocale, translatePhrase } from "../lib/i18n";
 
@@ -240,7 +240,9 @@ style={frameStyle}        data-builder-key={preview ? k("cardImage") : undefined
           {!preview && secondaryImage && secondaryImage !== image && (
             <img
               className="gallery-image-secondary"
-              src={cdnSrc(secondaryImage, CARD)}
+              key={secondaryImage}
+              {...responsiveImage(secondaryImage, {width: 1200, widths: [800, 1200, 1600], sizes: "(min-width: 1200px) 480px, 50vw", q: "auto:best"})}
+              onLoad={event => { event.currentTarget.dataset.ready = "true"; }}
               alt=""
               loading="lazy"
               decoding="async"

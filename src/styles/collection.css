@@ -156,7 +156,14 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .gallery-item:hover .gallery-image-secondary { opacity: 1; }
+  .gallery-item:hover .gallery-image-secondary[data-ready="true"] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+  .gallery-item:hover .gallery-image:has(.gallery-image-secondary[data-ready="true"])::after {
+    opacity: 0;
+  }
 }
 
 /* lớp sáng dịu phía trên ảnh */
@@ -172,7 +179,7 @@
 }
 
 .gallery-item:hover .gallery-image { box-shadow: var(--shadow-lift); }
-.gallery-item:hover .gallery-image img { transform: scale(1.07); filter: saturate(1.06); }
+.gallery-item:hover .gallery-image img:not(.gallery-image-secondary) { transform: scale(1.07); filter: saturate(1.06); }
 
 /* INFO */
 .gallery-info {

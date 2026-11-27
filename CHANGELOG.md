@@ -1,3 +1,8 @@
+## 27/11/2026 — Làm rõ ảnh phụ trên thẻ sản phẩm
+
+- Thẻ trang chủ chọn ảnh theo thứ tự bộ ảnh sản phẩm và dùng ảnh CDN chất lượng cao theo kích thước hiển thị. Khi rê chuột, giữ ảnh chính đến khi ảnh phụ tải xong, bỏ phóng lớn và lớp phủ sáng trên ảnh phụ.
+- Lint, build và 9 lượt Playwright đạt. Không thay đổi database.
+
 ## 27/11/2026 — Chỉnh toàn bộ khối đánh giá sản phẩm
 
 - Visual Builder cho chọn khung đánh giá, bật/tắt toàn mục và chỉnh riêng khung ngoài, khung thẻ, chữ và sao. Giữ nhãn nhận diện đánh giá minh họa.
