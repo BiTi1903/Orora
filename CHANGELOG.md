@@ -1,3 +1,11 @@
+## 27/11/2026 — Bổ sung tài liệu hướng dẫn sử dụng trang Quản trị (Admin) cho nhân viên
+
+- **Lý do**: Cung cấp tài liệu hướng dẫn chi tiết, chuẩn xác theo đúng giao diện và luồng vận hành thực tế để chủ website gửi cho nhân viên thao tác.
+- **Thay đổi chính**:
+  - `docs/HUONG-DAN-QUAN-TRI-ADMIN.md`: Tạo hướng dẫn đầy đủ cho toàn bộ 12 mục quản trị (`Tổng quan`, `Thống kê`, `Đơn hàng`, `Kiểm kho`, `Phí vận chuyển`, `Trang chủ / Visual Builder` gồm đủ 22 khu vực, `Sản phẩm`, `Bản dịch`, `Email`, `Thư cần xử lý`, `Chat AI`, `Xuất danh sách email`), kèm nguyên tắc thao tác an toàn, checklist hằng ngày và bảng xử lý tình huống thường gặp.
+- **Kiểm tra đã chạy**: Đã đối chiếu trực tiếp tên tab, nút bấm, trạng thái và luồng xử lý từ mã nguồn `src/admin/` và `src/lib/page-sections.js`. Không thay đổi mã chạy nên không chạy build/test.
+- **Ảnh hưởng database**: Không ảnh hưởng.
+
 ## 27/11/2026 — Sửa lỗi chức năng, đồng bộ UI/UX và mở rộng danh mục cho Bản dịch
 
 - **Lý do**: Khắc phục lỗi không xóa được bản dịch đã lưu, tránh nháy tiếng Việt khi tải trang EN/JP, loại bỏ nơi chỉnh bản dịch trùng lặp ở Visual Builder, bổ sung dịch Danh mục sản phẩm, tránh giới hạn 500 document/transaction và đồng bộ giao diện/nội dung theo thiết kế Admin ORORA.
