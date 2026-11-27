@@ -20,6 +20,9 @@ async function readCurrentRows() {
 }
 
 export default function TranslationAdmin() {
+  const [view, setView] = useState("content");
+  const [openedPhrases, setOpenedPhrases] = useState(false);
+  const [area, setArea] = useState("all");
   const [rows, setRows] = useState([]);
   const [draft, setDraft] = useState({});
   const [message, setMessage] = useState("");
@@ -49,7 +52,7 @@ export default function TranslationAdmin() {
       setRows(latest);
       setDraft({});
       setPage(0);
-      if (filter === "changed") setFilter("all");
+    if (filter === "changed") setFilter("all");
       setMessage("Đã tải bản dịch mới nhất từ máy chủ.");
     });
   }
@@ -107,6 +110,7 @@ export default function TranslationAdmin() {
   const changedKeys = new Set(changes.map(row => row.key));
   const search = normalizeSearch(query);
   const filtered = rows.filter(row => {
+    if (area !== "all" && (JSON.parse(row.key)[0] === "home") !== (area === "home")) return false;
     if (filter === "changed" && !changedKeys.has(row.key)) return false;
     if (languages.includes(filter) && row[filter]) return false;
     return normalizeSearch([row.vi, row.where, row.en, row.ja].join(" ")).includes(search);
@@ -115,7 +119,20 @@ export default function TranslationAdmin() {
   const pages = Math.ceil(filtered.length / pageSize);
   const current = Math.min(page, Math.max(0, pages - 1));
   return <section className="translations-admin">
-    <header><h1>Bản dịch</h1><div className="translation-actions">
+    <header><h1>Bản dịch</h1></header>
+    <nav className="translation-tabs" aria-label="Khu vực bản dịch">
+      <button type="button" aria-pressed={view === "content"} onClick={()=>setView("content")}>Nội dung website</button>
+      <button type="button" aria-pressed={view === "phrases"} onClick={()=>{setOpenedPhrases(true); setView("phrases");}}>Dịch theo cụm từ</button>
+    </nav>
+    {openedPhrases && <div hidden={view !== "phrases"}><PhraseTranslationForm /></div>}
+    <div hidden={view !== "content"} className="translation-panel">
+    <div className="translation-toolbar">
+    <div className="translation-counts">
+      <span><strong>{rows.length}</strong> nội dung</span>
+      <span><strong>{rows.filter(row=>!row.en).length}</strong> thiếu EN</span>
+      <span><strong>{rows.filter(row=>!row.ja).length}</strong> thiếu JP</span>
+    </div>
+    <div className="translation-actions">
       <button className="admin-btn" disabled={busy} onClick={reload}>Tải lại bản dịch</button>
       <button className="admin-btn" disabled={busy} onClick={()=>run(download)}>Xuất Excel</button>
       <button className="admin-btn" disabled={busy} onClick={()=>fileInput.current.click()}>Nhập Excel</button>
@@ -127,11 +144,13 @@ export default function TranslationAdmin() {
       <button className="admin-btn primary" disabled={busy || !changes.length} onClick={()=>run(save)}>
         {changes.length ? `Lưu ${changes.length} mục` : "Lưu thay đổi"}
       </button>
-    </div></header>
-    <PhraseTranslationForm />
+    </div></div>
     <div className="translation-filters">
       <input type="search" aria-label="Tìm bản dịch" placeholder="Tìm câu, tên sản phẩm hoặc vị trí…" value={query}
         onChange={event=>{setQuery(event.target.value); setPage(0);}}/>
+      <select aria-label="Khu vực nội dung" value={area} onChange={event=>{setArea(event.target.value); setPage(0);}}>
+        <option value="all">Mọi khu vực</option><option value="home">Trang chủ và cấu hình</option><option value="products">Sản phẩm</option>
+      </select>
       <select aria-label="Lọc bản dịch" value={filter} onChange={event=>{setFilter(event.target.value); setPage(0);}}>
         <option value="all">Tất cả trạng thái</option><option value="en">Chưa lưu tiếng Anh</option>
         <option value="ja">Chưa lưu tiếng Nhật</option><option value="changed">Đã sửa, chưa lưu</option>
@@ -159,5 +178,6 @@ export default function TranslationAdmin() {
       <button className="admin-btn" disabled={!current} onClick={()=>setPage(current-1)}>Trước</button>
       <button className="admin-btn" disabled={current+1 >= pages} onClick={()=>setPage(current+1)}>Sau</button>
     </footer>}
+    </div>
   </section>;
 }

@@ -5,7 +5,7 @@ test('translation drafts survive paging and filtering', async ({page}) => {
   await page.route('**/*firebase_firestore.js*', route => route.fulfill({
     contentType:'application/javascript',
     body:`export const collection=()=>null,doc=()=>null,runTransaction=()=>null;
-      export const getDocFromServer=async()=>({data:()=>({})});
+      export const getDocFromServer=async()=>({data:()=>({phraseOverrides:{example:{vi:"Cần tư vấn",en:"Need advice",ja:"ご相談"}}})});
       let reads=0;
       export const getDocsFromServer=async()=>{const prefix=++reads===1?'Sản phẩm ':'Mới ';return {docs:Array.from({length:12},(_,i)=>({id:String(i),data:()=>({name:prefix+i})}))}};`
   }));
@@ -30,6 +30,11 @@ test('translation drafts survive paging and filtering', async ({page}) => {
   await expect(page.getByRole('status')).toHaveText('Đã tải bản dịch mới nhất từ máy chủ.');
   await expect(items.first()).toContainText('Mới 0');
   await expect(page.getByRole('textbox',{name:'Tiếng Anh',exact:true})).toHaveValue('');
+  await page.getByRole('button',{name:'Dịch theo cụm từ',exact:true}).click();
+  await page.getByRole('searchbox',{name:'Tìm cụm từ'}).fill('can tu van');
+  await expect(page.getByText('Need advice',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Sửa',exact:true}).click();
+  await expect(page.getByRole('textbox',{name:'Tiếng Anh',exact:true})).toHaveValue('Need advice');
   await fit(page);
 });
 

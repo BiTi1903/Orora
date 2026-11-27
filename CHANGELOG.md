@@ -1,3 +1,8 @@
+## 27/11/2026 — Thiết kế lại khu vực Bản dịch
+
+- Chia nội dung website và cụm từ thành hai tab. Thêm thống kê thiếu bản dịch, lọc khu vực, danh sách cụm đã lưu có tìm kiếm và sửa trực tiếp.
+- Lint, build và tám lượt Playwright đạt. Không cần chuyển đổi dữ liệu.
+
 ## 27/11/2026 — Dịch theo cụm từ
 
 - Admin có thể lưu câu tiếng Việt và bản EN/JP vào cấu hình trang chủ. Website đối chiếu nguyên cụm văn bản khi khách đổi ngôn ngữ và khi nội dung xuất hiện sau.

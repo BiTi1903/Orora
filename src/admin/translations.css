@@ -22,7 +22,17 @@
 .translations-admin footer span { margin-right: auto; }
 .translations-admin [role=status]:empty { display: none; }
 @media(max-width: 640px) { .translation-editor { grid-template-columns: minmax(0,1fr); } }
-.translation-phrases { margin-bottom: 1rem; padding: .8rem; border: 1px solid #e6dfe3; border-radius: .5rem; }
-.translation-phrases summary { cursor: pointer; font-weight: 600; }
-.translation-phrases fieldset { margin: 0; border: 0; min-width: 0; }
-.translation-phrases button { justify-self: start; }
+
+.translation-tabs { display:flex; flex-wrap:wrap; gap:.3rem; border-bottom:1px solid #e5dce2; margin-bottom:1rem; }
+.translation-tabs button { border:0; border-bottom:2px solid transparent; background:transparent; padding:.7rem 1rem; color:#695560; font:inherit; cursor:pointer; }
+.translation-tabs button[aria-pressed=true] { border-color:#a72c5b; color:#862149; font-weight:700; }
+.translation-panel { padding:clamp(.75rem,2vw,1.35rem); border:1px solid #e6dfe3; border-radius:.9rem; background:#fff; }
+.translation-toolbar,.translation-counts { display:flex; flex-wrap:wrap; align-items:center; gap:.65rem; }
+.translation-toolbar { justify-content:space-between; margin-bottom:1rem; }
+.translation-toolbar h2,.translation-phrase-editor h3 { margin:0; font-size:1.1rem; }
+.translation-counts span { background:#fbf3f6; border-radius:.4rem; padding:.35rem .55rem; font-size:.875rem; }
+.translation-phrase-editor { padding:.8rem; margin-bottom:1rem; border:1px solid #e6dfe3; border-radius:.6rem; background:#fdf8fa; }
+.translation-phrase-editor fieldset { border:0; padding:0; margin:0; min-width:0; }
+.translation-phrase-row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)) auto; align-items:start; gap:.75rem; padding:.75rem 0; overflow-wrap:anywhere; }
+.translation-phrase-row small { display:block; color:#6d6069; margin-bottom:.2rem; }
+@media(max-width:640px) { .translation-phrase-row { grid-template-columns:1fr; } .translation-phrase-row button { justify-self:start; } }
