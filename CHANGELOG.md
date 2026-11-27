@@ -1,3 +1,8 @@
+## 27/11/2026 — Giảm chớp ảnh và khung chi tiết sản phẩm
+
+- Ảnh chính giữ nguyên URL khi vào/ra zoom. Bỏ lớp làm mờ nền tại các khung chi tiết và thanh mua nổi, bỏ hiệu ứng tải/xuất hiện của ảnh nội dung cùng các tùy chọn tương ứng trong Builder.
+- Lint, build và 11 lượt Playwright có kiểm tra hover và cuộn đạt. Không thay đổi database.
+
 ## 27/11/2026 — Ưu tiên dòng thiếu bản dịch và thêm gợi ý admin
 
 - Đưa dòng thiếu EN/JP lên trước trong Bản dịch. Thêm gợi ý cạnh thao tác khó của Bản dịch, Đơn hàng, Kiểm kho, Phí vận chuyển, Email và Thư cần xử lý.

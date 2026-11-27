@@ -87,10 +87,12 @@ test('product image zooms inline at cursor position without opening a popup', as
  });
  const imageBox = page.locator('.product-detail-image.is-interactive');
  await expect(imageBox).toBeVisible();
+ await expect(imageBox.locator("img")).toHaveAttribute("src", /q_auto:best/);
+ const source = await imageBox.locator('img').getAttribute('src');
  const box = await imageBox.boundingBox();
  await page.mouse.move(box.x + box.width * 0.25, box.y + box.height * 0.75);
  await expect(imageBox).toHaveAttribute('data-zooming', 'true');
- await expect(imageBox.locator('img')).toHaveAttribute('src', /w_1600/);
+ await expect(imageBox.locator('img')).toHaveAttribute('src', source);
  await expect(page.getByRole('dialog')).toHaveCount(0);
  const origin = await imageBox.evaluate(el => ({ x: parseFloat(el.style.getPropertyValue('--zoom-x')), y: parseFloat(el.style.getPropertyValue('--zoom-y')) }));
  expect(origin.x).toBeGreaterThan(15);
@@ -99,6 +101,15 @@ test('product image zooms inline at cursor position without opening a popup', as
  expect(origin.y).toBeLessThan(85);
  await page.mouse.move(box.x + box.width + 40, box.y);
  await expect(imageBox).toHaveAttribute('data-zooming', 'false');
+ await expect(imageBox.locator('img')).toHaveAttribute('src', source);
+ await page.evaluate(async () => {
+  await import('/src/styles/mobile-glass.css');
+  document.documentElement.setAttribute('data-glass-frames','');
+  window.scrollTo(0,500);
+ });
+ await expect(page.locator('.product-detail-gallery')).toHaveCSS('backdrop-filter','none');
+ await expect(imageBox.locator('img')).toHaveAttribute('src', source);
+
 });
 
 test('mobile buy bar shares purchase settings and leaves room for chat and navigation', async ({ page }) => {
@@ -110,7 +121,7 @@ test('mobile buy bar shares purchase settings and leaves room for chat and navig
  const sticky = page.getByRole('button', { name: 'Mua ngay', exact: true });
  await expect(sticky).toHaveCSS('background-color', 'rgb(101, 67, 33)');
  await expect(sticky).toHaveCSS('font-size', '18px');
- await expect(page.locator('.product-mobile-buy')).toHaveCSS('backdrop-filter', /blur/);
+ await expect(page.locator('.product-mobile-buy')).toHaveCSS('backdrop-filter', 'none');
  await page.getByRole('button',{name:'Tăng số lượng'}).click();
  await page.getByRole('button',{name:'Tăng số lượng'}).click();
  await expect(page.locator('.product-mobile-buy-total')).toContainText('1.350.000');

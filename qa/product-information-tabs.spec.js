@@ -71,7 +71,7 @@ test('product detail editor adds image blocks, applies text effects and hides in
   await expect(images).toHaveCount(2);
   await images.first().scrollIntoViewIfNeeded();
   await expect(images.first()).toHaveAttribute('data-image-state','ready');
-  await expect(images.first()).toHaveAttribute('data-revealed','true');
+  await expect(images.first().locator('img')).toHaveCSS('animation-name','none');
   await expect(panel.getByText('Nội dung cũ',{exact:true})).toHaveCount(0);
   await expect(panel.locator('[data-text-effect] br')).toHaveCount(1);
   await expect(panel.locator('[data-text-effect="fade"]')).toContainText('Chữ ngay sau ảnh thứ nhất.');
@@ -97,7 +97,7 @@ test('product detail editor adds image blocks, applies text effects and hides in
   await fit(page);
 });
 
-test('block and caption switches, skeleton shimmer, and Visual Builder frame/motion settings work together', async ({ page }) => {
+test('block and caption switches, static image loading, and Visual Builder frame/motion settings work together', async ({ page }) => {
   let releaseImage;
   const imageGate = new Promise((resolve) => { releaseImage = resolve; });
   await page.route('**/slow-detail.svg', async (route) => {
@@ -136,7 +136,6 @@ test('block and caption switches, skeleton shimmer, and Visual Builder frame/mot
 
   const infoRoot = page.locator('.product-information');
   const firstImage = infoRoot.locator('.product-information-image').first();
-  await expect(infoRoot).toHaveAttribute('data-skeleton-effect', 'shimmer');
   await expect(infoRoot).toHaveAttribute('data-tab-transition', 'slide-up');
   await expect(firstImage).toHaveAttribute('data-image-state', 'loading');
 
@@ -197,13 +196,9 @@ test('block and caption switches, skeleton shimmer, and Visual Builder frame/mot
   await page.getByRole('tab', { name: 'Khung ảnh', exact: true }).click();
   await page.getByLabel('Bo góc ảnh (px)', { exact: true }).fill('24');
   await page.getByRole('tab', { name: 'Hiệu ứng', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Hiệu ứng tải ảnh (Skeleton)', exact: true }).selectOption('shimmer-rose');
   await page.getByRole('combobox', { name: 'Hiệu ứng chuyển tab', exact: true }).selectOption('blur-in');
-  await page.getByRole('combobox', { name: 'Hiệu ứng load ảnh khi hiện', exact: true }).selectOption('curtain');
   await page.getByRole('combobox', { name: 'Hiệu ứng load text (Đầu mục & Nội dung)', exact: true }).selectOption('stagger');
-  await expect(infoRoot).toHaveAttribute('data-skeleton-effect', 'shimmer-rose');
   await expect(infoRoot).toHaveAttribute('data-tab-transition', 'blur-in');
-  await expect(infoRoot).toHaveAttribute('data-reveal-effect', 'curtain');
   await editor.getByRole('switch', { name: 'Hiển thị chú thích khối 1' }).check();
   await expect(infoRoot.locator('[data-text-effect="stagger"]')).toContainText('Nội dung chú thích.');
   const radius = await infoRoot.evaluate((el) => el.style.getPropertyValue('--info-img-radius'));

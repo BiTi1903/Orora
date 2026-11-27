@@ -57,3 +57,14 @@ html[data-glass-buttons] #root .order-tracking-submit,html[data-glass-buttons] #
 }
 @media(prefers-reduced-motion:reduce) { html[data-glass-buttons] #root .hero-btn:active { transform:none; } }
 
+
+/* Stable surfaces over moving product media, including on WebKit. */
+html[data-glass-frames] #root .product-detail:not(.product-detail--preview) :is(
+  .product-detail-gallery,.product-detail-info,.product-information,.product-assurances,
+  .product-slogan-card,.product-slogan,.product-care-guide,.product-care-item,
+  .related-product-sidebar,.related-products-sidebar,.product-reviews
+) {
+  background-color: #fffafc;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}

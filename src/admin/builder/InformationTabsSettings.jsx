@@ -20,19 +20,19 @@ const FRAME_PRESETS = [
 const MOTION_PRESETS = [
   [
     "Mượt nhẹ",
-    { skeletonEffect: "shimmer", tabTransition: "slide-up", revealEffect: "rise", captionEffect: "fade", motionDuration: 450 },
+    { tabTransition: "slide-up", captionEffect: "fade", motionDuration: 450 },
   ],
   [
     "Cao cấp",
-    { skeletonEffect: "shimmer-rose", tabTransition: "blur-in", revealEffect: "blur-in", captionEffect: "stagger", motionDuration: 600 },
+    { tabTransition: "blur-in", captionEffect: "stagger", motionDuration: 600 },
   ],
   [
     "Năng động",
-    { skeletonEffect: "wave", tabTransition: "slide-left", revealEffect: "curtain", captionEffect: "slide-left", motionDuration: 400 },
+    { tabTransition: "slide-left", captionEffect: "slide-left", motionDuration: 400 },
   ],
   [
     "Tắt hiệu ứng",
-    { skeletonEffect: "static", tabTransition: "none", revealEffect: "none", captionEffect: "none", motionDuration: 260 },
+    { tabTransition: "none", captionEffect: "none", motionDuration: 260 },
   ],
 ];
 
@@ -370,20 +370,6 @@ export default function InformationTabsSettings({ value = {}, onChange, openSect
           </div>
 
           <label className="builder-field">
-            Hiệu ứng tải ảnh (Skeleton)
-            <select
-              value={config.skeletonEffect}
-              onChange={(e) => updateWithReplay({ skeletonEffect: e.target.value })}
-            >
-              <option value="shimmer">Shimmer ánh sáng lướt</option>
-              <option value="shimmer-rose">Shimmer hồng ngọc trai</option>
-              <option value="pulse">Nhịp thở nhẹ</option>
-              <option value="wave">Sóng lan mềm</option>
-              <option value="static">Nền tĩnh</option>
-            </select>
-          </label>
-
-          <label className="builder-field">
             Hiệu ứng chuyển tab
             <select
               value={config.tabTransition}
@@ -394,22 +380,6 @@ export default function InformationTabsSettings({ value = {}, onChange, openSect
               <option value="fade">Hiện dần</option>
               <option value="blur-in">Mờ sang rõ nét</option>
               <option value="zoom">Phóng nhẹ</option>
-              <option value="none">Tắt hiệu ứng</option>
-            </select>
-          </label>
-
-          <label className="builder-field">
-            Hiệu ứng load ảnh khi hiện
-            <select
-              value={config.revealEffect}
-              onChange={(e) => updateWithReplay({ revealEffect: e.target.value })}
-            >
-              <option value="rise">Trượt nhẹ lên</option>
-              <option value="fade">Hiện dần</option>
-              <option value="zoom">Phóng nhẹ</option>
-              <option value="blur-in">Mờ sang rõ nét</option>
-              <option value="curtain">Mở rèm mềm</option>
-              <option value="slide-left">Lướt ngang</option>
               <option value="none">Tắt hiệu ứng</option>
             </select>
           </label>
@@ -443,21 +413,6 @@ export default function InformationTabsSettings({ value = {}, onChange, openSect
             </select>
           </label>
 
-          <details className="info-builder-subdetails">
-            <summary>Màu nền Skeleton & Ánh Shimmer</summary>
-            <ColorField
-              label="Màu nền Skeleton"
-              value={value.skeletonBaseColor}
-              fallback="#fcebf1"
-              onChange={(skeletonBaseColor) => updateWithReplay({ skeletonBaseColor })}
-            />
-            <ColorField
-              label="Màu ánh Shimmer"
-              value={value.skeletonHighlightColor}
-              fallback="#fff8fb"
-              onChange={(skeletonHighlightColor) => updateWithReplay({ skeletonHighlightColor })}
-            />
-          </details>
         </div>
       )}
     </div>

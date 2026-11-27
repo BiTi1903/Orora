@@ -26,5 +26,5 @@ export function heroImageSources(home={}){
 }
 
 export function productMainImage(src, width = 1200) {
- return cdnSrc(src, {w:width <= 600 ? 800 : width <= 1200 ? 1200 : 1800, q:"auto:good"});
+ return cdnSrc(src, {w:width <= 600 ? 1200 : width <= 1200 ? 1600 : 1800, q:"auto:best"});
 }
