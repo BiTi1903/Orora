@@ -148,6 +148,12 @@ test('template library finds and duplicates an order template with a personalize
   await dialog.getByRole('button',{name:'Văn bản thuần'}).click();
   await expect(dialog).toContainText('Chào Nguyễn Minh Anh');
   await dialog.getByRole('button',{name:'Đóng'}).click();
+  const viewport = page.viewportSize();
+  if (viewport && viewport.width >= 1024) {
+    const mainBox = await page.locator('.mail-studio-card .mail-writer-main').boundingBox();
+    const previewBox = await page.locator('.mail-studio-card .mail-editor-preview').boundingBox();
+    expect(previewBox.x).toBeGreaterThan(mainBox.x + 200);
+  }
   await page.getByRole('button',{name:'Nhân bản'}).click();
   await expect(page.getByLabel('Tên mẫu thư')).toHaveValue('Đơn mới (bản sao)');
   await page.getByRole('button',{name:'Lưu mẫu thư',exact:true}).click();

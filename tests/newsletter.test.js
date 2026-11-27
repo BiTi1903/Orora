@@ -439,21 +439,30 @@ test("private order placeholders cannot be sent unfilled to a customer list or a
   assert.equal(sent.length, 0);
 });
 
-test("saving the two current automatic templates is idempotent, preserves settings and respects later deletion", async () => {
+test("seeding the four built-in customer journey templates is idempotent, preserves settings, upgrades v1 stores and respects deletion", async () => {
   const db = memoryDb(); const { call, sent } = admin(db);
   const welcome = { subject: "Chào mừng đã lưu", text: "Nội dung chào mừng của shop" };
   const order = { subject: "Đơn {{orderCode}}", text: "Nội dung xác nhận hiện tại {{customerName}}" };
   await db.collection("newsletterSettings").doc("welcome").set(welcome);
   await db.collection("newsletterSettings").doc("orderConfirmation").set(order);
-  const res = await call({ action: "ensureDefaultTemplates" }); assert.equal(res.statusCode, 200); assert.equal(res.body.created.length, 2);
+  const res = await call({ action: "ensureDefaultTemplates" }); assert.equal(res.statusCode, 200); assert.equal(res.body.created.length, 4);
   const page = await call(null, { method: "GET", query: { templates: "1" } });
-  assert.equal(page.body.templates.length, 2);
+  assert.equal(page.body.templates.length, 4);
   assert.equal(page.body.templates.find((item) => item.kind === "welcome_auto").text, welcome.text);
   assert.equal(page.body.templates.find((item) => item.kind === "order_auto").text, order.text);
+  assert.ok(page.body.templates.some((item) => item.id === "builtin-order-shipping" && item.kind === "private"));
+  assert.ok(page.body.templates.some((item) => item.id === "builtin-order-thankyou" && item.kind === "private"));
   await Promise.all([call({ action: "ensureDefaultTemplates" }), call({ action: "ensureDefaultTemplates" })]);
-  assert.equal((await db.collection("newsletterTemplates").get()).docs.length, 2);
+  assert.equal((await db.collection("newsletterTemplates").get()).docs.length, 4);
   await call({ action: "deleteLibraryTemplate", id: "builtin-welcome" });
   await call({ action: "ensureDefaultTemplates" });
+  assert.equal((await db.collection("newsletterTemplates").doc("builtin-welcome").get()).exists, false);
+  // Simulate upgrading an older v1 store where seededIds was not yet recorded and builtin-welcome was deleted
+  await db.collection("newsletterSettings").doc("libraryDefaultsSeed").set({ seededAt: 100 });
+  await db.collection("newsletterTemplates").doc("builtin-order-shipping").delete();
+  await db.collection("newsletterTemplates").doc("builtin-order-thankyou").delete();
+  const upgraded = await call({ action: "ensureDefaultTemplates" });
+  assert.deepEqual(upgraded.body.created.sort(), ["builtin-order-shipping", "builtin-order-thankyou"]);
   assert.equal((await db.collection("newsletterTemplates").doc("builtin-welcome").get()).exists, false);
   assert.deepEqual((await db.collection("newsletterSettings").doc("welcome").get()).data(), welcome);
   assert.deepEqual((await db.collection("newsletterSettings").doc("orderConfirmation").get()).data(), order);

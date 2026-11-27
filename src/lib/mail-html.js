@@ -583,20 +583,34 @@ export function renderOrderEmailHtml({
               </td>
             </tr>
           </table>
-          ${frame.showOrderSteps ? `<!-- 3-Step Order Journey -->
+          ${frame.showOrderSteps ? (() => {
+            const activeStep = Number(frame.orderActiveStep) || 1;
+            const steps = [
+              frame.orderStep1 || "1. Đã tiếp nhận",
+              frame.orderStep2 || "2. Xác nhận & đóng gói",
+              frame.orderStep3 || "3. Giao hàng tận nơi",
+            ];
+            return `<!-- 3-Step Order Journey -->
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:16px;padding-top:14px;border-top:1px dashed ${frame.cardBorder};">
             <tr>
-              <td width="33.33%" align="center" style="font-family:${bodyFont};font-size:11.5px;font-weight:700;color:${frame.accent};">&#10003; ${escapeHtml(frame.orderStep1 || "1. Đã tiếp nhận")}</td>
-              <td width="33.33%" align="center" style="font-family:${bodyFont};font-size:11.5px;color:${frame.footerText};">${escapeHtml(frame.orderStep2 || "2. Xác nhận & đóng gói")}</td>
-              <td width="33.33%" align="center" style="font-family:${bodyFont};font-size:11.5px;color:${frame.footerText};">${escapeHtml(frame.orderStep3 || "3. Giao hàng tận nơi")}</td>
+              ${steps.map((label, idx) => {
+                const stepNum = idx + 1;
+                const reached = stepNum <= activeStep;
+                const current = stepNum === activeStep;
+                const color = current ? frame.accent : reached ? frame.headingColor : frame.footerText;
+                const weight = reached ? "700" : "400";
+                const prefix = reached ? "&#10003; " : "";
+                return `<td width="33.33%" align="center" style="font-family:${bodyFont};font-size:11.5px;font-weight:${weight};color:${color};">${prefix}${escapeHtml(label)}</td>`;
+              }).join("")}
             </tr>
-          </table>` : ""}
+          </table>`;
+          })() : ""}
         </td>
       </tr>
     </table>` : "";
 
   const messageBlockHtml = bodyCopy ? `<div${sectionAttr("Nội dung", interactivePreview)} style="margin:0 0 22px 0;">${bodyCopy}</div>` : "";
-  const headingBlockHtml = frame.heading.trim() ? renderHeroHeading(frame, frame.heading.trim(), "left", interactivePreview) : "";
+  const headingBlockHtml = frame.showHeading && frame.heading.trim() ? renderHeroHeading(frame, frame.heading.trim(), "left", interactivePreview) : "";
 
   const itemsBlockHtml = frame.showOrderItems ? `
     <div${sectionAttr("Các khối", interactivePreview)}>
@@ -654,6 +668,7 @@ export function renderOrderEmailHtml({
     ${itemsBlockHtml}
     ${deliveryBlockHtml}
     ${renderBankTransferBlock(order, bankInfo, frame, interactivePreview)}
+    ${renderCouponBox(frame, interactivePreview)}
     ${renderButton(trackingEnabled ? "Tra cứu trạng thái đơn hàng" : "Liên hệ ORORA", resolvedTrackingUrl, design, interactivePreview)}
     ${frame.showButton ? `<p style="margin:6px 0 0 0;text-align:center;font-family:${bodyFont};font-size:12px;color:${frame.footerText};">${tracking.hint}</p>` : ""}
   `;

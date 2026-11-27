@@ -1,19 +1,29 @@
 import { useEffect, useRef, useState } from "react";
-import { FRAME_COLORS, FRAME_SIZES, MAIL_COPY, MAIL_OPTIONS, MAIL_TOGGLES, mailDesign } from "../lib/mail-design";
+import {
+  FRAME_COLORS,
+  FRAME_SIZES,
+  MAIL_COLOR_THEMES,
+  MAIL_COPY,
+  MAIL_OPTIONS,
+  MAIL_PLACEHOLDERS,
+  MAIL_TOGGLES,
+  mailDesign,
+} from "../lib/mail-design";
 
-function buildSections(kind) {
-  const isOrder = kind === "order_auto";
+function buildSections(kind, hasOrderVars = false) {
+  const isOrder = kind === "order_auto" || hasOrderVars;
   const isWelcome = kind === "welcome_auto";
   return {
-    "Khung thư": ["background", "surface", "border", "accent", "cardBg", "cardBorder", "width", "radius", "thickness"],
-    "Đầu thư": ["showHeader", "brand", "tagline", "logoUrl", "logoWidth", "showEyebrow", "eyebrow", "headerFont", "brandSize", "header", "headerText", "taglineColor", "headerBorder", "preheader"],
+    "Khung thư": ["width", "radius", "thickness", "background", "surface", "border", "accent", "cardBg", "cardBorder"],
+    "Đầu thư": ["showHeader", "brand", "tagline", "logoUrl", "logoWidth", "showEyebrow", "eyebrow", "preheader", "headerFont", "brandSize", "header", "headerText", "taglineColor", "headerBorder"],
     "Tiêu đề": ["showHeading", "heading", "showDivider", "headingFont", "headingSize", "headingMobileSize", "headingWeight", "headingAlign", "headingColor"],
-    "Nội dung": ["font", "fontSize", "mobileFontSize", "weight", "align", "text", "bannerUrl", "bannerAlt"],
+    "Nội dung": ["font", "fontSize", "mobileFontSize", "weight", "align", "bannerUrl", "bannerAlt", "text"],
     "Các khối": isOrder
       ? [
           "orderLayout",
           "showOrderHero",
           "showOrderSteps",
+          "orderActiveStep",
           "orderStep1",
           "orderStep2",
           "orderStep3",
@@ -22,6 +32,10 @@ function buildSections(kind) {
           "showOrderDelivery",
           "orderDeliveryHeading",
           "showOrderBank",
+          "showCoupon",
+          "couponTitle",
+          "couponCode",
+          "couponNote",
         ]
       : [
           ...(isWelcome ? ["showPillars", "pillar1Title", "pillar1Desc", "pillar2Title", "pillar2Desc", "pillar3Title", "pillar3Desc"] : []),
@@ -35,8 +49,17 @@ function buildSections(kind) {
   };
 }
 
-export default function MailDesignFields({ value, onChange, disabled, kind, activeSection, onSectionChange }) {
-  const sections = buildSections(kind);
+export default function MailDesignFields({
+  value,
+  onChange,
+  disabled,
+  kind,
+  hasOrderVars = false,
+  activeSection,
+  onSectionChange,
+  defaultOpen = false,
+}) {
+  const sections = buildSections(kind, hasOrderVars);
   const [localSection, setLocalSection] = useState("Khung thư");
   const section = activeSection && Object.hasOwn(sections, activeSection) ? activeSection : localSection;
   const setSection = (name) => {
@@ -59,56 +82,26 @@ export default function MailDesignFields({ value, onChange, disabled, kind, acti
   const design = mailDesign(value);
   const change = (key, next) => onChange({ ...design, [key]: next });
 
-  function field(key) {
-    if (key === "buttonUrl" && kind === "order_auto") {
+  const keys = sections[section] || [];
+  const toggleKeys = keys.filter((k) => Boolean(MAIL_TOGGLES[k]));
+  const copyKeys = keys.filter((k) => Boolean(MAIL_COPY[k]));
+  const styleKeys = keys.filter((k) => Boolean(FRAME_SIZES[k] || MAIL_OPTIONS[k]));
+  const colorKeys = keys.filter((k) => Boolean(FRAME_COLORS[k]));
+
+  function renderCopyField(key) {
+    if (key === "buttonUrl" && (kind === "order_auto" || hasOrderVars)) {
       return <p key={key} className="admin-muted" style={{ gridColumn: "1 / -1", margin: 0 }}>Đích của nút lấy tự động theo cấu hình tra cứu đơn hàng.</p>;
-    }
-    if (MAIL_TOGGLES[key]) {
-      return (
-        <label key={key} className="admin-check" style={{ gridColumn: "1 / -1" }}>
-          <input type="checkbox" checked={design[key]} onChange={(event) => change(key, event.target.checked)} />
-          <span>{MAIL_TOGGLES[key][0]}</span>
-        </label>
-      );
-    }
-    if (FRAME_COLORS[key]) {
-      return (
-        <label key={key} className="admin-field">
-          {FRAME_COLORS[key][0]}
-          <input type="color" value={design[key]} onChange={(event) => change(key, event.target.value)} />
-        </label>
-      );
-    }
-    if (FRAME_SIZES[key]) {
-      const [label, , min, max] = FRAME_SIZES[key];
-      const displayVal = key === "buttonRadius" && design[key] >= 99 ? "Viên thuốc" : `${design[key]} px`;
-      return (
-        <label key={key} className="admin-field">
-          {label} · {displayVal}
-          <input type="range" min={min} max={max} value={design[key]} onChange={(event) => change(key, Number(event.target.value))} />
-        </label>
-      );
-    }
-    if (MAIL_OPTIONS[key]) {
-      const [label, options] = MAIL_OPTIONS[key];
-      return (
-        <label key={key} className="admin-field">
-          {label}
-          <select value={design[key]} onChange={(event) => change(key, event.target.value)}>
-            {Object.entries(options).map(([id, name]) => <option key={id} value={id}>{name}</option>)}
-          </select>
-        </label>
-      );
     }
     const [label, , limit] = MAIL_COPY[key];
     const isUrl = key === "buttonUrl" || key === "logoUrl" || key === "bannerUrl";
-    const isWide = limit >= 140 || isUrl;
+    const isWide = limit >= 110 || isUrl;
     return (
       <label key={key} className="admin-field" style={isWide ? { gridColumn: "1 / -1" } : undefined}>
         {label}
         <input
           type={isUrl ? "url" : "text"}
           maxLength={limit}
+          placeholder={MAIL_PLACEHOLDERS[key] || ""}
           value={design[key]}
           onChange={(event) => change(key, event.target.value)}
         />
@@ -116,11 +109,48 @@ export default function MailDesignFields({ value, onChange, disabled, kind, acti
     );
   }
 
+  function renderStyleField(key) {
+    if (FRAME_SIZES[key]) {
+      const [label, , min, max] = FRAME_SIZES[key];
+      const displayVal = key === "buttonRadius" && design[key] >= 99 ? "Viên thuốc" : `${design[key]} px`;
+      return (
+        <label key={key} className="admin-field mail-range-field">
+          <span className="mail-range-head">
+            <span>{label}</span>
+            <strong>{displayVal}</strong>
+          </span>
+          <input type="range" min={min} max={max} value={design[key]} onChange={(event) => change(key, Number(event.target.value))} />
+        </label>
+      );
+    }
+    const [label, options] = MAIL_OPTIONS[key];
+    return (
+      <label key={key} className="admin-field">
+        {label}
+        <select value={design[key]} onChange={(event) => change(key, event.target.value)}>
+          {Object.entries(options).map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+        </select>
+      </label>
+    );
+  }
+
+  function renderColorField(key) {
+    return (
+      <label key={key} className="mail-color-field">
+        <span className="mail-color-label">{FRAME_COLORS[key][0]}</span>
+        <span className="mail-color-swatch-wrap">
+          <input type="color" value={design[key]} onChange={(event) => change(key, event.target.value)} />
+          <code>{design[key].toUpperCase()}</code>
+        </span>
+      </label>
+    );
+  }
+
   return (
-    <details ref={detailsRef} className="admin-filter-panel">
+    <details ref={detailsRef} className="admin-filter-panel mail-design-studio" open={defaultOpen || undefined}>
       <summary>Khung và màu email</summary>
-      <fieldset className="writer-fields" disabled={disabled}>
-        <div className="mail-preview-toolbar" role="group" aria-label="Phần thư cần chỉnh">
+      <fieldset className="writer-fields mail-design-fieldset" disabled={disabled}>
+        <div className="mail-section-pills" role="group" aria-label="Phần thư cần chỉnh">
           {Object.keys(sections).map((name) => (
             <button
               key={name}
@@ -133,19 +163,79 @@ export default function MailDesignFields({ value, onChange, disabled, kind, acti
             </button>
           ))}
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%, 190px),1fr))", gap: 12, marginTop: 12 }}>
-          {sections[section].map(field)}
-        </div>
-        <div className="admin-actions" style={{ marginTop: 12 }}>
+
+        {section === "Khung thư" && (
+          <div className="mail-design-group">
+            <span className="mail-design-group-title">Bảng phối màu nhanh</span>
+            <div className="mail-theme-presets">
+              {MAIL_COLOR_THEMES.map((theme) => (
+                <button
+                  key={theme.id}
+                  type="button"
+                  className="mail-theme-chip"
+                  onClick={() => onChange({ ...design, ...theme.colors })}
+                >
+                  <span className="mail-theme-dots" aria-hidden="true">
+                    {theme.swatch.map((hex, idx) => (
+                      <i key={idx} style={{ backgroundColor: hex }} />
+                    ))}
+                  </span>
+                  <span>{theme.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {(toggleKeys.length > 0 || copyKeys.length > 0) && (
+          <div className="mail-design-group">
+            <span className="mail-design-group-title">Hiển thị & Nội dung phần này</span>
+            {toggleKeys.length > 0 && (
+              <div className="mail-toggle-list">
+                {toggleKeys.map((key) => (
+                  <label key={key} className="admin-check mail-toggle-item">
+                    <input type="checkbox" checked={design[key]} onChange={(event) => change(key, event.target.checked)} />
+                    <span>{MAIL_TOGGLES[key][0]}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+            {copyKeys.length > 0 && (
+              <div className="mail-design-grid">
+                {copyKeys.map(renderCopyField)}
+              </div>
+            )}
+          </div>
+        )}
+
+        {styleKeys.length > 0 && (
+          <div className="mail-design-group">
+            <span className="mail-design-group-title">Kiểu chữ & Kích thước</span>
+            <div className="mail-design-grid">
+              {styleKeys.map(renderStyleField)}
+            </div>
+          </div>
+        )}
+
+        {colorKeys.length > 0 && (
+          <div className="mail-design-group">
+            <span className="mail-design-group-title">Màu sắc</span>
+            <div className="mail-color-grid">
+              {colorKeys.map(renderColorField)}
+            </div>
+          </div>
+        )}
+
+        <div className="admin-actions" style={{ marginTop: 4 }}>
           <button
             type="button"
             className="admin-btn"
             onClick={() => {
               const defaults = mailDesign();
-              onChange({ ...design, ...Object.fromEntries(sections[section].map((key) => [key, defaults[key]])) });
+              onChange({ ...design, ...Object.fromEntries(keys.map((key) => [key, defaults[key]])) });
             }}
           >
-            Khôi phục mặc định phần này
+            Khôi phục mặc định phần “{section}”
           </button>
         </div>
       </fieldset>

@@ -291,3 +291,47 @@ test("Email Studio supports inline formatting, per-section typography/colors, co
   assert.doesNotMatch(orderHtml, /2\. Xác nhận &amp; đóng gói/);
   assert.doesNotMatch(orderHtml, /Thông tin giao nhận/);
 });
+
+test("all four BUILTIN_MAIL_PRESETS render tailored HTML stages including shipping step 3 and post-delivery thank-you coupon", async () => {
+  const { BUILTIN_MAIL_PRESETS, findMailPreset } = await import("../src/lib/mail-presets.js");
+  assert.equal(BUILTIN_MAIL_PRESETS.length, 4);
+
+  const sampleOrder = {
+    code: "OW_STAGE9",
+    customer: { name: "Nguyễn Minh Anh", phone: "0909123456", email: "minhanh@example.com", address: "TP.HCM" },
+    product: { name: "Serum ORORA", unitPrice: 450000 },
+    quantity: 1,
+    subtotal: 450000,
+    shippingFee: 0,
+    totalAmount: 450000,
+    paymentMethod: "bank_transfer",
+    paymentStatus: "unpaid",
+    trackingCode: "GHTK-STAGE9",
+  };
+  const bankInfo = { bankName: "Vietcombank", bankAccountNumber: "0011001234567", bankAccountName: "ORORA" };
+
+  const welcomePreset = findMailPreset("builtin-welcome");
+  const welcomeHtml = renderWelcomeEmailHtml({ ...welcomePreset, unsubscribeUrl: "https://ororavn.com/api/unsubscribe?id=1&token=2" });
+  assert.match(welcomeHtml, /Đặc quyền dành cho thành viên ORORA/);
+  assert.match(welcomeHtml, /Khám phá bộ sưu tập ORORA/);
+
+  const receivedPreset = findMailPreset("builtin-order-confirmation");
+  const receivedMsg = renderOrderMessage(receivedPreset, sampleOrder, ENV, { bankInfo });
+  assert.match(receivedMsg.html, /Đã tiếp nhận đơn hàng/);
+  assert.match(receivedMsg.html, /img\.vietqr\.io/);
+
+  const shippingPreset = findMailPreset("builtin-order-shipping");
+  const shippingMsg = renderOrderMessage(shippingPreset, sampleOrder, ENV, { bankInfo });
+  assert.match(shippingMsg.html, /Kiện hàng đang trên đường đến với bạn/);
+  assert.match(shippingMsg.html, /3\. Đang giao hàng/);
+  assert.match(shippingMsg.html, /GHTK-STAGE9/);
+  assert.doesNotMatch(shippingMsg.html, /img\.vietqr\.io/);
+
+  const thankYouPreset = findMailPreset("builtin-order-thankyou");
+  const thankYouMsg = renderOrderMessage(thankYouPreset, sampleOrder, ENV, { bankInfo });
+  assert.match(thankYouMsg.html, /ORORATHANK/);
+  assert.match(thankYouMsg.html, /3\. Đã nhận hàng/);
+  assert.ok(thankYouMsg.html.indexOf("Cảm ơn bạn đã tin chọn ORORA") < thankYouMsg.html.indexOf("Mã đơn hàng"));
+  assert.doesNotMatch(thankYouMsg.html, /img\.vietqr\.io/);
+});
+
