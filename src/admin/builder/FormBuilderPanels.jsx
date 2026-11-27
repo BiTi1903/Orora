@@ -300,7 +300,7 @@ export function OrderFormBuilderSettings({selected,productDetail,onChange}){
  return <>
   <SettingGroup title="Nút Đặt hàng ngay">
    <label className="builder-field">Chữ nút gửi đơn<input maxLength={100} value={value.orderSubmitLabel??'Đặt hàng ngay'} onChange={event=>patch({orderSubmitLabel:event.target.value})}/></label>
-   <label className="builder-field">Chữ khi đang gửi đơn<input maxLength={100} value={value.orderBusyLabel??'Đang gửi đơn hàng…'} onChange={event=>patch({orderBusyLabel:event.target.value})}/></label>
+   <label className="builder-field">Chữ khi đang đặt hàng<input maxLength={100} value={value.orderBusyLabel??'Đang đặt hàng…'} onChange={event=>patch({orderBusyLabel:event.target.value})}/></label>
    <label className="builder-field">Thông báo khi chờ quá lâu<textarea rows={2} maxLength={240} value={value.orderTimeoutLabel||''} placeholder="Chưa nhận được phản hồi. Bạn có thể thử gửi lại với cùng thông tin hoặc tra cứu đơn hàng để kiểm tra." onChange={event=>patch({orderTimeoutLabel:event.target.value})}/></label>
    <ColorField label="Màu nền nút Đặt hàng ngay" value={value.orderSubmitBackground||'#b8446d'} onChange={orderSubmitBackground=>patch({orderSubmitBackground})}/>
    <ColorField label="Màu viền nút Đặt hàng ngay" value={value.orderSubmitBorderColor||'#b8446d'} onChange={orderSubmitBorderColor=>patch({orderSubmitBorderColor})}/>

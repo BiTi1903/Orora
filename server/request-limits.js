@@ -7,17 +7,28 @@ export function requestClientIp(req) {
 
 export const rateLimitSalt = (env) => env.CHAT_RATE_LIMIT_SALT?.trim() || env.FIREBASE_SERVICE_ACCOUNT_JSON || '';
 
-// Persistent per-client budgets shared by all instances of the public endpoint.
-export async function reserveRequestBudget(db, req, { scope, cost, budget, now, salt, key, windowMs = 60000 }) {
-  const bucket = Math.floor(now / windowMs);
+export function rateLimitDocRef(db, req, { scope, salt, key }) {
   const hash = createHmac('sha256', salt).update(`${scope}:${key ?? requestClientIp(req)}`).digest('hex');
-  const ref = db.collection('chatRateLimits').doc(`${scope}-${hash}`);
+  return db.collection('chatRateLimits').doc(`${scope}-${hash}`);
+}
+
+export function evaluateRateLimit(prior, { cost, budget, now, windowMs = 60000 }) {
+  const bucket = Math.floor(now / windowMs);
+  // `minute` là chỉ số cửa sổ; giữ tên trường cũ cho các tài liệu đã có.
+  const count = (prior?.minute === bucket ? prior.count || 0 : 0) + cost;
+  if (count > budget) {
+    return { wait: Math.ceil(((bucket + 1) * windowMs - now) / 1000), write: null };
+  }
+  return { wait: 0, write: { minute: bucket, count, expiresAt: new Date(now + Math.max(3600000, windowMs * 2)) } };
+}
+
+// Persistent per-client budgets shared by all instances of the public endpoint.
+export async function reserveRequestBudget(db, req, options) {
+  const ref = rateLimitDocRef(db, req, options);
   return db.runTransaction(async tx => {
-    const prior = (await tx.get(ref)).data();
-    // `minute` là chỉ số cửa sổ; giữ tên trường cũ cho các tài liệu đã có.
-    const count = (prior?.minute === bucket ? prior.count || 0 : 0) + cost;
-    if (count > budget) return Math.ceil(((bucket + 1) * windowMs - now) / 1000);
-    tx.set(ref, { minute: bucket, count, expiresAt: new Date(now + Math.max(3600000, windowMs * 2)) });
+    const { wait, write } = evaluateRateLimit((await tx.get(ref)).data(), options);
+    if (wait) return wait;
+    tx.set(ref, write);
     return 0;
   });
 }

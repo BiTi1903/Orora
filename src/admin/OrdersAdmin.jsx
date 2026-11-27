@@ -378,7 +378,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
             <label className="admin-check"><input type="checkbox" checked={selected.paymentStatus === "paid"} disabled={busy || detail.loading || selected.status === "completed" || selected.status === "cancelled" || (selected.paymentStatus === "paid" && selected.inventory?.state === "deducted")} onChange={(event) => update(selected, { paymentStatus: event.target.checked ? "paid" : "unpaid" })} />Đã thanh toán</label>
           </div>
           <div className="admin-detail-box">
-            <h3>Xử lý đơn hàng</h3>
+            <h3>Xử lý đơn hàng <TranslationHelp label="xử lý đơn hàng">Đơn mới giữ hàng ở Chờ xác nhận. Khi đánh dấu Đã thanh toán, Đang giao hoặc Hoàn tất, hệ thống tự trừ tồn kho đúng một lần.</TranslationHelp></h3>
             {(QUICK_STATUS_ACTIONS[selected.status]?.length > 0) && (
               <div className="admin-actions" style={{ marginBottom: 10 }}>
                 {QUICK_STATUS_ACTIONS[selected.status].map(([nextKey, label, isPrimary]) => (
@@ -394,7 +394,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
             {selected.inventory?.state === "restocked" && <p className="admin-muted">Đã nhận hàng trả và hoàn kho.</p>}
           </div>
           <div className="admin-detail-box">
-            <h3>Vận đơn & ghi chú nội bộ</h3>
+            <h3>Vận đơn & ghi chú nội bộ <TranslationHelp label="vận đơn và ghi chú">Mã vận đơn sau khi lưu sẽ tự điền vào biến {"{{trackingCode}}"} khi gửi mẫu Đang giao hàng và hiện trên trang Tra cứu đơn. Ghi chú nội bộ chỉ hiển thị trong Admin.</TranslationHelp></h3>
             <div className="admin-field" style={{ marginBottom: 10 }}>
               <label htmlFor="order-tracking-code">Mã vận đơn (GHTK / GHN / J&T / ViettelPost…)</label>
               <input id="order-tracking-code" maxLength={120} value={activeMeta.trackingCode} onChange={(event) => setMetaDraft({ ...activeMeta, id: selected.id, trackingCode: event.target.value })} placeholder="Nhập mã vận đơn để tra cứu…" />
@@ -422,7 +422,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
             </div>
           </div>
           <div className="admin-detail-box">
-            <h3>Email xác nhận ({detail.mails.length})</h3>
+            <h3>Email xác nhận ({detail.mails.length}) <TranslationHelp label="email xác nhận đơn hàng">Bấm tiêu đề thư để xem lại giao diện đã gửi, hoặc bấm Check để đối chiếu trạng thái gửi/trả lại trực tiếp trên hộp thư Outlook. Dùng Gửi email riêng để gửi mẫu Đang giao hoặc Cảm ơn.</TranslationHelp></h3>
             <div className="admin-actions" style={{ marginBottom: 8 }}>
               <button type="button" className="admin-btn" onClick={() => showDetail(selected)}>Tải lại</button>
               {selected.customer?.email && ["failed", "unknown", "stuck"].includes(effectiveMailState(selected.confirmationMail)) && <button type="button" className="admin-btn primary" disabled={busy} onClick={() => quickResendMail(selected)}>{effectiveMailState(selected.confirmationMail) === "stuck" ? "Gỡ kẹt mail" : "Gửi lại mail"}</button>}

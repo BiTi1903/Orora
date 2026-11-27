@@ -94,7 +94,7 @@ export default function PurchaseOptionsSettings({ value = {}, onChange, initialG
           <SettingGroup title="Nút xác nhận trong form đặt hàng">
             {[
               ["orderSubmitLabel", "Chữ nút gửi đơn", "Đặt hàng ngay"],
-              ["orderBusyLabel", "Chữ khi đang gửi đơn", "Đang gửi đơn hàng…"],
+              ["orderBusyLabel", "Chữ khi đang đặt hàng", "Đang đặt hàng…"],
               [
                 "orderTimeoutLabel",
                 "Thông báo khi chờ quá lâu",

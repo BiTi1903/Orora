@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import "../styles/extras.css";
 import useHomeContent from "../hooks/useHomeContent";
 import { toCss } from "../lib/typography";
+import { useLocale, translatePhrase } from "../lib/i18n";
 
 /* ---------- Hook: hiện dần khi cuộn tới ---------- */
 
@@ -343,10 +344,12 @@ export function Newsletter({
   selectedElement = "",
   onSelect,
 }) {
+  const locale = useLocale();
   const live = useHomeContent();
   const c = preview && previewData ? previewData : live || {};
   const styles = c.newsletterStyles || {};
   const [submission, setSubmission] = useState({ busy: false, ok: false, message: "" });
+  const busyLabel = locale !== "vi" ? translatePhrase("Đang đăng ký…", locale) : "Đang đăng ký…";
 
   const subscribe = async (event) => {
     event.preventDefault();
@@ -449,7 +452,7 @@ export function Newsletter({
             onClick={select("nlButton")}
             style={css("button")}
           >
-            {submission.busy ? "Đang lưu email…" : c.newsletterButton || "Đăng ký"}
+            {submission.busy ? busyLabel : c.newsletterButton || "Đăng ký"}
           </button>
         </div>
       </form>

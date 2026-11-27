@@ -1,3 +1,4 @@
+import TranslationHelp from "./TranslationHelp";
 import { useConfirm } from "./confirm-context";
 import useDraftGuard from "../hooks/useDraftGuard";
 import PriceInput from "./PriceInput";
@@ -219,9 +220,10 @@ export default function ProductsAdmin() {
           <label className="admin-check">
             <input type="checkbox" role="switch" disabled={busy} checked={form.active !== false} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
             Hiển thị trên website
+            <TranslationHelp label="ẩn hiện sản phẩm">Tắt mục này sẽ ẩn sản phẩm khỏi trang khách và tạm ngừng nhận đơn mới, nhưng vẫn giữ nguyên dữ liệu sản phẩm và lịch sử đơn cũ.</TranslationHelp>
           </label>
       </div>}
-      {editorPanel === "pricing" && <div className="product-editor-panel"><h3>Giá bán và dung tích</h3><div className="admin-field"><label htmlFor="product-price">Giá</label><PriceInput id="product-price" disabled={busy} name="price" value={form.price} onChange={(price) => setForm((current) => ({ ...current, price }))} placeholder="250000" /><small className="admin-muted">Chỉ nhập số, ví dụ 250000. Đơn vị đ tự hiển thị; để trống nếu cần báo giá. Giá chung áp dụng khi dung tích không có giá riêng.</small></div><ProductVolumeEditor options={volumeOptions} onChange={setVolumeOptions} disabled={busy} /></div>}
+      {editorPanel === "pricing" && <div className="product-editor-panel"><h3>Giá bán và dung tích <TranslationHelp label="giá và dung tích">Nếu sản phẩm có nhiều dung tích (ví dụ 30ml, 50ml), thêm từng dung tích bên dưới để khách chọn khi mua và quản lý tồn kho riêng theo từng dung tích.</TranslationHelp></h3><div className="admin-field"><label htmlFor="product-price">Giá</label><PriceInput id="product-price" disabled={busy} name="price" value={form.price} onChange={(price) => setForm((current) => ({ ...current, price }))} placeholder="250000" /><small className="admin-muted">Chỉ nhập số, ví dụ 250000. Đơn vị đ tự hiển thị; để trống nếu cần báo giá. Giá chung áp dụng khi dung tích không có giá riêng.</small></div><ProductVolumeEditor options={volumeOptions} onChange={setVolumeOptions} disabled={busy} /></div>}
       {editorPanel === "images" && <div className="product-editor-panel">
           <section className="product-editor-block" aria-label="Ảnh sản phẩm"><div className="product-editor-heading"><div><h3>Ảnh sản phẩm</h3><p className="admin-muted">Một ảnh chính và các ảnh phụ theo thứ tự bạn thêm.</p></div></div>
             <ImageField label="Ảnh chính" value={form.image} disabled={busy} onBusyChange={(value) => uploadState("main", value)} onChange={(value) => setForm((current) => ({ ...current, image: value }))} width={1200} />
@@ -247,7 +249,7 @@ export default function ProductsAdmin() {
           <div className="product-table-scroll" style={{ overflowX: "auto" }} role="region" aria-label="Danh sách sản phẩm" tabIndex={0}>
             <table className="admin-table">
               <thead>
-                <tr><th>Mã SP</th><th>Ảnh</th><th>Sản phẩm</th><th>Giá</th><th>Trạng thái</th><th>Danh mục / Thao tác</th></tr>
+                <tr><th>Mã SP</th><th>Ảnh</th><th>Sản phẩm</th><th>Giá</th><th>Trạng thái</th><th>Danh mục / Thao tác <TranslationHelp label="đổi danh mục nhanh">Đổi ô danh mục ngay trên bảng sẽ tự lưu tức thì. Muốn ngừng bán mà vẫn giữ lịch sử đơn, vào Sửa rồi tắt Hiển thị thay vì Xóa.</TranslationHelp></th></tr>
               </thead>
               <tbody>
                 {visibleItems.map((p) => {

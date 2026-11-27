@@ -240,7 +240,7 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
           } />
           </div>}
           {view === "history" && <div className="admin-card">
-            <h2>Lịch sử gửi đến danh sách đăng ký</h2>
+            <h2>Lịch sử gửi đến danh sách đăng ký <TranslationHelp label="lịch sử chiến dịch email">Bấm Check để kiểm tra trạng thái thực tế trên Outlook (đã gửi, bị trả lại). Nếu chiến dịch đang tạm dừng, bấm Tiếp tục gửi để gửi nốt những địa chỉ chưa xử lý.</TranslationHelp></h2>
             <p className="admin-muted">20 thư gần nhất. Lịch sử thư xác nhận mua hàng nằm trong chi tiết từng đơn.</p>
 
             <div style={{ overflowX: "auto" }}><table className="admin-table"><thead><tr><th>Tiêu đề</th><th>Mẫu lúc gửi</th><th>Tài khoản thao tác</th><th>Người nhận</th><th>Trạng thái</th><th>Kết quả</th><th>Thao tác</th></tr></thead>
@@ -253,7 +253,7 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
             <p className="admin-muted">Thư bị lỗi hoặc chưa rõ kết quả không được tự gửi lại. “Hoàn tất” nghĩa là đã quét xong danh sách, không bảo đảm mọi thư gửi thành công.</p>
           </div>}
           {view === "contacts" && <div className="admin-card">
-            <h2>Email đã đăng ký ({contacts.length} đã tải)</h2>
+            <h2>Email đã đăng ký ({contacts.length} đã tải) <TranslationHelp label="quản lý email đăng ký">Chỉ địa chỉ ở trạng thái Hoạt động mới nhận thư chiến dịch. Địa chỉ Đã hủy đăng ký hoặc Bị trả lại tự động được bỏ qua để bảo vệ uy tín tên miền gửi thư.</TranslationHelp></h2>
             <div className="admin-order-filter-bar">
               <div className="admin-field">
                 <label htmlFor="newsletter-email-search">Tìm kiếm email</label>

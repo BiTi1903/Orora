@@ -13,6 +13,7 @@ import MailOrderTokenBar from "./MailOrderTokenBar";
 import { TEMPLATE_KINDS, templateUsageLabel } from "../lib/mail-templates";
 import { useEffect, useRef, useState } from "react";
 import MailPreviewDialog from "./MailPreviewDialog";
+import TranslationHelp from "./TranslationHelp";
 
 function TemplatePreview({ draft, onSelectSection, selectedSection }) {
   const order = SAMPLE_PREVIEW_ORDER;
@@ -266,7 +267,7 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
       <section className="admin-card mail-preset-shelf" aria-label="Bộ mẫu chuẩn ORORA">
         <div className="mail-shelf-head">
           <div>
-            <h3>Bộ 4 mẫu chuẩn theo hành trình khách hàng</h3>
+            <h3>Bộ 4 mẫu chuẩn theo hành trình khách hàng <TranslationHelp label="bộ 4 mẫu thư chuẩn">Mẫu Đăng ký và Đã nhận đơn dùng làm thư gửi tự động. Mẫu Đang giao hàng và Cảm ơn sau khi nhận hàng xuất hiện trong Đơn hàng → Gửi email riêng và tự điền tên khách, mã đơn, mã vận đơn.</TranslationHelp></h3>
             <p className="admin-muted">Bấm vào một giai đoạn để nạp sẵn bố cục, tiến trình đơn và nội dung chuẩn vào Studio bên dưới.</p>
           </div>
         </div>
@@ -338,7 +339,7 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
       >
         <div className="mail-studio-topbar">
           <div>
-            <h3>{id ? `Chỉnh mẫu đã lưu · ${draft.name || ""}` : "Soạn & Thiết kế mẫu thư"}</h3>
+            <h3>{id ? `Chỉnh mẫu đã lưu · ${draft.name || ""}` : "Soạn & Thiết kế mẫu thư"} <TranslationHelp label="chỉnh mẫu trong studio">Bấm trực tiếp vào từng khối trong khung Xem trước bên phải (Đầu thư, Tiêu đề, Nội dung, Nút bấm, Chân thư) để mở nhanh đúng mục chỉnh màu sắc và cỡ chữ.</TranslationHelp></h3>
             <p className="admin-muted">Chỉnh cột trái và quan sát trực tiếp kết quả ở khung Xem trước cố định bên phải.</p>
           </div>
           <div className="admin-actions">

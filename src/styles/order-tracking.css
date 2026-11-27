@@ -998,24 +998,34 @@
   padding-left: 12px;
 }
 
-.order-tracking-modal {
+.order-tracking-modal,
+.order-tracking-modal.orora-modal {
   width: min(740px, calc(100% - 32px));
   border-radius: var(--tracking-radius, 24px);
+  border: 1px solid var(--tracking-border, #edd7e1);
+  background: var(--tracking-card, #ffffff);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 0 24px 64px rgba(58, 21, 38, .18);
 }
 
 .order-tracking-modal .orora-modal-heading {
   gap: 12px;
   padding: 18px 22px;
+  background: var(--tracking-surface, #fdf7fa);
+  border-bottom: 1px solid var(--tracking-border, #edd7e1);
 }
 
 .order-tracking-modal .orora-modal-heading h2 {
   min-width: 0;
   font-size: clamp(18px, 4.4vw, 24px);
   overflow-wrap: anywhere;
+  color: var(--plum, #3a1526);
 }
 
 .order-tracking-modal .orora-modal-content {
   padding: 20px 22px;
+  background: var(--tracking-card, #ffffff);
 }
 
 html[data-glass-frames] #root .order-tracking-modal .order-tracking-result,

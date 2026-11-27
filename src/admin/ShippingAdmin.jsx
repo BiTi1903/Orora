@@ -68,7 +68,7 @@ export default function ShippingAdmin() {
       if(threshold!==null&&(!validShippingFee(threshold)||threshold<=0))return setNotice({error:true,text:"Nhập ngưỡng miễn phí là số nguyên dương."});
       if (await save({ enabled,freeAbove:threshold }, "Đã lưu trạng thái tính phí ship.","enabled")) setSettings((value) => ({ ...value, enabled,freeAbove:threshold }));
     }}>Lưu trạng thái tính ship</button></div></div>
-    <div className="admin-card admin-form"><h2>Phí theo khu vực</h2>
+    <div className="admin-card admin-form"><h2>Phí theo khu vực <TranslationHelp label="phí theo khu vực">Nhập 0 nếu muốn miễn phí giao hàng cho khu vực đó. Nếu chọn thêm Phường/Xã và lưu phí riêng, mức phí riêng sẽ ghi đè phí chung của tỉnh/thành.</TranslationHelp></h2>
       <AddressSelect label="Tỉnh / Thành phố" value={provinceCode} options={addresses.provinces.map((item) => ({ ...item, meta: validShippingFee(settings.provinces?.[item.code]?.fee) ? formatVnd(settings.provinces[item.code].fee) : "Chưa có phí chung" }))} disabled={loading || failed || busy} loading={addresses.loadingProvinces} placeholder="Tìm và chọn tỉnh/thành" onChange={(code) => { setProvinceCode(code); setWardCode(""); }} />
       {addresses.error && <p role="alert" className="admin-error">{addresses.error} <button type="button" className="admin-btn" onClick={addresses.retry}>Tải lại địa chỉ</button></p>}
       {provinceCode && <>

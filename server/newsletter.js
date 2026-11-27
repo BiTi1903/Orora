@@ -1,7 +1,7 @@
 import { reviewRecord } from "./mail-review.js";
 import { createHash, randomUUID } from "node:crypto";
 import { safeMailTracking } from "./mail-tracking.js";
-import { rateLimitSalt, reserveBudgetOrAllow } from "./request-limits.js";
+import { evaluateRateLimit, rateLimitDocRef, rateLimitSalt } from "./request-limits.js";
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 const SUCCESS_MESSAGE = "Đăng ký nhận tin thành công. Cảm ơn bạn đã quan tâm ORORA!";
 
@@ -26,28 +26,42 @@ export function createSubscribeHandler({ getDb, sendWelcome, notifyStore, schedu
     try {
       const db = await getDb(); subscriber = db.collection("newsletterSubscribers").doc(hash(email));
       const salt = rateLimitSalt(env);
-      if (salt) {
-        const now = clock();
-        const wait = await reserveBudgetOrAllow(db, req, { scope: "subscribe", cost: 1, budget: 5, now, salt })
-          || await reserveBudgetOrAllow(db, req, { scope: "subscribe-email", cost: 1, budget: 3, windowMs: 3600000, now, salt, key: email });
-        if (wait) { res.setHeader("Retry-After", String(wait)); return reply(429, "Bạn đã thử quá nhiều lần. Vui lòng thử lại sau."); }
-      }
+      const nowMs = clock();
+      const limitRules = salt ? [
+        { scope: "subscribe", cost: 1, budget: 5, now: nowMs, salt },
+        { scope: "subscribe-email", cost: 1, budget: 3, windowMs: 3600000, now: nowMs, salt, key: email },
+      ] : [];
+      const limitRefs = limitRules.map((rule) => rateLimitDocRef(db, req, rule));
       const STALE_PENDING_MS = 5 * 60 * 1000;
-      const action = await db.runTransaction(async (tx) => {
-        const saved = await tx.get(subscriber); const prior = saved.data() || {};
+      const txResult = await db.runTransaction(async (tx) => {
+        const [saved, ...limitSnaps] = limitRefs.length
+          ? await tx.getAll(subscriber, ...limitRefs)
+          : [await tx.get(subscriber)];
+        const limitWrites = [];
+        for (let i = 0; i < limitRules.length; i += 1) {
+          const check = evaluateRateLimit(limitSnaps[i]?.data(), limitRules[i]);
+          if (check.wait) return { action: "rate_limited", wait: check.wait };
+          limitWrites.push([limitRefs[i], check.write]);
+        }
+        for (const [ref, write] of limitWrites) tx.set(ref, write);
+        const prior = saved.data() || {};
         const updatedMs = prior.updatedAt?.toMillis?.() ?? (prior.updatedAt ? new Date(prior.updatedAt).getTime() : 0);
         const stalePending = prior.mailStatus === "pending" && Number.isFinite(updatedMs) && clock() - updatedMs > STALE_PENDING_MS;
         // Preserve unsubscribed and bounced suppression; never re-activate or re-send welcome mail silently.
-        if (["unsubscribed", "bounced"].includes(prior.status)) return "exists";
+        if (["unsubscribed", "bounced"].includes(prior.status)) return { action: "exists" };
         // Repeated submissions succeed without duplicating mail already accepted,
         // actively in progress (<5 min) or with an uncertain outcome.
-        if (prior.status === "active" && !stalePending && ["accepted", "pending", "unknown"].includes(prior.mailStatus)) return "exists";
+        if (prior.status === "active" && !stalePending && ["accepted", "pending", "unknown"].includes(prior.mailStatus)) return { action: "exists" };
         const now = new Date(clock());
         tx.set(subscriber, { email, status: "active", source: "website-newsletter", consentVersion: "newsletter-v1", consentAt: now, createdAt: prior.createdAt || now, updatedAt: now, mailStatus: "pending", attempt }, { merge: true });
-        return saved.exists ? "retry" : "new";
+        return { action: saved.exists ? "retry" : "new" };
       });
-      isNew = action === "new";
-      if (action === "exists") return reply(200, SUCCESS_MESSAGE);
+      if (txResult.action === "rate_limited") {
+        res.setHeader("Retry-After", String(txResult.wait));
+        return reply(429, "Bạn đã thử quá nhiều lần. Vui lòng thử lại sau.");
+      }
+      isNew = txResult.action === "new";
+      if (txResult.action === "exists") return reply(200, SUCCESS_MESSAGE);
     } catch {
       console.error("Newsletter: database reservation failed");
       return reply(503, "Chưa lưu được đăng ký. Vui lòng thử lại sau.");

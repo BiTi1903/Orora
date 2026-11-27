@@ -14,7 +14,7 @@ import { sendOrderConfirmation, validOrderEmail } from "./order-mail.js";
 import { createHash } from "node:crypto";
 import { parseVndPrice, sameVndPrice, availablePaymentMethods, PAYMENT_LABELS } from "../src/lib/commerce.js";
 import { requireAdmin, resolveAdminPermissions } from "./admin-auth.js";
-import { rateLimitSalt, reserveBudgetOrAllow } from "./request-limits.js";
+import { evaluateRateLimit, rateLimitDocRef, rateLimitSalt } from "./request-limits.js";
 import { normalizeTrackingPhone } from "../src/lib/order-tracking.js";
 import { analyticsDay } from "../src/lib/analytics.js";
 
@@ -88,37 +88,41 @@ export function createOrderHandler({ getDb, sendMail, notifyStore, schedule, env
         : hash(JSON.stringify({ ...(body.variantId ? { variantId: body.variantId } : {}), productId: body.productId, quantity: body.quantity, paymentMethod: body.paymentMethod, customer }));
       const db = await getDb();
       const order = db.collection("orders").doc(body.requestId);
-      const priorOrder = await order.get();
-      if (priorOrder.exists) {
-        const saved = priorOrder.data();
-        if (saved.requestHash !== digest) return res.status(409).json({ message: "Đơn này đã được tiếp nhận. Vui lòng liên hệ ORORA nếu muốn thay đổi thông tin." });
-        return res.status(201).json(orderCreatedPayload(saved, saved.confirmationMail?.state || "pending"));
-      }
       const salt = rateLimitSalt(env);
-      if (salt) {
-        const clock = now();
-        const wait = await reserveBudgetOrAllow(db, req, { scope: "orders", cost: 1, budget: 8, now: clock, salt })
-          || await reserveBudgetOrAllow(db, req, { scope: "orders-email", cost: 1, budget: 5, windowMs: 86400000, now: clock, salt, key: customer.email });
-        if (wait) { res.setHeader("Retry-After", String(wait)); return res.status(429).json({ message: "Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút hoặc liên hệ ORORA." }); }
-      }
-      const createdAt = new Date(now());
+      const clockMs = now();
+      const limitRules = salt ? [
+        { scope: "orders", cost: 1, budget: 8, now: clockMs, salt },
+        { scope: "orders-email", cost: 1, budget: 5, windowMs: 86400000, now: clockMs, salt, key: customer.email },
+      ] : [];
+      const limitRefs = limitRules.map((rule) => rateLimitDocRef(db, req, rule));
+      const createdAt = new Date(clockMs);
       const parts = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(createdAt).map(({ type, value }) => [type, value]));
       const orderDate = `${parts.year}-${parts.month}-${parts.day}`;
       const codePool = db.collection("orderCodePools").doc(body.paymentMethod === "cod" ? "C" : "B");
       const uniqueProductIds = [...new Set(rawItems.map((item) => item.productId))];
       const uniqueVariantStockKeys = [...new Set(rawItems.filter((item) => item.variantId).map((item) => inventoryDocId(item.productId, item.variantId)))];
-      const { record: result, created } = await db.runTransaction(async (tx) => {
+      const txOutcome = await db.runTransaction(async (tx) => {
         const productRefs = uniqueProductIds.map((pid) => db.collection("products").doc(pid));
         const stockRefs = uniqueProductIds.map((pid) => db.collection("inventory").doc(pid));
         const variantStockRefs = uniqueVariantStockKeys.map((key) => db.collection("inventory").doc(key));
-        const snaps = await tx.getAll(order, db.collection("settings").doc("home"), codePool, ...productRefs, ...stockRefs, ...variantStockRefs);
+        const snaps = await tx.getAll(order, db.collection("settings").doc("home"), codePool, ...productRefs, ...stockRefs, ...variantStockRefs, ...limitRefs);
         const [existing, settings, pool] = snaps;
-        const productSnaps = new Map(uniqueProductIds.map((pid, idx) => [pid, snaps[3 + idx]]));
-        const stockSnaps = new Map(uniqueProductIds.map((pid, idx) => [pid, snaps[3 + uniqueProductIds.length + idx]]));
-        const variantStockSnaps = new Map(uniqueVariantStockKeys.map((key, idx) => [key, snaps[3 + uniqueProductIds.length * 2 + idx]]));
+        const productOffset = 3;
+        const stockOffset = productOffset + uniqueProductIds.length;
+        const variantOffset = stockOffset + uniqueProductIds.length;
+        const limitOffset = variantOffset + uniqueVariantStockKeys.length;
+        const productSnaps = new Map(uniqueProductIds.map((pid, idx) => [pid, snaps[productOffset + idx]]));
+        const stockSnaps = new Map(uniqueProductIds.map((pid, idx) => [pid, snaps[stockOffset + idx]]));
+        const variantStockSnaps = new Map(uniqueVariantStockKeys.map((key, idx) => [key, snaps[variantOffset + idx]]));
         if (existing.exists) {
           if (existing.data().requestHash !== digest) throw Object.assign(new Error("Đơn này đã được tiếp nhận. Vui lòng liên hệ ORORA nếu muốn thay đổi thông tin."), { status: 409 });
-          return { record: existing.data(), created: false };
+          return { record: existing.data(), created: false, rateLimited: 0 };
+        }
+        const limitWrites = [];
+        for (let i = 0; i < limitRules.length; i += 1) {
+          const check = evaluateRateLimit(snaps[limitOffset + i]?.data(), limitRules[i]);
+          if (check.wait) return { record: null, created: false, rateLimited: check.wait };
+          limitWrites.push([limitRefs[i], check.write]);
         }
         const resolvedItems = [];
         const qtyByStockTarget = new Map();
@@ -194,15 +198,22 @@ export function createOrderHandler({ getDb, sendMail, notifyStore, schedule, env
           tx.set(plan.ref, plan.data, { merge: true });
         }
         if (Object.keys(reservedTargets).length) record.reservedTargets = reservedTargets;
+        for (const [ref, write] of limitWrites) tx.set(ref, write);
         tx.set(order, record); tx.set(codePool, { ...allocated.pool, updatedAt: createdAt });
-        return { record, created: true };
+        return { record, created: true, rateLimited: 0 };
       });
+      if (txOutcome.rateLimited) {
+        res.setHeader("Retry-After", String(txOutcome.rateLimited));
+        return res.status(429).json({ message: "Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút hoặc liên hệ ORORA." });
+      }
+      const { record: result, created } = txOutcome;
+      if (!created) return res.status(201).json(orderCreatedPayload(result, result.confirmationMail?.state || "pending"));
       let mailStatus = result.confirmationMail?.state || "pending";
       const completeMail = async () => {
         try { const outcome = await sendOrderConfirmation({ db, orderId: body.requestId, sendMail }); mailStatus = outcome.state || mailStatus; }
         catch { console.error("Order accepted; confirmation mail processing did not finish"); }
       };
-      const task = Promise.all([completeMail(), created && notifyStore?.(order, { code: result.code })]);
+      const task = Promise.all([completeMail(), notifyStore?.(order, { code: result.code })]);
       if (schedule) {
         try { schedule(task); } catch { await task; }
       } else await task;

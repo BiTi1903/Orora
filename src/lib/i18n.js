@@ -345,7 +345,9 @@ export const PHRASE_DICTIONARY = {
     ja: "入力した情報に基づき、ORORAからの連絡・確認メール送信および注文処理に同意します。",
   },
   "Đặt hàng ngay": { en: "Place Order", ja: "注文を確定する" },
+  "Đang đặt hàng…": { en: "Placing order…", ja: "注文中…" },
   "Đang gửi đơn hàng…": { en: "Placing order…", ja: "注文を送信中…" },
+  "Đang đăng ký…": { en: "Subscribing…", ja: "登録中…" },
 
   // Order Received / Success
   "Đã nhận đơn hàng": { en: "Order Received", ja: "ご注文ありがとうございます" },
