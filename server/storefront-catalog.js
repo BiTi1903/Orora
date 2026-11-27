@@ -17,8 +17,8 @@ export function createCatalogHandler({getDb}) {
    }));
    for (const product of products) {
      if (!product.translationSheet) continue;
-     const entries = translationRows(product.id, product).filter(row => row.en);
-     product.translationSheet = Object.fromEntries(entries.map(row => [row.key, {vi: row.vi, en: row.en}]));
+     const entries = translationRows(product.id, product).filter(row => row.en || row.ja);
+     product.translationSheet = Object.fromEntries(entries.map(row => [row.key, {vi: row.vi, en: row.en, ja: row.ja}]));
    }
    res.setHeader('Cache-Control','public, max-age=0, s-maxage=15, stale-while-revalidate=15');
    return req.method==='HEAD'?res.status(200).end():res.status(200).json({products});

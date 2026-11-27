@@ -1,3 +1,8 @@
+## 27/11/2026 — Tải bảng dịch hiện tại
+
+- Admin đọc lại trang chủ và sản phẩm từ máy chủ khi xuất Excel. Hỗ trợ sửa, nhập và lưu cả tiếng Anh lẫn tiếng Nhật, đọc được file cũ bốn cột.
+- Build, lint và kiểm tra đọc 219 dòng song ngữ đạt. Chưa thử ghi trên database thật.
+
 ## 27/11/2026 — Biên tập bản dịch bằng Excel
 
 - Admin Bản dịch đọc nội dung trang chủ và sản phẩm, nhập hoặc xuất Excel, cho sửa tiếng Anh và lưu sau khi kiểm tra nội dung gốc. Ghi bản dịch riêng khi quản trị viên bấm lưu.
