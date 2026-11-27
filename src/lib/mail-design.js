@@ -15,6 +15,19 @@ export const FRAME_SIZES = {
   thickness: ["Độ dày viền", 1, 0, 8],
 };
 
+export const MAIL_COPY = {
+  brand: ["Tên thương hiệu", "ORORA", 60],
+  tagline: ["Dòng dưới tên thương hiệu", "Luxury Skincare · Vietnam", 100],
+  preheader: ["Dòng xem trước trong hộp thư", "", 140],
+  buttonLabel: ["Chữ trên nút", "", 80],
+  buttonUrl: ["Đường dẫn nút (HTTPS)", "", 1000],
+};
+export const MAIL_OPTIONS = {
+  font: ["Phông chữ nội dung", { system: "Hệ thống", arial: "Arial", georgia: "Georgia" }],
+  align: ["Căn nội dung", { left: "Trái", center: "Giữa", right: "Phải" }],
+  weight: ["Độ đậm", { normal: "Thường", bold: "Đậm" }],
+};
+
 export function mailDesign(input) {
   const result = {};
   for (const [key, [, fallback]] of Object.entries(FRAME_COLORS)) {
@@ -24,6 +37,12 @@ export function mailDesign(input) {
   for (const [key, [, fallback, min, max]] of Object.entries(FRAME_SIZES)) {
     const size = input?.[key];
     result[key] = Number.isInteger(size) && size >= min && size <= max ? size : fallback;
+  }
+  for (const [key, [, fallback, limit]] of Object.entries(MAIL_COPY)) {
+    result[key] = typeof input?.[key] === "string" ? input[key].slice(0, limit) : fallback;
+  }
+  for (const [key, [, options]] of Object.entries(MAIL_OPTIONS)) {
+    result[key] = Object.hasOwn(options, input?.[key]) ? input[key] : Object.keys(options)[0];
   }
   return result;
 }

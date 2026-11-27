@@ -1,4 +1,5 @@
 import { orderTrackingMail, trackingTemplate } from "../lib/order-tracking-mail.js";
+import MailBodyBlocks from "./MailBodyBlocks";
 import MailDesignFields from "./MailDesignFields";
 import { useConfirm } from "./confirm-context";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
@@ -230,7 +231,8 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
               ))}
             </div>
           </div>}
-          <MailDesignFields value={value.design} onChange={design => onChange({ subject: value.subject, text: value.text, design })} />
+          <MailBodyBlocks text={value.text} onChange={text => onChange({ design: value.design, subject: value.subject, text })} />
+          <MailDesignFields kind={mode} value={value.design} onChange={design => onChange({ subject: value.subject, text: value.text, design })} />
           <details className="admin-filter-panel" open>
             <summary>Xem trước email chuẩn gửi khách{mode === "order_auto" ? (selectedOrder ? ` (${selectedOrder.code})` : " (dữ liệu minh họa)") : ""}</summary>
             {mode === "order_auto" && <label>Tra cứu đơn trong bản xem trước

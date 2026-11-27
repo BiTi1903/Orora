@@ -223,3 +223,16 @@ test("custom frame survives newsletter delivery and is shared by all HTML previe
   assert.match(delivered.html, /bgcolor="#304050"/);
   assert.doesNotMatch(renderWelcomeEmailHtml({ ...message, design: { background: "invalid-color" } }), /invalid-color/);
 });
+
+test("custom inbox preview, brand and button reach marketing HTML while order tracking keeps its destination", () => {
+  const design = { brand: "ORORA & Co", preheader: "Ưu đãi tháng này", buttonLabel: "Xem thêm", buttonUrl: "https://example.com/offers", align: "right", weight: "bold" };
+  const message = { subject: "Mẫu", text: "Cảm ơn", design };
+  for (const render of [renderWelcomeEmailHtml, renderBrandedEmailHtml, renderOrderEmailHtml]) {
+    const html = render(message);
+    assert.match(html, /ORORA &amp; Co/);
+    assert.match(html, /Ưu đãi tháng này/);
+    assert.match(html, /text-align:right;font-weight:bold/);
+    assert.match(html, />Xem thêm<\/a>/);
+    assert.equal(html.includes(design.buttonUrl), render !== renderOrderEmailHtml);
+  }
+});

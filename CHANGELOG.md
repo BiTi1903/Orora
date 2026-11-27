@@ -1,3 +1,9 @@
+## 27/11/2026 — Mở rộng trình soạn email cho admin
+
+- Chia thiết kế thành bốn phần. Cho chỉnh tên thương hiệu, dòng phụ, dòng xem trước hộp thư, font, độ đậm, căn đoạn và nút hành động. Thư đơn hàng dùng đường dẫn tra cứu hoặc hỗ trợ của đơn.
+- Cho di chuyển các đoạn nội dung trong cả trình soạn và kho mẫu. Lưu các tùy chọn mới vào trường design sẵn có, không chuyển đổi dữ liệu cũ.
+- 79 bài kiểm tra mail/newsletter, lint, build và kiểm tra giao diện ở 390/1440 px đạt. Chưa gửi thư vào hộp thư thật.
+
 ## 27/11/2026 — Chỉnh khung và màu thư trong admin
 
 - Thêm bộ chỉnh nền, viền, góc, chiều rộng khung, màu nút và chữ nội dung trong Gửi thư, thư tự động và kho Mẫu Thư. Bản xem trước và thư HTML gửi đi dùng cùng cấu hình.
