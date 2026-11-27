@@ -169,6 +169,21 @@ test('block and caption switches, skeleton shimmer, and Visual Builder frame/mot
   await expect(viewer).toHaveCount(0);
   await expect(trigger).toBeFocused();
 
+  await trigger.evaluate((button) => {
+    const box = button.getBoundingClientRect();
+    button.dispatchEvent(new PointerEvent('click', {
+      bubbles: true,
+      pointerType: 'touch',
+      clientX: box.left + box.width * 0.8,
+      clientY: box.top + box.height * 0.8,
+    }));
+  });
+  const zoomedImage = viewer.getByRole('img');
+  await expect.poll(async () => (await zoomedImage.boundingBox())?.width / originalWidth).toBeCloseTo(2, 2);
+  await expect.poll(() => viewer.getByRole('button', {name:'Đóng ảnh'}).evaluate(el => el.scrollLeft)).toBeGreaterThan(0);
+  await zoomedImage.click();
+  await expect(viewer).toHaveCount(0);
+
   const editor = page.getByRole('region', { name: 'Nội dung chi tiết sản phẩm' });
   await editor.getByRole('switch', { name: 'Hiển thị chú thích khối 1' }).uncheck();
   await expect(infoRoot.getByText('Nội dung chú thích.')).toHaveCount(0);

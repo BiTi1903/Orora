@@ -301,10 +301,10 @@ function ProductDetail({
   const visible = (key) => ps.visibility?.[key] !== false;
   const thumbPool = secondaryImages;
 
-  const promoteToMain = (src) => {
+  const promoteToMain = (src, toggle = true) => {
     const idx = allImages.indexOf(src);
     if (idx < 0) return;
-    setActiveImageIndex((current) => (current === idx && idx > 0 ? 0 : idx));
+    setActiveImageIndex((current) => (toggle && current === idx && idx > 0 ? 0 : idx));
   };
   const stepMainImage = (delta) => {
     if (allImages.length <= 1) return;
@@ -753,6 +753,7 @@ function ProductDetail({
                   aria-label="Ảnh phụ trước"
                   onClick={(e) => {
                     e.stopPropagation();
+                    promoteToMain(prevThumb, false);
                     goThumbPrev();
                   }}
                 >
@@ -803,6 +804,7 @@ function ProductDetail({
                   aria-label="Ảnh phụ sau"
                   onClick={(e) => {
                     e.stopPropagation();
+                    promoteToMain(nextThumb, false);
                     goThumbNext();
                   }}
                 >

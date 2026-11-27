@@ -5,11 +5,11 @@ import { cdnSrc } from "../lib/image-cdn";
 const distance = ([first, second]) => Math.hypot(first.x - second.x, first.y - second.y);
 const clampZoom = (value) => Math.min(4, Math.max(1, value));
 
-export default function ProductImageLightbox({ src, images, initialIndex = 0, name, onClose, imageActions = false }) {
+export default function ProductImageLightbox({ src, images, initialIndex = 0, name, onClose, imageActions = false, initialPoint = null }) {
   const gallery = Array.isArray(images) && images.length ? images : src ? [src] : [];
   const [index, setIndex] = useState(() => Math.max(0, Math.min(gallery.length - 1, initialIndex)));
-  const [zoom, setZoom] = useState(1);
-  const [loadLarge, setLoadLarge] = useState(false);
+  const [zoom, setZoom] = useState(initialPoint ? 2 : 1);
+  const [loadLarge, setLoadLarge] = useState(Boolean(initialPoint));
   const [actionStatus, setActionStatus] = useState("");
   const [showImageLink, setShowImageLink] = useState(false);
   const currentSrc = gallery[index] || src;
@@ -18,6 +18,7 @@ export default function ProductImageLightbox({ src, images, initialIndex = 0, na
   const viewRef = useRef(null);
   const imageRef = useRef(null);
   const anchor = useRef(null);
+  const openingPoint = useRef(initialPoint);
   const [fitWidth, setFitWidth] = useState(null);
 
   useLayoutEffect(() => {
@@ -34,6 +35,18 @@ export default function ProductImageLightbox({ src, images, initialIndex = 0, na
     image.addEventListener("load", measure);
     return () => { observer.disconnect(); image.removeEventListener("load", measure); };
   }, [currentSrc]);
+
+  useLayoutEffect(() => {
+    const point = openingPoint.current;
+    if (!point || !fitWidth) return;
+    openingPoint.current = null;
+    const view = viewRef.current;
+    const image = imageRef.current;
+    view.scrollTo(
+      point.x * image.offsetWidth - view.clientWidth / 2,
+      point.y * image.offsetHeight - view.clientHeight / 2,
+    );
+  }, [fitWidth]);
 
   function changeZoom(value, point) {
     const next = clampZoom(value);
@@ -92,7 +105,8 @@ export default function ProductImageLightbox({ src, images, initialIndex = 0, na
       if (zoom === 1 && hasMultiple && Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.2) {
         stepImage(dx < 0 ? 1 : -1);
       } else if (!start.moved && Math.hypot(dx, dy) < 8) {
-        changeZoom(zoom > 1 ? 1 : 2, {x:event.clientX,y:event.clientY});
+        if (initialPoint) onClose();
+        else changeZoom(zoom > 1 ? 1 : 2, {x:event.clientX,y:event.clientY});
       }
       gesture.current = null;
     }
@@ -152,10 +166,11 @@ export default function ProductImageLightbox({ src, images, initialIndex = 0, na
         onKeyDown={event => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
-            changeZoom(zoom > 1 ? 1 : 2);
+            if (initialPoint) onClose();
+            else changeZoom(zoom > 1 ? 1 : 2);
           }
         }}
-        aria-label={zoom > 1 ? "Thu nhỏ ảnh" : "Phóng to ảnh"}
+        aria-label={initialPoint ? "Đóng ảnh" : zoom > 1 ? "Thu nhỏ ảnh" : "Phóng to ảnh"}
         data-zoomed={zoom > 1}
         onPointerDown={(event) => {
           if (event.pointerType !== "touch" && event.button !== 0) return;

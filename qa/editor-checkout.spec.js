@@ -168,6 +168,7 @@ test('the compact thumbnail strip shows two square images with borderless previe
  await expect(previous.locator('img')).toHaveAttribute('src', /sample-4/);
  await previous.click();
  await expect(tiles.first()).toHaveAccessibleName('Ảnh phụ 4');
+ await expect(tiles.first()).toHaveAttribute('aria-selected', 'true');
  await expect(previous).toHaveCSS('box-shadow','none');
  await expect(previous).toHaveCSS('border-top-width','0px');
  const next = page.getByRole('button',{name:'Ảnh phụ sau',exact:true});
@@ -177,6 +178,8 @@ test('the compact thumbnail strip shows two square images with borderless previe
  await next.click();
  await expect(tiles).toHaveCount(2);
  const third = thumbs.getByRole('tab',{name:'Ảnh phụ 3',exact:true});
+ await expect(third).toHaveAttribute('aria-selected','true');
+ await tiles.first().click();
  await third.click();
  await expect(third).toHaveAttribute('aria-selected','true');
  const swipe = (startX, endX) => thumbs.evaluate((target, [from, to]) => {

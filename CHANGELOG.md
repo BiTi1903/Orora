@@ -1,3 +1,8 @@
+## 27/11/2026 — Chạm để phóng to và chọn ảnh phụ
+
+- Ảnh trong nội dung chi tiết mở với mức phóng to 2× quanh điểm chạm và đóng khi chạm lại. Ảnh phụ mờ đổi ảnh chính ngay khi chọn.
+- Lint, build và tám lượt Playwright trên bốn chiều rộng đều đạt. Thao tác chạm được giả lập. Không thay đổi database.
+
 ## 27/11/2026 — Thao tác với ảnh nội dung sản phẩm
 
 - Trình xem ảnh trong nội dung bỏ nút ×, thêm Lưu ảnh và Chia sẻ liên kết ảnh. Chạm nền hoặc dùng Escape để đóng.

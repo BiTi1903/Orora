@@ -16,8 +16,9 @@ const tabKeys = {
 
 function InformationImage({ src, alt, imageName, preview, selectedClass, onSelect, forceLoading = false }) {
   const [state, setState] = useState("loading");
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(null);
   const imgRef = useRef(null);
+  const touchInput = useRef(false);
 
   useEffect(() => {
     const img = imgRef.current;
@@ -54,9 +55,29 @@ function InformationImage({ src, alt, imageName, preview, selectedClass, onSelec
       )}
       {!preview && effectiveState === "ready" && (
         <button type="button" className="product-information-zoom" aria-label={`Xem ảnh lớn: ${imageName}`}
-          aria-haspopup="dialog" onClick={() => setOpen(true)} />
+          aria-haspopup="dialog"
+          onPointerDown={(event) => { touchInput.current = event.pointerType === "touch"; }}
+          onClick={(event) => {
+            const image = imgRef.current;
+            const box = image.getBoundingClientRect();
+            const fromTouch = event.nativeEvent.pointerType === "touch" ||
+              (event.detail > 0 && touchInput.current);
+            touchInput.current = false;
+            const fit = getComputedStyle(image).objectFit;
+            const scale = fit === "contain"
+              ? Math.min(box.width / image.naturalWidth, box.height / image.naturalHeight)
+              : Math.max(box.width / image.naturalWidth, box.height / image.naturalHeight);
+            const width = fit === "fill" ? box.width : image.naturalWidth * scale;
+            const height = fit === "fill" ? box.height : image.naturalHeight * scale;
+            setOpen({
+              point: fromTouch ? {
+                x: Math.min(1, Math.max(0, 0.5 + (event.clientX - box.left - box.width / 2) / width)),
+                y: Math.min(1, Math.max(0, 0.5 + (event.clientY - box.top - box.height / 2) / height)),
+              } : null,
+            });
+          }} />
       )}
-      {open && createPortal(<ProductImageLightbox imageActions src={src} name={imageName} onClose={() => setOpen(false)} />, document.body)}
+      {open && createPortal(<ProductImageLightbox imageActions initialPoint={open.point} src={src} name={imageName} onClose={() => setOpen(null)} />, document.body)}
     </div>
   );
 }
