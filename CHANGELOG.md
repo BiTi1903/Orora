@@ -1,3 +1,8 @@
+## 27/11/2026 — Bổ sung nội dung đa ngôn ngữ
+
+- Thêm nhãn tab kỹ thuật và hướng dẫn, địa chỉ, tiêu đề và CTA vào bảng dịch nếu đã nhập. Bổ sung EN và JP cho trình xem ảnh và các nhãn trang chính sách.
+- Lint và build đạt. Không ghi dữ liệu sản xuất.
+
 ## 27/11/2026 — Thu gọn form bản dịch
 
 - Admin hiển thị tám câu mỗi trang, tìm kiếm không dấu, lọc theo ngôn ngữ thiếu hoặc bản nháp. Chỉ mở trình sửa của câu được chọn.

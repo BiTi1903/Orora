@@ -1,3 +1,4 @@
+import {translatePhrase, useLocale} from "../lib/i18n";
 import {DEFAULT_RETURN_POLICY} from "../lib/return-policy";
 import {shippingPolicy,shippingOffer,policyDescription} from "../lib/shipping";
 import { Link } from "react-router-dom";
@@ -7,6 +8,8 @@ import { footerCopy } from "../lib/footer-copy";
 import "../styles/order-tracking.css";
 
 export default function PolicyPage({preview} = {}) {
+  const locale = useLocale();
+  const tr = (text) => translatePhrase(text, preview ? "vi" : locale);
   const saved = useHomeContent();
   const home = preview ? {...saved,...preview} : saved;
   const footer = footerCopy(home || {});
@@ -28,19 +31,19 @@ export default function PolicyPage({preview} = {}) {
 
   return (
     <section className="policy-page">
-      {!preview && <Link to="/" className="order-tracking-back">← Về trang chủ</Link>}
+      {!preview && <Link to="/" className="order-tracking-back">{tr("← Về trang chủ")}</Link>}
       <header className="policy-header">
-        <p className="product-eyebrow">ORORA · CHÍNH SÁCH & BẢO MẬT</p>
-        <h1 className="page-heading">Điều khoản, Chính sách đổi trả & Bảo mật</h1>
+        <p className="product-eyebrow">{tr("ORORA · CHÍNH SÁCH & BẢO MẬT")}</p>
+        <h1 className="page-heading">{tr("Điều khoản, Chính sách đổi trả & Bảo mật")}</h1>
         <p className="policy-lead">
-          ORORA cam kết minh bạch thông tin sản phẩm, phí giao hàng và bảo mật dữ liệu khách hàng trong suốt quá trình đặt hàng và chăm sóc sau bán.
+          {tr("ORORA cam kết minh bạch thông tin sản phẩm, phí giao hàng và bảo mật dữ liệu khách hàng trong suốt quá trình đặt hàng và chăm sóc sau bán.")}
         </p>
       </header>
 
       <div className="policy-cards">
         {items.some((item) => item.kind !== "returns") && (
           <section className="policy-card" aria-labelledby="policy-commitments">
-            <h2 id="policy-commitments">Cam kết từ ORORA</h2>
+            <h2 id="policy-commitments">{tr("Cam kết từ ORORA")}</h2>
             <ul className="policy-list">
               {items.filter((item) => item.kind !== "returns").map((item, index) => (
                 <li key={item.id || index}>
@@ -53,34 +56,34 @@ export default function PolicyPage({preview} = {}) {
         )}
 
         <section id="doi-tra" className="policy-card" aria-labelledby="policy-return">
-          <h2 id="policy-return">1. Chính sách kiểm hàng & đổi trả</h2>
+          <h2 id="policy-return">{tr("1. Chính sách kiểm hàng & đổi trả")}</h2>
           <p style={{ whiteSpace: "pre-line" }}>{returnsText}</p>
         </section>
 
         <section id="thanh-toan" className="policy-card" aria-labelledby="policy-payment">
-          <h2 id="policy-payment">2. Đặt hàng, thanh toán & vận chuyển</h2>
+          <h2 id="policy-payment">{tr("2. Đặt hàng, thanh toán & vận chuyển")}</h2>
           {paymentText ? (
             <p style={{ whiteSpace: "pre-line" }}>{paymentText}</p>
           ) : (
             <p>
               {!preview && sectionIsEnabled(home, "ordertracking") ? (
-                <>Mỗi đơn hàng trên website đều được cấp mã đơn riêng để tra cứu tại trang <Link to="/tra-cuu-don-hang">Tra cứu đơn hàng</Link>. </>
+                <>Mỗi đơn hàng trên website đều được cấp mã đơn riêng để tra cứu tại trang <Link to="/tra-cuu-don-hang">{tr("Tra cứu đơn hàng")}</Link>. </>
               ) : (
                 <>Mỗi đơn hàng trên website đều được cấp mã đơn riêng để ORORA xác nhận và hỗ trợ nhanh. </>
               )}
-              {shippingPolicy(home.shippingSettings?.enabled)}
+              {tr(shippingPolicy(home.shippingSettings?.enabled))}
             </p>
           )}
         </section>
 
         {shippingOffer(home.shippingSettings)&&<p>{shippingOffer(home.shippingSettings)}</p>}
         <section id="bao-mat" className="policy-card" aria-labelledby="policy-privacy">
-          <h2 id="policy-privacy">3. Chính sách bảo mật thông tin</h2>
-          <p style={{ whiteSpace: "pre-line" }}>{privacyText}</p><p>Mã QR chuyển khoản được tạo trên thiết bị từ thông tin tài khoản nhận, số tiền và nội dung thanh toán.</p>
+          <h2 id="policy-privacy">{tr("3. Chính sách bảo mật thông tin")}</h2>
+          <p style={{ whiteSpace: "pre-line" }}>{privacyText}</p><p>{tr("Mã QR chuyển khoản được tạo trên thiết bị từ thông tin tài khoản nhận, số tiền và nội dung thanh toán.")}</p>
         </section>
 
         <section className="policy-card policy-contact-card" aria-labelledby="policy-contact">
-          <h2 id="policy-contact">Liên hệ hỗ trợ</h2>
+          <h2 id="policy-contact">{tr("Liên hệ hỗ trợ")}</h2>
           <p>
             {[
               footer.footerPhone && `Điện thoại / Zalo: ${footer.footerPhone}`,

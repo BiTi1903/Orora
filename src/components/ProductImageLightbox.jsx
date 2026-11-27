@@ -1,3 +1,4 @@
+import {translatePhrase, useLocale} from "../lib/i18n";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import ModalDialog from "./ModalDialog";
 import { cdnSrc } from "../lib/image-cdn";
@@ -6,6 +7,8 @@ const distance = ([first, second]) => Math.hypot(first.x - second.x, first.y - s
 const clampZoom = (value) => Math.min(4, Math.max(1, value));
 
 export default function ProductImageLightbox({ src, images, initialIndex = 0, name, onClose, imageActions = false, initialPoint = null }) {
+  const locale = useLocale();
+  const tr = (text) => translatePhrase(text, locale);
   const gallery = Array.isArray(images) && images.length ? images : src ? [src] : [];
   const [index, setIndex] = useState(() => Math.max(0, Math.min(gallery.length - 1, initialIndex)));
   const [zoom, setZoom] = useState(initialPoint ? 2 : 1);
@@ -129,7 +132,7 @@ export default function ProductImageLightbox({ src, images, initialIndex = 0, na
       window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 30000);
     } catch {
       setShowImageLink(true);
-      setActionStatus("Hãy mở ảnh gốc để lưu bằng trình duyệt.");
+      setActionStatus(tr("Hãy mở ảnh gốc để lưu bằng trình duyệt."));
     }
   }
 
@@ -141,21 +144,21 @@ export default function ProductImageLightbox({ src, images, initialIndex = 0, na
         await navigator.share({ title: name, url });
       } else {
         await navigator.clipboard.writeText(url);
-        setActionStatus("Đã sao chép liên kết ảnh.");
+        setActionStatus(tr("Đã sao chép liên kết ảnh."));
       }
     } catch (error) {
       if (error.name === "AbortError") return;
       setShowImageLink(true);
-      setActionStatus("Hãy mở ảnh gốc để sao chép liên kết.");
+      setActionStatus(tr("Hãy mở ảnh gốc để sao chép liên kết."));
     }
   }
 
   return (
-    <ModalDialog title={name} onClose={onClose} className={imageActions ? "product-lightbox product-lightbox--actions" : "product-lightbox"} hideCloseButton={imageActions}>
+    <ModalDialog title={name} closeLabel={tr("Đóng cửa sổ")} onClose={onClose} className={imageActions ? "product-lightbox product-lightbox--actions" : "product-lightbox"} hideCloseButton={imageActions}>
       {hasMultiple && (
         <div className="product-lightbox-nav-group">
-          <button type="button" aria-label="Ảnh trước" onClick={() => stepImage(-1)}>‹</button>
-          <button type="button" aria-label="Ảnh sau" onClick={() => stepImage(1)}>›</button>
+          <button type="button" aria-label={tr("Ảnh trước")} onClick={() => stepImage(-1)}>‹</button>
+          <button type="button" aria-label={tr("Ảnh sau")} onClick={() => stepImage(1)}>›</button>
         </div>
       )}
       <div
@@ -170,7 +173,7 @@ export default function ProductImageLightbox({ src, images, initialIndex = 0, na
             else changeZoom(zoom > 1 ? 1 : 2);
           }
         }}
-        aria-label={initialPoint ? "Đóng ảnh" : zoom > 1 ? "Thu nhỏ ảnh" : "Phóng to ảnh"}
+        aria-label={tr(initialPoint ? "Đóng ảnh" : zoom > 1 ? "Thu nhỏ ảnh" : "Phóng to ảnh")}
         data-zoomed={zoom > 1}
         onPointerDown={(event) => {
           if (event.pointerType !== "touch" && event.button !== 0) return;
@@ -216,9 +219,9 @@ export default function ProductImageLightbox({ src, images, initialIndex = 0, na
       {imageActions && (
         <>
           <div className="product-lightbox-actions">
-            <button type="button" onClick={saveImage}>Lưu ảnh</button>
-            <button type="button" onClick={shareImage}>Chia sẻ</button>
-            {showImageLink && <a href={imageUrl} target="_blank" rel="noopener noreferrer">Mở ảnh gốc</a>}
+            <button type="button" onClick={saveImage}>{tr("Lưu ảnh")}</button>
+            <button type="button" onClick={shareImage}>{tr("Chia sẻ")}</button>
+            {showImageLink && <a href={imageUrl} target="_blank" rel="noopener noreferrer">{tr("Mở ảnh gốc")}</a>}
           </div>
           {actionStatus && <p className="product-lightbox-status" role="status">{actionStatus}</p>}
         </>

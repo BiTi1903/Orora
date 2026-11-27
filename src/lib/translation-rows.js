@@ -1,4 +1,4 @@
-const textField = /(?:title|description|label|text|body|name|caption|highlight|eyebrow|prefix|suffix|placeholder|consent|copyright|heading|question|answer|content|imageAlt|shoppingGuide|details|story|hint|note|button|greeting|material|origin|category|marqueeWords|heroRotator|heroChip\d+|testimonialsTitleEnd)$/i;
+const textField = /(?:title|description|label|text|body|name|caption|highlight|eyebrow|prefix|suffix|placeholder|consent|copyright|heading|question|answer|content|imageAlt|shoppingGuide|details|story|hint|note|button|greeting|address|headline|cta|material|origin|category|marqueeWords|heroRotator|heroChip\d+|testimonialsTitleEnd)$/i;
 const skip = /^(translations|translationSheet|slugAliases|productReviews|reviews)$/;
 export const translationHeaders = ["Mã nội dung", "Vị trí", "Tiếng Việt", "English", "日本語"];
 
@@ -6,7 +6,8 @@ export function translationRows(docKey, data) {
   const rows = [];
   function visit(value, path, field, legacy, japanese) {
     if (typeof value === "string") {
-      const exactText = ["size","color","t","d"].includes(field) && !/^#[0-9a-f]+$/i.test(value);
+      const tabLabel = path.includes("informationTabs") && path.at(-2) === "labels" && ["description", "specifications", "usage"].includes(field);
+      const exactText = tabLabel || ["size","color","t","d"].includes(field) && !/^#[0-9a-f]+$/i.test(value);
       if ((!exactText && !textField.test(field)) || !value.trim() || /^(https?:|\/|#)/.test(value)) return;
       const key = JSON.stringify([docKey, ...path]);
       const saved = data.translationSheet?.[key];
