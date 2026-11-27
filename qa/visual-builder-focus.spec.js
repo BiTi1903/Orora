@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {mount,render,fit,reveal} from './fixtures';
+import {builderPane,mount,render,fit,reveal} from './fixtures';
 const mocks={
  'hooks/useHomeContent.js':'export default function home(){return {loading:false}}',
  'hooks/useProducts.js':'export default function products(){return {products:[],loading:false}}',
@@ -29,7 +29,10 @@ test('element picker reaches price styles and full-size preview stays inside its
  await builder(page);await page.locator('.builder-sections').getByRole('button',{name:/Chi tiết SP/}).click();
  await page.getByLabel('Chọn thành phần cần sửa',{exact:true}).selectOption('pdPrice');await expect(page.locator('[data-compact-setting][open]')).toHaveCount(1);
  await reveal(page.getByLabel('Cỡ chữ desktop',{exact:true}));await page.getByLabel('Cỡ chữ desktop',{exact:true}).selectOption('18');
- await expect(page.frameLocator('iframe').locator('[data-builder-key="pdPrice"]')).toHaveCSS('font-size','18px');
+ await builderPane(page,'Xem trước');
+ const price=page.frameLocator('iframe').locator('[data-builder-key="pdPrice"]');
+ await page.getByRole('button',{name:'Desktop',exact:true}).click();
+ await expect(price).toHaveCSS('font-size','18px');
  await page.getByLabel('Tỉ lệ xem trước',{exact:true}).selectOption('actual');await expect(page.locator('iframe')).toHaveCSS('transform','matrix(1, 0, 0, 1, 0, 0)');await fit(page);
  await page.getByLabel('Tỉ lệ xem trước',{exact:true}).selectOption('fit');await fit(page);await page.screenshot({path:testInfo.outputPath('price-editor.png'),fullPage:true});
 });

@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {mount,render,fit} from './fixtures';
+import {builderPane,mount,render,fit} from './fixtures';
 
 const mocks={
  'hooks/useHomeContent.js':'export default function home(){return {loading:false}}',
@@ -16,8 +16,8 @@ test('builder uses one responsive layout at the tablet breakpoint',async({page})
   await page.setViewportSize({width,height:1000});
   if(width<=1000){
    await expect(layout).toHaveCSS('display','flex');await expect(layout).toHaveCSS('flex-direction','column');
-   const a=await canvas.boundingBox(),b=await settings.boundingBox(),all=await layout.boundingBox();
-   expect(Math.abs(a.width-all.width)).toBeLessThan(2);expect(b.y).toBeGreaterThanOrEqual(a.y+a.height-1);
+   await builderPane(page,'Chỉnh sửa');await expect(settings).toBeVisible();await expect(canvas).toBeHidden();
+   await builderPane(page,'Xem trước');await expect(canvas).toBeVisible();await expect(settings).toBeHidden();
   }else{
    await expect(layout).toHaveCSS('display','grid');
    const a=await canvas.boundingBox(),b=await settings.boundingBox();

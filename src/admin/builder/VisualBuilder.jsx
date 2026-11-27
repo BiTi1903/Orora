@@ -159,6 +159,7 @@ export default function VisualBuilder({
     }
   }
   const selectElement = (key) => {
+    setCompactPane("edit");
     setSelected(key);
     setSelectionVersion((value) => value + 1);
   };

@@ -67,7 +67,7 @@ export default function PreviewFrame({ device, children, surfaces, zoom="fit", s
     const preventNavigation = (event) => {
       if (event.target.closest("a") && !event.target.closest('a.order-consent-link[href="/chinh-sach"]')) {
         event.preventDefault();
-        event.stopPropagation();
+        // Keep the click available to the builder element picker.
       }
     };
     frameDocument.addEventListener("click", preventNavigation, true);

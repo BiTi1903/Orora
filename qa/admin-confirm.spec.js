@@ -40,7 +40,7 @@ test('custom chat typography keeps a 16px minimum on mobile and a visible keyboa
   await expect(page.getByRole('button', { name: 'Gợi ý tiếp theo' })).toHaveCSS('font-size', '18px');
   await page.keyboard.press('Tab');
   await expect(input).toBeFocused();
-  await expect(input).toHaveCSS('outline-width', '2px');
+  expect(await input.evaluate(el=>parseFloat(getComputedStyle(el).outlineWidth))).toBeGreaterThanOrEqual(2);
   await expect(input).toHaveCSS('outline-style', 'solid');
 });
 

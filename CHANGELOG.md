@@ -1,3 +1,9 @@
+## 27/11/2026 — Khắc phục lỗi Chromium và kiểm tra lại WebKit
+
+- Visual Builder cho phép chọn phần tử trong liên kết preview và mở bảng chỉnh trên màn hình nhỏ. Khôi phục viền focus của ô chat, lề giỏ hàng, cỡ chữ ô số lượng và thu gọn thanh mua nhanh ở 320 px.
+- Đồng bộ các bài Playwright với tên dung tích kèm giá, cấu hình Zalo, xác nhận bỏ bản nhập, các chế độ preview, menu admin và hình học thực tế của hiệu ứng giỏ hàng.
+- Đã chạy npm run check, 10 bài WebKit iOS của CI, kiểm tra giá preview trên cả bốn kích thước và chạy lại luồng checkout ở 320 px. Không thay đổi database.
+
 ## 27/11/2026 — Thư cần xử lý trong admin
 
 - Gom thư xác nhận đơn, chào mừng và thông báo cửa hàng mới vào hai bộ sưu tập Firestore orderMailReview và newsletterMailReview, dùng quyền admin theo từng nguồn.

@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {mount,render,fit,reveal} from './fixtures';
+import {builderPane,mount,render,fit,reveal} from './fixtures';
 const mocks={
  'hooks/useHomeContent.js':'export default function home(){return {loading:false}}',
  'hooks/useProducts.js':'export default function products(){return {products:[],loading:false}}',
@@ -12,7 +12,7 @@ test('volume selection is compact on first load and still adds the selected volu
  const box=await dialog.boundingBox();expect(box.width).toBeLessThanOrEqual(361);expect(box.height).toBeLessThan(340);
  await expect(dialog.locator('.product-volume-choices')).toHaveCSS('display','flex');
  await expect(dialog.getByRole('button',{name:'Thêm vào giỏ',exact:true})).toBeDisabled();
- await dialog.getByLabel('220ml',{exact:true}).check();await dialog.getByRole('button',{name:'Tăng số lượng',exact:true}).click();
+ await dialog.getByRole('radio',{name:/^220ml(?: ·|$)/}).check();await dialog.getByRole('button',{name:'Tăng số lượng',exact:true}).click();
  await page.screenshot({path:testInfo.outputPath('compact-selection.png')});
  await dialog.getByRole('button',{name:'Thêm vào giỏ',exact:true}).click();await expect(dialog).toHaveCount(0);
  await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('orora-cart-v1')))).toEqual([{id:'1',variantId:'large',quantity:2}]);
@@ -30,7 +30,7 @@ test('navbar cart settings preview typography and shape independently and keep s
  await page.getByLabel('Hiện số lượng trên nút',{exact:true}).uncheck();await expect(preview.getByRole('button')).toHaveText('Túi đồ');
  await page.getByText('Nội dung và kích thước popup chọn dung tích',{exact:true}).click();await page.getByLabel('Chiều rộng popup desktop (px)',{exact:true}).fill('400');await page.getByLabel('Chiều rộng popup mobile (px)',{exact:true}).fill('280');
  const popup=page.getByLabel('Xem trước popup chọn dung tích',{exact:true});const width=(await popup.boundingBox()).width;expect(width).toBeLessThanOrEqual(page.viewportSize().width<=768?281:401);
- await expect(popup.getByRole('heading')).toHaveText('Chọn dung tích');await popup.getByLabel('220ml',{exact:true}).check();await expect(popup.getByRole('button',{name:'Thêm vào giỏ',exact:true})).toBeEnabled();
+ await expect(popup.getByRole('heading')).toHaveText('Chọn dung tích');await popup.getByRole('radio',{name:/^220ml(?: ·|$)/}).check();await expect(popup.getByRole('button',{name:'Thêm vào giỏ',exact:true})).toBeEnabled();
  const saved=await page.evaluate(()=>window.__navbar);expect(saved.navStyles.mobile.enabled).toBe(false);expect(saved.navStyles.cart.futureSetting).toBe('keep');expect(saved.navStyles.cart.text.color).toBe('#112233');await fit(page);
 });
 test('builder saves only the changed cart fields and the live navbar and popup consume them',async({page})=>{
@@ -38,6 +38,7 @@ test('builder saves only the changed cart fields and the live navbar and popup c
   'lib/api.js':`export const getProduct=async()=>null;export const getHomeContent=async()=>({navLogo:'ORORA',navStyles:{cart:{copy:{label:'Giỏ hàng'},selectionPopup:{width:360},navbarButton:{radius:14},unknown:'keep'},mobile:{enabled:false}}});export const saveHomeContent=async payload=>{window.__saved=payload};`,
  });
  await page.locator('.builder-sections').getByRole('button',{name:/Navbar/}).click();
+ await builderPane(page,'Xem trước');
  await page.frameLocator('iframe').getByRole('button',{name:'Giỏ hàng',exact:true}).click();
  await expect(page.getByLabel('Chữ logo',{exact:true})).toHaveCount(0);
  await page.getByText('Khung và kiểu chữ nút navbar',{exact:true}).click();await page.getByLabel('Bo góc nút (px)',{exact:true}).fill('24');await page.getByLabel('Màu nền nút navbar',{exact:true}).fill('#123456');

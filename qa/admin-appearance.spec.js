@@ -10,6 +10,8 @@ async function admin(page){
   if(url.pathname==='/api/inventory')data=url.searchParams.has('pending')?{pending:{},nextCursor:null}:{items:products.map(p=>({...p,quantity:25})),nextCursor:null};
   if(url.pathname==='/api/addresses')data={items:[{code:'01',name:'Hà Nội'}]};
   if(url.pathname==='/api/admin-orders')data=url.searchParams.has('whoami')?{ok:true,uid:'appearance-admin',permissions:{orders:true,newsletter:true,full:true}}:url.searchParams.has('mailHistory')?{mails:[],scannedOrders:1,nextCursor:null}:url.searchParams.has('id')?{order,mails:[],activities:[]}:{orders:[order],nextCursor:null};
+  if(url.searchParams.has('mailReviewCount'))data={count:0};
+  if(url.searchParams.has('mailReview'))data={rows:[],cursor:null};
   if(url.pathname==='/api/chat')data={configured:true};
   return route.fulfill({json:data});
  });
@@ -41,11 +43,11 @@ async function audit(page){
 }
 async function shot(page,testInfo,name){if([390,1440].includes(page.viewportSize().width))await page.screenshot({path:testInfo.outputPath(`${name}.png`),fullPage:true});}
 
-test('all ten real admin pages use styled controls and fit the viewport',async({page},testInfo)=>{
+test('all admin pages use styled controls and fit the viewport',async({page},testInfo)=>{
  test.setTimeout(90000);const errors=await admin(page);
  await expect(page.getByRole('button',{name:'Đăng xuất'})).toHaveCSS('min-height','44px');
  const nav=page.getByRole('navigation',{name:'Menu quản trị'});
- for(const name of ['Tổng quan','Đơn hàng','Kiểm kho','Phí vận chuyển','Trang chủ','Sản phẩm','Thống kê','Email','Chat AI','Xuất danh sách email']){
+ for(const name of ['Tổng quan','Đơn hàng','Kiểm kho','Phí vận chuyển','Trang chủ','Sản phẩm','Thống kê','Email','Thư cần xử lý','Chat AI','Xuất danh sách email']){
   await nav.getByRole('button',{name,exact:true}).click();
   await expect(nav.getByRole('button',{name,exact:true})).toHaveAttribute('aria-current','page');
   await audit(page);await shot(page,testInfo,name);

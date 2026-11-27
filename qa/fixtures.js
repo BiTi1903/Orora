@@ -11,3 +11,8 @@ export async function reveal(control){
   if(!await details.evaluate(el=>el.open))await details.locator(':scope > summary').click();
  }
 }
+
+export async function builderPane(page, name){
+ const button=page.locator('.builder-compact-switch').getByRole('button',{name,exact:true});
+ if(await button.isVisible())await button.click();
+}

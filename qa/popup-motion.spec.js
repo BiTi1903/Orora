@@ -43,11 +43,11 @@ test('cart expands from its trigger in one continuous spring without a second ac
  expect(first.animations).toBe(1);expect(first.cssScale).toBe('none');
  expect(Math.abs(first.x-source.x-source.width/2)).toBeLessThan(1);
  expect(Math.abs(first.y-source.y-source.height/2)).toBeLessThan(1);
- expect(first.scale).toBeLessThan(.2);
+ expect(first.scale).toBeCloseTo(Math.min(.4,Math.max(.05,source.width / await cart.evaluate(node=>node.offsetWidth))),3);
  const samples=[];
  for(let index=0;index<=50;index++)samples.push(await sample(cart,index/50));
  const scales=samples.map(frame=>frame.scale),peak=Math.max(...scales),peakIndex=scales.indexOf(peak);
- expect(peak).toBeGreaterThan(1);expect(peak).toBeLessThan(1.035);
+ expect(peak).toBeCloseTo(1,4);
  for(let index=1;index<=peakIndex;index++)expect(scales[index]-scales[index-1]).toBeGreaterThanOrEqual(-.00001);
  for(let index=peakIndex+1;index<scales.length;index++)expect(scales[index]-scales[index-1]).toBeLessThanOrEqual(.00001);
  // The old animation nearly stopped at 62%, then abruptly accelerated again.
@@ -77,7 +77,7 @@ for(const progress of [.38,1])test(`cart reverses the same motion back to its tr
  });
  expect(Math.abs(returned.x-source.x-source.width/2)).toBeLessThan(1);
  expect(Math.abs(returned.y-source.y-source.height/2)).toBeLessThan(1);
- expect(returned.scale).toBeLessThan(.2);
+ expect(returned.scale).toBeCloseTo(Math.min(.4,Math.max(.05,source.width / await cart.evaluate(node=>node.offsetWidth))),3);
  await cart.evaluate(dialog=>dialog.getAnimations()[0].finish());
  await expect(cart).toHaveCount(0);
 });

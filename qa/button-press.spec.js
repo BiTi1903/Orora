@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 import {mount,render,reveal} from './fixtures';
 async function chat(page,settings={}) {
  await mount(page,`import Feedback from '/src/components/ButtonPressFeedback.jsx';import Chat from '/src/components/ChatButton.jsx';import Glass from '/src/components/MobileGlass.jsx';${render(`R.createElement(R.Fragment,null,R.createElement(Glass),R.createElement(Feedback,{settings:${JSON.stringify(settings)}}),R.createElement(Chat))`)}`,{
-  'hooks/useHomeContent.js':`export default function home(){return {loading:false,chatSettings:{hintEnabled:false,...${JSON.stringify(settings)}}}}`,
+  'hooks/useHomeContent.js':`export default function home(){return {loading:false,footerPhone:"0900000000",chatSettings:{hintEnabled:false,...${JSON.stringify(settings)}}}}`,
   'hooks/useChatConversation.js':'export default function conversation(){return {metadata:{},messages:[],sending:false,error:null,send:()=>false,retry(){},reset(){}}}',
  });
  const button=page.getByRole('button',{name:'Chat với ORORA',exact:true});await expect(button).toBeVisible();return page.locator('.chat-button');

@@ -2015,3 +2015,9 @@
 }
 
 
+
+@media (max-width:360px) {
+  .product-mobile-buy:not(.is-preview) { gap:6px; padding-inline:8px; }
+  .product-mobile-buy:not(.is-preview) .product-mobile-buy-cta { width:106px; min-width:0; padding-inline:6px !important; }
+  .product-mobile-buy-total strong { font-size:17px; }
+}

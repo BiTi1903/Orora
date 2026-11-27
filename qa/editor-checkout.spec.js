@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {mount,render,fit} from './fixtures';
+import {builderPane,mount,render,fit} from './fixtures';
 const product={id:'gel',slug:'gel',name:'Deodorant Mist - Bodyplex',price:'600000',description:'Xịt khử mùi dịu nhẹ',detailVisibility:{description:true,specifications:true,usage:true},volumeOptions:[{id:'large',label:'220ml',price:'600000'},{id:'small',label:'180ml',price:'450000'}]};
 const base={
  'hooks/useHomeContent.js':`export default function home(){return {loading:false,productDetailStyles:{},productPolicies:[]}}`,
@@ -14,19 +14,19 @@ async function detail(page,state,overrides={},withMobileControls=false){
 }
 test('detail selects the catalog price by default, keeps totals compact and isolates checkout edits',async({page},testInfo)=>{
  await detail(page);
- await expect(page.getByLabel('180ml',{exact:true})).toBeChecked();await expect(page.locator('.product-detail-price')).toContainText('450.000');
+ await expect(page.getByRole('radio',{name:/^180ml(?: ·|$)/})).toBeChecked();await expect(page.locator('.product-detail-price')).toContainText('450.000');
  await expect(page.locator('.product-price-variant')).toHaveCount(0);
  await expect(page.locator('.product-mobile-buy-total')).toContainText('180ml');
  await expect(page.locator('.purchase-subtotal')).toHaveCount(0);
  if (page.viewportSize().width > 768) await expect(page.locator('.purchase-options .product-mobile-buy')).toBeVisible();
  const buyBar=page.locator('.product-mobile-buy');await expect(buyBar).toBeVisible();expect((await buyBar.boundingBox()).height).toBeLessThan(95);
- await page.locator('.product-volume-choice').filter({hasText:'220ml'}).click();await expect(page.getByLabel('220ml',{exact:true})).toBeChecked();await expect(page.locator('.product-detail-price')).toContainText('600.000');
+ await page.locator('.product-volume-choice').filter({hasText:'220ml'}).click();await expect(page.getByRole('radio',{name:/^220ml(?: ·|$)/})).toBeChecked();await expect(page.locator('.product-detail-price')).toContainText('600.000');
  const purchase = page.getByRole('button',{name:'Mua ngay',exact:true});
  if (page.viewportSize().width <= 768) await expect(purchase).toBeInViewport();
  await purchase.click();const dialog=page.getByRole('dialog',{name:'Đặt hàng trên website',exact:true});await expect(dialog).toBeVisible();
  await dialog.evaluate((el)=>Promise.all(el.getAnimations().map((a)=>a.finished.catch(()=>{}))));
  if(page.viewportSize().width<=600){const labels=dialog.locator('.order-field-row').first().locator('label');const first=await labels.nth(0).boundingBox(),second=await labels.nth(1).boundingBox();expect(second.y).toBeGreaterThan(first.y+20);expect(first.width).toBeGreaterThan(230);}
- await expect(dialog.getByLabel('220ml',{exact:true})).toBeChecked();await expect(page.locator('.product-detail dialog')).toHaveCount(0);
+ await expect(dialog.getByRole('radio',{name:/^220ml(?: ·|$)/})).toBeChecked();await expect(page.locator('.product-detail dialog')).toHaveCount(0);
  await page.evaluate(()=>{window.__detailMutations=0;new MutationObserver(()=>window.__detailMutations++).observe(document.querySelector('.product-detail'),{childList:true,subtree:true});});
  await dialog.getByLabel('Họ và tên',{exact:true}).fill('Nguyễn Khách Thử');
  await dialog.getByLabel('Số điện thoại',{exact:true}).fill('0901234567');
@@ -39,12 +39,12 @@ test('detail selects the catalog price by default, keeps totals compact and isol
  await dialog.getByRole('combobox',{name:'Phường / Xã',exact:true}).fill('tan mai');await dialog.getByRole('option',{name:'Phường Tân Mai',exact:true}).click();
  expect(await page.evaluate(()=>window.__detailMutations)).toBe(0);
  await expect(dialog.locator('input[name=name]')).toHaveValue('Nguyễn Khách Thử');await fit(page);
- await page.screenshot({path:testInfo.outputPath('checkout.png')});await page.keyboard.press('Escape');await expect(dialog).toHaveCount(0);
+ await page.screenshot({path:testInfo.outputPath('checkout.png')});page.once('dialog',async confirmation=>{expect(confirmation.message()).toContain('Bỏ thông tin');await confirmation.accept();});await page.keyboard.press('Escape');await expect(dialog).toHaveCount(0);
  await page.screenshot({path:testInfo.outputPath('product-price.png')});
 });
 test('explicit cart volume and quantity take priority over the default catalog choice',async({page})=>{
- await detail(page,{cartSelection:{productId:'gel',variantId:'large',quantity:3}});await expect(page.getByLabel('220ml',{exact:true})).toBeChecked();await expect(page.getByRole('spinbutton')).toHaveValue('3');await expect(page.locator('.product-mobile-buy-total strong')).toContainText('1.800.000');
- await page.getByRole('button',{name:'Mua ngay',exact:true}).click();const dialog=page.getByRole('dialog');await expect(dialog.getByRole('spinbutton')).toHaveValue('3');await expect(dialog.getByLabel('220ml',{exact:true})).toBeChecked();
+ await detail(page,{cartSelection:{productId:'gel',variantId:'large',quantity:3}});await expect(page.getByRole('radio',{name:/^220ml(?: ·|$)/})).toBeChecked();await expect(page.getByRole('spinbutton')).toHaveValue('3');await expect(page.locator('.product-mobile-buy-total strong')).toContainText('1.800.000');
+ await page.getByRole('button',{name:'Mua ngay',exact:true}).click();const dialog=page.getByRole('dialog');await expect(dialog.getByRole('spinbutton')).toHaveValue('3');await expect(dialog.getByRole('radio',{name:/^220ml(?: ·|$)/})).toBeChecked();
 });
 test('inspector separates selected fields and section settings and keeps drafts while switching tabs',async({page},testInfo)=>{
  await mount(page,`import Builder from '/src/admin/builder/VisualBuilder.jsx';${render("R.createElement('main',{className:'admin-main'},R.createElement(Builder))")}`,{...base,'lib/api.js':`export const getProduct=async()=>null;export const getHomeContent=async()=>({navLogo:'ORORA',navStyles:{surfaces:{chatPanelWidth:310}}});export const saveHomeContent=async value=>window.__saved=value;`});
@@ -58,7 +58,7 @@ test('inspector separates selected fields and section settings and keeps drafts 
  await expect(page.getByLabel('Chiều rộng khung chat AI (px)',{exact:true})).toBeHidden();await page.getByRole('tab',{name:'Thiết lập mục',exact:true}).click();
  await page.getByText('Hiệu ứng, cánh hoa và icon nút',{exact:true}).click();await page.getByLabel('Chiều rộng khung chat AI (px)',{exact:true}).fill('320');
  await page.getByRole('tab',{name:'Đang chọn',exact:true}).click();await expect(page.getByLabel('Chữ logo',{exact:true})).toHaveValue('ORORA MỚI');
- await page.getByRole('tab',{name:'Thiết lập mục',exact:true}).click();await page.frameLocator('iframe').locator('[data-builder-key="navLogo"]').click();await expect(page.getByRole('tab',{name:'Đang chọn',exact:true})).toHaveAttribute('aria-selected','true');
+ await page.getByRole('tab',{name:'Thiết lập mục',exact:true}).click();await builderPane(page,'Xem trước');await page.frameLocator('iframe').locator('[data-builder-key="navLogo"]').click();await expect(page.getByRole('tab',{name:'Đang chọn',exact:true})).toHaveAttribute('aria-selected','true');
  await page.getByRole('button',{name:'💾 Lưu tất cả',exact:true}).click();await expect.poll(()=>page.evaluate(()=>window.__saved)).toEqual({navLogo:'ORORA MỚI',navStyles:{surfaces:{chatPanelWidth:320}}});await expect(page.getByRole('button',{name:'💾 Lưu tất cả',exact:true})).toHaveCSS('background-color','rgb(184, 68, 109)');
  await page.getByLabel('Tìm mục chỉnh sửa',{exact:true}).fill('');await fit(page);await page.screenshot({path:testInfo.outputPath('visual-admin.png'),fullPage:true});
 });
