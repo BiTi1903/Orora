@@ -132,3 +132,24 @@ test('mail writer previews frame edits and saves them with the welcome template'
   await page.getByRole('button', {name:'Lưu làm thư đăng ký tự động'}).click();
   await expect.poll(() => page.evaluate(() => window.savedMail?.design.background)).toBe('#123456');
 });
+
+test('template library finds and duplicates an order template with a personalized preview', async ({page}) => {
+  await mount(page, `
+    import Library from '/src/admin/MailTemplateLibrary.jsx';
+    import ConfirmProvider from '/src/admin/ConfirmDialog.jsx';
+    const item = {id:'existing',name:'Đơn mới',kind:'order_auto',subject:'Đơn {{orderCode}}',text:'Chào {{customerName}}'};
+    const request = async body => {
+      if (body) { window.saved = body; return {message:'Đã lưu'}; }
+      return {templates:[item], types:[]};
+    };
+    ${render('R.createElement(ConfirmProvider,null,R.createElement(Library,{request}))')}`);
+  await page.getByRole('button',{name:'Đơn mới',exact:true}).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('button',{name:'Văn bản thuần'}).click();
+  await expect(dialog).toContainText('Chào Nguyễn Minh Anh');
+  await dialog.getByRole('button',{name:'Đóng'}).click();
+  await page.getByRole('button',{name:'Nhân bản'}).click();
+  await expect(page.getByLabel('Tên mẫu thư')).toHaveValue('Đơn mới (bản sao)');
+  await page.getByRole('button',{name:'Lưu mẫu thư',exact:true}).click();
+  await expect.poll(() => page.evaluate(() => window.saved?.id)).toMatch(/^[a-f0-9-]{36}$/);
+});

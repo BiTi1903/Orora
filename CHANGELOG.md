@@ -1,3 +1,9 @@
+## 27/11/2026 — Bố trí lại màn hình soạn thư và kho mẫu
+
+- Đặt bản xem trước cạnh vùng soạn trên desktop. Kho mẫu hiển thị toàn bộ mẫu khi mở, cho tìm, xem trước HTML hoặc văn bản và nhân bản mẫu. Thư đơn hàng dùng dữ liệu minh họa để hiện biến trong bản xem trước.
+- Thêm hoàn tác khi nạp nội dung chuẩn trong trình soạn. Không thay đổi cấu trúc database.
+- Lint, build và 12 lượt Playwright tại 390/1440 px đạt. Chưa kiểm tra trên admin production.
+
 ## 27/11/2026 — Chỉnh HTML phần nội dung email
 
 - Thêm chế độ mã nguồn ở trình soạn và kho mẫu. Xem trước và tạo thư gửi dùng chung bộ lọc HTML và biến {{content}}. Tắt chế độ vẫn giữ mã để chỉnh tiếp.

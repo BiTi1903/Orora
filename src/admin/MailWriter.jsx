@@ -1,12 +1,12 @@
 import { orderTrackingMail, trackingTemplate } from "../lib/order-tracking-mail.js";
+import MailPreviewPane from "./MailPreviewPane";
 import MailHtmlEditor from "./MailHtmlEditor";
 import MailBodyBlocks from "./MailBodyBlocks";
 import MailDesignFields from "./MailDesignFields";
 import { useConfirm } from "./confirm-context";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { auth } from "../lib/firebaseAuth";
-import { PAYMENT_LABELS, formatProductPrice, formatVnd } from "../lib/commerce";
-import { orderProductName } from "../lib/product-options";
+import { SAMPLE_PREVIEW_ORDER, previewOrderVariables } from "./mail-order-preview";
 import { effectiveMailState } from "../lib/mail-state";
 import { renderBrandedEmailHtml, renderOrderEmailHtml, renderWelcomeEmailHtml } from "../lib/mail-html";
 import { sectionIsEnabled } from "../lib/page-sections";
@@ -21,26 +21,6 @@ const STANDARD_WELCOME_DRAFT = {
 const STANDARD_ORDER_DRAFT = {
   subject: "ORORA xác nhận đã tiếp nhận đơn hàng {{orderCode}}",
   text: "Chào {{customerName}},\n\nCảm ơn bạn đã tin chọn ORORA. Đơn hàng {{orderCode}} của bạn đã được hệ thống tiếp nhận thành công.\n\nTHÔNG TIN ĐƠN HÀNG\n- Sản phẩm: {{productName}}\n- Số lượng: {{quantity}}\n- Tạm tính: {{subtotal}}\n- Phí giao hàng: {{shippingFee}}\n- Tổng thanh toán dự kiến: {{totalAmount}}\n- Thanh toán: {{paymentMethod}} ({{paymentStatus}})\n- Người nhận: {{customerName}} · {{phone}}\n- Địa chỉ giao hàng: {{address}}\n\n{{trackingInstructions}}\n\nBƯỚC TIẾP THEO\n- Đội ngũ ORORA sẽ liên hệ xác nhận đơn hàng, phí giao hàng và thời gian giao dự kiến.\n- Email này xác nhận đã tiếp nhận yêu cầu đặt hàng, chưa xác nhận thanh toán.\n- Nếu cần điều chỉnh thông tin hoặc hỗ trợ nhanh, bạn chỉ cần trả lời trực tiếp email này kèm mã đơn {{orderCode}}.\n\nTrân trọng,\nORORA Vietnam\nsales@ororavn.com",
-};
-
-const SAMPLE_PREVIEW_ORDER = {
-  code: "OW_1024C",
-  customer: {
-    name: "Nguyễn Minh Anh",
-    email: "khachhang@example.com",
-    phone: "0901234567",
-    address: "12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh",
-    note: "Giao giờ hành chính giúp mình nhé.",
-  },
-  product: { name: "Gel dưỡng ORORA", variantLabel: "100 ml", unitPrice: 250000, priceText: "250000" },
-  quantity: 1,
-  subtotal: 250000,
-  shippingFee: 30000,
-  totalAmount: 280000,
-  paymentMethod: "cod",
-  paymentStatus: "unpaid",
-  trackingCode: "",
-  createdAt: new Date().toISOString(),
 };
 
 const ORDER_QUICK_TOKENS = [
@@ -65,45 +45,6 @@ const ORDER_QUICK_TOKENS = [
   ["{{trackingCode}}", "Mã vận đơn"],
 ];
 
-function previewOrderVariables(text, order, tracking) {
-  if (!text) return "";
-  const multiProductSummary = Array.isArray(order?.items) && order.items.length > 1
-    ? order.items.map((item) => `${orderProductName(item)} × ${item.quantity}`).join("; ")
-    : order?.product
-      ? orderProductName(order.product)
-      : "Gel dưỡng ORORA 100ml";
-  const unitPriceFormatted = order?.product
-    ? (order.product.unitPrice == null ? formatProductPrice(order.product.priceText) || "ORORA sẽ báo giá" : formatVnd(order.product.unitPrice))
-    : "250.000 đ";
-  const totalFormatted = order ? (order.totalAmount == null ? "ORORA sẽ xác nhận" : formatVnd(order.totalAmount)) : "280.000 đ";
-  const createdAtFormatted = order?.createdAt
-    ? new Date(order.createdAt).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })
-    : new Date().toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
-  const map = {
-    "{{customerName}}": order?.customer?.name || "Nguyễn Minh Anh",
-    "{{orderCode}}": order?.code || "OW_1024C",
-    "{{productName}}": multiProductSummary,
-    "{{variantLabel}}": order?.product?.variantLabel || "100 ml",
-    "{{quantity}}": String(order?.quantity ?? 1),
-    "{{unitPrice}}": unitPriceFormatted,
-    "{{subtotal}}": order ? (order.subtotal == null ? "ORORA sẽ báo giá" : formatVnd(order.subtotal)) : "250.000 đ",
-    "{{shippingFee}}": order ? (order.shippingFee == null ? "ORORA sẽ xác nhận" : formatVnd(order.shippingFee)) : "30.000 đ",
-    "{{totalAmount}}": totalFormatted,
-    "{{total}}": totalFormatted,
-    "{{paymentMethod}}": PAYMENT_LABELS[order?.paymentMethod] || "Thanh toán khi nhận hàng (COD)",
-    "{{paymentStatus}}": order?.paymentStatus === "paid" ? "Đã thanh toán" : "Chưa thanh toán",
-    "{{address}}": order?.customer?.address || "12 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh",
-    "{{phone}}": order?.customer?.phone || "0901234567",
-    "{{email}}": order?.customer?.email || "khachhang@example.com",
-    "{{note}}": order?.customer?.note || "Không có",
-    "{{createdAt}}": createdAtFormatted,
-    "{{trackingUrl}}": tracking.url,
-    "{{trackingInstructions}}": tracking.instructions,
-    "{{trackingCode}}": order?.trackingCode || "",
-  };
-  return Object.entries(map).reduce((acc, [token, val]) => acc.replaceAll(token, val), text);
-}
-
 export default function MailWriter({ mode, onModeChange, value, onChange, onChooseTemplate, request, onApply, onSendPrivate, privateRecipients, privateSendLabel, privateSendDisabled, disabled, allowedModes = ["welcome_auto", "order_auto", "private"], title = "Viết Thư", initialOrderId = "", purpose = "combined", onSent }) {
   const confirm = useConfirm();
   const fieldId = useId();
@@ -118,7 +59,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
   const [cursor, setCursor] = useState(null);
   const [orderId, setOrderId] = useState(initialOrderId);
   const [orderError, setOrderError] = useState("");
-  const [previewMode, setPreviewMode] = useState("desktop");
+  const [previousDraft, setPreviousDraft] = useState(null);
   const attempt = useRef(null);
   const subjectRef = useRef(null);
   const textRef = useRef(null);
@@ -218,9 +159,11 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
           {(onChooseTemplate || mode === "welcome_auto" || mode === "order_auto") && <div className="admin-actions">
             {onChooseTemplate && <button type="button" className="admin-btn" onClick={onChooseTemplate}>Chọn mẫu từ Mẫu Thư</button>}
             {(mode === "welcome_auto" || mode === "order_auto") && <button type="button" className="admin-btn" onClick={() => {
+              setPreviousDraft(value);
               onChange(mode === "order_auto" ? { ...STANDARD_ORDER_DRAFT } : { ...STANDARD_WELCOME_DRAFT });
               setNotice({ text: "Đã nạp nội dung mẫu chuẩn ORORA. Hãy xem trước rồi bấm Lưu để áp dụng." });
             }}>Nạp mẫu chuẩn ORORA</button>}
+            {previousDraft && <button type="button" className="admin-btn" onClick={() => { onChange(previousDraft); setPreviousDraft(null); setNotice(null); }}>Hoàn tác nạp mẫu</button>}
           </div>}
           <div className="admin-field"><label htmlFor={`${fieldId}-writer-subject`}>Tiêu đề thư</label><input ref={subjectRef} id={`${fieldId}-writer-subject`} required maxLength={200} value={value.subject} onFocus={() => { activeFieldRef.current = "subject"; }} onChange={(event) => onChange({ design: value.design, subject: event.target.value, text: value.text })} /></div>
           <div className="admin-field"><label htmlFor={`${fieldId}-writer-text`}>Nội dung thư</label><textarea ref={textRef} id={`${fieldId}-writer-text`} required rows={11} maxLength={20000} value={value.text} onFocus={() => { activeFieldRef.current = "text"; }} onChange={(event) => onChange({ design: value.design, subject: value.subject, text: event.target.value })} /></div>
@@ -235,8 +178,9 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
           <MailHtmlEditor value={value.design} onChange={design => onChange({ subject: value.subject, text: value.text, design })} />
           <MailBodyBlocks text={value.text} onChange={text => onChange({ design: value.design, subject: value.subject, text })} />
           <MailDesignFields kind={mode} value={value.design} onChange={design => onChange({ subject: value.subject, text: value.text, design })} />
-          <details className="admin-filter-panel" open>
-            <summary>Xem trước email chuẩn gửi khách{mode === "order_auto" ? (selectedOrder ? ` (${selectedOrder.code})` : " (dữ liệu minh họa)") : ""}</summary>
+        </div>
+        <MailPreviewPane html={previewHtml} subject={previewSubject} text={previewText}
+          title={mode === "order_auto" ? `Xem trước · ${selectedOrder?.code || "Đơn minh họa"}` : "Xem trước thư"}>
             {mode === "order_auto" && <label>Tra cứu đơn trong bản xem trước
               <select value={previewTracking} onChange={event => setPreviewTracking(event.target.value)}>
                 <option value="current">Theo cấu hình cửa hàng</option>
@@ -244,24 +188,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
                 <option value="off">Tắt tra cứu</option>
               </select>
             </label>}
-            <div className="mail-preview-toolbar">
-              <button type="button" className={`admin-btn${previewMode === "desktop" ? " primary" : ""}`} onClick={() => setPreviewMode("desktop")}>HTML · Máy tính</button>
-              <button type="button" className={`admin-btn${previewMode === "mobile" ? " primary" : ""}`} onClick={() => setPreviewMode("mobile")}>HTML · Điện thoại</button>
-              <button type="button" className={`admin-btn${previewMode === "text" ? " primary" : ""}`} onClick={() => setPreviewMode("text")}>Văn bản thuần</button>
-            </div>
-            {previewMode === "text" ? (
-              <div className="admin-detail-box" style={{ marginTop: 8 }}>
-                <p><strong>Tiêu đề:</strong> {previewSubject}</p>
-                <p style={{ whiteSpace: "pre-wrap", marginTop: 6 }}>{previewText}</p>
-              </div>
-            ) : (
-              <div className={`mail-preview-stage${previewMode === "mobile" ? " is-mobile" : ""}`}>
-                <iframe className="mail-preview-frame" sandbox="" title="Xem trước giao diện email ORORA" srcDoc={previewHtml} />
-              </div>
-            )}
-          </details>
-        </div>
-
+        </MailPreviewPane>
         <div className="mail-writer-side">
           {mode === "private" && privateRecipients}
           {lockedOrder && <div className="mail-recipient-summary"><span>Người nhận</span><strong>{(selectedOrder ? selectedOrder.customer.email || "Đơn chưa có email" : orderError ? "Chưa tải được người nhận" : "Đang tải người nhận…")}</strong><small>Đơn {selectedOrder?.code || "…"} · {selectedOrder?.customer.name}</small></div>}
