@@ -170,6 +170,15 @@ export function applySelectedPatch(
       setProductDetail((c) => ({ ...c, ...patch }));
       return;
     }
+    if (patch.purchaseOptions || patch.trustStrip || patch.recentlyViewed) {
+      setProductDetail((current) => ({
+        ...current,
+        ...(patch.purchaseOptions ? { purchaseOptions: { ...(current.purchaseOptions || {}), ...patch.purchaseOptions } } : {}),
+        ...(patch.trustStrip ? { trustStrip: { ...(current.trustStrip || {}), ...patch.trustStrip } } : {}),
+        ...(patch.recentlyViewed ? { recentlyViewed: { ...(current.recentlyViewed || {}), ...patch.recentlyViewed } } : {}),
+      }));
+      return;
+    }
     if (patch.loadError) {
       setProductDetail((current) => ({
         ...current,

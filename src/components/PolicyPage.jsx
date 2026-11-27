@@ -1,6 +1,7 @@
 import {DEFAULT_RETURN_POLICY} from "../lib/return-policy";
 import {shippingPolicy,shippingOffer,policyDescription} from "../lib/shipping";
 import { Link } from "react-router-dom";
+import { sectionIsEnabled } from "../lib/page-sections";
 import useHomeContent from "../hooks/useHomeContent";
 import { footerCopy } from "../lib/footer-copy";
 import "../styles/order-tracking.css";
@@ -62,7 +63,12 @@ export default function PolicyPage({preview} = {}) {
             <p style={{ whiteSpace: "pre-line" }}>{paymentText}</p>
           ) : (
             <p>
-              Mỗi đơn hàng trên website đều được cấp mã đơn riêng để tra cứu tại trang <Link to="/tra-cuu-don-hang">Tra cứu đơn hàng</Link>. {shippingPolicy(home.shippingSettings?.enabled)}
+              {!preview && sectionIsEnabled(home, "ordertracking") ? (
+                <>Mỗi đơn hàng trên website đều được cấp mã đơn riêng để tra cứu tại trang <Link to="/tra-cuu-don-hang">Tra cứu đơn hàng</Link>. </>
+              ) : (
+                <>Mỗi đơn hàng trên website đều được cấp mã đơn riêng để ORORA xác nhận và hỗ trợ nhanh. </>
+              )}
+              {shippingPolicy(home.shippingSettings?.enabled)}
             </p>
           )}
         </section>

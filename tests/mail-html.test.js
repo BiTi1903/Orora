@@ -190,4 +190,24 @@ test("bank transfer email never invites second payment when paid and never rende
   assert.ok(unpricedHtml.includes("chờ ORORA xác nhận tổng tiền chính xác"));
   assert.ok(!unpricedHtml.includes("img.vietqr.io"));
   assert.ok(!unpricedHtml.includes("0011001234567"));
+
+  const binHtml = renderOrderEmailHtml({
+    subject: "Đơn OW_BIN",
+    text: "Cảm ơn.",
+    order: {
+      code: "OW_BIN",
+      customer: { name: "An", phone: "0901234567", email: "an@example.com", address: "HCM" },
+      product: { name: "Serum ORORA", unitPrice: 300000 },
+      quantity: 1,
+      subtotal: 300000,
+      shippingFee: 0,
+      totalAmount: 300000,
+      paymentMethod: "bank_transfer",
+      paymentStatus: "unpaid",
+      createdAt: "2026-11-26T08:00:00.000Z",
+    },
+    siteOrigin: "https://ororavn.com",
+    bankInfo: { bankCode: "970436", bankName: "Ngân hàng tùy chỉnh", bankAccountNumber: "0011001234567", bankAccountName: "ORORA" },
+  });
+  assert.ok(binHtml.includes("https://img.vietqr.io/image/VCB-0011001234567-compact2.png"));
 });

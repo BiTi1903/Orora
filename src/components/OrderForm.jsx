@@ -126,7 +126,7 @@ export default function OrderForm({ product, cartItems, home, onClose, selection
             window.dispatchEvent(new CustomEvent("orora-cart-remove", { detail: { id: item.productId, variantId: item.variantId, quantity: item.quantity } }));
           }
         } else {
-          window.dispatchEvent(new CustomEvent("orora-cart-remove", { detail: { id: activeProduct.id || activeProduct.slug, variantId, quantity } }));
+          window.dispatchEvent(new CustomEvent("orora-cart-remove", { detail: { id: activeProduct.id || activeProduct.slug, variantId: startVariantId || variantId, quantity } }));
         }
       }
       dirty.current=false;

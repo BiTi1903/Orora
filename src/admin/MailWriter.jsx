@@ -5,6 +5,7 @@ import { PAYMENT_LABELS, formatProductPrice, formatVnd } from "../lib/commerce";
 import { orderProductName } from "../lib/product-options";
 import { effectiveMailState } from "../lib/mail-state";
 import { renderBrandedEmailHtml, renderOrderEmailHtml, renderWelcomeEmailHtml } from "../lib/mail-html";
+import * as api from "../lib/api";
 import { orderRequest, MAIL_STATES } from "./order-api";
 
 const STANDARD_WELCOME_DRAFT = {
@@ -121,6 +122,16 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
   const mailState = effectiveMailState(selectedOrder?.confirmationMail, checkedAt);
   const recovering = mailState === "stuck";
 
+  const [bankInfo, setBankInfo] = useState(null);
+  useEffect(() => {
+    if (mode !== "order_auto" || typeof api.getHomeContent !== "function") return;
+    let alive = true;
+    api.getHomeContent().then((home) => {
+      if (alive) setBankInfo(home?.productDetailStyles?.purchaseOptions || null);
+    }).catch(() => {});
+    return () => { alive = false; };
+  }, [mode]);
+
   const previewSubject = mode === "order_auto" ? previewOrderVariables(value.subject, selectedOrder) : value.subject;
   const previewText = mode === "order_auto" ? previewOrderVariables(value.text, selectedOrder) : value.text;
   const previewHtml = useMemo(() => {
@@ -131,6 +142,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
         text: previewText,
         order: selectedOrder || SAMPLE_PREVIEW_ORDER,
         siteOrigin,
+        bankInfo,
       });
     }
     if (mode === "welcome_auto") {
@@ -147,7 +159,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
       unsubscribeUrl: `${siteOrigin}/api/unsubscribe?id=preview&token=preview`,
       siteOrigin,
     });
-  }, [mode, previewSubject, previewText, selectedOrder]);
+  }, [mode, previewSubject, previewText, selectedOrder, bankInfo]);
 
   useEffect(() => {
     if (!canSendOrder || selectedOrder?.confirmationMail?.state !== "sending") return;

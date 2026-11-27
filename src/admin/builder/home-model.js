@@ -595,9 +595,12 @@ function mergeNestedStyle(base, custom) {
   for (const key of Object.keys(base)) {
     result[key] = { ...(base[key] || {}), ...(custom[key] || {}) };
   }
-  // keep any extra keys from custom
+  // keep any extra keys from custom without corrupting primitives or arrays
   for (const key of Object.keys(custom)) {
-    if (!result[key]) result[key] = { ...custom[key] };
+    if (result[key] === undefined) {
+      const value = custom[key];
+      result[key] = value && typeof value === "object" && !Array.isArray(value) ? { ...value } : value;
+    }
   }
   return result;
 }

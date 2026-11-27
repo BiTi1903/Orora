@@ -1,3 +1,25 @@
+## 27/11/2026 — Khắc phục toàn bộ lỗi Mức độ Cao & Trung bình sau rà soát toàn diện (Backend, Visual Builder, Admin & Storefront)
+
+- **Lý do**: Thực hiện khắc phục toàn bộ các vấn đề mức độ Cao (H1–H6) và Trung bình (M1–M6) phát hiện trong đợt `/review` tổng thể trên nhánh `main` (`7f64a48`).
+- **Thay đổi chính**:
+  - **Backend, Tồn kho & Doanh thu (`server/orders.js`, `server/inventory.js`)**:
+    - Bảo vệ tổng doanh thu theo ngày (`server/orders.js`): chỉ cộng/trừ delta vào `siteAnalyticsDaily/{day}` khi ngày đó đã có `revenueTracked === true`, tránh ghi đè làm mất doanh thu các đơn cũ khi đơn COD ngày cũ đổi trạng thái thanh toán hoặc bị hủy.
+    - Giải phóng đúng `reserved` trên kho gốc từ `reservedTargets` kể cả khi chốt đơn (`paid`/`shipping`) sau lúc admin mới khởi tạo tồn kho theo dung tích (`server/inventory.js`), chấm dứt rò rỉ `reserved`.
+  - **Admin, Đơn hàng & Email (`src/admin/OrdersAdmin.jsx`, `src/lib/mail-html.js`, `src/admin/MailWriter.jsx`, `src/lib/api.js`, `src/admin/builder/SharedBuilderPanels.jsx`)**:
+    - Chuẩn hóa bộ lọc tìm đơn ở client (`OrdersAdmin.jsx`: bỏ dấu tiếng Việt, chuẩn hóa `+84`/`84`, tìm trên toàn bộ `order.items`) để không ẩn mất kết quả tìm trên máy chủ; bọc chống CSV formula injection (`=`, `+`, `-`, `@`, `\t`, `\r`) khi xuất CSV đơn hàng.
+    - Hỗ trợ `bankCode` (mã BIN ngân hàng) trong `renderOrderEmailHtml` và nạp `bankInfo` thật trong `MailWriter.jsx` để bản xem trước email đơn chuyển khoản hiển thị đúng STK & VietQR.
+    - Bổ sung `deleteCategory` trong `src/lib/api.js` và nút xóa danh mục có xác nhận trong Visual Builder (`CategoriesBuilderPanel`).
+  - **An toàn & Độ khớp Visual Builder (`src/admin/builder/VisualBuilder.jsx`, `src/admin/builder/builder-updaters.js`, `src/admin/builder/PreviewFrame.jsx`, `src/admin/builder/home-model.js`, `src/components/Extras.jsx`, `src/components/Hero.jsx`, `src/styles/hero.css`, `src/components/About.jsx`)**:
+    - Bảo toàn `purchaseOptions` (STK ngân hàng, VietQR, nhãn checkout/biên nhận), kiểu Slogan, `navStyles.cart` và `navStyles.surfaces` khi bấm `Khôi phục mặc định mục này` ở `Chi tiết SP` hoặc `Navbar`.
+    - Sửa rơi thay đổi ở 3 nhóm thiết lập `purchaseOptions`, `trustStrip`, `recentlyViewed` trong `builder-updaters.js`; mở lại thông báo lưu thành công trên thanh công cụ Visual Builder; chặn điều hướng `<Link>` trong `PreviewFrame` ở pha capture để không văng khỏi `/admin`; sửa `mergeNestedStyle` giữ nguyên giá trị boolean/string ngoài mặc định.
+    - Gắn `reviewCardStyle(fs.card)` lên thẻ `.feature-card` (`Extras.jsx`), giữ nguyên khoảng trắng & màu chữ tùy chỉnh trên tiêu đề `Hero` (`Hero.jsx`, `hero.css`), bổ sung `textTransform` và `--mobile-font-size` ở `About.jsx`, đồng bộ `navStyles` + `sectionVisibility` vào preview `Collection`.
+  - **Storefront, Công tắc hiển thị, Tìm kiếm & Checkout (`src/components/Navbar.jsx`, `src/components/MobileShopNav.jsx`, `src/components/Footer.jsx`, `src/components/PolicyPage.jsx`, `src/components/OrderSuccessView.jsx`, `src/components/ProductDetail.jsx`, `src/components/AddressSelect.jsx`, `src/lib/catalog-filters.js`, `src/components/Collection.jsx`, `src/components/OrderFormFields.jsx`, `src/components/OrderForm.jsx`)**:
+    - Đồng bộ công tắc tắt `ordertracking` tại cả 5 điểm vào (`Navbar`, `MobileShopNav`, `Footer`, `PolicyPage`, biên nhận `OrderSuccessView`); đồng bộ công tắc `categories` trên dropdown `Navbar`; đồng bộ công tắc `policies` trên `.product-trust-strip` và `shoplinks` trên preview `ProductDetail`.
+    - Thêm `tabIndex={-1}` cho các tùy chọn trong `AddressSelect` để không kẹt phím `Tab`; đồng bộ tìm theo `description` và giữ `?q=` giữa `NavbarQuickSearch` và `Collection`; bổ sung kiểm tra `pattern`/`onBlur` cho SĐT khôi phục từ nháp, khóa checkbox ghi nhớ trong preview và xóa đúng `startVariantId` khỏi giỏ khi đổi dung tích trong checkout.
+- **Kiểm tra đã chạy**:
+  - `npm run check`: toàn bộ 287/287 unit test đạt, ESLint 0 lỗi, Vite build & ngân sách bundle đạt.
+- **Ảnh hưởng database**: Không thay đổi schema hay dữ liệu Firestore; bổ sung thao tác xóa danh mục trong `settings/productCategories`.
+
 ## 26/11/2026 — Khắc phục 4 vấn đề ưu tiên cao: Chống mời chuyển khoản trùng trong email, làm rõ chỉ số thống kê, ghi nguyên tử analytics & khung chờ ngay khi mở thẳng trang sản phẩm
 
 - **Lý do**: Xử lý triệt để 4 phát hiện ưu tiên cao sau kiểm toán thực tế trên email xác nhận đơn, dashboard thống kê, luồng ghi Firestore analytics và tải trực tiếp trang chi tiết sản phẩm.

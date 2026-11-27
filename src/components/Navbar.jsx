@@ -235,7 +235,7 @@ function Navbar({
     const href = resolveHref(item, index);
     if (href === "/#shop" && home.sectionVisibility?.collection !== false) return [
       { label: tr("Tất cả sản phẩm"), href: "/#shop" },
-      ...categories.filter((category) => category.id && category.name).map((category) => ({ label: category.name, href: `/?category=${encodeURIComponent(category.id)}#shop` })),
+      ...((preview || sectionIsEnabled(home, "categories")) ? categories.filter((category) => category.id && category.name).map((category) => ({ label: category.name, href: `/?category=${encodeURIComponent(category.id)}#shop` })) : []),
     ];
     if (href === "/#contact") return [zalo && { label: "Zalo", href: zalo, external: true }, facebook && { label: "Facebook", href: facebook, external: true }, tiktok && { label: "TikTok", href: tiktok, external: true }].filter(Boolean);
     return [];

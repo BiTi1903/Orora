@@ -143,6 +143,17 @@ export async function saveCategory({ id, name }) {
   return categoryId;
 }
 
+export async function deleteCategory(id) {
+  needDb();
+  if (!id || typeof id !== "string") throw new Error("Danh mục không hợp lệ.");
+  await runTransaction(db, async (transaction) => {
+    const ref = doc(db, "settings", "productCategories");
+    const snapshot = await transaction.get(ref);
+    const items = snapshot.data()?.items || [];
+    transaction.set(ref, { items: items.filter((item) => item.id !== id) }, { merge: true });
+  });
+}
+
 export async function setProductCategory(id, categoryId) {
   needDb();
   if (!id || typeof categoryId !== "string") throw new Error("Danh mục không hợp lệ.");

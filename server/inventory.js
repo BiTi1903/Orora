@@ -138,6 +138,7 @@ export async function settleOrderInventory(tx, db, order, nextPaymentStatus, ord
     if (current.quantity < qty) throw fail(`Tồn kho chỉ còn ${current.quantity}, không đủ ${qty} sản phẩm của đơn. Kiểm tra và cập nhật Kiểm Hàng trước.`);
   });
   const updatedAt = new Date();
+  const settledIds = new Set(entries.map(([docId]) => docId));
   let totalDeducted = 0;
   entries.forEach(([docId, qty]) => {
     totalDeducted += qty;
@@ -152,6 +153,21 @@ export async function settleOrderInventory(tx, db, order, nextPaymentStatus, ord
     const movementId = entries.length === 1 ? `order-${orderId}` : `order-${orderId}-${docId}`;
     tx.set(db.collection("inventoryMovements").doc(movementId), { type: "order_out", productId: docId, orderId, orderCode: order.code || "", change: -qty, before: current.quantity, after: current.quantity - qty, createdAt: updatedAt, actor: userId });
   });
+  if (wasWaiting && recordedTargets.length) {
+    recordedTargets.forEach(([docId, releaseQty]) => {
+      if (settledIds.has(docId)) return;
+      const stock = snapById.get(docId);
+      const current = stock?.data();
+      if (releaseQty > 0 && stock?.exists && Number.isSafeInteger(current?.reserved)) {
+        tx.set(db.collection("inventory").doc(docId), {
+          reserved: Math.max(0, current.reserved - releaseQty),
+          version: (current.version || 0) + 1,
+          updatedAt,
+          updatedBy: userId,
+        }, { merge: true });
+      }
+    });
+  }
   return {
     inventory: entries.length === 1
       ? { state: "deducted", productId: entries[0][0], quantity: entries[0][1], deductedAt: updatedAt }

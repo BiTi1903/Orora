@@ -187,6 +187,7 @@ export function Features({
           const card = (
             <article
               className={`feature-card ${selectedClass(cardKey)}`}
+              style={reviewCardStyle(fs.card)}
               data-builder-key={preview ? cardKey : undefined}
               onClick={select(cardKey)}
             >

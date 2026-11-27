@@ -554,17 +554,43 @@ export function CategoriesBuilderPanel() {
         <h3>Danh mục hiện có ({categories.length})</h3>
         <div className="admin-actions" style={{ marginTop: 8 }}>
           {categories.map((cat) => (
-            <button
-              type="button"
-              className="admin-btn"
-              key={cat.id}
-              onClick={() => {
-                setEditId(cat.id);
-                setName(cat.name);
-              }}
-            >
-              {cat.name} · Sửa
-            </button>
+            <span key={cat.id} style={{ display: "inline-flex", gap: 4, alignItems: "center" }}>
+              <button
+                type="button"
+                className="admin-btn"
+                disabled={busy}
+                onClick={() => {
+                  setEditId(cat.id);
+                  setName(cat.name);
+                }}
+              >
+                {cat.name} · Sửa
+              </button>
+              {api.deleteCategory && (
+                <button
+                  type="button"
+                  className="admin-btn danger"
+                  aria-label={`Xóa danh mục ${cat.name}`}
+                  disabled={busy}
+                  onClick={async () => {
+                    if (!window.confirm(`Xóa danh mục "${cat.name}"? Sản phẩm thuộc danh mục này vẫn được giữ.`)) return;
+                    setBusy(true);
+                    setNotice(null);
+                    try {
+                      await api.deleteCategory(cat.id);
+                      if (editId === cat.id) { setEditId(""); setName(""); }
+                      setNotice({ text: `Đã xóa danh mục "${cat.name}".` });
+                    } catch (cause) {
+                      setNotice({ error: true, text: api.explainError ? api.explainError(cause) : cause?.message || "Chưa xóa được danh mục." });
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                >
+                  ×
+                </button>
+              )}
+            </span>
           ))}
           {!categories.length && <p className="admin-muted">Chưa có danh mục nào.</p>}
         </div>

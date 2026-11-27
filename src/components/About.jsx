@@ -89,6 +89,8 @@ function createTextStyle(style = {}) {
         ? `${Number(s.paddingLeft)}px`
         : undefined,
 
+    textTransform: s.textTransform || undefined,
+    ...(s.mobileFontSize != null ? { "--mobile-font-size": `${Number(s.mobileFontSize)}px` } : {}),
     maxWidth,
   };
 }

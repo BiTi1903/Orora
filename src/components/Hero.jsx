@@ -189,6 +189,7 @@ function Hero({
           aria-label={c.heroTitle || undefined}
           key={c.heroTitle}
           style={toCss(hs.title,{responsive:true})}
+          data-custom-color={hs.title?.color ? "true" : undefined}
           data-builder-key={preview ? "title" : undefined}
           onClick={select("title")}
         >
@@ -196,12 +197,12 @@ function Hero({
             {Array.from(c.heroTitle || "").map((ch, n) => (
               <span
                 key={n}
-                className="hero-letter"
+                className={ch === " " ? "hero-letter hero-letter-space" : "hero-letter"}
                 style={{
                   "--letter-delay": preview ? "0s" : `${0.2 + n * 0.09}s`,
                 }}
               >
-                {ch}
+                {ch === " " ? "\u00A0" : ch}
               </span>
             ))}
           </span>

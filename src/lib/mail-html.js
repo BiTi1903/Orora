@@ -311,14 +311,15 @@ function renderBankTransferBlock(order, bankInfo) {
       </tr>
     </table>`;
   }
+  const bankCode = String(bankInfo?.bankCode || "").trim();
   const bankName = String(bankInfo?.bankName || "").trim();
   const accountNumber = String(bankInfo?.bankAccountNumber || "").trim();
   const accountName = String(bankInfo?.bankAccountName || "").trim();
   const transferNoteTemplate = String(bankInfo?.bankTransferNote || "").trim() || "Thanh toán đơn {{code}}";
   const transferNote = transferNoteTemplate.replace(/\{\{code\}\}/g, order?.code || "");
-  const hasBankDetails = Boolean(bankName && accountNumber && accountName);
+  const hasBankDetails = Boolean((bankCode || bankName) && accountNumber && accountName);
   const qrUrl = hasBankDetails
-    ? vietQrUrl({ bankName, accountNumber, accountName, amount, transferNote })
+    ? vietQrUrl({ bankName: bankCode || bankName, accountNumber, accountName, amount, transferNote })
     : "";
 
   if (!hasBankDetails) {

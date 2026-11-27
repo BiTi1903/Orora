@@ -31,7 +31,7 @@ export function filterCatalog(products,value={}){
  const sequence=product=>Number(product.publicId||product.number||product.id)||0;
  const rows=products.map(product=>({product,prices:productCatalogPrices(product).values})).filter(({product,prices})=>{
   if(s.category&&product.categoryId!==s.category)return false;
-  if(query&&!normalizeSearch([product.name,product.id,product.number,product.publicId].join(' ')).includes(query))return false;
+  if(query&&!normalizeSearch([product.name,product.description,product.id,product.number,product.publicId].join(' ')).includes(query))return false;
   if(s.volume&&!productVolumeOptions(product).some(option=>volumeKey(option.label)===s.volume))return false;
   if(s.price==='contact')return prices.length===0;
   if(s.price==='priced'&&!prices.length)return false;

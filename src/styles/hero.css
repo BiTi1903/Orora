@@ -157,6 +157,17 @@
     calc(var(--aurora-i, 0) * -0.45s);
 }
 
+.hero-letter-space {
+  min-width: 0.28em;
+}
+
+.hero-title[data-custom-color="true"] .hero-letter {
+  background: none;
+  color: inherit;
+  -webkit-text-fill-color: currentColor;
+  animation: letterUp 1.1s var(--ease) both;
+}
+
 .hero-letter:nth-child(1)  { --aurora-i: 0; }
 .hero-letter:nth-child(2)  { --aurora-i: 1; }
 .hero-letter:nth-child(3)  { --aurora-i: 2; }

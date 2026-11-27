@@ -318,7 +318,7 @@ function Collection({
   const rawProducts=preview?sampleProducts||[]:liveProducts;
   const availableProducts=excludeId?rawProducts.filter(product=>product.id!==excludeId&&product.slug!==excludeId):rawProducts;
   const catalog=withProductIdentity(availableProducts);
-  const effectiveFilters=filtering?catalogFilters({...savedFilters,category:categoryId,...(filterSettings.showSearch===false?{q:''}:{}),...(filterSettings.showPrice===false?{min:'',max:'',price:'all'}:{}),...(filterSettings.showVolume===false?{volume:''}:{})}):catalogFilters({category:categoryId});
+  const effectiveFilters=filtering?catalogFilters({...savedFilters,category:categoryId,...(filterSettings.showPrice===false?{min:'',max:'',price:'all'}:{}),...(filterSettings.showVolume===false?{volume:''}:{})}):catalogFilters({category:categoryId,q:savedFilters.q});
   const products=filterCatalog(catalog,effectiveFilters);
   const requestedView=savedFilters.view==='auto'?(filterSettings.layout||'auto'):savedFilters.view;
   const grid=filtering&&(requestedView==='grid'||(requestedView==='auto'&&(activeCatalogFilters(effectiveFilters)>0||availableProducts.length>12)));

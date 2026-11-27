@@ -429,7 +429,28 @@ export default function VisualBuilder({
       title: "Khôi phục mặc định", confirmLabel: "Khôi phục", danger: true,
     })) return;
     const field = activeSection === "productdetail" ? "productDetail" : activeSection;
-    resetField(field, (_current, fallback) => fallback);
+    resetField(field, (current, fallback) => {
+      if (field === "productDetail" && current) {
+        return {
+          ...fallback,
+          ...(current.purchaseOptions ? { purchaseOptions: current.purchaseOptions } : {}),
+          ...(current.sloganTitle ? { sloganTitle: current.sloganTitle } : {}),
+          ...(current.sloganBody ? { sloganBody: current.sloganBody } : {}),
+          ...(current.sloganCard ? { sloganCard: current.sloganCard } : {}),
+        };
+      }
+      if (field === "navbar" && current?.navStyles) {
+        return {
+          ...fallback,
+          navStyles: {
+            ...(fallback.navStyles || {}),
+            ...(current.navStyles.cart ? { cart: current.navStyles.cart } : {}),
+            ...(current.navStyles.surfaces ? { surfaces: current.navStyles.surfaces } : {}),
+          },
+        };
+      }
+      return fallback;
+    });
     dirtySections.current.add(activeSection);
     resetSections.current.add(activeSection);
     setEditVersion(value => value + 1);
@@ -562,7 +583,7 @@ export default function VisualBuilder({
                 ? "Có thay đổi chưa lưu"
                 : "Các thay đổi đã được lưu"}
           </span>
-          {message?.type === "error" && (
+          {message?.text && (
             <span
               className={message.type === "success" ? "builder-message success" : "builder-message error"}
             >
@@ -873,7 +894,7 @@ export default function VisualBuilder({
             ) : activeSection === "collection" ? (
               <Collection
                 preview
-                previewData={collection}
+                previewData={{ ...collection, navStyles: navbar.navStyles, sectionVisibility }}
                 selectedElement={selected}
                 onSelect={selectElement}
                 sampleProducts={sampleProducts.slice(0, 3)}

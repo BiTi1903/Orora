@@ -201,7 +201,19 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
       setSortDir(col === "date" || col === "amount" ? "desc" : "asc");
     }
   };
-  const filteredOrders = filterOrderDetails(orders.filter((order) => matchesMail(order) && (statusFilter === "all" || order.status === statusFilter) && (!customerEmail || String(order.customer.email || "").trim().toLowerCase() === customerEmail) && [order.id, order.code, order.customer.name, order.customer.phone, order.customer.email, orderProductName(order.product)].some((value) => String(value || "").toLocaleLowerCase("vi").includes(query))), filters);
+  const foldText = (v) => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
+  const foldPhone = (v) => String(v || "").replace(/\D+/g, "").replace(/^84/, "0");
+  const foldedQuery = foldText(query);
+  const digitQuery = foldPhone(query);
+  const filteredOrders = filterOrderDetails(orders.filter((order) => {
+    if (!matchesMail(order) || (statusFilter !== "all" && order.status !== statusFilter)) return false;
+    if (customerEmail && String(order.customer.email || "").trim().toLowerCase() !== customerEmail) return false;
+    if (!foldedQuery) return true;
+    const itemNames = Array.isArray(order.items) ? order.items.map((it) => orderProductName(it)) : [];
+    const fields = [order.id, order.code, order.customer.name, order.customer.phone, order.customer.email, orderProductName(order.product), ...itemNames];
+    if (fields.some((value) => foldText(value).includes(foldedQuery))) return true;
+    return digitQuery.length >= 3 && foldPhone(order.customer.phone).includes(digitQuery);
+  }), filters);
   const visibleOrders = [...filteredOrders].sort((a, b) => {
     const dir = sortDir === "asc" ? 1 : -1;
     const textCmp = (x, y) => String(x || "").localeCompare(String(y || ""), "vi", { sensitivity: "base" });
@@ -252,7 +264,11 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
   };
   const exportCsv = () => {
     if (!visibleOrders.length) return setNotice({ error: true, text: "Không có đơn hàng nào để xuất CSV." });
-    const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const esc = (v) => {
+      const s = String(v ?? "");
+      const safe = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+      return `"${safe.replace(/"/g, '""')}"`;
+    };
     const headers = ["Mã đơn", "Ngày đặt", "Trạng thái", "Khách hàng", "SĐT", "Email", "Địa chỉ", "Sản phẩm", "SL", "Tạm tính", "Phí ship", "Tổng tiền", "Phương thức", "Thanh toán", "Mã vận đơn", "Ghi chú khách", "Ghi chú nội bộ"];
     const rows = visibleOrders.map((o) => [
       o.code,

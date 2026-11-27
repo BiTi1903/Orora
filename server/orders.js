@@ -479,10 +479,20 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
         let dailyRef = null;
         let dailySnap = null;
         let revenueDay = "";
+        let dayOrdersSnap = null;
         if ((deltaAmount || deltaOrders || deltaUnpriced) && Number.isFinite(orderTime) && orderTime > 0) {
           revenueDay = analyticsDay(orderTime);
           dailyRef = db.collection("siteAnalyticsDaily").doc(revenueDay);
           dailySnap = await tx.get(dailyRef);
+          if (dailySnap?.data()?.revenueTracked !== true) {
+            const dayStart = new Date(`${revenueDay}T00:00:00+07:00`).getTime();
+            dayOrdersSnap = await tx.get(
+              db.collection("orders")
+                .where("createdAt", ">=", new Date(dayStart))
+                .where("createdAt", "<", new Date(dayStart + 86400000))
+                .limit(500),
+            );
+          }
         }
         const stockPatch = await settleOrderInventory(tx, db, cur, nextPaymentStatus, body.id, user.uid, nextStatus);
         const patch = { ...stockPatch, ...(body.status !== undefined ? { status: body.status, ...(body.status === "completed" ? { paymentStatus: "paid" } : {}) } : { paymentStatus: body.paymentStatus }), updatedAt: new Date(clock()), updatedBy: user.uid };
@@ -490,13 +500,25 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
         tx.set(ref, patch, { merge: true });
         if (dailyRef) {
           const prevDaily = dailySnap?.data() || {};
-          tx.set(dailyRef, {
-            day: revenueDay,
-            paidAmount: Math.max(0, (Number.isSafeInteger(prevDaily.paidAmount) ? prevDaily.paidAmount : 0) + deltaAmount),
-            paidOrders: Math.max(0, (Number.isSafeInteger(prevDaily.paidOrders) ? prevDaily.paidOrders : 0) + deltaOrders),
-            unpricedPaid: Math.max(0, (Number.isSafeInteger(prevDaily.unpricedPaid) ? prevDaily.unpricedPaid : 0) + deltaUnpriced),
-            revenueTracked: true,
-          }, { merge: true });
+          if (prevDaily.revenueTracked === true) {
+            tx.set(dailyRef, {
+              day: revenueDay,
+              paidAmount: Math.max(0, (Number.isSafeInteger(prevDaily.paidAmount) ? prevDaily.paidAmount : 0) + deltaAmount),
+              paidOrders: Math.max(0, (Number.isSafeInteger(prevDaily.paidOrders) ? prevDaily.paidOrders : 0) + deltaOrders),
+              unpricedPaid: Math.max(0, (Number.isSafeInteger(prevDaily.unpricedPaid) ? prevDaily.unpricedPaid : 0) + deltaUnpriced),
+              revenueTracked: true,
+            }, { merge: true });
+          } else if (dayOrdersSnap && dayOrdersSnap.docs.length < 500) {
+            let paidAmount = 0, paidOrders = 0, unpricedPaid = 0;
+            for (const doc of dayOrdersSnap.docs) {
+              const item = doc.id === body.id ? { ...cur, ...patch } : doc.data();
+              const contrib = paidContribution(item);
+              paidAmount += contrib.paidAmount;
+              paidOrders += contrib.paidOrders;
+              unpricedPaid += contrib.unpricedPaid;
+            }
+            tx.set(dailyRef, { day: revenueDay, paidAmount, paidOrders, unpricedPaid, revenueTracked: true }, { merge: true });
+          }
         }
         return { inventory: stockPatch.inventory || cur.inventory || null, activity };
       });

@@ -909,12 +909,13 @@ function ProductDetail({
             )}
             {(() => {
               const trustStrip = ps.trustStrip || {};
-              const trustEnabled = trustStrip.enabled !== false;
+              const policiesEnabled = sectionIsEnabled(home, "policies");
+              const trustEnabled = trustStrip.enabled !== false && policiesEnabled;
               if (!trustEnabled && !preview) return null;
               const customLines = typeof trustStrip.customText === "string"
                 ? trustStrip.customText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
                 : [];
-              const policyTitles = Array.isArray(home.productPolicies)
+              const policyTitles = policiesEnabled && Array.isArray(home.productPolicies)
                 ? home.productPolicies.filter((policy) => policy?.enabled !== false && policy?.title?.trim()).map((policy) => policy.title.trim())
                 : [];
               const sourceLabels = customLines.length
