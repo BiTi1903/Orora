@@ -1,3 +1,4 @@
+import { sameMailDesign } from "../src/lib/mail-design.js";
 import { normalizeTemplateKind } from "../src/lib/template-kinds.js";
 export const templateIdentity = (data = {}) => ({ templateId: data.templateId || "", templateRevision: data.templateRevision || 0, templateName: data.templateName || "", templateKind: data.templateKind || "" });
 export async function captureTemplate(tx, db, reference, message, kind) {
@@ -5,7 +6,7 @@ export async function captureTemplate(tx, db, reference, message, kind) {
   if (typeof reference.id !== "string" || !/^[a-zA-Z0-9_-]{1,100}$/.test(reference.id) || !Number.isInteger(reference.revision) || reference.revision < 1) throw Object.assign(new Error("template_changed"), { status: 409 });
   const saved = await tx.get(db.collection("newsletterTemplates").doc(reference.id));
   const data = saved.data();
-  if (!saved.exists || (data.revision || 1) !== reference.revision || !(Array.isArray(kind) ? kind : [kind]).some((allowed) => normalizeTemplateKind(data.kind) === normalizeTemplateKind(allowed)) || data.subject !== message.subject || data.text !== message.text) throw Object.assign(new Error("template_changed"), { status: 409 });
+  if (!saved.exists || (data.revision || 1) !== reference.revision || !(Array.isArray(kind) ? kind : [kind]).some((allowed) => normalizeTemplateKind(data.kind) === normalizeTemplateKind(allowed)) || data.subject !== message.subject || data.text !== message.text || !sameMailDesign(data.design, message.design)) throw Object.assign(new Error("template_changed"), { status: 409 });
   return { templateId: saved.id, templateRevision: data.revision || 1, templateName: data.name, templateKind: normalizeTemplateKind(data.kind) };
 }
 export async function recordTemplateUse(tx, db, snapshot) {

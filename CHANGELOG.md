@@ -1,3 +1,9 @@
+## 27/11/2026 — Chỉnh khung và màu thư trong admin
+
+- Thêm bộ chỉnh nền, viền, góc, chiều rộng khung, màu nút và chữ nội dung trong Gửi thư, thư tự động và kho Mẫu Thư. Bản xem trước và thư HTML gửi đi dùng cùng cấu hình.
+- Kiểm tra lint, build, 78 bài kiểm tra email/newsletter và hai lượt Playwright trên khung nhìn 390/1440 px đều đạt. Chưa gửi thư ra hộp thư thật.
+- Lưu thêm trường design vào tài liệu mẫu hoặc chiến dịch khi admin lưu. Mẫu cũ dùng giao diện mặc định, không cần chuyển đổi dữ liệu.
+
 ## 27/11/2026 — Sửa chớp trang chi tiết sản phẩm ở EN và JP
 
 - ProductDetail giữ lại sản phẩm đã dịch giữa các lần rê chuột và cuộn để tránh khởi động lại đo kích thước và hiệu ứng xuất hiện.

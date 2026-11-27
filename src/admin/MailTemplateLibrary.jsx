@@ -1,4 +1,6 @@
 import { useConfirm } from "./confirm-context";
+import { renderWelcomeEmailHtml, renderOrderEmailHtml, renderBrandedEmailHtml } from "../lib/mail-html";
+import MailDesignFields from "./MailDesignFields";
 import { TEMPLATE_KINDS, templateUsageLabel } from "../lib/mail-templates";
 import { useEffect, useRef, useState } from "react";
 import MailPreviewDialog from "./MailPreviewDialog";
@@ -40,7 +42,7 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
     }
     load(); return () => { alive = false; };
   }, [request, version, active]);
-  const edit = (item) => { pendingId.current = null; setId(item.id); setDraft({ name: item.name, kind: item.kind, categoryId: item.categoryId || "", subject: item.subject, text: item.text }); setPreview(null); setNotice({ text: "Đang chỉnh mẫu đã lưu." }); };
+  const edit = (item) => { pendingId.current = null; setId(item.id); setDraft({ name: item.name, kind: item.kind, categoryId: item.categoryId || "", design: item.design, subject: item.subject, text: item.text }); setPreview(null); setNotice({ text: "Đang chỉnh mẫu đã lưu." }); };
   const remove = async (item) => {
     if (busy || !await confirm(`Xóa mẫu “${item.name}” khỏi kho? Mẫu tự động và lịch sử thư đã gửi vẫn được giữ.`, { title: "Xóa mẫu thư", confirmLabel: "Xóa", danger: true })) return;
     setBusy(true);setBusyAction(`delete:${item.id}`);setNotice(null);
@@ -72,6 +74,12 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
         <details><summary>Thêm loại mẫu</summary><div className="admin-field"><label htmlFor="library-new-type">Tên loại mẫu mới</label><input id="library-new-type" maxLength={60} disabled={busy} value={newType} onChange={(event) => setNewType(event.target.value)} /></div><button type="button" className="admin-btn" aria-busy={busy && busyAction === "type"} disabled={busy || !newType.trim()} onClick={async () => { setBusy(true);setBusyAction("type");try { const result = await request({ action: "addTemplateType", name: newType }); setTypes((items) => [...new Map([...items, result.type].map((item) => [item.id, item])).values()]); setDraft({ ...draft, kind: "private", categoryId: result.type.id }); setNewType(""); setNotice({ text: result.message }); } catch (error) { setNotice({ error: true, text: error.message }); } finally { setBusy(false);setBusyAction(""); } }}>Thêm loại</button></details>
         <div className="admin-field"><label htmlFor="library-subject">Tiêu đề mẫu thư</label><input id="library-subject" required maxLength={200} disabled={busy} value={draft.subject} onChange={(event) => setDraft({ ...draft, subject: event.target.value })} /></div>
         <div className="admin-field"><label htmlFor="library-text">Nội dung mẫu thư</label><textarea id="library-text" required rows={10} maxLength={20000} disabled={busy} value={draft.text} onChange={(event) => setDraft({ ...draft, text: event.target.value })} /></div>
+        <MailDesignFields value={draft.design} disabled={busy} onChange={design => setDraft({ ...draft, design })} />
+        <details className="admin-filter-panel"><summary>Xem trước giao diện mẫu</summary>
+          <iframe className="mail-preview-frame" sandbox="" title="Giao diện mẫu thư đang chỉnh" srcDoc={
+            (draft.kind === "order_auto" ? renderOrderEmailHtml : draft.kind === "welcome_auto" ? renderWelcomeEmailHtml : renderBrandedEmailHtml)(draft)
+          } />
+        </details>
         {draft.kind !== "welcome_auto" && <p className="admin-muted">Biến đơn hàng: {"{{customerName}}, {{orderCode}}, {{productName}}, {{variantLabel}}, {{quantity}}, {{subtotal}}, {{paymentMethod}}, {{address}}, {{phone}}, {{email}}"}.</p>}
         <div className="admin-actions"><button className="admin-btn primary" aria-busy={busy && busyAction === "save"} disabled={busy}>{id ? "Lưu thay đổi mẫu" : "Lưu mẫu thư"}</button><button type="button" className="admin-btn" disabled={busy} onClick={() => { pendingId.current = null; setId(null); setDraft(empty); }}>Tạo mẫu mới</button></div>
       </form>

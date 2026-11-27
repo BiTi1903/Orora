@@ -1,4 +1,5 @@
 import { orderTrackingMail, trackingTemplate } from "../lib/order-tracking-mail.js";
+import MailDesignFields from "./MailDesignFields";
 import { useConfirm } from "./confirm-context";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { auth } from "../lib/firebaseAuth";
@@ -146,7 +147,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
     const siteOrigin = typeof window !== "undefined" ? window.location.origin : "https://ororavn.com";
     if (mode === "order_auto") {
       return renderOrderEmailHtml({
-        subject: previewSubject,
+        design: value.design, subject: previewSubject,
         text: previewText,
         order: selectedOrder || SAMPLE_PREVIEW_ORDER,
         siteOrigin,
@@ -155,19 +156,19 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
     }
     if (mode === "welcome_auto") {
       return renderWelcomeEmailHtml({
-        subject: previewSubject,
+        design: value.design, subject: previewSubject,
         text: previewText,
         unsubscribeUrl: `${siteOrigin}/api/unsubscribe?id=preview&token=preview`,
         siteOrigin,
       });
     }
     return renderBrandedEmailHtml({
-      subject: previewSubject,
+      design: value.design, subject: previewSubject,
       text: previewText,
       unsubscribeUrl: `${siteOrigin}/api/unsubscribe?id=preview&token=preview`,
       siteOrigin,
     });
-  }, [mode, previewSubject, previewText, selectedOrder, bankInfo, trackingEnabled, tracking.url]);
+  }, [value.design, mode, previewSubject, previewText, selectedOrder, bankInfo, trackingEnabled, tracking.url]);
 
   useEffect(() => {
     if (!canSendOrder || selectedOrder?.confirmationMail?.state !== "sending") return;
@@ -197,7 +198,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
     const start = el && typeof el.selectionStart === "number" ? el.selectionStart : current.length;
     const end = el && typeof el.selectionEnd === "number" ? el.selectionEnd : current.length;
     const updated = `${current.slice(0, start)}${token}${current.slice(end)}`;
-    onChange(field === "subject" ? { subject: updated, text: value.text } : { subject: value.subject, text: updated });
+    onChange({ design: value.design, subject: value.subject, text: value.text, [field]: updated });
     requestAnimationFrame(() => {
       if (!el) return;
       el.focus();
@@ -219,8 +220,8 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
               setNotice({ text: "Đã nạp nội dung mẫu chuẩn ORORA. Hãy xem trước rồi bấm Lưu để áp dụng." });
             }}>Nạp mẫu chuẩn ORORA</button>}
           </div>}
-          <div className="admin-field"><label htmlFor={`${fieldId}-writer-subject`}>Tiêu đề thư</label><input ref={subjectRef} id={`${fieldId}-writer-subject`} required maxLength={200} value={value.subject} onFocus={() => { activeFieldRef.current = "subject"; }} onChange={(event) => onChange({ subject: event.target.value, text: value.text })} /></div>
-          <div className="admin-field"><label htmlFor={`${fieldId}-writer-text`}>Nội dung thư</label><textarea ref={textRef} id={`${fieldId}-writer-text`} required rows={11} maxLength={20000} value={value.text} onFocus={() => { activeFieldRef.current = "text"; }} onChange={(event) => onChange({ subject: value.subject, text: event.target.value })} /></div>
+          <div className="admin-field"><label htmlFor={`${fieldId}-writer-subject`}>Tiêu đề thư</label><input ref={subjectRef} id={`${fieldId}-writer-subject`} required maxLength={200} value={value.subject} onFocus={() => { activeFieldRef.current = "subject"; }} onChange={(event) => onChange({ design: value.design, subject: event.target.value, text: value.text })} /></div>
+          <div className="admin-field"><label htmlFor={`${fieldId}-writer-text`}>Nội dung thư</label><textarea ref={textRef} id={`${fieldId}-writer-text`} required rows={11} maxLength={20000} value={value.text} onFocus={() => { activeFieldRef.current = "text"; }} onChange={(event) => onChange({ design: value.design, subject: value.subject, text: event.target.value })} /></div>
           {mode === "order_auto" && <div className="admin-detail-box">
             <h3>Chèn nhanh thông tin đơn hàng (tại vị trí con trỏ)</h3>
             <div className="mail-token-bar">
@@ -229,6 +230,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
               ))}
             </div>
           </div>}
+          <MailDesignFields value={value.design} onChange={design => onChange({ subject: value.subject, text: value.text, design })} />
           <details className="admin-filter-panel" open>
             <summary>Xem trước email chuẩn gửi khách{mode === "order_auto" ? (selectedOrder ? ` (${selectedOrder.code})` : " (dữ liệu minh họa)") : ""}</summary>
             {mode === "order_auto" && <label>Tra cứu đơn trong bản xem trước
@@ -288,7 +290,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
               perform(async () => {
                 const signature = JSON.stringify({ orderId, value });
                 if (attempt.current?.signature !== signature) attempt.current = { signature, id: crypto.randomUUID() };
-                const result = await orderRequest({ action: "sendOrderEmail", id: orderId, requestId: attempt.current.id, confirmResend, recoverOnly: recovering, message: { subject: value.subject, text: value.text }, ...(value.templateRef ? { templateRef: value.templateRef } : {}) });
+                const result = await orderRequest({ action: "sendOrderEmail", id: orderId, requestId: attempt.current.id, confirmResend, recoverOnly: recovering, message: { design: value.design, subject: value.subject, text: value.text }, ...(value.templateRef ? { templateRef: value.templateRef } : {}) });
                 attempt.current = null;
                 const current = await orderRequest(null, { id: orderId }); setOrders((items) => items.map((item) => item.id === orderId ? current.order : item));
                 onSent?.(current.order);
@@ -299,7 +301,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
 
           {request && <details className="writer-test"><summary>Gửi thử tới email của bạn</summary><form className="writer-block admin-form" aria-busy={localBusy && busyAction === "test"} onSubmit={(event) => {
             event.preventDefault();
-            perform(() => request({ action: "sendTest", subject: value.subject, text: value.text, testEmail, mailType: mode === "order_auto" ? "order" : mode === "welcome_auto" ? "registration" : "private", ...(mode === "order_auto" && orderId ? { orderId } : {}) }), "test");
+            perform(() => request({ action: "sendTest", design: value.design, subject: value.subject, text: value.text, testEmail, mailType: mode === "order_auto" ? "order" : mode === "welcome_auto" ? "registration" : "private", ...(mode === "order_auto" && orderId ? { orderId } : {}) }), "test");
           }}><div className="admin-field"><label htmlFor={`${fieldId}-writer-test-email`}>Email nhận thư thử</label><input id={`${fieldId}-writer-test-email`} type="email" required maxLength={254} value={testEmail} onChange={(event) => setTestEmail(event.target.value)} /></div><p className="admin-muted">Chỉ gửi tới email thử này.</p><button className="admin-btn" aria-busy={localBusy && busyAction === "test"} disabled={!valid}>Gửi thử</button></form></details>}
         </div>
       </div>

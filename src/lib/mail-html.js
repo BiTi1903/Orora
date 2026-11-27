@@ -1,3 +1,4 @@
+import { mailDesign } from "./mail-design.js";
 import { orderTrackingMail } from "./order-tracking-mail.js";
 import { PAYMENT_LABELS, formatProductPrice, formatVnd } from "./commerce.js";
 import { orderProductName } from "./product-options.js";
@@ -62,7 +63,8 @@ function stripUnsubscribeFooter(text, unsubscribeUrl) {
   return body;
 }
 
-export function formatBodyHtml(text, { unsubscribeUrl = "" } = {}) {
+export function formatBodyHtml(text, { unsubscribeUrl = "", design } = {}) {
+  const frame = mailDesign(design);
   const cleaned = stripUnsubscribeFooter(text, unsubscribeUrl);
   if (!cleaned) return "";
   const blocks = cleaned.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
@@ -74,7 +76,7 @@ export function formatBodyHtml(text, { unsubscribeUrl = "" } = {}) {
         const content = linkifyEscaped(escapeHtml(line.replace(/^[-•*]\s+/, "")));
         return `<tr>
           <td valign="top" width="18" style="padding:3px 0;color:#b8446d;font-size:15px;line-height:1.6;font-family:${FONT_SANS};">&bull;</td>
-          <td valign="top" style="padding:3px 0;color:#4a313d;font-size:14px;line-height:1.65;font-family:${FONT_SANS};">${content}</td>
+          <td valign="top" style="padding:3px 0;color:${design ? frame.text : "#4a313d"};font-size:${design ? frame.fontSize : 14}px;line-height:1.65;font-family:${FONT_SANS};">${content}</td>
         </tr>`;
       }).join("");
       return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px 0;">${items}</table>`;
@@ -84,7 +86,7 @@ export function formatBodyHtml(text, { unsubscribeUrl = "" } = {}) {
       return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:14px 0;"><tr><td style="border-top:1px solid #f0dde5;font-size:0;line-height:0;">&nbsp;</td></tr></table>`;
     }
     const renderedLines = lines.map((line) => linkifyEscaped(escapeHtml(line))).join("<br />");
-    return `<p style="margin:0 0 14px 0;color:#3f2732;font-size:15px;line-height:1.72;font-family:${FONT_SANS};">${renderedLines}</p>`;
+    return `<p style="margin:0 0 14px 0;color:${frame.text};font-size:${frame.fontSize}px;line-height:1.72;font-family:${FONT_SANS};">${renderedLines}</p>`;
   }).join("");
 }
 
@@ -94,11 +96,12 @@ function buildPreheader(text) {
   return `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f9f3f6;opacity:0;">${escapeHtml(preview)}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>`;
 }
 
-function renderEmailShell({ subject, preheader, eyebrow, bodyHtml, siteOrigin, contactEmail, unsubscribeUrl, footerNote }) {
+function renderEmailShell({ design, subject, preheader, eyebrow, bodyHtml, siteOrigin, contactEmail, unsubscribeUrl, footerNote }) {
   const origin = safeOrigin(siteOrigin);
   const email = contactEmail || DEFAULT_CONTACT_EMAIL;
   const policyUrl = `${origin}/chinh-sach`;
   const safeUnsub = safeHref(unsubscribeUrl);
+  const frame = mailDesign(design);
   const year = new Date().getFullYear();
 
   return `<!DOCTYPE html>
@@ -111,15 +114,15 @@ function renderEmailShell({ subject, preheader, eyebrow, bodyHtml, siteOrigin, c
   <meta name="supported-color-schemes" content="light" />
   <title>${escapeHtml(subject || "ORORA")}</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f9f3f6;color:#331c27;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;font-family:${FONT_SANS};">
+<body style="margin:0;padding:0;background-color:${frame.background};color:#331c27;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;font-family:${FONT_SANS};">
   ${buildPreheader(preheader || subject)}
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f9f3f6;margin:0;padding:0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${frame.background};margin:0;padding:0;">
     <tr>
       <td align="center" style="padding:28px 14px 36px 14px;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#ffffff;border:1px solid #efe0e7;border-radius:18px;overflow:hidden;box-shadow:0 12px 32px rgba(58,21,38,0.06);">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:${frame.width}px;width:100%;background-color:${frame.surface};border:${frame.thickness}px solid ${frame.border};border-radius:${frame.radius}px;overflow:hidden;box-shadow:0 12px 32px rgba(58,21,38,0.06);">
           <!-- Luxury Plum Header -->
           <tr>
-            <td align="center" style="background-color:#3a1526;padding:30px 28px 26px 28px;border-bottom:2px solid #d98ca7;">
+            <td align="center" style="background-color:${frame.header};padding:30px 28px 26px 28px;border-bottom:2px solid #d98ca7;">
               <a href="${escapeHtml(origin)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-block;">
                 <span style="display:block;font-family:${FONT_SERIF};font-size:30px;font-weight:600;letter-spacing:8px;color:#fff8fb;line-height:1.15;">ORORA</span>
                 <span style="display:block;margin-top:6px;font-family:${FONT_SANS};font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#f3c4d6;">Luxury Skincare &middot; Vietnam</span>
@@ -135,7 +138,7 @@ function renderEmailShell({ subject, preheader, eyebrow, bodyHtml, siteOrigin, c
           </tr>
           <!-- Footer -->
           <tr>
-            <td style="background-color:#fdf8fa;border-top:1px solid #f0dde5;padding:24px 28px 26px 28px;text-align:center;">
+            <td style="background-color:${frame.footer};border-top:1px solid #f0dde5;padding:24px 28px 26px 28px;text-align:center;">
               ${footerNote ? `<p style="margin:0 0 12px 0;font-family:${FONT_SANS};font-size:13px;line-height:1.6;color:#6c515e;">${footerNote}</p>` : ""}
               <p style="margin:0 0 10px 0;font-family:${FONT_SANS};font-size:12px;line-height:1.7;color:#846b77;">
                 <a href="${escapeHtml(origin)}" target="_blank" rel="noopener noreferrer" style="color:#b8446d;text-decoration:none;font-weight:600;">Website ORORA</a>
@@ -156,13 +159,14 @@ function renderEmailShell({ subject, preheader, eyebrow, bodyHtml, siteOrigin, c
 </html>`;
 }
 
-function renderButton(label, url) {
+function renderButton(label, url, design) {
+  const frame = mailDesign(design);
   const href = safeHref(url);
   if (!href) return "";
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:22px auto 6px auto;">
     <tr>
-      <td align="center" bgcolor="#b53c77" style="border-radius:999px;background-color:#b53c77;">
-        <a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:13px 28px;font-family:${FONT_SANS};font-size:14px;font-weight:600;letter-spacing:0.4px;color:#ffffff;text-decoration:none;border-radius:999px;">${escapeHtml(label)}</a>
+      <td align="center" bgcolor="${frame.button}" style="border-radius:999px;background-color:${frame.button};">
+        <a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:13px 28px;font-family:${FONT_SANS};font-size:14px;font-weight:600;letter-spacing:0.4px;color:${frame.buttonText};text-decoration:none;border-radius:999px;">${escapeHtml(label)}</a>
       </td>
     </tr>
   </table>`;
@@ -172,11 +176,12 @@ export function renderWelcomeEmailHtml({
   subject = "",
   text = "",
   unsubscribeUrl = "",
+  design,
   siteOrigin = DEFAULT_ORIGIN,
   contactEmail = DEFAULT_CONTACT_EMAIL,
 } = {}) {
   const origin = safeOrigin(siteOrigin);
-  const bodyCopy = formatBodyHtml(text, { unsubscribeUrl });
+  const bodyCopy = formatBodyHtml(text, { unsubscribeUrl, design });
 
   const bodyHtml = `
     <h1 style="margin:0 0 18px 0;font-family:${FONT_SERIF};font-size:26px;font-weight:600;line-height:1.3;color:#3a1526;text-align:center;">${escapeHtml(subject || "Chào mừng bạn đến với ORORA")}</h1>
@@ -201,10 +206,11 @@ export function renderWelcomeEmailHtml({
         </td>
       </tr>
     </table>
-    ${renderButton("Khám phá bộ sưu tập ORORA", origin)}
+    ${renderButton("Khám phá bộ sưu tập ORORA", origin, design)}
   `;
 
   return renderEmailShell({
+    design,
     subject: subject || "Chào mừng bạn đến với ORORA",
     preheader: stripUnsubscribeFooter(text, unsubscribeUrl) || "Cảm ơn bạn đã đăng ký nhận tin từ ORORA.",
     eyebrow: "Chào mừng thành viên mới",
@@ -220,6 +226,7 @@ export function renderBrandedEmailHtml({
   subject = "",
   text = "",
   unsubscribeUrl = "",
+  design,
   siteOrigin = DEFAULT_ORIGIN,
   contactEmail = DEFAULT_CONTACT_EMAIL,
   eyebrow = "Bản tin ORORA",
@@ -227,17 +234,18 @@ export function renderBrandedEmailHtml({
   ctaUrl = "",
 } = {}) {
   const origin = safeOrigin(siteOrigin);
-  const bodyCopy = formatBodyHtml(text, { unsubscribeUrl });
+  const bodyCopy = formatBodyHtml(text, { unsubscribeUrl, design });
   const bodyHtml = `
     <h1 style="margin:0 0 18px 0;font-family:${FONT_SERIF};font-size:25px;font-weight:600;line-height:1.32;color:#3a1526;">${escapeHtml(subject || "Thông báo từ ORORA")}</h1>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px 0;">
       <tr><td><div style="width:44px;height:2px;background-color:#d98ca7;font-size:0;line-height:0;">&nbsp;</div></td></tr>
     </table>
     <div>${bodyCopy}</div>
-    ${ctaLabel && ctaUrl ? renderButton(ctaLabel, ctaUrl) : ""}
+    ${ctaLabel && ctaUrl ? renderButton(ctaLabel, ctaUrl, design) : ""}
   `;
 
   return renderEmailShell({
+    design,
     subject: subject || "Thông báo từ ORORA",
     preheader: stripUnsubscribeFooter(text, unsubscribeUrl) || subject,
     eyebrow,
@@ -359,6 +367,7 @@ export function renderOrderEmailHtml({
   subject = "",
   text = "",
   order = {},
+  design,
   siteOrigin = DEFAULT_ORIGIN,
   bankInfo = null,
   contactEmail = DEFAULT_CONTACT_EMAIL,
@@ -379,7 +388,7 @@ export function renderOrderEmailHtml({
   const totalText = order?.totalAmount == null ? "ORORA sẽ xác nhận" : formatVnd(order.totalAmount);
   const paymentMethodLabel = PAYMENT_LABELS[order?.paymentMethod] || order?.paymentMethod || "Thanh toán khi nhận hàng (COD)";
   const customer = order?.customer || {};
-  const bodyCopy = formatBodyHtml(text);
+  const bodyCopy = formatBodyHtml(text, { design });
 
   const itemRows = items.map((item) => `
     <tr>
@@ -473,11 +482,12 @@ export function renderOrderEmailHtml({
     ${renderBankTransferBlock(order, bankInfo)}
 
     <!-- Tracking CTA -->
-    ${renderButton(trackingEnabled ? "Tra cứu trạng thái đơn hàng" : "Liên hệ ORORA", resolvedTrackingUrl)}
+    ${renderButton(trackingEnabled ? "Tra cứu trạng thái đơn hàng" : "Liên hệ ORORA", resolvedTrackingUrl, design)}
     <p style="margin:6px 0 0 0;text-align:center;font-family:${FONT_SANS};font-size:12px;color:#846b77;">${tracking.hint}</p>
   `;
 
   return renderEmailShell({
+    design,
     subject: subject || `ORORA xác nhận đơn hàng ${order?.code || ""}`.trim(),
     preheader: `Đơn hàng ${order?.code || ""} (${totalText}) đã được ORORA tiếp nhận.`,
     eyebrow: "Xác nhận đơn hàng",

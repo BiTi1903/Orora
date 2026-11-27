@@ -3,6 +3,7 @@ import { mailTransport } from "./mail-transport.js";
 import { describeMailError } from "./mail-error.js";
 import { safeMailTracking } from "./mail-tracking.js";
 import { syncOutlookStatus, syncOutlookBatch, OUTLOOK_ERROR_MESSAGES } from "./outlook-status.js";
+import { sameMailDesign } from "../src/lib/mail-design.js";
 import { ensureDefaultMailTemplates } from "./default-mail-templates.js";
 import { TEMPLATE_KINDS, normalizeTemplateKind, hasOrderTokens } from "../src/lib/template-kinds.js";
 import { captureTemplate, recordTemplateUse, templateIdentity } from "./template-snapshot.js";
@@ -108,7 +109,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         return reply(200, {
           contacts: page.docs.map(publicContact),
           nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null,
-          orderTemplate: orderTemplate.exists ? { subject: String(orderTemplate.data().subject || ""), text: String(orderTemplate.data().text || ""), ...templateIdentity(orderTemplate.data()) } : DEFAULT_ORDER_MESSAGE,
+          orderTemplate: orderTemplate.exists ? { ...validateOrderTemplate(orderTemplate.data()), ...templateIdentity(orderTemplate.data()) } : DEFAULT_ORDER_MESSAGE,
           welcome: welcome.exists ? { ...validateMessage(welcome.data()), ...templateIdentity(welcome.data()) } : DEFAULT_WELCOME,
           campaigns: await resolveMailActors(campaignHistory, lookupUser),
         });
@@ -219,8 +220,8 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
           }
           const updatedAt = new Date();
           const previous = saved.data() || {};
-          const changed = ["name", "kind", "subject", "text", "categoryId"].some((key) => (key === "kind" ? normalizeTemplateKind(previous[key]) : key === "categoryId" ? previous[key] || "" : previous[key]) !== ({ name: body.name.trim(), kind, ...message, categoryId: category?.id || "" })[key]);
-          tx.set(ref, { ...previous, name: body.name.trim(), kind, categoryId: category?.id || "", categoryName: category?.name || "", ...message, ...mailActor(user), revision: saved.exists ? (previous.revision || 1) + (changed ? 1 : 0) : 1, usageTracked: saved.exists ? previous.usageTracked === true : true, sentCount: previous.sentCount || 0, usedRevisions: previous.usedRevisions || [], createdAt: saved.exists ? previous.createdAt : updatedAt, updatedAt });
+          const changed = !sameMailDesign(previous.design, message.design) || ["name", "kind", "subject", "text", "categoryId"].some((key) => (key === "kind" ? normalizeTemplateKind(previous[key]) : key === "categoryId" ? previous[key] || "" : previous[key]) !== ({ name: body.name.trim(), kind, ...message, categoryId: category?.id || "" })[key]);
+          tx.set(ref, { ...previous, design: message.design || null, name: body.name.trim(), kind, categoryId: category?.id || "", categoryName: category?.name || "", ...message, ...mailActor(user), revision: saved.exists ? (previous.revision || 1) + (changed ? 1 : 0) : 1, usageTracked: saved.exists ? previous.usageTracked === true : true, sentCount: previous.sentCount || 0, usedRevisions: previous.usedRevisions || [], createdAt: saved.exists ? previous.createdAt : updatedAt, updatedAt });
         });
         return reply(200, { id: body.id, message: "Đã lưu vào Mẫu Thư. Chưa gửi email hoặc thay đổi mẫu tự động." });
       }
@@ -229,7 +230,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         try { message = validateOrderTemplate(body); } catch { return reply(400, { message: "Kiểm tra tiêu đề, nội dung và tên biến trong mẫu thư đơn hàng." }); }
         await db.runTransaction(async (tx) => {
           const current = await tx.get(db.collection("newsletterSettings").doc("orderConfirmation"));
-          const snapshot = body.templateRef ? await captureTemplate(tx, db, body.templateRef, message, ["order_auto", "private"]) : current.exists && current.data().subject === message.subject && current.data().text === message.text ? templateIdentity(current.data()) : {};
+          const snapshot = body.templateRef ? await captureTemplate(tx, db, body.templateRef, message, ["order_auto", "private"]) : current.exists && current.data().subject === message.subject && current.data().text === message.text && sameMailDesign(current.data().design, message.design) ? templateIdentity(current.data()) : {};
           tx.set(db.collection("newsletterSettings").doc("orderConfirmation"), { ...message, ...snapshot, updatedAt: new Date(), updatedBy: user.uid });
         });
         return reply(200, { message: "Đã lưu mẫu thư xác nhận đơn hàng." });
@@ -239,7 +240,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         if (hasOrderTokens(message)) throw new Error("order_context_required");
         await db.runTransaction(async (tx) => {
           const current = await tx.get(settings);
-          const snapshot = body.templateRef ? await captureTemplate(tx, db, body.templateRef, message, ["welcome_auto", "private"]) : current.exists && current.data().subject === message.subject && current.data().text === message.text ? templateIdentity(current.data()) : {};
+          const snapshot = body.templateRef ? await captureTemplate(tx, db, body.templateRef, message, ["welcome_auto", "private"]) : current.exists && current.data().subject === message.subject && current.data().text === message.text && sameMailDesign(current.data().design, message.design) ? templateIdentity(current.data()) : {};
           tx.set(settings, { ...message, ...snapshot, updatedAt: new Date(), updatedBy: user.uid });
         });
         return reply(200, { message: "Đã lưu mẫu thư gửi cho người đăng ký mới." });
@@ -302,9 +303,9 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         } else if (body.mailType && hasOrderTokens(message)) {
           throw new Error("order_context_required");
         } else if (body.mailType === "registration") {
-          message = { ...message, html: renderWelcomeEmailHtml({ subject: message.subject, text: message.text, siteOrigin, contactEmail }) };
+          message = { ...message, html: renderWelcomeEmailHtml({ ...message, siteOrigin, contactEmail }) };
         } else {
-          message = { ...message, html: renderBrandedEmailHtml({ subject: message.subject, text: message.text, siteOrigin, contactEmail }) };
+          message = { ...message, html: renderBrandedEmailHtml({ ...message, siteOrigin, contactEmail }) };
         }
         await sendMail(email, message);
         return reply(200, { message: `MS đã nhận thư gửi tới ${email}. Kiểm tra cả mục thư rác.` });
@@ -322,7 +323,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
           const existing = await tx.get(campaign);
           if (existing.exists) {
             const saved = existing.data();
-            if (saved.subject !== message.subject || saved.text !== message.text || JSON.stringify(saved.recipientIds || null) !== JSON.stringify(recipients)) throw new Error("campaign_conflict");
+            if (!sameMailDesign(saved.design, message.design) || saved.subject !== message.subject || saved.text !== message.text || JSON.stringify(saved.recipientIds || null) !== JSON.stringify(recipients)) throw new Error("campaign_conflict");
             return;
           }
           let recipientEmails = null;

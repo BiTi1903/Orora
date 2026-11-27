@@ -37,6 +37,7 @@ export function renderOrderMessage(template, order, env = process.env, { bankInf
   const text = trackingTemplate(template.text, trackingEnabled);
   const validated = validateMessage({ subject: fill(template.subject, true), text: fill(text) });
   const html = renderOrderEmailHtml({
+    design: template.design,
     subject: validated.subject,
     text: validated.text,
     order,

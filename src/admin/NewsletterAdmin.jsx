@@ -164,13 +164,13 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
   const currentMessage = writerDrafts[writerMode] || (writerMode === "welcome_auto" ? welcome : EMPTY) || EMPTY;
   const applyTemplate = (item) => {
     if (item.kind === "order_auto" || hasOrderTokens(item)) {
-      const draft = { purpose: item.kind === "order_auto" ? "automation" : "send", subject: item.subject, text: item.text, templateKind: item.kind, ...(templateReference(item) ? { templateRef: templateReference(item) } : {}) };
+      const draft = { purpose: item.kind === "order_auto" ? "automation" : "send", design: item.design, subject: item.subject, text: item.text, templateKind: item.kind, ...(templateReference(item) ? { templateRef: templateReference(item) } : {}) };
       if (onOpenOrderMail) onOpenOrderMail(draft);
       else setNotice({ text: "Mẫu này dùng khi gửi email trong chi tiết đơn hàng." });
       setPicker(null); setPreview(null); return;
     }
     const mode = item.kind === "private" ? (picker ? writerMode : "private") : item.kind;
-    setWriterDrafts((drafts) => ({ ...drafts, [mode]: { subject: item.subject, text: item.text, templateKind: item.kind, ...(templateReference(item) ? { templateRef: templateReference(item) } : {}) } }));
+    setWriterDrafts((drafts) => ({ ...drafts, [mode]: { design: item.design, subject: item.subject, text: item.text, templateKind: item.kind, ...(templateReference(item) ? { templateRef: templateReference(item) } : {}) } }));
     setWriterMode(mode); setView(mode === "welcome_auto" ? "welcome" : "write"); setPicker(null); setPreview(null);
     setNotice({ text: "Đã chọn mẫu. Kiểm tra người nhận và nội dung trước khi lưu hoặc gửi." });
   };
@@ -240,7 +240,7 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
 
             <div style={{ overflowX: "auto" }}><table className="admin-table"><thead><tr><th>Tiêu đề</th><th>Mẫu lúc gửi</th><th>Tài khoản thao tác</th><th>Người nhận</th><th>Trạng thái</th><th>Kết quả</th><th>Thao tác</th></tr></thead>
               <tbody>{!campaigns.length && <tr><td colSpan={7}>Chưa có thư gửi đến danh sách đăng ký.</td></tr>}{campaigns.map((item) => <tr key={item.id}>
-                <td className="mail-history-subject" title={item.subject}>{item.subject}</td><td><button type="button" className="admin-template-link" onClick={() => setPreview({ title: campaignTemplates.byMail.get(item.id)?.label || "Mẫu thư đã gửi", message: { subject: item.subject, text: item.text }, kind: "private" })}>{campaignTemplates.byMail.get(item.id)?.label || "Xem mẫu"}</button></td><td>{mailActorLabel(item)}</td><td>{item.recipientIds ? <details className="newsletter-history-recipients"><summary>{item.recipientIds.length} email đã chọn</summary><ul>{item.recipientIds.map((id, index) => <li key={id}>{item.recipientEmails?.[index] || `Email cũ không còn trong danh sách (${id.slice(0, 8)}…)`}</li>)}</ul></details> : "Toàn bộ email hoạt động"}</td><td>{STATUS[item.status] || item.status}</td><td><span className="mail-result-count">{item.accepted || 0} đã nhận</span>{item.failed > 0 && <small className="mail-result-error">{item.failed} lỗi</small>}{item.unknown > 0 && <small className="order-summary-note">{item.unknown} chưa rõ</small>}</td>
+                <td className="mail-history-subject" title={item.subject}>{item.subject}</td><td><button type="button" className="admin-template-link" onClick={() => setPreview({ title: campaignTemplates.byMail.get(item.id)?.label || "Mẫu thư đã gửi", message: { design: item.design, subject: item.subject, text: item.text }, kind: "private" })}>{campaignTemplates.byMail.get(item.id)?.label || "Xem mẫu"}</button></td><td>{mailActorLabel(item)}</td><td>{item.recipientIds ? <details className="newsletter-history-recipients"><summary>{item.recipientIds.length} email đã chọn</summary><ul>{item.recipientIds.map((id, index) => <li key={id}>{item.recipientEmails?.[index] || `Email cũ không còn trong danh sách (${id.slice(0, 8)}…)`}</li>)}</ul></details> : "Toàn bộ email hoạt động"}</td><td>{STATUS[item.status] || item.status}</td><td><span className="mail-result-count">{item.accepted || 0} đã nhận</span>{item.failed > 0 && <small className="mail-result-error">{item.failed} lỗi</small>}{item.unknown > 0 && <small className="order-summary-note">{item.unknown} chưa rõ</small>}</td>
                 <td><button type="button" className="admin-btn" onClick={() => setOutlookCampaign(item)}>Check</button>{item.status !== "completed" && <button type="button" className="admin-btn" disabled={busy} onClick={async () => {
                   if (await confirm(`Tiếp tục gửi thư “${item.subject}”?`, { title: "Tiếp tục chiến dịch", confirmLabel: "Tiếp tục gửi" })) perform(() => run(item.id));
                 }}>Tiếp tục gửi</button>}</td>

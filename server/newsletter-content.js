@@ -9,13 +9,15 @@ export const DEFAULT_WELCOME = {
 
 export const subscriberId = (email) => createHash("sha256").update(email).digest("hex");
 
+import { mailDesign } from "../src/lib/mail-design.js";
+
 export function validateMessage(value) {
   const subject = typeof value?.subject === "string" ? value.subject.trim() : "";
   const text = typeof value?.text === "string" ? value.text : "";
   if (!subject || subject.length > 200 || /[\r\n]/.test(subject) || !text.trim() || text.length > 20000) {
     throw new Error("invalid_message");
   }
-  return { subject, text };
+  return { subject, text, ...(value.design ? { design: mailDesign(value.design) } : {}) };
 }
 
 function signature(id, env) {
@@ -48,8 +50,8 @@ export function withUnsubscribe(message, id, env = process.env, { kind = "campai
   const text = message.text.includes(link) ? message.text : `${message.text.trimEnd()}\n\n---\nHủy đăng ký nhận tin từ ORORA: ${link}`;
   const contactEmail = env.MS_SENDER_EMAIL || "sales@ororavn.com";
   const html = message.html || (kind === "welcome"
-    ? renderWelcomeEmailHtml({ subject: message.subject, text: message.text, unsubscribeUrl: link, siteOrigin: origin, contactEmail })
-    : renderBrandedEmailHtml({ subject: message.subject, text: message.text, unsubscribeUrl: link, siteOrigin: origin, contactEmail }));
+    ? renderWelcomeEmailHtml({ ...message, unsubscribeUrl: link, siteOrigin: origin, contactEmail })
+    : renderBrandedEmailHtml({ ...message, unsubscribeUrl: link, siteOrigin: origin, contactEmail }));
   return { ...message, text, html, unsubscribeUrl: link };
 }
 

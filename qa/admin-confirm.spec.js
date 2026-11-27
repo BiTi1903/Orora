@@ -94,3 +94,23 @@ test('recoverOnly refreshes the selected order when the server returns unchanged
   expect(recoveryRequest).toMatchObject({ id: order.id, recoverOnly: true });
   expect(detailReads).toBe(1);
 });
+
+test('mail writer previews frame edits and saves them with the welcome template', async ({ page }) => {
+  await mount(page, `
+    import ConfirmProvider from '/src/admin/ConfirmDialog.jsx';
+    import MailWriter from '/src/admin/MailWriter.jsx';
+    function Editor() {
+      const [value, onChange] = R.useState({subject:'ORORA',text:'Xin chào'});
+      return R.createElement(MailWriter, {mode:'welcome_auto',purpose:'automation',allowedModes:['welcome_auto'],
+        value,onChange,onApply:async (_mode,message) => { window.savedMail = message; }});
+    }
+    ${render("R.createElement(ConfirmProvider,null,R.createElement(Editor))")}`, {
+    'hooks/useHomeContent.js': 'export default function useHomeContent(){return {}}',
+  });
+  await page.getByText('Khung và màu email', { exact:true }).click();
+  await page.getByLabel('Nền ngoài thư').fill('#123456');
+  await page.getByLabel('Tiêu đề thư', {exact:true}).fill('Chào bạn');
+  await expect(page.frameLocator('.mail-preview-frame').locator('body')).toHaveCSS('background-color', 'rgb(18, 52, 86)');
+  await page.getByRole('button', {name:'Lưu làm thư đăng ký tự động'}).click();
+  await expect.poll(() => page.evaluate(() => window.savedMail?.design.background)).toBe('#123456');
+});

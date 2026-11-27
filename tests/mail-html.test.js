@@ -211,3 +211,15 @@ test("bank transfer email never invites second payment when paid and never rende
   });
   assert.ok(binHtml.includes("https://img.vietqr.io/image/VCB-0011001234567-compact2.png"));
 });
+
+test("custom frame survives newsletter delivery and is shared by all HTML previews", () => {
+  const message = { subject: "ORORA", text: "Xin chào", design: { background: "#123456", thickness: 0, radius: 12, width: 640, button: "#304050" } };
+  const delivered = withUnsubscribe(message, subscriberId("test@example.com"), ENV, { kind: "welcome" });
+  for (const html of [delivered.html, renderWelcomeEmailHtml(message), renderOrderEmailHtml(message), renderBrandedEmailHtml(message)]) {
+    assert.match(html, /background-color:#123456/);
+    assert.match(html, /max-width:640px/);
+    assert.match(html, /border:0px solid #efe0e7;border-radius:12px/);
+  }
+  assert.match(delivered.html, /bgcolor="#304050"/);
+  assert.doesNotMatch(renderWelcomeEmailHtml({ ...message, design: { background: "invalid-color" } }), /invalid-color/);
+});
