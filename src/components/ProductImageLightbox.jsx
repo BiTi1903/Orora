@@ -5,11 +5,13 @@ import { cdnSrc } from "../lib/image-cdn";
 const distance = ([first, second]) => Math.hypot(first.x - second.x, first.y - second.y);
 const clampZoom = (value) => Math.min(4, Math.max(1, value));
 
-export default function ProductImageLightbox({ src, images, initialIndex = 0, name, onClose }) {
+export default function ProductImageLightbox({ src, images, initialIndex = 0, name, onClose, imageActions = false }) {
   const gallery = Array.isArray(images) && images.length ? images : src ? [src] : [];
   const [index, setIndex] = useState(() => Math.max(0, Math.min(gallery.length - 1, initialIndex)));
   const [zoom, setZoom] = useState(1);
   const [loadLarge, setLoadLarge] = useState(false);
+  const [actionStatus, setActionStatus] = useState("");
+  const [showImageLink, setShowImageLink] = useState(false);
   const currentSrc = gallery[index] || src;
   const hasMultiple = gallery.length > 1;
 
@@ -96,8 +98,46 @@ export default function ProductImageLightbox({ src, images, initialIndex = 0, na
     }
   }
 
+  const imageUrl = cdnSrc(currentSrc, { w: 2400, q: "auto:best" });
+
+  async function saveImage() {
+    setActionStatus("");
+    try {
+      const response = await fetch(imageUrl);
+      if (!response.ok) throw new Error("Image download failed");
+      const blob = await response.blob();
+      const downloadUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      const extension = blob.type.split("/")[1]?.split("+")[0];
+      link.download = extension ? `orora-${index + 1}.${extension}` : `orora-${index + 1}`;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 30000);
+    } catch {
+      setShowImageLink(true);
+      setActionStatus("Hãy mở ảnh gốc để lưu bằng trình duyệt.");
+    }
+  }
+
+  async function shareImage() {
+    const url = new URL(imageUrl, window.location.href).href;
+    setActionStatus("");
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: name, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        setActionStatus("Đã sao chép liên kết ảnh.");
+      }
+    } catch (error) {
+      if (error.name === "AbortError") return;
+      setShowImageLink(true);
+      setActionStatus("Hãy mở ảnh gốc để sao chép liên kết.");
+    }
+  }
+
   return (
-    <ModalDialog title={name} onClose={onClose} className="product-lightbox">
+    <ModalDialog title={name} onClose={onClose} className={imageActions ? "product-lightbox product-lightbox--actions" : "product-lightbox"} hideCloseButton={imageActions}>
       {hasMultiple && (
         <div className="product-lightbox-nav-group">
           <button type="button" aria-label="Ảnh trước" onClick={() => stepImage(-1)}>‹</button>
@@ -158,6 +198,16 @@ export default function ProductImageLightbox({ src, images, initialIndex = 0, na
           style={{ width: fitWidth ? fitWidth * zoom : "100%" }}
         />
       </div>
+      {imageActions && (
+        <>
+          <div className="product-lightbox-actions">
+            <button type="button" onClick={saveImage}>Lưu ảnh</button>
+            <button type="button" onClick={shareImage}>Chia sẻ</button>
+            {showImageLink && <a href={imageUrl} target="_blank" rel="noopener noreferrer">Mở ảnh gốc</a>}
+          </div>
+          {actionStatus && <p className="product-lightbox-status" role="status">{actionStatus}</p>}
+        </>
+      )}
     </ModalDialog>
   );
 }

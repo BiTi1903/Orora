@@ -1,7 +1,7 @@
 import { useLayoutEffect, useId, useRef } from "react";
 import { POPUP_OPEN_EASING, POPUP_CLOSE_EASING, popupCloseDuration, popupMotionKeyframes } from "../lib/popup-motion";
 const locks = new WeakMap();
-export default function ModalDialog({ title, children, onClose, className = "", closeDisabled = false, closeLabel="Đóng cửa sổ", style, headingStyle, headerStyle, closeButtonStyle, initialFocusRef, allowBackgroundScroll=false, outsideClickIgnoreSelector, motionSource, motionDuration=420, motionClosing=false, onMotionClosed }) {
+export default function ModalDialog({ title, children, onClose, className = "", closeDisabled = false, hideCloseButton = false, closeLabel="Đóng cửa sổ", style, headingStyle, headerStyle, closeButtonStyle, initialFocusRef, allowBackgroundScroll=false, outsideClickIgnoreSelector, motionSource, motionDuration=420, motionClosing=false, onMotionClosed }) {
   const closeRef=useRef(onClose);useLayoutEffect(()=>{closeRef.current=()=>{if(!closeDisabled)onClose();};});
   const motionRef=useRef(null),motionClosedRef=useRef(onMotionClosed);
   useLayoutEffect(()=>{motionClosedRef.current=onMotionClosed;});
@@ -90,5 +90,5 @@ export default function ModalDialog({ title, children, onClose, className = "", 
     if (!startedOutside || closeDisabled || event.target !== event.currentTarget) return;
     const box = event.currentTarget.getBoundingClientRect();
     if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) onClose();
-  }}><div className="orora-modal-heading" style={headerStyle}><h2 ref={headingRef} id={titleId} tabIndex={-1} style={headingStyle}>{title}</h2><button type="button" aria-label={closeLabel} disabled={closeDisabled} style={closeButtonStyle} onClick={onClose}>×</button></div><div className="orora-modal-content">{children}</div></dialog></>;
+  }}><div className="orora-modal-heading" style={headerStyle}><h2 ref={headingRef} id={titleId} tabIndex={-1} style={headingStyle}>{title}</h2>{!hideCloseButton && <button type="button" aria-label={closeLabel} disabled={closeDisabled} style={closeButtonStyle} onClick={onClose}>×</button>}</div><div className="orora-modal-content">{children}</div></dialog></>;
 }

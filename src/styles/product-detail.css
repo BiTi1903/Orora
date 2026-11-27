@@ -2020,3 +2020,32 @@
   cursor: zoom-in;
 }
 .product-information-zoom:focus-visible { outline: 3px solid var(--rose-deep); outline-offset: -4px; }
+
+.product-lightbox--actions .orora-modal-heading {
+  position: absolute;
+}
+.product-lightbox-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+.product-lightbox-actions button,
+.product-lightbox-actions a {
+  display: inline-grid;
+  place-items: center;
+  min-height: 44px;
+  padding-inline: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-soft, #fff);
+  color: var(--plum);
+  font: inherit;
+  cursor: pointer;
+}
+.product-lightbox-status {
+  margin: 8px 0 0;
+  text-align: center;
+  color: var(--plum);
+}

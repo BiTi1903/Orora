@@ -150,6 +150,17 @@ test('block and caption switches, skeleton shimmer, and Visual Builder frame/mot
   await expect(viewer.getByRole('img')).toHaveAttribute('src', /slow-detail/);
   const image = viewer.getByRole('img');
   await expect.poll(()=>image.evaluate(el=>el.complete && el.naturalWidth > 0)).toBe(true);
+  await expect(viewer.getByRole('button', {name:'Đóng cửa sổ'})).toHaveCount(0);
+  const downloadPending = page.waitForEvent('download');
+  await viewer.getByRole('button', {name:'Lưu ảnh'}).click();
+  expect((await downloadPending).suggestedFilename()).toMatch(/^orora-/);
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'share', { configurable: true, value: async ({url}) => {
+      document.body.dataset.sharedImage = url;
+    } });
+  });
+  await viewer.getByRole('button', {name:'Chia sẻ'}).click();
+  await expect(page.locator('body')).toHaveAttribute('data-shared-image', /slow-detail/);
   const originalWidth = (await image.boundingBox()).width;
   await image.click();
   await expect.poll(async ()=>(await image.boundingBox()).width / originalWidth).toBeCloseTo(2, 2);

@@ -56,7 +56,7 @@ function InformationImage({ src, alt, imageName, preview, selectedClass, onSelec
         <button type="button" className="product-information-zoom" aria-label={`Xem ảnh lớn: ${imageName}`}
           aria-haspopup="dialog" onClick={() => setOpen(true)} />
       )}
-      {open && createPortal(<ProductImageLightbox src={src} name={imageName} onClose={() => setOpen(false)} />, document.body)}
+      {open && createPortal(<ProductImageLightbox imageActions src={src} name={imageName} onClose={() => setOpen(false)} />, document.body)}
     </div>
   );
 }

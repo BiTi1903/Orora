@@ -1,3 +1,8 @@
+## 27/11/2026 — Thao tác với ảnh nội dung sản phẩm
+
+- Trình xem ảnh trong nội dung bỏ nút ×, thêm Lưu ảnh và Chia sẻ liên kết ảnh. Chạm nền hoặc dùng Escape để đóng.
+- Lint, build và bốn lượt Playwright kiểm tra tải ảnh, gọi API chia sẻ giả lập và thu phóng đều đạt. Không thay đổi database.
+
 ## 27/11/2026 — Hiển thị mục chi tiết và vuốt ảnh phụ
 
 - Visual Builder thêm công tắc cho ảnh phụ, mã, mô tả ngắn, thông tin chi tiết, đánh giá và thẻ slogan. Cấu hình cũ mặc định vẫn hiển thị.
