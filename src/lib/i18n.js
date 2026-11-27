@@ -103,7 +103,7 @@ export const PHRASE_DICTIONARY = {
   // Hero
   "WELCOME TO": { en: "WELCOME TO", ja: "WELCOME TO" },
   "Làn da": { en: "Your skin,", ja: "毎日、素肌を" },
-  "mỗi ngày": { en: "every day", ja: "もっと美しく" },
+  "mỗi ngày": { en: "every day", ja: "毎日" },
   "dịu nhẹ": { en: "gentle", ja: "やさしく" },
   "rạng rỡ": { en: "radiant", ja: "輝かしく" },
   "tự tin": { en: "confident", ja: "自信に満ちて" },
@@ -148,6 +148,8 @@ export const PHRASE_DICTIONARY = {
   "Tìm kiếm sản phẩm": { en: "Search products", ja: "商品を検索" },
   "Tìm theo tên hoặc mô tả…": { en: "Search by name or description…", ja: "商品名や説明で検索…" },
   "Danh mục": { en: "Category", ja: "カテゴリー" },
+  "Trắng Da": { en: "Brightening", ja: "ブライトニング" },
+  "Dưỡng Da": { en: "Skincare", ja: "スキンケア" },
   "Tất cả": { en: "All", ja: "すべて" },
   "Giá tăng dần": { en: "Price: low to high", ja: "価格が安い順" },
   "Giá giảm dần": { en: "Price: high to low", ja: "価格が高い順" },

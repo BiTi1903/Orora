@@ -1,3 +1,8 @@
+## 27/11/2026 — Dịch phần đầu trang và danh mục
+
+- Dịch cụm mỗi ngày mặc định trong Hero và các nhãn lọc Tất cả, Trắng Da, Dưỡng Da sang EN/JP.
+- Lint, build và kiểm tra tám giá trị dịch đạt. Không thay đổi database.
+
 ## 27/11/2026 — Gọn hiệu ứng hover và chọn dung tích
 
 - Bỏ vệt sáng rê chuột trên ảnh thẻ và nhãn nổi bị cắt ở thanh mua. Chỉ hiện dung tích ở trang chi tiết, giá vẫn cập nhật theo lựa chọn.

@@ -1,3 +1,4 @@
+import {useLocale, translatePhrase} from "../lib/i18n";
 import {secondaryProductImages} from "../lib/product-content";
 import { sectionIsEnabled } from "../lib/page-sections";
 import useStorefrontStock from '../hooks/useStorefrontStock';
@@ -301,6 +302,7 @@ function Collection({
   const { products: liveProducts, loading, error, retry } = useProducts({ enabled: !preview });
   const liveHome = useHomeContent();
   const { categories } = useCategories();
+  const locale = useLocale();
   const [localFilters,setLocalFilters]=useState(()=>catalogFilters());
   const location=useLocation(),navigate=useNavigate();
   const homeLoading=!preview&&liveHome.loading!==false;
@@ -461,7 +463,7 @@ function Collection({
       {filtering && <CatalogFilters value={effectiveFilters} activeView={grid?'grid':'carousel'} settings={filterSettings} onApply={changeFilters}/>}
       {showCategories && !isRelated && categories.length > 0 && (
         <nav className="collection-categories" aria-label="Danh mục sản phẩm">
-          <button type="button" aria-pressed={filtering ? !effectiveFilters.category : !categoryId} onClick={() => filtering ? changeFilters({ ...savedFilters, category: "", page: 1 }) : setCategoryId("")}>Tất cả</button>
+          <button type="button" aria-pressed={filtering ? !effectiveFilters.category : !categoryId} onClick={() => filtering ? changeFilters({ ...savedFilters, category: "", page: 1 }) : setCategoryId("")}>{translatePhrase("Tất cả", preview ? "vi" : locale)}</button>
           {categories.map((category) => <button type="button" key={category.id} aria-pressed={filtering ? effectiveFilters.category === category.id : categoryId === category.id} onClick={() => filtering ? changeFilters({ ...savedFilters, category: category.id, page: 1 }) : setCategoryId(category.id)}>{category.name}</button>)}
         </nav>
       )}

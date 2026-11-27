@@ -230,7 +230,7 @@ function Hero({
               {preview ? previewWord : words[i % words.length]}
             </em>
           </span>{" "}
-          {c.heroRotatorSuffix ?? "mỗi ngày"}
+          {label(c.heroRotatorSuffix ?? "mỗi ngày")}
         </p>}
 
         {/* =========================
