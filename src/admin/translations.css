@@ -22,3 +22,7 @@
 .translations-admin footer span { margin-right: auto; }
 .translations-admin [role=status]:empty { display: none; }
 @media(max-width: 640px) { .translation-editor { grid-template-columns: minmax(0,1fr); } }
+.translation-phrases { margin-bottom: 1rem; padding: .8rem; border: 1px solid #e6dfe3; border-radius: .5rem; }
+.translation-phrases summary { cursor: pointer; font-weight: 600; }
+.translation-phrases fieldset { margin: 0; border: 0; min-width: 0; }
+.translation-phrases button { justify-self: start; }

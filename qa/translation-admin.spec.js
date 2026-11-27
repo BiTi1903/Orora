@@ -32,3 +32,19 @@ test('translation drafts survive paging and filtering', async ({page}) => {
   await expect(page.getByRole('textbox',{name:'Tiếng Anh',exact:true})).toHaveValue('');
   await fit(page);
 });
+
+test('published phrases match whole text and restore Vietnamese', async ({page}) => {
+  await mount(page, `
+    import {translateVisiblePhrases} from '/src/lib/phrase-overrides.js';
+    const root = document.getElementById('root');
+    root.innerHTML = '<p id="label">Cần tư vấn</p><p id="long">Cần tư vấn ngay</p>';
+    window.restorePhrases = translateVisiblePhrases(root, {example:{vi:'Cần tư vấn',en:'Need advice'}}, 'en');
+    setTimeout(() => root.insertAdjacentHTML('beforeend', '<p id="late">Cần tư vấn</p>'), 10);
+  `);
+  await expect(page.locator('#label')).toHaveText('Need advice');
+  await expect(page.locator('#long')).toHaveText('Cần tư vấn ngay');
+  await expect(page.locator('#late')).toHaveText('Need advice');
+  await page.evaluate(() => window.restorePhrases());
+  await expect(page.locator('#label')).toHaveText('Cần tư vấn');
+  await expect(page.locator('#late')).toHaveText('Cần tư vấn');
+});

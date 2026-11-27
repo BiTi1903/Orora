@@ -1,3 +1,8 @@
+## 27/11/2026 — Dịch theo cụm từ
+
+- Admin có thể lưu câu tiếng Việt và bản EN/JP vào cấu hình trang chủ. Website đối chiếu nguyên cụm văn bản khi khách đổi ngôn ngữ và khi nội dung xuất hiện sau.
+- Build, lint và tám lượt Playwright đạt. Chưa ghi thử trên dữ liệu sản xuất.
+
 ## 27/11/2026 — Tải lại bản dịch trong admin
 
 - Thêm nút đọc bản dịch mới nhất từ máy chủ. Hỏi trước khi bỏ sửa đổi chưa lưu và chỉ xóa bản nháp sau khi tải thành công.

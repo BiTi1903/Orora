@@ -526,7 +526,7 @@ function applyTranslationsDeep(base, overrideMap, locale) {
   const result = { ...base };
   for (const [key, val] of Object.entries(base)) {
     if (
-      key === "translationSheet" || key === "translations" ||
+      key === "phraseOverrides" || key === "translationSheet" || key === "translations" ||
       key.endsWith("Styles") ||
       key === "styles" ||
       key === "style" ||

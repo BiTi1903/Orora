@@ -1,3 +1,4 @@
+import PhraseTranslationForm from "./PhraseTranslationForm";
 import "./translations.css";
 import {normalizeSearch} from "../lib/catalog-filters";
 import {useEffect, useRef, useState} from "react";
@@ -127,6 +128,7 @@ export default function TranslationAdmin() {
         {changes.length ? `Lưu ${changes.length} mục` : "Lưu thay đổi"}
       </button>
     </div></header>
+    <PhraseTranslationForm />
     <div className="translation-filters">
       <input type="search" aria-label="Tìm bản dịch" placeholder="Tìm câu, tên sản phẩm hoặc vị trí…" value={query}
         onChange={event=>{setQuery(event.target.value); setPage(0);}}/>

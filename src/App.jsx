@@ -1,3 +1,5 @@
+import {useLocale} from "./lib/i18n";
+import {translateVisiblePhrases} from "./lib/phrase-overrides";
 import {ButtonIconProvider} from "./components/ButtonIcon";
 import ButtonPressFeedback from './components/ButtonPressFeedback';
 import ShopCart from './components/ShopCart';
@@ -70,6 +72,15 @@ function App() {
 
   const location = useLocation();
   const home = useHomeContent();
+  const locale = useLocale();
+  const phraseOverrides = home.phraseOverrides;
+  const isAdmin = location.pathname.startsWith("/admin");
+
+  useEffect(() => {
+    if (isAdmin || locale === "vi" || !phraseOverrides || !Object.keys(phraseOverrides).length) return;
+    return translateVisiblePhrases(document.body, phraseOverrides, locale);
+  }, [locale, isAdmin, phraseOverrides]);
+
   const visibility = JSON.stringify(home.sectionVisibility || {});
   const visible = (key) => (!home.loading || (home.shellReady && ["navbar","hero","ticker"].includes(key))) && sectionIsEnabled(home,key);
 

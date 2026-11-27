@@ -1,5 +1,5 @@
 const textField = /(?:title|description|label|text|body|name|caption|highlight|eyebrow|prefix|suffix|placeholder|consent|copyright|heading|question|answer|content|imageAlt|shoppingGuide|details|story|hint|note|button|greeting|address|headline|cta|material|origin|category|marqueeWords|heroRotator|heroChip\d+|testimonialsTitleEnd)$/i;
-const skip = /^(translations|translationSheet|slugAliases|productReviews|reviews)$/;
+const skip = /^(translations|phraseOverrides|translationSheet|slugAliases|productReviews|reviews)$/;
 export const translationHeaders = ["Mã nội dung", "Vị trí", "Tiếng Việt", "English", "日本語"];
 
 export function translationRows(docKey, data) {
