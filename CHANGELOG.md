@@ -1,3 +1,8 @@
+## 27/11/2026 — Chỉnh toàn bộ khối đánh giá sản phẩm
+
+- Visual Builder cho chọn khung đánh giá, bật/tắt toàn mục và chỉnh riêng khung ngoài, khung thẻ, chữ và sao. Giữ nhãn nhận diện đánh giá minh họa.
+- Lint, build và bốn lượt kiểm tra preview đạt. Không ghi dữ liệu sản xuất.
+
 ## 27/11/2026 — Thanh mua nhanh và đánh giá trong Builder
 
 - Dùng nền đục cho thanh mua nổi để nội dung bên dưới không xuyên qua. Visual Builder hỗ trợ chọn đánh giá và chỉnh tiêu đề, kiểu chữ, khung thẻ.

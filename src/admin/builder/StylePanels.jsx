@@ -172,14 +172,6 @@ export function StylePanel({
             </label>
           ))}
         </InspectorGroup>
-        <InspectorGroup title="Đánh giá khách hàng · Khung thẻ">
-          <ReviewCardSettings
-            title="Khung thẻ đánh giá sản phẩm"
-            value={productDetail.reviewCard}
-            onChange={(patch) => onChange({reviewCard: {...productDetail.reviewCard, ...patch}})}
-          />
-          <p className="builder-help">Sửa nội dung đánh giá của từng sản phẩm trong Sản phẩm → Đánh giá.</p>
-        </InspectorGroup>
         {!["pdPurchaseOptions", "pdWebsiteText", "pdAddToCart", "pdFacebookText", "pdTiktokText"].includes(selected) && (
           <PurchaseOptionsSettings
             initialGroup="subtotal"

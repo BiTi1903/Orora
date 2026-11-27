@@ -1,3 +1,4 @@
+import ReviewCardSettings from "./ReviewCardSettings";
 import PurchaseOptionsSettings from "./PurchaseOptionsSettings";
 import InformationTabsSettings from "./InformationTabsSettings";
 import RecentlyViewedSettings from "./RecentlyViewedSettings";
@@ -14,6 +15,21 @@ import { PRODUCT_DETAIL_COLOR_DEFAULTS } from "../controls/color-defaults";
 export function ProductDetailSettings({ selected, data, productDetail, onChange, onStyleChange }) {
   if (!data || data.type === "pdEmpty") {
     return <div className="builder-empty">Chọn một thành phần trên preview.</div>;
+  }
+  if (selected === "pdReviewSection") {
+    return <>
+      <SettingGroup title="Hiển thị đánh giá sản phẩm">
+        <label className="admin-check">
+          <input type="checkbox" role="switch" checked={productDetail.visibility?.reviews !== false}
+            onChange={event => onChange({visibility: {...productDetail.visibility, reviews: event.target.checked}})} />
+          Hiện toàn bộ mục đánh giá
+        </label>
+      </SettingGroup>
+      <ReviewCardSettings title="Khung toàn bộ mục" value={productDetail.reviewSection} onChange={onStyleChange} />
+      <ReviewCardSettings title="Khung từng thẻ đánh giá" value={productDetail.reviewCard}
+        onChange={patch => onChange({reviewCard: {...productDetail.reviewCard, ...patch}})} />
+      <p className="builder-help">Chọn chữ, nhãn hoặc sao trong bản xem trước để chỉnh kiểu hiển thị. Nội dung và số sao của từng đánh giá chỉnh trong Sản phẩm → Đánh giá.</p>
+    </>;
   }
   if (selected === "pdTrustStrip") {
     return <TrustStripSettings value={productDetail.trustStrip || {}} onChange={onStyleChange} />;

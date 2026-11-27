@@ -143,6 +143,12 @@ const PRODUCT_DETAIL_FIELD_MAP = {
   pdInfoCaption: { styleKey: "informationTabs", label: "Nội dung · Chú thích (Đầu mục & Nội dung)" },
 
   /* ---- 6. Đánh giá ---- */
+  pdReviewSection: { styleKey: "reviewSection", label: "Đánh giá sản phẩm — Toàn bộ mục" },
+  pdReviewEyebrow: { styleKey: "reviewEyebrow", textKey: "text", label: "Đánh giá — Dòng giới thiệu", sample: "CHIA SẺ TRẢI NGHIỆM" },
+  pdReviewDisclosure: { styleKey: "reviewDisclosure", label: "Đánh giá — Chú thích minh họa" },
+  pdReviewBadge: { styleKey: "reviewBadge", label: "Đánh giá — Nhãn minh họa" },
+  pdReviewEmpty: { styleKey: "reviewEmpty", textKey: "text", label: "Đánh giá — Khi chưa có đánh giá", sample: "Chưa có đánh giá từ khách hàng." },
+  pdReviewStars: { styleKey: "reviewStars", label: "Đánh giá — Sao" },
   pdReviewTitle: { styleKey: "reviewTitle", textKey: "text", label: "Đánh giá — Tiêu đề", sample: "Đánh giá sản phẩm" },
   pdReviewName: { styleKey: "reviewName", label: "Đánh giá — Tên hiển thị", sample: "Đánh giá — Tên hiển thị" },
   pdReviewBody: { styleKey: "reviewBody", label: "Đánh giá — Nội dung", sample: "Đánh giá — Nội dung" },
