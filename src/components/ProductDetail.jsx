@@ -222,6 +222,7 @@ function ProductDetail({
   const [previousGalleryKey, setPreviousGalleryKey] = useState(galleryKey);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [thumbStart, setThumbStart] = useState(0);
+  const thumbTouchStart = useRef(null);
   const swipeStartRef = useRef(null);
   if (previousGalleryKey !== galleryKey) {
     setPreviousGalleryKey(galleryKey);
@@ -297,6 +298,7 @@ function ProductDetail({
   const allImages = images.length ? images : [mainImage, ...secondaryImages].filter(Boolean);
   const safeIndex = activeImageIndex < allImages.length ? activeImageIndex : 0;
   const displaySrc = allImages[safeIndex] || mainImage;
+  const visible = (key) => ps.visibility?.[key] !== false;
   const thumbPool = secondaryImages;
 
   const promoteToMain = (src) => {
@@ -720,9 +722,26 @@ function ProductDetail({
               </button>
             )}
           </div>
-          {thumbPool.length > 0 && (
+          {visible("thumbnails") && thumbPool.length > 0 && (
             <div
               className={`product-detail-thumbs-wrap ${selectedClass("pdThumbs")}`}
+              onTouchStart={(event) => {
+                const touch = event.touches[0];
+                thumbTouchStart.current = event.touches.length === 1 ? { x: touch.clientX, y: touch.clientY } : null;
+              }}
+              onTouchCancel={() => { thumbTouchStart.current = null; }}
+              onTouchEnd={(event) => {
+                const start = thumbTouchStart.current;
+                thumbTouchStart.current = null;
+                if (!start || !canSlideThumbs) return;
+                const touch = event.changedTouches[0];
+                const dx = touch.clientX - start.x;
+                const dy = touch.clientY - start.y;
+                if (Math.abs(dx) < 28 || Math.abs(dx) <= Math.abs(dy) * 1.3) return;
+                event.preventDefault();
+                if (dx < 0) goThumbNext();
+                else goThumbPrev();
+              }}
               style={thumbsWrapStyle}
               data-builder-key={preview ? "pdThumbs" : undefined}
               onClick={preview ? select("pdThumbs") : undefined}
@@ -795,14 +814,14 @@ function ProductDetail({
         </div>
 
         <div className="product-detail-info"><div className="product-purchase-content">
-          <p
+          {visible("number") && <p
             className={`product-detail-number ${selectedClass("pdNumber")}`}
             data-builder-key={preview ? "pdNumber" : undefined}
             onClick={select("pdNumber")}
             style={css("number")}
           >
             {productNumber(product)}
-          </p>
+          </p>}
 
           <h1
             className={selectedClass("pdName")}
@@ -822,7 +841,7 @@ function ProductDetail({
             {formatProductPrice(displayedPrice)}
           </p>
 
-          {(() => {
+          {visible("reviews") && (() => {
             const reviews = publishedProductReviews(product);
             if (!reviews.length) return null;
             const avg = (reviews.reduce((sum, item) => sum + (Number(item.rating) || 5), 0) / reviews.length).toFixed(1);
@@ -849,7 +868,7 @@ function ProductDetail({
             );
           })()}
 
-          <p
+          {visible("description") && <p
             className={`product-detail-description ${selectedClass("pdDescription")}`}
             data-builder-key={preview ? "pdDescription" : undefined}
             onClick={select("pdDescription")}
@@ -857,9 +876,7 @@ function ProductDetail({
           >
             {renderLines(product.description)}
             {product.shoppingGuide?.trim()&&<><br/>{renderLines(product.shoppingGuide)}</>}
-          </p>
-
-
+          </p>}
 
           {(stock === "out" || stock === "low") && <p className={`product-stock-badge is-${stock}`}>{tr(soldOut ? "Hết hàng" : "Còn ít")}</p>}
           <ProductPurchaseSelection product={product} options={options} variantId={variantId} quantity={choice.quantity} onVariantChange={(variantId) => changeSelection({ variantId })} onQuantityChange={(quantity) => changeSelection({ quantity })} disabled={soldOut} textProps={textProps} />
@@ -975,15 +992,15 @@ function ProductDetail({
         </div></div>
       </section>
 
-      {(preview || Object.keys(PRODUCT_CONTENT_GROUPS).some((group) => isProductContentGroupVisible(product.detailVisibility, group))) && <div className="product-detail-lower">
+      {visible("information") && (preview || Object.keys(PRODUCT_CONTENT_GROUPS).some((group) => isProductContentGroupVisible(product.detailVisibility, group))) && <div className="product-detail-lower">
         <ProductInformation key={`${product.id||product.slug}:${ps.informationTabs?.defaultTab||"description"}`} settings={ps.informationTabs} sections={sections} visibility={product.detailVisibility} preview={preview} select={select} selectedClass={selectedClass} textProps={textProps} />
       </div>}
-      <ProductReviews product={product} textProps={textProps} />
+      {visible("reviews") && <ProductReviews product={product} textProps={textProps} />}
       {!home.loading && <><ProductCareGuide value={careGuideForProduct(home.productCareGuide, product)} /><ProductFaq value={home.productFaq} product={product} /></>}
       </div>
       <div className="product-side-column">
         {sectionIsEnabled(home,"policies") && <ProductAssurances policies={home.productPolicies} shippingSettings={home.shippingSettings} textProps={textProps} />}
-        <ProductSloganCard home={home} styles={ps} textProps={textProps} cardProps={{ className: selectedClass("pdSloganCard"), "data-builder-key": preview ? "pdSloganCard" : undefined, onClick: preview ? select("pdSloganCard") : undefined }} />
+        {visible("slogan") && <ProductSloganCard home={home} styles={ps} textProps={textProps} cardProps={{ className: selectedClass("pdSloganCard"), "data-builder-key": preview ? "pdSloganCard" : undefined, onClick: preview ? select("pdSloganCard") : undefined }} />}
         <RelatedProductsSidebar product={product} preview={preview} previewProducts={previewProducts} styles={ps} selectedElement={selectedElement} onSelect={onSelect} />
       </div>
       </div>

@@ -150,6 +150,28 @@ export function StylePanel({
       </>
     ) : section === "productdetail" ? (
       <>
+        <InspectorGroup title="Hiển thị trên trang chi tiết">
+          {[
+            ["thumbnails", "Ảnh phụ"],
+            ["number", "Mã sản phẩm"],
+            ["description", "Mô tả ngắn"],
+            ["information", "Thông tin chi tiết"],
+            ["reviews", "Đánh giá sản phẩm"],
+            ["slogan", "Thẻ slogan"],
+          ].map(([key, label]) => (
+            <label className="admin-check" key={key}>
+              <input
+                type="checkbox"
+                role="switch"
+                checked={productDetail.visibility?.[key] !== false}
+                onChange={(event) => onChange({
+                  visibility: { ...productDetail.visibility, [key]: event.target.checked },
+                })}
+              />
+              {label}
+            </label>
+          ))}
+        </InspectorGroup>
         {!["pdPurchaseOptions", "pdWebsiteText", "pdAddToCart", "pdFacebookText", "pdTiktokText"].includes(selected) && (
           <PurchaseOptionsSettings
             initialGroup="subtotal"

@@ -179,5 +179,14 @@ test('the compact thumbnail strip shows two square images with borderless previe
  const third = thumbs.getByRole('tab',{name:'Ảnh phụ 3',exact:true});
  await third.click();
  await expect(third).toHaveAttribute('aria-selected','true');
+ const swipe = (startX, endX) => thumbs.evaluate((target, [from, to]) => {
+  const touch = clientX => new Touch({identifier: 1, target, clientX, clientY: 30});
+  target.dispatchEvent(new TouchEvent('touchstart', {bubbles: true, touches: [touch(from)]}));
+  target.dispatchEvent(new TouchEvent('touchend', {bubbles: true, cancelable: true, changedTouches: [touch(to)]}));
+ }, [startX, endX]);
+ await swipe(96, 16);
+ await expect(tiles.first()).toHaveAccessibleName('Ảnh phụ 3');
+ await swipe(16, 96);
+ await expect(tiles.first()).toHaveAccessibleName('Ảnh phụ 2');
  await fit(page);
 });

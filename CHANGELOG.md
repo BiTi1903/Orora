@@ -1,3 +1,8 @@
+## 27/11/2026 — Hiển thị mục chi tiết và vuốt ảnh phụ
+
+- Visual Builder thêm công tắc cho ảnh phụ, mã, mô tả ngắn, thông tin chi tiết, đánh giá và thẻ slogan. Cấu hình cũ mặc định vẫn hiển thị.
+- Vuốt ngang dải ảnh phụ để chuyển nhóm ảnh, chạm ảnh để chọn. Kiểm tra Playwright trên bốn chiều rộng và build thành công. Không cần chuyển đổi dữ liệu.
+
 ## 27/11/2026 — Tối giản trình xem ảnh sản phẩm
 
 - Bỏ tiêu đề hiển thị, số thứ tự, thanh zoom và hướng dẫn trong ProductImageLightbox. Chạm trực tiếp để đổi mức thu phóng.

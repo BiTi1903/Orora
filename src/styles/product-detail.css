@@ -592,6 +592,7 @@
 .product-detail-shell .product-main-column { gap: 24px; }
 .product-detail-shell .product-detail-gallery { gap: 12px; }
 .product-detail-shell .product-detail-thumbs-wrap {
+  touch-action: pan-y pinch-zoom;
   justify-content: center;
   gap: 10px;
 }
