@@ -213,6 +213,12 @@ export function createOrderHandler({ getDb, sendMail, notifyStore, schedule, env
         for (const entry of qtyByStockTarget.values()) {
           reservationPlans.push(await prepareOrderInventoryReservation(tx, db, entry.productId, entry.quantity, stockSnaps.get(entry.productId), entry.variantId, entry.variantSnap));
         }
+        if (body.marketingConsent === true) {
+          const ref = db.collection("newsletterSubscribers").doc(hash(customer.email));
+          const previous = await tx.get(ref);
+          record.marketingConsent = true;
+          if (!previous.exists) tx.set(ref,{email:customer.email,status:"active",source:"checkout",consentVersion:"checkout-marketing-v1",consentAt:createdAt,createdAt,updatedAt:createdAt});
+        }
         const reservedTargets = {};
         for (const plan of reservationPlans) {
           if (plan.targetKey && plan.reservedQty > 0) reservedTargets[plan.targetKey] = (reservedTargets[plan.targetKey] || 0) + plan.reservedQty;

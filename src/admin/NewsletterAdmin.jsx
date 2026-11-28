@@ -1,3 +1,4 @@
+import useProducts from "../hooks/useProducts";
 import TranslationHelp from "./TranslationHelp";
 import { useConfirm } from "./confirm-context";
 import OutlookCheck from "./OutlookCheck";
@@ -14,6 +15,7 @@ import { ensureNewsletterTemplatesOnce, fetchNewsletterCached, getAdminCache } f
 import useDraftGuard from "../hooks/useDraftGuard";
 import { sameMailDesign } from "../lib/mail-design";
 
+const AUDIENCES = {all:"Tất cả người nhận tin",buyers:"Đã từng đặt hàng",nonbuyers:"Chưa từng đặt hàng",product:"Đã đặt sản phẩm cụ thể"};
 const EMPTY = { subject: "", text: "" };
 const CONTACT_STATUS = { active: "Hoạt động", paused: "Tạm ngưng", unsubscribed: "Đã hủy đăng ký", bounced: "Bị trả lại" };
 const STATUS = { queued:"Chờ máy chủ gửi", cancelled:"Đã hủy lịch", draft: "Chưa gửi", sending: "Đang gửi", paused: "Tạm dừng", completed: "Hoàn tất" };
@@ -54,6 +56,8 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
   const [deliveryMode,setDeliveryMode] = useState("manual");
   const [scheduleTime,setScheduleTime] = useState("");
   const [recipientMode, setRecipientMode] = useState("selected");
+  const [productId,setProductId] = useState("");
+  const catalog=useProducts({enabled:view==="write" && recipientMode==="product",raw:true});
   const [recipientIds, setRecipientIds] = useState([]);
   const [recipientSearch, setRecipientSearch] = useState("");
   const [welcome, setWelcome] = useState(() => cached?.welcome || EMPTY);
@@ -192,10 +196,17 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
     if (recipientMode === "selected" && !eligibleIds.length) return;
     const scheduledAt = deliveryMode==="scheduled" ? Date.parse(scheduleTime) : undefined;
     if(deliveryMode==="scheduled" && !Number.isFinite(scheduledAt)) {setNotice({error:true,text:"Chọn ngày và giờ gửi."});return;}
-    if (!await confirm(`Gửi “${draft.subject}” đến ${recipientMode === "selected" ? `${eligibleIds.length} email đã chọn:\n${eligibleIds.map((id) => activeContacts.find((item) => item.id === id)?.email).join("\n")}\n` : "toàn bộ email đang hoạt động trước thời điểm tạo thư"}? ${scheduledAt ? "Sau "+new Date(scheduledAt).toLocaleString("vi-VN")+". " : ""}Mỗi khách nhận một thư riêng.`, { title: "Gửi chiến dịch", confirmLabel: "Gửi email" })) return;
+    if(recipientMode==="product" && !productId) {setNotice({error:true,text:"Chọn sản phẩm để lọc người nhận."});return;}
+    let count=eligibleIds.length;
+    if(recipientMode!=="selected"){
+      try {({count}=await request({action:"countAudience",segment:recipientMode,productId}));}
+      catch(error){setNotice({error:true,text:error.message});return;}
+      if(!count){setNotice({text:"Nhóm này chưa có người nhận đủ điều kiện."});return;}
+    }
+    if (!await confirm(`Gửi “${draft.subject}” đến ${recipientMode === "selected" ? `${eligibleIds.length} email đã chọn:\n${eligibleIds.map((id) => activeContacts.find((item) => item.id === id)?.email).join("\n")}\n` : `${count} người nhận · ${AUDIENCES[recipientMode]}${recipientMode==="product"?" · "+(catalog.products.find(p=>p.id===productId)?.name||productId):""}`}? ${scheduledAt ? "Sau "+new Date(scheduledAt).toLocaleString("vi-VN")+". " : ""}Mỗi khách nhận một thư riêng.`, { title: "Gửi chiến dịch", confirmLabel: "Gửi email" })) return;
     return perform(async () => {
       const id = crypto.randomUUID();
-      await request({ action: "createCampaign", id, ...draft, background:deliveryMode!=="manual",scheduledAt, ...(recipientMode === "selected" ? { recipientIds: eligibleIds } : {}) });
+      await request({ action: "createCampaign", id, ...draft, background:deliveryMode!=="manual",scheduledAt, ...(recipientMode === "selected" ? { recipientIds: eligibleIds } : {segment:recipientMode,productId}) });
       await load();
       if(deliveryMode==="manual") await run(id);
       else {setView("history");setNotice({text:"Đã xếp lịch gửi trên máy chủ. Bạn có thể đóng trang."});}
@@ -224,13 +235,14 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
             setSavedWelcome({ ...message });
             setWriterDrafts((drafts) => { const next = { ...drafts }; delete next.welcome_auto; return next; });
             return result;
-          }} onSendPrivate={sendCampaign} privateSendLabel={recipientMode === "selected" ? `Gửi tới ${eligibleIds.length} email đã chọn` : "Gửi đến toàn bộ email hoạt động"} privateSendDisabled={recipientMode === "selected" && !eligibleIds.length} privateRecipients={
+          }} onSendPrivate={sendCampaign} privateSendLabel={recipientMode === "selected" ? `Gửi tới ${eligibleIds.length} email đã chọn` : "Kiểm tra nhóm và gửi"} privateSendDisabled={recipientMode === "selected" && !eligibleIds.length} privateRecipients={
             <fieldset className="newsletter-recipient-picker" disabled={busy}>
               <legend>Người nhận thư</legend>
               <label className="admin-field">Thời điểm gửi<select value={deliveryMode} onChange={e=>setDeliveryMode(e.target.value)}><option value="background">Gửi nền ở đợt gần nhất</option><option value="scheduled">Hẹn giờ gửi nền</option><option value="manual">Gửi ngay trong tab này</option></select></label>
               {deliveryMode==="scheduled"&&<label className="admin-field">Bắt đầu sau (giờ trên thiết bị)<input type="datetime-local" value={scheduleTime} onChange={e=>setScheduleTime(e.target.value)}/></label>}
               <label className="admin-check"><input type="radio" name="recipient-mode" checked={recipientMode === "selected"} onChange={() => setRecipientMode("selected")} />Chọn email cụ thể</label>
-              <label className="admin-check"><input type="radio" name="recipient-mode" checked={recipientMode === "all"} onChange={() => setRecipientMode("all")} />Toàn bộ email đang hoạt động</label>
+              {Object.entries(AUDIENCES).map(([key,title])=><label key={key} className="admin-check"><input type="radio" name="recipient-mode" checked={recipientMode===key} onChange={()=>setRecipientMode(key)}/>{title}</label>)}
+              {recipientMode==="product"&&<label className="admin-field">Sản phẩm đã đặt<select value={productId} onChange={e=>setProductId(e.target.value)}><option value="">Chọn sản phẩm</option>{catalog.products.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label>}
               <TranslationHelp label="chọn người nhận email">Chọn mục này khi muốn gửi cho toàn bộ danh sách đang hoạt động. Chọn email cụ thể nếu chỉ gửi cho một nhóm nhỏ.</TranslationHelp>
               {recipientMode === "selected" ? <>
                 <div className="admin-field"><label htmlFor="recipient-search">Tìm người nhận</label><input id="recipient-search" type="search" placeholder="Nhập email…" value={recipientSearch} onChange={(event) => setRecipientSearch(event.target.value)} /></div>
@@ -242,7 +254,7 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
                 <div className="admin-actions"><span className="admin-muted" role="status">Đã chọn {eligibleIds.length} người nhận (tối đa 100).</span><button type="button" className="admin-btn" disabled={!eligibleIds.length} onClick={() => setRecipientIds([])}>Bỏ chọn tất cả</button>{cursor && <button type="button" className="admin-btn" onClick={() => perform(loadRemainingContacts)}>Tải toàn bộ email</button>}</div>
                 <details className="newsletter-selected-recipients"><summary>Email đã chọn ({eligibleIds.length})</summary><div className="newsletter-selected-list">{eligibleIds.map((id) => { const email = activeContacts.find((item) => item.id === id)?.email; return <span className="newsletter-recipient-chip" key={id}><span>{email}</span><button type="button" aria-label={`Bỏ chọn ${email}`} onClick={() => chooseRecipients([id], false)}>×</button></span>; })}{!eligibleIds.length && <p className="admin-muted">Chưa chọn người nhận.</p>}</div></details>
                 <p className="admin-muted">Chỉ gửi đến email đã chọn, kể cả khi bạn đổi từ khóa tìm kiếm. Email tạm ngưng hoặc hủy đăng ký không nhận thư.</p>
-              </> : <p className="admin-muted">Gửi đến toàn bộ email đang hoạt động, gồm cả email chưa tải trên màn hình. Danh sách được kiểm tra lại khi gửi.</p>}
+              </> : <p className="admin-muted">Chỉ tính người đang nhận tin. Lịch sử mua gồm các đơn chưa bị hủy. Số người đủ điều kiện sẽ hiện trước khi xác nhận gửi.</p>}
             </fieldset>
           } />
           </div>}
@@ -252,7 +264,7 @@ export default function NewsletterAdmin({ initialView = "contacts", viewRequest,
 
             <div style={{ overflowX: "auto" }}><table className="admin-table"><thead><tr><th>Tiêu đề</th><th>Mẫu lúc gửi</th><th>Tài khoản thao tác</th><th>Người nhận</th><th>Trạng thái</th><th>Kết quả</th><th>Thao tác</th></tr></thead>
               <tbody>{!campaigns.length && <tr><td colSpan={7}>Chưa có thư gửi đến danh sách đăng ký.</td></tr>}{campaigns.map((item) => <tr key={item.id}>
-                <td className="mail-history-subject" title={item.subject}>{item.subject}</td><td><button type="button" className="admin-template-link" onClick={() => setPreview({ title: campaignTemplates.byMail.get(item.id)?.label || "Mẫu thư đã gửi", message: { design: item.design, subject: item.subject, text: item.text }, kind: "private" })}>{campaignTemplates.byMail.get(item.id)?.label || "Xem mẫu"}</button></td><td>{mailActorLabel(item)}</td><td>{item.recipientIds ? <details className="newsletter-history-recipients"><summary>{item.recipientIds.length} email đã chọn</summary><ul>{item.recipientIds.map((id, index) => <li key={id}>{item.recipientEmails?.[index] || `Email cũ không còn trong danh sách (${id.slice(0, 8)}…)`}</li>)}</ul></details> : "Toàn bộ email hoạt động"}</td><td>{STATUS[item.status] || item.status}{item.scheduledAt && <small>{new Date(item.scheduledAt).toLocaleString("vi-VN")}</small>}</td><td><span className="mail-result-count">{item.accepted || 0} đã nhận</span>{item.failed > 0 && <small className="mail-result-error">{item.failed} lỗi</small>}{item.unknown > 0 && <small className="order-summary-note">{item.unknown} chưa rõ</small>}</td>
+                <td className="mail-history-subject" title={item.subject}>{item.subject}</td><td><button type="button" className="admin-template-link" onClick={() => setPreview({ title: campaignTemplates.byMail.get(item.id)?.label || "Mẫu thư đã gửi", message: { design: item.design, subject: item.subject, text: item.text }, kind: "private" })}>{campaignTemplates.byMail.get(item.id)?.label || "Xem mẫu"}</button></td><td>{mailActorLabel(item)}</td><td>{item.recipientIds ? <details className="newsletter-history-recipients"><summary>{item.recipientIds.length} email đã chọn</summary><ul>{item.recipientIds.map((id, index) => <li key={id}>{item.recipientEmails?.[index] || `Email cũ không còn trong danh sách (${id.slice(0, 8)}…)`}</li>)}</ul></details> : (AUDIENCES[item.segment||"all"]+(item.segment==="product"?" · "+item.productId:""))}</td><td>{STATUS[item.status] || item.status}{item.scheduledAt && <small>{new Date(item.scheduledAt).toLocaleString("vi-VN")}</small>}</td><td><span className="mail-result-count">{item.accepted || 0} đã nhận</span>{item.failed > 0 && <small className="mail-result-error">{item.failed} lỗi</small>}{item.unknown > 0 && <small className="order-summary-note">{item.unknown} chưa rõ</small>}</td>
                 <td><button type="button" className="admin-btn" onClick={() => setOutlookCampaign(item)}>Check</button>{!["completed","cancelled"].includes(item.status) && !item.nextSendAt && <button type="button" className="admin-btn" disabled={busy} onClick={async () => {
                   if (await confirm(`Tiếp tục gửi thư “${item.subject}”?`, { title: "Tiếp tục chiến dịch", confirmLabel: "Tiếp tục gửi" })) perform(() => run(item.id));
                 }}>Tiếp tục gửi</button>}{item.status==="queued"&&<button type="button" className="admin-btn" disabled={busy} onClick={async()=>{

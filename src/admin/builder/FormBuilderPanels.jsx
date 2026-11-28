@@ -293,6 +293,7 @@ export function OrderFormBuilderSettings({selected,productDetail,onChange}){
  if(selected==='ofConsent'){
   return <>
    <SettingGroup title="Ô tích đồng ý">
+    {labelField('marketingConsentText','Lời mời nhận tin',3)}
     {labelField('consentText','Nội dung câu đồng ý',3)}
    </SettingGroup>
    <StyleTypographyBlock title="Kiểu chữ câu đồng ý" style={value.consentStyle||{}} onStyleChange={next=>patch({consentStyle:{...value.consentStyle,...next}})}/>

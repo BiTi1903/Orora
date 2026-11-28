@@ -34,6 +34,7 @@ export const CHECKOUT_COPY={
  paymentHint:'Chưa thu tiền tại bước đặt đơn. ORORA sẽ hướng dẫn thanh toán sau khi tiếp nhận.',
  codPaymentHint:'Bạn thanh toán khi nhận hàng.',
  bankPaymentHint:'ORORA sẽ hiển thị thông tin chuyển khoản sau khi bạn đặt đơn và xác nhận cùng bạn.',
+ marketingConsentText:'Nhận tin về sản phẩm mới và mã quà từ ORORA (tùy chọn).',
  consentText:'Tôi đồng ý để ORORA liên hệ, gửi email xác nhận và xử lý đơn hàng theo thông tin đã cung cấp.',
 };
 export const CHECKOUT_RECEIPT_COPY={

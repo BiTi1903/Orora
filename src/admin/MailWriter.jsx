@@ -1,3 +1,4 @@
+import CampaignProducts from "./CampaignProducts";
 import { orderTrackingMail, trackingTemplate } from "../lib/order-tracking-mail.js";
 import { BUILTIN_MAIL_PRESETS, findMailPreset } from "../lib/mail-presets.js";
 import MailPreviewPane from "./MailPreviewPane";
@@ -178,6 +179,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
 
           {mode === "order_auto" && <MailOrderTokenBar onInsert={insertToken} disabled={working} />}
 
+          {mode==="private" && privateRecipients && <CampaignProducts cards={value.design?.products} onChange={products=>onChange({subject:value.subject,text:value.text,design:{...value.design,products}})}/>}
           <MailBodyBlocks text={value.text} onChange={text => onChange({ design: value.design, subject: value.subject, text })} />
 
           <MailDesignFields onEditBody={() => textRef.current?.focus()} kind={mode} value={value.design} activeSection={designSection} onSectionChange={setDesignSection} onChange={design => onChange({ subject: value.subject, text: value.text, design })} />

@@ -1,3 +1,4 @@
+import {audienceRule,audienceCount,eligibleContacts} from "./campaign-audience.js";
 import { checkReview, reviewPage, reviewCollection } from "./mail-review.js";
 import { mailTransport } from "./mail-transport.js";
 import { describeMailError } from "./mail-error.js";
@@ -126,6 +127,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
       try { body = typeof req.body === "string" ? JSON.parse(req.body) : req.body; }
       catch { return reply(400, { message: "Dữ liệu không hợp lệ." }); }
       if (!body || typeof body !== "object" || Buffer.byteLength(JSON.stringify(body)) > 40000) return reply(400, { message: "Dữ liệu không hợp lệ." });
+      if (body.action === "countAudience") return reply(200,{count:await audienceCount(db,contacts,audienceRule(body.segment,body.productId))});
       if (body.action === "cancelScheduledCampaign" && validId(body.id)) {
         const campaign = campaigns.doc(body.id);
         const cancelled = await db.runTransaction(async tx => {
@@ -344,12 +346,14 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         if (hasOrderTokens(message)) throw new Error("order_context_required");
         const recipientIds = body.recipientIds === undefined ? null : body.recipientIds;
         if (recipientIds !== null && (!Array.isArray(recipientIds) || !recipientIds.length || recipientIds.length > 100 || recipientIds.some((id) => typeof id !== "string" || !/^[a-f0-9]{64}$/.test(id)))) return reply(400, { message: "Chọn từ 1 đến 100 email đang hoạt động." });
+        const audience = audienceRule(body.segment,body.productId);
+        if (recipientIds && audience.segment !== "all") throw new Error("invalid_audience");
         const recipients = recipientIds === null ? null : [...new Set(recipientIds)].sort();
         await db.runTransaction(async (tx) => {
           const existing = await tx.get(campaign);
           if (existing.exists) {
             const saved = existing.data();
-            if (!sameMailDesign(saved.design, message.design) || saved.subject !== message.subject || saved.text !== message.text || JSON.stringify(saved.recipientIds || null) !== JSON.stringify(recipients)) throw new Error("campaign_conflict");
+            if ((saved.segment || "all") !== audience.segment || (saved.productId || "") !== audience.productId || !sameMailDesign(saved.design, message.design) || saved.subject !== message.subject || saved.text !== message.text || JSON.stringify(saved.recipientIds || null) !== JSON.stringify(recipients)) throw new Error("campaign_conflict");
             return;
           }
           let recipientEmails = null;
@@ -359,7 +363,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
             recipientEmails = people.map((person) => person.data().email);
           }
           const snapshot = await captureTemplate(tx, db, body.templateRef, message, "general");
-          tx.set(campaign, { ...message, ...snapshot, templateName: snapshot.templateName || "Thư soạn riêng cho khách", recipientIds: recipients, recipientEmails, createdAt: new Date(), createdBy: user.uid, ...mailActor(user), ...(queued ? {status:"queued", scheduledAt, nextSendAt:scheduledAt} : {status:"draft"}), cursor: null, accepted: 0, failed: 0, unknown: 0 });
+          tx.set(campaign, { ...message, ...audience, ...snapshot, templateName: snapshot.templateName || "Thư soạn riêng cho khách", recipientIds: recipients, recipientEmails, createdAt: new Date(), createdBy: user.uid, ...mailActor(user), ...(queued ? {status:"queued", scheduledAt, nextSendAt:scheduledAt} : {status:"draft"}), cursor: null, accepted: 0, failed: 0, unknown: 0 });
         });
         return reply(200, { id: body.id, message: "Đã tạo thư. Chưa gửi email." });
       }
@@ -388,7 +392,10 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         const page = state.recipientIds
           ? { docs: await Promise.all(state.recipientIds.filter((id) => !state.cursor || id > state.cursor).slice(0, 20).map((id) => contacts.doc(id).get())) }
           : await query.get();
+        const allowed = state.segment && state.segment !== "all"
+          ? new Set((await eligibleContacts(db,page.docs,state)).map(doc=>doc.id)) : null;
         for (const doc of page.docs) {
+          if (allowed && !allowed.has(doc.id)) {cursor=doc.id;continue;}
           const delivery = campaign.collection("deliveries").doc(doc.id);
           const claim = await db.runTransaction(async (tx) => {
             const [current, prior, person] = await tx.getAll(campaign, delivery, contacts.doc(doc.id));
@@ -481,6 +488,8 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         invalid_template_type: [400, "Loại mẫu đã chọn không hợp lệ. Hãy tải lại danh sách loại."],
         invalid_order_token: [400, "Tên biến trong mẫu đơn hàng chưa hợp lệ."],
         invalid_message: [400, "Nhập tiêu đề (tối đa 200 ký tự) và nội dung (tối đa 20.000 ký tự)."],
+        invalid_product_card:[400,"Điền tên sản phẩm và kiểm tra các đường dẫn HTTPS trên thẻ sản phẩm."],
+        invalid_audience: [400,"Chọn nhóm khách và sản phẩm hợp lệ."],
         invalid_recipients: [400, "Một email đã ngừng hoạt động hoặc bị xóa. Tải lại danh sách người nhận trước khi gửi."],
         template_changed: [409, "Mẫu đã được sửa hoặc xóa. Chọn lại mẫu hiện tại, hoặc sửa nội dung để gửi như thư soạn riêng."],
         campaign_conflict: [409, "Mã thư đã dùng cho nội dung khác."],

@@ -1,3 +1,9 @@
+## 28/11/2026 — Nhóm người nhận theo lịch sử mua và thẻ sản phẩm trong chiến dịch
+
+- Checkout có lựa chọn nhận tin riêng, mặc định bỏ chọn; khi khách chọn, tạo liên hệ mới cùng giao dịch đặt đơn và giữ trạng thái các liên hệ hiện có. Email admin lọc người nhận đang hoạt động theo đơn chưa hủy, kể cả đơn cũ và đơn nhiều sản phẩm; đếm trước khi xác nhận và kiểm tra lại khi gửi.
+- Trình soạn chiến dịch cho tìm, chèn, sửa và sắp xếp tối đa 8 sản phẩm. Ảnh và nút dùng cùng liên kết HTTPS, có bản xem trước và nội dung cho thư văn bản. Thẻ được lưu trong thiết kế chiến dịch; không sửa dữ liệu danh mục hay chuyển đổi đơn cũ.
+- 308 kiểm thử Node đạt, Playwright thao tác thẻ sản phẩm đạt ở 390 và 1440 px, build đạt. Chưa gửi thư thật.
+
 ## 28/11/2026 — Tạo mã quà và hiển thị tiền tiết kiệm
 
 - Đổi tên mục bán hàng, xếp lại form quản trị theo chiều rộng. Checkout đặt nút áp dụng cạnh ô mã quà và hiển thị số tiền được trừ trên nền riêng. Có thể chỉnh nhãn trong Visual Builder.

@@ -17,7 +17,12 @@ export function validateMessage(value) {
   if (!subject || subject.length > 200 || /[\r\n]/.test(subject) || !text.trim() || text.length > 20000) {
     throw new Error("invalid_message");
   }
-  return { subject, text, ...(value.design ? { design: mailDesign(value.design) } : {}) };
+  const design=value.design ? mailDesign(value.design) : null;
+  for (const card of design?.products || []) {
+    if (!card.name.trim() || !URL.canParse(card.url) || new URL(card.url).protocol !== "https:" ||
+        (card.image && (!URL.canParse(card.image) || new URL(card.image).protocol !== "https:"))) throw new Error("invalid_product_card");
+  }
+  return { subject, text, ...(design ? {design} : {}) };
 }
 
 function signature(id, env) {
@@ -47,7 +52,9 @@ export function withUnsubscribe(message, id, env = process.env, { kind = "campai
     origin = new URL(env.NEWSLETTER_SITE_ORIGIN).origin;
     link = unsubscribeLink(id, env);
   } catch { throw new Error("unsubscribe_configuration_missing"); }
-  const text = message.text.includes(link) ? message.text : `${message.text.trimEnd()}\n\n---\nHủy đăng ký nhận tin từ ORORA: ${link}`;
+  const productText = (message.design?.products || []).map(card=>[card.name,card.description,card.showPrice && card.price,card.url].filter(Boolean).join("\n")).join("\n\n");
+  const bodyText = [message.text.trimEnd(),productText].filter(Boolean).join("\n\n");
+  const text = message.text.includes(link) ? message.text : `${bodyText}\n\n---\nHủy đăng ký nhận tin từ ORORA: ${link}`;
   const contactEmail = env.MS_SENDER_EMAIL || "sales@ororavn.com";
   const html = message.html || (kind === "welcome"
     ? renderWelcomeEmailHtml({ ...message, unsubscribeUrl: link, siteOrigin: origin, contactEmail })

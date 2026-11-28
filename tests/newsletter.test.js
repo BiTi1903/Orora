@@ -697,3 +697,23 @@ test("queued campaigns wait for their time and run without an admin tab", async 
   assert.equal((await tick("test-worker")).body.idle,true);
   assert.equal(sent.length,1);
 });
+
+test("historical purchase audiences and product cards reach only active matching subscribers", async()=>{
+  const db=memoryDb(), {call,sent}=admin(db);
+  await seed(db,4);
+  const order=(id,i,status,items)=>db.collection("orders").doc(id).set({customer:{email:`customer${i}@example.com`},product:{id:"cleanser"},status,items});
+  await order("one",0,"completed",[{id:"serum"}]);await order("again",0,"completed",[{id:"serum"}]);
+  await order("two",1,"cancelled",[{id:"serum"}]);await order("three",2,"shipping",[]);
+  await order("four",3,"completed",[{id:"serum"}]);
+  await db.collection("newsletterSubscribers").doc(subscriberId("customer3@example.com")).set({status:"unsubscribed"},{merge:true});
+  for(const [segment,n] of [["all",3],["buyers",2],["nonbuyers",1],["product",1]]){
+    assert.equal((await call({action:"countAudience",segment,productId:"serum"})).body.count,n);
+  }
+  const card={id:"x",name:"Kem <mới>",image:"https://orora.example/kem.jpg",url:"https://orora.example/product/kem",description:"Dưỡng ẩm",price:"99.000 đ",showPrice:false,button:"Khám phá kem"};
+  assert.equal((await call({action:"createCampaign",id:"launch",segment:"product",productId:"serum",...message,design:{products:[card]}})).statusCode,200);
+  await call({action:"sendBatch",id:"launch"});
+  assert.equal(sent.length,1); assert.equal(sent[0][0],"customer0@example.com");
+  assert.match(sent[0][1].html,/Kem &lt;mới&gt;/);
+  assert.equal(sent[0][1].html.split('href="'+card.url+'"').length-1,2);
+  assert.doesNotMatch(sent[0][1].html,/99\.000/);assert.ok(sent[0][1].text.includes(card.url));
+});

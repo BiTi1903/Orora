@@ -128,6 +128,7 @@ export default function OrderForm({ product, cartItems, home, onClose, selection
         paymentMethod: data.get("paymentMethod"), consent: data.get("consent") === "on",
       };
     if (code.trim() && !applied) {setPromoMessage('Hãy áp dụng mã hoặc xóa mã trước khi đặt hàng.');return;}
+    if(data.get("marketingConsent")==="on") payload.marketingConsent=true;
     if (applied) Object.assign(payload,{promotionCode:applied.code,expectedDiscount:applied.discount});
     submitting.current = true; setBusy(true); setResult(null);
     const controller = new AbortController(), timeout = window.setTimeout(() => controller.abort(), 20_000);

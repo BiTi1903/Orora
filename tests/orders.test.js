@@ -546,3 +546,17 @@ test("validated promotions discount trusted prices and consume a single use on r
   assert.equal((await call({...order,requestId:randomUUID()})).statusCode,400);
   assert.equal((await db.collection("promotions").doc("THANKS").get()).data().used,1);
 });
+
+test("checkout newsletter consent is optional and preserves suppression",async()=>{
+  const {db,call}=await setup();
+  const data=body();
+  await call(data);
+  const contacts=db.collection("newsletterSubscribers");
+  assert.equal((await contacts.get()).docs.length,0);
+  assert.equal((await call({...body(),marketingConsent:true})).statusCode,201);
+  const [contact]=(await contacts.get()).docs;
+  assert.equal(contact.data().source,"checkout");
+  await contacts.doc(contact.id).set({status:"unsubscribed"},{merge:true});
+  await call({...body(),marketingConsent:true});
+  assert.equal((await contacts.doc(contact.id).get()).data().status,"unsubscribed");
+});

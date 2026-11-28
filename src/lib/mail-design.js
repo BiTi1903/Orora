@@ -281,6 +281,14 @@ export function mailDesign(input) {
   for (const [key, [, fallback]] of Object.entries(MAIL_TOGGLES)) {
     result[key] = typeof input?.[key] === "boolean" ? input[key] : fallback;
   }
+  if (Array.isArray(input?.products) && input.products.length) {
+    result.products=input.products.slice(0,8).filter(card=>card && typeof card==="object").map(card=>{
+      const fields={};
+      for(const [key,limit] of Object.entries({id:150,name:150,image:1500,url:1000,description:400,price:60,button:60}))
+        fields[key]=typeof card[key]==="string" ? card[key].slice(0,limit) : "";
+      return {...fields,showPrice:card.showPrice!==false};
+    });
+  }
   result.useHtml = input?.useHtml === true;
   result.htmlSource = typeof input?.htmlSource === "string" ? input.htmlSource.slice(0, MAIL_CODE_LIMIT) : DEFAULT_MAIL_CODE;
   return result;

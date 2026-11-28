@@ -389,6 +389,20 @@ export function renderWelcomeEmailHtml({
   });
 }
 
+function renderCampaignProducts(frame) {
+  return (frame.products || []).map(card=>{
+    const url=safeHttpsUrl(card.url), image=safeHttpsUrl(card.image);
+    if (!url || !card.name.trim()) return "";
+    const link=escapeHtml(url), name=escapeHtml(card.name);
+    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0;border:1px solid ${frame.border}"><tr><td style="padding:16px">
+      ${image ? `<a href="${link}"><img src="${escapeHtml(image)}" alt="${name}" width="400" style="width:100%;max-width:400px;height:auto;display:block"></a>` : ""}
+      <h2>${name}</h2>${card.description ? `<p>${escapeHtml(card.description)}</p>` : ""}
+      ${card.showPrice && card.price ? `<p><strong>${escapeHtml(card.price)}</strong></p>` : ""}
+      <a href="${link}" style="display:inline-block;background:${frame.button};color:${frame.buttonText};padding:10px 16px;text-decoration:none">${escapeHtml(card.button||"Xem sản phẩm")}</a>
+    </td></tr></table>`;
+  }).join("");
+}
+
 export function renderBrandedEmailHtml({
   subject = "",
   text = "",
@@ -409,6 +423,7 @@ export function renderBrandedEmailHtml({
     ${renderHeroHeading(frame, subject || "Thông báo từ ORORA", "left", interactivePreview)}
     ${renderBanner(frame, interactivePreview)}
     <div${sectionAttr("Nội dung", interactivePreview)}>${bodyCopy}</div>
+    ${renderCampaignProducts(frame)}
     ${renderCouponBox(frame, interactivePreview)}
     ${(design?.buttonLabel?.trim() || ctaLabel) && (marketingButtonUrl(design) || ctaUrl) ? renderButton(ctaLabel, marketingButtonUrl(design) || ctaUrl, design, interactivePreview) : ""}
   `;
