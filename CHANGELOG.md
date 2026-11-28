@@ -1,3 +1,9 @@
+## 28/11/2026 — Mã ưu đãi và lịch gửi chiến dịch
+
+- Bán hàng → Mã ưu đãi quản lý giảm theo phần trăm hoặc số tiền, ngày hết hạn, đơn tối thiểu, tổng lượt và lượt mỗi email. Checkout báo mức giảm trước khi đặt. Máy chủ kiểm tra giá và ghi lượt cùng giao dịch tạo đơn. Thể hiện mã trong biên nhận, chi tiết đơn và email. Studio gợi ý mã đang dùng khi nhập mã vào thư.
+- Gửi thư hỗ trợ gửi nền, hẹn giờ và hủy phần chiến dịch còn trong hàng chờ. Workflow campaigns.yml kiểm tra khoảng 5 phút một lần, cần GitHub Actions secret CRON_SECRET cùng giá trị với Vercel. API yêu cầu tác vụ đã chạy trong giờ qua trước khi nhận lịch mới.
+- Thêm collection promotions và bộ đếm theo email cho đơn có mã; lịch mới lưu trong newsletterCampaigns. Không chuyển đổi dữ liệu cũ. 306 kiểm thử Node, 3 ca Playwright ở 390px, build và ESLint các file thay đổi đạt. Chưa gửi email thật.
+
 ## 28/11/2026 — Mẫu email chiến dịch giới thiệu bộ sưu tập
 
 - Thêm mẫu cho danh sách đăng ký trong kho email. Mẫu cảm ơn mặc định ẩn mã ưu đãi chưa cấu hình. Không tự điền mã khi quản trị viên để trống.

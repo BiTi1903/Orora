@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import {orderRequest} from "./order-api";
+import { useId, useEffect, useRef, useState } from "react";
 import {
   FRAME_COLORS,
   FRAME_SIZES,
@@ -55,6 +56,15 @@ export default function MailDesignFields({
   onSectionChange,
   defaultOpen = false,
 }) {
+  const promoListId = useId();
+  const [promoOptions,setPromoOptions] = useState(null);
+  async function loadPromotions(){
+    if (promoOptions) return;
+    try {
+      const {promotions}=await orderRequest(null,{promotions:"1"});
+      setPromoOptions(promotions.filter(p=>p.active && (!p.limit || (p.used||0)<p.limit) && (!p.expires || Date.parse(p.expires+"T23:59:59.999+07:00")>=Date.now())));
+    } catch { /* Staff with email-only access can enter a known code. */ }
+  }
   const sections = buildSections(kind, hasOrderVars);
   const [localSection, setLocalSection] = useState("Khung thư");
   const section = activeSection && Object.hasOwn(sections, activeSection) ? activeSection : localSection;
@@ -96,11 +106,14 @@ export default function MailDesignFields({
         {label}
         <input
           type={isUrl ? "url" : "text"}
+          list={key==="couponCode" ? promoListId : undefined}
+          onFocus={key==="couponCode" ? loadPromotions : undefined}
           maxLength={limit}
           placeholder={MAIL_PLACEHOLDERS[key] || ""}
           value={design[key]}
           onChange={(event) => change(key, event.target.value)}
         />
+        {key==="couponCode"&&<datalist id={promoListId}>{promoOptions?.map(p=><option value={p.code} key={p.code}/>)}</datalist>}
       </label>
     );
   }

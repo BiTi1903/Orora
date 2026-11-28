@@ -29,9 +29,11 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
       res.setHeader("Allow", "GET, POST");
       return reply(405, { message: "Phương thức không được hỗ trợ." });
     }
+    const worker = req.method === "GET" && req.query?.dispatchCampaign === "1";
+    if (worker && (!env.CRON_SECRET || req.headers.authorization !== "Bearer "+env.CRON_SECRET)) return reply(403,{message:"Không có quyền chạy lịch."});
     let user;
     try {
-      user = await requireAdmin(req, {
+      user = worker ? {uid:"campaign-worker"} : await requireAdmin(req, {
         verifyToken,
         getDb,
         env,
@@ -54,6 +56,12 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
     }
     try {
       const db = await getDb();
+      if (worker) {
+        await db.collection("newsletterSettings").doc("campaignWorker").set({lastSeen:Date.now()});
+        const due = await db.collection("newsletterCampaigns").where("nextSendAt",">",0).where("nextSendAt","<=",Date.now()).orderBy("nextSendAt").limit(1).get();
+        if (!due.docs.length) return reply(200,{idle:true});
+        req = {method:"POST",body:{action:"sendBatch",id:due.docs[0].id}};
+      }
       const settings = db.collection("newsletterSettings").doc("welcome");
       const campaigns = db.collection("newsletterCampaigns");
       const contacts = db.collection("newsletterSubscribers");
@@ -118,6 +126,16 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
       try { body = typeof req.body === "string" ? JSON.parse(req.body) : req.body; }
       catch { return reply(400, { message: "Dữ liệu không hợp lệ." }); }
       if (!body || typeof body !== "object" || Buffer.byteLength(JSON.stringify(body)) > 40000) return reply(400, { message: "Dữ liệu không hợp lệ." });
+      if (body.action === "cancelScheduledCampaign" && validId(body.id)) {
+        const campaign = campaigns.doc(body.id);
+        const cancelled = await db.runTransaction(async tx => {
+          const saved = (await tx.get(campaign)).data();
+          if (saved?.status !== "queued" || saved.leaseUntil > Date.now()) return false;
+          tx.set(campaign,{nextSendAt:null,status:"cancelled"},{merge:true});
+          return true;
+        });
+        return reply(cancelled ? 200 : 409,{message:cancelled ? "Đã hủy các đợt gửi còn lại." : "Trạng thái vừa thay đổi. Hãy tải lại lịch sử."});
+      }
       if (body.action === "checkReview") return reply(200, await checkReview(db, "newsletter", body.ids, checkOutlook));
       if (body.action === "campaignDeliveryStatuses") {
         if (!validId(body.id) || (body.cursor && !/^[a-f0-9]{64}$/.test(body.cursor))) return reply(400, { message: "Thư hoặc trang không hợp lệ." });
@@ -314,6 +332,14 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
       if (!env.MS_TENANT_ID || !env.MS_CLIENT_ID || !env.MS_CLIENT_SECRET) return reply(503, { message: "Chưa cấu hình Microsoft 365 trên máy chủ." });
       const campaign = campaigns.doc(body.id);
       if (body.action === "createCampaign") {
+        const queued = body.background === true;
+        const scheduledAt = body.scheduledAt ?? Date.now();
+        if (queued && !env.CRON_SECRET) return reply(503,{message:"Chưa cấu hình CRON_SECRET để gửi nền."});
+        if (queued) {
+          const workerState = await db.collection("newsletterSettings").doc("campaignWorker").get();
+          if (!(workerState.data()?.lastSeen > Date.now()-3600000)) return reply(503,{message:"Chưa thấy tác vụ gửi nền chạy trong giờ qua. Kiểm tra workflow gửi chiến dịch và CRON_SECRET hoặc chọn gửi trong tab."});
+        }
+        if (queued && (!Number.isSafeInteger(scheduledAt) || (body.scheduledAt != null && scheduledAt <= Date.now()))) return reply(400,{message:"Giờ gửi chưa hợp lệ."});
         const message = validateMessage(body);
         if (hasOrderTokens(message)) throw new Error("order_context_required");
         const recipientIds = body.recipientIds === undefined ? null : body.recipientIds;
@@ -333,7 +359,7 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
             recipientEmails = people.map((person) => person.data().email);
           }
           const snapshot = await captureTemplate(tx, db, body.templateRef, message, "general");
-          tx.set(campaign, { ...message, ...snapshot, templateName: snapshot.templateName || "Thư soạn riêng cho khách", recipientIds: recipients, recipientEmails, createdAt: new Date(), createdBy: user.uid, ...mailActor(user), status: "draft", cursor: null, accepted: 0, failed: 0, unknown: 0 });
+          tx.set(campaign, { ...message, ...snapshot, templateName: snapshot.templateName || "Thư soạn riêng cho khách", recipientIds: recipients, recipientEmails, createdAt: new Date(), createdBy: user.uid, ...mailActor(user), ...(queued ? {status:"queued", scheduledAt, nextSendAt:scheduledAt} : {status:"draft"}), cursor: null, accepted: 0, failed: 0, unknown: 0 });
         });
         return reply(200, { id: body.id, message: "Đã tạo thư. Chưa gửi email." });
       }
@@ -343,9 +369,12 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         const saved = await tx.get(campaign);
         if (!saved.exists) throw new Error("campaign_missing");
         const data = saved.data();
+        if (worker && (!Number.isFinite(data.nextSendAt) || data.nextSendAt > Date.now())) throw new Error("campaign_busy");
+        if (data.status === "cancelled") throw new Error("campaign_conflict");
+        if (data.scheduledAt > Date.now()) throw new Error("campaign_busy");
         if (data.status === "completed") return data;
         if (data.leaseUntil > Date.now()) throw new Error("campaign_busy");
-        tx.set(campaign, { lease, leaseUntil: Date.now() + 120000, status: "sending" }, { merge: true });
+        tx.set(campaign, { lease, ...(worker ? {nextSendAt:Date.now()+120000} : {}), leaseUntil: Date.now() + 120000, status: "sending" }, { merge: true });
         return data;
       });
       if (state.status === "completed") return reply(200, { completed: true, campaign: { id: body.id, ...state } });
@@ -410,15 +439,16 @@ export function createNewsletterAdminHandler({ getDb, verifyToken, sendMail, loo
         await db.runTransaction(async (tx) => {
           const current = await tx.get(campaign);
           if (current.data().lease !== lease) throw new Error("campaign_busy");
-          tx.set(campaign, { cursor, status: completed ? "completed" : "paused", leaseUntil: 0, updatedAt: new Date() }, { merge: true });
+          tx.set(campaign, { cursor, status: completed ? "completed" : worker && !paused ? "queued" : "paused", ...(state.scheduledAt ? {nextSendAt:completed || paused || !worker ? null : Date.now()} : {}), leaseUntil: 0, updatedAt: new Date() }, { merge: true });
         });
+        if (worker) return reply(200,{processed:true,completed,paused});
         const saved = (await campaign.get()).data();
         return reply(200, { completed, paused, ...(lastError ? { message: lastError.errorMessage } : {}), campaign: { id: body.id, ...saved } });
       } catch (error) {
         // Release only our lease. Reserved deliveries remain non-retryable if their outcome is unknown.
         await db.runTransaction(async (tx) => {
           const current = await tx.get(campaign);
-          if (current.data()?.lease === lease) tx.set(campaign, { status: "paused", leaseUntil: 0 }, { merge: true });
+          if (current.data()?.lease === lease) tx.set(campaign, { status: "paused", ...(worker ? {nextSendAt:null} : {}), leaseUntil: 0 }, { merge: true });
         });
         throw error;
       }

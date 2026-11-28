@@ -530,3 +530,19 @@ test("pending orders can page past fifty completed orders while the status index
   assert.deepEqual(next.body.orders.map(order => order.id), [oldest]);
   assert.equal(next.body.nextCursor, null);
 });
+
+test("validated promotions discount trusted prices and consume a single use on replay",async()=>{
+  const {db,call}=await setup();
+  const staff=admin(db);
+  const rule={action:"savePromotion",code:"thanks",active:true,minimum:300000,limit:1,type:"percent",value:10,expires:""};
+  assert.equal((await staff(rule)).statusCode,200);
+  assert.equal((await staff(rule)).statusCode,409);
+  const quote=await call({action:"quotePromotion",code:"Thanks",subtotal:500000});
+  assert.equal(quote.body.discount,50000);
+  const order={...body(),promotionCode:"Thanks",expectedDiscount:50000};
+  assert.equal((await call({...order,expectedDiscount:99999})).statusCode,409);
+  assert.equal((await call(order)).body.discount,50000);
+  assert.equal((await call(order)).statusCode,201);
+  assert.equal((await call({...order,requestId:randomUUID()})).statusCode,400);
+  assert.equal((await db.collection("promotions").doc("THANKS").get()).data().used,1);
+});

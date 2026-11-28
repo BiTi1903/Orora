@@ -16,3 +16,27 @@ test('checkout policy opens in its own tab, directly and after reload',async({pa
   await policy.reload();
   await expect(heading).toBeVisible();
 });
+
+test('shopper applies a code and sees the discount before shipping is known',async({page})=>{
+  await page.route('**/api/orders',route=>route.fulfill({json:{code:'THANKS',discount:10000}}));
+  await mount(page,`import Order from '/src/components/OrderForm.jsx';${render("R.createElement(Order,{product:{id:'1',name:'SP',price:'100000'},home:{},onClose:()=>{}})")}`);
+  await page.getByLabel('Mã ưu đãi',{exact:true}).fill('thanks');
+  await page.getByRole('button',{name:'Áp dụng mã'}).click();
+  await expect(page.locator('.checkout-total')).toContainText('90.000');
+  await page.getByLabel('Mã ưu đãi',{exact:true}).fill('');
+  await expect(page.locator('.checkout-total')).toContainText('100.000');
+});
+
+test('admin creates a fixed-value promotion and can disable it',async({page})=>{
+  await mount(page,`import Admin from '/src/admin/PromotionsAdmin.jsx';${render('R.createElement(Admin)')}`,{
+    'admin/order-api.js':"const rows=new Map();export async function orderRequest(body){if(body)rows.set(body.code,body); return {promotions:[...rows.values()]};}"
+  });
+  await page.getByLabel('Mã khách nhập').fill('THANKS');
+  await page.getByLabel('Kiểu giảm').selectOption('fixed');
+  await page.getByLabel('Mức giảm (đồng)').fill('25000');
+  await page.getByRole('button',{name:'Lưu mã'}).click();
+  await page.getByRole('button',{name:'THANKS',exact:true}).click();
+  await page.getByLabel('Cho phép sử dụng').uncheck();
+  await page.getByRole('button',{name:'Lưu mã'}).click();
+  await expect(page.getByText(/25.000 đ · Đã tắt/)).toBeVisible();
+});

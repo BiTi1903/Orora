@@ -644,6 +644,7 @@ export function renderOrderEmailHtml({
           <td class="mail-detail-size-13-5" style="padding:4px 0;font-family:${detailFont};font-size:${frame.detailSize - 0.5}px;color:${frame.footerText};">${escapeHtml(frame.subtotalLabel)}</td>
           <td align="right" class="mail-detail-size-13-5" style="padding:4px 0;font-family:${detailFont};font-size:${frame.detailSize - 0.5}px;color:${frame.headingColor};">${escapeHtml(subtotalText)}</td>
         </tr>
+        ${order?.discount > 0 ? `<tr><td>${escapeHtml(order.promotionCode)}</td><td align="right">−${escapeHtml(formatVnd(order.discount))}</td></tr>` : ""}
         <tr>
           <td class="mail-detail-size-13-5" style="padding:4px 0;font-family:${detailFont};font-size:${frame.detailSize - 0.5}px;color:${frame.footerText};">${escapeHtml(frame.shippingLabel)}</td>
           <td align="right" class="mail-detail-size-13-5" style="padding:4px 0;font-family:${detailFont};font-size:${frame.detailSize - 0.5}px;color:${frame.headingColor};">${escapeHtml(shippingText)}</td>

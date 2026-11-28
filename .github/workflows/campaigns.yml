@@ -1,0 +1,24 @@
+name: Gửi chiến dịch email đến hạn
+on:
+  schedule:
+    - cron: '3-59/5 * * * *'
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: campaign-dispatch
+  cancel-in-progress: false
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Xử lý các đợt thư đến hạn
+        env:
+          WORKER_KEY: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$WORKER_KEY" ]; then exit 0; fi
+          for batch in {1..20}; do
+            result=$(curl --fail --silent --show-error --max-time 90 -H "Authorization: Bearer $WORKER_KEY" 'https://ororavn.com/api/newsletter?dispatchCampaign=1')
+            if jq -e '.idle == true' <<< "$result" >/dev/null; then break; fi
+            sleep 5
+          done

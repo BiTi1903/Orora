@@ -140,6 +140,7 @@ export function OrderSuccessContent({order,home={},appearance={},onClose,preview
       :<div><dt>{text('receiptProductLabel')}</dt><dd>{order.productName}{order.variantLabel?` (${order.variantLabel})`:''} × {order.quantity}</dd></div>}
      <div><dt>{text('receiptPaymentLabel')}</dt><dd>{PAYMENT_LABELS[order.paymentMethod]||order.paymentMethod}</dd></div>
      <div><dt>{text('receiptSubtotalLabel')}</dt><dd>{order.subtotal==null?'ORORA sẽ báo giá khi xác nhận':formatVnd(order.subtotal)}</dd></div>
+     {order.discount>0&&<div><dt>{order.promotionCode}</dt><dd>−{formatVnd(order.discount)}</dd></div>}
      <div><dt>{text('receiptShippingLabel')}</dt><dd>{order.shippingFee==null?'Xác nhận sau':formatVnd(order.shippingFee)}</dd></div>
      <div className="order-received-total" style={totalStyle}><dt>{text('receiptTotalLabel')}</dt><dd>{order.totalAmount==null?'ORORA sẽ xác nhận tổng tiền':formatVnd(order.totalAmount)}</dd></div>
     </dl>

@@ -74,14 +74,28 @@ export default function OrderForm({ product, cartItems, home, onClose, selection
     : (unitPrice === null ? null : unitPrice * (Number(quantity) || 0));
   const shipping = useMemo(() => shippingFeeFor(home.shippingSettings, provinceCode, wardCode,subtotal), [home.shippingSettings, provinceCode, wardCode,subtotal]);
   const shippingProp = useMemo(() => ({ ...shipping, blocked: home.shippingSettings?.enabled === true && shipping.fee === null }), [shipping, home.shippingSettings?.enabled]);
-  const total = subtotal === null || shipping.fee === null ? null : subtotal + shipping.fee;
+  const [code,setCode] = useState('');
+  const [quote,setQuote] = useState(null);
+  const [promoMessage,setPromoMessage] = useState('');
+  const [checking,setChecking] = useState(false);
+  const applied = quote?.subtotal === subtotal && quote.code === code.trim().toUpperCase() ? quote : null;
+  async function applyCode(){
+    setChecking(true);setPromoMessage('');setQuote(null);
+    try {
+      const response=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'quotePromotion',code,subtotal})});
+      const data=await response.json();
+      if(!response.ok) throw new Error(data.message);
+      setQuote({...data,subtotal});
+    } catch(error){setPromoMessage(error.message || 'Chưa kiểm tra được mã.');} finally{setChecking(false);}
+  }
+  const total = subtotal === null || shipping.fee === null ? null : subtotal - (applied?.discount || 0) + shipping.fee;
   const locale = useLocale();
   const tr = (val) => (locale !== "vi" ? translatePhrase(val, locale) : val);
   const modalStyle = useMemo(() => ({ ...checkoutStyle(appearance), background: appearance.formBackground, borderColor: appearance.formBorderColor }), [appearance]);
   const titleStyle = useMemo(() => toCss(appearance.formTitleStyle || appearance.formHeadingStyle, { responsive: true }), [appearance]);
   if (result?.code) return <ModalDialog key="success" title={tr(appearance.receiptTitle?.trim() || CHECKOUT_RECEIPT_COPY.receiptTitle)} motionSource={motionSource} motionDuration={240} motionClosing={closing} onMotionClosed={onClose} onClose={requestClose} className="order-success-modal" style={receiptModalStyle(appearance)} headingStyle={toCss(appearance.receiptTitleStyle, { responsive: true })}><OrderSuccessContent order={result} home={home} appearance={appearance} onClose={requestClose} /></ModalDialog>;
   if (!activeProduct) return null;
-  return <ModalDialog key="form" title={tr(appearance.formLabels?.title?.trim() || CHECKOUT_COPY.title)} motionSource={motionSource} motionDuration={240} motionClosing={closing} onMotionClosed={onClose} onClose={requestClose} closeDisabled={busy} className="order-form-modal" style={modalStyle} headingStyle={titleStyle}><OrderFormFields onEdit={()=>{dirty.current=true;}} product={activeProduct} items={normalizedItems} subtotal={subtotal} options={isMulti ? [] : options} variantId={variantId} quantity={quantity} onVariantChange={changeVariant} onQuantityChange={changeQuantity} addresses={addresses} provinceCode={provinceCode} wardCode={wardCode} onProvinceChange={changeProvince} onWardChange={setWardCode} methods={methods} unitPrice={unitPrice} shipping={shippingProp} total={total} appearance={appearance} busy={busy} error={result?.error} onSubmit={async (event) => {
+  return <ModalDialog key="form" title={tr(appearance.formLabels?.title?.trim() || CHECKOUT_COPY.title)} motionSource={motionSource} motionDuration={240} motionClosing={closing} onMotionClosed={onClose} onClose={requestClose} closeDisabled={busy} className="order-form-modal" style={modalStyle} headingStyle={titleStyle}><OrderFormFields promo={{code,change:value=>{setCode(value);setQuote(null);setPromoMessage('');},apply:applyCode,checking,message:promoMessage,applied}} onEdit={()=>{dirty.current=true;}} product={activeProduct} items={normalizedItems} subtotal={subtotal} options={isMulti ? [] : options} variantId={variantId} quantity={quantity} onVariantChange={changeVariant} onQuantityChange={changeQuantity} addresses={addresses} provinceCode={provinceCode} wardCode={wardCode} onProvinceChange={changeProvince} onWardChange={setWardCode} methods={methods} unitPrice={unitPrice} shipping={shippingProp} total={total} appearance={appearance} busy={busy} error={result?.error} onSubmit={async (event) => {
     event.preventDefault();
     if (submitting.current || busy || !methods.length || !provinceCode || !wardCode || (home.shippingSettings?.enabled === true && shipping.fee === null)) return;
     if (!isMulti && ((options.length > 0 && !variant) || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_ORDER_QUANTITY)) return;
@@ -113,6 +127,8 @@ export default function OrderForm({ product, cartItems, home, onClose, selection
         name: data.get("name"), phone: data.get("phone"), email: data.get("email"), provinceCode, wardCode, addressDetail: data.get("addressDetail"), expectedShippingFee: shipping.fee, note: data.get("note"),
         paymentMethod: data.get("paymentMethod"), consent: data.get("consent") === "on",
       };
+    if (code.trim() && !applied) {setPromoMessage('Hãy áp dụng mã hoặc xóa mã trước khi đặt hàng.');return;}
+    if (applied) Object.assign(payload,{promotionCode:applied.code,expectedDiscount:applied.discount});
     submitting.current = true; setBusy(true); setResult(null);
     const controller = new AbortController(), timeout = window.setTimeout(() => controller.abort(), 20_000);
     try {

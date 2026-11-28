@@ -20,7 +20,7 @@ function readProfile(preview){
  return {remember:false, fields:{}};
 }
 
-function OrderFormFields({onEdit,product,items=null,subtotal,options,variantId,quantity,onVariantChange,onQuantityChange,addresses,provinceCode,wardCode,onProvinceChange,onWardChange,methods,unitPrice,shipping,total,appearance={},busy=false,error,onSubmit,preview=false,selectedElement,onSelect}){
+function OrderFormFields({promo,onEdit,product,items=null,subtotal,options,variantId,quantity,onVariantChange,onQuantityChange,addresses,provinceCode,wardCode,onProvinceChange,onWardChange,methods,unitPrice,shipping,total,appearance={},busy=false,error,onSubmit,preview=false,selectedElement,onSelect}){
  const [phoneError,setPhoneError]=useState(false);
  const locale=useLocale();
  const tr=(val)=>preview?val:translatePhrase(val,locale);
@@ -62,7 +62,7 @@ function OrderFormFields({onEdit,product,items=null,subtotal,options,variantId,q
  const mark=(key,base='')=>preview&&onSelect?{'data-builder-key':key,className:`${base}${selectedElement===key?' builder-selected':''}`.trim(),onClick:event=>pick(key,event)}:{className:base||undefined};
  const effectiveSubtotal=subtotal!==undefined?subtotal:(unitPrice===null?null:unitPrice*(Number(quantity)||0));
  const itemTotal=effectiveSubtotal===null?'Shop liên hệ báo giá':formatVnd(effectiveSubtotal);
- const displayTotal=total===null?(effectiveSubtotal===null?tr('ORORA sẽ xác nhận'):itemTotal):formatVnd(total);
+ const displayTotal=total===null?(effectiveSubtotal===null?tr('ORORA sẽ xác nhận'):formatVnd(effectiveSubtotal-(promo?.applied?.discount||0))):formatVnd(total);
  const focusFirstMissing=form=>{
   if(!form)return;
   if(!isMulti&&options.length>0&&!variantId){
@@ -172,6 +172,10 @@ function OrderFormFields({onEdit,product,items=null,subtotal,options,variantId,q
     </div>
    </section>
    <section {...mark('ofSummary','checkout-summary')} aria-label={copy.summaryHeading||'Thanh toán'} style={summaryTextStyle}>
+    <label>{label('promotionLabel')}<input value={promo?.code||''} maxLength={40} disabled={busy||promo?.checking||preview} onChange={e=>promo?.change(e.target.value)} /></label>
+    <button type="button" disabled={!promo?.code.trim()||busy||promo?.checking||preview} onClick={promo?.apply}>{label('promotionApply')}</button>
+    {promo?.message&&<p role="alert">{tr(promo.message)}</p>}
+    {promo?.applied&&<div className="order-summary" role="status"><span>{promo.applied.code}</span><strong>−{formatVnd(promo.applied.discount)}</strong></div>}
     {shipping.fee!==null&&<div className="order-summary"><span>{tr('Tạm tính')}</span><strong>{itemTotal}</strong></div>}
     <div className="order-summary"><span>{label('shippingFeeLabel')}</span><strong>{shipping.fee===null?tr(shipping.reason||label('shippingUnknownLabel')):formatVnd(shipping.fee)}</strong></div>
     <div className="order-summary checkout-total"><span>{shipping.fee===null?label('subtotalPendingLabel'):label('totalLabel')}</span><strong style={summaryTotalStyle}>{displayTotal}</strong></div>

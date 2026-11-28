@@ -680,3 +680,20 @@ test("checkCampaignBatchOutlook batch-checks campaign deliveries and marks bounc
 });
 
 
+
+test("queued campaigns wait for their time and run without an admin tab", async () => {
+  const db=memoryDb();
+  const {call,sent}=admin(db,{env:{...env,CRON_SECRET:"test-worker"}});
+  await seed(db,1);
+  await call(null,{method:"GET",headers:{authorization:"Bearer test-worker"},query:{dispatchCampaign:"1"}});
+  const scheduledAt=Date.now()+60000;
+  const created=await call({action:"createCampaign",id:"future",background:true,scheduledAt,...message});
+  assert.equal(created.statusCode,200);
+  const tick=(token)=>call(null,{method:"GET",headers:{authorization:"Bearer "+token},query:{dispatchCampaign:"1"}});
+  assert.equal((await tick("wrong")).statusCode,403);
+  assert.equal((await tick("test-worker")).body.idle,true);
+  await db.collection("newsletterCampaigns").doc("future").set({scheduledAt:1,nextSendAt:1},{merge:true});
+  assert.equal((await tick("test-worker")).body.completed,true);
+  assert.equal((await tick("test-worker")).body.idle,true);
+  assert.equal(sent.length,1);
+});

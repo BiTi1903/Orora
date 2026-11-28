@@ -372,6 +372,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
               ? <ul className="admin-order-items">{selected.items.map((item, idx) => <li key={`${item.id || idx}:${item.variantId || ""}`}>{orderProductName(item)} × {item.quantity} — {formatProductPrice(item.priceText) || "Cần báo giá"}</li>)}</ul>
               : <><p><strong>{orderProductName(selected.product)}</strong> × {selected.quantity}</p><p>Đơn giá: {formatProductPrice(selected.product.priceText) || "Cần báo giá"}</p></>}
             <p>Tạm tính: {selected.subtotal === null ? "Cần báo giá" : formatVnd(selected.subtotal)}</p>
+            {selected.discount>0&&<p>Mã {selected.promotionCode} · Giảm {formatVnd(selected.discount)}</p>}
             <p>Phí giao hàng: {selected.shippingFee == null ? "Xác nhận sau" : formatVnd(selected.shippingFee)}</p>
             <p><strong>Tổng tiền: {selected.totalAmount == null ? "Chưa chốt tổng tiền" : formatVnd(selected.totalAmount)}</strong></p>
             <p>Phương thức: {PAYMENT_LABELS[selected.paymentMethod] || selected.paymentMethod} · {orderPaymentLabel(selected)}</p>

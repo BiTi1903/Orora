@@ -1,3 +1,4 @@
+import {promotionCode,promotionRule,promotionDiscount} from "./promotions.js";
 import { checkReview, reviewPage, reviewCollection } from "./mail-review.js";
 import {validOrderPhone} from "../src/lib/order-phone.js";
 import { MAX_ORDER_QUANTITY, productVolumeOptions, selectedVolumeOption, validateVolumeOptions, volumePriceText } from "../src/lib/product-options.js";
@@ -53,6 +54,7 @@ const orderCreatedPayload = (result, mailStatus) => ({
   mailStatus,
   subtotal: result.subtotal,
   shippingFee: result.shippingFee ?? null,
+  ...(result.promotionCode ? {promotionCode:result.promotionCode,discount:result.discount} : {}),
   totalAmount: result.totalAmount ?? null,
   paymentMethod: result.paymentMethod,
   message: result.shippingFee == null ? "Đã nhận đơn hàng. ORORA sẽ liên hệ xác nhận sản phẩm, phí giao hàng và cách thanh toán." : "Đã nhận đơn hàng. ORORA sẽ liên hệ xác nhận và hỗ trợ thanh toán.",
@@ -63,6 +65,13 @@ export function createOrderHandler({ getDb, sendMail, notifyStore, schedule, env
     if (req.method !== "POST") { res.setHeader("Allow", "POST"); return res.status(405).json({ message: "Chỉ nhận đơn bằng POST." }); }
     try {
       const body = readBody(req, env, 24000);
+      if (body.action === "quotePromotion") {
+        const code = promotionCode(body.code);
+        const db = await getDb();
+        const snap = await db.collection("promotions").doc(code).get();
+        return res.status(200).json({code, discount:promotionDiscount(snap.data(),body.subtotal,now())});
+      }
+      const promo = body.promotionCode ? promotionCode(body.promotionCode) : "";
       const customer = Object.fromEntries(["name", "phone", "email", "address", "note"].map((key) => [key, typeof body[key] === "string" ? body[key].trim() : ""]));
       const delivery = await resolveDeliveryAddress(body);
       if (delivery) Object.assign(customer, delivery);
@@ -84,8 +93,8 @@ export function createOrderHandler({ getDb, sendMail, notifyStore, schedule, env
         }
       }
       const digest = isMulti
-        ? hash(JSON.stringify({ items: rawItems.map((item) => ({ productId: item.productId, quantity: item.quantity, ...(item.variantId ? { variantId: item.variantId } : {}) })), paymentMethod: body.paymentMethod, customer }))
-        : hash(JSON.stringify({ ...(body.variantId ? { variantId: body.variantId } : {}), productId: body.productId, quantity: body.quantity, paymentMethod: body.paymentMethod, customer }));
+        ? hash(JSON.stringify({ items: rawItems.map((item) => ({ productId: item.productId, quantity: item.quantity, ...(item.variantId ? { variantId: item.variantId } : {}) })), paymentMethod: body.paymentMethod, customer, ...(promo ? {promo, expectedDiscount:body.expectedDiscount} : {}) }))
+        : hash(JSON.stringify({ ...(body.variantId ? { variantId: body.variantId } : {}), productId: body.productId, quantity: body.quantity, paymentMethod: body.paymentMethod, customer, ...(promo ? {promo, expectedDiscount:body.expectedDiscount} : {}) }));
       const db = await getDb();
       const order = db.collection("orders").doc(body.requestId);
       const salt = rateLimitSalt(env);
@@ -170,8 +179,20 @@ export function createOrderHandler({ getDb, sendMail, notifyStore, schedule, env
         const shipping = shippingFeeFor(settings.data()?.shippingSettings, delivery?.provinceCode, delivery?.wardCode,subtotal);
         if (settings.data()?.shippingSettings?.enabled === true && shipping.fee === null) throw Object.assign(new Error(shipping.reason), { status: 400 });
         if (body.expectedShippingFee !== undefined && body.expectedShippingFee !== shipping.fee) throw Object.assign(new Error("Phí giao hàng vừa thay đổi. Hãy tải lại trang để kiểm tra tổng tiền trước khi đặt."), { status: 409 });
+        let discount = 0;
+        let promoRef, promoUsed, customerUseRef, customerUses;
+        if (promo) {
+          promoRef = db.collection("promotions").doc(promo);
+          const rule = (await tx.get(promoRef)).data();
+          discount = promotionDiscount(rule,subtotal,now());
+          if (discount !== body.expectedDiscount) throw Object.assign(new Error("Ưu đãi đã thay đổi. Vui lòng áp dụng lại mã."),{status:409});
+          customerUseRef = promoRef.collection("redemptions").doc(hash(customer.email));
+          customerUses = ((await tx.get(customerUseRef)).data()?.used || 0) + 1;
+          if (rule.perEmail && customerUses > rule.perEmail) throw Object.assign(new Error("Email này đã dùng hết lượt ưu đãi."),{status:400});
+          promoUsed = (rule.used || 0) + 1;
+        }
         const totalQuantity = resolvedItems.reduce((sum, item) => sum + item.quantity, 0);
-        const totalAmount = subtotal === null || shipping.fee === null ? null : subtotal + shipping.fee;
+        const totalAmount = subtotal === null || shipping.fee === null ? null : subtotal - discount + shipping.fee;
         const allocated = allocateOrderCode(pool.data(), body.paymentMethod, chooseCodeIndex);
         const first = resolvedItems[0];
         const summaryProduct = resolvedItems.length === 1
@@ -184,7 +205,7 @@ export function createOrderHandler({ getDb, sendMail, notifyStore, schedule, env
           quantity: totalQuantity,
           product: summaryProduct,
           ...(resolvedItems.length > 1 ? { items: resolvedItems } : {}),
-          subtotal, totalAmount,
+          subtotal, totalAmount, ...(promo ? {promotionCode:promo,discount} : {}),
           paymentMethod: body.paymentMethod,
           confirmationMail: { state: "pending", updatedAt: createdAt }, paymentStatus: "unpaid", shippingFee: shipping.fee, status: "new", channel: "website", createdAt, requestHash: digest,
         };
@@ -199,6 +220,10 @@ export function createOrderHandler({ getDb, sendMail, notifyStore, schedule, env
         }
         if (Object.keys(reservedTargets).length) record.reservedTargets = reservedTargets;
         for (const [ref, write] of limitWrites) tx.set(ref, write);
+        if (promoRef) {
+          tx.set(promoRef,{used:promoUsed},{merge:true});
+          tx.set(customerUseRef,{used:customerUses});
+        }
         tx.set(order, record); tx.set(codePool, { ...allocated.pool, updatedAt: createdAt });
         return { record, created: true, rateLimited: 0 };
       });
@@ -244,6 +269,10 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
     try {
       const db = await getDb();
       const orders = db.collection("orders");
+      if (req.method === "GET" && req.query?.promotions === "1") {
+        const list = await db.collection("promotions").get();
+        return res.status(200).json({promotions:list.docs.map(doc=>({code:doc.id,...doc.data()}))});
+      }
       if (req.method === "GET" && req.query?.mailReviewCount === "1") {
         const snapshot = await db.collection(reviewCollection("orders")).where("issueAt", ">", 0).count().get();
         return res.status(200).json({count:snapshot.data().count});
@@ -378,6 +407,16 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
         return res.status(200).json({ orders: page.docs.map(formatOrderDoc), nextCursor: page.docs.length === 50 ? page.docs.at(-1).id : null });
       }
       const body = readBody(req, env, 40000);
+      if (body.action === "savePromotion") {
+        const ref = db.collection("promotions").doc(promotionCode(body.code));
+        const rule = promotionRule(body);
+        await db.runTransaction(async tx => {
+          const existing = await tx.get(ref);
+          if (existing.exists && !body.edit) throw Object.assign(new Error("Mã đã tồn tại. Chọn mã trong danh sách để sửa."),{status:409});
+          tx.set(ref,rule,{merge:true});
+        });
+        return res.status(200).json({ok:true});
+      }
       if (body.action === "checkReview") return res.status(200).json(await checkReview(db, "orders", body.ids, checkOutlook));
       if (body.action === "checkOrderOutlook") {
         if (!uuid(body.id) || !/^(confirmation-auto|status-shipping|status-completed|manual-[a-f0-9-]{36})$/i.test(body.eventId || "")) return res.status(400).json({ message: "Bản ghi gửi thư không hợp lệ." });
