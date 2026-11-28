@@ -1,3 +1,9 @@
+## 28/11/2026 — Đồng bộ phông và cỡ chữ nội dung email
+
+- Thân thư và tiêu đề phụ dùng cùng phông, tiêu đề phụ lớn hơn 4 px. Thêm nút Tiêu đề phụ / Đoạn văn để chuyển kiểu ngay tại dòng đang sửa. Chế độ xem máy tính dùng cỡ desktop ngay cả khi khung xem trước hẹp.
+- Dùng chung 12 phông cho thân thư, thương hiệu và tiêu đề, mặc định Noto Serif với phông dự phòng. Giữ lựa chọn phông đã lưu. Không đổi database.
+- 11 bài kiểm tra HTML thư và hai lượt Playwright desktop/mobile đạt; build đạt. Chưa xác minh trên hộp thư thật.
+
 ## 28/11/2026 — Phân biệt đơn mới và sự cố thư theo ngày trong Tổng quan
 
 - Tách danh sách đơn chờ xác nhận theo ngày đặt và thư cần kiểm tra theo ngày ghi nhận sự cố (giờ Việt Nam). Mỗi dòng mở đúng mã đơn, hiện thời điểm và lý do. Tải thêm riêng theo từng danh sách; giữ cảnh báo thư xác nhận bị kẹt trong 50 đơn gần nhất.

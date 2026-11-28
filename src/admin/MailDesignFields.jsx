@@ -1,3 +1,4 @@
+import MailFormatToolbar from "./MailFormatToolbar";
 import { useEffect, useRef, useState } from "react";
 import {
   FRAME_COLORS,
@@ -68,6 +69,7 @@ export default function MailDesignFields({
     onSectionChange?.(name);
   };
   const detailsRef = useRef(null);
+  const bodyEditor = useRef(null);
   const lastExternalRef = useRef(activeSection);
 
   useEffect(() => {
@@ -165,10 +167,13 @@ export default function MailDesignFields({
           ))}
         </div>
 
-        {section === "Nội dung" && onBodyTextChange && <label className="admin-field">Chỉnh nội dung hiển thị trong thư
-          <textarea rows={10} maxLength={20000} value={bodyText} onChange={event => onBodyTextChange(event.target.value)} />
-          <small>Chỉnh tiêu đề gợi ý và từng dòng hướng dẫn ngay trong nội dung này.</small>
-        </label>}
+        {section === "Nội dung" && onBodyTextChange && <div className="admin-field">
+          <MailFormatToolbar textRef={bodyEditor} value={bodyText} onChange={onBodyTextChange} disabled={disabled} />
+          <label>Chỉnh nội dung hiển thị trong thư
+          <textarea ref={bodyEditor} rows={10} maxLength={20000} value={bodyText} onChange={event => onBodyTextChange(event.target.value)} />
+          </label>
+          <small>Đặt con trỏ trong dòng cần đổi, rồi chọn Tiêu đề phụ hoặc Đoạn văn.</small>
+        </div>}
         {section === "Khung thư" && (
           <div className="mail-design-group">
             <span className="mail-design-group-title">Bảng phối màu nhanh</span>

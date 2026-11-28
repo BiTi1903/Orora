@@ -176,37 +176,25 @@ export const MAIL_PLACEHOLDERS = {
   footerCopyright: "Để trống tự hiện © Năm ORORA Vietnam",
 };
 
+const mailFonts = {
+  notoSerif: "Noto Serif",
+  system: "Hệ thống",
+  arial: "Arial",
+  georgia: "Georgia",
+  times: "Times New Roman",
+  trebuchet: "Trebuchet MS",
+  verdana: "Verdana",
+  tahoma: "Tahoma",
+  palatino: "Palatino",
+  garamond: "Garamond",
+  cambria: "Cambria",
+  calibri: "Calibri",
+};
+
 export const MAIL_OPTIONS = {
-  font: [
-    "Phông chữ nội dung",
-    {
-      system: "Hệ thống (Hiện đại)",
-      arial: "Arial",
-      georgia: "Georgia (Serif)",
-      times: "Times New Roman",
-      trebuchet: "Trebuchet MS",
-      verdana: "Verdana",
-    },
-  ],
-  headerFont: [
-    "Phông chữ thương hiệu",
-    {
-      georgia: "Georgia (Serif sang trọng)",
-      system: "Hệ thống (Sans)",
-      arial: "Arial",
-      times: "Times New Roman",
-    },
-  ],
-  headingFont: [
-    "Phông chữ tiêu đề",
-    {
-      georgia: "Georgia (Serif)",
-      system: "Hệ thống (Sans)",
-      arial: "Arial",
-      times: "Times New Roman",
-      trebuchet: "Trebuchet MS",
-    },
-  ],
+  font: ["Phông chữ nội dung", mailFonts],
+  headerFont: ["Phông chữ thương hiệu", mailFonts],
+  headingFont: ["Phông chữ tiêu đề", mailFonts],
   align: ["Căn nội dung", { left: "Trái", center: "Giữa", right: "Phải" }],
   headingAlign: ["Căn tiêu đề", { auto: "Theo mẫu", left: "Trái", center: "Giữa", right: "Phải" }],
   buttonAlign: ["Căn nút hành động", { center: "Giữa", left: "Trái", right: "Phải" }],

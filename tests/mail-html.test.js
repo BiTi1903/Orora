@@ -335,3 +335,12 @@ test("all four BUILTIN_MAIL_PRESETS render tailored HTML stages including shippi
   assert.doesNotMatch(thankYouMsg.html, /img\.vietqr\.io/);
 });
 
+
+test("mail body size and family cover paragraphs, subheadings and bullet text", () => {
+  const html = renderBrandedEmailHtml({ subject:"Thử", text:"Một đoạn\n\n## Gợi ý\n\n- Một mục", design:{font:"tahoma",fontSize:22,mobileFontSize:16} });
+  assert.match(html, /<h2 class="mail-body-subheading"[^>]+font-family:Tahoma[^>]+font-size:26px/);
+  assert.match(html, /<p class="mail-body-text"[^>]+font-size:22px[^>]+font-family:Tahoma/);
+  assert.match(html, /<td valign="top" class="mail-body-text"[^>]+font-size:22px/);
+  assert.match(html, /\.mail-body-subheading \{ font-size: 20px/);
+  assert.match(renderBrandedEmailHtml({text:"Xin chào"}), /font-family:'Noto Serif', Georgia/);
+});

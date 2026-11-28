@@ -2,7 +2,8 @@ const TOOLS = [
   { id: "bold", label: "B", title: "In đậm (**chữ**)", wrap: ["**", "**"], sample: "chữ đậm" },
   { id: "italic", label: "I", title: "In nghiêng (*chữ*)", wrap: ["*", "*"], sample: "chữ nghiêng" },
   { id: "accent", label: "Nhấn màu", title: "Tô màu nhấn (==chữ==)", wrap: ["==", "=="], sample: "ưu đãi nổi bật" },
-  { id: "heading", label: "H2", title: "Tiêu đề phụ (## Tiêu đề)", linePrefix: "## ", sample: "Tiêu đề mục" },
+  { id: "paragraph", label: "Đoạn văn", title: "Chuyển tiêu đề phụ thành đoạn văn" },
+  { id: "heading", label: "Tiêu đề phụ", title: "Tiêu đề phụ (## Tiêu đề)", linePrefix: "## ", sample: "Tiêu đề mục" },
   { id: "callout", label: "Hộp nổi bật", title: "Khung nhấn (> nội dung)", linePrefix: "> ", sample: "Thông tin quan trọng cần chú ý" },
   { id: "list", label: "• Danh sách", title: "Danh sách dấu chấm (- mục)", linePrefix: "- ", sample: "Mục danh sách" },
   { id: "divider", label: "— Kẻ ngang", title: "Đường kẻ phân cách", insert: "\n\n---\n\n" },
@@ -20,7 +21,20 @@ export default function MailFormatToolbar({ textRef, value, onChange, disabled }
     let cursorStart = start;
     let cursorEnd = end;
 
-    if (tool.insert) {
+    if (tool.id === "paragraph" || tool.id === "heading") {
+      const from = current.slice(0, start).lastIndexOf("\n") + 1;
+      const newline = current.indexOf("\n", Math.max(start, end - 1));
+      const to = newline < 0 ? current.length : newline;
+      const lines = current.slice(from, to).split("\n").map(line => line.replace(/^##\s+/, ""));
+      const replacement = tool.id === "paragraph" ? lines.join("\n") : lines.map(line => "## " + (line || tool.sample)).join("\n\n");
+      const before = current.slice(0, from);
+      const after = current.slice(to);
+      const prefix = tool.id === "heading" && before && !before.endsWith("\n\n") ? "\n" : "";
+      const suffix = tool.id === "heading" && after && !after.startsWith("\n\n") ? "\n" : "";
+      next = before + prefix + replacement + suffix + after;
+      cursorStart = from + prefix.length;
+      cursorEnd = cursorStart + replacement.length;
+    } else if (tool.insert) {
       next = `${current.slice(0, start)}${tool.insert}${current.slice(end)}`;
       cursorStart = cursorEnd = start + tool.insert.length;
     } else if (tool.wrap) {

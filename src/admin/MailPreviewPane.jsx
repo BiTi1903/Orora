@@ -37,7 +37,7 @@ export default function MailPreviewPane({ html, subject, text, title = "Xem trư
         className="mail-preview-frame"
         sandbox={onSelectSection ? "allow-scripts" : ""}
         title="Xem trước giao diện email ORORA"
-        srcDoc={html}
+        srcDoc={mode === "desktop" ? html.replace('<style data-mail-mobile>', '<style media="not all">') : html}
       />
     </div>}
   </details>;

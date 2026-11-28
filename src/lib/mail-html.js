@@ -13,6 +13,12 @@ const FONT_SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvet
 const FONT_MONO = "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace";
 
 const FONT_MAP = {
+  notoSerif: "'Noto Serif', Georgia, 'Times New Roman', serif",
+  tahoma: "Tahoma, Verdana, sans-serif",
+  palatino: "'Palatino Linotype', Palatino, Georgia, serif",
+  garamond: "Garamond, Georgia, serif",
+  cambria: "Cambria, Georgia, serif",
+  calibri: "Calibri, Arial, sans-serif",
   system: FONT_SANS,
   arial: "Arial, Helvetica, sans-serif",
   georgia: FONT_SERIF,
@@ -94,7 +100,6 @@ function stripUnsubscribeFooter(text, unsubscribeUrl) {
 export function formatBodyHtml(text, { unsubscribeUrl = "", design } = {}) {
   const frame = mailDesign(design);
   const font = resolveFont(frame.font, FONT_SANS);
-  const headingFont = resolveFont(frame.headingFont, FONT_SERIF);
   const typography = `font-family:${font};text-align:${frame.align};font-weight:${frame.weight};`;
   const cleaned = stripUnsubscribeFooter(text, unsubscribeUrl);
 
@@ -104,7 +109,7 @@ export function formatBodyHtml(text, { unsubscribeUrl = "", design } = {}) {
     const isSubheading = lines.length === 1 && /^##\s+/.test(lines[0]);
     if (isSubheading) {
       const content = formatInlineText(lines[0].replace(/^##\s+/, ""), frame.accent);
-      return `<h2 style="margin:18px 0 10px 0;font-family:${headingFont};font-size:${Math.min(22, frame.fontSize + 4)}px;font-weight:600;line-height:1.35;color:${frame.headingColor};text-align:${frame.align};">${content}</h2>`;
+      return `<h2 class="mail-body-subheading" style="margin:18px 0 10px 0;font-family:${font};font-size:${frame.fontSize + 4}px;font-weight:600;line-height:1.35;color:${frame.headingColor};text-align:${frame.align};">${content}</h2>`;
     }
     const isCallout = lines.length > 0 && lines.every((line) => /^>\s?/.test(line));
     if (isCallout) {
@@ -203,9 +208,11 @@ function renderEmailShell({
   <meta name="color-scheme" content="light" />
   <meta name="supported-color-schemes" content="light" />
   <title>${escapeHtml(subject || frame.brand || "ORORA")}</title>
-  <style>
+  ${[frame.font,frame.headerFont,frame.headingFont].includes("notoSerif") ? '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600;700&amp;display=swap" />' : ""}
+  <style data-mail-mobile>
     @media only screen and (max-width: 600px) {
       .mail-body-text { font-size: ${frame.mobileFontSize}px !important; }
+      .mail-body-subheading { font-size: ${frame.mobileFontSize + 4}px !important; }
       .mail-hero-heading { font-size: ${frame.headingMobileSize}px !important; }
     }
   </style>
@@ -224,9 +231,9 @@ function renderEmailShell({
                 ${logoSrc
                   ? `<img src="${escapeHtml(logoSrc)}" alt="${escapeHtml(frame.brand || "ORORA")}" width="${frame.logoWidth}" style="display:block;width:${frame.logoWidth}px;max-width:100%;height:auto;margin:0 auto;" />`
                   : `<span style="display:block;font-family:${headerFont};font-size:${frame.brandSize}px;font-weight:600;letter-spacing:8px;color:${frame.headerText};line-height:1.15;">${escapeHtml(frame.brand)}</span>`}
-                ${frame.tagline.trim() ? `<span style="display:block;margin-top:6px;font-family:${FONT_SANS};font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:${frame.taglineColor};">${escapeHtml(frame.tagline)}</span>` : ""}
+                ${frame.tagline.trim() ? `<span style="display:block;margin-top:6px;font-family:${headerFont};font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:${frame.taglineColor};">${escapeHtml(frame.tagline)}</span>` : ""}
               </a>
-              ${frame.showEyebrow && resolvedEyebrow ? `<div style="margin-top:16px;"><span style="display:inline-block;padding:5px 14px;border-radius:999px;background-color:rgba(255,248,251,0.12);border:1px solid rgba(243,196,214,0.35);font-family:${FONT_SANS};font-size:11px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:${frame.headerText};">${escapeHtml(resolvedEyebrow)}</span></div>` : ""}
+              ${frame.showEyebrow && resolvedEyebrow ? `<div style="margin-top:16px;"><span style="display:inline-block;padding:5px 14px;border-radius:999px;background-color:rgba(255,248,251,0.12);border:1px solid rgba(243,196,214,0.35);font-family:${headerFont};font-size:11px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:${frame.headerText};">${escapeHtml(resolvedEyebrow)}</span></div>` : ""}
             </td>
           </tr>` : ""}
           <!-- Main Content -->
