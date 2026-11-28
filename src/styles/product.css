@@ -40,30 +40,30 @@
   font-weight: 500;
   letter-spacing: 1px;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(184, 68, 109, 0.28);
-  transition: transform 0.35s var(--ease), box-shadow 0.35s ease;
+  box-shadow: 0 6px 16px rgba(138, 42, 78, 0.18);
+  transition: transform 0.3s var(--ease), box-shadow 0.3s ease;
 }
 
-.buy-button span { font-size: 15px; transition: transform 0.35s ease; }
+.buy-button span { font-size: 15px; transition: transform 0.3s ease; }
 
 .buy-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 28px rgba(184, 68, 109, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(138, 42, 78, 0.25);
 }
 
-.buy-button:hover span { transform: translate(3px, -3px); }
-.buy-button:active { transform: translateY(0) scale(0.97); }
+.buy-button:hover span { transform: translate(2px, -2px); }
+.buy-button:active { transform: translateY(0) scale(0.98); }
 
 /* =====================================================
-   NGHIÊNG 3D
+   NGHIÊNG 3D NHẸ
 ===================================================== */
 .gallery-item .gallery-image.tilt {
   --rx: 0deg;
   --ry: 0deg;
   --mx: 50%;
   --my: 50%;
-  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));
-  transition: transform 0.25s ease-out, box-shadow 0.5s ease;
+  transform: perspective(1200px) rotateX(var(--rx)) rotateY(var(--ry));
+  transition: transform 0.35s ease-out, box-shadow 0.4s ease;
   will-change: transform;
 }
 
@@ -93,9 +93,9 @@
   height: 100%;
   object-fit: var(--pc-object-fit, cover);
   opacity: 0;
-  transform: scale(1.045);
-  filter: saturate(0.96);
-  transition: opacity 0.9s ease, transform 3.4s ease, filter 0.9s ease;
+  transform: scale(1.02);
+  filter: saturate(0.98);
+  transition: opacity 0.8s ease, transform 2.2s ease, filter 0.8s ease;
   z-index: 1;
 }
 
@@ -107,8 +107,8 @@
 }
 
 .gallery-item:hover .product-slideshow img.is-active {
-  transform: scale(1.07);
-  filter: saturate(1.06);
+  transform: scale(1.03);
+  filter: saturate(1.02);
 }
 
 .product-slideshow-dots {

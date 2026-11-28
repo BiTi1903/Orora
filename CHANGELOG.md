@@ -1,3 +1,14 @@
+## 28/11/2026 — Tinh chỉnh nhẹ hiệu ứng & độ bóng giao diện theo phong cách Luxury Editorial
+
+- **Lý do**: Giảm cảm giác bóng loáng và chuyển động rườm rà ở màn đầu, thẻ sản phẩm, nút bấm và lớp kính điện thoại, đồng thời giữ lại nét mềm mại đặc trưng của thương hiệu ORORA và giữ nguyên toàn bộ công tắc tùy chỉnh trong Admin Visual Builder.
+- **Thay đổi chính**:
+  - `src/styles/global.css`, `src/styles/mobile-glass.css`, `src/styles/mobile-shop-nav.css`: Hạ độ đậm bóng đổ toàn trang về tông mận trầm tự nhiên (`--shadow-soft` / `--shadow-lift`); làm dịu vệt sáng trên nút và khung kính mờ điện thoại; thay viền ánh cầu vồng 7 màu sang viền ánh hồng champagne tinh tế.
+  - `src/styles/hero.css`: Làm chậm nhịp chảy màu cực quang trên chữ tiêu đề (`6s` → `14s`), bỏ vòng nhấp nháy bóng sáng lặp lại, giảm biên độ nhấp nhô của thẻ nổi (`-14px` → `-5px`), làm chậm vòng chữ xoay (`18s` → `32s`) và giảm nhẹ bóng nút Hero.
+  - `src/components/ProductCard.jsx`, `src/styles/product.css`, `src/lib/home-animations.js`: Hạ góc nghiêng 3D thẻ sản phẩm từ `±12°` xuống `±2.5°` tinh tế, giảm zoom hover ảnh (`1.07` → `1.03`), làm dịu bóng nút mua và thu gọn biên độ trượt/phóng của hiệu ứng cuộn GSAP trên desktop.
+  - `src/styles/about.css`, `src/styles/extras.css`, `src/styles/chat-button.css`, `src/styles/petals.css`: Bỏ lớp phủ bóng trắng chéo trên ảnh Giới thiệu, làm dịu nhịp nổi huy hiệu, sao lấp lánh, hiệu ứng hover thẻ (nâng nhẹ `-4px`, không xoay nghiêng thẻ/icon), dịu nền Newsletter, vòng sóng nút Chat và bóng cánh hoa.
+- **Kiểm tra đã chạy**: `npm run check` (unit tests, ESLint, Vite build, giới hạn bundle) và Playwright (`qa/glass-surfaces.spec.js`, `qa/petals-icons.spec.js`, `qa/hero-stability.spec.js`, `qa/mobile-polish.spec.js` tại `390px` & `1440px`) đều đạt.
+- **Ảnh hưởng database**: Không ảnh hưởng. Toàn bộ tùy chọn hiệu ứng & cánh hoa trong Visual Builder giữ nguyên cấu trúc lưu trữ.
+
 ## 28/11/2026 — Chọn sẵn ô nhận tin ở checkout
 
 - Form đặt hàng chọn sẵn ô nhận tin sản phẩm và mã quà. Khách có thể bỏ chọn trước khi gửi. Không chuyển đổi dữ liệu hiện có.

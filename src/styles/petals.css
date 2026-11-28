@@ -14,7 +14,7 @@
   border-radius: 150% 0 150% 0;
   opacity: 0;
   animation: petalFall linear infinite;
-  filter: drop-shadow(0 2px 4px rgba(184, 68, 109, 0.2));
+  filter: drop-shadow(0 1px 2px rgba(138, 42, 78, 0.1));
 }
 
 .petal.tone-0 { background: linear-gradient(135deg, var(--petal-light, #ffd6e4), var(--petal-color, #f7b8d0)); }

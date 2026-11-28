@@ -12,47 +12,47 @@
 
 /* Shared glass finish keeps each button's existing color and typography. */
 html[data-glass-buttons] #root :is(button,.buy-button,.btn-primary,.btn-outline,.product-contact-primary,.purchase-facebook,.purchase-tiktok,.hero-btn):not(:disabled):not(.orora-chat-panel *):not(.orora-chat-hint *):not(.product-detail-thumb-peek) {
- background-image:linear-gradient(135deg,#ffffff40 0%,#ffffff08 48%,#ffffff00 55%,#ffffff18 100%);
- border-color:color-mix(in srgb,currentColor 14%,#ffffffb3);
- box-shadow:inset 0 1px 0 #ffffffa8,inset 0 -1px 0 #68243e0c,0 3px 10px #68243e09;
+ background-image:linear-gradient(180deg,#ffffff1a 0%,#ffffff00 58%);
+ border-color:color-mix(in srgb,currentColor 12%,#ffffff90);
+ box-shadow:inset 0 1px 0 #ffffff52,0 2px 8px #3a15260a;
  -webkit-tap-highlight-color:transparent;
 }
 @media(hover:hover) {
- html[data-glass-buttons] #root :is(button,.buy-button,.btn-primary,.btn-outline,.product-contact-primary,.hero-btn):not(:disabled):not(.orora-chat-panel *):not(.orora-chat-hint *):not(.product-detail-thumb-peek):hover { box-shadow:inset 0 1px 0 #ffffffdb,0 5px 16px #68243e15; }
+ html[data-glass-buttons] #root :is(button,.buy-button,.btn-primary,.btn-outline,.product-contact-primary,.hero-btn):not(:disabled):not(.orora-chat-panel *):not(.orora-chat-hint *):not(.product-detail-thumb-peek):hover { box-shadow:inset 0 1px 0 #ffffff7a,0 4px 12px #3a152610; }
 }
 html[data-glass-frames] #root :is(.product-detail-gallery,.product-detail-info,.product-information,.product-assurances,.product-slogan-card,.product-slogan,.product-care-guide,.product-care-item,.related-product-sidebar,.related-products-sidebar,.gallery-image,.feature-card,.testimonial-card,.product-reviews,.newsletter,.orora-modal:not(.order-tracking-modal),.orora-chat-channel-chooser) {
  background-color:#fffafc;
- background-color:color-mix(in srgb,#fffafc var(--surface-opacity,78%),transparent);
- backdrop-filter:blur(var(--surface-frame-blur,6px)) saturate(125%);
- -webkit-backdrop-filter:blur(var(--surface-frame-blur,6px)) saturate(125%);
- border:1px solid #ffffffb8;
- box-shadow:inset 0 1px 0 #ffffffde,0 6px 24px #68243e0a;
+ background-color:color-mix(in srgb,#fffafc max(var(--surface-opacity,88%), 88%),transparent);
+ backdrop-filter:blur(min(var(--surface-frame-blur,4px), 5px)) saturate(110%);
+ -webkit-backdrop-filter:blur(min(var(--surface-frame-blur,4px), 5px)) saturate(110%);
+ border:1px solid #f0dde6;
+ box-shadow:0 6px 20px #3a15260a;
 }
 @supports not (backdrop-filter:blur(1px)) { html[data-glass-frames] #root :is(.orora-modal:not(.order-tracking-modal),.product-detail-info,.product-information) { background-color:#fffafc; } }
 @media(prefers-reduced-transparency:reduce) { html[data-glass-frames] #root :is(.product-detail-info,.product-information,.orora-modal:not(.order-tracking-modal),.newsletter,.orora-chat-panel) { background-color:#fffafc; backdrop-filter:none; } }
-html[data-glass-buttons] #root :is(.buy-button,.newsletter button[type="submit"]) { background-color:var(--store-button-pink-dark); background-image:linear-gradient(140deg,#ffffff26,transparent 60%,#ffffff0d); color:#fff; font-weight:600; text-shadow:0 1px 1px #57142a26; }
+html[data-glass-buttons] #root :is(.buy-button,.newsletter button[type="submit"]) { background-color:var(--store-button-pink-dark); background-image:linear-gradient(180deg,#ffffff14,transparent 60%); color:#fff; font-weight:600; text-shadow:none; }
 html[data-glass-buttons] #root .buy-button { font-size:12px; letter-spacing:.2px; }
 html[data-glass-buttons] #root .newsletter button[type="submit"] { font-size:15px; letter-spacing:.3px; }
-html[data-glass-buttons] #root .navbar .menu { background-color:#fffafcaa; background-image:linear-gradient(140deg,#ffffffb0,#ffffff20); border:1px solid #ffffffd0; backdrop-filter:blur(12px) saturate(150%); -webkit-backdrop-filter:blur(12px) saturate(150%); box-shadow:inset 0 1px 0 white,0 3px 12px #68243e12; }
+html[data-glass-buttons] #root .navbar .menu { background-color:#fffafce8; background-image:linear-gradient(180deg,#ffffff66,#ffffff00); border:1px solid #eedbe4; backdrop-filter:blur(10px) saturate(115%); -webkit-backdrop-filter:blur(10px) saturate(115%); box-shadow:0 2px 10px #3a15260e; }
 html[data-glass-buttons] #root .order-tracking-submit,html[data-glass-buttons] #root .order-tracking-modes button[aria-pressed="true"] { background-color:var(--store-button-pink-dark); color:white; }
 
 }
 
 @media(max-width:768px) {
- html[data-glass-rims] #root :is(.orora-chat-channel-chooser,.orora-chat-panel,.chat-button,.back-to-top,.shop-cart,.card-cart-button,.navbar .menu,.hero-btn,.mobile-drawer,.review,.product-review-card) { border:1.5px solid color-mix(in srgb,#d2c1de var(--surface-rim-strength,80%),#ffffff); box-shadow:0 3px 14px #68243e16; }
+ html[data-glass-rims] #root :is(.orora-chat-channel-chooser,.orora-chat-panel,.chat-button,.back-to-top,.shop-cart,.card-cart-button,.navbar .menu,.hero-btn,.mobile-drawer,.review,.product-review-card) { border:1px solid color-mix(in srgb,#e8cfd9 var(--surface-rim-strength,70%),#ffffff); box-shadow:0 3px 12px #3a15260e; }
  html[data-glass-rims] #root :is(.hero-btn,.card-cart-button,.review,.product-review-card) { position:relative; }
  html[data-glass-rims] #root .chat-button::before { display:none; }
- html[data-glass-rims] #root .gallery-image { border:1.5px solid color-mix(in srgb,#d2a1bc var(--surface-rim-strength,80%),#ffffff); box-shadow:0 3px 14px #68243e16; }
+ html[data-glass-rims] #root .gallery-image { border:1px solid color-mix(in srgb,#ead2de var(--surface-rim-strength,70%),#ffffff); box-shadow:0 4px 14px #3a15260c; }
  @supports (mask-composite:exclude) or (-webkit-mask-composite:xor) {
  html[data-glass-rims] #root :is(.orora-chat-panel,.chat-button,.back-to-top,.card-cart-button,.navbar .menu,.hero-btn,.review,.product-review-card) { border-color:transparent; background-clip:padding-box; }
- html[data-glass-rims] #root :is(.orora-chat-panel,.chat-button,.back-to-top,.card-cart-button,.navbar .menu,.hero-btn,.review,.product-review-card)::after { content:''; position:absolute; inset:-1.5px; box-sizing:border-box; z-index:5; padding:1.5px; border-radius:inherit; pointer-events:none; background:conic-gradient(from 35deg,#ffffffdf,#a3d4ffb3 18%,#b9a4ee99 29%,#ffffff66 43%,#e9bfa0c9 57%,#c9e0c2b3 68%,#f2a5c99c 83%,#ffffffdf); opacity:var(--surface-rim-opacity,.8); -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0); mask-composite:exclude; }
+ html[data-glass-rims] #root :is(.orora-chat-panel,.chat-button,.back-to-top,.card-cart-button,.navbar .menu,.hero-btn,.review,.product-review-card)::after { content:''; position:absolute; inset:-1px; box-sizing:border-box; z-index:5; padding:1px; border-radius:inherit; pointer-events:none; background:conic-gradient(from 35deg,#ffffffcc,#f2d2e099 24%,#ffffff44 50%,#e9c2d499 76%,#ffffffcc); opacity:calc(var(--surface-rim-opacity,.8) * .65); -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0); mask-composite:exclude; }
  }
 }
 @media(max-width:768px) {
- html[data-glass-buttons] #root .hero-btn { position:relative; isolation:isolate; box-shadow:inset 0 1px 0 #ffffffb3,0 5px 16px #68243e15; transition:transform .25s ease,box-shadow .25s ease; }
- html[data-glass-buttons] #root .hero-btn-primary { background-color:var(--store-button-pink-dark); background-image:linear-gradient(135deg,#ffffff26,transparent 65%); color:#fff; text-shadow:0 1px 1px #57142a26; }
- html[data-glass-buttons] #root .hero-btn-ghost { background:rgba(255,250,252,.96); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); color:#852447; border-color:#a9345f; }
- html[data-glass-buttons] #root .hero-btn:active { transform:scaleX(1.025) scaleY(.96); }
+ html[data-glass-buttons] #root .hero-btn { position:relative; isolation:isolate; box-shadow:0 4px 14px #3a152610; transition:transform .25s ease,box-shadow .25s ease; }
+ html[data-glass-buttons] #root .hero-btn-primary { background-color:var(--store-button-pink-dark); background-image:linear-gradient(180deg,#ffffff16,transparent 65%); color:#fff; text-shadow:none; }
+ html[data-glass-buttons] #root .hero-btn-ghost { background:rgba(255,250,252,.96); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:#852447; border-color:#b8587b; }
+ html[data-glass-buttons] #root .hero-btn:active { transform:scale(.98); }
 }
 @media(prefers-reduced-motion:reduce) { html[data-glass-buttons] #root .hero-btn:active { transform:none; } }
 

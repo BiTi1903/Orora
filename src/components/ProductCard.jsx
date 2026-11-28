@@ -76,8 +76,8 @@ function ProductCard({
       if (!r.width || !r.height) return;
       const x = (pointerRef.current.x - r.left) / r.width;
       const y = (pointerRef.current.y - r.top) / r.height;
-      target.style.setProperty("--ry", `${(x - 0.5) * 12}deg`);
-      target.style.setProperty("--rx", `${(0.5 - y) * 12}deg`);
+      target.style.setProperty("--ry", `${(x - 0.5) * 2.5}deg`);
+      target.style.setProperty("--rx", `${(0.5 - y) * 2.5}deg`);
       target.style.setProperty("--mx", `${x * 100}%`);
       target.style.setProperty("--my", `${y * 100}%`);
     });

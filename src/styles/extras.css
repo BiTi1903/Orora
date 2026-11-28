@@ -3,8 +3,8 @@
 ===================================================== */
 .reveal {
   opacity: 0;
-  transform: translateY(34px);
-  transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+  transform: translateY(20px);
+  transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
 }
 .reveal.in { opacity: 1; transform: none; }
 
@@ -13,13 +13,13 @@
   position: absolute;
   background: #fff;
   clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
-  filter: drop-shadow(0 0 6px rgba(226, 103, 143, 0.55));
+  filter: drop-shadow(0 0 3px rgba(184, 68, 109, 0.25));
   opacity: 0;
-  animation: twinkle 5s ease-in-out infinite;
+  animation: twinkle 7s ease-in-out infinite;
 }
 @keyframes twinkle {
-  0%, 100% { opacity: 0; transform: scale(0.4) rotate(0); }
-  50%      { opacity: 0.9; transform: scale(1) rotate(45deg); }
+  0%, 100% { opacity: 0; transform: scale(0.5) rotate(0); }
+  50%      { opacity: 0.45; transform: scale(0.92) rotate(30deg); }
 }
 
 /* =====================================================
@@ -91,22 +91,22 @@
 .feature-card {
   height: 100%;
   padding: 34px 28px;
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.88);
   border: 1px solid var(--line);
   border-radius: 26px;
   box-shadow: var(--shadow-soft);
-  transition: transform 0.5s var(--ease), box-shadow 0.5s ease, background 0.5s ease;
+  transition: transform 0.35s var(--ease), box-shadow 0.35s ease, background 0.35s ease;
 }
-.feature-card:hover { transform: translateY(-10px); box-shadow: var(--shadow-lift); background: #fff; }
+.feature-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lift); background: #fff; }
 .feature-icon {
   width: 56px; height: 56px; margin-bottom: 24px;
   display: grid; place-items: center;
   font-size: 24px; color: var(--rose-deep);
   background: linear-gradient(135deg, var(--petal), #fff);
   border: 1px solid var(--line); border-radius: 50%;
-  transition: transform 0.6s var(--ease);
+  transition: transform 0.4s var(--ease);
 }
-.feature-card:hover .feature-icon { transform: rotate(20deg) scale(1.1); }
+.feature-card:hover .feature-icon { transform: scale(1.05); }
 .feature-card h3 { font-family: var(--font-display); font-size: 25px; font-weight: 600; margin-bottom: 10px; }
 .feature-card p { font-size: 14px; line-height: 1.75; color: var(--plum-soft); }
 
@@ -127,13 +127,13 @@
   display: grid; place-items: center;
   font-size: 90px; color: rgba(255, 255, 255, 0.95);
 }
-.arch span { animation: bob 5s ease-in-out infinite alternate; }
+.arch span { animation: bob 7s ease-in-out infinite alternate; }
 .arch-small {
   inset: auto 0 -20px auto; width: 42%; height: 46%;
   background: linear-gradient(160deg, var(--rose-soft), var(--rose));
   border-radius: 999px 999px 20px 20px;
 }
-@keyframes bob { to { transform: translateY(-14px) rotate(8deg); } }
+@keyframes bob { to { transform: translateY(-6px) rotate(3deg); } }
 .story-p { margin-top: 26px; max-width: 520px; font-size: 16px; font-weight: 300; line-height: 1.9; color: var(--plum-soft); }
 .stats { margin-top: 44px; display: flex; gap: 44px; flex-wrap: wrap; }
 .stats strong { display: block; font-family: var(--font-display); font-size: 54px; font-weight: 600; color: var(--rose-deep); line-height: 1; }
@@ -155,10 +155,10 @@
   font-family: var(--font-display); font-size: 26px; font-weight: 600;
   color: var(--rose-deep); background: #fff;
   border: 1px solid var(--rose-soft); border-radius: 50%;
-  box-shadow: 0 10px 26px rgba(184, 68, 109, 0.16);
-  transition: transform 0.5s var(--ease), background 0.4s, color 0.4s;
+  box-shadow: 0 8px 20px rgba(58, 21, 38, 0.08);
+  transition: transform 0.35s var(--ease), background 0.35s, color 0.35s;
 }
-.step:hover .step-n { transform: scale(1.12); background: var(--rose); color: #fff; }
+.step:hover .step-n { transform: scale(1.06); background: var(--rose); color: #fff; }
 .step h3 { font-family: var(--font-display); font-size: 28px; font-weight: 600; margin-bottom: 8px; }
 .step p { font-size: 14px; line-height: 1.7; color: var(--plum-soft); max-width: 260px; margin: 0 auto; }
 
@@ -170,9 +170,9 @@
   height: 100%; padding: 34px 30px;
   background: #fff; border: 1px solid var(--line); border-radius: 26px;
   box-shadow: var(--shadow-soft);
-  transition: transform 0.5s var(--ease), box-shadow 0.5s;
+  transition: transform 0.35s var(--ease), box-shadow 0.35s;
 }
-.review:hover { transform: translateY(-8px) rotate(-0.6deg); box-shadow: var(--shadow-lift); }
+.review:hover { transform: translateY(-4px); box-shadow: var(--shadow-lift); }
 .stars { color: var(--rose); letter-spacing: 3px; margin-bottom: 16px; }
 .review p { font-family: var(--font-display); font-size: 22px; line-height: 1.45; margin-bottom: 20px; }
 .review cite { font-size: 13px; font-style: normal; color: var(--rose-deep); letter-spacing: 1px; }
@@ -191,7 +191,7 @@
   object-fit: cover;
   flex-shrink: 0;
   border: 2px solid #f5d6e0;
-  box-shadow: 0 4px 12px rgba(184, 68, 109, 0.15);
+  box-shadow: 0 3px 10px rgba(58, 21, 38, 0.1);
 }
 
 .review-avatar--placeholder {
@@ -211,7 +211,7 @@
 .newsletter {
   margin: 0 7% 110px; padding: 90px 6%; text-align: center;
   border-radius: 40px; position: relative; z-index: 801; overflow: hidden;
-  background: linear-gradient(135deg, var(--petal), #fff 50%, var(--rose-soft));
+  background: linear-gradient(135deg, #fff5f9, #ffffff 55%, #fdf0f5);
   border: 1px solid var(--line); box-shadow: var(--shadow-soft);
 }
 .newsletter-p { margin: 18px auto 34px; max-width: 460px; font-size: var(--text-section-subtitle); color: var(--plum-soft); }
@@ -242,9 +242,9 @@
   cursor: pointer; white-space: nowrap;
   font-size: 13px; font-weight: 500; letter-spacing: 1px; color: #fff;
   background: linear-gradient(135deg, var(--store-button-pink), var(--store-button-pink-dark));
-  transition: transform 0.3s var(--ease), box-shadow 0.3s;
+  transition: transform 0.25s var(--ease), box-shadow 0.25s;
 }
-.news-form-row button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(184, 68, 109, 0.4); }
+.news-form-row button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(138, 42, 78, 0.24); }
 .news-form-row button:focus-visible { outline: 2px solid var(--plum); outline-offset: 3px; }
 .news-form-row button:disabled { opacity: 0.65; cursor: default; }
 .newsletter-consent {

@@ -58,17 +58,9 @@
   transition: transform 1.4s var(--ease);
 }
 
-.about-image-wrapper:hover .about-image { transform: scale(1.05); }
+.about-image-wrapper:hover .about-image { transform: scale(1.03); }
 .about-image-wrapper .product-slideshow { border-radius: inherit; }
-.about-image-wrapper:hover .product-slideshow img.is-active { transform: scale(1.05); }
-
-.about-image-wrapper::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.22), transparent 45%, rgba(184, 68, 109, 0.1));
-}
+.about-image-wrapper:hover .product-slideshow img.is-active { transform: scale(1.03); }
 
 /* HUY HIỆU NỔI */
 .about-badge {
@@ -78,22 +70,22 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 16px 24px 16px 18px;
-  background: rgba(255, 255, 255, 0.9);
+  padding: 15px 22px 15px 16px;
+  background: rgba(255, 252, 253, 0.94);
   border: 1px solid var(--line);
   border-radius: 60px;
   box-shadow: var(--shadow-soft);
-  backdrop-filter: blur(10px);
-  animation: badgeFloat 5s ease-in-out infinite alternate;
+  backdrop-filter: blur(8px);
+  animation: badgeFloat 7s ease-in-out infinite alternate;
 }
 
 .about-badge b {
   display: grid;
   place-items: center;
-  width: 46px; height: 46px;
-  font-size: 22px;
+  width: 44px; height: 44px;
+  font-size: 20px;
   color: #fff;
-  background: linear-gradient(135deg, #ee7fa2, var(--rose-deep));
+  background: linear-gradient(135deg, var(--store-button-pink), var(--store-button-pink-dark));
   border-radius: 50%;
 }
 
@@ -104,7 +96,7 @@
   line-height: 1.2;
 }
 
-@keyframes badgeFloat { to { transform: translateY(-14px); } }
+@keyframes badgeFloat { to { transform: translateY(-5px); } }
 
 /* NỘI DUNG */
 .about-content { position: relative; flex: 1; min-width: 0; }

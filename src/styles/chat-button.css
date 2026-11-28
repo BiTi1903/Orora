@@ -20,9 +20,9 @@
   border-radius: 40px;
   color: #fff;
   background: linear-gradient(135deg, var(--store-button-pink), var(--store-button-pink-dark));
-  box-shadow: 0 14px 34px rgba(184, 68, 109, 0.4);
+  box-shadow: 0 8px 22px rgba(138, 42, 78, 0.24);
   overflow: visible;
-  transition: gap 0.4s var(--ease), padding 0.4s var(--ease), transform 0.4s var(--ease);
+  transition: gap 0.35s var(--ease), padding 0.35s var(--ease), transform 0.35s var(--ease);
 }
 
 /* vòng nhịp nhẹ phía sau nút */
@@ -31,14 +31,14 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  border: 2px solid var(--rose);
-  animation: chatPulse 2.4s ease-out infinite;
+  border: 1.5px solid var(--rose-soft);
+  animation: chatPulse 3.6s ease-out infinite;
   pointer-events: none;
 }
 
 @keyframes chatPulse {
-  0%   { transform: scale(1);    opacity: 0.7; }
-  100% { transform: scale(1.35); opacity: 0; }
+  0%   { transform: scale(1);    opacity: 0.38; }
+  100% { transform: scale(1.22); opacity: 0; }
 }
 
 .chat-icon { font-size: 24px; line-height: 1; }
