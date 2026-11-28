@@ -1,3 +1,9 @@
+## 28/11/2026 — Giữ vị trí xem trước và gộp ô soạn email
+
+- Studio và Gửi thư dùng một ô soạn nội dung. Bảng thiết kế có nút quay về ô này. Bỏ trình sửa mã HTML; mẫu đã lưu HTML có thể chuyển sang nội dung chuẩn.
+- Cập nhật bản minh họa trong cùng khung xem trước để giữ vị trí cuộn khi chỉnh kiểu nút, màu và chữ.
+- Lint, build, 11 bài kiểm tra HTML và 4 lượt Playwright ở 390/1440 px đạt. Không thay đổi database.
+
 ## 28/11/2026 — Đồng bộ phông và cỡ chữ nội dung email
 
 - Thân thư và tiêu đề phụ dùng cùng phông, tiêu đề phụ lớn hơn 4 px. Thêm nút Tiêu đề phụ / Đoạn văn để chuyển kiểu ngay tại dòng đang sửa. Chế độ xem máy tính dùng cỡ desktop ngay cả khi khung xem trước hẹp.

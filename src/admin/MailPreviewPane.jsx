@@ -1,8 +1,32 @@
 import { useEffect, useRef, useState } from "react";
 
+// Keep the editing viewport alive while the generated email changes.
+const editorDocument = `<!doctype html><html lang="vi"><head><meta charset="utf-8"></head><body><script>
+  window.addEventListener("message", event => {
+    if (event.source !== parent || event.data?.type !== "orora-mail-render") return;
+    const next = new DOMParser().parseFromString(event.data.html, "text/html");
+    const top = scrollY;
+    if (document.head.innerHTML !== next.head.innerHTML) document.head.innerHTML = next.head.innerHTML;
+    document.body.style.cssText = next.body.style.cssText;
+    document.body.innerHTML = next.body.innerHTML;
+    scrollTo(0, top);
+  });
+  document.addEventListener("click", event => {
+    const section = event.target.closest("[data-mail-section]");
+    if (event.target.closest("a") || section) event.preventDefault();
+    if (section) parent.postMessage({type:"orora-mail-select", section:section.dataset.mailSection}, "*");
+  });
+</script></body></html>`;
+
 export default function MailPreviewPane({ html, subject, text, title = "Xem trước", onSelectSection, children }) {
   const [mode, setMode] = useState("desktop");
   const frameRef = useRef(null);
+
+  const previewHtml = mode === "desktop" ? html.replace('<style data-mail-mobile>', '<style media="not all">') : html;
+  const interactive = Boolean(onSelectSection);
+  useEffect(() => {
+    if (interactive) frameRef.current?.contentWindow?.postMessage({type:"orora-mail-render", html:previewHtml}, "*");
+  }, [previewHtml, interactive, mode]);
 
   useEffect(() => {
     if (!onSelectSection) return;
@@ -37,7 +61,8 @@ export default function MailPreviewPane({ html, subject, text, title = "Xem trư
         className="mail-preview-frame"
         sandbox={onSelectSection ? "allow-scripts" : ""}
         title="Xem trước giao diện email ORORA"
-        srcDoc={mode === "desktop" ? html.replace('<style data-mail-mobile>', '<style media="not all">') : html}
+        srcDoc={interactive ? editorDocument : previewHtml}
+        onLoad={interactive ? () => frameRef.current?.contentWindow?.postMessage({type:"orora-mail-render", html:previewHtml}, "*") : undefined}
       />
     </div>}
   </details>;

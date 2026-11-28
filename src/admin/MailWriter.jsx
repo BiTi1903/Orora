@@ -1,7 +1,6 @@
 import { orderTrackingMail, trackingTemplate } from "../lib/order-tracking-mail.js";
 import { BUILTIN_MAIL_PRESETS, findMailPreset } from "../lib/mail-presets.js";
 import MailPreviewPane from "./MailPreviewPane";
-import MailHtmlEditor from "./MailHtmlEditor";
 import MailBodyBlocks from "./MailBodyBlocks";
 import MailDesignFields from "./MailDesignFields";
 import MailFormatToolbar from "./MailFormatToolbar";
@@ -181,9 +180,8 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
 
           <MailBodyBlocks text={value.text} onChange={text => onChange({ design: value.design, subject: value.subject, text })} />
 
-          <MailDesignFields bodyText={value.text} onBodyTextChange={text => onChange({subject:value.subject, design:value.design, text})} kind={mode} value={value.design} activeSection={designSection} onSectionChange={setDesignSection} onChange={design => onChange({ subject: value.subject, text: value.text, design })} />
+          <MailDesignFields onEditBody={() => textRef.current?.focus()} kind={mode} value={value.design} activeSection={designSection} onSectionChange={setDesignSection} onChange={design => onChange({ subject: value.subject, text: value.text, design })} />
 
-          <MailHtmlEditor value={value.design} onChange={design => onChange({ subject: value.subject, text: value.text, design })} />
         </div>
         <MailPreviewPane html={previewHtml} subject={previewSubject} text={previewText}
           onSelectSection={setDesignSection}

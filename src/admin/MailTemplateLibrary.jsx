@@ -5,7 +5,6 @@ import { SAMPLE_PREVIEW_ORDER, previewOrderVariables } from "./mail-order-previe
 import { useConfirm } from "./confirm-context";
 import { renderWelcomeEmailHtml, renderOrderEmailHtml, renderBrandedEmailHtml } from "../lib/mail-html";
 import MailPreviewPane from "./MailPreviewPane";
-import MailHtmlEditor from "./MailHtmlEditor";
 import MailBodyBlocks from "./MailBodyBlocks";
 import MailDesignFields from "./MailDesignFields";
 import MailFormatToolbar from "./MailFormatToolbar";
@@ -470,7 +469,7 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
 
             <MailBodyBlocks text={draft.text} disabled={busy} onChange={(text) => setDraft({ ...draft, text })} />
 
-            <MailDesignFields bodyText={draft.text} onBodyTextChange={text => setDraft({ ...draft, text })}
+            <MailDesignFields onEditBody={() => textField.current?.focus()}
               defaultOpen
               kind={draft.kind}
               hasOrderVars={hasOrderTokens(draft)}
@@ -481,7 +480,6 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
               onChange={(design) => setDraft({ ...draft, design })}
             />
 
-            <MailHtmlEditor value={draft.design} disabled={busy} onChange={(design) => setDraft({ ...draft, design })} />
           </div>
 
           <TemplatePreview draft={draft} onSelectSection={setDesignSection} selectedSection={designSection} />
