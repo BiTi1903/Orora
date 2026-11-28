@@ -509,3 +509,24 @@ test("delivery mail failure is reported without reverting shipping or repeating 
   await update({id:data.requestId,status:"shipping"});
   assert.equal(attempts,1);
 });
+
+test("pending orders can page past fifty completed orders while the status index builds", async () => {
+  const db = memoryDb();
+  const orders = db.collection("orders");
+  const oldest = randomUUID();
+  await orders.doc(oldest).set({status:"new", createdAt:new Date(1)});
+  for (let i = 0; i < 50; i++) {
+    await orders.doc(randomUUID()).set({status:"completed", createdAt:new Date(i + 2)});
+  }
+  const unavailable = {
+    orderBy() { return this; }, limit() { return this; }, startAfter() { return this; },
+    async get() { throw Object.assign(new Error("query requires an index"), {code:9}); },
+  };
+  const call = admin({collection:() => ({...orders, where:() => unavailable})});
+  const first = await call(null,{query:{status:"new"}});
+  assert.deepEqual(first.body.orders, []);
+  assert.ok(first.body.nextCursor);
+  const next = await call(null,{query:{status:"new",cursor:first.body.nextCursor}});
+  assert.deepEqual(next.body.orders.map(order => order.id), [oldest]);
+  assert.equal(next.body.nextCursor, null);
+});

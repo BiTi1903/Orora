@@ -27,7 +27,7 @@ function TaskGroup({kind, onOpenOrder, revision}) {
       if (controller.signal.aborted) return;
       const rows = taskRows(kind,data);
       setPage(p => ({rows:[...new Map([...(load.cursor ? p.rows : []),...rows].map(r => [r.key,r])).values()],cursor:data.nextCursor || data.cursor,loading:false}));
-    }).catch(() => { if (!controller.signal.aborted) setPage(p => ({...p,loading:false,error:true})); });
+    }).catch(error => { if (!controller.signal.aborted) setPage(p => ({...p,loading:false,error:error.status === 401 ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' : error.status === 403 ? 'Tài khoản chưa có quyền xem dữ liệu này.' : kind === 'orders' ? 'Chưa tải được danh sách đơn chờ xác nhận.' : 'Chưa tải được danh sách thư cần kiểm tra.'})); });
     return () => controller.abort();
   },[kind,load,revision]);
   const groups = new Map();
@@ -59,8 +59,8 @@ function TaskGroup({kind, onOpenOrder, revision}) {
       </li>)}</ul>
     </div>)}
     {page.loading && <p role="status">Đang tải…</p>}
-    {!page.loading && !page.error && !page.rows.length && <p>{kind === 'orders' ? 'Không có đơn chờ xác nhận.' : 'Không có thư được ghi nhận cần kiểm tra.'}</p>}
-    {page.error && <p role="alert">Chưa tải được dữ liệu. <button type="button" className="admin-btn" onClick={() => loadPage(load.cursor)}>Thử lại</button></p>}
+    {!page.loading && !page.error && !page.cursor && !page.rows.length && <p>{kind === 'orders' ? 'Không có đơn chờ xác nhận.' : 'Không có thư được ghi nhận cần kiểm tra.'}</p>}
+    {page.error && <p role="alert">{page.error} <button type="button" className="admin-btn" onClick={() => loadPage(load.cursor)}>Thử lại</button></p>}
     {page.cursor && <p className="admin-muted">Số lượng theo ngày tính trên các dòng đã tải. Còn dữ liệu ở trang sau.</p>}
     {page.cursor && !page.error && <button type="button" className="admin-btn" disabled={page.loading} onClick={() => loadPage(page.cursor)}>Tải thêm {kind === 'orders' ? 'đơn' : 'thư'}</button>}
   </section>;

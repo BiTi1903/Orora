@@ -337,14 +337,29 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
         const customerEmail = req.query?.customerEmail;
         if (customerEmail && (typeof customerEmail !== "string" || !validOrderEmail(customerEmail))) return res.status(400).json({message:"Email chưa hợp lệ."});
         let query = customerEmail ? orders.where("customer.email", "==", customerEmail.toLowerCase()).limit(pageSize) : orders.orderBy("createdAt", "desc").limit(pageSize);
-        if (!historyOnly && !bounceOnly && ORDER_STATUSES.includes(rawStatus)) query=orders.where("status","==",rawStatus).orderBy("createdAt","desc").limit(pageSize);
+        const filterStatus = !historyOnly && !bounceOnly && ORDER_STATUSES.includes(rawStatus);
+        if (filterStatus) query=orders.where("status","==",rawStatus).orderBy("createdAt","desc").limit(pageSize);
+        let last;
         if (req.query?.cursor) {
           if (!uuid(req.query.cursor)) return res.status(400).json({ message: "Trang không hợp lệ." });
-          const last = await orders.doc(req.query.cursor).get();
+          last = await orders.doc(req.query.cursor).get();
           if (last.exists) query = query.startAfter(last);
           else return res.status(400).json({ message: "Không tìm thấy mốc phân trang. Hãy tải lại danh sách." });
         }
-        const page = await query.get();
+        let page;
+        try {
+          page = await query.get();
+        } catch (error) {
+          const missingIndex = [9, "failed-precondition"].includes(error.code) && /index/i.test(error.message);
+          if (!filterStatus || !missingIndex) throw error;
+          let recent = orders.orderBy("createdAt", "desc").limit(pageSize);
+          if (last) recent = recent.startAfter(last);
+          const scanned = await recent.get();
+          return res.status(200).json({
+            orders: scanned.docs.filter(doc => doc.data().status === rawStatus).map(formatOrderDoc),
+            nextCursor: scanned.docs.length === pageSize ? scanned.docs.at(-1).id : null,
+          });
+        }
         if (bounceOnly) {
           const bounced = await Promise.all(page.docs.map(async order => {
             const history = await orders.doc(order.id).collection("mailEvents")

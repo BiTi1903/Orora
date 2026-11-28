@@ -1,3 +1,8 @@
+## 28/11/2026 — Tải đơn chờ xác nhận trong tổng quan
+
+- API đơn hàng đọc dự phòng theo ngày, tối đa 50 đơn mỗi trang khi Firestore báo thiếu chỉ mục trạng thái. Tổng quan vẫn cho tải tiếp khi chưa tìm thấy đơn trong trang hiện tại và phân biệt lỗi quyền truy cập. Chỉ đọc dữ liệu.
+- Đạt 30 kiểm thử API đơn hàng, kiểm thử tổng quan Playwright ở 390px và ESLint trên hai file triển khai. Chưa kiểm tra với tài khoản admin production.
+
 ## 28/11/2026 — Ẩn mặc định thanh điều hướng dưới trên điện thoại
 
 - Có thể bật lại trong Visual Builder. Cấu hình cũ tự ẩn thanh, không cần cập nhật cơ sở dữ liệu.
