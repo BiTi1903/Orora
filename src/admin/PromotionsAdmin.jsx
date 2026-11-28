@@ -1,4 +1,5 @@
 import {useEffect,useState} from 'react';
+import './gift-codes.css';
 import {orderRequest} from './order-api';
 
 const blank={code:'',type:'percent',value:10,minimum:0,limit:0,perEmail:0,expires:'',active:true};
@@ -15,15 +16,15 @@ export default function PromotionsAdmin(){
       await load(); setNotice('Đã lưu mã '+form.code.toUpperCase()); setEditing(false);setForm(blank);
     } catch(error){setNotice(error.message);} finally{setBusy(false);}
   }
-  return <section className="admin-card"><h1>Mã ưu đãi</h1>
-    <form onSubmit={save}><fieldset disabled={busy}><legend>{editing?'Sửa ưu đãi':'Tạo ưu đãi'}</legend>
+  return <section className="admin-card gift-admin"><h1>{editing?'Sửa mã quà':'Tạo mã quà'}</h1>
+    <form onSubmit={save}><fieldset disabled={busy}><legend>Giá trị và điều kiện sử dụng</legend><div className="gift-admin-fields">
       <label className="admin-field">Mã khách nhập<input required pattern="[A-Za-z0-9_\-]{2,40}" value={form.code} disabled={editing} onChange={e=>patch('code',e.target.value.toUpperCase())}/></label>
       <label className="admin-field">Kiểu giảm<select value={form.type} onChange={e=>patch('type',e.target.value)}><option value="percent">Phần trăm</option><option value="fixed">Số tiền cố định</option></select></label>
       {[[ 'value', form.type==='percent'?'Mức giảm (%)':'Mức giảm (đồng)' ],['minimum','Tiền hàng tối thiểu (đồng)'],['limit','Tổng lượt dùng (0 là không giới hạn)'],['perEmail','Lượt dùng mỗi email (0 là không giới hạn)']].map(([key,label])=><label key={key} className="admin-field">{label}<input type="number" required min={key==='value'?1:0} max={key==='value'&&form.type==='percent'?100:undefined} value={form[key]} onChange={e=>patch(key,e.target.value===''?'':Number(e.target.value))}/></label>)}
       <label className="admin-field">Ngày cuối áp dụng (giờ Việt Nam)<input type="date" value={form.expires} onChange={e=>patch('expires',e.target.value)}/></label>
-      <label><input type="checkbox" checked={form.active} onChange={e=>patch('active',e.target.checked)}/> Cho phép sử dụng</label>
+      </div><div className="gift-admin-footer"><label><input type="checkbox" checked={form.active} onChange={e=>patch('active',e.target.checked)}/> Cho phép sử dụng</label>
       <div className="admin-actions"><button className="admin-btn">Lưu mã</button>{editing&&<button type="button" className="admin-btn" onClick={()=>{setForm(blank);setEditing(false);}}>Hủy sửa</button>}</div>
-    </fieldset></form><p role="status">{notice}</p>
-    <h2>Mã đã tạo</h2>{rows.map(row=><p key={row.code}><button className="admin-btn" disabled={busy} onClick={()=>{setEditing(true);setForm({...blank,...row});}}>{row.code}</button> · {row.value.toLocaleString('vi-VN')}{row.type==='percent'?'%':' đ'} · {row.active?'Đang bật':'Đã tắt'} · {row.used||0} lượt đã dùng</p>)}
+    </div></fieldset></form><p role="status">{notice}</p>
+    <h2>Mã quà đã tạo</h2>{rows.map(row=><div className="gift-admin-row" key={row.code}><button className="admin-btn" disabled={busy} onClick={()=>{setEditing(true);setForm({...blank,...row});}}>{row.code}</button><strong>{row.value.toLocaleString('vi-VN')}{row.type==='percent'?'%':' đ'}</strong><span>{row.active?'Đang bật':'Đã tắt'}</span><small>{row.used||0} lượt đã dùng</small></div>)}
   </section>;
 }

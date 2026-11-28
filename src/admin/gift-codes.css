@@ -1,0 +1,11 @@
+.gift-admin { max-width: 58rem; }
+.gift-admin fieldset { min-width: 0; border: 1px solid #eadde3; padding: clamp(14px, 3vw, 26px); border-radius: 16px; }
+.gift-admin legend { font-size: .94rem; font-weight: 650; padding-inline: 6px; }
+.gift-admin-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: 14px 20px; }
+.gift-admin-fields label { margin: 0; }
+.gift-admin-footer, .gift-admin-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.gift-admin-footer { justify-content: space-between; margin-top: 20px; padding-top: 14px; border-top: 1px solid #eadde3; }
+.gift-admin-footer button:first-child { background: #963665; color: white; }
+.gift-admin-row { padding: 12px 0; border-top: 1px solid #eadde3; }
+.gift-admin-row button { overflow-wrap: anywhere; }
+.gift-admin-row small { margin-inline-start: auto; }

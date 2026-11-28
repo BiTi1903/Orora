@@ -278,7 +278,7 @@ export function OrderFormBuilderSettings({selected,productDetail,onChange}){
    <SettingGroup title="Tóm tắt phí giao & tổng tiền">
     {labelField('shippingFeeLabel','Nhãn Phí giao hàng')}
     {labelField('shippingUnknownLabel','Chữ khi chưa chọn địa chỉ')}
-    {labelField('promotionLabel','Nhãn mã ưu đãi')}{labelField('promotionApply','Nút áp dụng mã')}
+    {labelField('promotionLabel','Nhãn mã quà')}{labelField('promotionApply','Nút áp dụng mã')}{labelField('promotionSavings','Nhãn số tiền tiết kiệm')}
     {labelField('subtotalPendingLabel','Nhãn tổng khi chưa có phí ship')}
     {labelField('totalLabel','Nhãn Tổng thanh toán')}
     {labelField('codPaymentHint','Chú thích khi chọn COD',2)}

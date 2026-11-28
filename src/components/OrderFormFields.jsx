@@ -172,10 +172,15 @@ function OrderFormFields({promo,onEdit,product,items=null,subtotal,options,varia
     </div>
    </section>
    <section {...mark('ofSummary','checkout-summary')} aria-label={copy.summaryHeading||'Thanh toán'} style={summaryTextStyle}>
-    <label>{label('promotionLabel')}<input value={promo?.code||''} maxLength={40} disabled={busy||promo?.checking||preview} onChange={e=>promo?.change(e.target.value)} /></label>
-    <button type="button" disabled={!promo?.code.trim()||busy||promo?.checking||preview} onClick={promo?.apply}>{label('promotionApply')}</button>
-    {promo?.message&&<p role="alert">{tr(promo.message)}</p>}
-    {promo?.applied&&<div className="order-summary" role="status"><span>{promo.applied.code}</span><strong>−{formatVnd(promo.applied.discount)}</strong></div>}
+    <div className="checkout-gift">
+     <label htmlFor={preview?'gift-preview':'gift-code'}>{label('promotionLabel')}</label>
+     <div className="checkout-gift-controls">
+      <input id={preview?'gift-preview':'gift-code'} value={promo?.code||''} maxLength={40} autoCapitalize="characters" spellCheck={false} disabled={busy||promo?.checking||preview} onChange={e=>promo?.change(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();if(promo?.code.trim()&&!promo.applied&&!promo.checking)promo.apply();}}}/>
+      <button type="button" disabled={!promo?.code.trim()||busy||promo?.checking||preview||Boolean(promo?.applied)} onClick={promo?.apply}>{promo?.checking?tr('Đang kiểm tra…'):promo?.applied?tr('Đã áp dụng'):label('promotionApply')}</button>
+     </div>
+     {promo?.message&&<p role="alert">{tr(promo.message)}</p>}
+     {promo?.applied&&<div className="checkout-gift-saving" role="status"><span>{label('promotionSavings')}<small>{promo.applied.code}</small></span><strong>−{formatVnd(promo.applied.discount)}</strong></div>}
+    </div>
     {shipping.fee!==null&&<div className="order-summary"><span>{tr('Tạm tính')}</span><strong>{itemTotal}</strong></div>}
     <div className="order-summary"><span>{label('shippingFeeLabel')}</span><strong>{shipping.fee===null?tr(shipping.reason||label('shippingUnknownLabel')):formatVnd(shipping.fee)}</strong></div>
     <div className="order-summary checkout-total"><span>{shipping.fee===null?label('subtotalPendingLabel'):label('totalLabel')}</span><strong style={summaryTotalStyle}>{displayTotal}</strong></div>

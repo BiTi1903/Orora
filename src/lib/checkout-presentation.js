@@ -28,7 +28,7 @@ export const CHECKOUT_COPY={
  summaryHeading:'Tóm tắt đơn hàng',
  shippingFeeLabel:'Phí giao hàng',
  shippingUnknownLabel:'Chọn tỉnh và phường để tính phí',
- promotionLabel:'Mã ưu đãi', promotionApply:'Áp dụng mã',
+ promotionLabel:'Mã quà', promotionApply:'Áp dụng', promotionSavings:'Bạn tiết kiệm',
  subtotalPendingLabel:'Tạm tính (chưa gồm phí giao)',
  totalLabel:'Tổng thanh toán',
  paymentHint:'Chưa thu tiền tại bước đặt đơn. ORORA sẽ hướng dẫn thanh toán sau khi tiếp nhận.',

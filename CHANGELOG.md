@@ -1,3 +1,8 @@
+## 28/11/2026 — Tạo mã quà và hiển thị tiền tiết kiệm
+
+- Đổi tên mục bán hàng, xếp lại form quản trị theo chiều rộng. Checkout đặt nút áp dụng cạnh ô mã quà và hiển thị số tiền được trừ trên nền riêng. Có thể chỉnh nhãn trong Visual Builder.
+- Build đạt; 8 lượt kiểm thử thao tác admin và khách hàng đạt ở 320, 390, 768 và 1440 px. Không thay đổi database.
+
 ## 28/11/2026 — Mã ưu đãi và lịch gửi chiến dịch
 
 - Bán hàng → Mã ưu đãi quản lý giảm theo phần trăm hoặc số tiền, ngày hết hạn, đơn tối thiểu, tổng lượt và lượt mỗi email. Checkout báo mức giảm trước khi đặt. Máy chủ kiểm tra giá và ghi lượt cùng giao dịch tạo đơn. Thể hiện mã trong biên nhận, chi tiết đơn và email. Studio gợi ý mã đang dùng khi nhập mã vào thư.
