@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {mount,render} from './fixtures';
 test('mobile nav appears as soon as there is room below the ticker and no desktop cart flashes on mobile',async({page})=>{
- await mount(page,`import Nav from '/src/components/MobileShopNav.jsx';import Cart from '/src/components/ShopCart.jsx';${render("R.createElement(R.Fragment,null,R.createElement('main',null,R.createElement('section',{className:'hero',style:{height:600}},'Hero'),R.createElement('div',{className:'marquee',style:{height:50}},'Dải chữ'),R.createElement('div',{style:{height:2800}},'Nội dung')),R.createElement(Cart),R.createElement(Nav))")}`,{'hooks/useHomeContent.js':'export default function home(){return {loading:false,navStyles:{mobile:{safariLayout:"bar"}}}}','hooks/useProducts.js':'export default function products(){return {products:[],loading:false}}'});
+ await mount(page,`import Nav from '/src/components/MobileShopNav.jsx';import Cart from '/src/components/ShopCart.jsx';${render("R.createElement(R.Fragment,null,R.createElement('main',null,R.createElement('section',{className:'hero',style:{height:600}},'Hero'),R.createElement('div',{className:'marquee',style:{height:50}},'Dải chữ'),R.createElement('div',{style:{height:2800}},'Nội dung')),R.createElement(Cart),R.createElement(Nav))")}`,{'hooks/useHomeContent.js':'export default function home(){return {loading:false,navStyles:{mobile:{showBottomBar:true,safariLayout:"bar"}}}}','hooks/useProducts.js':'export default function products(){return {products:[],loading:false}}'});
  const nav=page.locator('.mobile-shop-nav');
  if(page.viewportSize().width>768){await expect(nav).toBeHidden();await expect(page.locator('.desktop-cart')).toBeVisible();return;}
  await expect(page.locator('.desktop-cart')).toBeHidden();await expect(nav).toBeHidden();expect(await page.evaluate(()=>document.documentElement.classList.contains('has-mobile-shop-nav'))).toBe(true);
@@ -15,7 +15,7 @@ test('iPhone Safari nav follows scroll direction regardless of browser chrome he
   const viewport=new EventTarget();let forcedHeight;Object.defineProperty(viewport,'height',{get:()=>forcedHeight??(window.innerHeight-100),set:value=>{forcedHeight=value;}});viewport.scale=1;
   Object.defineProperty(window,'visualViewport',{value:viewport,configurable:true});
  });
- await mount(page,`import Nav from '/src/components/MobileShopNav.jsx';${render("R.createElement(R.Fragment,null,R.createElement('main',{style:{height:4000}},R.createElement('input',{'aria-label':'Nhập thử'})),R.createElement(Nav))")}`,{'hooks/useHomeContent.js':'export default function home(){return {loading:false,navStyles:{mobile:{safariLayout:"bar",afterTicker:false}}}}'});
+ await mount(page,`import Nav from '/src/components/MobileShopNav.jsx';${render("R.createElement(R.Fragment,null,R.createElement('main',{style:{height:4000}},R.createElement('input',{'aria-label':'Nhập thử'})),R.createElement(Nav))")}`,{'hooks/useHomeContent.js':'export default function home(){return {loading:false,navStyles:{mobile:{showBottomBar:true,safariLayout:"bar",afterTicker:false}}}}'});
  const nav=page.locator('.mobile-shop-nav');await expect(nav).toBeHidden();
  await page.evaluate(()=>window.scrollTo(0,300));await expect(nav).toBeVisible();
  await page.evaluate(()=>{window.visualViewport.height=window.innerHeight;window.visualViewport.dispatchEvent(new Event('resize'));});await expect(nav).toBeVisible();
@@ -27,7 +27,7 @@ test('iPhone Safari nav follows scroll direction regardless of browser chrome he
 });
 
 const visibilityFixture=`import Nav from '/src/components/MobileShopNav.jsx';${render("R.createElement(R.Fragment,null,R.createElement('main',{style:{height:4000}},R.createElement('input',{'aria-label':'Nhập thông tin',type:'text'}),R.createElement('input',{'aria-label':'Chọn dung tích',type:'radio'}),R.createElement('input',{'aria-label':'Đồng ý',type:'checkbox'}),R.createElement('input',{'aria-label':'Tùy chỉnh',type:'range'})),R.createElement(Nav))")}`;
-const visibilityModules={'hooks/useHomeContent.js':'export default function home(){return {loading:false,navStyles:{mobile:{safariLayout:"bar",afterTicker:false}}}}'};
+const visibilityModules={'hooks/useHomeContent.js':'export default function home(){return {loading:false,navStyles:{mobile:{showBottomBar:true,safariLayout:"bar",afterTicker:false}}}}'};
 
 async function mockViewport(page,{safari=false,standalone=false,unsupportedUnits=false}={}){
  await page.addInitScript(({safari,standalone,unsupportedUnits})=>{

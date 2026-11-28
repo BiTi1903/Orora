@@ -139,7 +139,7 @@ test('product image zooms inline at cursor position without opening a popup', as
 test('mobile buy bar shares purchase settings and leaves room for chat and navigation', async ({ page }) => {
  test.skip(page.viewportSize().width > 768, 'Mobile layout');
  await detail(page, null, {
-  'hooks/useHomeContent.js': 'export default function home(){return {loading:false,productDetailStyles:{purchaseOptions:{websiteBackground:"#654321",fontSize:18}},navStyles:{mobile:{afterTicker:false}},chatSettings:{hintEnabled:false}}}',
+  'hooks/useHomeContent.js': 'export default function home(){return {loading:false,productDetailStyles:{purchaseOptions:{websiteBackground:"#654321",fontSize:18}},navStyles:{mobile:{showBottomBar:true,afterTicker:false}},chatSettings:{hintEnabled:false}}}',
   'hooks/useChatConversation.js': 'export default function chat(){return {metadata:{}}}',
  }, true);
  const sticky = page.getByRole('button', { name: 'Mua ngay', exact: true });

@@ -7,7 +7,7 @@ export default function MobileNavSettings({navbar,onChange}){
  const items=Array.isArray(value.items)?value.items:mobileNavItems(mobileNavSettings(value));
  const edit=(index,next)=>patch({items:items.map((item,i)=>i===index?{...item,...next}:item)});
  return <SettingGroup title="Thanh điều hướng dưới — mobile">
-  <label className="admin-check"><input type="checkbox" role="switch" checked={value.enabled!==false} onChange={event=>patch({enabled:event.target.checked})}/>Hiện điều hướng trên điện thoại</label>
+  <label className="admin-check"><input type="checkbox" role="switch" checked={value.showBottomBar===true} onChange={event=>patch({showBottomBar:event.target.checked})}/>Hiện điều hướng trên điện thoại</label>
   <label className="admin-check"><input type="checkbox" role="switch" checked={value.afterTicker!==false} onChange={e=>patch({afterTicker:e.target.checked})}/>Trang chủ: hiện khi cuộn xuống đủ chỗ, không che dải chữ chạy</label>
   <label>Khoảng hở với dải chữ chạy (px)<input type="number" min="0" max="48" value={value.revealGap??12} onChange={e=>patch({revealGap:Number(e.target.value)})}/></label>
   <label className="admin-check"><input type="checkbox" role="switch" checked={value.spin!==false} onChange={e=>patch({spin:e.target.checked})}/>Xoay icon khi nhấn mục trên thanh dưới</label>

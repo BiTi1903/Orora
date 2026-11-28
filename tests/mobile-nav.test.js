@@ -7,3 +7,10 @@ test('mobile links preserve old defaults and allow ordered custom targets safely
  assert.deepEqual(items.map(x=>x.to),['/#newsletter','/#contact','https://example.com/path']);assert.equal(items[0].icon,'heart');assert.equal(items[0].label,'Ưu đãi');
  assert.deepEqual(mobileNavItems({items:[]}),[]);
 });
+
+test('the bottom bar stays hidden until enabled in the builder',()=>{
+ for(const old of [undefined,{}, {enabled:true},{enabled:false}] ){
+  assert.equal(mobileNavSettings(old).enabled,false);
+ }
+ assert.equal(mobileNavSettings({showBottomBar:true}).enabled,true);
+});

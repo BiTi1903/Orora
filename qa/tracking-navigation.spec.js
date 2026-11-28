@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {mount,render} from './fixtures';
 const modules={
- 'hooks/useHomeContent.js':`export default function home(){return {loading:false,navLogo:'ORORA',navLinks:[{label:'Tra cứu đơn hàng',href:'/tra-cuu-don-hang',kind:'order-tracking'}],navStyles:{mobile:{safariLayout:"bar",afterTicker:false}}}}`,
+ 'hooks/useHomeContent.js':`export default function home(){return {loading:false,navLogo:'ORORA',navLinks:[{label:'Tra cứu đơn hàng',href:'/tra-cuu-don-hang',kind:'order-tracking'}],navStyles:{mobile:{showBottomBar:true,safariLayout:"bar",afterTicker:false}}}}`,
  'hooks/useCategories.js':'export default function categories(){return {categories:[]}}',
 };
 async function fixture(page){

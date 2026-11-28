@@ -5,7 +5,7 @@ const categories=[{id:'care',name:'Dưỡng da'},{id:'clean',name:'Làm sạch'}
 const categoryMock=`export default function cats(){return {categories:${JSON.stringify(categories)},error:null,retry:()=>{}}}`;
 test('mobile bottom navigation links to Story and scrolls home to the top, links to lookup and clears the floating chat button',async({page})=>{
  await mount(page,`import Nav from '/src/components/MobileShopNav.jsx';import Chat from '/src/components/ChatButton.jsx';import {useLocation} from '/qa/runtime.js';function Route(){const l=useLocation();return R.createElement('output',{'data-testid':'route'},l.pathname+l.search+l.hash)};${render("R.createElement(R.Fragment,null,R.createElement('main',{style:{height:2400}}),R.createElement(Nav),R.createElement(Chat),R.createElement(Route))")}`,{
-  'hooks/useHomeContent.js':'export default function home(){return {loading:false,navStyles:{mobile:{safariLayout:"bar",afterTicker:false}},chatSettings:{hintEnabled:false}}}',
+  'hooks/useHomeContent.js':'export default function home(){return {loading:false,navStyles:{mobile:{showBottomBar:true,safariLayout:"bar",afterTicker:false}},chatSettings:{hintEnabled:false}}}',
   'hooks/useCategories.js':categoryMock,
   'hooks/useChatConversation.js':'export default function chat(){return {metadata:{}}}',
  });
@@ -31,6 +31,8 @@ test('catalog paginates a larger list and sorts actual variant prices with two c
 });
 test('admin can rename, style and disable the mobile bar with a live preview',async({page})=>{
  await mount(page,`import Settings from '/src/admin/builder/MobileNavSettings.jsx';function Fixture(){const [value,setValue]=R.useState({navStyles:{}});return R.createElement(Settings,{navbar:value,onChange:patch=>setValue(old=>({...old,...patch}))})};${render('R.createElement(Fixture)')}`,{'hooks/useHomeContent.js':'export default function home(){return {loading:false}}','hooks/useCategories.js':categoryMock});
+ const toggle=page.getByRole('switch',{name:'Hiện điều hướng trên điện thoại',exact:true});
+ await expect(toggle).not.toBeChecked();await expect(page.locator('.mobile-shop-nav.is-preview')).toHaveCount(0);await toggle.check();
  await page.getByText('Nội dung và giao diện thanh dưới',{exact:true}).click();await page.getByLabel('Tên hiển thị',{exact:true}).first().fill('Về nhà');await expect(page.locator('.mobile-shop-nav.is-preview').getByRole('link',{name:'Về nhà',exact:true})).toBeVisible();
  await page.getByRole('combobox',{name:'Đi đến',exact:true}).nth(1).selectOption('email');await page.getByRole('combobox',{name:'Biểu tượng',exact:true}).nth(1).selectOption('heart');await expect(page.locator('.mobile-shop-nav.is-preview a').nth(1)).toBeVisible();
  await page.getByRole('switch',{name:'Hiện điều hướng trên điện thoại',exact:true}).uncheck();await expect(page.locator('.mobile-shop-nav.is-preview')).toHaveCount(0);await fit(page);

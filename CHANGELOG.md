@@ -1,3 +1,8 @@
+## 28/11/2026 — Ẩn mặc định thanh điều hướng dưới trên điện thoại
+
+- Có thể bật lại trong Visual Builder. Cấu hình cũ tự ẩn thanh, không cần cập nhật cơ sở dữ liệu.
+- Bổ sung kiểm thử cấu hình cũ và thao tác bật/tắt trong bản xem trước.
+
 ## 28/11/2026 — Chỉnh giao nhận và chi tiết đơn từ bản xem trước
 
 - Thêm bảng chỉnh nhãn từng dòng, tiêu đề, phông và cỡ chữ desktop/mobile cho thông tin giao nhận. Studio nhận đúng mẫu đang giao/cảm ơn kể cả khi nội dung không còn biến đơn.
