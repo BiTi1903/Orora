@@ -114,7 +114,7 @@ test('mail writer previews frame edits and saves them with the welcome template'
   await expect(page.frameLocator('.mail-preview-frame').getByText('ORORA Studio', {exact:true})).toBeVisible();
   await page.getByRole('button', { name:'Nội dung', exact:true }).click();
   await page.getByLabel('Căn nội dung').selectOption('center');
-  await page.getByLabel('Nội dung thư', {exact:true}).fill('Đoạn đầu\n\nĐoạn sau');
+  await page.getByLabel('Chỉnh nội dung hiển thị trong thư').fill('Đoạn đầu\n\nĐoạn sau');
   await page.getByText('Sắp xếp các đoạn nội dung').click();
   await page.getByRole('button', {name:'Đưa đoạn 2 lên'}).click();
   await expect(page.getByLabel('Nội dung thư', {exact:true})).toHaveValue('Đoạn sau\n\nĐoạn đầu');

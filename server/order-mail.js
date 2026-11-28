@@ -1,3 +1,4 @@
+import { findMailPreset } from "../src/lib/mail-presets.js";
 import { reviewRecord } from "./mail-review.js";
 import { orderTrackingMail, trackingTemplate } from "../src/lib/order-tracking-mail.js";
 import { sectionIsEnabled } from "../src/lib/page-sections.js";
@@ -121,4 +122,43 @@ export async function sendOrderConfirmation({ db, orderId, sendMail, manual = fa
     if (latest.data()?.confirmationMail?.eventId === eventRef.id) tx.set(orderRef, { confirmationMail: { state, eventId: eventRef.id, updatedAt } }, { merge: true });
   });
   return { state, ...(errorCode ? { errorCode, errorMessage } : {}) };
+}
+
+export async function deliverStatusMail({ db, orderRef, status, sendMail, env }) {
+  const eventRef = orderRef.collection("mailEvents").doc("status-" + status);
+  const preset = findMailPreset(status === "shipping" ? "shipping" : "delivered");
+  const templateRef = db.collection("newsletterTemplates").doc(preset.id);
+  const claim = await db.runTransaction(async tx => {
+    const event = await tx.get(eventRef);
+    if (event.data()?.state !== "queued") return null;
+    const [order, saved, home] = await tx.getAll(orderRef, templateRef, db.collection("settings").doc("home"));
+    const template = saved.data() || preset;
+    const data = order.data();
+    const metadata = { templateName:template.name, templateSubject:template.subject, templateText:template.text,
+      ...(saved.exists ? {templateId:saved.id, templateRevision:template.revision || 1} : {}) };
+    const message = renderOrderMessage(validateOrderTemplate(template), data, env, {
+      trackingEnabled:sectionIsEnabled(home.data(), "ordertracking"),
+      bankInfo:home.data()?.productDetailStyles?.purchaseOptions,
+    });
+    tx.set(eventRef, { ...metadata, state:"sending", subject:message.subject, text:message.text, updatedAt:new Date() }, {merge:true});
+    return { message, recipient:data.customer.email, code:data.code, metadata };
+  });
+  if (!claim) return null;
+  let state = "accepted";
+  let tracking = {};
+  let failure = {};
+  try {
+    if (!sendMail) throw new Error("mail_configuration_missing");
+    tracking = safeMailTracking(await sendMail(claim.recipient, claim.message));
+  } catch (error) {
+    failure = describeMailError(error);
+    tracking = safeMailTracking(error.mailTracking);
+    state = ["mail_configuration_missing","mail_transport_invalid","mail_auth_failed","mail_send_failed","mail_smtp_auth_failed","mail_smtp_connection_failed"].includes(error.message) ? "failed" : "unknown";
+  }
+  await db.runTransaction(async tx => {
+    if (state === "accepted") await recordTemplateUse(tx, db, claim.metadata);
+    tx.set(eventRef, {state, ...failure, ...tracking, updatedAt:new Date()}, {merge:true});
+    tx.set(db.collection("orderMailReview").doc(orderRef.id + "-" + eventRef.id), reviewRecord("order", claim.recipient, state, tracking, eventRef.path, claim.code));
+  });
+  return state;
 }

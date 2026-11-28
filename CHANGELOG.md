@@ -1,3 +1,9 @@
+## 28/11/2026 — Sửa nội dung gợi ý và gửi thư theo trạng thái đơn
+
+- Bảng Nội dung trong Studio và trình soạn cho sửa trực tiếp tiêu đề, danh sách gợi ý và lời nhắn trong thân thư. Mở mẫu giao hàng/cảm ơn sẽ đọc phiên bản đã lưu.
+- Khi đơn chuyển sang shipping/completed, ghi sự kiện mailEvents cùng giao dịch đổi trạng thái và dùng mẫu hệ thống tương ứng để gửi. Lưu kết quả, cập nhật danh sách kiểm tra thư và báo admin nếu thiếu địa chỉ hoặc gửi lỗi. Không gửi hồi tố cho các đơn cũ.
+- 68 bài kiểm tra đơn hàng/email và bài Playwright chỉnh nội dung đạt. Lint và build đạt. Kiểm thử dùng dịch vụ gửi giả lập, chưa gửi email cho khách thật.
+
 ## 28/11/2026 — Tối ưu tốc độ đăng ký/đặt hàng, đổi chữ nút đang xử lý, bỏ kính lỏng ở Tra cứu đơn và bổ sung nút hướng dẫn `i` trong Admin
 
 - **Lý do**: Cải thiện trải nghiệm người dùng khi bấm đăng ký nhận tin & đặt hàng (đổi chữ nút thành *Đang đăng ký…* / *Đang đặt hàng…* và rút ngắn thời gian phản hồi BE); bỏ hiệu ứng kính lỏng trên form & hộp thoại chi tiết Tra cứu đơn hàng để đồng bộ màu nền; đồng thời bổ sung nút hướng dẫn `i` (`TranslationHelp`) ở nhiều thao tác quan trọng trong trang quản trị.

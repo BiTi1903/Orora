@@ -122,7 +122,11 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
   const loadPreset = (preset) => {
     const savedMatch = templates.find((t) => t.id === preset.id);
     pendingId.current = null;
-    setId(savedMatch ? savedMatch.id : null);
+    if (savedMatch && ["shipping", "delivered"].includes(preset.stage)) {
+      edit(savedMatch, "Đang chỉnh mẫu tự động dùng khi đơn đổi trạng thái.");
+      return;
+    }
+    setId(savedMatch || ["shipping", "delivered"].includes(preset.stage) ? preset.id : null);
     setDraft({
       name: preset.name,
       kind: preset.kind,
@@ -192,7 +196,7 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
       <article className={`mail-library-card${isEditing ? " is-editing" : ""}`} key={item.id || item.name}>
         <div className="mail-library-card-top">
           <span className="mail-preset-badge">
-            {item.categoryName || (isOrderCard && item.kind === "private" ? "Mẫu đơn hàng gửi riêng" : TEMPLATE_KINDS[item.kind] || item.kind)}
+            {item.id === "builtin-order-shipping" ? "Tự động khi đang giao" : item.id === "builtin-order-thankyou" ? "Tự động khi hoàn tất" : item.categoryName || (isOrderCard && item.kind === "private" ? "Mẫu đơn hàng gửi riêng" : TEMPLATE_KINDS[item.kind] || item.kind)}
           </span>
           <span className={`mail-usage-badge ${item.usedRevisions?.includes(item.revision || 1) ? "sent" : ""}`}>
             v{item.revision || 1} · {templateUsageLabel(item)}
@@ -267,7 +271,7 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
       <section className="admin-card mail-preset-shelf" aria-label="Bộ mẫu chuẩn ORORA">
         <div className="mail-shelf-head">
           <div>
-            <h3>Bộ 4 mẫu chuẩn theo hành trình khách hàng <TranslationHelp label="bộ 4 mẫu thư chuẩn">Mẫu Đăng ký và Đã nhận đơn dùng làm thư gửi tự động. Mẫu Đang giao hàng và Cảm ơn sau khi nhận hàng xuất hiện trong Đơn hàng → Gửi email riêng và tự điền tên khách, mã đơn, mã vận đơn.</TranslationHelp></h3>
+            <h3>Bộ 4 mẫu chuẩn theo hành trình khách hàng <TranslationHelp label="bộ 4 mẫu thư chuẩn">Mẫu Đăng ký và Đã nhận đơn dùng làm thư gửi tự động. Khi đơn chuyển sang Đang giao hoặc Hoàn tất, hệ thống tự gửi mẫu tương ứng tới email của khách. Lưu thay đổi trong Studio để áp dụng cho các lần gửi sau.</TranslationHelp></h3>
             <p className="admin-muted">Bấm vào một giai đoạn để nạp sẵn bố cục, tiến trình đơn và nội dung chuẩn vào Studio bên dưới.</p>
           </div>
         </div>
@@ -466,7 +470,7 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
 
             <MailBodyBlocks text={draft.text} disabled={busy} onChange={(text) => setDraft({ ...draft, text })} />
 
-            <MailDesignFields
+            <MailDesignFields bodyText={draft.text} onBodyTextChange={text => setDraft({ ...draft, text })}
               defaultOpen
               kind={draft.kind}
               hasOrderVars={hasOrderTokens(draft)}

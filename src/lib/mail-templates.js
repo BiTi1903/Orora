@@ -1,4 +1,4 @@
-export const mailActorLabel = (mail) => !mail.manual && mail.manual !== undefined ? "Tự động khi đặt hàng" : mail.actorName || mail.actorEmail || (mail.actor ? `Tài khoản ${mail.actor}` : "Chưa lưu tài khoản thao tác");
+export const mailActorLabel = (mail) => !mail.manual && mail.manual !== undefined ? (mail.id?.startsWith("status-") ? "Tự động khi đổi trạng thái" : "Tự động khi đặt hàng") : mail.actorName || mail.actorEmail || (mail.actor ? `Tài khoản ${mail.actor}` : "Chưa lưu tài khoản thao tác");
 export function groupMailTemplates(mails) {
   const groups = new Map(); const byMail = new Map();
   const chronological = [...mails].sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id));

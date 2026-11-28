@@ -10,7 +10,7 @@ import { syncOutlookStatus, syncOutlookBatch, OUTLOOK_ERROR_MESSAGES } from "./o
 import { effectiveMailState } from "../src/lib/mail-state.js";
 import { templateIdentity } from "./template-snapshot.js";
 import { mailActor, resolveMailActors } from "./mail-actor.js";
-import { sendOrderConfirmation, validOrderEmail } from "./order-mail.js";
+import { deliverStatusMail, sendOrderConfirmation, validOrderEmail } from "./order-mail.js";
 import { createHash } from "node:crypto";
 import { parseVndPrice, sameVndPrice, availablePaymentMethods, PAYMENT_LABELS } from "../src/lib/commerce.js";
 import { requireAdmin, resolveAdminPermissions } from "./admin-auth.js";
@@ -365,7 +365,7 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
       const body = readBody(req, env, 40000);
       if (body.action === "checkReview") return res.status(200).json(await checkReview(db, "orders", body.ids, checkOutlook));
       if (body.action === "checkOrderOutlook") {
-        if (!uuid(body.id) || !/^(confirmation-auto|manual-[a-f0-9-]{36})$/i.test(body.eventId || "")) return res.status(400).json({ message: "Bản ghi gửi thư không hợp lệ." });
+        if (!uuid(body.id) || !/^(confirmation-auto|status-shipping|status-completed|manual-[a-f0-9-]{36})$/i.test(body.eventId || "")) return res.status(400).json({ message: "Bản ghi gửi thư không hợp lệ." });
         const outlook = await syncOutlookStatus(orders.doc(body.id).collection("mailEvents").doc(body.eventId), checkOutlook);
         return res.status(200).json({ outlook });
       }
@@ -538,9 +538,28 @@ export function createAdminOrdersHandler({ getDb, verifyToken, sendMail, lookupU
             tx.set(dailyRef, { day: revenueDay, paidAmount, paidOrders, unpricedPaid, revenueTracked: true }, { merge: true });
           }
         }
-        return { inventory: stockPatch.inventory || cur.inventory || null, activity };
+        const notifyStatus = ["shipping", "completed"].includes(body.status);
+        const missingEmail = notifyStatus && !validOrderEmail(cur.customer?.email);
+        if (notifyStatus && cur.status !== body.status && !missingEmail) {
+          tx.set(ref.collection("mailEvents").doc("status-" + body.status), {
+            type:"orderStatus", orderStatus:body.status, recipient:cur.customer.email, manual:false,
+            state:"queued", createdAt:patch.updatedAt, updatedAt:patch.updatedAt,
+          });
+        }
+        return { inventory: stockPatch.inventory || cur.inventory || null, activity, notifyStatus, missingEmail };
       });
-      return res.status(200).json({ ...result, message: body.status === "completed" ? "Đã hoàn tất đơn hàng và ghi nhận đã thanh toán." : "Đã cập nhật trạng thái đơn hàng." });
+      const { notifyStatus, missingEmail, ...updated } = result;
+      let mailState = null;
+      if (notifyStatus && !missingEmail) {
+        try { mailState = await deliverStatusMail({ db, orderRef:orders.doc(body.id), status:body.status, sendMail, env }); }
+        catch { mailState = "unknown"; }
+      }
+      let message = body.status === "completed" ? "Đã hoàn tất đơn hàng và ghi nhận đã thanh toán." : "Đã cập nhật trạng thái đơn hàng.";
+      if (missingEmail) message += " Chưa gửi thư vì đơn thiếu email hợp lệ.";
+      if (mailState === "accepted") message += " Dịch vụ email đã tiếp nhận thư gửi khách.";
+      if (mailState === "failed") message += " Gửi thư cho khách thất bại. Kiểm tra lịch sử thư.";
+      if (mailState === "unknown") message += " Chưa xác nhận được kết quả gửi thư. Kiểm tra lịch sử thư trước khi gửi lại.";
+      return res.status(200).json({ ...updated, mailState, message });
     } catch (error) { if (OUTLOOK_ERROR_MESSAGES[error.message]) return res.status(503).json({ code: error.message, message: OUTLOOK_ERROR_MESSAGES[error.message] }); return res.status(error.status || 503).json({ message: error.message === "template_changed" ? "Mẫu đã được sửa hoặc xóa. Chọn lại mẫu hiện tại hoặc soạn nội dung riêng." : error.status ? error.message : "Không tải hoặc cập nhật được đơn hàng." }); }
   };
 }

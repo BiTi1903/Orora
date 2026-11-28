@@ -181,7 +181,7 @@ export default function MailWriter({ mode, onModeChange, value, onChange, onChoo
 
           <MailBodyBlocks text={value.text} onChange={text => onChange({ design: value.design, subject: value.subject, text })} />
 
-          <MailDesignFields kind={mode} value={value.design} activeSection={designSection} onSectionChange={setDesignSection} onChange={design => onChange({ subject: value.subject, text: value.text, design })} />
+          <MailDesignFields bodyText={value.text} onBodyTextChange={text => onChange({subject:value.subject, design:value.design, text})} kind={mode} value={value.design} activeSection={designSection} onSectionChange={setDesignSection} onChange={design => onChange({ subject: value.subject, text: value.text, design })} />
 
           <MailHtmlEditor value={value.design} onChange={design => onChange({ subject: value.subject, text: value.text, design })} />
         </div>

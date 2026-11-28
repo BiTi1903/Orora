@@ -149,7 +149,7 @@ export default function OrdersAdmin({ onOpenEmailTemplates, initialMailDraft, re
       patchLocal(order.id, patch);
       try { const result = await orderRequest({ id: order.id, ...patch }); if (result.inventory) patchLocal(order.id, { inventory: result.inventory });
         if (result.activity) setDetail((value) => value?.order.id === order.id ? { ...value, activities: [result.activity, ...(value.activities || []).filter((item) => item.id !== result.activity.id)] } : value);
-        onOrderChanged?.(); setNotice({ text: result.message }); }
+        onOrderChanged?.(); setNotice({ error:["failed","unknown"].includes(result.mailState), text: result.message }); }
       catch (error) { patchLocal(order.id, previous); throw error; }
     });
   };

@@ -14,8 +14,8 @@ async function setup() {
   const handler = createOrderHandler({ getDb: () => db, env, now: () => 1700000000000 });
   return { db, call: async (data, overrides = {}) => { const res = response(); await handler({ method: "POST", headers, body: data, ...overrides }, res); return res; } };
 }
-function admin(db, user = { uid: "owner" }) {
-  const handler = createAdminOrdersHandler({ getDb: () => db, verifyToken: async () => user, env });
+function admin(db, user = { uid: "owner" }, sendMail) {
+  const handler = createAdminOrdersHandler({ getDb: () => db, verifyToken: async () => user, sendMail, env });
   return async (data, options = {}) => { const res = response(); await handler({ method: data ? "POST" : "GET", headers: { ...headers, authorization: "Bearer test-token" }, body: data, ...options }, res); return res; };
 }
 
@@ -466,4 +466,46 @@ test("multi-item cart orders combine totals, reserve/deduct/release inventory pe
   assert.equal((await admin(db)({ id: cancelReq.requestId, status: "cancelled" })).statusCode, 200);
   assert.equal((await db.collection("inventory").doc("serum").get()).data().reserved, 0);
   assert.equal((await db.collection("inventory").doc("cream").get()).data().reserved, 0);
+});
+
+test("status transitions send the saved shipping and thank-you emails once each", async () => {
+  const { db, call } = await setup();
+  const data = body();
+  await call(data);
+  const messages = [];
+  const update = admin(db, undefined, async (recipient, message) => {
+    assert.equal(recipient, data.email);
+    messages.push(message);
+  });
+  await db.collection("newsletterTemplates").doc("builtin-order-thankyou").set({
+    name:"Sau giao", subject:"Cảm ơn {{customerName}}", text:"Gợi ý đã sửa cho {{productName}}", revision:2,
+  });
+  for (const status of ["shipping", "completed"]) {
+    const result = await update({id:data.requestId,status});
+    assert.equal(result.body.mailState, "accepted", JSON.stringify(result.body));
+    await update({id:data.requestId,status});
+    const event = await db.collection("orders").doc(data.requestId).collection("mailEvents").doc("status-" + status).get();
+    assert.equal(event.data().state,"accepted");
+  }
+  assert.equal(messages.length,2);
+  assert.match(messages[0].subject,/đang trên đường giao/);
+  assert.ok(messages[1].subject.includes(data.name));
+  assert.match(messages[1].html,/Gợi ý đã sửa/);
+});
+
+test("delivery mail failure is reported without reverting shipping or repeating the submission", async () => {
+  const { db, call } = await setup();
+  const data = body();
+  await call(data);
+  let attempts = 0;
+  const update = admin(db, undefined, async () => { attempts++; throw new Error("mail_auth_failed"); });
+  const result = await update({id:data.requestId, status:"shipping"});
+  assert.equal(result.statusCode,200);
+  assert.equal(result.body.mailState,"failed");
+  assert.match(result.body.message,/thất bại/);
+  const order = db.collection("orders").doc(data.requestId);
+  assert.equal((await order.get()).data().status,"shipping");
+  assert.equal((await order.collection("mailEvents").doc("status-shipping").get()).data().state,"failed");
+  await update({id:data.requestId,status:"shipping"});
+  assert.equal(attempts,1);
 });

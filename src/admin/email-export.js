@@ -22,7 +22,7 @@ export async function buildEmailExport(kind, { request, orderRequest }) {
   }
   if (kind === "orders") {
     const mails = await collect((cursor) => orderRequest(null, { mailHistory: "1", ...(cursor ? { cursor } : {}) }), "mails");
-    return { name: "thu-don-hang-da-gui", headers: ["Mã đơn", "ID đơn", "Tên khách", "Email", "Cách gửi", "Tài khoản thao tác", "Ngày gửi", "Tiêu đề", "Nội dung", "Mẫu lúc gửi", "Phiên bản", "Kết quả gửi", "Check", "Mã lỗi", "Chi tiết lỗi"], rows: mails.map((item) => [item.orderCode, item.orderId, item.customerName, item.recipient, item.manual ? "Gửi bởi tài khoản" : "Tự động khi đặt hàng", mailActorLabel(item), date(item.createdAt), item.subject, item.text, item.templateName, item.templateRevision || "", mailStates[item.state] || item.state, outlook(item.outlook), item.errorCode, item.errorMessage]) };
+    return { name: "thu-don-hang-da-gui", headers: ["Mã đơn", "ID đơn", "Tên khách", "Email", "Cách gửi", "Tài khoản thao tác", "Ngày gửi", "Tiêu đề", "Nội dung", "Mẫu lúc gửi", "Phiên bản", "Kết quả gửi", "Check", "Mã lỗi", "Chi tiết lỗi"], rows: mails.map((item) => [item.orderCode, item.orderId, item.customerName, item.recipient, item.manual ? "Gửi bởi tài khoản" : "Gửi tự động", mailActorLabel(item), date(item.createdAt), item.subject, item.text, item.templateName, item.templateRevision || "", mailStates[item.state] || item.state, outlook(item.outlook), item.errorCode, item.errorMessage]) };
   }
   if (kind !== "sent") throw new Error("Chọn danh sách cần xuất.");
   const campaigns = await collect((cursor) => request(null, { campaignHistory: "1", ...(cursor ? { cursor } : {}) }), "campaigns");

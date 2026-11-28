@@ -55,6 +55,7 @@ export default function MailDesignFields({
   disabled,
   kind,
   hasOrderVars = false,
+  bodyText, onBodyTextChange,
   activeSection,
   onSectionChange,
   defaultOpen = false,
@@ -164,6 +165,10 @@ export default function MailDesignFields({
           ))}
         </div>
 
+        {section === "Nội dung" && onBodyTextChange && <label className="admin-field">Chỉnh nội dung hiển thị trong thư
+          <textarea rows={10} maxLength={20000} value={bodyText} onChange={event => onBodyTextChange(event.target.value)} />
+          <small>Chỉnh tiêu đề gợi ý và từng dòng hướng dẫn ngay trong nội dung này.</small>
+        </label>}
         {section === "Khung thư" && (
           <div className="mail-design-group">
             <span className="mail-design-group-title">Bảng phối màu nhanh</span>
