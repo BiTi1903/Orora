@@ -208,10 +208,12 @@ function renderEmailShell({
   <meta name="color-scheme" content="light" />
   <meta name="supported-color-schemes" content="light" />
   <title>${escapeHtml(subject || frame.brand || "ORORA")}</title>
-  ${[frame.font,frame.headerFont,frame.headingFont,frame.orderCodeFont,frame.detailFont].includes("notoSerif") ? '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600;700&amp;display=swap" />' : ""}
+  ${[frame.font,frame.headerFont,frame.headingFont,frame.orderCodeFont,frame.detailFont,frame.deliveryFont].includes("notoSerif") ? '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600;700&amp;display=swap" />' : ""}
   <style data-mail-mobile>
     @media only screen and (max-width: 600px) {
       .mail-body-text { font-size: ${frame.mobileFontSize}px !important; }
+      .mail-delivery-text { font-size: ${frame.deliveryMobileSize}px !important; }
+      .mail-delivery-heading { font-size: ${frame.deliveryMobileSize - 2}px !important; }
       .mail-order-code { font-size: ${frame.orderCodeMobileSize}px !important; }
       ${[11.5,12,13.5,14,15,17].map(size => `.mail-detail-size-${size.toFixed(1).replace(".", "-")} { font-size: ${frame.detailMobileSize + size - 14}px !important; }`).join("\n")}
       .mail-body-subheading { font-size: ${frame.mobileFontSize + 4}px !important; }
@@ -653,20 +655,21 @@ export function renderOrderEmailHtml({
       </table>
     </div>` : "";
 
+  const deliveryFont = resolveFont(frame.deliveryFont, bodyFont);
   const deliveryBlockHtml = frame.showOrderDelivery ? `
     <!-- Recipient & Delivery Details -->
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${sectionAttr("Các khối", interactivePreview)} style="background-color:${frame.footer};border:1px solid ${frame.border};border-radius:14px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${sectionAttr("Thông tin giao nhận", interactivePreview)} style="font-family:${deliveryFont};background-color:${frame.footer};border:1px solid ${frame.border};border-radius:14px;">
       <tr>
         <td style="padding:18px 20px;">
-          <div style="font-family:${bodyFont};font-size:12px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:${frame.accent};margin-bottom:10px;">${escapeHtml(frame.orderDeliveryHeading || "Thông tin giao nhận")}</div>
+          <div class="mail-delivery-heading" style="font-family:${deliveryFont};font-size:${frame.deliverySize - 2}px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:${frame.accent};margin-bottom:10px;">${escapeHtml(frame.orderDeliveryHeading)}</div>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-            ${customer.name ? `<tr><td valign="top" style="padding:4px 0;font-size:13px;color:${frame.footerText};width:130px;">Người nhận</td><td style="padding:4px 0;font-size:13.5px;font-weight:600;color:${frame.headingColor};">${escapeHtml(customer.name)}</td></tr>` : ""}
-            ${customer.phone ? `<tr><td valign="top" style="padding:4px 0;font-size:13px;color:${frame.footerText};">Số điện thoại</td><td style="padding:4px 0;font-size:13.5px;color:${frame.headingColor};">${escapeHtml(customer.phone)}</td></tr>` : ""}
-            ${customer.email ? `<tr><td valign="top" style="padding:4px 0;font-size:13px;color:${frame.footerText};">Email</td><td style="padding:4px 0;font-size:13.5px;color:${frame.headingColor};">${escapeHtml(customer.email)}</td></tr>` : ""}
-            ${customer.address ? `<tr><td valign="top" style="padding:4px 0;font-size:13px;color:${frame.footerText};">Địa chỉ</td><td style="padding:4px 0;font-size:13.5px;line-height:1.55;color:${frame.headingColor};">${escapeHtml(customer.address)}</td></tr>` : ""}
-            <tr><td valign="top" style="padding:4px 0;font-size:13px;color:${frame.footerText};">Thanh toán</td><td style="padding:4px 0;font-size:13.5px;color:${frame.headingColor};">${escapeHtml(paymentMethodLabel)}</td></tr>
-            ${order?.trackingCode ? `<tr><td valign="top" style="padding:4px 0;font-size:13px;color:${frame.footerText};">Mã vận đơn</td><td style="padding:4px 0;font-size:13.5px;font-weight:700;font-family:${FONT_MONO};color:${frame.accent};">${escapeHtml(order.trackingCode)}</td></tr>` : ""}
-            ${customer.note ? `<tr><td valign="top" style="padding:4px 0;font-size:13px;color:${frame.footerText};">Ghi chú</td><td style="padding:4px 0;font-size:13.5px;line-height:1.55;color:${frame.text};">${escapeHtml(customer.note)}</td></tr>` : ""}
+            ${customer.name ? `<tr><td valign="top" class="mail-delivery-text" style="padding:4px 0;font-size:${frame.deliverySize}px;color:${frame.footerText};width:130px;">${escapeHtml(frame.deliveryRecipientLabel)}</td><td class="mail-delivery-text" style="padding:4px 0;font-size:${frame.deliverySize}px;font-weight:600;color:${frame.headingColor};">${escapeHtml(customer.name)}</td></tr>` : ""}
+            ${customer.phone ? `<tr><td valign="top" class="mail-delivery-text" style="padding:4px 0;font-size:${frame.deliverySize}px;color:${frame.footerText};">${escapeHtml(frame.deliveryPhoneLabel)}</td><td class="mail-delivery-text" style="padding:4px 0;font-size:${frame.deliverySize}px;color:${frame.headingColor};">${escapeHtml(customer.phone)}</td></tr>` : ""}
+            ${customer.email ? `<tr><td valign="top" class="mail-delivery-text" style="padding:4px 0;font-size:${frame.deliverySize}px;color:${frame.footerText};">${escapeHtml(frame.deliveryEmailLabel)}</td><td class="mail-delivery-text" style="padding:4px 0;font-size:${frame.deliverySize}px;color:${frame.headingColor};">${escapeHtml(customer.email)}</td></tr>` : ""}
+            ${customer.address ? `<tr><td valign="top" class="mail-delivery-text" style="padding:4px 0;font-size:${frame.deliverySize}px;color:${frame.footerText};">${escapeHtml(frame.deliveryAddressLabel)}</td><td class="mail-delivery-text" style="padding:4px 0;font-size:${frame.deliverySize}px;line-height:1.55;color:${frame.headingColor};">${escapeHtml(customer.address)}</td></tr>` : ""}
+            <tr><td valign="top" class="mail-delivery-text" style="padding:4px 0;font-size:${frame.deliverySize}px;color:${frame.footerText};">${escapeHtml(frame.deliveryPaymentLabel)}</td><td class="mail-delivery-text" style="padding:4px 0;font-size:${frame.deliverySize}px;color:${frame.headingColor};">${escapeHtml(paymentMethodLabel)}</td></tr>
+            ${order?.trackingCode ? `<tr><td valign="top" class="mail-delivery-text" style="padding:4px 0;font-size:${frame.deliverySize}px;color:${frame.footerText};">${escapeHtml(frame.deliveryTrackingLabel)}</td><td class="mail-delivery-text" style="padding:4px 0;font-size:${frame.deliverySize}px;font-weight:700;font-family:${deliveryFont};color:${frame.accent};">${escapeHtml(order.trackingCode)}</td></tr>` : ""}
+            ${customer.note ? `<tr><td valign="top" class="mail-delivery-text" style="padding:4px 0;font-size:${frame.deliverySize}px;color:${frame.footerText};">${escapeHtml(frame.deliveryNoteLabel)}</td><td class="mail-delivery-text" style="padding:4px 0;font-size:${frame.deliverySize}px;line-height:1.55;color:${frame.text};">${escapeHtml(customer.note)}</td></tr>` : ""}
           </table>
         </td>
       </tr>

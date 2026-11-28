@@ -21,8 +21,6 @@ function buildSections(kind, hasOrderVars = false) {
     "Các khối": isOrder
       ? [
           "orderLayout",
-          "showOrderDelivery",
-          "orderDeliveryHeading",
           "showOrderBank",
           "showCoupon",
           "couponTitle",
@@ -38,6 +36,7 @@ function buildSections(kind, hasOrderVars = false) {
         ],
     ...(isOrder ? {
       "Mã đơn": ["showOrderHero", "codeLabel", "placedLabel", "paidLabel", "unpaidLabel", "orderCodeFont", "orderCodeWeight", "codeLabelSize", "orderCodeSize", "orderCodeMobileSize", "showOrderSteps", "orderActiveStep", "orderStep1", "orderStep2", "orderStep3"],
+      "Thông tin giao nhận": ["showOrderDelivery", "orderDeliveryHeading", "deliveryRecipientLabel", "deliveryPhoneLabel", "deliveryEmailLabel", "deliveryAddressLabel", "deliveryPaymentLabel", "deliveryTrackingLabel", "deliveryNoteLabel", "deliveryFont", "deliverySize", "deliveryMobileSize"],
       "Chi tiết đơn": ["showOrderItems", "orderItemsHeading", "productLabel", "qtyLabel", "amountLabel", "variantLabel", "subtotalLabel", "shippingLabel", "totalLabel", "detailFont", "detailSize", "detailMobileSize"],
     } : {}),
     "Nút hành động": ["showButton", "buttonLabel", "buttonUrl", "buttonFontSize", "buttonRadius", "buttonAlign", "button", "buttonText"],
@@ -71,7 +70,7 @@ export default function MailDesignFields({
       lastExternalRef.current = activeSection;
       if (detailsRef.current) {
         detailsRef.current.open = true;
-        detailsRef.current.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
+        detailsRef.current.scrollIntoView?.({ behavior: "instant", block: "nearest" });
       }
     }
   }, [activeSection, sections]);

@@ -119,6 +119,8 @@ export const FRAME_SIZES = {
   codeLabelSize: ["Cỡ chữ nhãn mã đơn", 11, 10, 24],
   orderCodeSize: ["Cỡ chữ mã đơn", 22, 12, 36],
   orderCodeMobileSize: ["Cỡ mã đơn trên điện thoại", 22, 12, 32],
+  deliverySize: ["Cỡ chữ giao nhận", 14, 12, 24],
+  deliveryMobileSize: ["Cỡ giao nhận trên điện thoại", 14, 12, 24],
   detailSize: ["Cỡ chữ bảng chi tiết", 14, 12, 24],
   detailMobileSize: ["Cỡ bảng trên điện thoại", 14, 12, 24],
   fontSize: ["Cỡ chữ nội dung", 15, 12, 24],
@@ -135,6 +137,13 @@ export const FRAME_SIZES = {
 };
 
 export const MAIL_COPY = {
+  deliveryRecipientLabel: ["Nhãn người nhận", "Người nhận", 80],
+  deliveryPhoneLabel: ["Nhãn số điện thoại", "Số điện thoại", 80],
+  deliveryEmailLabel: ["Nhãn email", "Email", 80],
+  deliveryAddressLabel: ["Nhãn địa chỉ", "Địa chỉ", 80],
+  deliveryPaymentLabel: ["Nhãn thanh toán", "Thanh toán", 80],
+  deliveryTrackingLabel: ["Nhãn mã vận đơn", "Mã vận đơn", 80],
+  deliveryNoteLabel: ["Nhãn ghi chú", "Ghi chú", 80],
   codeLabel: ["Nhãn mã đơn", "Mã đơn hàng", 80],
   placedLabel: ["Nhãn thời gian đặt", "Đặt lúc:", 80],
   paidLabel: ["Nhãn đã thanh toán", "Đã thanh toán", 80],
@@ -210,6 +219,7 @@ const mailFonts = {
 export const MAIL_OPTIONS = {
   orderCodeWeight: ["Độ đậm mã đơn", {bold:"Đậm", normal:"Thường"}],
   orderCodeFont: ["Phông chữ mã đơn", {mono:"Đơn cách", ...mailFonts}],
+  deliveryFont: ["Phông chữ giao nhận", {inherit:"Theo nội dung thư", ...mailFonts}],
   detailFont: ["Phông chữ bảng chi tiết", {inherit:"Theo nội dung thư", ...mailFonts}],
   font: ["Phông chữ nội dung", mailFonts],
   headerFont: ["Phông chữ thương hiệu", mailFonts],

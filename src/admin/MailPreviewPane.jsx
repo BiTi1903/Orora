@@ -2,8 +2,11 @@ import { useEffect, useRef, useState } from "react";
 
 // Keep the editing viewport alive while the generated email changes.
 const editorDocument = `<!doctype html><html lang="vi"><head><meta charset="utf-8"></head><body><script>
+  let renderedHtml;
   window.addEventListener("message", event => {
     if (event.source !== parent || event.data?.type !== "orora-mail-render") return;
+    if (event.data.html === renderedHtml) return;
+    renderedHtml = event.data.html;
     const next = new DOMParser().parseFromString(event.data.html, "text/html");
     const top = scrollY;
     if (document.head.innerHTML !== next.head.innerHTML) document.head.innerHTML = next.head.innerHTML;

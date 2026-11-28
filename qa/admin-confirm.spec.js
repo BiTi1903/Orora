@@ -170,3 +170,28 @@ test('template library finds and duplicates an order template with a personalize
   await page.getByRole('button',{name:'Lưu mẫu thư',exact:true}).click();
   await expect.poll(() => page.evaluate(() => window.saved?.id)).toMatch(/^[a-f0-9-]{36}$/);
 });
+
+test('order studio opens both preview blocks and keeps edited labels when reopened', async ({page}) => {
+  await mount(page, `
+    import Library from '/src/admin/MailTemplateLibrary.jsx';
+    import ConfirmProvider from '/src/admin/ConfirmDialog.jsx';
+    let item = {id:'builtin-order-shipping',name:'Mẫu vận chuyển',kind:'private',subject:'Đang giao',text:'Xin chào'};
+    const request = async body => {
+      if (body) { item = {...item,...body}; return {message:'Đã lưu'}; }
+      return {templates:[item],types:[]};
+    };
+    ${render('R.createElement(ConfirmProvider,null,R.createElement(Library,{request}))')}`);
+  await page.getByRole('button',{name:'Chỉnh sửa',exact:true}).click();
+  const frame = page.frameLocator('.mail-studio-card iframe');
+  await frame.getByText('Thông tin giao nhận',{exact:true}).click();
+  await page.getByLabel('Nhãn người nhận',{exact:true}).fill('Giao cho');
+  await expect(frame.getByText('Giao cho',{exact:true})).toBeVisible();
+  await frame.getByText('Chi tiết đơn hàng',{exact:true}).click();
+  await page.getByLabel('Tên cột sản phẩm').fill('Mặt hàng');
+  await expect(frame.getByText('Mặt hàng',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Lưu thay đổi mẫu',exact:true}).click();
+  await page.getByRole('button',{name:'+ Tạo mẫu trắng mới'}).click();
+  await page.getByRole('button',{name:'Chỉnh sửa',exact:true}).click();
+  await expect(frame.getByText('Giao cho',{exact:true})).toBeVisible();
+  await expect(frame.getByText('Mặt hàng',{exact:true})).toBeVisible();
+});

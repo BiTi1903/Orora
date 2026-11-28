@@ -1,3 +1,8 @@
+## 28/11/2026 — Chỉnh giao nhận và chi tiết đơn từ bản xem trước
+
+- Thêm bảng chỉnh nhãn từng dòng, tiêu đề, phông và cỡ chữ desktop/mobile cho thông tin giao nhận. Studio nhận đúng mẫu đang giao/cảm ơn kể cả khi nội dung không còn biến đơn.
+- Tránh làm mới khung xem trước với cùng HTML và cuộn chuyển động khi chọn vùng chỉnh. Playwright bấm hai khối, đổi nhãn, lưu và mở lại mẫu với API giả lập đạt bốn lượt trên desktop/mobile. 12 bài kiểm tra HTML, build và lint các file sửa đạt. Không chuyển đổi database.
+
 ## 28/11/2026 — Chỉnh chữ khối mã đơn và bảng chi tiết trong Email Studio
 
 - Bấm khối trên bản xem trước để mở mục Mã đơn hoặc Chi tiết đơn. Cho đổi nhãn, phông và cỡ chữ desktop/mobile của mã đơn và bảng sản phẩm. Dữ liệu đơn hàng vẫn lấy từ đơn thực tế.

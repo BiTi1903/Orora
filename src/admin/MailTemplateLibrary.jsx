@@ -14,10 +14,14 @@ import { useEffect, useRef, useState } from "react";
 import MailPreviewDialog from "./MailPreviewDialog";
 import TranslationHelp from "./TranslationHelp";
 
-function TemplatePreview({ draft, onSelectSection, selectedSection }) {
+function isOrderTemplate(draft, id) {
+  return ["builtin-order-shipping", "builtin-order-thankyou"].includes(id) || draft.kind === "order_auto" || hasOrderTokens(draft);
+}
+
+function TemplatePreview({ draft, templateId = draft.id, onSelectSection, selectedSection }) {
   const order = SAMPLE_PREVIEW_ORDER;
   const tracking = orderTrackingMail(window.location.origin, order.code, true);
-  const isOrder = draft.kind === "order_auto" || hasOrderTokens(draft);
+  const isOrder = isOrderTemplate(draft, templateId);
   const subject = isOrder ? previewOrderVariables(draft.subject || "", order, tracking) : (draft.subject || "");
   const text = isOrder ? previewOrderVariables(trackingTemplate(draft.text || "", true), order, tracking) : (draft.text || "");
   const render = isOrder ? renderOrderEmailHtml : draft.kind === "welcome_auto" ? renderWelcomeEmailHtml : renderBrandedEmailHtml;
@@ -97,7 +101,7 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
 
   const scrollToStudio = () => {
     requestAnimationFrame(() => {
-      studioRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+      studioRef.current?.scrollIntoView?.({ behavior: "instant", block: "start" });
     });
   };
 
@@ -472,7 +476,7 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
             <MailDesignFields onEditBody={() => textField.current?.focus()}
               defaultOpen
               kind={draft.kind}
-              hasOrderVars={hasOrderTokens(draft)}
+              hasOrderVars={isOrderTemplate(draft, id)}
               value={draft.design}
               disabled={busy}
               activeSection={designSection}
@@ -482,7 +486,7 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
 
           </div>
 
-          <TemplatePreview draft={draft} onSelectSection={setDesignSection} selectedSection={designSection} />
+          <TemplatePreview draft={draft} templateId={id} onSelectSection={setDesignSection} selectedSection={designSection} />
         </div>
       </form>
 
