@@ -41,3 +41,12 @@ test('admin creates a fixed-value promotion and can disable it',async({page})=>{
   await page.getByRole('button',{name:'Lưu mã'}).click();
   await expect(page.locator('.gift-admin-row').filter({hasText:'Đã tắt'})).toBeVisible();
 });
+
+test('newsletter is initially checked and checkout respects opting out',async({page})=>{
+  await mount(page,`import Order from '/src/components/OrderForm.jsx';${render("R.createElement(Order,{product:{id:'1',name:'SP',price:'100000'},home:{},onClose:()=>{}})")}`);
+  const newsletter=page.getByRole('checkbox',{name:/Nhận tin về sản phẩm mới/});
+  await expect(newsletter).toBeChecked();
+  await newsletter.uncheck();
+  expect(await newsletter.evaluate(input=>new FormData(input.form).has(input.name))).toBe(false);
+  await expect(page.locator('input[name="consent"]')).not.toBeChecked();
+});

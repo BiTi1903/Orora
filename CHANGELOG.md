@@ -1,3 +1,8 @@
+## 28/11/2026 — Chọn sẵn ô nhận tin ở checkout
+
+- Form đặt hàng chọn sẵn ô nhận tin sản phẩm và mã quà. Khách có thể bỏ chọn trước khi gửi. Không chuyển đổi dữ liệu hiện có.
+- Kiểm thử Playwright đạt ở 390 và 1440 px cho trạng thái ban đầu và dữ liệu form sau khi bỏ chọn.
+
 ## 28/11/2026 — Nhóm người nhận theo lịch sử mua và thẻ sản phẩm trong chiến dịch
 
 - Checkout có lựa chọn nhận tin riêng, mặc định bỏ chọn; khi khách chọn, tạo liên hệ mới cùng giao dịch đặt đơn và giữ trạng thái các liên hệ hiện có. Email admin lọc người nhận đang hoạt động theo đơn chưa hủy, kể cả đơn cũ và đơn nhiều sản phẩm; đếm trước khi xác nhận và kiểm tra lại khi gửi.
