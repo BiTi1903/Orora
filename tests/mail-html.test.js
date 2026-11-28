@@ -344,3 +344,16 @@ test("mail body size and family cover paragraphs, subheadings and bullet text", 
   assert.match(html, /\.mail-body-subheading \{ font-size: 20px/);
   assert.match(renderBrandedEmailHtml({text:"Xin chào"}), /font-family:'Noto Serif', Georgia/);
 });
+
+test("order code and detail blocks expose editable copy and styles in preview and delivery", () => {
+  const design = {codeLabel:"Số phiếu", productLabel:"Mặt hàng", totalLabel:"Tổng cộng", orderCodeFont:"arial", orderCodeSize:28, detailFont:"tahoma", detailSize:18};
+  for (const interactivePreview of [false,true]) {
+    const html = renderOrderEmailHtml({order:{code:"OW_ABC"}, design, interactivePreview});
+    assert.match(html,/>Số phiếu</);
+    assert.match(html,/font-family:Arial[^>]+font-size:28px[^>]+>OW_ABC</);
+    assert.match(html,/font-family:Tahoma[^>]+font-size:15.5px[^>]+>Mặt hàng</);
+    assert.match(html,/>Tổng cộng</);
+    assert.equal(html.includes('data-mail-section="Mã đơn"'),interactivePreview);
+    assert.equal(html.includes('data-mail-section="Chi tiết đơn"'),interactivePreview);
+  }
+});

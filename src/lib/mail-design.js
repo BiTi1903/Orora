@@ -116,6 +116,11 @@ export const FRAME_COLORS = {
 };
 
 export const FRAME_SIZES = {
+  codeLabelSize: ["Cỡ chữ nhãn mã đơn", 11, 10, 24],
+  orderCodeSize: ["Cỡ chữ mã đơn", 22, 12, 36],
+  orderCodeMobileSize: ["Cỡ mã đơn trên điện thoại", 22, 12, 32],
+  detailSize: ["Cỡ chữ bảng chi tiết", 14, 12, 24],
+  detailMobileSize: ["Cỡ bảng trên điện thoại", 14, 12, 24],
   fontSize: ["Cỡ chữ nội dung", 15, 12, 24],
   mobileFontSize: ["Cỡ chữ điện thoại", 15, 12, 22],
   brandSize: ["Cỡ chữ thương hiệu", 30, 18, 44],
@@ -130,6 +135,17 @@ export const FRAME_SIZES = {
 };
 
 export const MAIL_COPY = {
+  codeLabel: ["Nhãn mã đơn", "Mã đơn hàng", 80],
+  placedLabel: ["Nhãn thời gian đặt", "Đặt lúc:", 80],
+  paidLabel: ["Nhãn đã thanh toán", "Đã thanh toán", 80],
+  unpaidLabel: ["Nhãn chưa thanh toán", "Chưa thanh toán", 80],
+  productLabel: ["Tên cột sản phẩm", "Sản phẩm", 80],
+  qtyLabel: ["Tên cột số lượng", "SL", 80],
+  amountLabel: ["Tên cột thành tiền", "Thành tiền", 80],
+  variantLabel: ["Nhãn phân loại", "Phân loại:", 80],
+  subtotalLabel: ["Nhãn tạm tính", "Tạm tính", 80],
+  shippingLabel: ["Nhãn phí giao hàng", "Phí giao hàng", 80],
+  totalLabel: ["Nhãn tổng thanh toán", "Tổng thanh toán", 80],
   brand: ["Tên thương hiệu", "ORORA", 60],
   tagline: ["Dòng dưới tên thương hiệu", "Luxury Skincare · Vietnam", 100],
   logoUrl: ["Link ảnh logo (HTTPS)", "", 1000],
@@ -192,6 +208,9 @@ const mailFonts = {
 };
 
 export const MAIL_OPTIONS = {
+  orderCodeWeight: ["Độ đậm mã đơn", {bold:"Đậm", normal:"Thường"}],
+  orderCodeFont: ["Phông chữ mã đơn", {mono:"Đơn cách", ...mailFonts}],
+  detailFont: ["Phông chữ bảng chi tiết", {inherit:"Theo nội dung thư", ...mailFonts}],
   font: ["Phông chữ nội dung", mailFonts],
   headerFont: ["Phông chữ thương hiệu", mailFonts],
   headingFont: ["Phông chữ tiêu đề", mailFonts],

@@ -1,3 +1,8 @@
+## 28/11/2026 — Chỉnh chữ khối mã đơn và bảng chi tiết trong Email Studio
+
+- Bấm khối trên bản xem trước để mở mục Mã đơn hoặc Chi tiết đơn. Cho đổi nhãn, phông và cỡ chữ desktop/mobile của mã đơn và bảng sản phẩm. Dữ liệu đơn hàng vẫn lấy từ đơn thực tế.
+- Build, ESLint các file sửa và 12 bài kiểm tra HTML email đạt. Tùy chọn lưu cùng thiết kế mẫu khi admin lưu, không chuyển đổi database.
+
 ## 28/11/2026 — Giữ vị trí xem trước và gộp ô soạn email
 
 - Studio và Gửi thư dùng một ô soạn nội dung. Bảng thiết kế có nút quay về ô này. Bỏ trình sửa mã HTML; mẫu đã lưu HTML có thể chuyển sang nội dung chuẩn.

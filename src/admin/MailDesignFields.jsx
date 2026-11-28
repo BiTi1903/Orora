@@ -21,14 +21,6 @@ function buildSections(kind, hasOrderVars = false) {
     "Các khối": isOrder
       ? [
           "orderLayout",
-          "showOrderHero",
-          "showOrderSteps",
-          "orderActiveStep",
-          "orderStep1",
-          "orderStep2",
-          "orderStep3",
-          "showOrderItems",
-          "orderItemsHeading",
           "showOrderDelivery",
           "orderDeliveryHeading",
           "showOrderBank",
@@ -44,6 +36,10 @@ function buildSections(kind, hasOrderVars = false) {
           "couponCode",
           "couponNote",
         ],
+    ...(isOrder ? {
+      "Mã đơn": ["showOrderHero", "codeLabel", "placedLabel", "paidLabel", "unpaidLabel", "orderCodeFont", "orderCodeWeight", "codeLabelSize", "orderCodeSize", "orderCodeMobileSize", "showOrderSteps", "orderActiveStep", "orderStep1", "orderStep2", "orderStep3"],
+      "Chi tiết đơn": ["showOrderItems", "orderItemsHeading", "productLabel", "qtyLabel", "amountLabel", "variantLabel", "subtotalLabel", "shippingLabel", "totalLabel", "detailFont", "detailSize", "detailMobileSize"],
+    } : {}),
     "Nút hành động": ["showButton", "buttonLabel", "buttonUrl", "buttonFontSize", "buttonRadius", "buttonAlign", "button", "buttonText"],
     "Chân thư": ["showFooter", "footerNote", "footerSiteLabel", "footerPolicyLabel", "footerAddress", "footerCopyright", "footer", "footerText"],
   };

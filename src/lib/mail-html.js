@@ -208,10 +208,12 @@ function renderEmailShell({
   <meta name="color-scheme" content="light" />
   <meta name="supported-color-schemes" content="light" />
   <title>${escapeHtml(subject || frame.brand || "ORORA")}</title>
-  ${[frame.font,frame.headerFont,frame.headingFont].includes("notoSerif") ? '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600;700&amp;display=swap" />' : ""}
+  ${[frame.font,frame.headerFont,frame.headingFont,frame.orderCodeFont,frame.detailFont].includes("notoSerif") ? '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600;700&amp;display=swap" />' : ""}
   <style data-mail-mobile>
     @media only screen and (max-width: 600px) {
       .mail-body-text { font-size: ${frame.mobileFontSize}px !important; }
+      .mail-order-code { font-size: ${frame.orderCodeMobileSize}px !important; }
+      ${[11.5,12,13.5,14,15,17].map(size => `.mail-detail-size-${size.toFixed(1).replace(".", "-")} { font-size: ${frame.detailMobileSize + size - 14}px !important; }`).join("\n")}
       .mail-body-subheading { font-size: ${frame.mobileFontSize + 4}px !important; }
       .mail-hero-heading { font-size: ${frame.headingMobileSize}px !important; }
     }
@@ -554,7 +556,7 @@ export function renderOrderEmailHtml({
   const paymentBadgeBg = isPaid ? "#eef8f2" : "#fff6ea";
   const paymentBadgeColor = isPaid ? "#1f6e43" : "#9a5a12";
   const paymentBadgeBorder = isPaid ? "#b7e2c7" : "#f3d9b1";
-  const paymentBadgeLabel = isPaid ? "Đã thanh toán" : "Chưa thanh toán";
+  const paymentBadgeLabel = isPaid ? frame.paidLabel : frame.unpaidLabel;
   const subtotalText = order?.subtotal == null ? "ORORA sẽ báo giá" : formatVnd(order.subtotal);
   const shippingText = order?.shippingFee == null ? "ORORA sẽ xác nhận" : formatVnd(order.shippingFee);
   const totalText = order?.totalAmount == null ? "ORORA sẽ xác nhận" : formatVnd(order.totalAmount);
@@ -562,31 +564,33 @@ export function renderOrderEmailHtml({
   const customer = order?.customer || {};
   const bodyCopy = formatBodyHtml(text, { design });
 
+  const codeFont = resolveFont(frame.orderCodeFont, FONT_MONO);
+  const detailFont = resolveFont(frame.detailFont, bodyFont);
   const itemRows = items.map((item) => `
     <tr>
-      <td style="padding:12px 0;border-bottom:1px solid ${frame.border};font-family:${bodyFont};">
-        <div style="font-size:14px;font-weight:600;color:${frame.headingColor};line-height:1.4;">${escapeHtml(item.name)}</div>
-        ${item.variant && !item.name.includes(item.variant) ? `<div style="margin-top:2px;font-size:12px;color:${frame.footerText};">Phân loại: ${escapeHtml(item.variant)}</div>` : ""}
+      <td style="padding:12px 0;border-bottom:1px solid ${frame.border};font-family:${detailFont};">
+        <div class="mail-detail-size-14-0" style="font-size:${frame.detailSize}px;font-weight:600;color:${frame.headingColor};line-height:1.4;">${escapeHtml(item.name)}</div>
+        ${item.variant && !item.name.includes(item.variant) ? `<div class="mail-detail-size-12-0" style="margin-top:2px;font-size:${frame.detailSize - 2}px;color:${frame.footerText};">${escapeHtml(frame.variantLabel)} ${escapeHtml(item.variant)}</div>` : ""}
       </td>
-      <td align="center" style="padding:12px 8px;border-bottom:1px solid ${frame.border};font-family:${bodyFont};font-size:13.5px;color:${frame.text};white-space:nowrap;">&times;${escapeHtml(item.quantity)}</td>
-      <td align="right" style="padding:12px 0;border-bottom:1px solid ${frame.border};font-family:${bodyFont};font-size:14px;font-weight:600;color:${frame.headingColor};white-space:nowrap;">${escapeHtml(item.priceText)}</td>
+      <td align="center" class="mail-detail-size-13-5" style="padding:12px 8px;border-bottom:1px solid ${frame.border};font-family:${detailFont};font-size:${frame.detailSize - 0.5}px;color:${frame.text};white-space:nowrap;">&times;${escapeHtml(item.quantity)}</td>
+      <td align="right" class="mail-detail-size-14-0" style="padding:12px 0;border-bottom:1px solid ${frame.border};font-family:${detailFont};font-size:${frame.detailSize}px;font-weight:600;color:${frame.headingColor};white-space:nowrap;">${escapeHtml(item.priceText)}</td>
     </tr>
   `).join("");
 
   const heroCardHtml = frame.showOrderHero ? `
     <!-- Order Hero Card -->
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${sectionAttr("Các khối", interactivePreview)} style="background-color:${frame.cardBg};border:1px solid ${frame.cardBorder};border-radius:14px;margin:0 0 22px 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${sectionAttr("Mã đơn", interactivePreview)} style="background-color:${frame.cardBg};border:1px solid ${frame.cardBorder};border-radius:14px;margin:0 0 22px 0;">
       <tr>
         <td style="padding:20px 22px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
             <tr>
               <td valign="top">
-                <div style="font-family:${bodyFont};font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:${frame.footerText};">Mã đơn hàng</div>
-                <div style="margin-top:4px;font-family:${FONT_MONO};font-size:22px;font-weight:700;color:${frame.headingColor};letter-spacing:0.6px;">${escapeHtml(order?.code || "ORORA")}</div>
-                <div style="margin-top:4px;font-family:${bodyFont};font-size:12.5px;color:${frame.footerText};">Đặt lúc: ${escapeHtml(formatOrderDate(order))}</div>
+                <div style="font-family:${frame.orderCodeFont === "mono" ? bodyFont : codeFont};font-size:${frame.codeLabelSize}px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:${frame.footerText};">${escapeHtml(frame.codeLabel)}</div>
+                <div class="mail-order-code" style="margin-top:4px;font-family:${codeFont};font-size:${frame.orderCodeSize}px;font-weight:${frame.orderCodeWeight === "bold" ? 700 : 400};color:${frame.headingColor};letter-spacing:0.6px;">${escapeHtml(order?.code || "ORORA")}</div>
+                <div style="margin-top:4px;font-family:${bodyFont};font-size:12.5px;color:${frame.footerText};">${escapeHtml(frame.placedLabel)} ${escapeHtml(formatOrderDate(order))}</div>
               </td>
               <td valign="top" align="right">
-                <span style="display:inline-block;padding:5px 12px;border-radius:999px;background-color:${paymentBadgeBg};border:1px solid ${paymentBadgeBorder};font-family:${bodyFont};font-size:12px;font-weight:600;color:${paymentBadgeColor};white-space:nowrap;">${paymentBadgeLabel}</span>
+                <span style="display:inline-block;padding:5px 12px;border-radius:999px;background-color:${paymentBadgeBg};border:1px solid ${paymentBadgeBorder};font-family:${bodyFont};font-size:12px;font-weight:600;color:${paymentBadgeColor};white-space:nowrap;">${escapeHtml(paymentBadgeLabel)}</span>
               </td>
             </tr>
           </table>
@@ -620,14 +624,14 @@ export function renderOrderEmailHtml({
   const headingBlockHtml = frame.showHeading && frame.heading.trim() ? renderHeroHeading(frame, frame.heading.trim(), "left", interactivePreview) : "";
 
   const itemsBlockHtml = frame.showOrderItems ? `
-    <div${sectionAttr("Các khối", interactivePreview)}>
+    <div${sectionAttr("Chi tiết đơn", interactivePreview)}>
       <!-- Itemized Order Summary -->
-      <div style="font-family:${bodyFont};font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:${frame.accent};margin:0 0 8px 0;">${escapeHtml(frame.orderItemsHeading || "Chi tiết đơn hàng")}</div>
+      <div class="mail-detail-size-12-0" style="font-family:${detailFont};font-size:${frame.detailSize - 2}px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:${frame.accent};margin:0 0 8px 0;">${escapeHtml(frame.orderItemsHeading)}</div>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:2px solid ${frame.headingColor};margin:0 0 14px 0;">
         <tr>
-          <th align="left" style="padding:10px 0;border-bottom:1px solid ${frame.border};font-family:${bodyFont};font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:${frame.footerText};">Sản phẩm</th>
-          <th align="center" style="padding:10px 8px;border-bottom:1px solid ${frame.border};font-family:${bodyFont};font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:${frame.footerText};">SL</th>
-          <th align="right" style="padding:10px 0;border-bottom:1px solid ${frame.border};font-family:${bodyFont};font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:${frame.footerText};">Thành tiền</th>
+          <th align="left" class="mail-detail-size-11-5" style="padding:10px 0;border-bottom:1px solid ${frame.border};font-family:${detailFont};font-size:${frame.detailSize - 2.5}px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:${frame.footerText};">${escapeHtml(frame.productLabel)}</th>
+          <th align="center" class="mail-detail-size-11-5" style="padding:10px 8px;border-bottom:1px solid ${frame.border};font-family:${detailFont};font-size:${frame.detailSize - 2.5}px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:${frame.footerText};">${escapeHtml(frame.qtyLabel)}</th>
+          <th align="right" class="mail-detail-size-11-5" style="padding:10px 0;border-bottom:1px solid ${frame.border};font-family:${detailFont};font-size:${frame.detailSize - 2.5}px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:${frame.footerText};">${escapeHtml(frame.amountLabel)}</th>
         </tr>
         ${itemRows}
       </table>
@@ -635,16 +639,16 @@ export function renderOrderEmailHtml({
       <!-- Pricing Breakdown -->
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 22px 0;">
         <tr>
-          <td style="padding:4px 0;font-family:${bodyFont};font-size:13.5px;color:${frame.footerText};">Tạm tính</td>
-          <td align="right" style="padding:4px 0;font-family:${bodyFont};font-size:13.5px;color:${frame.headingColor};">${escapeHtml(subtotalText)}</td>
+          <td class="mail-detail-size-13-5" style="padding:4px 0;font-family:${detailFont};font-size:${frame.detailSize - 0.5}px;color:${frame.footerText};">${escapeHtml(frame.subtotalLabel)}</td>
+          <td align="right" class="mail-detail-size-13-5" style="padding:4px 0;font-family:${detailFont};font-size:${frame.detailSize - 0.5}px;color:${frame.headingColor};">${escapeHtml(subtotalText)}</td>
         </tr>
         <tr>
-          <td style="padding:4px 0;font-family:${bodyFont};font-size:13.5px;color:${frame.footerText};">Phí giao hàng</td>
-          <td align="right" style="padding:4px 0;font-family:${bodyFont};font-size:13.5px;color:${frame.headingColor};">${escapeHtml(shippingText)}</td>
+          <td class="mail-detail-size-13-5" style="padding:4px 0;font-family:${detailFont};font-size:${frame.detailSize - 0.5}px;color:${frame.footerText};">${escapeHtml(frame.shippingLabel)}</td>
+          <td align="right" class="mail-detail-size-13-5" style="padding:4px 0;font-family:${detailFont};font-size:${frame.detailSize - 0.5}px;color:${frame.headingColor};">${escapeHtml(shippingText)}</td>
         </tr>
         <tr>
-          <td style="padding:12px 0 4px 0;border-top:1px solid ${frame.border};font-family:${bodyFont};font-size:15px;font-weight:700;color:${frame.headingColor};">Tổng thanh toán</td>
-          <td align="right" style="padding:12px 0 4px 0;border-top:1px solid ${frame.border};font-family:${bodyFont};font-size:17px;font-weight:700;color:${frame.accent};">${escapeHtml(totalText)}</td>
+          <td class="mail-detail-size-15-0" style="padding:12px 0 4px 0;border-top:1px solid ${frame.border};font-family:${detailFont};font-size:${frame.detailSize + 1}px;font-weight:700;color:${frame.headingColor};">${escapeHtml(frame.totalLabel)}</td>
+          <td align="right" class="mail-detail-size-17-0" style="padding:12px 0 4px 0;border-top:1px solid ${frame.border};font-family:${detailFont};font-size:${frame.detailSize + 3}px;font-weight:700;color:${frame.accent};">${escapeHtml(totalText)}</td>
         </tr>
       </table>
     </div>` : "";
