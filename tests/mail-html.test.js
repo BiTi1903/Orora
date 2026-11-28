@@ -292,9 +292,9 @@ test("Email Studio supports inline formatting, per-section typography/colors, co
   assert.doesNotMatch(orderHtml, /Thông tin giao nhận/);
 });
 
-test("all four BUILTIN_MAIL_PRESETS render tailored HTML stages including shipping step 3 and post-delivery thank-you coupon", async () => {
+test("built-in templates include a campaign and omit unconfigured discounts", async () => {
   const { BUILTIN_MAIL_PRESETS, findMailPreset } = await import("../src/lib/mail-presets.js");
-  assert.equal(BUILTIN_MAIL_PRESETS.length, 4);
+  assert.equal(BUILTIN_MAIL_PRESETS.length, 5);
 
   const sampleOrder = {
     code: "OW_STAGE9",
@@ -329,7 +329,8 @@ test("all four BUILTIN_MAIL_PRESETS render tailored HTML stages including shippi
 
   const thankYouPreset = findMailPreset("builtin-order-thankyou");
   const thankYouMsg = renderOrderMessage(thankYouPreset, sampleOrder, ENV, { bankInfo });
-  assert.match(thankYouMsg.html, /ORORATHANK/);
+  assert.doesNotMatch(thankYouMsg.html, /ORORATHANK|ORORA10/);
+  assert.ok(findMailPreset("builtin-campaign-catalog"));
   assert.match(thankYouMsg.html, /3\. Đã nhận hàng/);
   assert.ok(thankYouMsg.html.indexOf("Cảm ơn bạn đã tin chọn ORORA") < thankYouMsg.html.indexOf("Mã đơn hàng"));
   assert.doesNotMatch(thankYouMsg.html, /img\.vietqr\.io/);

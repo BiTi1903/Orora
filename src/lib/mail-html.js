@@ -302,8 +302,8 @@ function renderBanner(frame, interactivePreview = false) {
 }
 
 function renderCouponBox(frame, interactivePreview = false) {
-  if (!frame.showCoupon) return "";
-  const code = frame.couponCode.trim() || "ORORA10";
+  if (!frame.showCoupon || !frame.couponCode.trim()) return "";
+  const code = frame.couponCode.trim();
   const bodyFont = resolveFont(frame.font, FONT_SANS);
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"${sectionAttr("Các khối", interactivePreview)} style="margin:20px 0 8px 0;background-color:${frame.cardBg};border:1px dashed ${frame.accent};border-radius:14px;">
     <tr>

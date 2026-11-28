@@ -1,3 +1,8 @@
+## 28/11/2026 — Mẫu email chiến dịch giới thiệu bộ sưu tập
+
+- Thêm mẫu cho danh sách đăng ký trong kho email. Mẫu cảm ơn mặc định ẩn mã ưu đãi chưa cấu hình. Không tự điền mã khi quản trị viên để trống.
+- Khi khởi tạo kho, hệ thống bổ sung mẫu chiến dịch còn thiếu và giữ mẫu đã lưu. Không gửi thư trong quá trình cập nhật. 55 kiểm thử newsletter và HTML email đạt.
+
 ## 28/11/2026 — Tải đơn chờ xác nhận trong tổng quan
 
 - API đơn hàng đọc dự phòng theo ngày, tối đa 50 đơn mỗi trang khi Firestore báo thiếu chỉ mục trạng thái. Tổng quan vẫn cho tải tiếp khi chưa tìm thấy đơn trong trang hiện tại và phân biệt lỗi quyền truy cập. Chỉ đọc dữ liệu.

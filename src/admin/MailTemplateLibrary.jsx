@@ -274,7 +274,7 @@ export default function MailTemplateLibrary({ request, onUse, active = true }) {
       <section className="admin-card mail-preset-shelf" aria-label="Bộ mẫu chuẩn ORORA">
         <div className="mail-shelf-head">
           <div>
-            <h3>Bộ 4 mẫu chuẩn theo hành trình khách hàng <TranslationHelp label="bộ 4 mẫu thư chuẩn">Mẫu Đăng ký và Đã nhận đơn dùng làm thư gửi tự động. Khi đơn chuyển sang Đang giao hoặc Hoàn tất, hệ thống tự gửi mẫu tương ứng tới email của khách. Lưu thay đổi trong Studio để áp dụng cho các lần gửi sau.</TranslationHelp></h3>
+            <h3>Mẫu thư tự động và chiến dịch <TranslationHelp label="bộ mẫu thư chuẩn">Chọn Giới thiệu bộ sưu tập để soạn chiến dịch cho người đăng ký. Mẫu Đăng ký và Đã nhận đơn dùng làm thư gửi tự động. Khi đơn chuyển sang Đang giao hoặc Hoàn tất, hệ thống tự gửi mẫu tương ứng tới email của khách. Lưu thay đổi trong Studio để áp dụng cho các lần gửi sau.</TranslationHelp></h3>
             <p className="admin-muted">Bấm vào một giai đoạn để nạp sẵn bố cục, tiến trình đơn và nội dung chuẩn vào Studio bên dưới.</p>
           </div>
         </div>
