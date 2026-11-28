@@ -1,3 +1,9 @@
+## 28/11/2026 — Phân biệt đơn mới và sự cố thư theo ngày trong Tổng quan
+
+- Tách danh sách đơn chờ xác nhận theo ngày đặt và thư cần kiểm tra theo ngày ghi nhận sự cố (giờ Việt Nam). Mỗi dòng mở đúng mã đơn, hiện thời điểm và lý do. Tải thêm riêng theo từng danh sách; giữ cảnh báo thư xác nhận bị kẹt trong 50 đơn gần nhất.
+- Dùng dữ liệu orderMailReview hiện có, không ghi hoặc chuyển đổi database. Không suy diễn lỗi lịch sử chưa có bản ghi kiểm tra.
+- Kiểm tra tình huống 10 đơn hôm nay, 20 thư lỗi hôm qua trên desktop/mobile đạt. Kiểm tra mail-review, ESLint các file sửa và build đạt.
+
 ## 28/11/2026 — Sửa nội dung gợi ý và gửi thư theo trạng thái đơn
 
 - Bảng Nội dung trong Studio và trình soạn cho sửa trực tiếp tiêu đề, danh sách gợi ý và lời nhắn trong thân thư. Mở mẫu giao hàng/cảm ơn sẽ đọc phiên bản đã lưu.

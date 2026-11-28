@@ -23,7 +23,7 @@ export async function reviewPage(collection, params) {
   const page = await query.limit(26).get();
   const rows = page.docs.slice(0,25).map(doc => {
     const r = doc.data();
-    return { id:doc.id, kind:r.kind, recipient:r.recipient, code:r.code, orderId:r.source?.startsWith("orders/") ? r.source.split("/")[1] : null, state:r.state, outlook:r.outlook || null, trackable:Boolean(r.trackingId), createdAt:r.createdAt.toMillis?.() ?? +r.createdAt };
+    return { id:doc.id, kind:r.kind, recipient:r.recipient, code:r.code, issueAt:r.issueAt || null, eventId:r.source?.split("/")[3] || null, orderId:r.source?.startsWith("orders/") ? r.source.split("/")[1] : null, state:r.state, outlook:r.outlook || null, trackable:Boolean(r.trackingId), createdAt:r.createdAt.toMillis?.() ?? +r.createdAt };
   });
   return { rows, cursor: page.docs.length > 25 ? rows.at(-1).id : null };
 }
